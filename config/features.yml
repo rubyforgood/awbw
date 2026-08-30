@@ -27,6 +27,18 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Schedule site banners with start and end dates"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-08-30
+  summary: >-
+    Banners can now carry an optional "show from" and "show until" date, so an
+    announcement can be set up ahead of time and disappear on its own instead of
+    having to be published and unpublished by hand.
+  pro_tips:
+    - "Leave both dates blank to behave exactly as before — the banner shows whenever it is published."
+    - "Set only a start date to schedule ahead, or only an end date to auto-expire."
+
 - name: "Scholarship recipients get an agreement confirmation email"
   area: scholarships
   display_status: public_facing

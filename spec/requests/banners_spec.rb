@@ -73,6 +73,15 @@ RSpec.describe "/banners", type: :request do
         post banners_url, params: { banner: valid_attributes }
         expect(response).to redirect_to(banner_url(Banner.last))
       end
+
+      it "persists the scheduling window" do
+        starts = 1.day.from_now.change(usec: 0)
+        ends = 3.days.from_now.change(usec: 0)
+        post banners_url, params: { banner: valid_attributes.merge(started_at: starts, ended_at: ends) }
+        banner = Banner.last
+        expect(banner.started_at).to be_within(1.second).of(starts)
+        expect(banner.ended_at).to be_within(1.second).of(ends)
+      end
     end
 
     context "with invalid parameters" do
