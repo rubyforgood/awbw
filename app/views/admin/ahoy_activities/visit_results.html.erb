@@ -75,8 +75,9 @@
               <% end %>
             </td>
 
-            <td class="max-w-xs truncate px-4 py-3 text-gray-500" title="<%= visit.user_agent %>">
-              <%= visit.user_agent %>
+            <% decorated_visit = visit.decorate %>
+            <td class="max-w-xs truncate px-4 py-3 text-gray-500" title="<%= decorated_visit.user_agent_details %>">
+              <%= decorated_visit.user_agent_summary %>
             </td>
           </tr>
         <% end %>
