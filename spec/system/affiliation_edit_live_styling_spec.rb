@@ -150,4 +150,21 @@ RSpec.describe "Affiliation editor live styling", type: :system do
 
     expect(row[:class]).to include("bg-blue-50")
   end
+
+  describe "the left accent bar" do
+    def accent = find("[data-inactive-toggle-target='accentBar']", visible: :all)
+
+    it "is purple for an active facilitator row" do
+      expect(accent[:class]).to include("bg-purple-500")
+    end
+
+    it "switches to blue when the title stops being Facilitator" do
+      page.execute_script(
+        "arguments[0].value = 'Counselor'; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
+        find("[data-inactive-toggle-target~='title']")
+      )
+
+      expect(accent[:class]).to include("bg-blue-500")
+    end
+  end
 end

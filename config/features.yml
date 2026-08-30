@@ -2823,3 +2823,17 @@
     (e.g. "Desktop · Windows 10 · Firefox 5.0") instead of the raw user agent string.
   pro_tips:
     - "Hover the browser column to see the full raw user agent when you need the exact string."
+
+- name: "Clearer status chips on the affiliation editor"
+  area: people
+  display_status: user_facing
+  released_on: 2026-08-30
+  pr_number: 2438
+  summary: >-
+    The affiliation editor shows a status chip under the dates — "Upcoming" below
+    the start date for one that hasn't begun, "Inactive" below the end date for one
+    that has ended, and nothing for a currently active affiliation. A row no longer
+    shows both labels at once.
+  pro_tips:
+    - "No chip means the affiliation is active right now — a chip only appears for a future start or a past end."
+    - "The chips look and behave the same on the person editor, the organization editor, and the standalone affiliation edit page."
