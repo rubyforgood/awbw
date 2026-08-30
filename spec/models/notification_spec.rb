@@ -1,6 +1,49 @@
 require 'rails_helper'
 
 RSpec.describe Notification do
+  describe "audit stamps follow the sender" do
+    after { Current.reset }
+
+    it "stamps created_by and updated_by from the sender on create" do
+      sender = create(:user)
+
+      notification = create(:notification, sender: sender)
+
+      expect(notification.created_by).to eq(sender)
+      expect(notification.updated_by).to eq(sender)
+    end
+
+    it "matches the sender even when a different user is current (bulk/async sends)" do
+      sender = create(:user)
+      Current.user = create(:user)
+
+      notification = create(:notification, sender: sender)
+
+      expect(notification.created_by).to eq(sender)
+      expect(notification.updated_by).to eq(sender)
+    end
+
+    it "leaves the stamps nil for a system send with no sender" do
+      Current.user = create(:user)
+
+      notification = create(:notification, sender: nil)
+
+      expect(notification.created_by).to be_nil
+      expect(notification.updated_by).to be_nil
+    end
+
+    it "stamps updated_by from the editor on a later edit, keeping created_by as the sender" do
+      sender = create(:user)
+      notification = create(:notification, sender: sender)
+      editor = create(:user)
+
+      Current.set(user: editor) { notification.update!(custom_message: "Edited") }
+
+      expect(notification.reload.created_by).to eq(sender)
+      expect(notification.updated_by).to eq(editor)
+    end
+  end
+
   describe "Ahoy lifecycle tracking" do
     after { Current.reset }
 

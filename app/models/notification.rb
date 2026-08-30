@@ -168,6 +168,12 @@ class Notification < ApplicationRecord
   before_validation :force_manual_log_channel, if: :manual_log?
   # A contact_us_fyi is always something a person sent us — stamp it incoming.
   before_validation :mark_incoming, on: :create, if: -> { kind == "contact_us_fyi" }
+  # A notification's audit stamps follow its sender (the staff member the
+  # communication is from), not whoever's request created the row — a bulk send
+  # runs in a background job with no Current.user, and a system send has no sender
+  # at all. Set both at create, overriding the Current.user-based UserStampable
+  # default (this callback runs after it); later edits still stamp the editor.
+  before_validation :match_stamps_to_sender, on: :create
 
   def manual_log?
     kind == "manual_log"
@@ -351,6 +357,11 @@ class Notification < ApplicationRecord
   end
 
   private
+
+  def match_stamps_to_sender
+    self.created_by_id = sender_id
+    self.updated_by_id = sender_id
+  end
 
   def apply_manual_log_defaults
     self.kind = "manual_log"
