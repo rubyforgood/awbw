@@ -180,10 +180,15 @@ class WorkshopsController < ApplicationController
       model_class: Workshop,
       domain: :workshops,
       candidate_finder: -> { WorkshopServices::DuplicateFinder.new.groups },
-      editable_columns: %w[title full_name featured published windows_type_id],
-      belongs_to_options: -> { { "windows_type_id" => WindowsType.order(:name) } },
+      editable_columns: %w[title full_name author_id featured published windows_type_id],
+      belongs_to_options: -> {
+        {
+          "author_id" => Person.joins(:workshops_as_author).distinct.order(:last_name, :first_name),
+          "windows_type_id" => WindowsType.order(:name)
+        }
+      },
       record_extras: ->(workshop) {
-        [ workshop.windows_type&.name, workshop.author&.full_name ].compact.join(" · ").presence
+        [ workshop.windows_type&.name, workshop.author&.name ].compact.join(" · ").presence
       }
     }
   end

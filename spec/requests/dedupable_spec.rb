@@ -535,8 +535,10 @@ RSpec.describe "Dedupable concern", type: :request do
     end
 
     describe "GET dedupe_preview" do
-      let!(:keep) { create(:workshop, title: "Keep Workshop") }
-      let!(:delete_rec) { create(:workshop, title: "Delete Workshop") }
+      let!(:keep_author) { create(:person, first_name: "Ada", last_name: "Keeper") }
+      let!(:delete_author) { create(:person, first_name: "Ben", last_name: "Duplicate") }
+      let!(:keep) { create(:workshop, title: "Keep Workshop", author: keep_author) }
+      let!(:delete_rec) { create(:workshop, title: "Delete Workshop", author: delete_author) }
       before do
         sign_in admin
         create(:workshop_log, workshop: delete_rec)
@@ -550,6 +552,17 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Keep Workshop", "Delete Workshop")
+      end
+
+      it "surfaces each workshop's author so it can be edited on the kept record" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Author")
+        expect(response.body).to include("Ada Keeper", "Ben Duplicate")
+        expect(response.body).to include("[workshop_to_keep][author_id]")
       end
     end
 
