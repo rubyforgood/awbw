@@ -68,8 +68,11 @@ module StorySharesHelper
   # so visitors don't lose the story they were reading.
   AWBW_BASE = "https://awbw.org".freeze
 
-  def awbw_menu_link(label, path, html_class: "hover:text-purple-700")
-    link_to label, "#{AWBW_BASE}#{path}", target: "_blank", rel: "noopener noreferrer", class: html_class
+  # `arrow: true` puts the trailing arrow inside the link, so it is part of the
+  # click target and picks up the link's hover — outside it, it was neither.
+  def awbw_menu_link(label, path, html_class: "hover:text-purple-700", arrow: false)
+    body = arrow ? safe_join([ label, tag.i("", class: "fa-solid fa-arrow-right text-xs") ], " ") : label
+    link_to body, "#{AWBW_BASE}#{path}", target: "_blank", rel: "noopener noreferrer", class: html_class
   end
 
   # A mega-menu photo card: an awbw.org-linked image with an accent gradient and a
