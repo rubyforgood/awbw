@@ -15,6 +15,13 @@ else
   cities = [ "Los Angeles", "San Diego", "Portland", "Seattle", "Denver" ]
   browsers = %w[Chrome Safari Firefox Edge]
   devices = %w[Desktop Mobile Tablet]
+  ips = [ "203.0.113.5", "203.0.113.42", "198.51.100.7", "198.51.100.88", "192.0.2.13" ]
+  user_agents = [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile Safari/604.1",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 Edg/124.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0"
+  ]
 
   # Create visits spread over the past month, with some users browsing more than others
   ahoy_visits = []
@@ -36,6 +43,8 @@ else
         device_type: devices.sample,
         city: cities.sample,
         country: "US",
+        ip: ips.sample,
+        user_agent: user_agents.sample,
         landing_page: %w[/workshops /resources /stories /].sample
       )
       ahoy_visits << visit

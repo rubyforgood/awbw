@@ -63,6 +63,15 @@ module Admin
         scope = scope.where(visit_id: params[:visit_id])
       end
 
+      # Filter by resource title (the human name captured in the event's properties)
+      if params[:resource_name].present?
+        term = Ahoy::Event.sanitize_sql_like(params[:resource_name])
+        scope = scope.where(
+          "LOWER(ahoy_events.properties->>'$.resource_title') LIKE LOWER(?)",
+          "%#{term}%"
+        )
+      end
+
       # Filter by props (full-text search across properties JSON)
       if params[:props].present?
         term = Ahoy::Event.sanitize_sql_like(params[:props])
@@ -107,6 +116,11 @@ module Admin
         @total_count = @timeline.total_entries
         activity_events = @timeline.reject(&:communication?).map(&:record)
       else
+        sortable = %w[time name user]
+        @sort = sortable.include?(params[:sort]) ? params[:sort] : "time"
+        @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+        scope = apply_event_sort(scope, @sort, @sort_direction)
+
         @events = scope.paginate(page: page, per_page: per_page)
         @total_count = @events.total_entries
         activity_events = @events
@@ -126,15 +140,19 @@ module Admin
     def visits
       authorize! :ahoy_activity, to: :visits?
 
+      # The full page renders only the header, filters, and an empty results frame;
+      # the frame's src request (turbo_frame_request?) loads the filtered rows.
+      return render :visits unless turbo_frame_request?
+
       page     = params[:page].presence&.to_i || 1
       per_page = params[:per_page].presence&.to_i || 20
 
       scope = Ahoy::Visit
                 .includes(:user)
                 .left_joins(:events)
-                .select("ahoy_visits.*, COUNT(ahoy_events.id) AS events_count")
+                .select("ahoy_visits.*, COUNT(ahoy_events.id) AS events_count, " \
+                        "TIMESTAMPDIFF(MINUTE, ahoy_visits.started_at, MAX(ahoy_events.time)) AS duration_minutes")
                 .group("ahoy_visits.id")
-                .order(started_at: :desc)
 
       # Filter by user
       if params[:user_id].present?
@@ -148,6 +166,15 @@ module Admin
       # Filter by visit
       if params[:visit_id].present?
         scope = scope.where(id: params[:visit_id])
+      end
+
+      # Filter by IP address (exact match)
+      scope = scope.where(ip: params[:ip]) if params[:ip].present?
+
+      # Filter by user agent (partial match)
+      if params[:user_agent].present?
+        term = Ahoy::Visit.sanitize_sql_like(params[:user_agent])
+        scope = scope.where("ahoy_visits.user_agent LIKE ?", "%#{term}%")
       end
 
       # Time period filter
@@ -167,7 +194,15 @@ module Admin
         scope = scope.where("ahoy_visits.started_at <= ?", to_time)
       end
 
+      sortable = %w[started_at user events_count duration]
+      @sort = sortable.include?(params[:sort]) ? params[:sort] : "started_at"
+      @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+      scope = apply_visit_sort(scope, @sort, @sort_direction)
+
       @visits = scope.paginate(page: page, per_page: per_page)
+      @total_count = @visits.total_entries
+
+      render :visit_results
     end
 
     def charts
@@ -698,6 +733,32 @@ module Admin
       scope = Ahoy::Visit.all
       scope = scope.where(started_at: time_range) if time_range
       apply_audience_filter(scope)
+    end
+
+    def apply_event_sort(scope, column, direction)
+      case column
+      when "name"
+        scope.reorder(name: direction.to_sym)
+      when "user"
+        order = direction == "asc" ? "users.first_name ASC, users.last_name ASC" : "users.first_name DESC, users.last_name DESC"
+        scope.left_joins(:user).reorder(Arel.sql(order))
+      else
+        scope.reorder(time: direction.to_sym)
+      end
+    end
+
+    def apply_visit_sort(scope, column, direction)
+      case column
+      when "user"
+        order = direction == "asc" ? "users.first_name ASC, users.last_name ASC" : "users.first_name DESC, users.last_name DESC"
+        scope.left_joins(:user).reorder(Arel.sql(order))
+      when "events_count"
+        scope.reorder(Arel.sql(direction == "asc" ? "events_count ASC" : "events_count DESC"))
+      when "duration"
+        scope.reorder(Arel.sql(direction == "asc" ? "duration_minutes ASC" : "duration_minutes DESC"))
+      else
+        scope.reorder(started_at: direction.to_sym)
+      end
     end
 
     def scoped_events

@@ -2,6 +2,22 @@
     renders this (instead of the full index) on turbo_frame_request?. %>
 <%= turbo_frame_tag :activity_results do %>
   <%= turbo_stream.replace "activities_count", partial: "count" %>
+  <%
+    sort_base = params.permit(:event_name, :props, :resource_name, :user_search, :visit_id, :time_period, :from, :to, :per_page, audience: []).to_h.symbolize_keys
+    sort_icon = ->(column) {
+      next "fa-sort" unless @sort == column
+      @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
+    }
+    sort_link = ->(column, label) {
+      next_direction = (@sort == column && @sort_direction == "desc") ? "asc" : "desc"
+      link_to admin_activities_events_path(sort_base.merge(sort: column, direction: next_direction)),
+              data: { turbo_frame: "activity_results" },
+              class: "inline-flex items-center gap-1 text-gray-600 hover:text-gray-900" do
+        concat label
+        concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")
+      end
+    }
+  %>
 
   <%# Attendance sign-ins aren't ahoy-tracked (login-free public callout), so
       list the entries directly, newest first. %>
@@ -55,10 +71,10 @@
     <table class="responsive-table min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-50 text-xs tracking-wider text-gray-600 uppercase">
       <tr>
-        <th class="rounded-tl-xl px-4 py-3 text-left">Time</th>
-        <th class="px-4 py-3 text-left">Activity</th>
+        <th class="rounded-tl-xl px-4 py-3 text-left"><%= @person ? "Time" : sort_link.call("time", "Time") %></th>
+        <th class="px-4 py-3 text-left"><%= @person ? "Activity" : sort_link.call("name", "Activity") %></th>
         <th class="px-4 py-3 text-left">Resource</th>
-        <th class="px-4 py-3 text-left">User</th>
+        <th class="px-4 py-3 text-left"><%= @person ? "User" : sort_link.call("user", "User") %></th>
         <th class="px-4 py-3 text-left">Visit ID</th>
         <th class="rounded-tr-xl px-4 py-3 text-left">Details</th>
       </tr>

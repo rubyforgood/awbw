@@ -2766,3 +2766,27 @@
     - >-
       Not every check can be fixed automatically. Ones marked "Review by hand"
       report only, because the right answer is a judgement call rather than a rule.
+
+- name: "Dynamic search on the admin visits page"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-30
+  action_path: "/admin/activities/visits"
+  summary: >-
+    The admin Visits page now filters as you type — no more full-page reloads — and
+    adds IP address and user agent search plus sortable columns.
+  pro_tips:
+    - "Search by IP address (exact) or user agent (partial) to trace a single device or session."
+    - "Click the Started, User, Activities, or Duration column headers to sort."
+
+- name: "Sort and resource-title search on the admin activity feed"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-08-30
+  action_path: "/admin/activities/events"
+  summary: >-
+    The admin activity feed gains a Resource title search (find activity by the name
+    of the workshop, resource, or record it touched) and sortable Time, Activity, and
+    User columns.
+  pro_tips:
+    - "Resource title searches the name captured on each activity, which is more precise than the broader Details search."

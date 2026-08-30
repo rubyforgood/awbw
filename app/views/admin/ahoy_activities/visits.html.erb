@@ -15,38 +15,59 @@
 
       <div class="mb-6 flex items-baseline gap-3 leading-none">
         <h1 class="text-primary font-display text-2xl leading-none font-semibold">Visits</h1>
-        <span class="text-sm leading-none text-gray-500"><%= @visits.total_entries %> total</span>
+        <%= render "visit_count" %>
       </div>
 
       <div class="mb-6 min-h-10 text-sm">
         <%= render "admin/shared/active_filters_subheader" %>
       </div>
 
-      <!-- Filters -->
       <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-6 shadow-sm">
-        <%= form_with url: request.path, method: :get, local: true do %>
+        <%# Selects submit on change and the text boxes debounce-submit as you type,
+            all into the visit_results frame — the filter form stays put (and
+            focused) while just the rows swap. %>
+        <%= form_with url: request.path, method: :get,
+              data: { controller: "collection", turbo_frame: "visit_results" },
+              autocomplete: "off" do %>
 
           <div class="flex flex-wrap gap-4 lg:flex-nowrap">
 
-            <!-- User Filter -->
             <div class="min-w-0 flex-1">
-              <label class="mb-1 block text-sm font-medium text-gray-600">
+              <label class="<%= search_label_class %>">
                 User
               </label>
               <%= text_field_tag :user_search,
                                  params[:user_search],
                                  placeholder: "Name or email",
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                                 class: search_field_class %>
             </div>
 
-            <!-- Audience -->
+            <div class="min-w-0 flex-1">
+              <label class="<%= search_label_class %>">
+                IP address
+              </label>
+              <%= text_field_tag :ip,
+                                 params[:ip],
+                                 placeholder: "e.g. 203.0.113.5",
+                                 class: search_field_class %>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <label class="<%= search_label_class %>">
+                User agent
+              </label>
+              <%= text_field_tag :user_agent,
+                                 params[:user_agent],
+                                 placeholder: "e.g. Chrome, iPhone",
+                                 class: search_field_class %>
+            </div>
+
             <div class="min-w-0 flex-1">
               <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true %>
             </div>
 
-            <!-- Time Period -->
             <div class="min-w-0 flex-1">
-              <label class="mb-1 block text-sm font-medium text-gray-600">
+              <label class="<%= search_label_class %>">
                 Time Period
               </label>
               <%= select_tag :time_period,
@@ -54,33 +75,42 @@
                                [["All time", "all_time"], ["Past day", "past_day"], ["Past week", "past_week"], ["Past month", "past_month"], ["Past year", "past_year"]],
                                params[:time_period] || "past_month"
                              ),
-                             class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" %>
+                             class: search_field_class %>
             </div>
 
-            <!-- Date From -->
             <div class="min-w-0 flex-1">
-              <label class="mb-1 block text-sm font-medium text-gray-600">
+              <label class="<%= search_label_class %>">
                 From
               </label>
-              <%= date_field_tag :from, params[:from],
-                                 class: date_filter_class("w-full px-3 py-2 border-gray-300 rounded-md shadow-sm", params[:from]) %>
+              <%= date_field_tag :from,
+                                 params[:from],
+                                 class: date_filter_class(search_field_class, params[:from]) %>
             </div>
 
-            <!-- Date To -->
             <div class="min-w-0 flex-1">
-              <label class="mb-1 block text-sm font-medium text-gray-600">
+              <label class="<%= search_label_class %>">
                 To
               </label>
-              <%= date_field_tag :to, params[:to],
-                                 class: date_filter_class("w-full px-3 py-2 border-gray-300 rounded-md shadow-sm", params[:to]) %>
+              <%= date_field_tag :to,
+                                 params[:to],
+                                 class: date_filter_class(search_field_class, params[:to]) %>
+            </div>
+
+            <div class="w-24 flex-none">
+              <label class="<%= search_label_class %>">
+                Visit ID
+              </label>
+              <%= number_field_tag :visit_id,
+                                   params[:visit_id],
+                                   placeholder: "e.g. 42",
+                                   class: search_field_class %>
             </div>
 
           </div>
 
-          <!-- Quick Ranges -->
           <div class="mt-6 flex items-center gap-3 text-sm">
             <span class="text-gray-500">Quick:</span>
-            <% safe_params = params.slice(:user_id, :user_search, :from, :to).to_unsafe_h %>
+            <% safe_params = params.slice(:user_search, :ip, :user_agent, :visit_id, :from, :to).to_unsafe_h %>
             <%= link_to "24h",
                         url_for(safe_params.merge(from: 1.day.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
@@ -92,70 +122,18 @@
             <%= link_to "30d",
                         url_for(safe_params.merge(from: 30.days.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
-          </div>
 
-          <div class="mt-6">
-            <%= submit_tag "Filter",
-                           class: "bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition" %>
+            <%= link_to "Clear filters", request.path,
+                        class: "ml-auto #{eyebrow_link_class}",
+                        data: { action: "collection#clearAndSubmit" } %>
           </div>
 
         <% end %>
       </div>
 
-      <!-- Table -->
-      <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
-          <thead class="bg-gray-50 text-xs tracking-wider text-gray-600 uppercase">
-          <tr>
-            <th class="px-4 py-3 text-left">ID</th>
-            <th class="px-4 py-3 text-left">Started</th>
-            <th class="px-4 py-3 text-left">User</th>
-            <th class="px-4 py-3 text-left">IP</th>
-            <th class="px-4 py-3 text-left">Activities</th>
-            <th class="px-4 py-3 text-left">User Agent</th>
-          </tr>
-          </thead>
-
-          <tbody class="divide-y divide-gray-100">
-          <% @visits.each do |visit| %>
-            <tr class="transition hover:bg-gray-50">
-              <td class="px-4 py-3 text-gray-700">
-                <%= visit.id %>
-              </td>
-
-              <td class="px-4 py-3 whitespace-nowrap text-gray-500">
-                <%= visit.started_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
-              </td>
-
-              <td class="px-4 py-3 text-gray-700">
-                <% if visit.user %>
-                  <%= link_to visit.user.full_name,
-                              user_path(visit.user),
-                              class: "text-indigo-600 hover:underline" %>
-                <% else %>
-                  <span class="text-gray-400 italic">Guest</span>
-                <% end %>
-              </td>
-
-              <td class="px-4 py-3 text-gray-500">
-                <%= visit.ip %>
-              </td>
-
-              <td class="px-4 py-3 text-gray-500">
-                <%= link_to visit.attributes["events_count"],
-                            admin_activities_events_path(visit_id: visit.id) %>
-              </td>
-
-              <td class="max-w-xs px-4 py-3 text-gray-500">
-                <%= visit.user_agent %>
-              </td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mt-8 flex justify-center">
-        <%= tailwind_paginate @visits %>
-      </div>
+      <%# Results load in a turbo frame so the filter form (outside the frame) can
+          swap just the rows — keeping the search inputs focused as you type. %>
+      <%= turbo_frame_tag :visit_results, src: admin_activities_visits_path(request.query_parameters), data: { turbo: "temporary" } do %>
+        <%= render "results_skeleton" %>
+      <% end %>
 </div>
