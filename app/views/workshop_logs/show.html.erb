@@ -77,11 +77,13 @@
           <%= @workshop_log.created_by&.name %>
           <br><span class="text-gray-400"><%= @workshop_log.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
-        <div>
-          <span class="font-semibold text-gray-700">Updated by:</span>
-          <%= @updated_by&.name || "—" %>
-          <br><span class="text-gray-400"><%= @workshop_log.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
-        </div>
+        <% if @workshop_log.updated_at != @workshop_log.created_at %>
+          <div>
+            <span class="font-semibold text-gray-700">Updated by:</span>
+            <%= @workshop_log.updated_by&.name || "—" %>
+            <br><span class="text-gray-400"><%= @workshop_log.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
+          </div>
+        <% end %>
       </div>
     </div>
 

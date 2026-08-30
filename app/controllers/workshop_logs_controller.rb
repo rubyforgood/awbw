@@ -73,17 +73,13 @@ class WorkshopLogsController < ApplicationController
 
   def show
     @workshop_log = WorkshopLog.includes(
-      :organization, :windows_type, :author, { created_by: :person },
+      :organization, :windows_type, :author, { created_by: :person }, { updated_by: :person },
       { quotes: :workshop },
       { gallery_assets: { file_attachment: :blob } }
     ).find(params[:id]).decorate
     authorize! @workshop_log
     @workshop     = @workshop_log.workshop&.decorate
     @answers      = @workshop_log.report_form_field_answers.includes(:form_field)
-    @updated_by   = Ahoy::Event.where(resource_type: "WorkshopLog", resource_id: @workshop_log.id)
-                                .where("name LIKE 'update.%'")
-                                .order(time: :desc)
-                                .first&.user
   end
 
   def edit

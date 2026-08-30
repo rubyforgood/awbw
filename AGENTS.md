@@ -51,7 +51,7 @@ This codebase (Rails 8.1)
 | `app/models/` | ActiveRecord models | ~90 files |
 | `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for WordPress CSV import) | ~70 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
-| `app/models/concerns/` | Shared model modules | 19 concerns |
+| `app/models/concerns/` | Shared model modules | 20 concerns |
 
 ### Presentation
 
@@ -153,6 +153,7 @@ This codebase (Rails 8.1)
 | `StaffTaggable` | Adds the polymorphic `staff_taggings`/`staff_tags` associations for internal admin StaffTags (Person today) |
 | `TagFilterable` | Scope-based filtering by tag names |
 | `Trendable` | Trending metrics tracking |
+| `UserStampable` | Stamps `updated_by_id` from `Current.user` on every write (no-op without the column) |
 | `WindowsTypeFilterable` | Filter by WindowsType association |
 
 ## Controllers
@@ -531,7 +532,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (9 files):
+Located in `lib/tasks/` (11 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
@@ -541,4 +542,4 @@ Located in `lib/tasks/` (9 files):
 - `migrate_sectors.rake` — Sector data migration
 - `import_stories.rake` — Imports stories from a WordPress Posts Export CSV (`StoryImporter`)
 - `migrate_workshop_logs.rake` — Workshop log migration
-- `migrate_sectors.rake` — Sector data migration
+- `backfill_user_stamps.rake` — Backfill `created_by_id`/`updated_by_id` on legacy rows from the Ahoy trail (`data:backfill_user_stamps`)

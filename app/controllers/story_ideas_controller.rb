@@ -17,10 +17,6 @@ class StoryIdeasController < ApplicationController
 
   def show
     authorize! @story_idea
-    @updated_by = Ahoy::Event.where(resource_type: "StoryIdea", resource_id: @story_idea.id)
-                              .where("name LIKE 'update.%'")
-                              .order(time: :desc)
-                              .first&.user
   end
 
   def new
