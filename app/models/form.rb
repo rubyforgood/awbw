@@ -32,7 +32,7 @@ class Form < ApplicationRecord
     reject_if: proc { |attrs| attrs["name"].blank? && attrs["id"].blank? }
 
   scope :standalone, -> { where(owner_id: nil, owner_type: nil) }
-  scope :owned, -> { where.not(owner_id: nil) }
+  scope :owned, -> { standalone.invert_where }
   scope :published, -> { where(published: true) }
   scope :not_event_connected, -> { where.missing(:event_forms) }
   # The publicly fillable agreement forms — the ones the person-page panel
