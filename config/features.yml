@@ -27,6 +27,18 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Scholarship recipients get an agreement confirmation email"
+  area: scholarships
+  display_status: public_facing
+  released_on: 2026-08-30
+  action_path: /registration/sample
+  summary: >-
+    When a recipient accepts their scholarship agreement, they now get a confirmation
+    email with the award amount and a link back to their ticket — so they have a record
+    that their acceptance went through, not just the on-page notice.
+  pro_tips:
+    - The trainings team still gets its own heads-up on every accept, decline, or support request.
+
 - name: "Navigate a form's pages, and fix the forms list actions"
   area: content
   display_status: admin_facing
