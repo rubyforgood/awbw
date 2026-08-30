@@ -1,0 +1,87 @@
+<%# Frame response for the visit_results turbo frame: the visits controller
+    renders this (instead of the full visits page) on turbo_frame_request?. %>
+<%
+  sort_base = params.permit(:user_search, :ip, :user_agent, :visit_id, :time_period, :from, :to, :per_page, audience: []).to_h.symbolize_keys
+  sort_icon = ->(column) {
+    return "fa-sort" unless @sort == column
+    @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
+  }
+  sort_link = ->(column, label) {
+    next_direction = (@sort == column && @sort_direction == "desc") ? "asc" : "desc"
+    link_to admin_activities_visits_path(sort_base.merge(sort: column, direction: next_direction)),
+            data: { turbo_frame: "visit_results" },
+            class: "inline-flex items-center gap-1 text-gray-600 hover:text-gray-900" do
+      concat label
+      concat content_tag(:i, "", class: "fa-solid #{sort_icon.call(column)} text-xs opacity-70")
+    end
+  }
+%>
+<%= turbo_frame_tag :visit_results do %>
+  <%= turbo_stream.replace "visits_count", partial: "visit_count" %>
+
+  <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm blur-on-submit">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50 text-xs tracking-wider text-gray-600 uppercase">
+      <tr>
+        <th class="px-4 py-3 text-left">ID</th>
+        <th class="px-4 py-3 text-left"><%= sort_link.call("started_at", "Started") %></th>
+        <th class="px-4 py-3 text-left"><%= sort_link.call("user", "User") %></th>
+        <th class="px-4 py-3 text-left">IP</th>
+        <th class="px-4 py-3 text-left"><%= sort_link.call("events_count", "Activities") %></th>
+        <th class="px-4 py-3 text-left">User Agent</th>
+      </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-100">
+      <% if @visits.any? %>
+        <% @visits.each do |visit| %>
+          <tr class="transition hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-700">
+              <%= visit.id %>
+            </td>
+
+            <td class="px-4 py-3 whitespace-nowrap text-gray-500">
+              <%= visit.started_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
+            </td>
+
+            <td class="px-4 py-3 text-gray-700">
+              <% if visit.user %>
+                <%= link_to visit.user.full_name,
+                            user_path(visit.user),
+                            class: "text-indigo-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-400 italic">Guest</span>
+              <% end %>
+            </td>
+
+            <td class="px-4 py-3 text-gray-500">
+              <%= visit.ip %>
+            </td>
+
+            <td class="px-4 py-3 text-gray-500">
+              <%= link_to visit.attributes["events_count"],
+                          admin_activities_events_path(visit_id: visit.id) %>
+            </td>
+
+            <td class="max-w-xs px-4 py-3 text-gray-500 truncate" title="<%= visit.user_agent %>">
+              <%= visit.user_agent %>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="6" class="text-center py-16">
+            <h2 class="text-gray-600 text-lg">No visits found</h2>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if @visits.any? %>
+    <div class="mt-8 flex justify-center">
+      <%= tailwind_paginate @visits %>
+    </div>
+  <% end %>
+<% end %>
