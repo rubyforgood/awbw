@@ -12,7 +12,7 @@
       <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
-      <div class="admin-only bg-yellow-100 m-3 p-3">
+      <div class="admin-only m-3 bg-yellow-100 p-3">
         This workshop variation idea has been promoted to a
         <% f.object.workshop_variations.each do |workshop_variation| %>
           <%= link_to "Workshop Variation ##{workshop_variation.id}",
@@ -23,7 +23,7 @@
     <% end %>
     <%= render 'shared/errors', resource: workshop_variation_idea if workshop_variation_idea.errors.any? %>
     <!-- Workshop + Organization -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
       <div>
         <% if !promoted_to_variation && (params[:admin] == "true" || f.object.new_record?) %>
           <%= f.input :workshop_id,
@@ -53,8 +53,8 @@
                       label: "Organization",
                       required: true,
                       disabled: promoted_to_variation,
-                      hint: "Please contact AWBW if your agency is not listed.",
-                      prompt: (@organizations.count > 1 ? "Please select the relevant agency" : nil),
+                      hint: "Please contact AWBW if your organization is not listed.",
+                      prompt: (@organizations.count > 1 ? "Please select the relevant organization" : nil),
                       selected: (params[:organization_id].presence || (f.object.organization_id || (@organizations.count == 1 ? @organizations.first.id : nil))),
                       input_html: { value: params[:organization_id].presence || f.object.organization_id || @organization_id,
                                     class: "#{ "readonly" if promoted_to_variation } block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" },
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Name + Windows type -->
-    <div class="flex flex-col md:flex-row md:space-x-4 mb-6">
+    <div class="mb-6 flex flex-col md:flex-row md:space-x-4">
       <div class="flex-1">
         <%= f.input :name,
                     label: "Variation name",
@@ -102,7 +102,7 @@
       </div>
     <% end %>
 
-    <div class="flex my-6 gap-4">
+    <div class="my-6 flex gap-4">
       <%= render "shared/author_credit_status", f: f %>
       <%= f.input :youtube_url,
                   as: :text,
