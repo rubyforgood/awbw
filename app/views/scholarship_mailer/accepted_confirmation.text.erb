@@ -1,0 +1,10 @@
+Your scholarship agreement is confirmed
+=======================================
+
+Thank you<% if @recipient&.first_name.present? %>, <%= @recipient.first_name %><% end %> — we've recorded your agreement to complete your scholarship tasks<% if @event.present? %> for <%= @event.title %><% end %>.
+
+Award confirmed: <%= dollars_from_cents(@scholarship.amount_cents) %>
+
+<% if @ticket_url.present? %>View your ticket (award details, tasks, and next steps):
+<%= @ticket_url %>
+<% end %>

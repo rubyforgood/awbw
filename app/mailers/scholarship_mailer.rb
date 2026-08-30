@@ -20,6 +20,15 @@ class ScholarshipMailer < ApplicationMailer
     mail(subject: fyi_subject("Scholarship accepted"))
   end
 
+  # Confirmation to the recipient that their acceptance was recorded, with the
+  # award amount and a link back to their ticket. Sent to them, not the team.
+  def accepted_confirmation(scholarship)
+    assign_agreement(scholarship)
+    registration = scholarship.allocation&.allocatable
+    @ticket_url = registration_ticket_url(registration.slug) if registration.is_a?(EventRegistration)
+    mail(to: @recipient&.preferred_email, subject: "AWBW Portal: Your scholarship agreement is confirmed")
+  end
+
   private
 
   def assign_agreement(scholarship)
