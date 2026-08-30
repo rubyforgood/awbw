@@ -141,11 +141,11 @@
     delete_total = reassignment_delete.sum { |entry| entry[:count] }
     keep_total = reassignment_keep.sum { |entry| entry[:count] }
   %>
-  <div class="border-x border-b <%= border %> bg-white px-5 py-3">
-    <h3 class="text-sm font-semibold text-gray-700">Records that will move <span class="font-normal text-gray-400">(<%= delete_total %>)</span></h3>
+  <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records that will move <span class="ml-1 text-gray-400 normal-case">(<%= delete_total %>)</span></h3>
   </div>
-  <div class="border-x border-b <%= border %> bg-white px-5 py-3">
-    <h3 class="text-sm font-semibold text-gray-700">Records already here <span class="font-normal text-gray-400">(<%= keep_total %>)</span></h3>
+  <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records already here <span class="ml-1 text-gray-400 normal-case">(<%= keep_total %>)</span></h3>
   </div>
 
   <% if labels.empty? %>
@@ -172,17 +172,18 @@
 %>
 <% if linked_associations.any? %>
   <div class="mt-6">
-    <h3 class="mb-2 text-sm font-semibold text-gray-700">Linked records <span class="font-normal text-gray-400">(read-only — for reference)</span></h3>
+    <div class="rounded-t-xl border-x border-t border-b <%= border %> <%= header_bg %> px-5 py-3">
+      <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Linked records <span class="ml-1 text-gray-400 normal-case">(read-only — for reference)</span></h3>
+    </div>
     <div class="grid grid-cols-2 gap-x-6">
       <% linked_associations.each_with_index do |assoc, index| %>
-        <% first = index.zero? %>
         <% last = index == linked_associations.size - 1 %>
         <% assoc_label = assoc.name.to_s.humanize %>
-        <div class="border-x border-b <%= border %> <%= "border-t" if first %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-tl-xl" if first %> <%= "rounded-bl-xl" if last %>">
+        <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-bl-xl" if last %>">
           <span class="w-full text-gray-400 sm:w-auto"><%= assoc_label %></span>
           <span class="text-gray-900"><%= linked_display.call(record_to_delete.public_send(assoc.name)) %></span>
         </div>
-        <div class="border-x border-b <%= border %> <%= "border-t" if first %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-tr-xl" if first %> <%= "rounded-br-xl" if last %>">
+        <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-br-xl" if last %>">
           <span class="w-full text-gray-400 sm:w-auto"><%= assoc_label %></span>
           <span class="text-gray-900"><%= linked_display.call(record_to_keep.public_send(assoc.name)) %></span>
         </div>
