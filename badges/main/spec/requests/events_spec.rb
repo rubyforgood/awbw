@@ -1719,7 +1719,7 @@ RSpec.describe "Events", type: :request do
 
       # Stores a submitted "organization_name" answer for the registrant, mirroring
       # what public registration captures, so the Pending/None chip logic has data.
-      def submit_agency_name(name)
+      def submit_organization_name(name)
         registration_form = Form.find_by(name: "Registration") || create(:form, name: "Registration")
         field = registration_form.form_fields.find_by(field_identifier: "organization_name") ||
           create(:form_field, form: registration_form, field_identifier: "organization_name")
@@ -1738,7 +1738,7 @@ RSpec.describe "Events", type: :request do
       end
 
       it "shows a 'Pending' chip when a registrant submitted an org name but has no linked org" do
-        submit_agency_name("Some Unlisted Org")
+        submit_organization_name("Some Unlisted Org")
 
         get registrants_event_path(event)
 
@@ -1755,7 +1755,7 @@ RSpec.describe "Events", type: :request do
 
       it "does not show a 'Pending' chip when an org is linked, even if the submitted name differs" do
         create(:event_registration_organization, event_registration: registration, organization: organization)
-        submit_agency_name("A Different Unlisted Agency")
+        submit_organization_name("A Different Unlisted Agency")
 
         get registrants_event_path(event)
 
@@ -1765,7 +1765,7 @@ RSpec.describe "Events", type: :request do
 
       it "does not show 'Pending' when the submitted name matches a linked org" do
         create(:event_registration_organization, event_registration: registration, organization: organization)
-        submit_agency_name(organization.name)
+        submit_organization_name(organization.name)
 
         get registrants_event_path(event)
 
