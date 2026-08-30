@@ -19,7 +19,6 @@ class ProfessionalLicensesController < ApplicationController
 
   def create
     @professional_license = ProfessionalLicense.new(professional_license_params)
-    @professional_license.created_by = current_user
     authorize! @professional_license
 
     if @professional_license.save
@@ -37,7 +36,6 @@ class ProfessionalLicensesController < ApplicationController
   def update
     @professional_license = ProfessionalLicense.find(params[:id])
     authorize! @professional_license
-    @professional_license.updated_by = current_user
 
     if @professional_license.update(license_edit_params)
       redirect_to professional_licenses_path, notice: "License updated for #{@professional_license.person.full_name}."

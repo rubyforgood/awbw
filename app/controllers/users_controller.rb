@@ -99,7 +99,6 @@ class UsersController < ApplicationController
     # assign person
     person_id = params[:person_id].presence || params.dig(:user, :person_id).presence
     @user.person = Person.find(person_id) if person_id
-    @user.updated_by = current_user
 
     if @user.save
       if params[:event_registration_id].present?
@@ -132,7 +131,6 @@ class UsersController < ApplicationController
     end
 
     @user.assign_attributes(user_params.except(:password, :password_confirmation))
-    @user.updated_by = current_user
 
     # Suppress Devise's automatic reconfirmation email so the interstitial can control it
     @user.skip_confirmation_notification!
@@ -216,11 +214,11 @@ class UsersController < ApplicationController
 
     if @user.locked_at.present?
       # Unlock the user
-      @user.update(locked_at: nil, failed_attempts: 0, updated_by: current_user)
+      @user.update(locked_at: nil, failed_attempts: 0)
       message = "User has been unlocked."
     else
       # Lock the user
-      @user.update(locked_at: Time.current, updated_by: current_user)
+      @user.update(locked_at: Time.current)
       message = "User has been locked."
     end
 
@@ -240,7 +238,7 @@ class UsersController < ApplicationController
     if @user.confirmed_at.present?
       message = "Email is already confirmed."
     else
-      @user.update(confirmed_at: Time.current, updated_by: current_user)
+      @user.update(confirmed_at: Time.current)
       message = "Email has been manually confirmed."
     end
 

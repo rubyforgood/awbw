@@ -11,8 +11,6 @@ class AffiliationsController < ApplicationController
     # This form always posts the Inactive checkbox, so whatever it sends is deliberate.
     @affiliation.inactive_supplied = affiliation_params.key?(:inactive)
     @affiliation.assign_attributes(affiliation_params)
-    @affiliation.comments.select(&:new_record?).each { |c| c.created_by = current_user; c.updated_by = current_user }
-    @affiliation.comments.select { |c| c.persisted? && c.body_changed? }.each { |c| c.updated_by = current_user }
 
     if @affiliation.save
       redirect_to affiliation_return_path, notice: "Affiliation was successfully updated.", status: :see_other

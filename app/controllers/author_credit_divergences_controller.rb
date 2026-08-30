@@ -15,7 +15,6 @@ class AuthorCreditDivergencesController < ApplicationController
     person = Person.find(params[:id])
     person.assign_attributes(person_params)
     person.author_credit_reconciled_at = Time.current
-    person.updated_by = current_user
 
     if person.save
       render_divergence_change("Updated credit preferences for #{person.full_name}.", :notice)
@@ -35,7 +34,6 @@ class AuthorCreditDivergencesController < ApplicationController
     # Clearing "anonymous" hands the item back to the profile, which may credit it —
     # that's what this page exists to do.
     record.author_credit_preference = params[:author_credit_preference]
-    record.updated_by = current_user if record.respond_to?(:updated_by=)
 
     if record.save
       render_divergence_change("Updated credit for #{model.name.underscore.humanize.downcase} ##{record.id}.", :notice)
@@ -55,7 +53,6 @@ class AuthorCreditDivergencesController < ApplicationController
     return render_divergence_change("Choose a person to credit.", :alert) unless person
 
     record.author_id = person.id
-    record.updated_by = current_user if record.respond_to?(:updated_by=)
 
     if record.save
       render_divergence_change("Credited #{model.name.underscore.humanize.downcase} ##{record.id} to #{person.full_name}.", :notice)

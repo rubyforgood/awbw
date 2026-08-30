@@ -31,7 +31,6 @@ class QuotesController < ApplicationController
 
   def create
     @quote = Quote.new(quote_params)
-    @quote.created_by = current_user
     authorize! @quote
 
     success = false
@@ -55,7 +54,6 @@ class QuotesController < ApplicationController
 
   def update
     authorize! @quote
-    @quote.updated_by = current_user
 
     success = false
     Quote.transaction do

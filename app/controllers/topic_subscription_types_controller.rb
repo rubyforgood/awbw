@@ -20,8 +20,6 @@ class TopicSubscriptionTypesController < ApplicationController
   def create
     authorize! TopicSubscriptionType
     @topic_subscription_type = TopicSubscriptionType.new(topic_subscription_type_params)
-    @topic_subscription_type.created_by = current_user
-    @topic_subscription_type.updated_by = current_user
 
     if @topic_subscription_type.save
       redirect_to topic_subscription_types_path, notice: "Topic added."
@@ -36,7 +34,6 @@ class TopicSubscriptionTypesController < ApplicationController
 
   def update
     authorize! @topic_subscription_type
-    @topic_subscription_type.updated_by = current_user
 
     if @topic_subscription_type.update(topic_subscription_type_params)
       redirect_to topic_subscription_types_path, notice: "Topic updated."

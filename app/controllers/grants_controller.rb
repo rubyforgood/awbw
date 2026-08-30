@@ -48,7 +48,6 @@ class GrantsController < ApplicationController
 
   def create
     @grant = Grant.new(grant_params)
-    @grant.updated_by = current_user
     authorize! @grant
 
     if @grant.save
@@ -61,7 +60,6 @@ class GrantsController < ApplicationController
 
   def update
     authorize! @grant
-    @grant.updated_by = current_user
 
     if @grant.update(grant_params)
       redirect_to @grant, notice: "Grant was successfully updated.", status: :see_other

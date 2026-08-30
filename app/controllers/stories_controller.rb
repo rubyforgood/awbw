@@ -98,7 +98,6 @@ class StoriesController < ApplicationController
 
     Story.transaction do
       @story.assign_attributes(story_params.except(:images, :category_ids, :sector_ids))
-      attribute_comment_authorship
       if @story.save
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
@@ -159,18 +158,6 @@ class StoriesController < ApplicationController
   end
 
   private
-
-  # Stamp authorship on comments edited through the story form: author + editor
-  # on new ones, editor on existing ones whose body changed.
-  def attribute_comment_authorship
-    @story.comments.select(&:new_record?).each do |c|
-      c.created_by = current_user
-      c.updated_by = current_user
-    end
-    @story.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
-      c.updated_by = current_user
-    end
-  end
 
   # Promoting a story idea into a story emails the idea's submitter and an admin FYI.
   def notify_story_promoted

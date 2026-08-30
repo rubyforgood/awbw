@@ -58,9 +58,6 @@ class TopicSubscriptionsController < ApplicationController
   def create
     authorize! TopicSubscription
     @topic_subscription = TopicSubscription.new(topic_subscription_params)
-    @topic_subscription.created_by = current_user
-    @topic_subscription.updated_by = current_user
-    stamp_inline_person
 
     if @topic_subscription.save
       redirect_to save_return_path, notice: "Subscription added."
@@ -75,7 +72,6 @@ class TopicSubscriptionsController < ApplicationController
 
   def update
     authorize! @topic_subscription
-    @topic_subscription.updated_by = current_user
 
     if @topic_subscription.update(topic_subscription_params)
       redirect_to save_return_path, notice: "Subscription updated."
@@ -138,15 +134,6 @@ class TopicSubscriptionsController < ApplicationController
     end
   end
 
-  # Stamp the auditing columns on a person created inline through the form so the
-  # new record carries the same authorship the subscription does.
-  def stamp_inline_person
-    person = @topic_subscription.person
-    return unless person&.new_record?
-
-    person.created_by ||= current_user
-    person.updated_by ||= current_user
-  end
 
   # Prefill the topic when opened from an event's Forms menu: an explicit type id
   # wins, then a stable key (e.g. "facilitator_trainings"), else the canonical

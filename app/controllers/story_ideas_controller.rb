@@ -34,7 +34,6 @@ class StoryIdeasController < ApplicationController
 
   def create
     @story_idea = StoryIdea.new(story_idea_params.except(:category_ids, :sector_ids))
-    @story_idea.updated_by = current_user
     # Credit the submitter as the author, so the idea lists on their profile by
     # authorship like every other content type. An admin can reassign it later.
     @story_idea.author ||= current_user.person
@@ -80,14 +79,12 @@ class StoryIdeasController < ApplicationController
   end
 
   def update
-    @story_idea.updated_by = current_user
     authorize! @story_idea
 
     success = false
 
     StoryIdea.transaction do
       @story_idea.assign_attributes(story_idea_params.except(:images, :category_ids, :sector_ids))
-      attribute_comment_authorship
       if @story_idea.save
         assign_associations(@story_idea)
         success = true
@@ -118,19 +115,6 @@ class StoryIdeasController < ApplicationController
   end
 
   private
-
-  # Stamp authorship on comments edited through the story idea form: author +
-  # editor on new ones, editor on existing ones whose body changed.
-  def attribute_comment_authorship
-    @story_idea.comments.select(&:new_record?).each do |c|
-      c.created_by = current_user
-      c.updated_by = current_user
-    end
-    @story_idea.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
-      c.updated_by = current_user
-    end
-  end
-
 
   def set_story_idea
     @story_idea = StoryIdea.find(params[:id])
