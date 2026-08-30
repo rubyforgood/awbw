@@ -32,10 +32,7 @@
       <% end %>
 
       <%= form_with url: public_form_path(@form.slug), method: :post, local: true, class: "space-y-2", data: { turbo: false } do %>
-        <%# Honeypot %>
-        <div class="hidden" aria-hidden="true">
-          <input type="text" name="public_registration[website_url]" tabindex="-1" autocomplete="off">
-        </div>
+        <%= render "shared/honeypot", scope: "public_registration" %>
 
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>

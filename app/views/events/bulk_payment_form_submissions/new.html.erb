@@ -65,9 +65,7 @@
                      data: { controller: "bulk-payment-attendees", action: "submit->bulk-payment-attendees#serialize", turbo: false },
                      class: "space-y-2" do |f| %>
 
-        <div class="hidden" aria-hidden="true">
-          <input type="text" name="bulk_payment[website_url]" tabindex="-1" autocomplete="off">
-        </div>
+        <%= render "shared/honeypot", scope: "bulk_payment" %>
 
         <%
           fields_by_identifier = @form_fields.select(&:field_identifier).index_by(&:field_identifier)

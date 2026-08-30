@@ -46,6 +46,18 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
          params: { bulk_payment: { form_fields: { org_field.id.to_s => answer } } }
   end
 
+  describe "POST create with the honeypot tripped" do
+    it "silently bounces a bot without recording a submission" do
+      expect {
+        post event_bulk_payment_path(event),
+             params: { bulk_payment: { Honeypot::FIELD_NAME => "http://spam.example",
+                                       form_fields: { org_field.id.to_s => "this answer easily has plenty of words" } } }
+      }.not_to change(FormSubmission, :count)
+
+      expect(response).to redirect_to(new_event_bulk_payment_path(event))
+    end
+  end
+
   describe "POST create with a minimum word count" do
     it "rejects an answer with too few words" do
       post_bulk_payment("not quite enough")
