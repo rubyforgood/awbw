@@ -69,22 +69,44 @@
     <span class="text-gray-400">ID</span> <span class="ml-2 text-gray-900"><%= record_to_keep.id %></span>
   </div>
 
-  <!-- Photos: attached images on each record, side by side -->
+  <!-- Photos: attached images on each record, side by side, with what happens on merge -->
   <% if preview_images && (delete_images.any? || keep_images.any?) %>
-    <% [ delete_images, keep_images ].each do |images| %>
-      <div class="border-x border-b <%= border %> bg-white px-5 py-3">
-        <p class="text-2xs mb-2 font-semibold tracking-widest text-gray-400 uppercase">Photos</p>
-        <% if images.any? %>
-          <div class="flex flex-wrap gap-2">
-            <% images.first(12).each do |image| %>
-              <%= image_tag url_for(image), loading: "lazy", class: "h-16 w-16 rounded object-cover ring-1 ring-gray-200" %>
-            <% end %>
-          </div>
-        <% else %>
-          <span class="text-sm text-gray-400">No photos</span>
+    <!-- Left: the deleted record's photos move to the keeper -->
+    <div class="border-x border-b <%= border %> bg-white px-5 py-3">
+      <div class="mb-2 flex flex-wrap items-center gap-2">
+        <p class="text-2xs font-semibold tracking-widest text-gray-400 uppercase">Photos</p>
+        <% if delete_images.any? %>
+          <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Move to the kept <%= model_label.downcase %></span>
         <% end %>
       </div>
-    <% end %>
+      <% if delete_images.any? %>
+        <div class="flex flex-wrap gap-2">
+          <% delete_images.first(12).each do |image| %>
+            <%= image_tag url_for(image), loading: "lazy", class: "h-16 w-16 rounded object-cover ring-1 ring-gray-200" %>
+          <% end %>
+        </div>
+      <% else %>
+        <span class="text-sm text-gray-400">No photos</span>
+      <% end %>
+    </div>
+    <!-- Right: the keeper's own photos stay -->
+    <div class="border-x border-b <%= border %> bg-white px-5 py-3">
+      <div class="mb-2 flex flex-wrap items-center gap-2">
+        <p class="text-2xs font-semibold tracking-widest text-gray-400 uppercase">Photos</p>
+        <% if keep_images.any? %>
+          <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Kept</span>
+        <% end %>
+      </div>
+      <% if keep_images.any? %>
+        <div class="flex flex-wrap gap-2">
+          <% keep_images.first(12).each do |image| %>
+            <%= image_tag url_for(image), loading: "lazy", class: "h-16 w-16 rounded object-cover ring-1 ring-gray-200" %>
+          <% end %>
+        </div>
+      <% else %>
+        <span class="text-sm text-gray-400"><%= delete_images.any? ? "None yet — the photos on the left move here" : "No photos" %></span>
+      <% end %>
+    </div>
   <% end %>
 
   <!-- Field rows -->

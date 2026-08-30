@@ -621,11 +621,11 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Moves to keeper")
       end
 
-      it "renders the attached photos of each workshop side by side" do
+      it "renders each workshop's photos and shows the deleted record's moving to the keeper" do
         blob = ActiveStorage::Blob.create_and_upload!(
-          io: StringIO.new("img"), filename: "keep.png", content_type: "image/png"
+          io: StringIO.new("img"), filename: "del.png", content_type: "image/png"
         )
-        ActiveStorage::Attachment.create!(name: "thumbnail", record: keep, blob: blob)
+        ActiveStorage::Attachment.create!(name: "thumbnail", record: delete_rec, blob: blob)
 
         get dedupe_preview_workshops_path(
           workshop_to_keep_id: keep.id,
@@ -634,6 +634,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response.body).to include("Photos")
         expect(response.body).to include("active_storage/blobs")
+        expect(response.body).to include("Move to the kept workshop")
       end
 
       it "still renders the author picker when neither workshop has a person author" do
