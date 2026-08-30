@@ -185,7 +185,7 @@ class WorkshopsController < ApplicationController
       remote_select_options: { "author_id" => "person" },
       deprecated_columns: %w[full_name],
       field_notes: {
-        "full_name" => "Legacy free-text author name. Prefer crediting a real person in Author below.",
+        "full_name" => "Legacy (not referenced). Credit a real person in Author below instead.",
         "author_id" => "Credited author — search any person."
       },
       record_extras: ->(workshop) {

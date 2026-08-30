@@ -573,7 +573,7 @@ RSpec.describe "Dedupable concern", type: :request do
           workshop_to_delete_id: delete_rec.id
         )
 
-        expect(response.body).to include("Legacy free-text author name")
+        expect(response.body).to include("Legacy (not referenced)")
         expect(response.body).to include("Credited author")
       end
 
