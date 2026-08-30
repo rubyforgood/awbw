@@ -15,6 +15,8 @@ class Affiliation < ApplicationRecord
 
   belongs_to :organization, inverse_of: :affiliations
   belongs_to :person, touch: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   # Which of the organization's addresses this person is affiliated with (optional).
   belongs_to :organization_address, class_name: "Address", optional: true
   # The registration that auto-minted this affiliation, when it came from one. NULL

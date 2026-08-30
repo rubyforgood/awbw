@@ -5,6 +5,8 @@ class Category < ApplicationRecord
   positioned on: :category_type_id
 
   belongs_to :category_type, class_name: "CategoryType", foreign_key: :category_type_id
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :categorizable_items, dependent: :destroy
   has_many :workshops, through: :categorizable_items, source: :categorizable, source_type: "Workshop"
 

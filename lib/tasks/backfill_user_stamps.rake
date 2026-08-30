@@ -3,19 +3,23 @@
 namespace :data do
   desc "Backfill created_by_id/updated_by_id on legacy rows from the Ahoy lifecycle trail"
   task backfill_user_stamps: :environment do
-    # Concrete models carrying the stamp columns. Report is the STI base for
-    # MonthlyReport, so scanning it covers both (find_each yields the leaf instances,
-    # so record.class.name matches the Ahoy resource_type).
-    model_classes = [
-      Banner, Comment, CommunityNews, ContinuingEducationRegistration, Event, Grant,
-      Person, ProfessionalLicense, Report, Resource, Story, StoryIdea, User, Workshop,
-      WorkshopIdea, WorkshopLog, WorkshopVariation, WorkshopVariationIdea
-    ]
+    # Every concrete model carrying either stamp column, discovered rather than listed
+    # so new audited tables are covered automatically. Scanning only STI base classes
+    # (klass == klass.base_class) avoids visiting the same table twice; find_each still
+    # yields leaf instances, so record.class.name matches the Ahoy resource_type.
+    # Load just app/models (not a full eager_load!, which would boot the SolidCache /
+    # SolidQueue databases that aren't configured in every environment).
+    Rails.autoloaders.main.eager_load_dir(Rails.root.join("app/models"))
+
+    model_classes = ApplicationRecord.descendants.select do |klass|
+      klass == klass.base_class &&
+        !klass.abstract_class? &&
+        klass.table_exists? &&
+        (klass.column_names & %w[created_by_id updated_by_id]).any?
+    end.sort_by(&:name)
 
     model_classes.each do |klass|
       stamps = klass.column_names & %w[created_by_id updated_by_id]
-      next if stamps.empty?
-
       scope = klass.where(stamps.map { |c| "#{c} IS NULL" }.join(" OR "))
       filled = 0
 

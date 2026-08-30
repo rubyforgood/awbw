@@ -1,4 +1,7 @@
 class Form < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   # Public-facing name for the "bulk payment" form — what visitors see on the
   # event page CTA and the form heading. Internal/admin labels still say "Bulk
   # payment" (the form role). Single source of truth so both ends stay in sync.

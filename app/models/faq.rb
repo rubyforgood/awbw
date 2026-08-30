@@ -2,6 +2,9 @@ class Faq < ApplicationRecord
   include Publishable
   positioned
 
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
 
   # Validations

@@ -1,4 +1,7 @@
 class WindowsType < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   TYPES = [ "Adult", "Children", "Combined" ]
 
   has_many :categorizable_items, dependent: :destroy, as: :categorizable

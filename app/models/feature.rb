@@ -1,4 +1,7 @@
 class Feature < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   # `rhino_`-prefixed per the app's ActionText/Rhino convention (see rhino_editor helper).
   has_rich_text :rhino_description
 
