@@ -402,4 +402,110 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
   end
+
+  # ============================================================
+  # PEOPLE — FK-based model with a candidate finder and a merge guard
+  # ============================================================
+
+  describe "People" do
+    before { sign_in admin }
+
+    describe "GET dedupe_index" do
+      it "renders and surfaces candidate groups from the duplicate finder" do
+        create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com", user: nil)
+        create(:person, first_name: "Jane", last_name: "Doe", email: "jane@work.com", user: nil)
+
+        get dedupe_index_people_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Same name")
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      let!(:keep) { create(:person, first_name: "Keep", last_name: "Person", user: nil) }
+      let!(:delete_rec) { create(:person, first_name: "Delete", last_name: "Person", user: nil) }
+      before { create(:affiliation, person: delete_rec) }
+
+      it "renders the preview with a reassignment summary and curated fields" do
+        get dedupe_preview_people_path(
+          person_to_keep_id: keep.id,
+          person_to_delete_id: delete_rec.id
+        )
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Keep", "Delete")
+        expect(response.body).to include("Records that will move", "Affiliations")
+        expect(response.body).to include("Date of birth")
+        expect(response.body).not_to include("Profile show age ranges")
+      end
+    end
+
+    describe "POST dedupe_perform" do
+      let!(:keep) { create(:person, first_name: "Keeper", last_name: "Person", user: nil) }
+      let!(:delete_rec) { create(:person, first_name: "Duplicate", last_name: "Person", user: nil) }
+      let!(:affiliation) { create(:affiliation, person: delete_rec) }
+
+      it "merges, reassigns FK associations, and deletes the duplicate" do
+        expect {
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id
+          }
+        }.to change(Person, :count).by(-1)
+
+        expect(response).to redirect_to(people_path)
+        expect(Person.exists?(delete_rec.id)).to be false
+        expect(affiliation.reload.person_id).to eq(keep.id)
+      end
+
+      it "merges exact duplicates (same name and email) despite the uniqueness validation" do
+        keep.update!(first_name: "Sam", last_name: "Twin", email: "twin@example.com")
+        dupe = build(:person, first_name: "Sam", last_name: "Twin", email: "twin@example.com", user: nil)
+        dupe.save!(validate: false)
+
+        expect {
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: dupe.id,
+            person_to_keep_id: keep.id,
+            person_to_keep: { first_name: "Sam", last_name: "Twin", email: "twin@example.com", notes: "Canonical record" }
+          }
+        }.to change(Person, :count).by(-1)
+
+        expect(Person.exists?(dupe.id)).to be false
+        expect(keep.reload.notes).to eq("Canonical record")
+      end
+    end
+
+    describe "when both people have a linked login" do
+      let!(:keep) { create(:person, first_name: "Login", last_name: "One") }
+      let!(:delete_rec) { create(:person, first_name: "Login", last_name: "Two") }
+
+      it "surfaces a non-blocking heads-up on the preview and keeps the merge enabled" do
+        get dedupe_preview_people_path(
+          person_to_keep_id: keep.id,
+          person_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Both people have a login")
+        expect(response.body).not_to include("Merge blocked")
+      end
+
+      it "merges and points both logins at the kept person" do
+        keep_user = keep.user
+        delete_user = delete_rec.user
+
+        expect {
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id
+          }
+        }.to change(Person, :count).by(-1)
+
+        expect(Person.exists?(delete_rec.id)).to be false
+        expect(keep_user.reload.person_id).to eq(keep.id)
+        expect(delete_user.reload.person_id).to eq(keep.id)
+      end
+    end
+  end
 end

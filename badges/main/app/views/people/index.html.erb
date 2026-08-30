@@ -35,6 +35,10 @@
           <%= link_to "Email addresses", email_addresses_people_path(request.query_parameters),
                       class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
+        <% if allowed_to?(:manage?, Person) %>
+          <%= link_to "Dedupe", dedupe_index_people_path,
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
         <% if allowed_to?(:new?, Person) %>
           <%= link_to "New Person",
                       new_person_path,
