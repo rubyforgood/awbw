@@ -12,7 +12,7 @@ class FormsController < ApplicationController
       @forms = sorted_forms
       render :forms_results
     else
-      @legacy_forms = Form.owned.includes(:owner, :form_fields).order(:owner_type, :id)
+      @owned_forms = Form.owned.includes(:owner, :form_fields).order(:owner_type, :id)
       render :index
     end
   end

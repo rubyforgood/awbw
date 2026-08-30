@@ -1,5 +1,5 @@
 class FormDecorator < ApplicationDecorator
-  # A legacy owner-attached form's answers don't live in the form-submission
+  # An owned (owner-attached) form's answers don't live in the form-submission
   # system: a FormBuilder-owned report/log template stores its answers as
   # report_form_field_answers, surfaced on the reporting indexes. Resolve the
   # best "view answers" path for the form's owner, falling back to the standard
@@ -14,7 +14,7 @@ class FormDecorator < ApplicationDecorator
     end
   end
 
-  # Where the answers link points, in words, so the legacy row reads clearly.
+  # Where the answers link points, in words, so the owned-form row reads clearly.
   def answers_label
     return "View answers" unless owner.is_a?(FormBuilder)
 

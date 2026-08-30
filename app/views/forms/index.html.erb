@@ -22,7 +22,7 @@
     <%= render "results_skeleton" %>
   <% end %>
 
-  <% if @legacy_forms.any? %>
-    <%= render "legacy_forms", forms: @legacy_forms %>
+  <% if @owned_forms.any? %>
+    <%= render "owned_forms", forms: @owned_forms %>
   <% end %>
 </div>

@@ -29,11 +29,11 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("New Job")
       end
 
-      it "lists owner-attached forms in a legacy section with an answers link" do
+      it "lists owner-attached forms in an owned-forms section with an answers link" do
         builder = create(:form_builder, name: "Adult Workshop Log")
         create(:form, owner: builder, name: "Adult Workshop Log")
         get forms_path
-        expect(response.body).to include("Legacy forms")
+        expect(response.body).to include("Owned forms")
         expect(response.body).to include("Report template")
         expect(response.body).to include(workshop_logs_path)
       end
