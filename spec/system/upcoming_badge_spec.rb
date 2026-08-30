@@ -42,13 +42,16 @@ RSpec.describe "Affiliation status badges", type: :system do
     expect(badge_hidden?(row, "inactiveBadge")).to be true
     expect(badge_hidden?(row, "upcomingBadge")).to be true
 
+    # A future start shows Upcoming only — never Inactive alongside it.
     set_start_date(row, 1.month.from_now.to_date.iso8601)
     expect(page).to have_css("[data-inactive-toggle-target='upcomingBadge']:not(.hidden)", wait: 5)
-    expect(badge_hidden?(row, "inactiveBadge")).to be false
+    expect(badge_hidden?(row, "inactiveBadge")).to be true
 
-    # Back to a started date: both badges go away again.
+    # Back to a started date: the badge goes away again. `visible: :all` because a
+    # hidden badge is now genuinely display:none (the fix), so a visible-only match
+    # would never find it.
     set_start_date(row, 1.year.ago.to_date.iso8601)
-    expect(page).to have_css("[data-inactive-toggle-target='upcomingBadge'].hidden", wait: 5)
+    expect(page).to have_css("[data-inactive-toggle-target='upcomingBadge'].hidden", visible: :all, wait: 5)
     expect(badge_hidden?(row, "inactiveBadge")).to be true
   end
 end

@@ -24,7 +24,7 @@ RSpec.describe "Affiliation status badges on the person edit form", type: :reque
     end
   end
 
-  it "renders Inactive for not-active rows and adds Upcoming for a future start" do
+  it "renders at most one badge: Inactive for ended/flagged, Upcoming for a future start, none for active" do
     create(:affiliation, person: person, organization: org, title: "PastActive",
                          start_date: 1.year.ago.to_date, end_date: nil)
     create(:affiliation, person: person, organization: org, title: "Ended",
@@ -40,7 +40,7 @@ RSpec.describe "Affiliation status badges on the person edit form", type: :reque
       "PastActive" => [],
       "StartsToday" => [],
       "Ended" => [ "inactiveBadge" ],
-      "FutureUp" => [ "inactiveBadge", "upcomingBadge" ]
+      "FutureUp" => [ "upcomingBadge" ]
     )
   end
 end
