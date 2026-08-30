@@ -185,6 +185,10 @@ class WorkshopsController < ApplicationController
       remote_select_options: { "author_id" => "person" },
       deprecated_columns: %w[full_name],
       movable_attachments: %w[thumbnail header],
+      preview_images: ->(workshop) {
+        [ workshop.thumbnail, workshop.header, workshop.primary_asset&.file,
+          *workshop.gallery_assets.map(&:file) ].compact.select(&:attached?)
+      },
       field_notes: {
         "full_name" => "Legacy (not referenced). Credit a real person in Author below instead.",
         "author_id" => "Credited author — search any person."

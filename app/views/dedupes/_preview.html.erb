@@ -30,6 +30,9 @@
   remote_select_options ||= {}
   field_notes ||= {}
   deprecated_columns ||= []
+  preview_images ||= nil
+  delete_images = preview_images ? Array(preview_images.call(record_to_delete)) : []
+  keep_images = preview_images ? Array(preview_images.call(record_to_keep)) : []
 %>
 
 <div class="mb-6 grid grid-cols-2 gap-x-6"
@@ -65,6 +68,24 @@
   <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm">
     <span class="text-gray-400">ID</span> <span class="ml-2 text-gray-900"><%= record_to_keep.id %></span>
   </div>
+
+  <!-- Photos: attached images on each record, side by side -->
+  <% if preview_images && (delete_images.any? || keep_images.any?) %>
+    <% [ delete_images, keep_images ].each do |images| %>
+      <div class="border-x border-b <%= border %> bg-white px-5 py-3">
+        <p class="text-2xs mb-2 font-semibold tracking-widest text-gray-400 uppercase">Photos</p>
+        <% if images.any? %>
+          <div class="flex flex-wrap gap-2">
+            <% images.first(12).each do |image| %>
+              <%= image_tag url_for(image), loading: "lazy", class: "h-16 w-16 rounded object-cover ring-1 ring-gray-200" %>
+            <% end %>
+          </div>
+        <% else %>
+          <span class="text-sm text-gray-400">No photos</span>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
 
   <!-- Field rows -->
   <%= form_builder.fields_for keep_param_key, record_to_keep do |keep_f| %>

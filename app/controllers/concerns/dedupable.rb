@@ -142,6 +142,8 @@ module Dedupable
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
   #   movable_attachments: Array of has_one_attached names to move to the keeper when it has none
   #                       (otherwise dropped with the deleted record), e.g. %w[thumbnail header] (optional)
+  #   preview_images:     Lambda(record) returning that record's attached images (ActiveStorage
+  #                       attachments) so the preview shows them side by side for comparison (optional)
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
@@ -183,6 +185,7 @@ module Dedupable
       remote_select_options: config[:remote_select_options] || {},
       field_notes: config[:field_notes] || {},
       deprecated_columns: Array(config[:deprecated_columns]).map(&:to_s),
+      preview_images: config[:preview_images],
       record_extras: config[:record_extras]
     }
   end
