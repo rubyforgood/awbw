@@ -35,6 +35,20 @@ RSpec.describe "Affiliation editor live styling", type: :system do
     )
   end
 
+  def set_start_date(value)
+    page.execute_script(
+      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
+      find("[data-inactive-toggle-target~='startDate']"), value
+    )
+  end
+
+  # classList, not visibility: the fast test path skips the Tailwind build.
+  def badge_hidden?(target)
+    page.evaluate_script(
+      "document.querySelector(\"[data-inactive-toggle-target='#{target}']\").classList.contains('hidden')"
+    )
+  end
+
 
   it "tints an active facilitator row without striking it through" do
     expect(row[:class]).to include("bg-purple-50")
@@ -106,6 +120,27 @@ RSpec.describe "Affiliation editor live styling", type: :system do
     end
   end
 
+  describe "the status chips under the date fields" do
+    it "starts with neither chip for an active row" do
+      expect(badge_hidden?("upcomingBadge")).to be true
+      expect(badge_hidden?("inactiveBadge")).to be true
+    end
+
+    it "shows Upcoming only for a future start date" do
+      set_start_date(1.month.from_now.to_date.iso8601)
+
+      expect(page).to have_css("[data-inactive-toggle-target='upcomingBadge']:not(.hidden)", wait: 5)
+      expect(badge_hidden?("inactiveBadge")).to be true
+    end
+
+    it "shows Inactive only once the Inactive box is ticked" do
+      find("[data-inactive-toggle-target='inactiveCheckbox']").click
+
+      expect(page).to have_css("[data-inactive-toggle-target='inactiveBadge']:not(.hidden)", wait: 5)
+      expect(badge_hidden?("upcomingBadge")).to be true
+    end
+  end
+
   it "switches the hue when the title stops being Facilitator" do
     title = find("[data-inactive-toggle-target~='title']")
     page.execute_script(
@@ -114,5 +149,22 @@ RSpec.describe "Affiliation editor live styling", type: :system do
     )
 
     expect(row[:class]).to include("bg-blue-50")
+  end
+
+  describe "the left accent bar" do
+    def accent = find("[data-inactive-toggle-target='accentBar']", visible: :all)
+
+    it "is purple for an active facilitator row" do
+      expect(accent[:class]).to include("bg-purple-500")
+    end
+
+    it "switches to blue when the title stops being Facilitator" do
+      page.execute_script(
+        "arguments[0].value = 'Counselor'; arguments[0].dispatchEvent(new Event('input', { bubbles: true }))",
+        find("[data-inactive-toggle-target~='title']")
+      )
+
+      expect(accent[:class]).to include("bg-blue-500")
+    end
   end
 end
