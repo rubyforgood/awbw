@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_192350) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_200153) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1107,6 +1107,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_192350) do
     t.boolean "bulk", default: false, null: false
     t.string "channel", default: "autoemail", null: false
     t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
     t.text "custom_message"
     t.string "custom_subject"
     t.datetime "delivered_at"
@@ -1130,11 +1131,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_192350) do
     t.integer "root_notification_id"
     t.integer "sender_id"
     t.datetime "updated_at", precision: nil, null: false
+    t.integer "updated_by_id"
+    t.index ["created_by_id"], name: "index_notifications_on_created_by_id"
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
     t.index ["parent_notification_id"], name: "index_notifications_on_parent_notification_id"
     t.index ["root_notification_id"], name: "index_notifications_on_root_notification_id"
     t.index ["sender_id"], name: "index_notifications_on_sender_id"
+    t.index ["updated_by_id"], name: "index_notifications_on_updated_by_id"
   end
 
   create_table "organization_obligations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2376,7 +2380,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_192350) do
   add_foreign_key "monthly_reports", "organizations"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
+  add_foreign_key "notifications", "users", column: "created_by_id"
   add_foreign_key "notifications", "users", column: "sender_id"
+  add_foreign_key "notifications", "users", column: "updated_by_id"
   add_foreign_key "organization_obligations", "users", column: "created_by_id"
   add_foreign_key "organization_obligations", "users", column: "updated_by_id"
   add_foreign_key "organization_statuses", "users", column: "created_by_id"

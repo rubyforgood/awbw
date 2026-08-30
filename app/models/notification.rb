@@ -1,5 +1,7 @@
 class Notification < ApplicationRecord
   belongs_to :sender, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   belongs_to :noticeable, polymorphic: true, optional: true
   belongs_to :parent_notification, class_name: "Notification", optional: true
   belongs_to :root_notification, class_name: "Notification", optional: true
