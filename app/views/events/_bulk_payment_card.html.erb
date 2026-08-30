@@ -21,7 +21,15 @@
   event_cost_cents = @event.cost_cents.to_i
   linked_ids = submission.linked_registration_ids.to_set
   linked_regs = event_registrations.select { |r| linked_ids.include?(r.id) }
-  attendee_matches = submission.matched_attendees(event_registrations) %>
+  attendee_matches = submission.matched_attendees(event_registrations)
+
+  # At-a-glance status of who this payer covers: attendees not matched to any
+  # registration, and matched registrations not yet paid in full (allocated from
+  # the preloaded totals so this stays query-free).
+  unregistered_count = attendee_matches.count { |attendee| attendee[:matches].empty? }
+  unpaid_count = attendee_matches.count { |attendee|
+    attendee[:matches].present? && attendee[:matches].none? { |reg| allocated_by_registration.fetch(reg.id, 0) >= event_cost_cents }
+  } %>
 
 <div id="payment-card-<%= submission.id %>" data-controller="dropdown" class="bg-white border rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow transition-colors duration-150 scroll-mt-4 <%= highlighted ? "border-yellow-500 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200" %>">
   <%#
@@ -34,7 +42,25 @@
     <span class="text-sm text-gray-500 min-w-0 break-all lg:break-normal lg:truncate"><%= submission.person.email %></span>
     <span class="text-sm text-gray-500 min-w-0 whitespace-nowrap lg:truncate"><%= payment_method.presence || "—" %></span>
     <span class="text-sm text-gray-500 whitespace-nowrap tabular-nums lg:text-right"><% amount_cents = payment&.amount_cents || submission.bulk_payment_amount_cents(@event) %><%= dollars_from_cents(amount_cents) %></span>
-    <span id="<%= dom_id(payment, :remaining) if payment %>" class="min-w-0"><%= render "events/payment_badge", payment: payment %></span>
+    <div class="flex min-w-0 flex-col gap-1">
+      <span id="<%= dom_id(payment, :remaining) if payment %>" class="min-w-0"><%= render "events/payment_badge", payment: payment %></span>
+      <% if unregistered_count.positive? || unpaid_count.positive? %>
+        <div class="flex flex-wrap gap-1">
+          <% if unregistered_count.positive? %>
+            <span class="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+              <i class="fa-solid fa-user-slash"></i>
+              <%= pluralize(unregistered_count, "attendee") %> not registered
+            </span>
+          <% end %>
+          <% if unpaid_count.positive? %>
+            <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+              <%= pluralize(unpaid_count, "attendee") %> unpaid
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
     <span class="text-sm text-gray-500 whitespace-nowrap"><%= submission.created_at.strftime("%b %-d, %Y") %></span>
 
     <div class="flex items-center gap-2">
@@ -74,30 +100,6 @@
       <i id="<%= arrow_id %>" class="fa-solid fa-chevron-down transition-transform duration-200"></i>
     </button>
   </div>
-
-  <%# At-a-glance status of who this payer covers: attendees not matched to any
-      registration, and matched registrations not yet paid in full (allocated from
-      the preloaded totals so this stays query-free). %>
-  <% unregistered_count = attendee_matches.count { |attendee| attendee[:matches].empty? }
-     unpaid_count = attendee_matches.count { |attendee|
-       attendee[:matches].present? && attendee[:matches].none? { |reg| allocated_by_registration.fetch(reg.id, 0) >= event_cost_cents }
-     } %>
-  <% if unregistered_count.positive? || unpaid_count.positive? %>
-    <div class="mt-2 flex flex-wrap gap-1.5">
-      <% if unregistered_count.positive? %>
-        <span class="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
-          <i class="fa-solid fa-user-slash"></i>
-          <%= pluralize(unregistered_count, "attendee") %> not registered
-        </span>
-      <% end %>
-      <% if unpaid_count.positive? %>
-        <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-          <i class="fa-solid fa-hand-holding-dollar"></i>
-          <%= pluralize(unpaid_count, "attendee") %> unpaid
-        </span>
-      <% end %>
-    </div>
-  <% end %>
 
   <div id="<%= content_id %>" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3" data-dropdown-target="content">
     <% if linked_regs.any? %>

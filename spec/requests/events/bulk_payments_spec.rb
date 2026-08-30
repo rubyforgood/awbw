@@ -133,6 +133,20 @@ RSpec.describe "Events::BulkPayments", type: :request do
       end
     end
 
+    context "search" do
+      let(:priya) { create(:person, first_name: "Priya", last_name: "Patel") }
+      let(:sam) { create(:person, first_name: "Sam", last_name: "Jonesborough") }
+      let!(:priya_sub) { create(:form_submission, person: priya, form: form, event: event, role: "bulk_payment") }
+      let!(:sam_sub) { create(:form_submission, person: sam, form: form, event: event, role: "bulk_payment") }
+
+      it "narrows the list to matches on the shared search box" do
+        get bulk_payments_event_path(event, search: "Priya")
+
+        expect(response.body).to include("Priya")
+        expect(response.body).not_to include("Jonesborough")
+      end
+    end
+
     context "status chips" do
       let!(:attendees_field) do
         create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees")

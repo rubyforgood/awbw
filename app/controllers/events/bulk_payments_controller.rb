@@ -8,11 +8,12 @@ module Events
       # Skip on the filter turbo-frame reload so filtering doesn't double-count views.
       track_view("events.bulk_payments", { event_id: @event.id }) unless turbo_frame_request?
 
-      @payment_method = params[:payment_method].presence
       @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
+      # Same filter set as the global bulk payments index (search + method +
+      # status + dates), applied to this event's submissions.
       @submissions = @event.form_submissions
                            .where(role: "bulk_payment")
-                           .payment_method(@payment_method)
+                           .search_by_params(params)
                            .includes(:person, form_answers: :form_field, payment: :allocations)
                            .order(created_at: :desc)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)
