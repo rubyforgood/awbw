@@ -12,6 +12,7 @@ class FormsController < ApplicationController
       @forms = sorted_forms
       render :forms_results
     else
+      @owned_forms = Form.owned.includes(:owner, :form_fields).order(:owner_type, :id)
       render :index
     end
   end
@@ -61,7 +62,7 @@ class FormsController < ApplicationController
     form = FormBuilderService.new(
       name: params[:name].presence || "New Form",
       sections: sections,
-      role: params[:role].presence
+      role: params[:role].presence || "general"
     ).call
 
     redirect_to edit_sections_form_path(form), notice: "Form created with #{form.form_fields.size} fields."

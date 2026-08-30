@@ -29,7 +29,7 @@
                 <label class="mb-1 block text-sm font-medium text-gray-700">Form role</label>
                 <select name="role" data-section-filter-target="select" data-action="section-filter#filter"
                         class="w-full rounded border-gray-300 px-3 py-2 text-sm shadow-sm">
-                  <option value="">General</option>
+                  <option value="general" <%= "selected" if params[:role].blank? || params[:role] == "general" %>>General</option>
                   <option value="registration" <%= "selected" if params[:role] == "registration" %>>Registration</option>
                   <option value="new_job" <%= "selected" if params[:role] == "new_job" %>>New job</option>
                   <option value="reinstatement" <%= "selected" if params[:role] == "reinstatement" %>>Reinstatement</option>

@@ -30,6 +30,16 @@
                      onchange: "this.form.requestSubmit()" %>
     </div>
 
+    <!-- Windows type -->
+    <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5">
+      <%= label_tag :windows_type_id, "Windows type", class: search_label_class %>
+      <%= select_tag :windows_type_id,
+                     options_from_collection_for_select(@windows_types, :id, :name, params[:windows_type_id]),
+                     include_blank: "All windows types",
+                     class: search_field_class(extra: "search-select-placeholder"),
+                     onchange: "this.form.requestSubmit()" %>
+    </div>
+
     <!-- Submitted by -->
     <div class="flex w-full flex-col sm:w-1/2 md:w-1/4 lg:w-1/5" data-controller="searchable-select" data-searchable-select-mode-value="person">
       <%= label_tag :created_by_id, "Submitted by", class: search_label_class %>

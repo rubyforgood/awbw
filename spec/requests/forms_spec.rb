@@ -29,6 +29,15 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("New Job")
       end
 
+      it "lists owner-attached forms in an owned-forms section with an answers link" do
+        builder = create(:form_builder, name: "Adult Workshop Log")
+        create(:form, owner: builder, name: "Adult Workshop Log")
+        get forms_path
+        expect(response.body).to include("Owned forms")
+        expect(response.body).to include("Report template")
+        expect(response.body).to include(workshop_logs_path)
+      end
+
       it "shows the public link for a published form" do
         create(:form, :standalone, name: "Volunteer", slug: "volunteer", published: true)
         get forms_path, headers: frame_headers
@@ -203,6 +212,24 @@ RSpec.describe "Forms", type: :request do
       expect(form.name).to eq("Custom Form")
       expect(form.sections).to eq(%w[person_identifier consent])
       expect(response).to redirect_to(edit_sections_form_path(form))
+    end
+
+    it "defaults a blank role to general rather than creating a role-less form" do
+      post forms_path, params: {
+        name: "No role",
+        role: "",
+        sections: %w[person_identifier]
+      }
+      expect(Form.last.role).to eq("general")
+    end
+
+    it "keeps an explicitly selected role" do
+      post forms_path, params: {
+        name: "Scholarship",
+        role: "scholarship",
+        sections: %w[scholarship]
+      }
+      expect(Form.last.role).to eq("scholarship")
     end
 
     it "rejects when no sections selected" do

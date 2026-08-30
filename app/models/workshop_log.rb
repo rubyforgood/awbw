@@ -55,6 +55,7 @@ class WorkshopLog < ApplicationRecord
   # Scopes
   scope :workshop_id, ->(workshop_id) { where(workshop_id: workshop_id) if workshop_id.present? }
   scope :organization_id, ->(organization_id) { where(organization_id: organization_id) if organization_id.present? }
+  scope :windows_type_id, ->(windows_type_id) { where(windows_type_id: windows_type_id) if windows_type_id.present? }
   scope :created_by_id, ->(created_by_id) { where(created_by_id: created_by_id.to_i) if created_by_id.present? }
   scope :month_and_year, ->(month_and_year) {
     if month_and_year.present?
@@ -76,6 +77,7 @@ class WorkshopLog < ApplicationRecord
     logs = logs.year(params[:year]) if params[:year].present?
     logs = logs.workshop_id(params[:workshop_id]) if params[:workshop_id].present?
     logs = logs.organization_id(params[:organization_id]) if params[:organization_id].present?
+    logs = logs.windows_type_id(params[:windows_type_id]) if params[:windows_type_id].present?
     logs.ordered_by_date
   end
 

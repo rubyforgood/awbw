@@ -130,6 +130,16 @@ RSpec.describe WorkshopLog do
         expect(results).not_to include(other_log)
       end
 
+      it "filters by windows_type_id" do
+        windows_type = create(:windows_type)
+        log = create(:workshop_log, windows_type: windows_type)
+        other_log = create(:workshop_log, windows_type: create(:windows_type))
+
+        results = WorkshopLog.search(windows_type_id: windows_type.id)
+        expect(results).to include(log)
+        expect(results).not_to include(other_log)
+      end
+
       it "filters by created_by_id" do
         log = create(:workshop_log, created_by: user)
         other_log = create(:workshop_log)
