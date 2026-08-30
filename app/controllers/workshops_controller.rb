@@ -1,5 +1,5 @@
 class WorkshopsController < ApplicationController
-  include AhoyTracking, TagAssignable, MentionableScopable
+  include AhoyTracking, TagAssignable, MentionableScopable, Dedupable
 
   skip_before_action :authenticate_user!, only: [ :index, :show ]
 
@@ -173,6 +173,19 @@ class WorkshopsController < ApplicationController
 
   def log_workshop_error(action, error)
     Rails.logger.error "Workshop #{action} failed: #{error.class} - #{error.message}\n#{error.backtrace.join("\n")}"
+  end
+
+  def dedupe_config
+    {
+      model_class: Workshop,
+      domain: :workshops,
+      candidate_finder: -> { WorkshopServices::DuplicateFinder.new.groups },
+      editable_columns: %w[title full_name featured published windows_type_id],
+      belongs_to_options: -> { { "windows_type_id" => WindowsType.order(:name) } },
+      record_extras: ->(workshop) {
+        [ workshop.windows_type&.name, workshop.author&.full_name ].compact.join(" · ").presence
+      }
+    }
   end
 
   def workshop_params

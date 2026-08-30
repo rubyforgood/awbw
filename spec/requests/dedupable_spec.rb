@@ -508,4 +508,93 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
   end
+
+  # ============================================================
+  # WORKSHOPS — dedupe wired through WorkshopsController on the
+  # config-driven Dedupable pattern, matched by title.
+  # ============================================================
+
+  describe "Workshops" do
+    describe "GET dedupe_index" do
+      it "surfaces title-matched candidate groups for an admin" do
+        sign_in admin
+        create(:workshop, title: "Paper Bag Puppets")
+        create(:workshop, title: "paper bag puppets")
+
+        get dedupe_index_workshops_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Same title")
+      end
+
+      it "denies access to a regular user" do
+        sign_in regular_user
+        get dedupe_index_workshops_path
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      let!(:keep) { create(:workshop, title: "Keep Workshop") }
+      let!(:delete_rec) { create(:workshop, title: "Delete Workshop") }
+      before do
+        sign_in admin
+        create(:workshop_log, workshop: delete_rec)
+      end
+
+      it "renders the preview with a reassignment summary" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Keep Workshop", "Delete Workshop")
+      end
+    end
+
+    describe "POST dedupe_perform" do
+      let!(:keep) { create(:workshop, title: "Keeper Workshop") }
+      let!(:delete_rec) { create(:workshop, title: "Duplicate Workshop") }
+      let!(:log) { create(:workshop_log, workshop: delete_rec) }
+
+      it "merges, reassigns FK associations, and deletes the duplicate" do
+        sign_in admin
+
+        expect {
+          post dedupe_perform_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+        }.to change(Workshop, :count).by(-1)
+
+        expect(response).to redirect_to(workshops_path)
+        expect(Workshop.exists?(delete_rec.id)).to be false
+        expect(log.reload.workshop_id).to eq(keep.id)
+      end
+
+      it "applies keep-field edits before merging" do
+        sign_in admin
+
+        post dedupe_perform_workshops_path, params: {
+          workshop_to_delete_id: delete_rec.id,
+          workshop_to_keep_id: keep.id,
+          workshop_to_keep: { title: "Canonical Workshop" }
+        }
+
+        expect(keep.reload.title).to eq("Canonical Workshop")
+      end
+
+      it "denies access to a regular user and does not merge" do
+        sign_in regular_user
+
+        expect {
+          post dedupe_perform_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+        }.not_to change(Workshop, :count)
+      end
+    end
+  end
 end
