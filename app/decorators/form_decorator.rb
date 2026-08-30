@@ -8,7 +8,7 @@ class FormDecorator < ApplicationDecorator
     return h.results_form_path(object) unless owner.is_a?(FormBuilder)
 
     case owner.report_type
-    when "WorkshopLog" then h.workshop_logs_path
+    when "WorkshopLog" then h.workshop_logs_path(windows_type_id: owner.windows_type_id)
     when "MonthlyReport" then h.monthly_reports_path(form_builder_id: owner.id)
     else h.results_form_path(object)
     end

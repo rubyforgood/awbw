@@ -116,6 +116,7 @@ class WorkshopLogsController < ApplicationController
                                 .select("users.id, users.email, users.person_id, people.first_name, people.last_name")
                                 .order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
     @organizations = authorized_scope(Organization.all, as: :affiliated).order(:name)
+    @windows_types = WindowsType.order(:name)
     @workshops = Workshop.where(id: @workshop_logs_unpaginated.select(:workshop_id).distinct)
                          .includes(:windows_type)
                          .order(:title)

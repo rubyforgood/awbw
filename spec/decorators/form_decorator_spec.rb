@@ -4,9 +4,10 @@ RSpec.describe FormDecorator do
   include Rails.application.routes.url_helpers
 
   describe "#answers_path / #answers_label" do
-    it "links a workshop-log template to the workshop logs index" do
-      form = create(:form, owner: create(:form_builder, name: "Adult Workshop Log")).decorate
-      expect(form.answers_path).to eq(workshop_logs_path)
+    it "links a workshop-log template to the logs index filtered by its windows type" do
+      builder = create(:form_builder, name: "Adult Workshop Log")
+      form = create(:form, owner: builder).decorate
+      expect(form.answers_path).to eq(workshop_logs_path(windows_type_id: builder.windows_type_id))
       expect(form.answers_label).to eq("View workshop logs")
     end
 
