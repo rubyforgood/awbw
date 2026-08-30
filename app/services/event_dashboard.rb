@@ -728,8 +728,8 @@ class EventDashboard
     primary_sector_ids.size
   end
 
-  def additional_sector_count
-    additional_sector_ids.size
+  def additional_sectors_count
+    additional_sectors_ids.size
   end
 
   # Registrant (Person) ids who named a primary sector, and those who tagged a
@@ -740,7 +740,7 @@ class EventDashboard
     primary_sector_rows.map(&:first).uniq
   end
 
-  def additional_sector_registrant_ids
+  def additional_sectors_registrant_ids
     primary_pairs = primary_sector_rows.to_set
     registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:first).uniq
   end
@@ -1476,8 +1476,8 @@ class EventDashboard
   # Distinct sectors a registrant has as a tag without having named that sector as
   # their own primary sector. Overlaps primary_sector_ids when a sector is
   # primary for one registrant and additional for another.
-  def additional_sector_ids
-    @additional_sector_ids ||= begin
+  def additional_sectors_ids
+    @additional_sectors_ids ||= begin
       primary_pairs = primary_sector_rows.to_set
       registrant_sector_pairs.reject { |pair| primary_pairs.include?(pair) }.map(&:last).uniq
     end

@@ -48,7 +48,7 @@
          path: roster_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids.join("-").presence || "0"), sub: program_breakdown },
        { label: "Sectors", value: @dashboard.sectors.size, icon: "fa-hand-holding-heart", theme: :sectors,
          path: roster_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-").presence || "0"),
-         sub: @dashboard.sectors.any? ? "#{@dashboard.primary_sector_count} primary · #{@dashboard.additional_sector_count} additional" : nil }
+         sub: @dashboard.sectors.any? ? "#{@dashboard.primary_sector_count} primary · #{@dashboard.additional_sectors_count} additional" : nil }
      ] %>
   <div id="overview" class="scroll-mt-24 flex flex-wrap items-stretch divide-y sm:divide-y-0 sm:divide-x divide-gray-100 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
     <%# Registrants, with scholarship recipients and CE as subtotals drilling into their lists. %>

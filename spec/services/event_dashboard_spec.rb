@@ -311,7 +311,7 @@ RSpec.describe EventDashboard do
 
       it "counts sectors carried as a non-primary tag, overlapping the primary count" do
         # sector1 is a tag for person2, who named sector2 (not sector1) as primary.
-        expect(dashboard.additional_sector_count).to eq(1)
+        expect(dashboard.additional_sectors_count).to eq(1)
       end
 
       it "counts distinct registrants per primary sector, from the dropdown only" do

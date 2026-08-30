@@ -402,7 +402,7 @@
                 path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="mt-1 text-xs text-gray-500"><%= render "stat_link", label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
+        <p class="mt-1 text-xs text-gray-500"><%= render "stat_link", label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", label: "#{@dashboard.additional_sectors_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sectors_registrant_ids.join("-").presence || "0") %></p>
       </summary>
       <div class="mt-3 border-t border-gray-100 pt-3">
         <% if @dashboard.sectors.any? %>
