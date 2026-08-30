@@ -82,18 +82,18 @@
           <div class="mt-3" data-controller="panel-toggle">
             <div class="flex flex-wrap items-center gap-3">
               <%= form_with url: registration_scholarship_agreement_path(@event_registration.slug), method: :post do %>
-                <button type="submit" name="agreement" value="yes" class="btn btn-success">
+                <button type="submit" name="agreement" value="yes" class="<%= button_classes(:success) %>">
                   <i class="fa-solid fa-check"></i> Agree
                 </button>
               <% end %>
 
-              <button type="button" class="btn btn-secondary-outline" aria-expanded="false"
+              <button type="button" class="<%= button_classes(:secondary_outline) %>" aria-expanded="false"
                       data-panel-toggle-target="button" data-panel-toggle-name="support" data-action="panel-toggle#toggle">
                 <i class="fa-solid fa-hand-holding-dollar"></i> Request additional support
                 <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform in-aria-expanded:rotate-180"></i>
               </button>
 
-              <button type="button" class="btn btn-secondary-outline" aria-expanded="false"
+              <button type="button" class="<%= button_classes(:secondary_outline) %>" aria-expanded="false"
                       data-panel-toggle-target="button" data-panel-toggle-name="decline" data-action="panel-toggle#toggle">
                 <i class="fa-solid fa-xmark"></i> Decline
                 <i class="fa-solid fa-chevron-down ml-1 text-xs text-gray-400 transition-transform in-aria-expanded:rotate-180"></i>
@@ -118,7 +118,7 @@
                   <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700">
                     <i class="fa-solid fa-paper-plane"></i> Send request
                   </button>
-                  <button type="button" class="btn btn-secondary-outline"
+                  <button type="button" class="<%= button_classes(:secondary_outline) %>"
                           data-panel-toggle-target="button" data-panel-toggle-name="support" data-action="panel-toggle#toggle">Cancel</button>
                 </div>
               <% end %>
@@ -134,7 +134,7 @@
                   <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
                     <i class="fa-solid fa-paper-plane"></i> Decline scholarship
                   </button>
-                  <button type="button" class="btn btn-secondary-outline"
+                  <button type="button" class="<%= button_classes(:secondary_outline) %>"
                           data-panel-toggle-target="button" data-panel-toggle-name="decline" data-action="panel-toggle#toggle">Cancel</button>
                 </div>
               <% end %>

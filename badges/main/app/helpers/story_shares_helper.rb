@@ -72,6 +72,21 @@ module StorySharesHelper
     link_to label, "#{AWBW_BASE}#{path}", target: "_blank", rel: "noopener noreferrer", class: html_class
   end
 
+  # A mega-menu photo card: an awbw.org-linked image with an accent gradient and a
+  # serif call-to-action (the marketing site's right-hand menu tile). The accent
+  # comes from the surrounding `--accent` CSS variable.
+  def awbw_menu_link_photo(image:, alt:, cta:, href:)
+    link_to "#{AWBW_BASE}#{href}", target: "_blank", rel: "noopener noreferrer", class: "mega-photo" do
+      safe_join([
+        image_tag(image, alt: alt),
+        tag.span("", class: "mega-photo-overlay"),
+        tag.span(class: "mega-photo-cta") do
+          safe_join([ cta, tag.i("", class: "fa-solid fa-arrow-right text-sm") ], " ")
+        end
+      ])
+    end
+  end
+
   # Featured sectors shown in the navbar focus-area row (first 6 by position).
   # Cached because it renders on every portal page and rarely changes.
   def story_share_nav_sectors

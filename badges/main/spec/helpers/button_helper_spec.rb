@@ -1,0 +1,39 @@
+require "rails_helper"
+
+RSpec.describe ButtonHelper, type: :helper do
+  describe "#button_classes" do
+    it "combines the base, default size, and the requested variant" do
+      result = helper.button_classes(:primary)
+
+      expect(result).to include("inline-flex", "rounded-lg", "shadow-sm")
+      expect(result).to include("px-4", "py-2", "text-sm")
+      expect(result).to include("bg-primary", "hover:text-primary")
+    end
+
+    it "defaults to the primary variant" do
+      expect(helper.button_classes).to eq(helper.button_classes(:primary))
+    end
+
+    it "swaps in the compact size" do
+      result = helper.button_classes(:secondary_outline, size: :sm)
+
+      expect(result).to include("px-3", "py-1", "text-xs")
+      expect(result).not_to include("px-4", "py-2", "text-sm")
+    end
+
+    it "omits size utilities when size is nil so a call site can supply its own" do
+      result = helper.button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl")
+
+      expect(result).not_to include("px-4", "text-sm")
+      expect(result).to include("px-10", "text-2xl")
+    end
+
+    it "appends extra classes" do
+      expect(helper.button_classes(:primary, extra: "whitespace-nowrap")).to include("whitespace-nowrap")
+    end
+
+    it "raises for an unknown variant so typos fail loudly" do
+      expect { helper.button_classes(:nope) }.to raise_error(KeyError)
+    end
+  end
+end

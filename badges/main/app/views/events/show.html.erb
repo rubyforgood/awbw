@@ -12,7 +12,7 @@
 <% if @preview %>
   <div class="mb-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
     <span><span class="font-medium">Preview</span> — unsaved changes</span>
-    <button onclick="window.close()" class="btn btn-secondary-outline btn-sm">Close preview</button>
+    <button onclick="window.close()" class="<%= button_classes(:secondary_outline, size: :sm) %>">Close preview</button>
   </div>
 <% else %>
 <!-- Top Right Actions -->
@@ -110,7 +110,7 @@
     <div class="mt-4">
       <%= link_to Form::BULK_PAYMENT_PUBLIC_NAME,
                   new_event_bulk_payment_path(@event),
-                  class: "btn btn-success px-10 py-2 text-2xl uppercase",
+                  class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
                   style: "font-family: 'Telefon Bold', sans-serif;" %>
     </div>
   <% end %>
@@ -131,6 +131,6 @@
 <% if @preview %>
   <div class="mt-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
     <span><span class="font-medium">Preview</span> — unsaved changes</span>
-    <button onclick="window.close()" class="btn btn-secondary-outline btn-sm">Close preview</button>
+    <button onclick="window.close()" class="<%= button_classes(:secondary_outline, size: :sm) %>">Close preview</button>
   </div>
 <% end %>

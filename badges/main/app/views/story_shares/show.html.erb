@@ -9,9 +9,9 @@
   <% end %>
 <% end %>
 
-<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<section class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
   <!-- Utility buttons -->
-  <div class="flex flex-wrap justify-end gap-1 mb-6">
+  <div class="mb-6 flex flex-wrap justify-end gap-1">
     <%= link_to "All stories", story_shares_path, class: "btn btn-secondary-outline" %>
     <%= link_to "Home", root_path, class: "btn btn-secondary-outline" %>
     <% if current_user&.super_user? %>
@@ -23,13 +23,13 @@
     <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+  <div class="grid grid-cols-1 gap-10 lg:grid-cols-3">
     <!-- MAIN COLUMN -->
-    <div class="lg:col-span-2 min-w-0">
-      <h1 class="font-telefon text-3xl sm:text-4xl text-gray-900 mb-4"><%= @story.title %></h1>
+    <div class="min-w-0 lg:col-span-2">
+      <h1 class="text-brand-navy-900 mb-4 font-display text-3xl leading-tight sm:text-4xl"><%= @story.title %></h1>
 
       <!-- Metadata -->
-      <div class="text-sm text-gray-700 space-y-1 mb-5">
+      <div class="mb-5 space-y-1 text-sm text-gray-700">
         <p><strong>Story by:</strong> <%= @story.author_credit %></p>
         <% if @story.organization_name.present? %>
           <p>
@@ -48,25 +48,25 @@
       <%= render "assets/display_assets_carousel", resource: @story %>
 
       <!-- Body -->
-      <div class="prose prose-lg max-w-none text-gray-700 mb-10">
+      <div class="mb-10 max-w-none prose prose-lg text-gray-700">
         <%= @story.rhino_body %>
       </div>
 
       <!-- YouTube embed -->
       <% if (embed_url = youtube_embed_url(@story.youtube_url)) %>
-        <div class="aspect-video mb-10">
-          <iframe src="<%= embed_url %>" class="w-full h-full rounded-lg"
+        <div class="mb-10 aspect-video">
+          <iframe src="<%= embed_url %>" class="h-full w-full rounded-lg"
                   title="<%= @story.title %> video" allowfullscreen loading="lazy"></iframe>
         </div>
       <% end %>
 
       <!-- Share -->
-      <div class="border-t border-gray-200 pt-6 mb-8">
+      <div class="mb-8 border-t border-gray-200 pt-6">
         <%= render "share_buttons", story: @story %>
       </div>
 
       <!-- Boilerplate footer -->
-      <p class="text-xs text-gray-400 leading-relaxed border-t border-gray-200 pt-6">
+      <p class="border-t border-gray-200 pt-6 text-xs leading-relaxed text-gray-400">
         <%= render "shared/organization_footer" %>
       </p>
     </div>
@@ -74,15 +74,15 @@
     <!-- RELATED SIDEBAR -->
     <% if @related_stories.any? %>
       <aside class="lg:col-span-1">
-        <h2 class="font-telefon text-lg text-purple-800 border-b-2 border-purple-800 pb-1 mb-5">Related stories:</h2>
+        <h2 class="text-brand-magenta-800 border-brand-magenta-700 mb-5 border-b-2 pb-1 font-display text-xl">Related stories</h2>
         <div class="space-y-8">
           <% @related_stories.each do |story| %>
             <article>
-              <%= link_to story.title, story_share_path(story), class: "font-telefon text-lg text-gray-900 hover:text-purple-700 leading-tight" %>
-              <p class="text-xs text-gray-500 mt-1 mb-2">
+              <%= link_to story.title, story_share_path(story), class: "font-display text-lg text-brand-navy-900 hover:text-brand-magenta-700 leading-tight" %>
+              <p class="mt-1 mb-2 text-xs text-gray-500">
                 <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
               </p>
-              <%= link_to story_share_path(story), class: "block rounded overflow-hidden bg-gray-100" do %>
+              <%= link_to story_share_path(story), class: "block rounded-xl overflow-hidden bg-brand-navy-50" do %>
                 <%= image_tag story.display_image, loading: "lazy", alt: story.title,
                               class: "w-full aspect-[4/3] object-cover" %>
               <% end %>

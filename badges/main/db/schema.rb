@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_29_234350) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_001119) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1447,6 +1447,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_234350) do
     t.string "legacy_author_name"
     t.integer "legacy_id"
     t.boolean "male", default: false
+    t.integer "organization_id"
     t.integer "position"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
@@ -1458,6 +1459,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_234350) do
     t.integer "workshop_id"
     t.index ["author_id"], name: "index_resources_on_author_id"
     t.index ["created_by_id"], name: "index_resources_on_created_by_id"
+    t.index ["organization_id"], name: "index_resources_on_organization_id"
     t.index ["published"], name: "index_resources_on_published"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
     t.index ["workshop_id"], name: "index_resources_on_workshop_id"
@@ -2137,6 +2139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_234350) do
   add_foreign_key "reports", "people", column: "author_id"
   add_foreign_key "reports", "users", column: "created_by_id"
   add_foreign_key "reports", "windows_types"
+  add_foreign_key "resources", "organizations"
   add_foreign_key "resources", "people", column: "author_id"
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "windows_types"

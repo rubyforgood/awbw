@@ -8,6 +8,7 @@ RSpec.describe Resource do
 
   describe 'associations' do
     it { should belong_to(:author).class_name("Person").optional }
+    it { should belong_to(:organization).optional }
 
     # Nested Attributes
     it { should accept_nested_attributes_for(:primary_asset).allow_destroy(true) }
