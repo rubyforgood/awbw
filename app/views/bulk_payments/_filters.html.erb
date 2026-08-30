@@ -12,21 +12,21 @@
     <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>
   </div>
   <div class="flex flex-wrap items-end gap-3">
-    <div class="min-w-56 flex-1">
+    <div class="min-w-44 flex-1">
       <%= label_tag :search, "Search", class: search_label_class %>
       <%= text_field_tag :search, params[:search], placeholder: "Name, email, organization, or details", class: search_field_class %>
     </div>
 
     <%= render "events/filter_select", param: :payment_method, label: "Payment method",
           options: FormSubmission::PAYMENT_METHOD_FILTER_OPTIONS, selected: params[:payment_method],
-          blank: "Any payment method", field_class: search_field_class %>
+          blank: "Any payment method", field_class: search_field_class, wrapper_class: "w-full sm:w-40" %>
 
     <%= render "events/filter_select", param: :payment_status, label: "Payment status",
           options: FormSubmission::PAYMENT_STATUS_FILTER_OPTIONS, selected: params[:payment_status],
-          blank: "Any status", field_class: search_field_class %>
+          blank: "Any status", field_class: search_field_class, wrapper_class: "w-full sm:w-40" %>
 
     <% unless scoped_to_event %>
-      <div class="w-56">
+      <div class="w-full sm:w-44">
         <%= label_tag :event_id, "Event", class: search_label_class %>
         <%= select_tag :event_id,
               options_for_select(Event.where(id: params[:event_id]).map { |event| [ event.name, event.id ] }, params[:event_id]),
@@ -37,9 +37,9 @@
       </div>
     <% end %>
 
-    <%= render "events/filter_date", param: :start_date, label: "Submitted from", field_class: search_field_class, wrapper_class: "w-40" %>
+    <%= render "events/filter_date", param: :start_date, label: "Submitted from", field_class: search_field_class, wrapper_class: "w-full sm:w-36" %>
 
-    <%= render "events/filter_date", param: :end_date, label: "Submitted to", field_class: search_field_class, wrapper_class: "w-40" %>
+    <%= render "events/filter_date", param: :end_date, label: "Submitted to", field_class: search_field_class, wrapper_class: "w-full sm:w-36" %>
 
     <div class="flex items-end">
       <%= render "shared/search_clear", url: url %>
