@@ -2537,6 +2537,28 @@
     - "Use Swap if you picked the wrong record to keep."
     - "If both people have a login, the preview says so: after the merge both logins sign in to the kept person, and no login is lost."
 
+- name: "Merge duplicate workshops"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-30
+  pr_number: 2434
+  action_path: "/workshops/dedupe_index"
+  summary: >-
+    Admins can now merge two duplicate workshops into one, the same way
+    organizations, categories, and sectors are deduped. It suggests likely
+    duplicates by title, then previews exactly what will move before merging.
+  description: >-
+    Reach it from the Dedupe link on the Workshops page. It clusters workshops
+    with the same title (ignoring case and punctuation) and flags why each was
+    grouped. The preview shows a side-by-side of both workshops with the kept
+    one's key fields editable, plus a summary of every associated record
+    (workshop logs, resources, series links, tags, bookmarks, and more) that
+    moves to the kept workshop. The merge reassigns all of them and deletes the
+    duplicate. It can't be undone. Admin-only.
+  pro_tips:
+    - "Edit the kept workshop's fields right in the preview before you merge."
+    - "Use Swap if you picked the wrong workshop to keep."
+
 - name: "People and Organizations lists in the AWBW brand"
   area: people
   display_status: user_facing

@@ -2,6 +2,10 @@
 
 <% content_for(:page_bg_class, "public") %>
 <% actions = capture do %>
+  <% if allowed_to?(:manage?, Workshop) %>
+    <%= link_to "Dedupe", dedupe_index_workshops_path,
+                class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% end %>
   <% if allowed_to?(:new?, Workshop) %>
     <%= link_to "New workshop",
                 new_workshop_path,

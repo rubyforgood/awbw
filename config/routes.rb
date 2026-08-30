@@ -380,6 +380,12 @@ Rails.application.routes.draw do
   resources :workshop_variation_ideas
   resources :workshop_variations
   resources :workshops do
+    collection do
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_perform
+      patch :dedupe_update_keep
+    end
     resources :comments, only: [ :create, :update ]
   end
 
