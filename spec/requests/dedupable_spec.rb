@@ -477,30 +477,34 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
 
-    describe "linked-login guard" do
+    describe "when both people have a linked login" do
       let!(:keep) { create(:person, first_name: "Login", last_name: "One") }
       let!(:delete_rec) { create(:person, first_name: "Login", last_name: "Two") }
 
-      it "blocks the preview when both people have a linked login account" do
+      it "surfaces a non-blocking heads-up on the preview and keeps the merge enabled" do
         get dedupe_preview_people_path(
           person_to_keep_id: keep.id,
           person_to_delete_id: delete_rec.id
         )
 
-        expect(response.body).to include("Merge blocked")
-        expect(response.body).to include("two logins")
+        expect(response.body).to include("Both people have a login")
+        expect(response.body).not_to include("Merge blocked")
       end
 
-      it "refuses the merge and keeps both records" do
+      it "merges and points both logins at the kept person" do
+        keep_user = keep.user
+        delete_user = delete_rec.user
+
         expect {
           post dedupe_perform_people_path, params: {
             person_to_delete_id: delete_rec.id,
             person_to_keep_id: keep.id
           }
-        }.not_to change(Person, :count)
+        }.to change(Person, :count).by(-1)
 
-        expect(response).to redirect_to(dedupe_index_people_path)
-        expect(Person.exists?(delete_rec.id)).to be true
+        expect(Person.exists?(delete_rec.id)).to be false
+        expect(keep_user.reload.person_id).to eq(keep.id)
+        expect(delete_user.reload.person_id).to eq(keep.id)
       end
     end
   end

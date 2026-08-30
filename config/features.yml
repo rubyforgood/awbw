@@ -2523,7 +2523,7 @@
   pro_tips:
     - "Edit the kept person's fields right in the preview before you merge."
     - "Use Swap if you picked the wrong record to keep."
-    - "If both people have a linked login account, the merge is blocked — resolve the login accounts first so no one ends up with two."
+    - "If both people have a login, the preview says so: after the merge both logins sign in to the kept person, and no login is lost."
 
 - name: "People and Organizations lists in the AWBW brand"
   area: people

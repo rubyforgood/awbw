@@ -6,7 +6,7 @@ module Dedupable
   CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
 
   def dedupe_index
-    authorize!
+    authorize! to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
 
@@ -17,7 +17,7 @@ module Dedupable
   end
 
   def dedupe_preview
-    authorize!
+    authorize! to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
     mn = mc.model_name.singular
@@ -43,14 +43,14 @@ module Dedupable
     @reassignment_keep = deduper.reassignment_preview(@record_to_keep)
     @lost_references = deduper.lost_references(@record_to_delete)
     @unhandled_references = deduper.unhandled_references(@record_to_delete)
-    @merge_guard_error = config[:merge_guard]&.call(@record_to_keep, @record_to_delete)
+    @merge_notes = Array(config[:merge_notes]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/preview"
   end
 
   def dedupe_update_keep
-    authorize!
+    authorize! to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
     mn = mc.model_name.singular
@@ -71,7 +71,7 @@ module Dedupable
   end
 
   def dedupe_perform
-    authorize!
+    authorize! to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
     mn = mc.model_name.singular
@@ -84,10 +84,6 @@ module Dedupable
       tables = unhandled.map { |ref| ref[:table] }.uniq.join(", ")
       return redirect_to url_for(action: :dedupe_index),
         alert: "Can't merge: #{tables} still reference this #{mc.model_name.human.downcase} and the deduper doesn't reassign them. A developer needs to teach ModelDeduper about them before merging."
-    end
-
-    if (guard_error = config[:merge_guard]&.call(record_to_keep, record_to_delete))
-      return redirect_to url_for(action: :dedupe_index), alert: "Can't merge: #{guard_error}"
     end
 
     keep_param_key = "#{mn}_to_keep"
@@ -136,8 +132,8 @@ module Dedupable
   #   model_class:        The ActiveRecord model (e.g. Category)
   #   domain:             Symbol for DomainTheme (e.g. :categories) (optional, derived from model)
   #   belongs_to_options: Hash or Proc of { column_name => collection } for select fields (optional)
-  #   merge_guard:        Lambda(keep, delete) returning an error string when this specific
-  #                       merge can't be safely collapsed (e.g. two linked logins); nil = allowed (optional)
+  #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
+  #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
   def dedupe_config
     raise NotImplementedError, "#{self.class} must implement #dedupe_config"

@@ -43,14 +43,18 @@
       </div>
     <% end %>
 
-    <!-- Model-specific guard: block a merge the deduper can't safely collapse (e.g. two linked logins) -->
-    <% if @merge_guard_error.present? %>
-      <div class="rounded-xl border border-red-300 bg-red-50 p-4">
+    <!-- Model-specific heads-up notes (non-blocking): e.g. the kept person will have two logins -->
+    <% if @merge_notes.present? %>
+      <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
         <div class="flex items-start gap-3">
-          <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
-          <div class="text-sm text-red-800">
-            <p class="font-semibold text-red-900">Merge blocked</p>
-            <p class="mt-1"><%= @merge_guard_error %></p>
+          <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
+          <div class="text-sm text-blue-800">
+            <p class="font-semibold text-blue-900">Before you merge</p>
+            <ul class="mt-1 list-inside list-disc">
+              <% @merge_notes.each do |note| %>
+                <li><%= note %></li>
+              <% end %>
+            </ul>
           </div>
         </div>
       </div>
@@ -112,7 +116,7 @@
       </div>
 
       <!-- Actions -->
-      <% blocked = @unhandled_references.any? || @merge_guard_error.present? %>
+      <% blocked = @unhandled_references.any? %>
       <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
         <% if blocked %>
           <span class="text-sm text-red-700">

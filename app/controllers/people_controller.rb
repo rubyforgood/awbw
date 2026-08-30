@@ -386,13 +386,13 @@ class PeopleController < ApplicationController
         first_name legal_first_name last_name email email_type email_2 email_2_type
         date_of_birth pronouns filemaker_code member_since notes
       ],
-      # Both people carrying a login (User) can't be collapsed automatically:
-      # users.person_id is a non-unique FK, so a merge would silently leave one
-      # person with two logins. Make the admin resolve the accounts first.
-      merge_guard: ->(keep, delete) {
-        next unless keep.user && delete.user
+      # Merging two people who each have a login leaves the kept person with both
+      # (users.person_id has no unique constraint); both logins still sign in to
+      # the one record. Surface it so the admin isn't surprised — it doesn't block.
+      merge_notes: ->(keep, delete) {
+        next [] unless keep.user && delete.user
 
-        "Both people have a linked login account. Merging would leave one person with two logins — unlink or merge the login accounts first."
+        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
