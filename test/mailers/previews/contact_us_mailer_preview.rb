@@ -6,7 +6,7 @@ class ContactUsMailerPreview < ActionMailer::Preview
       from: "test@example.com",
       first_name: "John",
       last_name: "Doe",
-      agency: "Test Agency",
+      organization: "Test Agency",
       message: "This is a test message"
     }
     ContactUsMailer.hello(contact_us)
