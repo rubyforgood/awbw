@@ -43,6 +43,19 @@
       </div>
     <% end %>
 
+    <!-- Model-specific guard: block a merge the deduper can't safely collapse (e.g. two linked logins) -->
+    <% if @merge_guard_error.present? %>
+      <div class="rounded-xl border border-red-300 bg-red-50 p-4">
+        <div class="flex items-start gap-3">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
+          <div class="text-sm text-red-800">
+            <p class="font-semibold text-red-900">Merge blocked</p>
+            <p class="mt-1"><%= @merge_guard_error %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
     <%= form_with url: url_for(action: :dedupe_perform), method: :post,
                   data: { turbo: false,
                           turbo_confirm: "Merge these #{@dedupe[:model_label_plural].downcase}? This can't be undone." } do |f| %>
@@ -99,11 +112,11 @@
       </div>
 
       <!-- Actions -->
-      <% blocked = @unhandled_references.any? %>
+      <% blocked = @unhandled_references.any? || @merge_guard_error.present? %>
       <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
         <% if blocked %>
           <span class="text-sm text-red-700">
-            <i class="fa-solid fa-ban"></i> Merge disabled — unhandled associations (see above).
+            <i class="fa-solid fa-ban"></i> Merge disabled (see above).
           </span>
         <% end %>
         <%= link_to "Cancel", url_for(action: :dedupe_index), class: "btn btn-secondary-outline" %>

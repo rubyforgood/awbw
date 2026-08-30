@@ -1,5 +1,5 @@
 class PeopleController < ApplicationController
-  include AhoyTracking, TagAssignable
+  include AhoyTracking, TagAssignable, Dedupable
   before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments comments_and_communications send_form_link ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
@@ -376,6 +376,29 @@ class PeopleController < ApplicationController
   end
 
   private
+
+  def dedupe_config
+    {
+      model_class: Person,
+      domain: :people,
+      candidate_finder: -> { PersonServices::DuplicateFinder.new.groups },
+      editable_columns: %w[
+        first_name legal_first_name last_name email email_type email_2 email_2_type
+        date_of_birth pronouns filemaker_code member_since notes
+      ],
+      # Both people carrying a login (User) can't be collapsed automatically:
+      # users.person_id is a non-unique FK, so a merge would silently leave one
+      # person with two logins. Make the admin resolve the accounts first.
+      merge_guard: ->(keep, delete) {
+        next unless keep.user && delete.user
+
+        "Both people have a linked login account. Merging would leave one person with two logins — unlink or merge the login accounts first."
+      },
+      record_extras: ->(person) {
+        [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
+      }
+    }
+  end
 
   # Showing anonymous content to anyone but the person and admins would tie an
   # "Anonymous" credit back to a name.

@@ -2500,6 +2500,30 @@
     - "Use Swap if you picked the wrong record to keep."
     - "Both records' FileMaker codes are kept on the merged organization — a field flagged 'Kept on merge' is combined, not dropped."
 
+- name: "Merge duplicate people"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-30
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Admins can now merge two duplicate person records into one. The deduper
+    suggests likely duplicates (by name — including nickname and legal-name
+    variants — shared email, FileMaker code, and date of birth), then previews
+    exactly what will move before merging.
+  description: >-
+    Reach it from the Dedupe link on the People page. It clusters likely
+    duplicates and flags why each was grouped — same name, a nickname or
+    legal-name variant of it, a shared email, the same FileMaker code, or the
+    same date of birth. The preview shows a side-by-side of both records with the
+    kept person's key fields editable, plus a summary of every associated record
+    (affiliations, event registrations, memberships, scholarships, authored
+    content, tags, and more) that moves to the kept person. The merge reassigns
+    all of them and deletes the duplicate. It can't be undone. Admin-only.
+  pro_tips:
+    - "Edit the kept person's fields right in the preview before you merge."
+    - "Use Swap if you picked the wrong record to keep."
+    - "If both people have a linked login account, the merge is blocked — resolve the login accounts first so no one ends up with two."
+
 - name: "People and Organizations lists in the AWBW brand"
   area: people
   display_status: user_facing
