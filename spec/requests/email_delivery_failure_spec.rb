@@ -48,7 +48,7 @@ RSpec.describe "Email delivery failures", type: :request do
           first_name: "Jane",
           last_name: "Smith",
           from: "jane@example.com",
-          agency: "Test Agency",
+          organization: "Test Agency",
           subject: "Test Subject",
           message: "Test message",
           q: "general"
