@@ -9,7 +9,7 @@ RSpec.describe ContactUsMailer do
         q: 'general',
         first_name: 'John',
         last_name: 'Doe',
-        agency: 'Test Agency',
+        organization: 'Test Agency',
         message: 'This is a test message'
       }
 
@@ -27,7 +27,7 @@ RSpec.describe ContactUsMailer do
         q: nil,
         first_name: 'John',
         last_name: 'Doe',
-        agency: 'Test Agency',
+        organization: 'Test Agency',
         message: 'This is a test message'
       }
 
@@ -43,7 +43,7 @@ RSpec.describe ContactUsMailer do
         q: 'general',
         first_name: 'John',
         last_name: 'Doe',
-        agency: 'Test Agency',
+        organization: 'Test Agency',
         message: 'This is a test message'
       }
 
@@ -62,7 +62,7 @@ RSpec.describe ContactUsMailer do
         q: 'general',
         first_name: user.person.first_name,
         last_name: user.person.last_name,
-        agency: 'Test Agency',
+        organization: 'Test Agency',
         message: 'This is a test message from logged in user'
       }
 

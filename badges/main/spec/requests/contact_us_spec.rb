@@ -8,7 +8,7 @@ RSpec.describe "ContactUs", type: :request do
         first_name: "Jane",
         last_name: "Smith",
         from: "jane@example.com",
-        agency: "Test Agency",
+        organization: "Test Agency",
         subject: "Test Subject",
         message: "Test message",
         q: "general"
@@ -33,7 +33,7 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to include('name="contact_us[first_name]"')
         expect(response.body).to include('name="contact_us[last_name]"')
         expect(response.body).to include('name="contact_us[from]"')
-        expect(response.body).to include('name="contact_us[agency]"')
+        expect(response.body).to include('name="contact_us[organization]"')
       end
 
       it "does not show adult or children program options" do
@@ -111,7 +111,7 @@ RSpec.describe "ContactUs", type: :request do
             first_name: user.person.first_name,
             last_name: user.person.last_name,
             from: user.email,
-            agency: "",
+            organization: "",
             subject: "Test",
             message: "Test",
             q: "general"
@@ -196,7 +196,7 @@ RSpec.describe "ContactUs", type: :request do
             first_name: user.person.first_name,
             last_name: user.person.last_name,
             from: user.email,
-            agency: "",
+            organization: "",
             subject: "Test Subject from logged in user",
             message: "Test message from logged in user",
             q: "general"
