@@ -1,6 +1,9 @@
 class CategoryType < ApplicationRecord
   include Publishable
 
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   has_many :categories, class_name: "Category", foreign_key: :category_type_id, dependent: :destroy
   has_many :categorizable_items, through: :categories, dependent: :destroy
 

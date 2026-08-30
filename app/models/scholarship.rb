@@ -2,6 +2,8 @@ class Scholarship < ApplicationRecord
   include Communicable
   belongs_to :recipient, class_name: "Person"
   belongs_to :grant, optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_one :allocation, as: :source, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :agreement_responses, -> { chronological }, class_name: "ScholarshipAgreementResponse", dependent: :destroy

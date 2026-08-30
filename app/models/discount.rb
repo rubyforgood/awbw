@@ -1,6 +1,8 @@
 class Discount < ApplicationRecord
   has_paper_trail
   has_many :allocations, as: :source, dependent: :destroy
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   validates :amount_cents, numericality: { greater_than: 0 }
 

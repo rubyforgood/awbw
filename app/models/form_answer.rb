@@ -10,6 +10,8 @@
 class FormAnswer < ApplicationRecord
   belongs_to :form_field, optional: true
   belongs_to :form_submission
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   # A file-upload answer stores its file on a polymorphic Asset (the same
   # attachment/validation/display machinery story ideas use). Text answers leave

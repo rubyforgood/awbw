@@ -2,6 +2,8 @@ class ReportFormFieldAnswer < ApplicationRecord
   attr_accessor :_create
 
   belongs_to :report, optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   belongs_to :workshop_log, optional: true
   belongs_to :form_field
   belongs_to :answer_option, optional: true

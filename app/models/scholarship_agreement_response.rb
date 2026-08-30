@@ -9,6 +9,8 @@ class ScholarshipAgreementResponse < ApplicationRecord
   # public recipient flow). The `responder` role string still records recipient/
   # admin/system regardless.
   belongs_to :responded_by, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   validates :status, inclusion: { in: STATUSES }
   validates :responder, inclusion: { in: RESPONDERS }, allow_nil: true

@@ -1,4 +1,7 @@
 class Membership < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   # TODO enable for production when the full membership feature is complete
   def self.enabled?
     !Rails.env.production?
