@@ -183,9 +183,10 @@ class WorkshopsController < ApplicationController
       editable_columns: %w[title full_name author_id featured published windows_type_id],
       belongs_to_options: -> { { "windows_type_id" => WindowsType.order(:name) } },
       remote_select_options: { "author_id" => "person" },
+      deprecated_columns: %w[full_name],
       field_notes: {
         "full_name" => "Legacy free-text author name. Prefer crediting a real person in Author below.",
-        "author_id" => "Credited author — search any person, not just active users."
+        "author_id" => "Credited author — search any person."
       },
       record_extras: ->(workshop) {
         [ workshop.windows_type&.name, workshop.author&.name ].compact.join(" · ").presence

@@ -577,6 +577,15 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Credited author")
       end
 
+      it "marks the legacy Full name field as deprecated" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Deprecated")
+      end
+
       it "still renders the author picker when neither workshop has a person author" do
         keep.update!(author: nil)
         delete_rec.update!(author: nil)
