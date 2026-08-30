@@ -70,10 +70,7 @@ class BuiltinCalloutCards
     "ce_hours" => :ce_hours_card,
     "videoconference" => :videoconference_card,
     "staff" => :staff_card,
-    "certificate" => :certificate_card,
-    "day_1_survey" => :day_1_survey_card,
-    "day_2_survey" => :day_2_survey_card,
-    "scholarship_recipients_survey" => :scholarship_recipients_survey_card
+    "certificate" => :certificate_card
   }.freeze
 
   # Why a built-in card with this builtin_key can never appear on the given event's
@@ -126,11 +123,8 @@ class BuiltinCalloutCards
   # event has materialized into editable rows are omitted here — the ticket renders
   # those from the row (calling #card_for for behavioral ones), so this is both the
   # non-materialized set and the fallback for events not yet seeded.
-  # Survey cards only render from a seeded row via #card_for, never from this fallback.
-  FALLBACK_EXCLUDED_KEYS = %w[ day_1_survey day_2_survey scholarship_recipients_survey ].freeze
-
   def cards
-    CARD_BUILDERS.reject { |builtin_key, _| materialized?(builtin_key) || FALLBACK_EXCLUDED_KEYS.include?(builtin_key) }
+    CARD_BUILDERS.reject { |builtin_key, _| materialized?(builtin_key) }
                  .filter_map { |_, builder| send(builder) }
   end
 
@@ -459,27 +453,6 @@ class BuiltinCalloutCards
              title: "Videoconference",
              subtitle: "Join details and add to calendar links",
              href: registration_videoconference_path(registration.slug),
-             target: nil, trailing_icon: "fa-solid fa-arrow-right")
-  end
-
-  # The day cards show for everyone; the recipients card only for scholarship recipients.
-  def day_1_survey_card
-    survey_card("day_1_survey")
-  end
-
-  def day_2_survey_card
-    survey_card("day_2_survey")
-  end
-
-  def scholarship_recipients_survey_card
-    return unless registration.scholarship?
-    survey_card("scholarship_recipients_survey")
-  end
-
-  def survey_card(builtin_key)
-    Card.new(icon_class: "fa-solid fa-clipboard-list", color: "indigo",
-             title: "Survey", subtitle: "Share your feedback",
-             href: registration_survey_path(registration.slug, builtin_key),
              target: nil, trailing_icon: "fa-solid fa-arrow-right")
   end
 end

@@ -154,9 +154,10 @@ class BuiltinCallouts
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],
       hidden: definition[:hidden].call(@event),
-      display_from: definition[:display_from]&.call(@event),
-      form_id: definition[:form]&.call(@event)&.id
+      display_from: definition[:display_from]&.call(@event)
     )
+    callout.registration_ticket_callout_forms.destroy_all
+    build_form_links(callout, definition)
     callout.registration_ticket_callout_resources.destroy_all
     build_resource_links(callout, definition)
     callout
@@ -174,6 +175,7 @@ class BuiltinCallouts
       callout.color_class != definition[:color_class] ||
       callout.hidden != definition[:hidden].call(@event) ||
       callout.display_from != definition[:display_from]&.call(@event) ||
+      form_links_customized?(callout, definition) ||
       callout.resource_ids.sort != Array(definition[:resources]&.call).map(&:id).sort ||
       resource_content_customized?(callout, definition)
   end
@@ -303,46 +305,31 @@ class BuiltinCallouts
         hidden: ->(_event) { true }
       },
       {
-        builtin_key: "day_1_survey",
-        title: "Day 1 survey",
-        subtitle: "Share your feedback on day 1 of the training",
-        callout_type: "action",
-        icon_class: "fa-solid fa-clipboard-list",
-        color_class: "indigo",
-        hidden: ->(_event) { true },
-        form: ->(_event) { Form.standalone.find_by(name: "Day 1 Survey") },
-        display_from: ->(event) { survey_drip(event, 1) }
-      },
-      {
-        builtin_key: "day_2_survey",
-        title: "Day 2 survey",
-        subtitle: "Share your feedback on day 2 of the training",
-        callout_type: "action",
-        icon_class: "fa-solid fa-clipboard-list",
-        color_class: "indigo",
-        hidden: ->(_event) { true },
-        # Only seeds on multi-day events — a one-day training has no day 2.
-        seed_if: ->(event) { event.day_count >= 2 },
-        form: ->(_event) { Form.standalone.find_by(name: "Day 2 Survey") },
-        display_from: ->(event) { survey_drip(event, 2) }
-      },
-      {
-        builtin_key: "scholarship_recipients_survey",
-        title: "Scholarship recipients survey",
-        subtitle: "Post-training questions for scholarship recipients",
+        builtin_key: "post_event_survey",
+        title: "Post-event survey",
+        subtitle: "Share your feedback on the training",
         callout_type: "action",
         icon_class: "fa-solid fa-clipboard-list",
         color_class: "fuchsia",
         hidden: ->(_event) { true },
-        form: ->(_event) { Form.standalone.find_by(name: "Post-Training Recipients Survey") },
-        # Opens 30 min before the event ends.
-        display_from: ->(event) { event.end_date - 30.minutes if event.end_date }
+        # One callout that drips several survey forms, each on its own date: the
+        # Day 1 evaluation, the Day 2 evaluation (multi-day events only), and the
+        # recipients survey (the one that gates readiness). Rows whose template
+        # isn't seeded yet resolve to nil and are skipped.
+        forms: ->(event) {
+          [
+            { form: Form.standalone.find_by(name: "Day 1 Survey"), display_from: survey_drip(event, 1) },
+            ({ form: Form.standalone.find_by(name: "Day 2 Survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2),
+            { form: Form.standalone.find_by(name: "Post-Training Recipients Survey"), display_from: (event.end_date - 30.minutes if event.end_date) }
+          ].compact
+        }
       }
     ]
   end
 
   def create(definition)
     callout = @event.registration_ticket_callouts.create!(attributes_for(definition))
+    build_form_links(callout, definition)
     build_resource_links(callout, definition)
     callout
   rescue ActiveRecord::RecordNotUnique
@@ -357,8 +344,22 @@ class BuiltinCallouts
   # persisting, so they save as nested attributes when the event is saved.
   def build_row(definition)
     callout = @event.registration_ticket_callouts.build(attributes_for(definition))
+    build_form_links(callout, definition)
     build_resource_links(callout, definition)
     callout
+  end
+
+  # Link the definition's forms in order, each with its own drip date. A definition
+  # supplies `forms` as a proc returning [{ form:, display_from: }] (the form procs
+  # resolve the seeded standalone templates by name). Persists immediately for a
+  # saved callout, or stays in memory (saved with the event) when still unsaved.
+  def build_form_links(callout, definition)
+    Array(definition[:forms]&.call(@event)).each do |entry|
+      form = entry[:form]
+      next unless form
+      link = callout.registration_ticket_callout_forms.build(form: form, display_from: entry[:display_from])
+      link.save! if callout.persisted?
+    end
   end
 
   def attributes_for(definition)
@@ -371,8 +372,7 @@ class BuiltinCallouts
       icon_class: definition[:icon_class],
       color_class: definition[:color_class],
       hidden: definition[:hidden].call(@event),
-      display_from: definition[:display_from]&.call(@event),
-      form_id: definition[:form]&.call(@event)&.id
+      display_from: definition[:display_from]&.call(@event)
     }
   end
 
@@ -396,6 +396,16 @@ class BuiltinCallouts
 
   # Whether any link's subtitle/page_content has been edited away from its
   # default, so "Restore default" is offered when only the copy was changed.
+  # Whether the callout's linked forms (form + drip date, in order) diverge from
+  # the definition's default set.
+  def form_links_customized?(callout, definition)
+    expected = Array(definition[:forms]&.call(@event)).filter_map do |entry|
+      [ entry[:form].id, entry[:display_from] ] if entry[:form]
+    end
+    actual = callout.registration_ticket_callout_forms.map { |link| [ link.form_id, link.display_from ] }
+    expected != actual
+  end
+
   def resource_content_customized?(callout, definition)
     content = definition[:resource_content]
     return false if content.blank?

@@ -13,14 +13,14 @@ class RegistrationTicketCallout < ApplicationRecord
   BUILTIN_KEYS = %w[
     payment certificate scholarship ce_hours art_supplies
     videoconference staff handouts faq
-    day_1_survey day_2_survey scholarship_recipients_survey
+    post_event_survey
   ].freeze
 
   # "Content" built-in callouts render their own editable copy/resources (like custom
   # callouts), on the generic callout page. "Behavioral" built-in callouts (the rest)
   # render live per-registration status through BuiltinCalloutCards#card_for — the row
   # still owns the editable title/subtitle/text, order, visibility, and resources.
-  CONTENT_BUILTIN_KEYS = %w[ art_supplies handouts faq ].freeze
+  CONTENT_BUILTIN_KEYS = %w[ art_supplies handouts faq post_event_survey ].freeze
 
   # Behavioral built-ins that also carry event-level config edited inline in their
   # row (CE hours offered / cost); their text lives on the row like everything else.
@@ -57,7 +57,13 @@ class RegistrationTicketCallout < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
-  belongs_to :form, optional: true
+  # A callout delivers its linked forms inline, in order, each gated by its own
+  # drip date (see RegistrationTicketCalloutForm). One row behaves like a plain
+  # single-form callout; several rows open on their own dates (e.g. a Day 1 and
+  # Day 2 evaluation, or the post-event survey).
+  has_many :registration_ticket_callout_forms, -> { ordered }, dependent: :destroy,
+           inverse_of: :registration_ticket_callout
+  has_many :forms, through: :registration_ticket_callout_forms
 
   # A callout can link many resources, shown in order on its detail page (PDF
   # previews + download buttons) beneath its own title/subtitle/content — e.g.
@@ -66,8 +72,10 @@ class RegistrationTicketCallout < ApplicationRecord
            inverse_of: :registration_ticket_callout
   has_many :resources, through: :registration_ticket_callout_resources
 
-  # Linked resources are added one dropdown at a time in the editor (cocoon
-  # add/remove), like Sectors on a Person. Blank picks are dropped.
+  # Linked forms and resources are each added one row at a time in the editor
+  # (cocoon add/remove), like Sectors on a Person. Blank picks are dropped.
+  accepts_nested_attributes_for :registration_ticket_callout_forms, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["form_id"].blank? }
   accepts_nested_attributes_for :registration_ticket_callout_resources, allow_destroy: true,
     reject_if: proc { |attrs| attrs["resource_id"].blank? }
 
@@ -161,7 +169,7 @@ class RegistrationTicketCallout < ApplicationRecord
   end
 
   def delivers_form?
-    form_id.present?
+    registration_ticket_callout_forms.any?
   end
 
   # The Payment built-in's visibility is driven entirely by live balance status,

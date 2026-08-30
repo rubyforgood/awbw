@@ -309,8 +309,9 @@ module Events
       @faq_content = callout&.description
     end
 
-    # A callout that delivers a form inline: the registrant fills it out here and
-    # sees their responses on return. The reg slug is the authorization.
+    # A callout that delivers one or more forms inline: each linked form drips on
+    # its own date, is filled here, and shows its answers on return. The reg slug
+    # is the authorization. Forms already submitted collapse to a completed toggle.
     def callout
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
       return redirect_to registration_ticket_path(@event_registration.slug) if @callout.hidden? || !@callout.delivers_form?
@@ -318,64 +319,31 @@ module Events
       # registrant's sign-outs are complete, and it lives on the CE page.
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
-      @form = @callout.form
+      @callout_forms = @callout.registration_ticket_callout_forms.includes(:form)
       @resource_cards = @callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to: "callout_form")
-      unless @callout.dripping?
-        @submission = callout_submission
-        @editing = @submission.nil? || params[:edit].present?
-      end
+      @submissions = callout_submissions
+      @editing_form_id = params[:edit].to_i if params[:edit].present?
     end
 
     def submit_callout
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
-      if @callout.hidden? || !@callout.delivers_form? || @callout.dripping?
+      callout_form = @callout.registration_ticket_callout_forms.find_by(form_id: params[:form_id])
+      if @callout.hidden? || callout_form.nil? || callout_form.dripping?
         redirect_to registration_callout_form_path(@event_registration.slug, @callout)
         return
       end
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
-      EventRegistrationServices::CalloutFormSubmission.call(
-        registration: @event_registration, callout: @callout, form_params: callout_form_params
+      service = EventRegistrationServices::CalloutFormSubmission.call(
+        registration: @event_registration, callout: @callout, form: callout_form.form,
+        form_params: callout_form_params, clarity_params: callout_clarity_params
       )
+      if callout_form.form.survey?
+        track_profile_changes(service.profile_changes)
+        NotificationMailer.survey_submitted_fyi(service.submission).deliver_later
+      end
 
-      redirect_to registration_callout_form_path(@event_registration.slug, @callout),
-                  notice: "Thanks! Your responses have been submitted."
-    end
-
-    # builtin_key => the FormSubmission role. The recipients survey is tagged
-    # "post_event_survey" — the one that gates readiness.
-    SURVEY_ROLES = {
-      "day_1_survey" => "day_1_survey",
-      "day_2_survey" => "day_2_survey",
-      "scholarship_recipients_survey" => "post_event_survey"
-    }.freeze
-
-    def survey
-      @callout = survey_callout
-      return redirect_to registration_ticket_path(@event_registration.slug) unless @callout
-
-      @form = @callout.form
-      @role = SURVEY_ROLES.fetch(@callout.builtin_key)
-      @dripping = @callout.dripping?
-      @submission = survey_submission
-      @editing = @submission.nil? || params[:edit].present?
-    end
-
-    def submit_survey
-      @callout = survey_callout
-      return redirect_to registration_ticket_path(@event_registration.slug) if @callout.nil? || @callout.dripping?
-
-      service = EventRegistrationServices::SurveySubmission.call(
-        event_registration: @event_registration,
-        form: @callout.form,
-        role: SURVEY_ROLES.fetch(@callout.builtin_key),
-        field_params: survey_field_params,
-        clarity_params: survey_clarity_params
-      )
-      track_survey_profile_changes(service.profile_changes)
-      NotificationMailer.survey_submitted_fyi(service.submission).deliver_later
-
-      redirect_to registration_survey_path(@event_registration.slug, @callout.builtin_key),
+      redirect_to registration_callout_form_path(@event_registration.slug, @callout, anchor: "form-#{callout_form.form_id}"),
                   notice: "Thanks! Your responses have been submitted."
     end
 
@@ -398,9 +366,12 @@ module Events
       (amount * 100).to_i
     end
 
-    def callout_submission
-      FormSubmission.find_by(person: @event_registration.registrant, form: @callout.form, event: @event,
-                             role: EventRegistrationServices::CalloutFormSubmission.role_for(@callout))
+    # The registrant's submission for each of the callout's forms, keyed by form_id
+    # (missing entries mean not yet submitted). Each carries the form's own role.
+    def callout_submissions
+      forms = @callout.forms.to_a
+      FormSubmission.where(person: @event_registration.registrant, event: @event, form: forms)
+                    .index_by(&:form_id)
     end
 
     # The CE callout's form is a post-training step gated on sign-out completion —
@@ -414,6 +385,11 @@ module Events
 
     def callout_form_params
       params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
+    end
+
+    # Per-resource "clarity" answers: { field_id => { resource_id => answer } }.
+    def callout_clarity_params
+      params.dig(:callout_form, :clarity)&.to_unsafe_h || {}
     end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
@@ -451,28 +427,8 @@ module Events
       "Signed out for #{entry.attendance_date.strftime("%a, %b %-d")} at #{time}."
     end
 
-    # The published survey callout for :builtin_key once it carries a form; nil otherwise.
-    def survey_callout
-      callout = @event.registration_ticket_callouts.find_by(builtin_key: params[:builtin_key])
-      return unless callout && callout.form && !callout.hidden? && SURVEY_ROLES.key?(callout.builtin_key)
-      callout
-    end
-
-    def survey_submission
-      FormSubmission.find_by(person: @event_registration.registrant, form: @callout.form,
-                             event: @event, role: SURVEY_ROLES.fetch(@callout.builtin_key))
-    end
-
-    def survey_field_params
-      params.dig(:survey, :fields)&.to_unsafe_h || {}
-    end
-
-    def survey_clarity_params
-      params.dig(:survey, :clarity)&.to_unsafe_h || {}
-    end
-
     # One Ahoy event per profile field the survey actually changed.
-    def track_survey_profile_changes(changes)
+    def track_profile_changes(changes)
       changes.each do |attribute, (from, to)|
         ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to)
       end

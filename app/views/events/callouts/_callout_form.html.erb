@@ -1,0 +1,69 @@
+<%# One linked form on a callout page. Gated (future date) → a header chip naming
+    when it opens. Completed → a collapsed toggle with a "Completed" chip that
+    expands to the answers + Edit. Otherwise → the form, ready to fill. %>
+<% form = callout_form.form %>
+<% completed = submission.present? %>
+<div id="form-<%= form.id %>" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200">
+  <% if callout_form.dripping? %>
+    <div class="flex items-center justify-between gap-2 <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5">
+      <div class="flex items-center gap-2 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
+        <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
+        <h2 class="text-sm font-semibold"><%= form.name %></h2>
+      </div>
+      <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+        <i class="fa-solid fa-clock text-2xs" aria-hidden="true"></i>
+        Available <%= callout_form.display_from.to_date.to_fs(:long) %>
+      </span>
+    </div>
+
+  <% elsif completed && !editing %>
+    <details class="group">
+      <summary class="flex cursor-pointer items-center justify-between gap-2 <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> list-none px-4 py-2.5 select-none [&::-webkit-details-marker]:hidden">
+        <div class="flex items-center gap-2 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
+          <i class="fa-solid fa-chevron-right text-xs transition-transform group-open:rotate-90" aria-hidden="true"></i>
+          <h2 class="text-sm font-semibold"><%= form.name %></h2>
+        </div>
+        <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+          <i class="fa-solid fa-check text-2xs" aria-hidden="true"></i> Completed
+        </span>
+      </summary>
+      <div class="border-t border-gray-100 px-4 py-5 sm:px-6">
+        <dl class="space-y-4">
+          <% submission.form_answers.includes(:form_field).order(:id).each do |answer| %>
+            <div>
+              <dt class="text-sm font-semibold text-gray-900"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></dt>
+              <dd class="text-sm whitespace-pre-line text-gray-700"><%= answer.submitted_answer.presence || "—" %></dd>
+            </div>
+          <% end %>
+        </dl>
+        <div class="mt-6">
+          <%= link_to "Edit responses", registration_callout_form_path(@event_registration.slug, callout, edit: form.id, anchor: "form-#{form.id}"),
+                class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+        </div>
+      </div>
+    </details>
+
+  <% else %>
+    <div class="flex items-center gap-2 border-b <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
+      <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
+      <h2 class="text-sm font-semibold"><%= form.name %></h2>
+    </div>
+    <div class="px-4 py-5 sm:px-6">
+      <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, callout, form), method: :post do %>
+        <div class="space-y-2">
+          <% form.form_fields.order(:position).each do |field| %>
+            <% if field.group_header? %>
+              <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
+            <% elsif field.per_resource? %>
+              <%= render "events/callouts/clarity_field", field: field, submission: submission %>
+            <% else %>
+              <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form",
+                    value: submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
+            <% end %>
+          <% end %>
+        </div>
+        <%= submit_tag "Submit", class: "mt-2 rounded-lg #{DomainTheme.bg_class_for(:forms, intensity: 600)} #{DomainTheme.bg_class_for(:forms, intensity: 600, hover: true)} px-4 py-2 text-sm font-semibold text-white cursor-pointer" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

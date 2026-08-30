@@ -1,0 +1,20 @@
+<%# A per-resource "clarity" question fans out to one input per linked resource,
+    the resource title appended to the prompt. Answers submit under
+    callout_form[clarity][field_id][resource_id] and store with a nil form_field. %>
+<% field.form_field_resources.ordered.includes(:resource).each do |link| %>
+  <% resource = link.resource %>
+  <% next unless resource %>
+  <% prefill = submission&.form_answers&.find_by(form_field: nil, question_name_when_answered: "#{field.name} #{resource.title}")&.submitted_answer %>
+  <fieldset class="mb-7">
+    <legend class="mb-1.5 text-sm font-semibold text-gray-700"><%= field.name %> <strong><%= resource.title %></strong></legend>
+    <div class="flex flex-wrap gap-3">
+      <% field.form_field_answer_options.includes(:answer_option).each do |ffo| %>
+        <% option = ffo.answer_option.name %>
+        <label class="inline-flex items-center gap-1.5 text-sm text-gray-700">
+          <%= radio_button_tag "callout_form[clarity][#{field.id}][#{resource.id}]", option, prefill == option %>
+          <%= option %>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+<% end %>

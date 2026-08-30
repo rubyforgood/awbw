@@ -2906,3 +2906,17 @@
   pro_tips:
     - "This covers people cards on registrants, notifications, membership invoices, professional licenses, monthly reports, users, and the affiliation and staff editors."
     - "The full name shows here for admins even if the person set their public credit to a first name or initials — that preference still governs public-facing pages, not the admin editor."
+
+- name: "Post-event surveys on the registration ticket"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-30
+  summary: >-
+    A "Post-event survey" callout on the registration ticket now delivers your
+    survey forms inline. One callout can carry several forms — a Day 1 and Day 2
+    evaluation, a recipients survey — each opening on its own date, and each showing
+    as "Completed" once the registrant submits it.
+  pro_tips:
+    - "Link forms to any callout under \"Linked forms\" in the callout editor; set a display date to drip a form open on that date, or leave it blank to show right away."
+    - "Completion shows per form on the registrants roster under the Ticket forms columns."
+    - "The recipients survey is the one that gates a scholarship recipient's readiness for their certificate."

@@ -17,10 +17,13 @@ RSpec.describe EventRegistrationReadiness, "post-event survey gating" do
   end
 
   def open_recipient_survey(hidden: false, display_from: 1.day.ago)
-    event.registration_ticket_callouts.create!(
-      builtin_key: "scholarship_recipients_survey", title: "Scholarship recipients survey",
-      callout_type: "action", hidden: hidden, display_from: display_from
+    callout = event.registration_ticket_callouts.create!(
+      builtin_key: "post_event_survey", title: "Post-event survey",
+      callout_type: "action", hidden: hidden
     )
+    form = create(:form, role: "post_event_survey")
+    callout.registration_ticket_callout_forms.create!(form: form, display_from: display_from)
+    callout
   end
 
   before do

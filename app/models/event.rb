@@ -242,18 +242,26 @@ class Event < ApplicationRecord
 
   # Memoized so readiness (which runs per registration) hits the callouts once per
   # event, not per row.
-  def scholarship_recipients_survey_callout
-    return @scholarship_recipients_survey_callout if defined?(@scholarship_recipients_survey_callout)
-    @scholarship_recipients_survey_callout =
-      registration_ticket_callouts.detect { |callout| callout.builtin_key == "scholarship_recipients_survey" }
+  def post_event_survey_callout
+    return @post_event_survey_callout if defined?(@post_event_survey_callout)
+    @post_event_survey_callout =
+      registration_ticket_callouts.detect { |callout| callout.builtin_key == "post_event_survey" }
+  end
+
+  # The readiness-gating form row within the post-event survey callout — the one
+  # whose form carries the "post_event_survey" role (the recipients survey).
+  def readiness_survey_form_link
+    return @readiness_survey_form_link if defined?(@readiness_survey_form_link)
+    @readiness_survey_form_link =
+      post_event_survey_callout&.registration_ticket_callout_forms&.detect { |link| link.form&.role == Form::READINESS_SURVEY_ROLE }
   end
 
   # Published + past drip. Only then does an unsubmitted survey gate a recipient's
   # completion.
   def post_event_survey_open?(now = Time.current)
-    callout = scholarship_recipients_survey_callout
-    return false unless callout && !callout.hidden?
-    callout.display_from.blank? || callout.display_from <= now
+    link = readiness_survey_form_link
+    return false unless link && !post_event_survey_callout.hidden?
+    link.display_from.blank? || link.display_from <= now
   end
 
   def registerable?

@@ -281,7 +281,6 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/callouts/videoconference.html.erb"  => "public",
     "app/views/events/callouts/staff.html.erb"            => "public",
     "app/views/events/callouts/callout.html.erb"          => "public",
-    "app/views/events/callouts/survey.html.erb"           => "public",
     "app/views/registration_ticket_callouts/show.html.erb" => "public",
 
     # ─── public standalone form (pretty URL, no account) ───

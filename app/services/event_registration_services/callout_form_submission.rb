@@ -1,40 +1,101 @@
 module EventRegistrationServices
-  # Records a registrant's answers to the form a ticket callout delivers inline.
+  # Records a registrant's answers to one form a ticket callout delivers inline.
   # One submission per (registrant, form, event) so re-submitting edits in place.
+  #
+  # A survey-role form additionally: fans a per-resource "clarity" field out to one
+  # answer per linked resource, writes the anonymity / name-display answers through
+  # to the Person (#profile_changes reports real changes for Ahoy), and stamps
+  # post_survey_completed_at for a recipient's post-event survey.
   class CalloutFormSubmission
-    def self.call(registration:, callout:, form_params:)
-      new(registration:, callout:, form_params:).call
+    attr_reader :submission, :profile_changes
+
+    def self.call(**kwargs)
+      instance = new(**kwargs)
+      instance.call
+      instance
     end
 
-    # The submission carries the form's own role — indistinguishable from the same
-    # form submitted elsewhere. That a callout collected it is recorded separately,
-    # in metadata (see FormSubmission#collected_via_callout?).
-    def self.role_for(callout)
-      callout.form&.role
-    end
-
-    def initialize(registration:, callout:, form_params:)
+    def initialize(registration:, callout:, form:, form_params: {}, clarity_params: {})
       @registration = registration
       @callout = callout
-      @form_params = form_params || {}
+      @form = form
+      @form_params = (form_params || {}).transform_keys(&:to_s)
+      @clarity_params = clarity_params || {}
+      @profile_changes = {}
     end
 
     def call
-      form = @callout.form
+      person = @registration.registrant
       ActiveRecord::Base.transaction do
-        submission = FormSubmission.find_or_create_by!(
-          person: @registration.registrant, form: form, event: @registration.event,
-          role: self.class.role_for(@callout)
+        @submission = FormSubmission.find_or_create_by!(
+          person: person, form: @form, event: @registration.event, role: @form.role
         )
-        submission.record_callout_collection!(@callout)
-        @form_params.each do |field_id, raw_value|
-          field = form.form_fields.find_by(id: field_id)
-          next unless field
-          next if field.group_header?
-          submission.persist_answer(field, raw_value)
+        @submission.record_callout_collection!(@callout)
+        save_answers
+        if @form.survey?
+          save_clarity_answers
+          sync_profile(person)
+          stamp_completion
         end
-        submission
       end
+      @submission
+    end
+
+    private
+
+    def save_answers
+      @form.form_fields.each do |field|
+        next if field.group_header? || field.per_resource?
+        raw = @form_params[field.id.to_s]
+        next if raw.nil?
+        text = raw.is_a?(Array) ? raw.reject(&:blank?).join(", ") : raw
+        @submission.persist_answer(field, text)
+      end
+    end
+
+    # One answer per linked resource, keyed by the snapshotted sentence so re-submits
+    # update in place (form_field stays nil).
+    def save_clarity_answers
+      @clarity_params.each do |field_id, per_resource|
+        field = @form.form_fields.find_by(id: field_id)
+        next unless field&.per_resource?
+        field.form_field_resources.includes(:resource).each do |link|
+          raw = per_resource[link.resource_id.to_s] || per_resource[link.resource_id]
+          next if raw.blank?
+          question = "#{field.name} #{link.resource.title}"
+          record = @submission.form_answers.find_or_initialize_by(form_field: nil, question_name_when_answered: question)
+          record.update!(submitted_answer: raw)
+        end
+      end
+    end
+
+    # Write the two identified questions to the Person, recording only real changes.
+    def sync_profile(person)
+      apply_profile_change(person, :anonymous_contributions,
+        Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.invert[value_for("anonymous_contributions")])
+      apply_profile_change(person, :display_name_preference,
+        Person::DISPLAY_NAME_PREFERENCE_LABELS.invert[value_for("display_name_preference")])
+      person.save! if person.changed?
+    end
+
+    def apply_profile_change(person, attribute, new_value)
+      return if new_value.nil?
+      current = person.public_send(attribute)
+      return if current == new_value
+      @profile_changes[attribute] = [ current, new_value ]
+      person.public_send("#{attribute}=", new_value)
+    end
+
+    # The submitted label for a field identified by its field_identifier.
+    def value_for(field_identifier)
+      field = @form.form_fields.find_by(field_identifier: field_identifier)
+      field && @form_params[field.id.to_s]
+    end
+
+    def stamp_completion
+      return unless @form.role == Form::READINESS_SURVEY_ROLE && @registration.scholarship?
+      return if @registration.post_survey_completed?
+      @registration.mark_post_survey_completed!
     end
   end
 end
