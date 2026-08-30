@@ -1,6 +1,6 @@
 module OrganizationServices
   # Find-or-create an organization's work address from a registrant's submitted
-  # agency address fields. When AddressMatcher recognizes one of the org's
+  # organization address fields. When AddressMatcher recognizes one of the org's
   # addresses as the same place, update it in place; otherwise add a new "work"
   # address.
   #

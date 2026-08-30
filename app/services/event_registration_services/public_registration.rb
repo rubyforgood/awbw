@@ -83,7 +83,7 @@ module EventRegistrationServices
         organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
         if organization
           profile_changes = sync_organization_profile(organization).changes
-          address_result = create_agency_address(organization)
+          address_result = create_organization_address(organization)
           # find_organization only ever finds, so this org already existed and the
           # registrant just changed it — connect_organization records what, and to
           # what value, for the admin linking page's persistent note.
@@ -144,7 +144,7 @@ module EventRegistrationServices
 
     # Turn a database "Data too long for column 'city'" failure into a friendly,
     # form-level message. We can't always map the column back to a single form
-    # field (both the mailing and agency address write `city`), so we name the
+    # field (both the mailing and organization address write `city`), so we name the
     # column generically and ask the registrant to shorten that answer.
     def too_long_message(error)
       column = error.message[/column '([^']+)'/, 1]
@@ -355,7 +355,7 @@ module EventRegistrationServices
       )
     end
 
-    def create_agency_address(organization)
+    def create_organization_address(organization)
       OrganizationServices::UpsertAddress.call(
         organization: organization,
         street_address: field_value("organization_street"),

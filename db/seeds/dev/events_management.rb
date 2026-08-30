@@ -1237,9 +1237,9 @@ record_organization_answers = ->(registration, submission, i) do
                                     question_name_when_answered: position_field.name)
   end
 
-  agency_field = form.form_fields.find_by(field_identifier: "organization_name")
-  next unless agency_field && org_answer_orgs.any?
-  next if submission.form_answers.where(form_field: agency_field).any?
+  organization_name_field = form.form_fields.find_by(field_identifier: "organization_name")
+  next unless organization_name_field && org_answer_orgs.any?
+  next if submission.form_answers.where(form_field: organization_name_field).any?
 
   linked_org = registration.organizations.first
   unless linked_org
@@ -1254,9 +1254,9 @@ record_organization_answers = ->(registration, submission, i) do
   mismatch = org_answer_index % 4 == 3
   typed_name = mismatch ? unmatched_org_names[org_answer_index / 4 % unmatched_org_names.size] : linked_org.name
   org_answer_index += 1
-  submission.form_answers.create!(form_field: agency_field,
+  submission.form_answers.create!(form_field: organization_name_field,
                                   submitted_answer: typed_name,
-                                  question_name_when_answered: agency_field.name)
+                                  question_name_when_answered: organization_name_field.name)
 end
 
 # Give the flagship cohort registration submissions so its Background charts have
@@ -1430,7 +1430,7 @@ end
 puts "Creating organization-link demo registrants on the flagship training…"
 # Exercises every state of the registrants Organization column and the Link
 # Organization editor: linked org(s), the amber "Pending" chip (the registrant
-# typed an agency name that is not linked to an org), and the grey "None" chip
+# typed an organization name that is not linked to an org), and the grey "None" chip
 # (nothing submitted). Deterministic, clearly-named people so each state is easy
 # to spot in the browser at the flagship event's registrants page. Runs last so
 # the earlier affiliation backfill / form-fill passes leave these registrants
@@ -1444,8 +1444,8 @@ if facilitator_training && registration_form
       (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ]
     )
   end
-  agency_field = registration_form.form_fields.find_by(field_identifier: "organization_name")
-  agency_position_field = registration_form.form_fields.find_by(field_identifier: "organization_position")
+  organization_name_field = registration_form.form_fields.find_by(field_identifier: "organization_name")
+  organization_position_field = registration_form.form_fields.find_by(field_identifier: "organization_position")
 
   # Real, existing orgs to link against / match on (skip the AWBW house org).
   demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
@@ -1453,7 +1453,7 @@ if facilitator_training && registration_form
   # A partial of the matched org's name (its words minus the first) shares words
   # with it but isn't an exact match — drives a fuzzy "Suggested matches" hit
   # (case 11). Nil when the org name is a single word (no partial to take).
-  fuzzy_agency = matched_org&.name.to_s.split.length.to_i > 1 ? matched_org.name.split.drop(1).join(" ") : nil
+  fuzzy_organization = matched_org&.name.to_s.split.length.to_i > 1 ? matched_org.name.split.drop(1).join(" ") : nil
 
   # Several orgs that share a word ("Riverside"), so typing just that word surfaces
   # a handful of fuzzy "Suggested matches" at once (case 9). find_or_create so
@@ -1480,11 +1480,11 @@ if facilitator_training && registration_form
     registration.event_registration_organizations.find_or_create_by!(organization: organization)
   end
 
-  submit_agency_name = ->(registration, value) do
+  submit_organization_name = ->(registration, value) do
     submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration", event: registration.event)
-    if agency_field
-      answer = submission.form_answers.find_or_initialize_by(form_field: agency_field)
-      answer.update!(submitted_answer: value.to_s, question_name_when_answered: agency_field.name)
+    if organization_name_field
+      answer = submission.form_answers.find_or_initialize_by(form_field: organization_name_field)
+      answer.update!(submitted_answer: value.to_s, question_name_when_answered: organization_name_field.name)
     end
   end
 
@@ -1505,7 +1505,7 @@ if facilitator_training && registration_form
   end
 
   # Each scenario => one registrant. :orgs link real orgs (→ chip shows links);
-  # :agency stores a submitted name. A typed name matching an existing org is linked
+  # :organization stores a submitted name. A typed name matching an existing org is linked
   # (as registration does), so "Pending" only shows for names not among the linked
   # orgs — on its own (case 3) or alongside linked orgs (case 5). "None" = nothing typed.
   # Case 8 is the stale edge case: a typed name that matches an existing org but was
@@ -1516,17 +1516,17 @@ if facilitator_training && registration_form
   scenarios = [
     { last: "01 Linked one org",       orgs: demo_orgs.first(1) },
     { last: "02 Linked three orgs",    orgs: demo_orgs.first(3) },
-    { last: "03 Pending no match",     agency: "Riverside Healing Arts Collective" },
-    { last: "04 Matched name auto-linked", orgs: demo_orgs.first(1), agency: matched_org&.name },
-    { last: "05 Mixed linked + pending", orgs: demo_orgs.first(1), agency: "Westview Community Healing" },
-    { last: "06 None blank typed",     agency: "" },
+    { last: "03 Pending no match",     organization: "Riverside Healing Arts Collective" },
+    { last: "04 Matched name auto-linked", orgs: demo_orgs.first(1), organization: matched_org&.name },
+    { last: "05 Mixed linked + pending", orgs: demo_orgs.first(1), organization: "Westview Community Healing" },
+    { last: "06 None blank typed",     organization: "" },
     { last: "07 None nothing typed" },
-    { last: "08 Pending matches existing org", agency: matched_org&.name }
+    { last: "08 Pending matches existing org", organization: matched_org&.name }
   ]
   # Case 9: a single word shared by several orgs — not an exact match, so it shows
   # a "Create and link" row plus a handful of orgs under fuzzy "Suggested matches".
   # Includes a job title so the submission detail shows a position too.
-  scenarios << { last: "09 Fuzzy match suggestions", agency: fuzzy_match_word, position: "Lead Facilitator" }
+  scenarios << { last: "09 Fuzzy match suggestions", organization: fuzzy_match_word, position: "Lead Facilitator" }
 
   scenarios.each_with_index do |scenario, i|
     person = Person.create!(
@@ -1539,11 +1539,11 @@ if facilitator_training && registration_form
     end
 
     Array(scenario[:orgs]).each { |org| link_org.call(registration, org) }
-    submit_agency_name.call(registration, scenario[:agency]) if scenario.key?(:agency)
-    if scenario[:position].present? && agency_position_field
+    submit_organization_name.call(registration, scenario[:organization]) if scenario.key?(:organization)
+    if scenario[:position].present? && organization_position_field
       submission = FormSubmission.find_or_create_by!(person: person, form: registration_form, role: "registration", event: registration.event)
-      answer = submission.form_answers.find_or_initialize_by(form_field: agency_position_field)
-      answer.update!(submitted_answer: scenario[:position], question_name_when_answered: agency_position_field.name)
+      answer = submission.form_answers.find_or_initialize_by(form_field: organization_position_field)
+      answer.update!(submitted_answer: scenario[:position], question_name_when_answered: organization_position_field.name)
     end
   end
 
@@ -1553,7 +1553,7 @@ if facilitator_training && registration_form
   # Each submission also carries a fake Stripe (ExternalProcessorPayment) so the
   # payments index has Stripe rows to exercise its payment-method filter and
   # metadata / charge-id search.
-  if agency_field
+  if organization_name_field
     demo_multi = Person.create!(
       email: "orgchip.demo.10@seed.example.com",
       first_name: "Org Demo",
@@ -1566,7 +1566,7 @@ if facilitator_training && registration_form
     card_amount_cents = 15_000 if card_amount_cents <= 0
     [ "Greenfield Survivor Services", "Harbor Light Counseling" ].each do |org_name|
       submission = FormSubmission.create!(person: demo_multi, form: registration_form, event: facilitator_training, role: "registration")
-      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+      submission.form_answers.create!(form_field: organization_name_field, submitted_answer: org_name, question_name_when_answered: organization_name_field.name)
 
       stripe_payment = ExternalProcessorPayment.new(
         person: demo_multi,
@@ -1591,8 +1591,8 @@ if facilitator_training && registration_form
   # each naming a partial of a different existing org. Exercises multiple "View
   # submission #N" links, a "Create and link" row per partial, and the fuzzy
   # "Suggested matches" list (driven by the first/primary submission).
-  fuzzy_agency_2 = demo_orgs[1]&.name.to_s.split.length.to_i > 1 ? demo_orgs[1].name.split.drop(1).join(" ") : nil
-  if agency_field && fuzzy_agency.present? && fuzzy_agency_2.present?
+  fuzzy_organization_2 = demo_orgs[1]&.name.to_s.split.length.to_i > 1 ? demo_orgs[1].name.split.drop(1).join(" ") : nil
+  if organization_name_field && fuzzy_organization.present? && fuzzy_organization_2.present?
     demo_fuzzy_multi = Person.create!(
       email: "orgchip.demo.11@seed.example.com",
       first_name: "Org Demo",
@@ -1601,9 +1601,9 @@ if facilitator_training && registration_form
     EventRegistration.find_or_create_by!(event: facilitator_training, registrant: demo_fuzzy_multi) do |reg|
       reg.status = "registered"
     end
-    [ fuzzy_agency, fuzzy_agency_2 ].each do |org_name|
+    [ fuzzy_organization, fuzzy_organization_2 ].each do |org_name|
       submission = FormSubmission.create!(person: demo_fuzzy_multi, form: registration_form, event: facilitator_training, role: "registration")
-      submission.form_answers.create!(form_field: agency_field, submitted_answer: org_name, question_name_when_answered: agency_field.name)
+      submission.form_answers.create!(form_field: organization_name_field, submitted_answer: org_name, question_name_when_answered: organization_name_field.name)
     end
   end
 
@@ -1641,7 +1641,7 @@ if facilitator_training && registration_form
     registration.event_registration_organizations.find_or_create_by!(organization: aff_org)
     add_affiliation.call(person, aff_org, title: scenario[:job])
     add_affiliation.call(person, aff_org, title: "Facilitator", end_date: scenario[:facilitator_end])
-    submit_field.call(registration, agency_field, aff_org.name)
+    submit_field.call(registration, organization_name_field, aff_org.name)
     submit_field.call(registration, position_field, scenario[:position])
   end
 
@@ -1664,7 +1664,7 @@ if facilitator_training && registration_form
   if aff_org && other_org
     person = Person.create!(email: "affdemo.5@seed.example.com", first_name: "Demo Affiliation", last_name: "A5 Admin-linked second org")
     registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
-    submit_field.call(registration, agency_field, aff_org.name)
+    submit_field.call(registration, organization_name_field, aff_org.name)
     link_org.call(registration, aff_org)
     # Admin adds the second org later — no matching submission (mirrors the
     # select/create_organization controller path: affiliation + connection).
@@ -1678,7 +1678,7 @@ if facilitator_training && registration_form
     registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
     [ aff_org, other_org ].each do |org|
       submission = FormSubmission.create!(person: person, form: registration_form, event: facilitator_training, role: "registration")
-      submission.form_answers.create!(form_field: agency_field, submitted_answer: org.name, question_name_when_answered: agency_field.name) if agency_field
+      submission.form_answers.create!(form_field: organization_name_field, submitted_answer: org.name, question_name_when_answered: organization_name_field.name) if organization_name_field
       link_org.call(registration, org)
     end
   end
@@ -1698,7 +1698,7 @@ if facilitator_training && registration_form
     registration.event_registration_organizations.find_or_create_by!(organization: upcoming_org)
     add_affiliation.call(person, aff_org, title: "Counselor")
     add_affiliation.call(person, upcoming_org, title: "Facilitator", start_date: Date.current + 1.month)
-    submit_field.call(registration, agency_field, upcoming_org.name)
+    submit_field.call(registration, organization_name_field, upcoming_org.name)
     submit_field.call(registration, position_field, "Counselor")
   end
 end

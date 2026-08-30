@@ -183,7 +183,7 @@ kara = [ "Kara", "External", "kara.external@external.example.com" ]
 
 # Payers (the people who submitted/paid; their emails mark this seed's data).
 shelter = make_person.("Northside Shelter", "Payments", "northside@#{payer_domain}")
-agency  = make_person.("Eastside Agency", "Payments", "eastside@#{payer_domain}")
+eastside = make_person.("Eastside Agency", "Payments", "eastside@#{payer_domain}")
 quentin = make_person.("Quentin", "Cardpayer", "quentin.cardpayer@#{payer_domain}")
 rita    = make_person.("Rita", "Checklater", "rita.checklater@#{payer_domain}")
 sam     = make_person.("Sam", "Paylater", "sam.paylater@#{payer_domain}")
@@ -202,7 +202,7 @@ allocate.(p1, bea, cost_cents, 11.days.ago)
 # --- Scenario 2: CASH logged by staff, fully allocated --------------------------
 # $3,000 cash for 2 seats, both allocated their full cost → $0 remaining, both paid
 # in full. Method is "Other" (cash isn't a payer-selectable option on the form).
-s2 = build_submission.(payer: agency, method: "Other",
+s2 = build_submission.(payer: eastside, method: "Other",
   attendees: [ listed.(dot), listed.(eli) ])
 p2 = recorded_payment.(s2, kind: :cash, amount_cents: cost_cents * 2, created_at: 9.days.ago)
 allocate.(p2, dot, cost_cents, 8.days.ago)
