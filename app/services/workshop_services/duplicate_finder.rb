@@ -57,33 +57,5 @@ module WorkshopServices
     def alnum_title(workshop)
       workshop.title.to_s.downcase.gsub(/[^a-z0-9 ]/, " ").squish
     end
-
-    # Minimal disjoint-set: clusters ids connected by any shared signal into
-    # components, so a workshop linked to one dupe by exact title and to another
-    # by punctuation-insensitive title lands in a single group.
-    class UnionFind
-      def initialize(ids)
-        @parent = ids.to_h { |id| [ id, id ] }
-      end
-
-      def union_all(ids)
-        ids.each { |id| union(ids.first, id) }
-      end
-
-      def components
-        @parent.keys.group_by { |id| find(id) }.values
-      end
-
-      private
-
-      def find(id)
-        id = @parent[id] while @parent[id] != id
-        id
-      end
-
-      def union(a, b)
-        @parent[find(a)] = find(b)
-      end
-    end
   end
 end
