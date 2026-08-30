@@ -1078,10 +1078,9 @@ class EventsController < ApplicationController
   end
 
   # Maps registrant person_id => the organization name they typed on the
-  # registration form (the organization-name answer, canonical or legacy), in one
-  # batch query. Drives both
-  # the roster's Pending/None org chip and the readiness "Organization not linked"
-  # check, so both read the same resolved answer.
+  # registration form (the organization_name answer), in one batch query. Drives
+  # both the roster's Pending/None org chip and the readiness "Organization not
+  # linked" check, so both read the same resolved answer.
   def submitted_org_names_for(registrations)
     registration_form = @event.registration_form
     field = registration_form&.form_fields&.find_by(field_identifier: "organization_name")
