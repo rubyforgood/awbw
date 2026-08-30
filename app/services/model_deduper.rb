@@ -5,11 +5,12 @@ require "set"
 class ModelDeduper
   attr_reader :model_class, :logger, :dry_run, :min_usage
 
-  def initialize(model_class:, logger: Logger.new($stdout), dry_run: true, min_usage: 0)
+  def initialize(model_class:, logger: Logger.new($stdout), dry_run: true, min_usage: 0, movable_attachments: [])
     @model_class = model_class
     @logger = logger
     @dry_run = dry_run
     @min_usage = min_usage
+    @movable_attachments = Array(movable_attachments).map(&:to_s)
   end
 
   def call
@@ -119,7 +120,9 @@ class ModelDeduper
     DEFERRED_REFERENCE_TABLES + IGNORED_REFERENCE_TABLES
   ).freeze
 
-  # Attached files (e.g. the logo) that are deleted with the record, not moved.
+  # Attached files that are deleted with the record, not moved. Any attachment
+  # named in `movable_attachments` is excluded here — it's reported by
+  # #attachment_plan instead, which decides move-vs-drop against the keeper.
   # Each entry is { label:, count: } — drives the preview's "will be lost" note.
   def lost_references(record)
     LOST_POLYMORPHIC_REFERENCES.filter_map do |table, (type_column, id_column)|
@@ -128,10 +131,24 @@ class ModelDeduper
       klass = model_for_table(table)
       next unless klass.column_names.include?(id_column)
 
-      count = klass.where(type_column => model_class.polymorphic_name, id_column => record.id).count
+      scope = klass.where(type_column => model_class.polymorphic_name, id_column => record.id)
+      scope = scope.where.not(name: @movable_attachments) if @movable_attachments.any? && klass.column_names.include?("name")
+      count = scope.count
       next if count.zero?
 
-      { label: "Attached files (e.g. logo)", count: count }
+      { label: "Attached files", count: count }
+    end
+  end
+
+  # For each `movable_attachments` name the deleted record has: whether it will
+  # MOVE to the keeper (keeper has none) or be DROPPED (keeper already has one).
+  # Each entry is { name:, label:, action: :move | :drop }.
+  def attachment_plan(record_to_keep, record_to_delete)
+    @movable_attachments.filter_map do |name|
+      next unless record_to_delete.public_send(name).attached?
+
+      action = record_to_keep.public_send(name).attached? ? :drop : :move
+      { name: name, label: name.humanize, action: action }
     end
   end
 
@@ -321,9 +338,24 @@ class ModelDeduper
       end
 
       reassign_polymorphic_references(primary, dupe)
+      move_attachments(primary, dupe)
 
       dupe.reload.destroy!
       logger.info "  deleted #{model_label} #{dupe.id}"
+    end
+  end
+
+  # Reassign each movable attachment from the dupe to the kept record when the
+  # keeper has none; otherwise leave it on the dupe so it purges on destroy. The
+  # attachment row's record_id moves (record_type is unchanged — same model), so
+  # the file follows the survivor instead of being lost with the deleted record.
+  def move_attachments(primary, dupe)
+    @movable_attachments.each do |name|
+      next unless dupe.public_send(name).attached?
+      next if primary.public_send(name).attached?
+
+      ActiveStorage::Attachment.where(record: dupe, name: name).update_all(record_id: primary.id)
+      logger.info "  moved attachment #{name} to primary"
     end
   end
 

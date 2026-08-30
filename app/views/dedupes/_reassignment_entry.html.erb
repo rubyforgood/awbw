@@ -14,9 +14,9 @@
     <% extra = entry[:count] - entry[:names].size %>
     <details class="group">
       <summary class="flex cursor-pointer list-none items-center gap-1 text-gray-600 [&::-webkit-details-marker]:hidden">
-        <i class="fa-solid fa-chevron-right text-xs text-gray-400 transition-transform group-open:rotate-90"></i>
         <span class="font-medium text-gray-800"><%= entry[:label] %></span>
         <span class="text-gray-400">(<%= entry[:count] %>)</span>
+        <i class="fa-solid fa-chevron-right ml-auto text-xs text-gray-400 transition-transform group-open:rotate-90"></i>
       </summary>
       <ul class="mt-1 ml-5 list-disc space-y-0.5 text-gray-500">
         <% entry[:names].each do |name| %>

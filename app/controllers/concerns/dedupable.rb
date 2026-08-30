@@ -38,10 +38,11 @@ module Dedupable
       return redirect_to url_for(action: :dedupe_index),
         alert: "#{mc.model_name.human} not found (ID: #{missing.join(', ')})."
     end
-    deduper = ModelDeduper.new(model_class: mc)
+    deduper = ModelDeduper.new(model_class: mc, movable_attachments: config[:movable_attachments])
     @reassignment_delete = deduper.reassignment_preview(@record_to_delete)
     @reassignment_keep = deduper.reassignment_preview(@record_to_keep)
     @lost_references = deduper.lost_references(@record_to_delete)
+    @attachment_plan = deduper.attachment_plan(@record_to_keep, @record_to_delete)
     @unhandled_references = deduper.unhandled_references(@record_to_delete)
     @merge_notes = Array(config[:merge_notes]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
@@ -96,7 +97,8 @@ module Dedupable
     # (e.g. an org's FileMaker codes), so the kept record keeps both records' links.
     config[:merge_keeper]&.call(record_to_keep, record_to_delete)
 
-    deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
+    deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0,
+                               movable_attachments: config[:movable_attachments])
 
     if respond_to?(:track_event, true)
       track_event("dedupe.#{mn}", {
@@ -138,6 +140,8 @@ module Dedupable
   #   field_notes:        Hash of { column_name => hint } rendered under the keeper's field, to guide
   #                       an admin on what to enter (e.g. full_name is a legacy free-text author) (optional)
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
+  #   movable_attachments: Array of has_one_attached names to move to the keeper when it has none
+  #                       (otherwise dropped with the deleted record), e.g. %w[thumbnail header] (optional)
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
