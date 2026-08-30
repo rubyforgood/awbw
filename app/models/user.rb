@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  include Communicable
   # Include default devise modules. Others available are:
   # :confirmable, :timeoutable and :omniauthable
   devise :database_authenticatable, :recoverable, :confirmable,
@@ -34,8 +35,12 @@ class User < ApplicationRecord
   belongs_to :favorite_event, class_name: "Event", optional: true
   has_many :bookmarks, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # A user account's communications are addressed to its login email.
+  def communications_email
+    email
+  end
   has_many :event_registrations, through: :person
-  has_many :notifications, as: :noticeable, dependent: :nullify
 
   has_many :reports, foreign_key: :created_by_id, inverse_of: :created_by
   has_many :resources, foreign_key: :created_by_id, inverse_of: :created_by
@@ -191,17 +196,6 @@ class User < ApplicationRecord
         log.workshop_held_on.year == date.year.to_i
     end.flatten
     logs.uniq.group_by { |log| log.workshop_held_on }
-  end
-
-  def organization_workshop_logs(date, windows_type, organization_id)
-    if organization_id
-      logs = workshop_logs.where(organization_id: organization_id, windows_type_id: windows_type.id)
-      logs = logs.select do |log|
-        log.workshop_held_on && log.workshop_held_on.month == date.month.to_i &&
-          log.workshop_held_on.year == date.year.to_i
-      end.flatten
-      logs.uniq.group_by { |log| log.workshop_held_on }
-    end
   end
 
   def deletable?

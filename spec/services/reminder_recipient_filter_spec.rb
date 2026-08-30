@@ -74,6 +74,14 @@ RSpec.describe ReminderRecipientFilter do
       expect(matched({ funder_name: "acme" }, [ reg, ungranted ])).to eq([ reg.id ].to_set)
     end
 
+    it "filters by registration date range" do
+      early = registration(first_name: "Early").tap { |r| r.update_column(:created_at, Time.zone.parse("2026-01-10")) }
+      mid = registration(first_name: "Mid").tap { |r| r.update_column(:created_at, Time.zone.parse("2026-02-15")) }
+      late = registration(first_name: "Late").tap { |r| r.update_column(:created_at, Time.zone.parse("2026-03-20")) }
+      params = { registered_from: "2026-02-01", registered_to: "2026-02-28" }
+      expect(matched(params, [ early, mid, late ])).to eq([ mid.id ].to_set)
+    end
+
     it "filters by email address" do
       amy = registration(first_name: "Amy", email: "amy@example.com", user: nil)
       sam = registration(first_name: "Sam", email: "sam@example.com", user: nil)

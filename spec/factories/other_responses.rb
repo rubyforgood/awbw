@@ -8,7 +8,7 @@ FactoryBot.define do
 
     trait :organization_type do
       association :owner, factory: :organization
-      field_identifier { "agency_type" }
+      field_identifier { "organization_type" }
     end
 
     trait :generic do

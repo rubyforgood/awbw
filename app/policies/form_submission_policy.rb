@@ -10,6 +10,10 @@ class FormSubmissionPolicy < ApplicationPolicy
     admin? || (slug.present? && record.slug == slug)
   end
 
+  def changes?
+    admin?
+  end
+
   def ticket?
     admin? || (slug.present? && record.slug == slug)
   end
@@ -27,5 +31,23 @@ class FormSubmissionPolicy < ApplicationPolicy
   # admin-only.
   def show_invoice?
     record.role == "bulk_payment" || admin?
+  end
+
+  # The agreement processing panel (affiliation actions, portal invite) — staff
+  # only, even where a submitter can reach their own submission by slug.
+  def process?
+    admin?
+  end
+
+  def link_organization?
+    admin?
+  end
+
+  def select_organization?
+    admin?
+  end
+
+  def create_organization?
+    admin?
   end
 end

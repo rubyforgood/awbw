@@ -1,6 +1,7 @@
 class Story < ApplicationRecord
   include AuthorCreditable
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Communicable
 
   has_rich_text :rhino_body
 
@@ -20,7 +21,6 @@ class Story < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
 
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
@@ -49,7 +49,6 @@ class Story < ApplicationRecord
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   # SearchCop
   include SearchCop
@@ -105,6 +104,10 @@ class Story < ApplicationRecord
                        .or(stories.where(id: by_credited_person_name(query).select("stories.id")))
     end
 
+    if params[:author_name].present?
+      stories = stories.where(id: by_credited_person_name(params[:author_name]).select("stories.id"))
+    end
+
     stories = stories.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)
     stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
@@ -127,8 +130,6 @@ class Story < ApplicationRecord
     title
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     author_person&.preferred_email
   end

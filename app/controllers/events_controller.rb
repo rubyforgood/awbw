@@ -119,7 +119,7 @@ class EventsController < ApplicationController
     @report = EventAttendanceReport.new(@event, ce_only: params[:ce] == "true")
   end
 
-  # Cross-event sign-ins: the totals table for each event the report filters reach,
+  # Cross-event timesheets: the totals table for each event the report filters reach,
   # so staff can read a training's logged hours without opening it, and compare
   # across a year. Sibling of the revenue/participation/scholarship reports, sharing
   # their filter bar. CE columns switch on when any event in scope grants CE —
@@ -228,6 +228,7 @@ class EventsController < ApplicationController
     scope = scope.registrant_state(params[:state]) if params[:state].present?
     scope = scope.registrant_county(params[:county]) if params[:county].present?
     scope = scope.registrant_sector(params[:sector]) if params[:sector].present?
+    scope = scope.registered_between(params[:registered_from], params[:registered_to])
 
     @active_count = scope.active.count
     @inactive_count = scope.inactive.count
@@ -431,11 +432,13 @@ class EventsController < ApplicationController
     # hiding the box (its dates/times/cost describe nothing), but an explicit "0"
     # from a bounce-back means the admin unticked it and we respect that.
     @hide_event_card = params.key?(:hide_event_card) ? hide_event_card_param : @event.on_demand?
+    # The ticket button shows by default — only hidden when the admin explicitly ticks it.
+    @hide_ticket_button = hide_ticket_button_param
 
     if @sample_registration
       # Render in preview mode so the custom-message container is always present
       # in the markup for the live preview, even before any text is typed.
-      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, preview: true)
+      mail = EventMailer.event_registration_reminder(@sample_registration, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button, preview: true)
       @reminder_preview_html = mail.html_part&.body&.decoded
     end
   end
@@ -451,9 +454,10 @@ class EventsController < ApplicationController
     @custom_message = params[:custom_message].to_s
     @custom_subject = params[:custom_subject].to_s
     @hide_event_card = hide_event_card_param
+    @hide_ticket_button = hide_ticket_button_param
 
     if @event_registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: (hide_event_card_param ? "1" : "0")), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient."
       return
     end
 
@@ -463,7 +467,7 @@ class EventsController < ApplicationController
       return
     end
 
-    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card)
+    mail = EventMailer.event_registration_reminder(@event_registrations.first, custom_message: @custom_message, custom_subject: @custom_subject, hide_event_card: @hide_event_card, hide_ticket_button: @hide_ticket_button)
     @reminder_subject = mail.subject
     @reminder_preview_html = mail.html_part&.body&.decoded
   end
@@ -473,7 +477,7 @@ class EventsController < ApplicationController
     registrations = selected_reminder_registrations
 
     if registrations.empty?
-      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: (hide_event_card_param ? "1" : "0")), alert: "Please select at least one recipient."
+      redirect_to preview_reminder_event_path(@event, mode: params[:mode].presence, custom_message: params[:custom_message].to_s, custom_subject: params[:custom_subject].to_s, hide_event_card: (hide_event_card_param ? "1" : "0"), hide_ticket_button: (hide_ticket_button_param ? "1" : "0")), alert: "Please select at least one recipient."
       return
     end
 
@@ -482,6 +486,7 @@ class EventsController < ApplicationController
     custom_message = params[:custom_message].to_s
     custom_subject = params[:custom_subject].to_s
     hide_event_card = hide_event_card_param
+    hide_ticket_button = hide_ticket_button_param
 
     # Record an individual notification per recipient (delivered + persisted via
     # NotificationMailerJob), so each reminder shows up in that person's
@@ -497,7 +502,8 @@ class EventsController < ApplicationController
         bulk: true,
         custom_message: custom_message.presence,
         custom_subject: custom_subject.presence,
-        hide_event_card: hide_event_card
+        hide_event_card: hide_event_card,
+        hide_ticket_button: hide_ticket_button
       )
     end
 
@@ -505,7 +511,7 @@ class EventsController < ApplicationController
     # was sent. Roster passed as plain "Name <email>" labels so the delivery job
     # needs no record lookups.
     recipient_labels = registrations.map { |r| "#{r.registrant.full_name} <#{r.registrant.preferred_email}>" }
-    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence, hide_event_card: hide_event_card).deliver_later
+    EventMailer.event_registration_reminder_fyi(@event, recipient_labels, custom_message: custom_message.presence, hide_event_card: hide_event_card, hide_ticket_button: hide_ticket_button).deliver_later
 
     track_view("events.send_reminder", { event_id: @event.id, recipient_count: registrations.size })
     redirect_to registrants_event_path(@event), notice: "Reminder emails are being sent to #{registrations.size} registrant#{'s' if registrations.size != 1}."
@@ -985,8 +991,9 @@ class EventsController < ApplicationController
       .select(:registrant_id)
   end
 
-  # Person ids with at least one affiliation in the given status (Active / Pending
-  # / Inactive).
+  # Person ids with at least one affiliation in the given status (Affiliation::
+  # STATUSES — Active / Upcoming / Inactive), judged as of today to match the
+  # roster's Affiliation status column.
   def person_affiliation_status_ids(status)
     Affiliation.with_status(status).select(:person_id)
   end
@@ -1054,6 +1061,11 @@ class EventsController < ApplicationController
     ActiveModel::Type::Boolean.new.cast(params[:hide_event_card]) || false
   end
 
+  # Whether the admin ticked "hide the View ticket button" on the compose page.
+  def hide_ticket_button_param
+    ActiveModel::Type::Boolean.new.cast(params[:hide_ticket_button]) || false
+  end
+
   # The registrations the admin checked on the recipient picker, narrowed to those
   # we can actually email. Shared by the confirm interstitial and the send action
   # so both operate on exactly the same set.
@@ -1066,12 +1078,13 @@ class EventsController < ApplicationController
   end
 
   # Maps registrant person_id => the organization name they typed on the
-  # registration form (the `agency_name` answer), in one batch query. Drives both
+  # registration form (the organization-name answer, canonical or legacy), in one
+  # batch query. Drives both
   # the roster's Pending/None org chip and the readiness "Organization not linked"
   # check, so both read the same resolved answer.
   def submitted_org_names_for(registrations)
     registration_form = @event.registration_form
-    field = registration_form&.form_fields&.find_by(field_identifier: "agency_name")
+    field = registration_form&.form_fields&.find_by(field_identifier: "organization_name")
     return {} unless field
 
     FormAnswer.joins(:form_submission)
@@ -1096,7 +1109,7 @@ class EventsController < ApplicationController
   def event_registration_csv_row(registration, cost_required, include_ce = false)
     person = registration.registrant
     orgs = person.affiliations
-      .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }
+      .select(&:active?)
       .map(&:organization).compact.uniq
     org_names = orgs.map(&:name).join("; ")
     total_cents = registration.allocations_sum
@@ -1230,6 +1243,7 @@ class EventsController < ApplicationController
     @scholarship_forms = Form.standalone.where(role: "scholarship").order(:name)
     @bulk_payment_forms = Form.standalone.where(role: "bulk_payment").order(:name)
     @continuing_education_forms = Form.standalone.where(role: "continuing_education").order(:name)
+    @callout_forms = Form.standalone.order(:name)
     @categories_grouped =
       Category
         .includes(:category_type)

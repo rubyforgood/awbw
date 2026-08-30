@@ -13,6 +13,7 @@ namespace :db do
       workshop_logs
       monthly_reports
       events_management
+      form_submission_changes
       resources
       faqs
       video_recordings
@@ -22,9 +23,10 @@ namespace :db do
       payments
       scholarships
       membership
+      affiliation_history
       bulk_payments
-      legacy_form_identifiers
       public_forms
+      form_results_showcase
     ]
 
     desc "Generate representative sample data for development"
@@ -80,6 +82,11 @@ namespace :db do
       load Rails.root.join("db/seeds/dev/resources.rb")
     end
 
+    desc "Seed a post-registration edit trail for a known person (dev only)"
+    task form_submission_changes: :environment do
+      load Rails.root.join("db/seeds/dev/form_submission_changes.rb")
+    end
+
     desc "Seed dev FAQs"
     task faqs: :environment do
       load Rails.root.join("db/seeds/dev/faqs.rb")
@@ -120,19 +127,24 @@ namespace :db do
       load Rails.root.join("db/seeds/dev/membership.rb")
     end
 
+    desc "Seed several years of trainings, memberships, comments and affiliation edits for one person (dev only)"
+    task affiliation_history: :environment do
+      load Rails.root.join("db/seeds/dev/affiliation_history.rb")
+    end
+
     desc "Seed bulk payment demo submissions, payments, and allocations (dev only)"
     task bulk_payments: :environment do
       load Rails.root.join("db/seeds/dev/bulk_payments.rb")
     end
 
-    desc "Seed a registration form using the legacy primary-sector identifier (dev only)"
-    task legacy_form_identifiers: :environment do
-      load Rails.root.join("db/seeds/dev/legacy_form_identifiers.rb")
-    end
-
     desc "Seed standalone public forms with submissions and answers (dev only)"
     task public_forms: :environment do
       load Rails.root.join("db/seeds/dev/public_forms.rb")
+    end
+
+    desc "Seed a form covering every field type + varied answers for the results page (dev only)"
+    task form_results_showcase: :environment do
+      load Rails.root.join("db/seeds/dev/form_results_showcase.rb")
     end
   end
 end

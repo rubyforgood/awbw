@@ -2,6 +2,7 @@ class EventPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   # override or add new rules here that are not defined in ApplicationPolicy
+  authorize :person, optional: true, allow_nil: true
 
   def index?
     true
@@ -119,6 +120,10 @@ class EventPolicy < ApplicationPolicy
     manage?
   end
 
+  def reconcile_affiliations?
+    manage?
+  end
+
   def invoice?
     manage?
   end
@@ -126,6 +131,14 @@ class EventPolicy < ApplicationPolicy
   # Who can view a person's form submissions for this event
   def form_submissions?
     manage?
+  end
+
+  # Who can view one specific person's registration submission for this event:
+  # the event's submission managers, or that person viewing their own. The person
+  # is passed as context because the admin-side person_id fallback authorizes
+  # against the event while still allowing the registrant themselves through.
+  def person_form_submission?
+    form_submissions? || (person.present? && user&.person_id == person.id)
   end
 
   def preview_reminder?
@@ -193,7 +206,7 @@ class EventPolicy < ApplicationPolicy
                   sector_ids: [],
                   primary_asset_attributes: [ :id, :file, :_destroy ],
                   gallery_assets_attributes: [ :id, :file, :_destroy ],
-                  registration_ticket_callouts_attributes: [ :id, :builtin_key, :title, :subtitle, :description, :callout_type, :icon_class, :color_class, :display_from, :payment_access_gated, :published, :reset_to_default, :_destroy,
+                  registration_ticket_callouts_attributes: [ :id, :builtin_key, :title, :subtitle, :description, :callout_type, :icon_class, :color_class, :display_from, :payment_access_gated, :ce_payment_access_gated, :published, :reset_to_default, :form_id, :_destroy,
                     { registration_ticket_callout_resources_attributes: [ :id, :resource_id, :subtitle, :page_content, :_destroy ] } ],
                   event_staffs_attributes: [ :id, :person_id, :title, :expected_to_attend, :bio, :_destroy ]
         ]

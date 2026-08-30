@@ -2,6 +2,7 @@ class Workshop < ApplicationRecord
   include AuthorCreditable
   credits_to_org
   include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Communicable
   include PunctuationStrippable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
@@ -31,6 +32,11 @@ class Workshop < ApplicationRecord
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # A communication logged on a workshop is addressed to its credited author.
+  def communications_email
+    author&.preferred_email
+  end
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error

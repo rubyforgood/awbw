@@ -1,5 +1,7 @@
 class WorkshopIdea < ApplicationRecord
   include AuthorCreditable
+  # The submitter is the author when none is named.
+  credits_creator
 
   belongs_to :author, class_name: "Person", inverse_of: :workshop_ideas_as_author, optional: true
   belongs_to :created_by, class_name: "User"
@@ -74,22 +76,13 @@ class WorkshopIdea < ApplicationRecord
 
   # Scopes
   scope :title, ->(title) { where("workshop_ideas.title like ?", "%#{ title }%") }
-  # An idea credits nobody — `author_credit` is always the generic label — so there is
-  # no credit for this filter to leak. It matches the submitter the pages actually show
-  # (`created_by.name`, i.e. the person), falling back to the account email.
   scope :author_name, ->(author_name) {
-    needle = "%#{author_name.to_s.strip.downcase}%"
-    joins("INNER JOIN users ON users.id = workshop_ideas.created_by_id")
-      .joins("LEFT OUTER JOIN people ON people.id = users.person_id")
-      .where("LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
-             "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle " \
-             "OR LOWER(users.email) LIKE :needle", needle: needle)
+    where(id: by_credited_person_name(author_name).select("workshop_ideas.id"))
   }
 
   def self.search(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.title(params[:title]) if params[:title].present?
-    results = results.where(created_by_id: params[:created_by_id]) if params[:created_by_id].present?
     results = results.author_name(params[:author_name]) if params[:author_name].present?
     results
   end

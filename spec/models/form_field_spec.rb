@@ -485,15 +485,6 @@ RSpec.describe FormField do
         expect(additional.answer_inclusion_error([ unpublished.id.to_s ])).to eq("has an invalid selection")
       end
 
-      it "backs the additional age group field under its legacy singular identifier too" do
-        type = create(:category_type, name: "AgeRange")
-        offered = create(:category, :published, category_type: type, name: "Teens (13-17)")
-        legacy = create(:form_field, form: form, answer_type: :multi_select_checkbox, field_identifier: "additional_age_group")
-
-        expect(legacy.dynamic_categories).to contain_exactly(offered)
-        expect(legacy.answer_inclusion_error([ offered.id.to_s ])).to be_nil
-      end
-
       it "accepts a folded \"Other: <text>\" value for the additional sectors field" do
         create(:sector, :published, name: "Other")
         mental_health = create(:sector, :published, name: "Mental Health")
@@ -540,6 +531,41 @@ RSpec.describe FormField do
     it "returns false for an ordinary field" do
       field = build(:form_field, form: form, field_identifier: "how_did_you_hear")
       expect(field.fixed_options?).to be false
+    end
+  end
+
+  describe "#quote_field?" do
+    let(:form) { create(:form) }
+
+    it "returns true for every quote identifier" do
+      %w[quote quote_body quote_speaker_name quote_age_range].each do |identifier|
+        field = build(:form_field, form: form, field_identifier: identifier)
+        expect(field.quote_field?).to be(true), "expected #{identifier} to be a quote field"
+      end
+    end
+
+    it "returns false for an ordinary field" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Favorite color")
+      expect(field.quote_field?).to be false
+    end
+  end
+
+  describe "#quote_related?" do
+    let(:form) { create(:form) }
+
+    it "is true for the quote identifier" do
+      field = build(:form_field, form: form, field_identifier: "quote", name: "Anything")
+      expect(field.quote_related?).to be true
+    end
+
+    it "is true when the name mentions quote, regardless of identifier" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Share a Quote from a participant")
+      expect(field.quote_related?).to be true
+    end
+
+    it "is false for an unrelated field" do
+      field = build(:form_field, form: form, field_identifier: nil, name: "Favorite color")
+      expect(field.quote_related?).to be false
     end
   end
 

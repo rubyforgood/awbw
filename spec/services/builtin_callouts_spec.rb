@@ -65,7 +65,7 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "seeds the Videoconference card with a drip date a week before start" do
-      event = create(:event, start_date: Date.new(2026, 9, 10))
+      event = create(:event, start_date: Date.new(2026, 9, 10), end_date: Date.new(2026, 9, 12))
       described_class.seed(event)
 
       vc = event.registration_ticket_callouts.find_by(builtin_key: "videoconference")
@@ -99,15 +99,17 @@ RSpec.describe BuiltinCallouts do
       expect(payment.resources).to eq([ w9 ])
     end
 
-    it "omits the W-9 from the Payment card on a free (training) event" do
-      create(:resource, title: "W-9")
+    it "links the W-9 to the Payment card on a free event too (dormant until it's priced)" do
+      w9 = create(:resource, title: "W-9")
       event = create(:event, facilitator_training: true, cost_cents: 0)
 
       described_class.seed(event)
 
       payment = event.registration_ticket_callouts.find_by(builtin_key: "payment")
       expect(payment).to be_present
-      expect(payment.resources).to be_empty # no W-9 on a free event
+      # The link is always present; the payment surface (and this document) only
+      # renders once the event has a cost, so free→paid needs no backfill.
+      expect(payment.resources).to eq([ w9 ])
     end
 
     it "seeds CE hours with its default title and no content" do

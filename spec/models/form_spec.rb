@@ -28,6 +28,24 @@ RSpec.describe Form do
   #   pending("Requires functional owner factory and association uncommented")
   # end
 
+  describe ".agreement_forms (agreement scenarios by role)" do
+    it "returns publicly fillable forms with an agreement role" do
+      on_demand = create(:form, role: "registration", slug: "collab", published: true)
+      new_job = create(:form, role: "new_job", slug: "collab-new-job", published: true)
+
+      expect(Form.agreement_forms).to contain_exactly(on_demand, new_job)
+    end
+
+    it "excludes unpublished, event-connected, and non-agreement-role forms" do
+      create(:form, role: "new_job", slug: "draft", published: false)
+      create(:form, role: "scholarship", slug: "scholarship", published: true)
+      connected = create(:form, role: "registration", slug: "event-reg")
+      create(:event_form, form: connected)
+
+      expect(Form.agreement_forms).to be_empty
+    end
+  end
+
   describe ".where(role: 'scholarship')" do
     it "returns only forms with scholarship role" do
       regular_form = create(:form)
@@ -35,6 +53,62 @@ RSpec.describe Form do
 
       expect(Form.where(role: "scholarship")).to include(scholarship_form)
       expect(Form.where(role: "scholarship")).not_to include(regular_form)
+    end
+  end
+
+  describe "#accepts_anonymous_submissions?" do
+    let(:form) { create(:form) }
+
+    it "is true when the name/email questions are all optional" do
+      create(:form_field, form: form, field_identifier: "first_name", required: false)
+      create(:form_field, form: form, field_identifier: "last_name", required: false)
+      create(:form_field, form: form, field_identifier: "primary_email", required: false)
+
+      expect(form.reload.accepts_anonymous_submissions?).to be(true)
+    end
+
+    it "is false when any identity question is required" do
+      create(:form_field, form: form, field_identifier: "first_name", required: false)
+      create(:form_field, form: form, field_identifier: "primary_email", required: true)
+
+      expect(form.reload.accepts_anonymous_submissions?).to be(false)
+    end
+
+    it "is false when the form asks for no identity questions at all" do
+      create(:form_field, form: form, field_identifier: "why_volunteer", required: false)
+
+      expect(form.reload.accepts_anonymous_submissions?).to be(false)
+    end
+
+    Form::AGREEMENT_ROLES.each do |role|
+      it "is false for a #{role} agreement form even when its identity questions are optional" do
+        agreement = create(:form, role: role)
+        create(:form_field, form: agreement, field_identifier: "first_name", required: false)
+        create(:form_field, form: agreement, field_identifier: "last_name", required: false)
+        create(:form_field, form: agreement, field_identifier: "primary_email", required: false)
+
+        expect(agreement.reload.accepts_anonymous_submissions?).to be(false)
+      end
+    end
+  end
+
+  describe "#requires_answer?" do
+    Form::AGREEMENT_ROLES.each do |role|
+      it "forces identity questions on a #{role} agreement form even when flagged optional" do
+        agreement = create(:form, role: role)
+        email = create(:form_field, form: agreement, field_identifier: "primary_email", required: false)
+        other = create(:form_field, form: agreement, field_identifier: "why_volunteer", required: false)
+
+        expect(agreement.requires_answer?(email)).to be(true)
+        expect(agreement.requires_answer?(other)).to be(false)
+      end
+    end
+
+    it "defers to the field's own required flag on a non-agreement form" do
+      general = create(:form)
+      email = create(:form_field, form: general, field_identifier: "primary_email", required: false)
+
+      expect(general.requires_answer?(email)).to be(false)
     end
   end
 

@@ -45,12 +45,14 @@ module Events
     # scholarship exists, or a pending state while it is only requested. Nothing
     # to show when neither requested nor received.
     def scholarship
-      unless @event_registration.scholarship_requested? || @event_registration.scholarship?
+      # A transferred-in recipient's award lives on the source registration, so
+      # resolve through the transfer and still show the callout here. (#1944)
+      unless @event_registration.scholarship_requested? || @event_registration.scholarship_recipient?
         redirect_to registration_ticket_path(@event_registration.slug)
         return
       end
 
-      @scholarship = @event_registration.scholarships.first
+      @scholarship = @event_registration.effective_scholarship
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
     end
 
@@ -63,7 +65,9 @@ module Events
       end
 
       if params[:agreement] == "yes"
+        newly_accepted = !scholarship.agreement_signed?
         scholarship.accept_agreement!(by: "recipient")
+        ScholarshipMailer.accepted_fyi(scholarship).deliver_later if newly_accepted
         redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks — your agreement has been recorded."
       else
         redirect_to registration_scholarship_path(@event_registration.slug), alert: "Something went wrong recording your agreement. Please try again."
@@ -85,14 +89,40 @@ module Events
       end
 
       scholarship.decline_agreement!(params[:decline_reason].to_s.strip)
+      ScholarshipMailer.declined_fyi(scholarship).deliver_later
 
       redirect_to registration_scholarship_path(@event_registration.slug), notice: "Thanks for letting us know — the team will follow up with you."
+    end
+
+    # The recipient asking for additional support instead of accepting/declining.
+    # The award stays live; we record the amount they can contribute and notify the
+    # trainings team so they can revisit the award. A repeat request just updates.
+    def request_scholarship_support
+      scholarship = @event_registration.scholarships.first
+      unless scholarship
+        redirect_to registration_scholarship_path(@event_registration.slug)
+        return
+      end
+
+      contribution_cents = parse_contribution_cents(params[:contribution_amount])
+      unless contribution_cents
+        redirect_to registration_scholarship_path(@event_registration.slug),
+          alert: "Please enter the amount you or your employer can contribute."
+        return
+      end
+
+      scholarship.request_additional_support!(contribution_cents:, reason: params[:support_reason].to_s.strip.presence)
+      ScholarshipMailer.additional_support_requested_fyi(scholarship).deliver_later
+
+      redirect_to registration_scholarship_path(@event_registration.slug),
+        notice: "Thanks — we've shared your request with the team and will follow up about your award."
     end
 
     # CE hours status: hours, amount owed, and license number. The heading and the
     # requirements copy live on the materialized ce_hours callout row now.
     def ce
       @ce_callout = @event.registration_ticket_callouts.find_by(builtin_key: "ce_hours")
+      @ce_form = RegistrantCeForm.new(@event_registration)
       case params[:checkout]
       when "success"
         flash.now[:notice] = "Your CE payment was successful."
@@ -276,7 +306,75 @@ module Events
       @faq_content = callout&.description
     end
 
+    # A callout that delivers a form inline: the registrant fills it out here and
+    # sees their responses on return. The reg slug is the authorization.
+    def callout
+      @callout = @event.registration_ticket_callouts.find(params[:callout_id])
+      return redirect_to registration_ticket_path(@event_registration.slug) if @callout.hidden? || !@callout.delivers_form?
+      # The CE callout's form is a post-training step — it opens only once the
+      # registrant's sign-outs are complete, and it lives on the CE page.
+      return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
+
+      @form = @callout.form
+      @resource_cards = @callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to: "callout_form")
+      unless @callout.dripping?
+        @submission = callout_submission
+        @editing = @submission.nil? || params[:edit].present?
+      end
+    end
+
+    def submit_callout
+      @callout = @event.registration_ticket_callouts.find(params[:callout_id])
+      if @callout.hidden? || !@callout.delivers_form? || @callout.dripping?
+        redirect_to registration_callout_form_path(@event_registration.slug, @callout)
+        return
+      end
+      return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
+
+      EventRegistrationServices::CalloutFormSubmission.call(
+        registration: @event_registration, callout: @callout, form_params: callout_form_params
+      )
+
+      redirect_to registration_callout_form_path(@event_registration.slug, @callout),
+                  notice: "Thanks! Your responses have been submitted."
+    end
+
     private
+
+    # A dollar amount typed into the support-request box ("$1,200", "1200.50") as
+    # integer cents. Nil when blank or not a non-negative number, so the action can
+    # reject it rather than record a zero-value request from a typo.
+    def parse_contribution_cents(raw)
+      cleaned = raw.to_s.gsub(/[$,\s]/, "")
+      return if cleaned.blank?
+
+      amount = begin
+        BigDecimal(cleaned)
+      rescue ArgumentError
+        nil
+      end
+      return if amount.nil? || amount.negative?
+
+      (amount * 100).to_i
+    end
+
+    def callout_submission
+      FormSubmission.find_by(person: @event_registration.registrant, form: @callout.form, event: @event,
+                             role: EventRegistrationServices::CalloutFormSubmission.role_for(@callout))
+    end
+
+    # The CE callout's form is a post-training step gated on sign-out completion —
+    # it opens only after the registrant has finished signing out (and is reached
+    # from the CE page). Only the CE callout is gated this way; every other callout
+    # form follows its own drip date. The sample preview bypasses it so an admin can
+    # see the form on the sample ticket.
+    def ce_form_locked?(callout)
+      callout.ce_config? && !sample_preview? && !@event_registration.ce_signouts_complete?
+    end
+
+    def callout_form_params
+      params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
+    end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
     # rather than all-of, matching the callout view: each paid CE registration renders
@@ -403,24 +501,24 @@ module Events
     # The payment page's Documents section as grey callout cards, rendered through
     # the shared card partial like every other callout surface: the dynamic
     # invoice/receipt first, then the payment callout's linked resources (the W-9
-    # by default on paid events), each reading its admin-editable subtitle from the
-    # materialized join row.
+    # by default), each reading its admin-editable subtitle from the materialized
+    # join row. All are payment-event documents, so nothing renders on a free event
+    # — the W-9 is always linked but stays dormant until the event has a cost.
     def payment_document_cards
+      return [] unless @event_registration.invoice_available?
+
       slug = @event_registration.slug
-      cards = []
-      if @event_registration.invoice_available?
-        cards << document_card(title: "Invoice", subtitle: "Itemized invoice for this registration",
-          icon: "fa-solid fa-file-invoice-dollar", href: registration_invoice_path(slug, return_to: "payment"))
-        # The receipt is proof money changed hands, so it links once an actual
-        # payment settles the balance in full; until then (balance owing, or a
-        # balance cleared only by scholarship/discount) it's a locked card.
-        if @event_registration.receipt_available?
-          cards << document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
-            icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
-        else
-          cards << locked_document_card(title: "Receipt", icon: "fa-solid fa-receipt",
-            subtitle: "Available once your payment is received in full")
-        end
+      cards = [ document_card(title: "Invoice", subtitle: "Itemized invoice for this registration",
+        icon: "fa-solid fa-file-invoice-dollar", href: registration_invoice_path(slug, return_to: "payment")) ]
+      # The receipt is proof money changed hands, so it links once an actual
+      # payment settles the balance in full; until then (balance owing, or a
+      # balance cleared only by scholarship/discount) it's a locked card.
+      if @event_registration.receipt_available?
+        cards << document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
+          icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
+      else
+        cards << locked_document_card(title: "Receipt", icon: "fa-solid fa-receipt",
+          subtitle: "Available once your payment is received in full")
       end
       cards + payment_document_resources.map { |link| payment_resource_card(link, slug) }
     end
@@ -437,9 +535,10 @@ module Events
                             icon: "fa-solid fa-file-pdf", color: "gray")
     end
 
-    # The payment callout's linked resource join rows (the W-9 by default on paid
-    # events). Uses the materialized Payment row's links when present (so admins
-    # can add/remove them), else transient links for the W-9 on paid events not
+    # The payment callout's linked resource join rows (the W-9 by default). Only
+    # reached for a paid registration (the caller gates on invoice_available?).
+    # Uses the materialized Payment row's links when present (so admins can
+    # add/remove them), else transient links for the W-9 on a payment callout not
     # yet materialized.
     def payment_document_resources
       payment_callout = @event.registration_ticket_callouts.find_by(builtin_key: "payment")

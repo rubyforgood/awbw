@@ -1,0 +1,60 @@
+<% verb = { "declined" => "Declined", "accepted" => "Accepted", "support_requested" => "Requested" }[@response&.status] || "Updated" %>
+<p style="margin-bottom: 6px;">
+  <%= heading %>
+</p>
+
+<h1 style="margin: 0;">
+  <strong><%= @recipient&.full_name %></strong>
+  <% if @recipient&.preferred_email.present? %>
+    (<%= @recipient.preferred_email %>)
+  <% end %>
+</h1>
+
+<% if @response&.responded_at %>
+  <p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
+    <%= verb %> on
+    <%= @response.responded_at
+                 .in_time_zone("Pacific Time (US & Canada)")
+                 .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+  </p>
+<% end %>
+
+<hr style="margin: 24px 0;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+  <% if @event %>
+    <tr>
+      <td style="padding: 4px 0; color:#6b7280; width: 200px;">Training</td>
+      <td style="padding: 4px 0;"><strong><%= @event.title %></strong></td>
+    </tr>
+  <% end %>
+  <tr>
+    <td style="padding: 4px 0; color:#6b7280;">Award amount</td>
+    <td style="padding: 4px 0;"><strong><%= dollars_from_cents(@scholarship.amount_cents) %></strong></td>
+  </tr>
+  <% if @response&.contribution_cents.present? %>
+    <tr>
+      <td style="padding: 4px 0; color:#6b7280;">They/their employer can contribute</td>
+      <td style="padding: 4px 0;"><strong><%= dollars_from_cents(@response.contribution_cents) %></strong></td>
+    </tr>
+  <% end %>
+</table>
+
+<% if @response&.reason.present? %>
+  <h2 style="margin-bottom: 8px;"><%= @response.status == "declined" ? "Reason" : "Their note" %></h2>
+  <p style="margin: 0 0 24px; color:#374151;">“<%= @response.reason %>”</p>
+<% end %>
+
+<hr style="margin: 24px 0;">
+
+<p>
+  <%= link_to "View scholarship",
+              edit_scholarship_url(@scholarship),
+              style: "display:inline-block;
+                      padding:10px 16px;
+                      background:#2563eb;
+                      color:#ffffff;
+                      text-decoration:none;
+                      border-radius:6px;
+                      font-weight:bold;" %>
+</p>

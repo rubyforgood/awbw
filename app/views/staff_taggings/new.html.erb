@@ -1,0 +1,39 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="min-h-screen py-8">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <div class="border-primary/10 mx-auto rounded-2xl border bg-white p-6 shadow-lg">
+      <div class="mb-4">
+        <%= link_to "← Staff taggings", staff_taggings_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      </div>
+      <h1 class="text-primary mb-2 font-display text-2xl font-semibold">New staff tagging</h1>
+      <p class="mb-6 text-sm text-gray-600">Tag a person with a staff tag.</p>
+
+      <%= simple_form_for @staff_tagging, url: staff_taggings_path do |f| %>
+        <%= render "shared/errors", resource: @staff_tagging if @staff_tagging.errors.any? %>
+
+        <div class="space-y-6">
+          <div>
+            <%= label_tag "staff_tagging[person_id]", "Person", class: search_label_class %>
+            <%= select_tag "staff_tagging[person_id]",
+                  options_for_select(Person.where(id: params.dig(:staff_tagging, :person_id)).map { |p| [ p.full_name, p.id ] }, params.dig(:staff_tagging, :person_id)),
+                  include_blank: true, prompt: "Search for a person",
+                  class: search_field_class(extra: "bg-white"),
+                  data: { controller: "remote-select", remote_select_model_value: "person" } %>
+          </div>
+
+          <%= f.input :staff_tag_id,
+                      label: "Staff tag",
+                      label_html: { class: search_label_class },
+                      collection: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
+                      include_blank: "Select a tag",
+                      input_html: { class: "form-control" } %>
+        </div>
+
+        <div class="action-buttons mt-8 flex flex-wrap justify-center gap-3">
+          <%= link_to "Cancel", staff_taggings_path, class: "btn btn-secondary-outline" %>
+          <%= f.button :submit, "Create tagging", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

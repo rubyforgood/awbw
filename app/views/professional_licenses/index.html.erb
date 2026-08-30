@@ -1,26 +1,26 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-    <%= link_to continuing_education_registrations_path, class: "text-sm #{eyebrow_link_class}" do %>
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:continuing_education) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to continuing_education_registrations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-certificate text-xs"></i> CE registrations
     <% end %>
-    <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
+    <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <div class="flex justify-end mb-6">
+  <div class="mb-6 flex justify-end">
     <%= link_to new_professional_license_path, class: "btn btn-primary" do %>
       <i class="fa-solid fa-plus text-xs"></i> New license
     <% end %>
   </div>
 
-  <div class="flex items-center gap-3 mb-6">
+  <div class="mb-6 flex items-center gap-3">
     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
       <i class="fa-solid fa-id-card"></i>
     </span>
     <div>
-      <h1 class="text-2xl font-semibold text-gray-900">Licenses</h1>
-      <p class="text-gray-600 mt-1">Professional licenses on file across all registrants</p>
+      <h1 class="text-primary font-display text-2xl font-semibold">Licenses</h1>
+      <p class="mt-1 text-gray-600">Professional licenses on file across all registrants</p>
     </div>
   </div>
 

@@ -27,18 +27,26 @@
       <% end %>
     <% end %>
     <% if reg && allowed_to?(:index?, EventRegistration) %>
-      <%= link_to "Edit registration", edit_event_registration_path(reg), class: "ml-auto admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%# Admin's counterpart to this public view — jump back to the event-scoped
+          submission page this page's "View public version" link came from. %>
+      <%= link_to "Admin view", event_registrant_submissions_path(@event, person_id: @form_submission.person_id), class: "ml-auto admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Edit registration", edit_event_registration_path(reg), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% end %>
   </div>
 </div>
 
 <div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
 
+  <%# Admin-only audit banner — sits above the registrant-facing card so it
+      stands out to admins as an overlay, not part of what the registrant sees. %>
+  <%= render "form_submissions/changes_link", submission: @form_submission, return_to: "public_registration", badge: true %>
+
   <%# ---- FORM RESPONSES CARD ---- %>
   <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
 
     <%# Card Header %>
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="bg-primary text-white px-6 sm:px-8 py-5">
       <div class="flex items-center gap-5">
         <div class="shrink-0">
           <%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %>
@@ -48,7 +56,6 @@
           <p class="text-sm text-blue-200"><%= @event.title %></p>
         </div>
       </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <%# Card Body %>
@@ -89,7 +96,8 @@
     <div id="scholarship-application" class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden mt-8 scroll-mt-24">
 
       <%# Card Header %>
-      <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+      <%= render "shared/brand_accent_strip" %>
+      <div class="bg-primary text-white px-6 sm:px-8 py-5">
         <div class="flex items-center gap-3">
           <i class="fa-solid fa-hand-holding-heart text-accent text-xl"></i>
           <div class="flex-1">
@@ -97,7 +105,6 @@
             <p class="text-sm text-blue-200"><%= @scholarship_form.display_name %></p>
           </div>
         </div>
-        <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
       </div>
 
       <%# Card Body %>

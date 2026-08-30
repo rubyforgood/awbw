@@ -1,17 +1,17 @@
-<div class="max-w-2xl mx-auto" data-controller="search-type-select">
-  <h1 class="text-2xl font-bold mb-6">New Allocation</h1>
+<div class="mx-auto max-w-2xl" data-controller="search-type-select">
+  <h1 class="text-primary mb-6 font-display text-2xl font-bold">New Allocation</h1>
   <%= simple_form_for @allocation, url: allocations_path do |f| %>
     <%= f.hidden_field :source_type %>
     <%= f.hidden_field :source_id %>
     <% source = @source || (@allocation.source if @allocation.source.present?) %>
     <% if source.present? && source.is_a?(Payment) %>
-      <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+      <div class="mb-4 rounded-lg bg-gray-50 p-4">
         <p class="text-sm font-medium text-gray-700">From Payment</p>
         <p class="text-lg text-gray-900"><%= dollars_from_cents(source.amount_cents) %></p>
         <p class="text-sm text-gray-500">Remaining: <%= dollars_from_cents(source.amount_cents_remaining) %></p>
       </div>
     <% else %>
-      <div class="mb-4 p-4 bg-red-50 rounded-lg">
+      <div class="mb-4 rounded-lg bg-red-50 p-4">
         <p class="text-sm font-medium text-red-700">Error: No payment source found</p>
       </div>
     <% end %>
@@ -35,8 +35,8 @@
     </template>
     <div data-search-type-select-target="pickerContainer">
       <div>
-        <label class="text-sm font-medium text-gray-500 mb-1 block italic">Select Allocatable Type</label>
-        <div class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 cursor-not-allowed min-h-[2.2rem]"></div>
+        <label class="mb-1 block text-sm font-medium text-gray-500 italic">Select Allocatable Type</label>
+        <div class="min-h-[2.2rem] w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"></div>
       </div>
     </div>
     <%= f.input :amount_dollars, label: "Amount ($)", input_html: { min: 0, step: 0.01, placeholder: "0.00", data: { controller: "currency-input", action: "currency-input#format" } } %>

@@ -16,13 +16,13 @@ RSpec.describe "Person profile membership section", type: :request do
       end_date: start_date + 1.year - 1.day)
   end
 
-  context "as an admin" do
+  context "as an admin (Membership card on the edit page)" do
     before { sign_in admin }
 
     it "lists the person's invoices with cost and status" do
       membership_invoice_for
 
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response).to be_successful
       expect(response.body).to include("Membership")
@@ -33,7 +33,7 @@ RSpec.describe "Person profile membership section", type: :request do
     it "shows the standard cost when the membership has no override" do
       membership_invoice_for
 
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include("Standard (#{standard_cost})")
     end
@@ -42,7 +42,7 @@ RSpec.describe "Person profile membership section", type: :request do
       membership = create(:membership, person: person, cost_cents: 1_500)
       membership_invoice_for(membership: membership)
 
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include("Locked at $15")
     end
@@ -54,7 +54,7 @@ RSpec.describe "Person profile membership section", type: :request do
         cancelled_at: Time.zone.parse("2026-08-03 12:00"))
       membership_invoice_for(membership: membership)
 
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include("Cancelled Aug 3, 2026")
     end
@@ -64,7 +64,7 @@ RSpec.describe "Person profile membership section", type: :request do
       older = membership_invoice_for(cost_cents: 0, start_date: Date.current - 1.year, membership: membership)
       current = membership_invoice_for(membership: membership)
 
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include(current.decorate.period_range)
       expect(response.body).not_to include(older.decorate.period_range)
@@ -75,21 +75,21 @@ RSpec.describe "Person profile membership section", type: :request do
       current = membership_invoice_for(membership: membership)
       future = membership_invoice_for(start_date: current.end_date + 1.day, membership: membership)
 
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include(current.decorate.period_range)
       expect(response.body).not_to include(future.decorate.period_range)
     end
 
     it "links to the management page" do
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include(person_memberships_path(person))
       expect(response.body).to include("Manage membership")
     end
 
     it "says so when the person has no membership" do
-      get person_path(person)
+      get edit_person_path(person)
 
       expect(response.body).to include("No membership yet")
     end

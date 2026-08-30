@@ -1,0 +1,53 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4 flex flex-wrap justify-start gap-2">
+    <%= link_to "← Registrants", (@event ? registrants_event_path(@event) : events_path),
+                class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  </div>
+
+  <h1 class="text-primary mb-3 font-display text-3xl font-semibold tracking-tight">
+    Import registrants
+  </h1>
+  <p class="mb-6 text-gray-600">
+    Upload a CSV of people who attended a training and we'll add each one to the
+    event as an <strong>attended</strong> registration, just as if they'd registered.
+    People already in the portal are matched by email and name — no duplicates. Matched
+    organizations are linked (and facilitator affiliations added on trainings); names we
+    don't recognize are queued for reconciliation on each registrant's link-organization
+    page. No emails are sent. You'll preview everything before anything is saved.
+  </p>
+  <p class="mb-6 text-sm text-gray-600">
+    Expected columns: <span class="font-medium">FirstName</span>,
+    <span class="font-medium">LastName</span>,
+    <span class="font-medium">Organization</span>,
+    <span class="font-medium">EMail</span>. Export your spreadsheet as a .csv first.
+  </p>
+
+  <div class="rounded bg-white p-6">
+    <% if flash.now[:alert].present? %>
+      <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <%= flash.now[:alert] %>
+      </div>
+    <% end %>
+
+    <%= form_with url: event_registration_import_path, method: :post, multipart: true do |f| %>
+      <div class="mb-4">
+        <%= f.label :event_id, "Event", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.select :event_id,
+                     options_from_collection_for_select(@events, :id, :time_title, @event&.id),
+                     { prompt: "Choose an event…" },
+                     class: "block w-full text-sm text-gray-700 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-200 p-2" %>
+      </div>
+      <div class="mb-4">
+        <%= f.label :file, "CSV file", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.file_field :file, accept: ".csv,text/csv",
+                         class: "block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none p-2" %>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= f.submit "Preview import", class: "btn btn-primary-outline bg-blue-100" %>
+        <%= link_to "Cancel", (@event ? registrants_event_path(@event) : events_path),
+                    class: "btn btn-secondary-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div>

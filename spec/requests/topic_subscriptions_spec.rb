@@ -6,6 +6,13 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
   before { sign_in admin }
 
+  describe "GET /topic_subscriptions/:id/edit" do
+    it_behaves_like "a page with a change log" do
+      let(:record) { create(:topic_subscription, topic_subscription_type: trainings) }
+      let(:page_path) { edit_topic_subscription_path(record) }
+    end
+  end
+
   describe "GET /topic_subscriptions" do
     it "renders the index shell for a full-page request" do
       get topic_subscriptions_path
@@ -64,6 +71,17 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       expect(response.body).to include("Nora News")
       expect(response.body).not_to include("Tara Trainings")
+    end
+
+    it "filters by organization name via the frame request" do
+      acme = create(:organization, name: "Acme Shelter")
+      create(:topic_subscription, person: create(:person, first_name: "Orla", last_name: "Acme"), topic_subscription_type: trainings, organization: acme)
+      create(:topic_subscription, person: create(:person, first_name: "Nadia", last_name: "Noorg"), topic_subscription_type: trainings, organization: nil)
+
+      get topic_subscriptions_path(organization_name: "acme"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Orla Acme")
+      expect(response.body).not_to include("Nadia Noorg")
     end
 
     it "eager loads each subscriber's user so the row count doesn't drive the query count" do
@@ -362,6 +380,17 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(subscription).to be_active
     end
 
+    it "links the chosen organization to the subscription" do
+      person = create(:person)
+      organization = create(:organization)
+
+      post topic_subscriptions_path, params: {
+        topic_subscription: { person_id: person.id, topic_subscription_type_id: trainings.id, organization_id: organization.id, source: "admin" }
+      }
+
+      expect(TopicSubscription.last.organization).to eq(organization)
+    end
+
     it "creates a new person inline and links them to the subscription" do
       expect {
         post topic_subscriptions_path, params: {
@@ -431,7 +460,24 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
     it "renders a comments box on the edit page" do
       get edit_topic_subscription_path(subscription)
-      expect(response.body).to include("comment-list")
+      expect(response.body).to include("topic_subscription-activity-list")
+      expect(response.body).to include("Add communication")
+    end
+
+    it "logs a communication inline, addressed to the subscriber" do
+      subscription = create(:topic_subscription)
+
+      expect {
+        patch topic_subscription_path(subscription), params: {
+          topic_subscription: {
+            notifications_attributes: { "0" => { channel: "phone", email_subject: "Called about the topic" } }
+          }
+        }
+      }.to change { subscription.notifications.count }.by(1)
+
+      logged = subscription.notifications.last
+      expect(logged.email_subject).to eq("Called about the topic")
+      expect(logged.recipient_email).to eq(subscription.person.preferred_email)
     end
 
     it "saves a comment added on the subscription form" do

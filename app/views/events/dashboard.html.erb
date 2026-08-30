@@ -3,10 +3,10 @@
     the wrapper restores the layout's gutters at a wider bound. %>
 <% content_for(:full_width, true) %>
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
-<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <%# Top bar: back link + sub-nav, matching the other event pages %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
-    <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class}" %>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4 print:hidden">
+    <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= render "events/subnav", event: @event, current: :dashboard %>
   </div>
   <%# Title block with the action buttons pinned top-right so they share the
@@ -31,7 +31,7 @@
           <%= @event.date_range %>
         </p>
       <% end %>
-      <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+      <h1 class="font-display text-3xl font-bold text-primary mt-2 flex items-center justify-center gap-2">
         <i class="fa-solid fa-chart-simple <%= DomainTheme.text_class_for(:events, intensity: 600) %>"></i>
         Dashboard
       </h1>
@@ -42,8 +42,8 @@
       free registration AND no CE fees or scholarships (a free event can still
       charge for CE). %>
   <% if @dashboard.free? && @dashboard.cont_ed_total_cents.zero? && @dashboard.scholarship_total_cents.zero? %>
-    <div class="bg-white rounded-xl border border-gray-200 p-4 text-center text-sm text-gray-500 mb-4">
-      <i class="fa-solid fa-tag text-gray-400 mr-1"></i> Free event — no payments or scholarships
+    <div class="border-primary/10 mb-4 rounded-2xl border bg-white p-4 text-center text-sm text-gray-500">
+      <i class="fa-solid fa-tag mr-1 text-gray-400"></i> Free event — no payments or scholarships
     </div>
   <% else %>
     <%# Money reads as an equation: Grand total = Registration fees + Scholarships allocated + Continuing education fees.
@@ -53,7 +53,7 @@
         stay visible.
         Each addend owns Paid/Allocated + Outstanding sub-rows (nested inside its card).
         Grand total is a full-width hero; the three addends sit in a row beneath it. %>
-    <div class="space-y-3 sm:space-y-4 mb-4">
+    <div class="mb-4 space-y-3 sm:space-y-4">
       <%# Grand total — full-width headline read as an inline equation:
           $grand = $registration + $scholarships + $cont_ed. Left-aligned; the headline
           figure dominates while the addends stay muted, and the row wraps on mobile. %>
@@ -66,11 +66,11 @@
            "leading-tight rounded-lg border border-transparent px-3 py-2 transition-colors hover:bg-#{color}-50 hover:border-#{color}-300"
          end %>
       <div class="rounded-xl border <%= DomainTheme.border_class_for(:event_dashboard, intensity: 200) %> <%= DomainTheme.bg_class_for(:event_dashboard, intensity: 50) %> p-4 shadow-sm">
-        <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:event_dashboard, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
+        <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:event_dashboard, intensity: 600) %> text-xs font-semibold tracking-wide uppercase">
           <i class="fa-solid fa-coins"></i>
           <span>Grand total</span>
         </div>
-        <div class="mt-2 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-x-6 gap-y-3">
+        <div class="mt-2 flex flex-col gap-x-6 gap-y-3 lg:flex-row lg:items-start lg:justify-between">
           <%# The equation stays on one line at every width: below lg the per-addend
               labels collapse so it reads as numbers only ($grand = $reg + $sch + $ce),
               with a compact label key beneath; the full labels return inline at lg+.
@@ -82,18 +82,18 @@
                     title: "View the event revenue report" %>
               <span class="text-2xl font-light text-gray-300 select-none">=</span>
               <%= link_to registrants_event_path(@event), class: addend_class.call(:payments), title: "Manage registrations" do %>
-                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></p>
-                <p class="hidden lg:block text-xs text-gray-500">Registration fees</p>
+                <p class="text-lg font-semibold sm:text-xl <%= DomainTheme.text_class_for(:payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></p>
+                <p class="hidden text-xs text-gray-500 lg:block">Registration fees</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <%= link_to recipients_event_path(@event), class: addend_class.call(:scholarships), title: "View scholarships" do %>
-                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.scholarship_total_cents) %></p>
-                <p class="hidden lg:block text-xs text-gray-500">Scholarships</p>
+                <p class="text-lg font-semibold sm:text-xl <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.scholarship_total_cents) %></p>
+                <p class="hidden text-xs text-gray-500 lg:block">Scholarships</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <%= link_to registrants_event_path(@event, ce_status: "registered"), class: "#{addend_class.call(:continuing_education)} whitespace-nowrap", title: "View registrants with continuing education" do %>
-                <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></p>
-                <p class="hidden lg:block text-xs text-gray-500">CE fees</p>
+                <p class="text-lg font-semibold sm:text-xl <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></p>
+                <p class="hidden text-xs text-gray-500 lg:block">CE fees</p>
               <% end %>
               <span class="text-2xl font-light text-gray-300 select-none">+</span>
               <% if @dashboard.unallocated_bulk_payment_cents.positive? %>
@@ -101,16 +101,16 @@
                     amber-bordered card with a warning icon, since unallocated bulk
                     payment money still needs action. %>
                 <%= link_to bulk_payments_event_path(@event), class: "whitespace-nowrap leading-tight rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 hover:bg-amber-100 transition-colors", title: "Allocate bulk payments" do %>
-                  <p class="flex items-center gap-1.5 text-lg sm:text-xl font-semibold text-amber-700 tabular-nums">
+                  <p class="flex items-center gap-1.5 text-lg font-semibold text-amber-700 tabular-nums sm:text-xl">
                     <i class="fa-solid fa-circle-exclamation"></i>
                     <%= dollars_from_cents(@dashboard.unallocated_bulk_payment_cents) %>
                   </p>
-                  <p class="hidden lg:block text-xs text-gray-500">Unallocated bulk payments</p>
+                  <p class="hidden text-xs text-gray-500 lg:block">Unallocated bulk payments</p>
                 <% end %>
               <% else %>
                 <%= link_to bulk_payments_event_path(@event), class: addend_class.call(:bulk_payments), title: "View bulk payments" do %>
-                  <p class="text-lg sm:text-xl font-semibold <%= DomainTheme.text_class_for(:bulk_payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.unallocated_bulk_payment_cents) %></p>
-                  <p class="hidden lg:block text-xs text-gray-500">Bulk payments</p>
+                  <p class="text-lg font-semibold sm:text-xl <%= DomainTheme.text_class_for(:bulk_payments, intensity: 600) %> tabular-nums"><%= dollars_from_cents(@dashboard.unallocated_bulk_payment_cents) %></p>
+                  <p class="hidden text-xs text-gray-500 lg:block">Bulk payments</p>
                 <% end %>
               <% end %>
             </div>
@@ -121,7 +121,7 @@
               cont ed paid), what's still owed, and the fee revenue earned
               (registration + cont ed, excluding scholarships). Collected + due =
               monies made. Kept neutral grey so the equation stays the focus. %>
-          <div class="lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6 flex flex-col gap-1 text-xs text-gray-500">
+          <div class="flex flex-col gap-1 text-xs text-gray-500 lg:shrink-0 lg:border-l lg:border-gray-200 lg:pl-6">
             <span class="flex items-center justify-between gap-3">
               <span>Collected</span>
               <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.collected_cents) %></span>
@@ -130,7 +130,7 @@
               <span>Due</span>
               <span class="font-semibold text-gray-500 tabular-nums"><%= dollars_from_cents(@dashboard.due_cents) %></span>
             </span>
-            <span class="flex items-center justify-between gap-3 mt-1 pt-1 border-t border-gray-200">
+            <span class="mt-1 flex items-center justify-between gap-3 border-t border-gray-200 pt-1">
               <span class="font-bold text-gray-700">Monies</span>
               <span class="font-bold text-gray-700 tabular-nums"><%= dollars_from_cents(@dashboard.monies_made_cents) %></span>
             </span>
@@ -140,12 +140,12 @@
 
       <%# The three addends: Registration fees + Scholarships + Continuing education fees. Each owns
           paid/completed + outstanding sub-rows that expand to the registrants behind the figure. %>
-      <div class="flex flex-col md:flex-row md:flex-wrap md:items-stretch gap-3 md:gap-4">
+      <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-stretch md:gap-4">
         <%# Payments = Paid + Outstanding %>
-        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm">
-          <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <details class="group/card flex-1 rounded-xl border md:min-w-[16rem] <%= DomainTheme.border_class_for(:payments, intensity: 200) %> bg-white p-4 shadow-sm">
+          <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:payments, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
+              <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:payments, intensity: 600) %> text-xs font-semibold tracking-wide uppercase">
                 <i class="fa-solid fa-sack-dollar"></i>
                 <span>Registration fees</span>
               </div>
@@ -158,14 +158,14 @@
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
-                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:payments, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></span>
+                <span class="text-2xl font-bold sm:text-3xl <%= DomainTheme.text_class_for(:payments, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.registration_subtotal_cents) %></span>
                 <span class="text-xs text-gray-500">including due</span>
               </p>
               <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
-          <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+          <div class="mt-3 space-y-1 border-t border-gray-100 pt-3">
             <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
                   amount_cents: @dashboard.received_cents,
                   count: @dashboard.paid_count, registrants: @dashboard.paid_registrants,
@@ -182,10 +182,10 @@
         </details>
 
         <%# Scholarships = Completed + Outstanding %>
-        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm">
-          <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <details class="group/card flex-1 rounded-xl border md:min-w-[16rem] <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> bg-white p-4 shadow-sm">
+          <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
+              <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %> text-xs font-semibold tracking-wide uppercase">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span>Scholarships</span>
               </div>
@@ -198,13 +198,13 @@
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
-                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.scholarship_total_cents) %></span>
+                <span class="text-2xl font-bold sm:text-3xl <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.scholarship_total_cents) %></span>
               </p>
               <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
-          <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+          <div class="mt-3 space-y-1 border-t border-gray-100 pt-3">
             <%= render "dashboard_money_row", label: "Scholarships", icon: "fa-graduation-cap",
                   amount_cents: @dashboard.scholarship_total_cents,
                   count: @dashboard.scholarship_registrants.size, registrants: @dashboard.scholarship_registrants,
@@ -214,10 +214,10 @@
         </details>
 
         <%# Continuing education fees = Paid + Outstanding %>
-        <details class="group/card flex-1 md:min-w-[16rem] rounded-xl border <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm">
-          <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+        <details class="group/card flex-1 rounded-xl border md:min-w-[16rem] <%= DomainTheme.border_class_for(:continuing_education, intensity: 200) %> bg-white p-4 shadow-sm">
+          <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
             <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> text-xs font-semibold uppercase tracking-wide">
+              <div class="flex items-center gap-1.5 <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %> text-xs font-semibold tracking-wide uppercase">
                 <i class="fa-solid fa-award"></i>
                 <span>CE fees</span>
               </div>
@@ -230,14 +230,14 @@
             </div>
             <div class="mt-2 flex items-center justify-between gap-2">
               <p class="break-words">
-                <span class="text-2xl sm:text-3xl font-bold <%= DomainTheme.text_class_for(:continuing_education, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></span>
+                <span class="text-2xl font-bold sm:text-3xl <%= DomainTheme.text_class_for(:continuing_education, intensity: 700) %> tabular-nums"><%= dollars_from_cents(@dashboard.cont_ed_total_cents) %></span>
                 <span class="text-xs text-gray-500">including due</span>
               </p>
               <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
             </div>
           </summary>
 
-          <div class="mt-3 pt-3 border-t border-gray-100 space-y-1">
+          <div class="mt-3 space-y-1 border-t border-gray-100 pt-3">
             <%= render "dashboard_money_row", label: "Paid", icon: "fa-money-bill-wave",
                   amount_cents: @dashboard.cont_ed_paid_cents,
                   count: @dashboard.cont_ed_paid_count, registrants: @dashboard.cont_ed_paid_registrants,
@@ -357,8 +357,8 @@
       </div>
     </details>
 
-    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
-      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+    <details class="group/card rounded-xl border bg-white <%= DomainTheme.border_class_for(:organizations, intensity: 200) %> p-4 shadow-sm">
+      <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <%= render "headcount_header", color_key: :organizations, icon: "fa-building",
                 count: @dashboard.organization_count, label: "Organizations",
@@ -367,20 +367,20 @@
         </div>
         <% program_counts = @dashboard.program_status_counts %>
         <% program_status_ids = @dashboard.program_status_registrant_ids %>
-        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{program_counts[:new]} new", path: registrants_event_path(@event, registrant_ids: program_status_ids[:new].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:ongoing]} ongoing", path: registrants_event_path(@event, registrant_ids: program_status_ids[:ongoing].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:reinstated]} reinstated", path: registrants_event_path(@event, registrant_ids: program_status_ids[:reinstated].join("-").presence || "0") %></p>
+        <p class="mt-1 text-xs text-gray-500"><%= render "stat_link", label: "#{program_counts[:new]} new", path: registrants_event_path(@event, registrant_ids: program_status_ids[:new].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:ongoing]} ongoing", path: registrants_event_path(@event, registrant_ids: program_status_ids[:ongoing].join("-").presence || "0") %> · <%= render "stat_link", label: "#{program_counts[:reinstated]} reinstated", path: registrants_event_path(@event, registrant_ids: program_status_ids[:reinstated].join("-").presence || "0") %></p>
       </summary>
-      <div class="mt-3 pt-3 border-t border-gray-100">
+      <div class="mt-3 border-t border-gray-100 pt-3">
         <% if @dashboard.organizations.any? %>
-          <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
+          <ul class="max-h-64 space-y-1 overflow-y-auto text-xs text-gray-700">
             <% @dashboard.organizations.each do |organization| %>
-              <li class="group/rowlink flex items-center gap-1.5 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50">
+              <li class="group/rowlink -mx-1 flex items-center gap-1.5 rounded px-1 py-0.5 hover:bg-gray-50">
                 <%= link_to registrants_event_path(@event, registrant_ids: @dashboard.organization_registrant_ids_by_org.fetch(organization.id, []).to_a.join("-")), class: "flex items-center justify-between gap-2 flex-1 min-w-0", title: "Registrants from #{organization.name}" do %>
-                  <span class="flex items-center gap-1.5 min-w-0">
+                  <span class="flex min-w-0 items-center gap-1.5">
                     <%= organization.decorate.program_status_badge(@dashboard.program_status_by_organization[organization.id]) %>
                     <%= organization.decorate.high_profile_icon %>
-                    <span class="truncate min-w-0 group-hover/rowlink:underline"><%= organization.name %></span>
+                    <span class="min-w-0 truncate group-hover/rowlink:underline"><%= organization.name %></span>
                   </span>
-                  <span class="text-xs text-gray-500 shrink-0"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
+                  <span class="shrink-0 text-xs text-gray-500"><%= @dashboard.organization_counts.fetch(organization.id, 0) %></span>
                 <% end %>
                 <%= link_to organization_path(organization), class: "shrink-0 flex h-7 items-center text-white group-hover/rowlink:text-gray-500", title: "View #{organization.name} profile" do %>
                   <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
@@ -394,24 +394,24 @@
       </div>
     </details>
 
-    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
-      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+    <details class="group/card rounded-xl border bg-white <%= DomainTheme.border_class_for(:sectors, intensity: 200) %> p-4 shadow-sm">
+      <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <%= render "headcount_header", color_key: :sectors, icon: "fa-layer-group",
                 count: @dashboard.sectors.size, label: "Sectors",
                 path: registrants_event_path(@event, registrant_ids: @dashboard.sector_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
+        <p class="mt-1 text-xs text-gray-500"><%= render "stat_link", label: "#{@dashboard.primary_sector_count} primary", path: registrants_event_path(@event, registrant_ids: @dashboard.primary_sector_registrant_ids.join("-").presence || "0") %> · <%= render "stat_link", label: "#{@dashboard.additional_sector_count} additional", path: registrants_event_path(@event, registrant_ids: @dashboard.additional_sector_registrant_ids.join("-").presence || "0") %></p>
       </summary>
-      <div class="mt-3 pt-3 border-t border-gray-100">
+      <div class="mt-3 border-t border-gray-100 pt-3">
         <% if @dashboard.sectors.any? %>
-          <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
+          <ul class="max-h-64 space-y-1 overflow-y-auto text-xs text-gray-700">
             <% @dashboard.sectors.each do |sector| %>
               <li>
                 <%= link_to registrants_event_path(@event, sector: sector.id), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50", title: sector.name do %>
-                  <span class="truncate min-w-0 group-hover/rowlink:underline"><%= sector.name %></span>
-                  <span class="flex items-center gap-2 shrink-0">
+                  <span class="min-w-0 truncate group-hover/rowlink:underline"><%= sector.name %></span>
+                  <span class="flex shrink-0 items-center gap-2">
                     <span class="text-xs text-gray-500"><%= @dashboard.sector_counts.fetch(sector.id, 0) %></span>
                     <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-white group-hover/rowlink:text-gray-500"></i>
                   </span>
@@ -425,24 +425,24 @@
       </div>
     </details>
 
-    <details class="group/card bg-white rounded-xl border <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
-      <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+    <details class="group/card rounded-xl border bg-white <%= DomainTheme.border_class_for(:addresses, intensity: 200) %> p-4 shadow-sm">
+      <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center justify-between gap-2">
           <%= render "headcount_header", color_key: :addresses, icon: "fa-location-dot",
                 count: @dashboard.states.size, label: "States",
                 path: registrants_event_path(@event, registrant_ids: @dashboard.state_registrant_ids.join("-")) %>
           <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open/card:rotate-180"></i>
         </div>
-        <p class="text-xs text-gray-500 mt-1"><%= render "stat_link", label: pluralize(@dashboard.countries.size, "country"), path: registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-").presence || "0") %></p>
+        <p class="mt-1 text-xs text-gray-500"><%= render "stat_link", label: pluralize(@dashboard.countries.size, "country"), path: registrants_event_path(@event, registrant_ids: @dashboard.country_registrant_ids.join("-").presence || "0") %></p>
       </summary>
-      <div class="mt-3 pt-3 border-t border-gray-100">
+      <div class="mt-3 border-t border-gray-100 pt-3">
         <% if @dashboard.states.any? %>
-          <ul class="space-y-1 text-xs text-gray-700 max-h-64 overflow-y-auto">
+          <ul class="max-h-64 space-y-1 overflow-y-auto text-xs text-gray-700">
             <% @dashboard.states.each do |state| %>
               <li>
                 <%= link_to registrants_event_path(@event, state: state), class: "group/rowlink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
                   <span class="group-hover/rowlink:underline"><%= state %></span>
-                  <span class="flex items-center gap-2 shrink-0">
+                  <span class="flex shrink-0 items-center gap-2">
                     <span class="text-xs text-gray-500"><%= @dashboard.state_counts.fetch(state, 0) %></span>
                     <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-white group-hover/rowlink:text-gray-500"></i>
                   </span>

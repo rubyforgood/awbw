@@ -1,63 +1,53 @@
 <%= render "shared/public_welcome_banner" %>
 
 <% content_for(:page_bg_class, "public") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <!-- Header Row -->
-  <div class="w-full">
-    <div class="flex items-start justify-between mb-6">
-      <div class="pr-6">
-        <h1 class="text-2xl font-semibold mb-2">Events</h1>
-
-        <p class="text-gray-600 max-w-2xl">
-          Join us for our virtual events including art workshops, facilitator trainings and other opportunities to create, connect and be in community
-        </p>
-      </div>
-      <div class="text-right text-end">
-        <% if allowed_to?(:new?, Event) %>
-          <div class="admin-only bg-blue-100 flex flex-wrap items-center justify-end gap-4">
-            <%= link_to "Reports",
-                        reports_events_path(return_to: "events"),
-                        class: "whitespace-nowrap text-sm #{eyebrow_link_class} px-2 py-1" %>
-            <%= link_to "New event",
-                        new_event_path,
-                        class: "whitespace-nowrap btn btn-secondary-outline" %>
-          </div>
-        <% end %>
-      </div>
+<% actions = capture do %>
+  <% if allowed_to?(:new?, Event) %>
+    <div class="admin-only flex flex-wrap items-center justify-end gap-4 bg-blue-100">
+      <%= link_to "Reports",
+                  reports_events_path(return_to: "events"),
+                  class: "whitespace-nowrap text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "New event",
+                  new_event_path,
+                  class: "whitespace-nowrap btn btn-secondary-outline" %>
     </div>
-    <!-- Divider -->
-    <div class="w-full mt-6">
-      <hr class="border-gray-300 mb-6">
-    </div>
-
-    <% if params[:form_id].present? && (filtered_form = Form.find_by(id: params[:form_id])) %>
-      <div class="flex items-center justify-between gap-3 mb-6 rounded-lg bg-blue-50 border border-blue-200 px-4 py-2.5 text-sm text-blue-800">
-        <span class="inline-flex items-center gap-2">
-          <i class="fa-solid fa-filter text-blue-500"></i>
-          Showing events using form: <span class="font-semibold"><%= filtered_form.display_name %></span>
-        </span>
-        <%= link_to "Clear filter", events_path, class: "inline-flex items-center gap-1.5 font-medium text-blue-700 hover:text-blue-900" %>
-      </div>
-    <% end %>
-
-    <% archived_events = @archived_events.to_a %>
-    <% if @events.any? %>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <% @events.each do |event| %>
-          <%= render "card", event: event %>
-        <% end %>
-      </div>
-
-    <% elsif archived_events.none? %>
-      <!-- Empty State -->
-      <div class="text-center py-12 text-gray-500">
-        No events available.
-      </div>
-    <% end %>
-
-    <% if archived_events.any? %>
-      <%= render "archived_events", events: archived_events %>
-    <% end %>
+  <% end %>
+<% end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :events, eyebrow: "Programs", title: "Events",
+                     subtitle: "Join us for our virtual events including art workshops, facilitator trainings and other opportunities to create, connect and be in community",
+                     actions: actions } do %>
+  <!-- Divider -->
+  <div class="mt-6 w-full">
+    <hr class="mb-6 border-gray-300">
   </div>
-</div>
 
+  <% if params[:form_id].present? && (filtered_form = Form.find_by(id: params[:form_id])) %>
+    <div class="mb-6 flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-800">
+      <span class="inline-flex items-center gap-2">
+        <i class="fa-solid fa-filter text-blue-500"></i>
+        Showing events using form: <span class="font-semibold"><%= filtered_form.display_name %></span>
+      </span>
+      <%= link_to "Clear filter", events_path, class: "inline-flex items-center gap-1.5 font-medium text-blue-700 hover:text-blue-900" %>
+    </div>
+  <% end %>
+
+  <% archived_events = @archived_events.to_a %>
+  <% if @events.any? %>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <% @events.each do |event| %>
+        <%= render "card", event: event %>
+      <% end %>
+    </div>
+
+  <% elsif archived_events.none? %>
+    <!-- Empty State -->
+    <div class="py-12 text-center text-gray-500">
+      No events available.
+    </div>
+  <% end %>
+
+  <% if archived_events.any? %>
+    <%= render "archived_events", events: archived_events %>
+  <% end %>
+<% end %>

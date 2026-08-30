@@ -103,4 +103,29 @@ RSpec.describe AttendeesRoster do
       expect(roster.affiliation_statuses_by_registrant[person.id]).to eq([ "Active", "Upcoming", "Inactive" ])
     end
   end
+
+  describe "#program_statuses_by_registrant" do
+    # The roster spans events, but each row knows the registration that linked the
+    # org, so each org is judged at its own training rather than at the year anchor.
+    it "judges each linked organization at the event that linked it" do
+      org = create(:organization)
+      person = create(:person)
+      create(:affiliation, person: create(:person), organization: org,
+                           title: "Facilitator", start_date: Date.new(2020, 1, 1), end_date: nil)
+
+      early = create(:event, facilitator_training: true, start_date: Date.new(2018, 6, 1))
+      late = create(:event, facilitator_training: true, start_date: Date.new(2024, 6, 1))
+      [ early, late ].each do |event|
+        registration = create(:event_registration, event: event, registrant: person, status: "attended")
+        registration.event_registration_organizations.create!(organization: org)
+      end
+
+      roster = described_class.new([ person ])
+      statuses = roster.program_statuses_by_registrant[person.id]
+
+      expect(statuses.map(&:status)).to contain_exactly(:new, :ongoing)
+      expect(statuses).to all(satisfy { |status| !status.year_anchored? })
+      expect(statuses.map(&:as_of)).to contain_exactly(Date.new(2018, 6, 1), Date.new(2024, 6, 1))
+    end
+  end
 end

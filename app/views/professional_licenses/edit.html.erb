@@ -1,23 +1,29 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="max-w-2xl mx-auto <%= DomainTheme.bg_class_for(:continuing_education) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:continuing_education) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mb-6">
-    <%= link_to professional_licenses_path, class: "text-sm #{eyebrow_link_class}" do %>
+    <%= link_to professional_licenses_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Licenses
     <% end %>
   </div>
 
-  <div class="flex items-center gap-3 mb-6">
+  <div class="mb-6 flex items-center gap-3">
     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
       <i class="fa-solid fa-id-card"></i>
     </span>
     <div>
-      <h1 class="text-2xl font-semibold text-gray-900">Edit license</h1>
-      <p class="text-gray-600 mt-1">Update this registrant's professional license</p>
+      <h1 class="text-primary font-display text-2xl font-semibold">Edit license</h1>
+      <p class="mt-1 text-gray-600">Update this registrant's professional license</p>
     </div>
   </div>
 
-  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+  <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
     <%= render "form", professional_license: @professional_license %>
   </div>
+  <%= render "shared/audit_info", resource: @professional_license %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @professional_license %>
+    </div>
+  <% end %>
 </div>

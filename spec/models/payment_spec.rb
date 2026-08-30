@@ -186,6 +186,15 @@ RSpec.describe Payment, type: :model do
         expect(result).to include(person_payment, org_payment)
       end
 
+      it "filters by person_name matching the linked person" do
+        named = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")
+        named_payment = create(:payment, person: named, organization: nil)
+
+        result = Payment.search_by_params({ person_name: "Bartholomew" })
+        expect(result).to include(named_payment)
+        expect(result).not_to include(person_payment, org_payment)
+      end
+
       describe "search (metadata / stripe charge id)" do
         let!(:metadata_match) { create(:payment, metadata: { "note" => "reunion gala" }) }
         let!(:stripe_match) { create(:payment, stripe_charge_id: "ch_ABC123") }

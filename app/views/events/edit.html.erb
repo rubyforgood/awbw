@@ -1,11 +1,11 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4">
-    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+<div class="<%= DomainTheme.bg_class_for(:events) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= render "events/subnav", event: @event, current: :edit %>
   </div>
-  <div class="flex items-center justify-between mb-3">
-    <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
+  <div class="mb-3 flex items-center justify-between">
+    <h1 class="text-primary font-display text-3xl font-semibold tracking-tight">
       Edit event: <%= @event.title %>
     </h1>
     <button type="submit" form="event-form"
@@ -17,7 +17,7 @@
     </button>
   </div>
   <div class="space-y-6">
-    <div class="bg-white rounded mt-4 p-6">
+    <div class="mt-4 rounded bg-white p-6">
       <%= render "form" %>
       <%= render "shared/audit_info", resource: @event %>
     </div>

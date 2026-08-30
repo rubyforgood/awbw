@@ -1,5 +1,6 @@
 class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
+  include Communicable
   belongs_to :organization_status
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
@@ -13,6 +14,11 @@ class Organization < ApplicationRecord
   has_many :people, through: :affiliations
   has_many :users, through: :people
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # An organization is its own correspondent — there is no person behind it.
+  def communications_email
+    email
+  end
   has_many :reports
   has_many :workshop_logs
   has_many :grants, as: :funder, dependent: :destroy
@@ -39,8 +45,8 @@ class Organization < ApplicationRecord
   # "Organization Type" question, in display order. Any stored value not listed
   # (e.g. the legacy "Other (please specify below)") folds into "Other" for display
   # so an unmatched select can't silently save as the first option.
-  AGENCY_TYPE_OTHER = "Other"
-  AGENCY_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", AGENCY_TYPE_OTHER ].freeze
+  ORGANIZATION_TYPE_OTHER = "Other"
+  ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
 
   # The organization that runs this app. A grant it self-funds counts as subsidy
   # (unfunded), not external funding, in reports. Not memoized: the record can be
@@ -56,7 +62,7 @@ class Organization < ApplicationRecord
   validates :name, presence: true, length: { maximum: 255 }
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
-  validates :agency_type_other, length: { maximum: 255 }
+  validates :organization_type_other, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
@@ -79,11 +85,9 @@ class Organization < ApplicationRecord
 
   # Scopes
   # See TagFilterable, Trendable, WindowsTypeFilterable
-  scope :active, -> {
-    status_active = joins(:organization_status).where(organization_statuses: { name: "Active" })
-    affiliation_active = where(id: Affiliation.active.select(:organization_id))
-    status_active.or(affiliation_active)
-  }
+  # An org is active because someone is affiliated there, not because the legacy
+  # status column says so (ADR-0001 D3, ADR-0003 D4).
+  scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
   scope :address, ->(address) do
     return all if address.blank?
     terms = address.to_s.strip.split(/[\s,]+/).reject(&:blank?)
@@ -114,14 +118,28 @@ class Organization < ApplicationRecord
   scope :program_status, ->(bucket) {
     fac_ids = Affiliation.facilitators.select(:organization_id)
     active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
+    upcoming_fac_ids = Affiliation.facilitators.with_status("Upcoming").select(:organization_id)
     case bucket.to_s
     when "active"            then where(id: active_fac_ids)
-    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids)
+    when "upcoming"          then where(id: upcoming_fac_ids).where.not(id: active_fac_ids)
+    when "formerly_active"   then where(id: fac_ids).where.not(id: active_fac_ids).where.not(id: upcoming_fac_ids)
     when "never_active"      then where.not(id: fac_ids)
     when "formerly_or_never" then where.not(id: active_fac_ids)
     else all
     end
   }
+
+  # The index's Program status dropdown, in display order. "Inactive" is the
+  # not-active umbrella (formerly + never + upcoming) with the two narrower
+  # buckets after it, mirroring Person::FACILITATOR_STATUS_FILTER_OPTIONS so the
+  # two indexes read the same way.
+  PROGRAM_STATUS_FILTER_OPTIONS = [
+    [ "Active", "active" ],
+    [ "Inactive", "formerly_or_never" ],
+    [ "Upcoming", "upcoming" ],
+    [ "Formerly active", "formerly_active" ],
+    [ "Never active", "never_active" ]
+  ].freeze
 
   # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
   # mirroring the aggregate the index/profile columns show.
@@ -186,12 +204,6 @@ class Organization < ApplicationRecord
     facilitator_program_status(as_of: reference_date).status
   end
 
-  # Methods
-  def led_by?(user)
-    return false unless leader
-    leader.user == user
-  end
-
   def state
     addresses.active.first&.state
   end
@@ -219,19 +231,6 @@ class Organization < ApplicationRecord
     [ first_active.city, first_active.state ].compact_blank.join(", ").presence
   end
 
-  # This org's program status relative to a scholarship recipient (the
-  # New/Ongoing/Reinstate column on the scholarship index): Reinstate = lapsed,
-  # Ongoing = has facilitators beyond this recipient, New = none prior. In-memory
-  # facilitator-affiliation heuristic, to reuse a preloaded association.
-  def program_status(recipient = nil)
-    facilitators = affiliations.select(&:facilitator?)
-    return "New" if facilitators.empty?
-    return "Reinstate" if facilitators.none?(&:active?)
-
-    prior = recipient ? facilitators.reject { |a| a.person_id == recipient.id } : facilitators
-    prior.any? ? "Ongoing" : "New"
-  end
-
   def type_name
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end
@@ -249,10 +248,11 @@ class Organization < ApplicationRecord
     end
   end
 
-  def published? # needed for my_bookmarks
-    return true if organization_status&.name == "Active"
-    # #active? is the in-memory twin of the `active` scope, so a list page that
-    # preloaded affiliations doesn't query once per row.
+  # Needed for my_bookmarks. Keys off affiliations only — the stored
+  # organization_status has drifted and is never consulted (ADR-0003 D4).
+  # The loaded branch is the in-memory twin of the `active` scope, so a list page
+  # that preloaded affiliations doesn't query once per row.
+  def published?
     return affiliations.any?(&:active?) if affiliations.loaded?
 
     affiliations.active.exists?
@@ -298,6 +298,23 @@ class Organization < ApplicationRecord
 
   remote_searchable_by :name
 
+  # FileMaker is the source of truth, and a record can carry more than one
+  # FileMaker code (e.g. when two orgs that each mapped to a FileMaker record are
+  # merged). The `filemaker_code` column holds them as a trimmed, comma-separated
+  # list; these are the seam for reading and combining them.
+  def filemaker_codes
+    Organization.split_filemaker_codes(filemaker_code)
+  end
+
+  def self.split_filemaker_codes(value)
+    value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
+  end
+
+  # A single normalized column value from any mix of code strings/lists.
+  def self.join_filemaker_codes(*values)
+    values.flatten.flat_map { |value| split_filemaker_codes(value) }.uniq.sort.join(", ").presence
+  end
+
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or
   # not a usable web address. Drives the external links on the org profile and
@@ -330,10 +347,6 @@ class Organization < ApplicationRecord
     if end_date_changed?
       errors.add(:end_date, "is managed automatically by affiliations")
     end
-  end
-
-  def leader
-    affiliations.find_by(position: 2)
   end
 
   def remove_duplicate_sectorable_items

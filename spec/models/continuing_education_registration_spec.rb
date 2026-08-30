@@ -151,6 +151,22 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg_for(event: event, status: "attended").certificate_available?).to be(true)
     end
 
+    it "requires the CE callout's post-training form to be completed once one is set" do
+      event = create(:event, ce_hours_offered: 6, start_date: 3.days.ago, end_date: 1.day.ago)
+      form = create(:form, name: "CE Evaluation")
+      required_field = create(:form_field, form:, required: true)
+      callout = create(:registration_ticket_callout, event:, builtin_key: "ce_hours", title: "CE hours", form:)
+
+      ce_reg = ce_reg_for(event: event, status: "attended")
+      expect(ce_reg.certificate_available?).to be(false)
+
+      EventRegistrationServices::CalloutFormSubmission.call(
+        registration: ce_reg.event_registration, callout: callout,
+        form_params: { required_field.id.to_s => "Great" }
+      )
+      expect(ce_reg.reload.certificate_available?).to be(true)
+    end
+
     it "records delivery via certificate_sent_at" do
       ce_reg = create(:continuing_education_registration)
       expect(ce_reg.certificate_sent?).to be(false)
@@ -164,6 +180,10 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       let(:license) { create(:professional_license, person: origin_reg.registrant) }
 
       it "carries hours/cost from the source without re-defaulting from the event" do
+        # A real transfer leaves a matching stub on the source; that stub is what
+        # marks the destination record as transfer-carried.
+        origin_reg.continuing_education_registrations.create!(
+          professional_license: license, hours: 0, cost_cents: 10_000, skip_event_defaults: true)
         dest_reg = create(:event_registration, event: create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 10_000),
           registrant: origin_reg.registrant, transferred_from_registration: origin_reg)
         ce = dest_reg.continuing_education_registrations.create!(

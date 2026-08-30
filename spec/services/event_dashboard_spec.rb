@@ -43,7 +43,7 @@ RSpec.describe EventDashboard do
                           name: "Primary Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
     let(:additional_age_group_field) do
-      create(:form_field, form: registration_form, field_identifier: "additional_age_group",
+      create(:form_field, form: registration_form, field_identifier: "additional_age_groups",
                           name: "Additional Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
 
@@ -108,7 +108,7 @@ RSpec.describe EventDashboard do
       create(:form_answer, form_field: age_group_field, submitted_answer: age_group_excluded.id.to_s,
                            form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
 
-      # Additional age group(s) served, captured as "additional_age_group" answers.
+      # Additional age group(s) served, captured as "additional_age_groups" answers.
       # person1 → Adults + Teens (Adults dupes the primary answer, so it dedupes);
       # cancelled → Adults (ignored). This makes "All age groups" (primary +
       # additional) differ from the primary-only breakdown.
@@ -596,6 +596,30 @@ RSpec.describe EventDashboard do
         expect(shoutout.organization).to eq(org)
       end
 
+      # `inactive` is only re-derived on save, so a term that simply lapsed still
+      # reads inactive: false — judging on the flag alone credited the shout-out to
+      # an org the person had already left.
+      it "skips an organization whose affiliation ended, even with a stale inactive flag" do
+        opt_in(embedded_applicant, text: "Thank you.")
+        lapsed = create(:organization, name: "Lapsed Org")
+        ended = create(:affiliation, person: embedded_applicant, organization: lapsed,
+                                     start_date: 3.years.ago.to_date, end_date: 1.year.ago.to_date)
+        ended.update_column(:inactive, false)
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.organization).to be_nil
+      end
+
+      it "keeps an organization the registrant is about to start facilitating for" do
+        opt_in(embedded_applicant, text: "Excited to begin.")
+        upcoming_org = create(:organization, name: "Starting Soon Org")
+        create(:affiliation, person: embedded_applicant, organization: upcoming_org,
+                             title: "Facilitator", start_date: 1.month.from_now.to_date, end_date: nil)
+
+        shoutout = dashboard.shoutouts.find { |s| s.recipient == embedded_applicant }
+        expect(shoutout.organization).to eq(upcoming_org)
+      end
+
       it "exposes the registrant's primary sector and age group" do
         age_range = create(:category_type, name: "AgeRange")
         embedded_applicant.sectorable_items.create!(sector: create(:sector, name: "Sexual Assault"), is_primary: true)
@@ -967,7 +991,7 @@ RSpec.describe EventDashboard do
     it "anchors every verdict on the event's start date, for the hover to explain" do
       status = dashboard.program_statuses_by_registrant[ongoing_facilitator.id].first
 
-      expect(status.as_of).to eq(event.start_date.to_date)
+      expect(status.as_of).to eq(event.starts_on)
       expect(status).not_to be_year_anchored
       expect(status.explanation).to include("Ongoing as of", "event start date", "Jan 2023")
     end
@@ -978,6 +1002,42 @@ RSpec.describe EventDashboard do
       expect(ids[:new]).to contain_exactly(new_facilitator.id)
       expect(ids[:ongoing]).to contain_exactly(ongoing_facilitator.id)
       expect(ids[:reinstated]).to contain_exactly(reinstated_facilitator.id)
+    end
+  end
+
+  context "same-day facilitation dated to the event start (ADR-0001 D8)" do
+    let(:event) { create(:event) }
+
+    it "reads New — the affiliation the training mints is not prior history" do
+      org = create(:organization, name: "One Day Program")
+      facilitator = create(:person)
+      # start == end == the event date: the minted affiliation, not a prior program,
+      # so this must NOT read Ongoing.
+      create(:affiliation, organization: org, person: facilitator, title: "Facilitator",
+             start_date: event.start_date.to_date, end_date: event.start_date.to_date)
+      create(:event_registration, event: event, registrant: facilitator, status: "registered")
+
+      expect(dashboard.program_status_counts).to eq(new: 1, ongoing: 0, reinstated: 0)
+      expect(dashboard.program_statuses_by_registrant[facilitator.id].map(&:status)).to eq([ :new ])
+    end
+  end
+
+  context "an organization with both a prior facilitator and one minted at the event" do
+    let(:event) { create(:event) }
+
+    it "reads Ongoing — a prior active facilitator outweighs the training-minted one (D5)" do
+      org = create(:organization, name: "Mixed Program")
+      registrant = create(:person)
+      # A facilitator already active before this training…
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+             start_date: Date.new(2023, 1, 1), end_date: nil)
+      # …plus the registrant's own affiliation minted at the training itself.
+      create(:affiliation, organization: org, person: registrant, title: "Facilitator",
+             start_date: event.start_date.to_date)
+      create(:event_registration, event: event, registrant: registrant, status: "registered")
+
+      expect(dashboard.program_status_counts).to eq(new: 0, ongoing: 1, reinstated: 0)
+      expect(dashboard.program_statuses_by_registrant[registrant.id].map(&:status)).to eq([ :ongoing ])
     end
   end
 

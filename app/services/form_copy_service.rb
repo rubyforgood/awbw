@@ -1,5 +1,5 @@
 class FormCopyService
-  COPY_NAME_PREFIX = "COPY of ".freeze
+  COPY_NAME_PREFIX = "DUPLICATE of ".freeze
 
   def initialize(form)
     @form = form

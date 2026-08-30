@@ -1,30 +1,23 @@
 <%= render "shared/public_welcome_banner" %>
 
 <% content_for(:page_bg_class, "public") %>
-<div class="workshops-index max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:workshops) %> border border-gray-200 rounded-xl shadow p-6">
-  <!-- Header -->
-  <div class="w-full">
-    <div class="flex items-start justify-between mb-6">
-      <div class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">Workshops</h2>
-
-        <p class="text-gray-700">
-          Search by emotional theme, materials needed, ease of set-up, and more.
-          <br>
-          We encourage Windows Facilitator creativity and innovation. If you adapt and improve workshops, please <%= link_to "share your ideas with us", new_workshop_variation_idea_path, class: "text-blue-500" %>!
-        </p>
-      </div>
-
-      <% if allowed_to?(:new?, Workshop) %>
-        <%= link_to "New workshop",
-                    new_workshop_path,
-                    class: "admin-only bg-blue-100 btn btn-primary-outline" %>
-      <% end %>
-    </div>
-  </div>
-
+<% actions = capture do %>
+  <% if allowed_to?(:new?, Workshop) %>
+    <%= link_to "New workshop",
+                new_workshop_path,
+                class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+  <% end %>
+<% end %>
+<% subtitle = capture do %>
+  Search by emotional theme, materials needed, ease of set-up, and more.
+  <br>
+  We encourage Windows Facilitator creativity and innovation. If you adapt and improve workshops, please <%= link_to "share your ideas with us", new_workshop_variation_idea_path, class: "text-blue-500" %>!
+<% end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :workshops, eyebrow: "Curriculum", title: "Workshops",
+                     subtitle: subtitle, actions: actions } do %>
   <!-- Divider -->
-  <div class="w-full"><hr class="border-gray-300 mb-6"></div>
+  <div class="w-full"><hr class="mb-6 border-gray-300"></div>
 
   <!-- Search Form -->
   <div class="w-full">
@@ -35,15 +28,15 @@
       <%= hidden_field_tag :author_id, params[:author_id] if params[:author_id].present? %>
       <%= render "filters" %>
 
-      <div><hr class="border-gray-300 my-6"></div>
+      <div><hr class="my-6 border-gray-300"></div>
 
       <div class="mt-6"><%= render "filters_applied" %></div>
 
-      <div><hr class="border-gray-300 my-6"></div>
+      <div><hr class="my-6 border-gray-300"></div>
 
       <!-- Sort Options -->
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2 font-medium">
-        <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">
+        <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
           Sort by
         </h3>
 
@@ -62,4 +55,4 @@
       <%= render "results_skeleton" %>
     <% end %>
   </div>
-</div>
+<% end %>

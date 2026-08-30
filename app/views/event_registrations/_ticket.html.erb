@@ -1,24 +1,23 @@
 <% preview = local_assigns.fetch(:preview, false) %>
 <% show_all = local_assigns.fetch(:show_all, false) %>
-<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
+<div class="mx-auto max-w-3xl px-4 pt-6 pb-12">
   <%= render "event_registrations/transfer_notice", event_registration: event_registration %>
   <!-- Ticket Container -->
-  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+  <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+    <%= render "shared/brand_accent_strip" %>
     <!-- Ticket Header -->
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+    <div class="bg-primary px-6 py-5 text-white sm:px-8">
       <div class="flex items-center gap-5">
         <div class="shrink-0"><%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %></div>
 
         <div class="flex-1">
-          <h1 class="text-xl font-semibold tracking-wide leading-tight">Registration ticket</h1>
+          <h1 class="font-display text-2xl leading-tight font-semibold tracking-tight">Registration ticket</h1>
         </div>
       </div>
-
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <!-- Ticket Body -->
-    <div class="bg-gray-50 px-6 py-6 space-y-5">
+    <div class="bg-brand-cream space-y-5 px-6 py-6">
       <!-- Event thumbnail + title -->
       <div class="flex items-center justify-center gap-4">
         <%= render "assets/display_image",
@@ -30,12 +29,12 @@
 
         <div class="min-w-0 text-left">
           <% if event_registration.event.respond_to?(:pre_title) && event_registration.event.pre_title.present? %>
-            <p class="text-sm font-semibold text-gray-700 mb-0.5" style="font-family: 'Telefon Bold', sans-serif"><%= event_registration.event.pre_title %></p>
+            <p class="mb-0.5 font-telefon text-sm font-semibold text-gray-700"><%= event_registration.event.pre_title %></p>
           <% end %>
 
-          <h2 class="text-2xl font-bold text-green-800 leading-tight" style="font-family: Lato, sans-serif"><%= link_to event_registration.event.title, event_path(event_registration.event, reg: event_registration.slug), class: "hover:underline" %></h2>
+          <h2 class="text-primary text-2xl leading-tight font-bold"><%= link_to event_registration.event.title, event_path(event_registration.event, reg: event_registration.slug), class: "hover:underline" %></h2>
 
-          <p class="text-sm font-semibold text-blue-900 mt-0.5" style="font-family: Lato, sans-serif"><%= event_registration.event.decorate.times(display_day: true, display_date: true) %></p>
+          <p class="text-primary mt-0.5 text-sm font-semibold"><%= event_registration.event.decorate.times(display_day: true, display_date: true) %></p>
 
           <%
             venue = if event_registration.event.autoshow_videoconference_label && event_registration.event.videoconference_label.present?
@@ -46,7 +45,7 @@
             summary = [ event_registration.event.decorate.labelled_cost.presence, ("Location: #{venue}" if venue.present?) ].compact
           %>
           <% if summary.any? %>
-            <p class="text-sm text-gray-600 mt-0.5"><%= summary.join(" · ") %></p>
+            <p class="mt-0.5 text-sm text-gray-600"><%= summary.join(" · ") %></p>
           <% end %>
         </div>
       </div>
@@ -54,15 +53,15 @@
       <!-- Divider (perforation style) -->
       <div class="relative my-6">
         <div class="border-t border-dashed border-gray-300"></div>
-        <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
-        <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-100 rounded-full"></div>
+        <div class="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white"></div>
+        <div class="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-white"></div>
       </div>
 
       <!-- Registrant -->
       <div class="text-center">
-        <p class="text-gray-500 uppercase tracking-wide text-xs">Registrant</p>
+        <p class="text-xs tracking-wide text-gray-500 uppercase">Registrant</p>
 
-        <p class="font-medium text-gray-900 text-lg">
+        <p class="text-lg font-medium text-gray-900">
           <% if user_signed_in? && !preview %>
             <%= link_to event_registration.registrant.full_name, person_path(event_registration.registrant), class: "text-blue-700 hover:text-blue-900 underline" %>
           <% else %>
@@ -79,10 +78,10 @@
       <% end %>
 
       <% if event_registration.event.cost_cents.to_i > 0 && event_registration.status != "cancelled" && event_registration.remaining_cost > 0 && @checkout_payment_status != "paid" && !event_registration.transferred_out? %>
-        <div class="text-center mt-2 space-y-3">
+        <div class="mt-2 space-y-3 text-center">
           <% if event_registration.intends_to_pay? %>
             <div>
-              <span class="inline-flex items-center gap-1.5 rounded-full text-sm font-medium border px-3 py-1 bg-blue-50 text-blue-700 border-blue-200">
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
                 <i class="fa-solid fa-circle-check"></i> Access granted · payment to follow
               </span>
             </div>
@@ -91,7 +90,7 @@
           <div>
             <% if preview %>
               <button type="button" disabled
-                      class="btn btn-accent px-6 py-2 text-sm uppercase font-telefon opacity-60 cursor-not-allowed">Pay with Credit Card</button>
+                      class="btn btn-accent cursor-not-allowed px-6 py-2 font-telefon text-sm uppercase opacity-60">Pay with Credit Card</button>
             <% else %>
               <%= button_to "Pay with Credit Card",
                             registration_pay_path(event_registration.slug),
@@ -132,6 +131,7 @@
             material (videoconference, staff, handouts, FAQ, custom callouts). (#1944) %>
         <% next if event_registration.transferred_out? && !callout.financial_record? %>
         <% next if callout.payment_access_gated && !payment_access && !(preview && show_all) %>
+        <% next if callout.ce_payment_access_gated && !event_registration.ce_paid_in_full? && !(preview && show_all) %>
         <% if callout.behavioral_builtin? %>
           <% card = builtin_cards.card_for(callout) %>
           <% if card %>
@@ -151,22 +151,28 @@
                        href: sample_href, linked: sample_href.present? %>
           <% end %>
         <% else %>
+          <%# A form-bearing callout opens its own person-first page where the
+              registrant fills the form out; other custom callouts use the generic
+              event-scoped content page. Preview always uses the event-scoped page. %>
+          <% real_href = callout.delivers_form? ?
+               registration_callout_form_path(event_registration.slug, callout) :
+               event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug) %>
           <%= render "event_registrations/callout_card",
                      callout: callout,
                      href: preview ?
                        event_registration_ticket_callout_path(event_registration.event, callout, return_to: "sample_ticket") :
-                       event_registration_ticket_callout_path(event_registration.event, callout, reg: event_registration.slug),
+                       real_href,
                      linked: preview ? callout.page_content? : true %>
         <% end %>
       <% end %>
 
       <!-- Divider -->
-      <div class="border-t border-gray-200"></div>
+      <div class="border-primary/10 border-t"></div>
 
       <!-- Status -->
-      <div class="text-center space-y-2">
+      <div class="space-y-2 text-center">
         <% if event_registration.status == "cancelled" %>
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"> Registration cancelled </span>
+          <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-800"> Registration cancelled </span>
           <% if event_registration.event.registerable? %>
             <div><%= button_to "Register again", registration_reactivate_path(event_registration.slug),
                               class: "text-sm text-gray-500 hover:text-blue-600 underline bg-transparent border-0 cursor-pointer p-0" %></div>
@@ -188,8 +194,8 @@
           <% end %>
 
           <% if preview %>
-            <button type="button" disabled class="text-sm text-gray-400 underline bg-transparent border-0 cursor-not-allowed p-0">Resend confirmation email</button>
-            <button type="button" disabled class="text-sm text-gray-400 underline bg-transparent border-0 cursor-not-allowed p-0">Cancel registration</button>
+            <button type="button" disabled class="cursor-not-allowed border-0 bg-transparent p-0 text-sm text-gray-400 underline">Resend confirmation email</button>
+            <button type="button" disabled class="cursor-not-allowed border-0 bg-transparent p-0 text-sm text-gray-400 underline">Cancel registration</button>
           <% else %>
             <%= button_to "Resend confirmation email",
                             registration_resend_confirmation_path(event_registration.slug),
@@ -203,15 +209,15 @@
         </div>
 
         <!-- Add to calendar (secondary utility, kept at the bottom) -->
-        <div class="flex flex-col items-center pt-5 border-t border-gray-100">
-          <div class="flex items-center gap-1 mb-2">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">
+        <div class="border-primary/10 flex flex-col items-center border-t pt-5">
+          <div class="mb-2 flex items-center gap-1">
+            <p class="text-xs font-bold tracking-wide text-gray-400 uppercase">
               Add to your calendar
             </p>
             <%= render "events/videoconference_calendar_notice", event: event_registration.event, registration: event_registration %>
           </div>
 
-          <div class="flex flex-wrap gap-1 items-center justify-center w-full text-sm text-blue-600 font-medium"><%= event_registration.event.decorate.calendar_links(show_videoconference_details: event_registration.videoconference_details_visible?, re_add_url: registration_videoconference_url(event_registration.slug), payment_pending: !event_registration.payment_access_granted?) %></div>
+          <div class="flex w-full flex-wrap items-center justify-center gap-1 text-sm font-medium text-blue-600"><%= event_registration.event.decorate.calendar_links(show_videoconference_details: event_registration.videoconference_details_visible?, re_add_url: registration_videoconference_url(event_registration.slug), payment_pending: !event_registration.payment_access_granted?) %></div>
         </div>
       <% end %>
     </div>

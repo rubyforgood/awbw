@@ -5,30 +5,55 @@
     </span>
     <% if @form %>
       for <span class="font-medium text-gray-900"><%= @form.display_name %></span>
+    <% elsif @form_ids.many? %>
+      across <span class="font-medium text-gray-900"><%= @form_ids.size %> forms</span>
     <% end %>
   </div>
 
   <% if @form_submissions.any? %>
-    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div data-column-toggle-root data-column-toggle-scope="form-submissions">
+    <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <span class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Columns</span>
+      <%= render "shared/column_toggle_switch", group: "role", label: "Role", on: true %>
+      <%= render "shared/column_toggle_switch", group: "event", label: "Event", on: true %>
+      <%= render "shared/column_toggle_switch", group: "submitted", label: "Submitted date", on: true %>
+      <%= render "shared/column_toggle_switch", group: "user_account", label: "User account", on: false %>
+    </div>
+    <div class="border-primary/10 overflow-x-auto rounded-2xl border bg-white shadow-sm">
       <table class="w-full border-collapse">
         <thead>
           <tr class="border-b border-gray-200 bg-gray-50 text-left text-sm text-gray-600">
             <th class="px-4 py-3">Form</th>
-            <th class="px-4 py-3">Role</th>
-            <th class="px-4 py-3">Event</th>
+            <th class="px-4 py-3" data-column-toggle-col="role">Role</th>
+            <th class="px-4 py-3" data-column-toggle-col="event">Event</th>
             <% unless @person %><th class="px-4 py-3">Person</th><% end %>
-            <th class="px-4 py-3">Submitted</th>
+            <th class="px-4 py-3">Organization</th>
+            <th class="hidden px-4 py-3" data-column-toggle-col="user_account">User account</th>
+            <th class="px-4 py-3" data-column-toggle-col="submitted">Submitted</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody>
           <% @form_submissions.each do |submission| %>
-            <tr class="border-b border-gray-100 text-sm text-gray-800 last:border-0">
-              <td class="px-4 py-3 font-medium"><%= submission.form&.display_name %></td>
-              <td class="px-4 py-3"><%= submission.role&.humanize %></td>
-              <td class="px-4 py-3">
+            <% highlighted = params[:highlight].to_s == submission.id.to_s %>
+            <tr id="<%= form_submission_row_id(submission) %>" class="scroll-mt-24 border-b border-gray-100 text-sm text-gray-800 transition-colors duration-150 last:border-0 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "" %>">
+              <td class="px-4 py-3 font-medium">
+                <% if submission.bulk_payment? && submission.resolved_event %>
+                  <%# Deep-link to this submission's card on its event's bulk payments page (scrolls + highlights). %>
+                  <%= link_to submission.form&.display_name, event_bulk_payment_row_path(submission.resolved_event, submission), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
+                <% else %>
+                  <%= submission.form&.display_name %>
+                <% end %>
+              </td>
+              <td class="px-4 py-3" data-column-toggle-col="role"><%= submission.role&.humanize %></td>
+              <td class="px-4 py-3" data-column-toggle-col="event">
                 <% if submission.resolved_event %>
-                  <%= submission.resolved_event.name %>
+                  <% event = submission.resolved_event %>
+                  <span class="font-medium text-gray-900"><%= event.name %></span>
+                  <% if event.decorate.month_year %>
+                    <span class="text-gray-400">·</span>
+                    <span class="whitespace-nowrap text-gray-500"><%= event.decorate.month_year %></span>
+                  <% end %>
                 <% elsif submission.role == "public" %>
                   <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
                     <i class="fa-solid fa-link text-3xs"></i>Public form
@@ -37,11 +62,58 @@
                   <span class="text-gray-300">—</span>
                 <% end %>
               </td>
-              <% unless @person %><td class="px-4 py-3"><%= submission.person&.name %></td><% end %>
-              <td class="px-4 py-3 whitespace-nowrap"><%= submission.created_at.to_fs(:long) %></td>
-              <td class="px-4 py-3 text-right">
-                <%# origin: where this index itself was reached from, so the detail page can hand it back and the eyebrow survives the round trip. %>
-                <%= link_to "View", form_submission_path(submission, return_to: "form_submissions", origin: params[:return_to].presence, person_id: submission.person_id, form_id: @form&.id), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
+              <% unless @person %><td class="px-4 py-3"><%= submission.person&.name || content_tag(:span, "Anonymous", class: "text-gray-400 italic") %></td><% end %>
+              <td class="px-4 py-3">
+                <%# The submitted organization answer, with whether an org has been
+                    directly linked to this submission yet — the "to process" signal.
+                    A matching affiliation the person holds doesn't count; only an
+                    explicit link made in the editor does. %>
+                <% answers = submission.answers_by_identifier %>
+                <% submitted_org = answers["organization_name"].presence %>
+                <%# The chip doubles as the way into the submission's org-linking
+                    editor, like the org chips on the registrants roster. %>
+                <% editor_path = link_organization_form_submission_path(submission, return_to: "form_submissions") %>
+                <% linked_orgs = @linked_orgs[submission.id] || [] %>
+                <% pill_classes = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full text-xs font-medium border px-3 py-0.5 transition hover:opacity-80 hover:shadow-sm" %>
+                <div class="flex flex-wrap gap-1.5">
+                  <% if linked_orgs.any? %>
+                    <%# Match the registrants roster: a linked org is shown as its own
+                        chip (no "Linked" label) plus a small link into the editor. %>
+                    <% org_btn_classes = "inline-flex items-center whitespace-nowrap rounded-md text-xs font-medium border px-3 py-0.5 transition bg-gray-50 text-gray-500 border-gray-200 hover:shadow-sm #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)} hover:text-emerald-800 hover:border-emerald-300" %>
+                    <% linked_orgs.each do |org| %>
+                      <span class="inline-flex items-center gap-1">
+                        <%= link_to truncate(org.name, length: 31), organization_path(org), title: org.name, class: org_btn_classes, data: { turbo_frame: "_top" } %>
+                        <% icon_only_pill = pill_classes.sub("gap-1.5 ", "") %>
+                        <%= link_to editor_path, title: "Edit linked organizations", class: "#{icon_only_pill} bg-gray-50 text-gray-500 border-gray-200", data: { turbo_frame: "_top" } do %>
+                          <span class="invisible w-0 min-w-0 overflow-hidden">None</span>
+                          <i class="fa-solid fa-arrow-up-right-from-square text-2xs opacity-70"></i>
+                        <% end %>
+                      </span>
+                    <% end %>
+                  <% elsif submitted_org %>
+                    <%# Amber "Pending" chip, like the registrants roster: a submitted
+                        org that hasn't been linked to the submission yet. %>
+                    <%= render "shared/badge", label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200", icon: "fa-solid fa-circle-exclamation text-2xs", href: editor_path, title: submitted_org %>
+                  <% else %>
+                    <%# No org submitted and none linked — grey "None" chip. %>
+                    <%= render "shared/badge", label: "None", classes: "bg-gray-50 text-gray-500 border-gray-200", href: editor_path %>
+                  <% end %>
+                </div>
+              </td>
+              <td class="px-4 py-3 hidden" data-column-toggle-col="user_account">
+                <% if submission.person&.user %>
+                  <%= render "users/confirmed_status", user: submission.person.user, invite_params: { return_to: "form_submissions", form_submission_id: submission.id } %>
+                <% elsif submission.person %>
+                  <%= link_to "Create user", new_user_path(person_id: submission.person.id),
+                              class: "btn btn-secondary-outline whitespace-nowrap", data: { turbo_frame: "_top" } %>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap" data-column-toggle-col="submitted"><%= submission.created_at.to_fs(:long) %><%= render "form_submissions/via_callout_badge", submission: submission %></td>
+              <td class="px-4 py-3 text-right whitespace-nowrap">
+                <%# origin: where this index itself was reached from, so the detail page can hand it back and the eyebrow survives the round trip. person_id/form_id are carried only when they were active filters — the back-link anchors to this row via highlight, so it need not re-scope to this submission's person. %>
+                <%= link_to "View", form_submission_path(submission, return_to: "form_submissions", origin: params[:return_to].presence, person_id: params[:person_id].presence, form_id: @form&.id, **form_submission_carryover_params(params)), data: { turbo_frame: "_top" }, class: "text-blue-600 hover:underline" %>
               </td>
             </tr>
           <% end %>
@@ -50,6 +122,7 @@
     </div>
 
     <div class="pagination mt-6 flex w-full justify-center"><%= tailwind_paginate @form_submissions %></div>
+    </div>
   <% else %>
     <div class="rounded-xl border border-dashed border-gray-300 bg-white py-12 text-center">
       <i class="fa-solid fa-file-signature text-3xl text-gray-300" aria-hidden="true"></i>

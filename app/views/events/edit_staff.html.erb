@@ -1,6 +1,6 @@
-<% content_for(:page_bg_class, "admin-or-owner bg-white") %>
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 
-<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6 sm:p-8">
+<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-primary/10 rounded-2xl shadow-sm p-6 sm:p-8">
   <%# Eyebrow returns to wherever the editor was opened from: a registrant's (or
       the sample's) staff callout page, else the admin staff roster. Kept in sync
       with EventsController#update_staff's post-save redirect. %>
@@ -15,7 +15,7 @@
 
   <div class="mb-8">
     <p class="text-sm font-semibold uppercase tracking-wide <%= DomainTheme.text_class_for(:events) %>">Manage staff</p>
-    <h1 class="text-2xl font-bold text-gray-900 mt-1"><%= @event.title %></h1>
+    <h1 class="font-display text-2xl font-bold text-primary mt-1"><%= @event.title %></h1>
     <p class="text-gray-500 mt-1 text-sm">Connect people to this event and set their role. Use the toggle to mark who is expected to attend.</p>
   </div>
 

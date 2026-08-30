@@ -401,7 +401,7 @@ module ApplicationHelper
   # show page.
   def form_submission_link_path(submission)
     event = submission.resolved_event
-    registration = event && submission.person.event_registrations.find_by(event: event)
+    registration = event && submission.person&.event_registrations&.find_by(event: event)
     return event_public_registration_path(event, reg: registration.slug) if registration&.slug.present?
     form_submission_path(submission)
   end
@@ -463,9 +463,8 @@ module ApplicationHelper
   # Training (August 2026)") so a registration reads as which occurrence it's for.
   def event_title_with_month_year(event)
     return if event.blank?
-    return event.title if event.start_date.blank?
 
-    "#{event.title} (#{event.start_date.strftime('%B %Y')})"
+    event.decorate.title_with_month_year
   end
 
   def search_page(params)

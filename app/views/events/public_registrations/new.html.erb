@@ -3,7 +3,7 @@
 <%# ---- SOCIAL SHARE SIDEBAR ---- %>
 <%= render "events/social_share_sidebar", share_url: event_url(@event), share_title: @event.title %>
 
-<div class="max-w-3xl mx-auto px-4">
+<div class="mx-auto max-w-3xl px-4">
   <div class="flex flex-wrap items-center gap-2 pt-4">
     <%= link_to event_path(@event), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to event
@@ -19,28 +19,28 @@
   </div>
 </div>
 
-<div class="max-w-3xl mx-auto pb-12 pt-6 px-4">
+<div class="mx-auto max-w-3xl px-4 pt-6 pb-12">
 
   <%# ---- EVENT HEADER ---- %>
-  <div class="text-center mb-8">
+  <div class="mb-8 text-center">
     <%# Organization logo leads the page so the publisher's identity (and the
         "art transforming trauma" tagline) establishes trust before the event
         and the registration ask. The color tagline lockup reads on the white
         page; the white reversed mark no longer appears in the purple card. %>
     <%= image_tag("logo-with-tagline.png", alt: "A Window Between Worlds — art transforming trauma", class: "mx-auto mb-6 block h-12 w-auto") %>
     <% if @event.respond_to?(:pre_title) && @event.pre_title.present? %>
-      <p class="text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-accent mb-3" style="font-family: 'Telefon Bold', sans-serif"><%= @event.pre_title %></p>
+      <p class="text-lg sm:text-xl font-bold uppercase tracking-[0.2em] text-accent mb-3"><%= @event.pre_title %></p>
     <% end %>
-    <h1 class="font-black text-green-800 leading-tight text-4xl sm:text-5xl mb-5" style="font-family: Lato, sans-serif">
+    <h1 class="font-display text-primary leading-tight text-4xl sm:text-5xl mb-5">
       <%= link_to @event.title, event_path(@event), class: "hover:underline decoration-2 underline-offset-4" %>
     </h1>
 
     <%# Date is upper-cased for hero emphasis (no weekday, includes the year);
         the time line keeps natural case so am/pm read lowercase. %>
-    <div class="font-bold text-blue-900 uppercase text-2xl sm:text-3xl" style="font-family: Lato, sans-serif">
+    <div class="font-bold text-primary uppercase text-2xl sm:text-3xl">
       <%= event_dates_label(@event) %>
     </div>
-    <div class="font-bold text-blue-900 text-lg sm:text-xl mt-2 mb-4" style="font-family: Lato, sans-serif">
+    <div class="font-bold text-primary text-lg sm:text-xl mt-2 mb-4">
       <%= event_times_label(@event) %>
     </div>
 
@@ -68,18 +68,18 @@
   </div>
 
   <%# ---- REGISTRATION FORM CARD ---- %>
-  <div class="bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+  <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
 
     <%# Card Header %>
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 text-white px-6 sm:px-8 py-5">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="bg-primary px-6 py-5 text-white sm:px-8">
       <div class="min-w-0">
-        <h2 class="text-xl font-semibold tracking-wide leading-tight"><%= @registration_form.display_name %></h2>
+        <h2 class="text-xl leading-tight font-semibold tracking-wide"><%= @registration_form.display_name %></h2>
       </div>
-      <div class="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
     </div>
 
     <%# Card Body %>
-    <div class="px-6 sm:px-8 py-7">
+    <div class="px-6 py-7 sm:px-8">
       <% if @event.autoshow_registration_details? %>
         <%= render "events/public_registrations/details", event: @event %>
       <% end %>
@@ -88,7 +88,7 @@
       <%# The error flash band carries the form-errors controller so it scrolls
           itself into view on connect after a failed submit. %>
       <% if flash[:alert] %>
-        <div role="alert" class="scroll-mt-24 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 mb-6" data-controller="form-errors">
+        <div role="alert" class="mb-6 flex scroll-mt-24 items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800" data-controller="form-errors">
           <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
           <span><%= flash[:alert] %></span>
         </div>
@@ -117,7 +117,7 @@
           end
         %>
 
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+        <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
           <% @form_fields.each do |field| %>
             <% if field.group_header? %>
               <%= render "events/public_registrations/group_header", field: field %>
@@ -135,11 +135,11 @@
 
         <% if @scholarship_form && @scholarship_form.form_fields.any? %>
           <div class="mt-8 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-6">
-            <h3 class="flex items-center gap-2.5 text-lg font-bold text-purple-900 mb-5">
+            <h3 class="mb-5 flex items-center gap-2.5 text-lg font-bold text-purple-900">
               <i class="fa-solid fa-hand-holding-heart text-accent"></i><%= @scholarship_form.display_name %>
             </h3>
             <%= render "forms/header", form: @scholarship_form, event: @event %>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+            <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
               <% @scholarship_form.form_fields.reorder(position: :asc).each do |field| %>
                 <% if field.group_header? %>
                   <%# Skip a section header that just repeats the form name shown as the title above %>
@@ -158,7 +158,7 @@
 
         <% if @continuing_education_form && @continuing_education_form.form_fields.any? %>
           <div class="mt-8 rounded-xl border border-teal-100 bg-teal-50/50 px-5 py-6">
-            <h3 class="flex items-center gap-2.5 text-lg font-bold text-teal-900 mb-5">
+            <h3 class="mb-5 flex items-center gap-2.5 text-lg font-bold text-teal-900">
               <i class="fa-solid fa-certificate text-teal-600"></i><%= @continuing_education_form.display_name %>
             </h3>
             <%= render "forms/header", form: @continuing_education_form, event: @event %>
@@ -166,19 +166,19 @@
               <dl class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <% if @event.ce_hours_request_deadline %>
                   <div class="rounded-lg border border-teal-200 bg-white px-3 py-2">
-                    <dt class="text-xs font-medium uppercase tracking-wide text-teal-700">Request CE credit by</dt>
+                    <dt class="text-xs font-medium tracking-wide text-teal-700 uppercase">Request CE credit by</dt>
                     <dd class="mt-0.5 text-sm font-semibold text-gray-900"><%= @event.ce_hours_request_deadline.strftime("%B %-d, %Y") %></dd>
                   </div>
                 <% end %>
                 <% if @event.ce_payment_due_deadline %>
                   <div class="rounded-lg border border-teal-200 bg-white px-3 py-2">
-                    <dt class="text-xs font-medium uppercase tracking-wide text-teal-700">Payment due by</dt>
+                    <dt class="text-xs font-medium tracking-wide text-teal-700 uppercase">Payment due by</dt>
                     <dd class="mt-0.5 text-sm font-semibold text-gray-900"><%= @event.ce_payment_due_deadline.strftime("%B %-d, %Y") %></dd>
                   </div>
                 <% end %>
               </dl>
             <% end %>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
+            <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
               <% @continuing_education_form.form_fields.reorder(position: :asc).each do |field| %>
                 <% if field.group_header? %>
                   <% next if field.name.to_s.strip.casecmp?(@continuing_education_form.display_name.to_s.strip) %>
@@ -200,7 +200,7 @@
             <i class="fa-regular fa-circle-check"></i>Register
           <% end %>
           <p class="mt-3 flex items-center justify-center gap-1.5 text-xs text-gray-400">
-            <i class="fa-solid fa-lock"></i>Your information is kept private. Fields marked <span class="text-red-500 font-medium">*</span> are required.
+            <i class="fa-solid fa-lock"></i>Your information is kept private. Fields marked <span class="font-medium text-red-500">*</span> are required.
           </p>
         </div>
 

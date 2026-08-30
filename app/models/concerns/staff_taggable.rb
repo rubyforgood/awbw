@@ -1,0 +1,10 @@
+module StaffTaggable
+  extend ActiveSupport::Concern
+
+  included do
+    has_many :staff_taggings, as: :staff_taggable, dependent: :destroy
+    has_many :staff_tags, through: :staff_taggings
+    accepts_nested_attributes_for :staff_taggings, allow_destroy: true,
+                                  reject_if: ->(attrs) { attrs[:staff_tag_id].blank? }
+  end
+end

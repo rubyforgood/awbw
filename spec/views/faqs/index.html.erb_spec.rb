@@ -12,30 +12,56 @@ RSpec.describe "faqs/index", type: :view do
     end
   end
 
-  context "as an admin" do
+  context "as an admin in the default (public-facing) view" do
     let(:admin) { build_stubbed(:user, :admin) }
 
     before do
       allow(view).to receive(:current_user).and_return(admin)
       allow(view).to receive(:allowed_to?).and_return(true)
+      allow(view).to receive(:faq_admin_mode?).and_return(false)
       assign(:faqs, paginate_faqs([ faq1, faq2, unpublished_faq ]))
       render
     end
 
-    it "renders all FAQ divs including the unpublished status for unpublished FAQs" do
+    it "renders every FAQ question" do
       expect(rendered).to have_css("##{dom_id(faq1)}", text: faq1.question)
       expect(rendered).to have_css("##{dom_id(faq2)}", text: faq2.question)
-
       expect(rendered).to have_css("##{dom_id(unpublished_faq)}", text: unpublished_faq.question)
-
-      within("##{dom_id(unpublished_faq)}") do
-        expect(rendered).to have_selector("strong", text: "Unpublished:")
-        expect(rendered).to include(unpublished_faq.unpublished.to_s)
-      end
     end
 
-    it "shows New FAQ button for admin" do
+    it "hides the admin edit controls" do
+      expect(rendered).not_to include("data-sortable-handle")
+      expect(rendered).not_to have_css("i.fa-toggle-on, i.fa-toggle-off")
+      expect(rendered).not_to include("Confirm: Delete FAQ?")
+    end
+
+    it "shows the New FAQ button and an Admin mode link" do
       expect(rendered).to include("New FAQ")
+      expect(rendered).to have_link("Admin mode")
+      expect(rendered).not_to have_link("Exit admin mode")
+    end
+  end
+
+  context "as an admin in admin mode" do
+    let(:admin) { build_stubbed(:user, :admin) }
+
+    before do
+      allow(view).to receive(:current_user).and_return(admin)
+      allow(view).to receive(:allowed_to?).and_return(true)
+      allow(view).to receive(:faq_admin_mode?).and_return(true)
+      assign(:faqs, paginate_faqs([ faq1, faq2, unpublished_faq ]))
+      render
+    end
+
+    it "shows the reorder handle, visibility toggles, and delete control" do
+      expect(rendered).to include("data-sortable-handle")
+      expect(rendered).to have_css("i.fa-toggle-on, i.fa-toggle-off")
+      expect(rendered).to include("Confirm: Delete FAQ?")
+    end
+
+    it "swaps the toggle for an Exit admin mode link" do
+      expect(rendered).to have_link("Exit admin mode")
+      expect(rendered).not_to have_link("Admin mode")
     end
   end
 
@@ -58,6 +84,10 @@ RSpec.describe "faqs/index", type: :view do
 
     it "does not New FAQ button for regular_user" do
       expect(rendered).to_not include("New FAQ")
+    end
+
+    it "does not show an Admin mode link" do
+      expect(rendered).not_to have_link("Admin mode")
     end
   end
 

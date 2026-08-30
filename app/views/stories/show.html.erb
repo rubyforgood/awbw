@@ -2,9 +2,9 @@
 <% story_title = ERB::Util.url_encode(@story.title) %>
 
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
-<div class="<%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
+<%= render layout: "shared/show_page", locals: { domain: :stories } do %>
       <!-- Top Right Utility Links -->
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
+      <div class="mb-4 flex flex-wrap justify-end gap-2">
         <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= link_to "Stories", stories_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% if allowed_to?(:edit?, @story) %>
@@ -18,15 +18,15 @@
       </div>
 
       <!-- Story Card -->
-      <div class="bg-white rounded-lg shadow-md p-6 space-y-2">
+      <div class="space-y-2 rounded-lg bg-white p-6 shadow-md">
 
         <!-- Title -->
-        <div class="font-semibold text-gray-900 mb-2">
-          <%= title_with_badges(@story, font_size: "text-3xl") %>
+        <div class="mb-2 font-semibold text-gray-900">
+          <%= title_with_badges(@story, font_size: "text-3xl", display: true) %>
         </div>
 
         <!-- Meta Data (exact screenshot style) -->
-        <div class="text-sm text-gray-600 space-y-0.5">
+        <div class="space-y-0.5 text-sm text-gray-600">
           <p><strong>Story by:</strong>
             <%= credited_author_link(@story) %>
           </p>
@@ -49,7 +49,7 @@
           <% end %>
         </div>
 
-        <div id="upload-progress" class="mt-2 h-1 w-full bg-gray-200 rounded overflow-hidden hidden">
+        <div id="upload-progress" class="mt-2 hidden h-1 w-full overflow-hidden rounded bg-gray-200">
           <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
         </div>
         <div id="hero-image" class="relative">
@@ -65,9 +65,9 @@
         </div>
 
         <!-- Share Section -->
-        <h3 class="font-semibold text-lg mb-3">Share this Story:</h3>
+        <h3 class="mb-3 text-lg font-semibold">Share this Story:</h3>
 
-        <div class="flex space-x-4 mb-6">
+        <div class="mb-6 flex space-x-4">
 
           <!-- Facebook -->
           <%= link_to "https://www.facebook.com/sharer/sharer.php?u=#{story_url}",
@@ -99,8 +99,8 @@
 
         </div>
 
-        <div class="text-sm text-gray-500 leading-relaxed border-t border-gray-300 pt-6">
+        <div class="border-t border-gray-300 pt-6 text-sm leading-relaxed text-gray-500">
           <%= render "shared/organization_footer" %>
         </div>
       </div>
-</div>
+<% end %>

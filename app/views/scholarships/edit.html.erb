@@ -3,35 +3,35 @@
 <% grant_nav = grant.present? && params[:return_to].in?(%w[ grant_show grant_edit ]) %>
 <% theme = (grant_nav || (@allocatable.blank? && grant.present?)) ? :grants : :scholarships %>
 
-<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <%# Top bar: back link + secondary links, matching the registration edit page %>
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <% if grant_nav %>
-      <%= link_to (params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to (params[:return_to] == "grant_edit" ? edit_grant_path(grant) : grant_path(grant)), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Grant
       <% end %>
     <% elsif @allocatable.respond_to?(:event) && params[:return_to] == "registration" %>
-      <%= link_to edit_event_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to edit_event_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registration
       <% end %>
     <% elsif @allocatable.respond_to?(:event) && params[:return_to] == "recipients" %>
-      <%= link_to recipients_event_card_path(@allocatable.event, params[:participant]), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to recipients_event_card_path(@allocatable.event, params[:participant]), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Recipients
       <% end %>
     <% elsif @allocatable.respond_to?(:event) && params[:return_to] == "onboarding" %>
-      <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
       <% end %>
     <% elsif @allocatable.respond_to?(:event) %>
-      <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
       <% end %>
     <% elsif grant.present? %>
-      <%= link_to grant_path(grant), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to grant_path(grant), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Grant
       <% end %>
     <% else %>
-      <%= link_to scholarships_path, class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to scholarships_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Scholarships
       <% end %>
     <% end %>
@@ -47,8 +47,8 @@
                    href: registration_scholarship_path(@allocatable.slug, return_to: "scholarship"),
                    target: "_blank", rel: "noopener" %>
       <% end %>
-      <%= link_to "View", scholarship_path(@scholarship), class: "text-sm #{eyebrow_link_class}" %>
-      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "View", scholarship_path(@scholarship), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
   </div>
 
@@ -97,7 +97,10 @@
     </div>
   <% end %>
 
-  <%= render "agreement_history", scholarship: @scholarship %>
-
   <%= render "shared/audit_info", resource: @scholarship %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @scholarship %>
+    </div>
+  <% end %>
 </div>

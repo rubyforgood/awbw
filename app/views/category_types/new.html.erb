@@ -1,12 +1,12 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
-      <div class="flex items-center justify-between mb-3">
-        <h1 class="text-2xl font-semibold text-gray-900">New <%= @category_type.class.model_name.human.downcase %></h1>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="border-primary/10 mx-auto max-w-5xl rounded-2xl border bg-white p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
+      <div class="mb-3 flex items-center justify-between">
+        <h1 class="text-primary font-display text-2xl font-semibold">New <%= @category_type.class.model_name.human.downcase %></h1>
       </div>
 
-      <div class="border-b border-gray-300 mb-6"></div>
+      <div class="mb-6 border-b border-gray-300"></div>
 
       <div class="space-y-6">
         <div class="mt-4">

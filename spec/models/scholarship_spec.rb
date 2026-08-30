@@ -7,6 +7,23 @@ RSpec.describe Scholarship, type: :model do
     it { is_expected.to have_one(:allocation).dependent(:destroy) }
   end
 
+  describe "#event" do
+    let(:person) { create(:person) }
+
+    it "is the event behind the registration the allocation funds" do
+      training = create(:event, title: "TAC251", facilitator_training: true)
+      registration = create(:event_registration, event: training, registrant: person)
+      scholarship = create(:scholarship, recipient: person)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+
+      expect(scholarship.reload.event).to eq(training)
+    end
+
+    it "is nil for an award with no allocation behind it" do
+      expect(create(:scholarship, recipient: person).event).to be_nil
+    end
+  end
+
   describe "validations" do
     it { is_expected.to validate_numericality_of(:amount_cents).is_greater_than_or_equal_to(0) }
 
@@ -232,12 +249,64 @@ RSpec.describe Scholarship, type: :model do
       scholarship.decline_agreement!("no")
       expect(scholarship.allocation.reload.amount).to eq(0)
 
-      # The admin "Agreement signed" toggle routes through agreement_signed=.
+      # The admin "Accepted" toggle routes through agreement_signed=.
       scholarship.update!(agreement_signed: true)
 
       expect(scholarship.agreement_signed?).to be(true)
       expect(scholarship.agreement_declined?).to be(false)
       expect(scholarship.allocation.reload.amount).to eq(5_000)
+    end
+  end
+
+  describe "requesting additional support" do
+    it "#request_additional_support! records the status, contribution, reason, and time" do
+      scholarship = create(:scholarship)
+
+      scholarship.request_additional_support!(contribution_cents: 12_000, reason: "Employer can help")
+
+      expect(scholarship.agreement_support_requested?).to be(true)
+      response = scholarship.latest_agreement_response
+      expect(response).to have_attributes(status: "support_requested", contribution_cents: 12_000,
+                                          reason: "Employer can help", responder: "recipient")
+      expect(response.responded_at).to be_present
+    end
+
+    it "keeps the award live — not declined, allocation untouched, still in .not_declined" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+
+      scholarship.request_additional_support!(contribution_cents: 2_000)
+
+      expect(scholarship.agreement_declined?).to be(false)
+      expect(scholarship.allocation.reload.amount).to eq(5_000)
+      expect(Scholarship.not_declined).to include(scholarship)
+    end
+
+    it "reactivates to pending (re-offering) when the admin changes the amount" do
+      event = create(:event, cost_cents: 10_000)
+      registration = create(:event_registration, event:)
+      scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 5_000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 5_000)
+      scholarship.reload
+      scholarship.request_additional_support!(contribution_cents: 2_000)
+
+      scholarship.update!(amount_cents: 7_000)
+
+      expect(scholarship.reload.agreement_pending?).to be(true)
+      expect(scholarship.allocation.reload.amount).to eq(7_000)
+      expect(scholarship.latest_agreement_response).to have_attributes(status: "pending", responder: "admin")
+    end
+
+    it "stays support-requested when an edit doesn't touch the amount" do
+      scholarship = create(:scholarship, amount_cents: 5_000)
+      scholarship.request_additional_support!(contribution_cents: 2_000)
+
+      scholarship.update!(tasks_completed: true)
+
+      expect(scholarship.reload.agreement_support_requested?).to be(true)
     end
   end
 

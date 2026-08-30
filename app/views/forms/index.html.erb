@@ -1,8 +1,8 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-xl border border-gray-200 p-6 shadow">
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mb-6 flex items-start justify-between">
     <div class="pr-6">
-      <h1 class="mb-2 text-2xl font-semibold">Forms</h1>
+      <h1 class="text-primary mb-2 font-display text-2xl font-semibold">Forms</h1>
       <p class="max-w-2xl text-gray-600">Reusable forms for event registrations and other submissions</p>
     </div>
     <div class="text-end text-right">
@@ -16,71 +16,9 @@
     </div>
   </div>
 
-  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-    <table class="w-full border-collapse">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Fields</th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Events</th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Availability</th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Submissions</th>
-          <th class="px-4 py-2"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
-        <% @forms.each do |form| %>
-          <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
-            <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= form.display_name %></td>
-            <td class="px-4 py-2 text-sm text-gray-600"><%= form.form_fields.size %></td>
-            <td class="px-4 py-2 text-sm text-gray-600">
-              <% if form.events.size.positive? %>
-                <%= link_to form.events.size, events_path(form_id: form.id), class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
-              <% else %>
-                0
-              <% end %>
-            </td>
-            <%# A public link and an event form are mutually exclusive — an
-                event-connected form is never offered publicly — so at most one
-                chip applies. %>
-            <td class="px-4 py-2 text-sm text-gray-600">
-              <div class="flex flex-wrap items-center gap-1.5">
-                <% if form.publicly_fillable? %>
-                  <%= link_to public_form_path(form.slug), target: "_blank", rel: "noopener",
-                              class: "inline-flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-0.5 text-green-700 font-medium hover:bg-green-100" do %>
-                    <i class="fa-solid fa-link text-xs"></i>/f/<%= form.slug %>
-                  <% end %>
-                <% end %>
-                <% if form.events.size.positive? %>
-                  <span class="inline-flex items-center gap-1.5 rounded-md <%= DomainTheme.bg_class_for(:forms) %> px-2 py-0.5 text-xs <%= DomainTheme.text_class_for(:forms, intensity: 700) %>">
-                    <i class="fa-solid fa-calendar-day"></i>Event form
-                  </span>
-                <% end %>
-                <% unless form.publicly_fillable? || form.events.size.positive? %>
-                  <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Not published</span>
-                <% end %>
-              </div>
-            </td>
-            <td class="px-4 py-2 text-sm text-gray-600">
-              <% submissions_count = form.form_submissions.size %>
-              <% if submissions_count.positive? %>
-                <%= link_to submissions_count, form_submissions_path(form_id: form.id, return_to: "forms"),
-                            class: "inline-flex items-center rounded-md #{DomainTheme.bg_class_for(:forms)} px-2 py-0.5 #{DomainTheme.text_class_for(:forms, intensity: 700)} font-medium #{DomainTheme.bg_class_for(:forms, hover: true)}" %>
-              <% else %>
-                0
-              <% end %>
-            </td>
-            <td class="space-x-3 px-4 py-2 text-right text-sm">
-              <%= link_to "View", form_path(form), class: "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
-              <%= link_to "Edit", edit_form_path(form), class: "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
-              <% if allowed_to?(:copy?, form) %>
-                <%= link_to "Copy", copy_form_path(form), class: "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline",
-                            data: { turbo_method: :post, turbo_confirm: "Make a full copy of \"#{form.display_name}\"?" } %>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+  <% result_src = forms_path + "?" + request.query_string %>
+
+  <%= turbo_frame_tag :forms_results, src: result_src, data: { turbo: "temporary" } do %>
+    <%= render "results_skeleton" %>
+  <% end %>
 </div>

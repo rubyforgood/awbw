@@ -18,12 +18,10 @@ class FormField < ApplicationRecord
   # Multi-select "additional sectors" field identifier.
   ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors].freeze
 
-  # Single-select "primary sector" field identifiers. "primary_sector" is the
-  # canonical name; the legacy "primary_sector_single" is still accepted so
-  # existing forms keep resolving. Unlike the multi-select "additional" field,
-  # these omit the catch-all "Other" sector — a respondent's primary sector must
-  # be a concrete sector.
-  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector primary_sector_single].freeze
+  # Single-select "primary sector" field identifiers. Unlike the multi-select
+  # "additional" field, these omit the catch-all "Other" sector — a respondent's
+  # primary sector must be a concrete sector.
+  PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector].freeze
 
   # Field identifiers whose selectable options are sourced dynamically from
   # Sector records rather than the field's own stored answer options. The
@@ -33,10 +31,8 @@ class FormField < ApplicationRecord
   # Single-select "primary age group" field identifier.
   PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS = %w[primary_age_group].freeze
 
-  # Multi-select "additional age groups" field identifiers. "additional_age_groups"
-  # is the canonical name new forms are built with; the legacy singular
-  # "additional_age_group" is still accepted so existing forms keep resolving.
-  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS = %w[additional_age_groups additional_age_group].freeze
+  # Multi-select "additional age groups" field identifier.
+  ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS = %w[additional_age_groups].freeze
 
   # Both age group fields (the single-select "primary" and the multi-select
   # "additional"), backing the "All age groups" breakdown. The primary field
@@ -46,8 +42,8 @@ class FormField < ApplicationRecord
   # Field identifiers whose selectable options are sourced dynamically from a
   # CategoryType's published categories. The submitted value is a Category id
   # (as a string). Maps the field identifier to its backing CategoryType name.
-  # Every age group field (primary + additional, canonical and legacy) is backed
-  # by the published AgeRange categories. Unlike the sector fields, age groups have
+  # Every age group field (primary + additional) is backed by the published
+  # AgeRange categories. Unlike the sector fields, age groups have
   # no catch-all option — the additional sector field keeps "Other", but no age
   # field offers one.
   DYNAMIC_FIELD_CATEGORY_TYPES = AGE_GROUP_FIELD_IDENTIFIERS.index_with { "AgeRange" }.freeze
@@ -57,6 +53,20 @@ class FormField < ApplicationRecord
   # casually from the form builder — the editor shows them read-only unless the
   # admin override is present.
   PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
+
+  # Quote smart fields. When a submission carries these, its answers are captured
+  # as a Quote (see Quotes::CaptureFromSubmission): "quote_body" or the simpler
+  # "quote" is the quote text (either is accepted; "quote_body" wins when both are
+  # present), while "quote_speaker_name" and "quote_age_range" flesh out the
+  # speaker and age when the form collects them.
+  QUOTE_FIELD_IDENTIFIER = "quote"
+  QUOTE_BODY_FIELD_IDENTIFIER = "quote_body"
+  QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER = "quote_speaker_name"
+  QUOTE_AGE_RANGE_FIELD_IDENTIFIER = "quote_age_range"
+  # Body sources in precedence order (explicit "quote_body" first, simple "quote" second).
+  QUOTE_BODY_FIELD_IDENTIFIERS = [ QUOTE_BODY_FIELD_IDENTIFIER, QUOTE_FIELD_IDENTIFIER ].freeze
+  QUOTE_FIELD_IDENTIFIERS = (QUOTE_BODY_FIELD_IDENTIFIERS +
+    [ QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER, QUOTE_AGE_RANGE_FIELD_IDENTIFIER ]).freeze
 
   # The generic free-text option label that lets a respondent supply their own
   # value; a chosen "Other" answer is stored as "Other" or "Other: <text>".
@@ -220,10 +230,22 @@ class FormField < ApplicationRecord
   # email address, so a submitted value should be format-checked. The "*_type"
   # selector fields are deliberately excluded — this is an exact allowlist, not
   # a name-pattern match, so an unrelated field can't opt in by accident.
-  EMAIL_FIELD_IDENTIFIERS = %w[primary_email confirm_email secondary_email payer_email].freeze
+  EMAIL_FIELD_IDENTIFIERS = %w[primary_email confirm_email secondary_email].freeze
 
   def email_field?
     field_identifier.in?(EMAIL_FIELD_IDENTIFIERS)
+  end
+
+  # A quote smart field — its answer helps build a Quote on submission.
+  def quote_field?
+    field_identifier.in?(QUOTE_FIELD_IDENTIFIERS)
+  end
+
+  # Whether the admin form preview should flag this field as quote-related: either
+  # it carries a quote identifier, or its name mentions "quote" (a hint for older
+  # fields that predate the identifiers).
+  def quote_related?
+    quote_field? || name.to_s.downcase.include?("quote")
   end
 
   # Counts whitespace-separated tokens. Uses the Unicode-aware [[:space:]] class

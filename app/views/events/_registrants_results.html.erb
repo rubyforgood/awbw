@@ -1,6 +1,10 @@
 <%= turbo_frame_tag :registrants_results do %>
   <%# Scholarship column shows by default only when the event charges a fee. %>
   <% scholarship_on = @event.cost_cents.to_i > 0 %>
+  <%# The event's visible callouts that deliver a form inline — one toggleable
+      completion column each, under the single "Ticket forms" switch. %>
+  <% form_callouts = @event.registration_ticket_callouts.where.not(form_id: nil).visible.includes(:form).ordered.to_a %>
+  <% callout_roles = form_callouts.index_with { |callout| EventRegistrationServices::CalloutFormSubmission.role_for(callout) } %>
   <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit" data-column-toggle-root data-column-toggle-scope="event-<%= @event.id %>">
     <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
@@ -168,6 +172,26 @@
             <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
           </span>
         </label>
+
+        <%# One switch reveals a completion column per form-bearing callout. %>
+        <% if form_callouts.any? %>
+          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
+                 data-controller="column-toggle" data-column-toggle-group-value="ticket_forms">
+            <span class="text-sm text-gray-500">Ticket forms</span>
+
+            <input
+              type="checkbox"
+              data-column-toggle-target="toggle"
+              data-action="column-toggle#toggle"
+              class="sr-only"
+            >
+
+            <span class="relative inline-block h-5 w-9">
+              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
+            </span>
+          </label>
+        <% end %>
       </div>
     </div>
 
@@ -175,6 +199,11 @@
     <% form_submissions = event_form_ids.any? ? FormSubmission.where(event_id: @event.id, person_id: @event_registrations.map(&:registrant_id)).joins(:form).where(form_id: event_form_ids).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% scholarship_form = @event.scholarship_form %>
     <% scholarship_submitter_ids = scholarship_form ? FormSubmission.where(event_id: @event.id, form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).joins(:form_answers).distinct.pluck(:person_id).to_set : Set.new %>
+    <%# Completion of each callout form, keyed [person_id, form_id, role] → submitted_at. %>
+    <% callout_form_completion = form_callouts.any? ?
+         FormSubmission.where(event_id: @event.id, form_id: form_callouts.map(&:form_id).uniq, person_id: @event_registrations.map(&:registrant_id))
+           .pluck(:person_id, :form_id, :role, :created_at)
+           .each_with_object({}) { |(pid, fid, role, ts), map| map[[ pid, fid, role ]] = ts } : {} %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
@@ -233,6 +262,10 @@
               </th>
               <%# Off by default; kept out of the sortable index range (last data column). %>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="certificate">Certificate</th>
+              <%# One completion column per form callout, revealed together by the Ticket forms switch. %>
+              <% form_callouts.each do |callout| %>
+                <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="ticket_forms"><%= callout.title %></th>
+              <% end %>
               <th class="px-4 py-2"></th>
             </tr>
           </thead>
@@ -363,8 +396,9 @@
                     <% if linked_orgs.none? && !needs_linking %>
                       <%= render "shared/badge",
                             label: "None",
-                            classes: "bg-gray-50 text-gray-500 border-gray-200",
-                            href: editor_path %>
+                            classes: "bg-red-50 text-red-700 border-red-200",
+                            href: editor_path,
+                            title: "No organization on this registration" %>
                     <% end %>
                   </div>
                 </td>
@@ -518,6 +552,21 @@
                 <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
+                <% form_callouts.each do |callout| %>
+                  <% submitted_at = callout_form_completion[[ registration.registrant_id, callout.form_id, callout_roles[callout] ]] %>
+                  <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="ticket_forms">
+                    <% if submitted_at %>
+                      <%= link_to registration_callout_form_path(registration.slug, callout), target: "_blank", rel: "noopener",
+                            class: "inline-flex items-center gap-1.5 text-green-700 hover:underline",
+                            title: "Submitted #{submitted_at.strftime("%b %-d, %Y")}" do %>
+                        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        <span class="text-gray-600"><%= submitted_at.strftime("%b %-d") %></span>
+                      <% end %>
+                    <% else %>
+                      <span class="text-gray-300" title="Not submitted">—</span>
+                    <% end %>
+                  </td>
+                <% end %>
                 <td class="px-4 py-2 text-right text-sm"><%= link_to "Edit", edit_event_registration_path(registration, return_to: "registrants"), class: "#{eyebrow_link_class} underline", data: { turbo_frame: "_top" } %></td>
               </tr>
             <% end %>

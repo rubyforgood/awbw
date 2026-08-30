@@ -1086,20 +1086,19 @@ form_submissions.each do |data|
   data[:form].form_fields.where(answer_type: [ :free_form_input_one_line, :free_form_input_paragraph ]).each do |field|
     # Organization Name + Position / Title are seeded later with org-matching values
     # (record_organization_answers), so leave them blank here.
-    next if %w[agency_name agency_position].include?(field.field_identifier)
+    next if field.field_identifier.in?(%w[organization_name organization_position])
 
     sample_text = case field.field_identifier
     when "first_name" then data[:person].first_name
     when "last_name" then data[:person].last_name
     when "primary_email", "enter_email", "confirm_email" then data[:person].preferred_email || "sample@example.com"
     when "phone" then "(555) #{rand(100..999)}-#{rand(1000..9999)}"
-    when "street_address", "agency_street_address" then Faker::Address.street_address
-    when "city", "agency_city" then Faker::Address.city
-    when "state_province", "agency_state_province" then Faker::Address.state_abbr
-    when "zip_postal_code", "agency_zip_postal_code" then Faker::Address.zip_code
-    when "agency_organization_name" then Faker::Company.name
+    when "street_address", "organization_street" then Faker::Address.street_address
+    when "city", "organization_city" then Faker::Address.city
+    when "state_province", "organization_state" then Faker::Address.state_abbr
+    when "zip_postal_code", "organization_zip" then Faker::Address.zip_code
     when "position_title" then "Facilitator"
-    when "agency_website" then "https://example.org"
+    when "organization_website" then "https://example.org"
     when "secondary_email" then data[:person].email_2
     when "preferred_nickname" then data[:person].first_name
     when "pronouns" then [ "she/her", "he/him", "they/them" ].sample
@@ -1231,14 +1230,14 @@ record_organization_answers = ->(registration, submission, i) do
   # A title on most submissions, but leave roughly one in five blank so dev data
   # exercises both registration/linking outcomes: a job + Facilitator affiliation
   # when a title was given, and a Facilitator-only affiliation when it wasn't.
-  position_field = form.form_fields.find_by(field_identifier: "agency_position")
+  position_field = form.form_fields.find_by(field_identifier: "organization_position")
   if position_field && i % 5 != 4 && submission.form_answers.where(form_field: position_field).none?
     submission.form_answers.create!(form_field: position_field,
                                     submitted_answer: job_titles[i % job_titles.size],
                                     question_name_when_answered: position_field.name)
   end
 
-  agency_field = form.form_fields.find_by(field_identifier: "agency_name")
+  agency_field = form.form_fields.find_by(field_identifier: "organization_name")
   next unless agency_field && org_answer_orgs.any?
   next if submission.form_answers.where(form_field: agency_field).any?
 
@@ -1439,14 +1438,14 @@ puts "Creating organization-link demo registrants on the flagship training…"
 if facilitator_training && registration_form
   # "Pending" only exists when the form has the Organization Name field,
   # which lives in the person_contact_info section the dev form otherwise omits.
-  unless registration_form.form_fields.exists?(field_identifier: "agency_name")
+  unless registration_form.form_fields.exists?(field_identifier: "organization_name")
     FormBuilderService.update_sections!(
       registration_form,
       (registration_form.sections || []).map(&:to_sym) | [ :person_contact_info ]
     )
   end
-  agency_field = registration_form.form_fields.find_by(field_identifier: "agency_name")
-  agency_position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
+  agency_field = registration_form.form_fields.find_by(field_identifier: "organization_name")
+  agency_position_field = registration_form.form_fields.find_by(field_identifier: "organization_position")
 
   # Real, existing orgs to link against / match on (skip the AWBW house org).
   demo_orgs = Organization.where.not(name: "A Window Between Worlds").order(:name).to_a
@@ -1611,7 +1610,7 @@ if facilitator_training && registration_form
   # --- Affiliation-status demo: two affiliations per org (a real job title plus the
   # Facilitator role that gates AWBW-active), plus the position typed on the form, so
   # the org-link editor's affiliation pills can be seen across their states. ---
-  position_field = registration_form.form_fields.find_by(field_identifier: "agency_position")
+  position_field = registration_form.form_fields.find_by(field_identifier: "organization_position")
   submit_field = ->(registration, field, value) do
     if field
       submission = FormSubmission.find_or_create_by!(person: registration.registrant, form: registration_form, role: "registration", event: registration.event)
@@ -1619,9 +1618,9 @@ if facilitator_training && registration_form
       answer.update!(submitted_answer: value.to_s, question_name_when_answered: field.name)
     end
   end
-  add_affiliation = ->(person, organization, title:, end_date: nil) do
+  add_affiliation = ->(person, organization, title:, start_date: Date.current - 1.year, end_date: nil) do
     Affiliation.find_or_create_by!(person: person, organization: organization, title: title) do |aff|
-      aff.start_date = Date.current - 1.year
+      aff.start_date = start_date
       aff.end_date = end_date
     end
   end
@@ -1683,4 +1682,81 @@ if facilitator_training && registration_form
       link_org.call(registration, org)
     end
   end
+
+  # A7: a facilitator dated to a future training — not started yet, so their
+  # facilitator status reads "Upcoming" (distinct from Active and from a lapsed
+  # Formerly active). The upcoming Facilitator role sits on a dedicated org whose
+  # ONLY facilitator is this one, so that org's program-status chip and the
+  # "Upcoming" index filter read Upcoming too; an active Counselor role at aff_org
+  # shows an active job alongside it.
+  if aff_org
+    upcoming_org = Organization.find_or_create_by!(name: "Windows Program (starting soon)") do |o|
+      o.organization_status = OrganizationStatus.find_by(name: "Pending") || active_status
+    end
+    person = Person.create!(email: "affdemo.7@seed.example.com", first_name: "Demo Affiliation", last_name: "A7 Upcoming facilitator")
+    registration = EventRegistration.find_or_create_by!(event: facilitator_training, registrant: person) { |reg| reg.status = "registered" }
+    registration.event_registration_organizations.find_or_create_by!(organization: upcoming_org)
+    add_affiliation.call(person, aff_org, title: "Counselor")
+    add_affiliation.call(person, upcoming_org, title: "Facilitator", start_date: Date.current + 1.month)
+    submit_field.call(registration, agency_field, upcoming_org.name)
+    submit_field.call(registration, position_field, "Counselor")
+  end
+end
+
+# Spread each registration's "registered on" date (created_at) around its event's
+# start instead of leaving it at the seed run's "today", so the roster's
+# registration-date filter has realistic data to work with. Most people register
+# in advance (days to weeks before the event); a couple register a day or two
+# after it starts (late / at-the-door). The offset is derived from the
+# registration id, so re-seeding keeps the same spread and this stays idempotent.
+puts "Spreading registration dates around each event's start…"
+# Days BEFORE the event start; the two negatives put a couple registrations just
+# after the start. Weighted toward the final weeks, with a long early-bird tail.
+registration_day_offsets = [ 56, 45, 38, 30, 28, 24, 21, 18, 16, 14, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, -1, -2 ]
+EventRegistration.includes(:event).find_each do |registration|
+  start = registration.event&.start_date
+  next unless start
+  offset_days = registration_day_offsets[registration.id % registration_day_offsets.length]
+  registration.update_column(:created_at, start - offset_days.days)
+end
+
+# The yearly on-demand facilitator trainings: last year's (ended), the current
+# one (what Event.current_on_demand_facilitator_training resolves to — the
+# on-demand agreement path registers people here), and next year's upcoming
+# one. Each spans its calendar year and shares the standalone registration
+# form, so the person-page "Email form links" panel and the public
+# registration form both have real targets.
+puts "Creating yearly on-demand facilitator trainings…"
+(Date.current.year - 1..Date.current.year + 1).each do |year|
+  title = "On-Demand Training #{year}"
+  # start/end are datetimes and pages render them in the viewer's zone — anchor
+  # in AWBW's home (Pacific) zone so Jan 1 doesn't display as Dec 31 of the
+  # prior year for US viewers.
+  pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+  opens = pacific.local(year, 1, 1)
+  closes = pacific.local(year, 12, 31).end_of_day
+  event = Event.find_or_create_by!(title: title) do |e|
+    e.description = "Self-paced facilitator training for #{year}."
+    e.rhino_description = "Self-paced facilitator training for #{year}."
+    e.start_date = opens
+    e.end_date = closes
+    e.created_by = admin_user
+    e.published = true
+  end
+
+  # Keep the schedule current on re-seed (find_or_create_by! only sets on create).
+  event.update!(
+    start_date: opens,
+    end_date: closes,
+    registration_close_date: closes,
+    cost_cents: 0,
+    published: true,
+    on_demand: true,
+    facilitator_training: true
+  )
+
+  EventForm.find_or_create_by!(event: event, role: "registration") do |ef|
+    ef.form = registration_form
+  end
+  event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
 end

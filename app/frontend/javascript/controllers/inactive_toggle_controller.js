@@ -1,20 +1,51 @@
 import { Controller } from "@hotwired/stimulus";
+import { isFacilitatorTitle } from "../lib/affiliation";
 
 // Live styling for the affiliation editor row as you edit, before saving. Four
 // states by colour: role is the hue (facilitator = purple, else blue) and status
 // is the saturation (active = full, inactive = super-light). Inactive rows also
-// strike their fields (.aff-ended).
+// strike their fields (.aff-ended). A not-yet-started row (future start date, not
+// ended) additionally shows an "Upcoming" badge.
 export default class extends Controller {
-  static targets = ["endDate", "title", "row", "accentBar", "valueField"]
-  static values = { expired: Boolean }
+  static targets = ["endDate", "title", "row", "accentBar", "valueField", "startDate", "upcomingBadge", "inactiveBadge", "inactiveField", "suppliedField", "inactiveCheckbox"]
+  static values = { expired: Boolean, today: String }
 
   connect() {
+    // A row flagged inactive whose dates still read as current is one where the
+    // flag is doing real work, so mark it authoritative up front — otherwise an
+    // unrelated date edit would let the server re-derive it away.
+    if (this.expiredValue && !this.endsOnOrBeforeToday()) this.markSupplied();
     if (this.hasTitleTarget) this.updateBorder();
     else this.apply();
   }
 
+  // Entering an end date of today or earlier ticks Inactive for you, so the flag
+  // travels with the form — the date rule alone compares strictly and would still
+  // call today "active". Clearing the date (or a future one) unticks it again.
+  //
+  // Only the end date drives this. Ticking the box by hand has to stick, which it
+  // would not if the checkbox's own action recomputed it from the dates.
+  endDateChanged() {
+    const ended = this.endsOnOrBeforeToday();
+    if (this.hasInactiveCheckboxTarget) this.inactiveCheckboxTarget.checked = ended;
+    if (this.hasInactiveFieldTarget) this.inactiveFieldTarget.value = ended ? "1" : "0";
+    this.markSupplied();
+    this.apply();
+  }
+
   toggle() {
     this.apply();
+  }
+
+  markSupplied() {
+    if (this.hasSuppliedFieldTarget) this.suppliedFieldTarget.value = "1";
+  }
+
+  endsOnOrBeforeToday() {
+    const value = this.hasEndDateTarget ? this.endDateTarget.value : "";
+    if (!value) return false;
+
+    return new Date(value) <= new Date(new Date().toDateString());
   }
 
   updateBorder() {
@@ -35,7 +66,38 @@ export default class extends Controller {
     this.updateRowBackground();
     this.styleTitle();
     this.paintFields();
+    this.updateBadges();
     this.rowTarget.classList.toggle("aff-ended", this.isPast());
+  }
+
+  // "Inactive" whenever the affiliation isn't currently active (ended, flagged,
+  // or not-yet-started); "Upcoming" additionally for a future start — so an
+  // upcoming row shows both and an ended one shows only Inactive.
+  updateBadges() {
+    const notActive = this.isPast() || this.isUpcoming();
+    if (this.hasInactiveBadgeTarget) this.inactiveBadgeTarget.classList.toggle("hidden", !notActive);
+    if (this.hasUpcomingBadgeTarget) this.upcomingBadgeTarget.classList.toggle("hidden", !this.isUpcoming());
+  }
+
+  isUpcoming() {
+    if (this.isPast()) return false;
+    const value = this.hasStartDateTarget ? this.startDateTarget.value : "";
+    if (!value) return false;
+    return value > this.todayISO();
+  }
+
+  // "Today" as YYYY-MM-DD, compared against the date inputs' own YYYY-MM-DD values
+  // as strings — no cross-timezone Date parsing. It comes from the server, because
+  // the ERB badges are rendered against the app's Date.current: a browser whose
+  // local date is a day behind (e.g. US evening under a UTC app zone) would
+  // otherwise call a row starting today "Upcoming" while the server didn't.
+  todayISO() {
+    return this.todayValue || this.browserToday();
+  }
+
+  browserToday() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
   styleTitle() {
@@ -87,14 +149,18 @@ export default class extends Controller {
   // With an end date, compute from it (live); without one, the JS can't see the
   // server's inactive flag, so trust the server-rendered `expired` value.
   isPast() {
+    // The standalone editor has an explicit Inactive checkbox, and on that form it
+    // is the whole truth: ticked, or ended on/before today.
+    if (this.hasInactiveCheckboxTarget) {
+      return this.inactiveCheckboxTarget.checked || this.endsOnOrBeforeToday();
+    }
+
     const value = this.hasEndDateTarget ? this.endDateTarget.value : "";
-    if (value) return new Date(value) < new Date(new Date().toDateString());
+    if (value) return value < this.todayISO();
     return this.expiredValue;
   }
 
-  // Mirror Affiliation#facilitator? — an exact, case-sensitive match on
-  // "Facilitator" (trimmed), so the live styling matches what the server renders.
   isFacilitator() {
-    return this.hasTitleTarget && this.titleTarget.value.trim() === "Facilitator";
+    return this.hasTitleTarget && isFacilitatorTitle(this.titleTarget.value);
   }
 }

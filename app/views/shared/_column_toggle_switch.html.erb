@@ -1,0 +1,14 @@
+<%# A single column-toggle slide switch (see column_toggle_controller.js). Shows/
+    hides every cell tagged data-column-toggle-col="<group>" under the nearest
+    [data-column-toggle-root]. Locals: group, label, on (default false). %>
+<% on = local_assigns.fetch(:on, false) %>
+<label class="inline-flex cursor-pointer items-center gap-2 select-none"
+       data-controller="column-toggle" data-column-toggle-group-value="<%= group %>">
+  <span class="text-sm text-gray-500"><%= label %></span>
+  <%= check_box_tag "column_toggle_#{group}", "1", on,
+        data: { column_toggle_target: "toggle", action: "column-toggle#toggle" }, class: "sr-only" %>
+  <span class="relative inline-block h-5 w-9">
+    <span data-column-toggle-target="track" class="absolute inset-0 rounded-full transition-colors <%= on ? "bg-blue-600" : "bg-gray-300" %>"></span>
+    <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform" style="<%= "transform: translateX(16px)" if on %>"></span>
+  </span>
+</label>

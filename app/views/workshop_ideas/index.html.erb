@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_ideas) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:workshop_ideas) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
+        <div class="mb-6 flex items-center justify-between">
+          <h1 class="text-primary font-display text-2xl font-semibold">
             <%= WorkshopIdea.model_name.human.pluralize %> (<%= @workshop_ideas_count %>)
           </h1>
           <div class="flex gap-2">
@@ -21,18 +21,18 @@
           <table class="w-full border-collapse border border-gray-200">
             <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Main Image</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Title</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Timeframe</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 w-1/6">Author</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[60px]">Promoted?</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[80px]">Actions</th>
+              <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Main Image</th>
+              <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Title</th>
+              <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Timeframe</th>
+              <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Author</th>
+              <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Promoted?</th>
+              <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
             </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-200">
             <% @workshop_ideas.each do |workshop_idea| %>
-              <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <tr class="transition-colors duration-150 hover:bg-gray-50">
                 <td>
                   <div class="p-3">
                     <%= render "assets/display_image",
@@ -45,8 +45,8 @@
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.title %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.time_frame_total %></td>
-                <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.created_by.name %></td>
-                <td class="px-4 py-2 text-sm text-gray-800 text-center">
+                <td class="px-4 py-2 text-sm text-gray-800"><%= credited_author_link(workshop_idea, class: eyebrow_link_class) %></td>
+                <td class="px-4 py-2 text-center text-sm text-gray-800">
                   <% if workshop_idea.workshops.any? %>
                     <span class='fa fa-check-circle text-green-500'></span>
                   <% else %>
@@ -55,7 +55,7 @@
                 </td>
 
                 <!-- Actions -->
-                <td class="px-4 py-2 flex justify-center gap-2">
+                <td class="flex justify-center gap-2 px-4 py-2">
                   <%= link_to 'Edit', edit_workshop_idea_path(workshop_idea), class: "btn btn-secondary-outline" %>
                 </td>
               </tr>
@@ -67,7 +67,7 @@
 
         <!-- Empty state -->
         <% unless @workshop_ideas.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No <%= WorkshopIdea.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>

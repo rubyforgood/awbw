@@ -3,8 +3,8 @@
   attendees = @submission.bulk_payment_attendees
   total_cents = @payment&.amount_cents || @submission.bulk_payment_amount_cents(@event)
   answers = @submission.answers_by_identifier
-  payer_name = [ answers["payer_first_name"], answers["payer_last_name"] ].compact_blank.join(" ").presence || @submission.person.name
-  payer_organization = answers["payer_organization"]
+  payer_name = [ answers["first_name"], answers["last_name"] ].compact_blank.join(" ").presence || @submission.person.name
+  payer_organization = answers["organization_name"]
   attendee_count = @submission.bulk_payment_attendee_count
 %>
 
@@ -36,7 +36,8 @@
   <!-- Ticket Container -->
   <div class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
     <!-- Ticket Header -->
-    <div class="relative bg-gradient-to-r from-purple-950 to-purple-700 px-6 py-5 text-white sm:px-8">
+    <%= render "shared/brand_accent_strip" %>
+    <div class="bg-primary px-6 py-5 text-white sm:px-8">
       <div class="flex items-center gap-5">
         <div class="shrink-0"><%= image_tag("logo.png", alt: "Organization logo", class: "h-9 w-auto") %></div>
 
@@ -46,7 +47,6 @@
         </div>
       </div>
 
-      <div class="from-accent to-accent absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r via-amber-400"></div>
     </div>
 
     <!-- Ticket Body -->

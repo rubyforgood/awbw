@@ -1,4 +1,5 @@
 class Affiliation < ApplicationRecord
+  include Communicable
   # Standing title given to the "facilitator affiliation" we create on registration
   # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
   # (both treat exactly "Facilitator" as canonical).
@@ -21,7 +22,23 @@ class Affiliation < ApplicationRecord
   # have this link.
   belongs_to :event_registration, optional: true, inverse_of: :affiliations
 
+  # Set by a caller that supplied `inactive` deliberately (the standalone editor's
+  # checkbox, or a nested row whose end date the admin just changed). Re-submitting
+  # the value it already holds isn't a change, so without this the date rule below
+  # would quietly undo a hand-set flag on the next date edit. Cast because it
+  # arrives from a form as "0"/"1", and "0" is truthy in Ruby.
+  attr_reader :inactive_supplied
+
+  def inactive_supplied=(value)
+    @inactive_supplied = ActiveModel::Type::Boolean.new.cast(value)
+  end
+
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+
+  # A communication logged on an affiliation is addressed to the affiliated person.
+  def communications_email
+    person&.preferred_email
+  end
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Validations
@@ -31,29 +48,33 @@ class Affiliation < ApplicationRecord
 
   # Not flagged inactive and not past its end date. Includes affiliations whose
   # start_date is still in the future (e.g. a Facilitator affiliation dated to an
-  # upcoming training) — they are "pending" but counted here.
+  # upcoming training) — they are "pending" but counted here. Use this for
+  # "active or not-yet-started" checks (e.g. registration dedup); use `active` for
+  # genuinely-current rows.
   scope :active_or_pending, -> {
     where(inactive: false)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", Date.current)
   }
 
-  scope :active, -> { active_or_pending }
+  # Genuinely active *now*: not flagged inactive, already started (no future
+  # start), and not past its end date. A future-start row is Upcoming, not Active.
+  # Delegates to with_status so the SQL lives in one place, the way #active?
+  # delegates to #status_on.
+  scope :active, -> { with_status("Active") }
 
   # Affiliations that overlapped a given date, judged purely by their start/end
   # dates rather than the cached `inactive` flag (which reflects "now"). Use this
   # when a view must reflect a fixed point in time — e.g. the event dashboard
   # reporting organizations as they stood at the time of the event, so the
   # numbers don't drift as affiliations end after the fact.
-  scope :active_on, ->(date) {
+  scope :active_by_date_on, ->(date) {
     where("affiliations.start_date IS NULL OR affiliations.start_date <= ?", date)
       .where("affiliations.end_date IS NULL OR affiliations.end_date >= ?", date)
   }
 
-  # Only the exact, case-sensitive title "Facilitator" counts — variants like
-  # "Lead Facilitator" or "facilitator" are deliberately excluded. BINARY forces
-  # a case-sensitive comparison under MySQL's default case-insensitive collation;
-  # TRIM mirrors the in-memory #facilitator? strip so stray whitespace still matches.
-  scope :facilitators, -> { where("BINARY TRIM(title) = ?", "Facilitator") }
+  # Exactly "Facilitator" (case-sensitive; BINARY on the literal keeps the plain
+  # title index usable). Titles are normalized on write, so no TRIM is needed.
+  scope :facilitators, -> { where("affiliations.title = BINARY ?", FACILITATOR_TITLE) }
 
   # Affiliations whose #status_on(date) equals the given status, expressed in SQL
   # so it composes as a subquery (e.g. person-id narrowing). Kept in lock-step with
@@ -78,6 +99,7 @@ class Affiliation < ApplicationRecord
     end
   }
 
+  before_validation :normalize_title
   before_validation :skip_if_duplicate
   # Runs before validation so a reassigned org drops its stale organization_address_id
   # before organization_address_belongs_to_organization would reject it.
@@ -89,19 +111,32 @@ class Affiliation < ApplicationRecord
   after_destroy :sync_organization_affiliation_dates
 
   # Methods
-  # A facilitator affiliation is one whose title is *exactly* "Facilitator"
-  # (trimmed, case-sensitive). Variants like "Lead Facilitator" or "facilitator"
-  # are deliberately excluded. Mirrors the .facilitators scope so in-memory and
-  # SQL checks agree.
+  # In-memory twin of the .facilitators scope: exactly "Facilitator", case-sensitive.
+  # An executable agreement spec locks the two together.
   def facilitator?
-    title.to_s.strip == "Facilitator"
+    title.to_s.strip == FACILITATOR_TITLE
   end
 
-  # Current: not flagged inactive and not past its end date. Mirrors the `active`
-  # scope so already-loaded affiliations can be filtered in Ruby without another
-  # query (e.g. on list pages that preload affiliations).
+  # Genuinely active now — the in-memory twin of the `active` scope and of
+  # status_on == "Active", so already-loaded affiliations can be filtered in Ruby
+  # without another query (e.g. on list pages that preload affiliations). A
+  # future-start row is Upcoming, not Active.
   def active?
-    !inactive? && (end_date.nil? || end_date >= Date.current)
+    status_on == "Active"
+  end
+
+  # Not yet started: a future start date, not flagged inactive and not ended.
+  # The in-memory twin of status_on == "Upcoming".
+  def upcoming?
+    status_on == "Upcoming"
+  end
+
+  # Ended or flagged, as of a date — the in-memory twin of status_on == "Inactive".
+  # Prefer this to the raw `inactive` column when judging a row for display: the
+  # column is only re-derived on save (set_inactive_from_dates), so a term that
+  # simply lapsed still reads `inactive: false` until something touches it.
+  def inactive_on?(date = Date.current)
+    status_on(date) == "Inactive"
   end
 
   # This affiliation's status as of a date: Inactive (flagged or ended), Upcoming
@@ -126,6 +161,12 @@ class Affiliation < ApplicationRecord
     valid = organization_address.addressable_type == "Organization" &&
             organization_address.addressable_id == organization_id
     errors.add(:organization_address_id, "must be an address of this organization") unless valid
+  end
+
+  # Store titles trimmed (blank → nil) so the .facilitators scope matches the bare
+  # column and uses the title index without a TRIM wrapper.
+  def normalize_title
+    self.title = title&.strip.presence
   end
 
   def skip_if_duplicate
@@ -163,7 +204,10 @@ class Affiliation < ApplicationRecord
     addresses.first.id if addresses&.one?
   end
 
+  # An explicit assignment wins: the date rule alone still reads a row ending today
+  # or later as active.
   def set_inactive_from_dates
+    return if inactive_changed? || inactive_supplied
     return unless end_date_changed? || start_date_changed?
 
     self.inactive = end_date.present? && end_date < Date.current
@@ -190,10 +234,15 @@ class Affiliation < ApplicationRecord
 
   # Org status tracks active *Facilitator* affiliations specifically (mirroring the
   # form's status indicator) — a non-facilitator affiliation does not keep an org active.
+  # An upcoming-only program is left alone in both directions: a facilitator dated
+  # to a future training must not stamp the org Inactive (nothing re-runs this when
+  # the start date arrives), but it hasn't started, so it must not stamp it Active
+  # either — either way the stored value would read as drift on the edit form.
   def sync_organization_status_with_affiliations
-    if organization.affiliations.facilitators.active.exists?
+    facilitators = organization.affiliations.facilitators
+    if facilitators.active.exists?
       reactivate_organization_if_inactive
-    else
+    elsif facilitators.with_status("Upcoming").none?
       deactivate_organization_if_no_active_people
     end
   end

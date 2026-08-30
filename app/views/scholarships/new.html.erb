@@ -1,32 +1,32 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% theme = @grant ? :grants : :scholarships %>
 
-<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(theme) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <%# Top bar: back link + secondary links, matching the registration edit page %>
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <% if @grant %>
-      <%= link_to (params[:return_to] == "grant_edit" ? edit_grant_path(@grant) : grant_path(@grant)), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to (params[:return_to] == "grant_edit" ? edit_grant_path(@grant) : grant_path(@grant)), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Grant
       <% end %>
     <% elsif @allocatable.respond_to?(:event) && params[:return_to] == "registration" %>
-      <%= link_to edit_event_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to edit_event_registration_path(@allocatable), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registration
       <% end %>
     <% elsif @allocatable.respond_to?(:event) && params[:return_to] == "onboarding" %>
-      <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to onboarding_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
       <% end %>
     <% elsif @allocatable.respond_to?(:event) %>
-      <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to registrants_event_row_path(@allocatable.event, @allocatable.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
       <% end %>
     <% else %>
-      <%= link_to scholarships_path, class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to scholarships_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Scholarships
       <% end %>
     <% end %>
     <div class="flex items-center gap-3">
-      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
   </div>
 

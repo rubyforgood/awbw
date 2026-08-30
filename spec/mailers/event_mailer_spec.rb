@@ -333,6 +333,41 @@ RSpec.describe EventMailer, type: :mailer do
         end
       end
     end
+
+    context "by default" do
+      it "includes the View ticket button in the HTML body" do
+        expect(mail.html_part.body.encoded).to include("View ticket")
+      end
+
+      it "includes the ticket link in the plain-text body" do
+        expect(mail.text_part.body.encoded).to include("View your ticket")
+      end
+    end
+
+    context "with the ticket button hidden" do
+      let(:mail) { described_class.event_registration_reminder(event_registration, hide_ticket_button: true) }
+
+      it "renders without raising" do
+        expect { mail.deliver_now }.not_to raise_error
+      end
+
+      it "omits the View ticket button from the HTML body" do
+        expect(mail.html_part.body.encoded).not_to include("View ticket")
+      end
+
+      it "omits the ticket link from the plain-text body" do
+        expect(mail.text_part.body.encoded).not_to include("View your ticket")
+      end
+
+      context "in preview mode" do
+        let(:mail) { described_class.event_registration_reminder(event_registration, hide_ticket_button: true, preview: true) }
+
+        it "still renders the button markup (hidden), so the live toggle can reveal it" do
+          expect(mail.html_part.body.encoded).to include("reminder-ticket-button")
+          expect(mail.html_part.body.encoded).to include("View ticket")
+        end
+      end
+    end
   end
 
   describe "#event_registration_reminder_fyi" do
@@ -395,6 +430,22 @@ RSpec.describe EventMailer, type: :mailer do
       it "still names the event and lists recipients in the plain-text body" do
         expect(mail.text_part.body.encoded).to include("Art Workshop")
         expect(mail.text_part.body.encoded).to include("Alex Rivera <alex@example.org>")
+      end
+    end
+
+    context "with the ticket button hidden" do
+      let(:mail) { described_class.event_registration_reminder_fyi(event, recipient_labels, hide_ticket_button: true) }
+
+      it "omits the View ticket link note, matching what registrants received" do
+        expect(mail.html_part.body.encoded).not_to include("View ticket")
+        expect(mail.text_part.body.encoded).not_to include("View ticket")
+      end
+    end
+
+    context "by default" do
+      it "notes each registrant received a View ticket link" do
+        expect(mail.html_part.body.encoded).to include("View ticket")
+        expect(mail.text_part.body.encoded).to include("View ticket")
       end
     end
   end

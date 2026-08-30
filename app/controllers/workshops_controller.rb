@@ -28,54 +28,6 @@ class WorkshopsController < ApplicationController
     end
   end
 
-  def summary
-    authorize! :workshop, to: :summary?
-    @year = params[:year] ? params[:year].to_i : Date.current.year.to_i
-    @month = params[:month] ? params[:month].to_i : Date.current.month.to_i
-
-    reports = build_report
-    @report = reports[0]
-
-    types = reports.map do |r|
-      r.windows_type
-    end
-    @workshop_logs = current_user.organization_monthly_workshop_logs(
-      reports.first.date, *types,
-    )
-
-    logs = @workshop_logs.map { |_k, v| v }.flatten
-    @total_ongoing    = logs.reduce(0) { |sum, l| sum += l.num_ongoing }
-    @total_first_time = logs.reduce(0) { |sum, l| sum += l.num_first_time }
-
-    combined_windows_type = WindowsType.where(short_name: "Combined").first
-    @combined_workshop_logs = current_user.organization_workshop_logs(
-      @report.date, combined_windows_type, current_user.agency_id
-    )
-    authorize! @combined_workshop_logs
-  end
-
-  def build_report
-    authorize! :workshop, to: :summary?
-    date = Date.new(@year, @month)
-
-    form_builder = FormBuilder
-                   .monthly
-
-    report = form_builder.map do |f|
-      Report.new(
-        type: f.report_type,
-        windows_type: f.windows_type,
-        date: date
-      )
-    end
-
-    report.each do |r|
-      r.media_files.build
-    end
-
-    report
-  end
-
   def new
     if params[:workshop_idea_id].present?
       @workshop_idea = WorkshopIdea.find(params[:workshop_idea_id])
@@ -293,7 +245,8 @@ class WorkshopsController < ApplicationController
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ]
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
     )
   end
 end

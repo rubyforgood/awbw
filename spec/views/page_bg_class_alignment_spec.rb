@@ -41,6 +41,11 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── admin-or-auth (policy: authenticated?) ───
     "app/views/organizations/index.html.erb"           => "admin-or-auth",
+    "app/views/devise/sessions/new.html.erb"            => "public",
+    "app/views/devise/passwords/new.html.erb"           => "public",
+    "app/views/devise/passwords/edit.html.erb"          => "public",
+    "app/views/devise/confirmations/new.html.erb"       => "public",
+    "app/views/devise/unlocks/new.html.erb"             => "public",
     "app/views/people/index.html.erb"                  => "admin-or-auth",
     "app/views/workshop_logs/index.html.erb"           => "admin-or-auth",
     "app/views/features/index.html.erb"                => "admin-or-auth",
@@ -51,7 +56,6 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_variation_ideas/new.html.erb"  => "admin-or-auth",
 
     "app/views/workshop_logs/new.html.erb"             => "admin-or-auth",
-    "app/views/monthly_reports/new.html.erb"           => "admin-or-auth",
     "app/views/monthly_reports/index.html.erb"         => "admin-or-auth",
     "app/views/reports/new.html.erb"                   => "admin-or-auth",
 
@@ -92,6 +96,7 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── admin-only bg-blue-100 (policy: admin?) ───
     # custom actions
+    "app/views/transfer_guide/show.html.erb"           => "admin-only bg-blue-100",
     "app/views/admin/home/index.html.erb"              => "admin-only bg-blue-100",
     "app/views/admin/ahoy_activities/charts.html.erb"  => "admin-only bg-blue-100",
     "app/views/admin/ahoy_activities/show.html.erb"    => "admin-only bg-blue-100",
@@ -106,21 +111,36 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/story_share_admin/show.html.erb"        => "admin-only bg-blue-100",
     "app/views/story_imports/new.html.erb"             => "admin-only bg-blue-100",
     "app/views/story_imports/create.html.erb"          => "admin-only bg-blue-100",
+    "app/views/event_registration_imports/new.html.erb"    => "admin-only bg-blue-100",
+    "app/views/event_registration_imports/create.html.erb" => "admin-only bg-blue-100",
+    "app/views/form_submissions/changes.html.erb"      => "admin-only bg-blue-100",
     # index
     "app/views/allocations/index.html.erb"             => "admin-only bg-blue-100",
     "app/views/other_responses/index.html.erb"         => "admin-only bg-blue-100",
     "app/views/banners/index.html.erb"                 => "admin-only bg-blue-100",
-    "app/views/people/all_comments.html.erb"           => "admin-only bg-white",
-    "app/views/comments/index.html.erb"                => "admin-only bg-white",
+    "app/views/people/all_comments.html.erb"           => "admin-only bg-blue-100",
+    "app/views/people/email_addresses.html.erb"        => "admin-only bg-blue-100",
+    "app/views/people/comments_and_communications.html.erb" => "admin-only bg-blue-100",
+    "app/views/admin/data_health/index.html.erb"       => "admin-only bg-blue-100",
+    "app/views/comments/index.html.erb"                => "admin-only bg-blue-100",
     "app/views/bookmarks/index.html.erb"               => "admin-only bg-blue-100",
     "app/views/categories/index.html.erb"              => "admin-only bg-blue-100",
     "app/views/category_types/index.html.erb"          => "admin-only bg-blue-100",
+    "app/views/staff_tags/index.html.erb"              => "admin-only bg-blue-100",
+    "app/views/staff_tags/show.html.erb"               => "admin-only bg-blue-100",
+    "app/views/staff_tags/new.html.erb"                => "admin-only bg-blue-100",
+    "app/views/staff_tags/edit.html.erb"               => "admin-only bg-blue-100",
+    "app/views/staff_taggings/index.html.erb"          => "admin-only bg-blue-100",
+    "app/views/staff_taggings/new.html.erb"            => "admin-only bg-blue-100",
+    "app/views/staff_taggings/edit.html.erb"           => "admin-only bg-blue-100",
     "app/views/events/dashboard.html.erb"              => "admin-or-owner bg-blue-100",
     "app/views/events/attendance.html.erb"             => "admin-or-owner bg-blue-100",
     "app/views/events/signins.html.erb"                => "admin-or-owner bg-blue-100",
     "app/views/events/sample_ticket.html.erb"          => "admin-or-owner bg-blue-100",
     "app/views/events/bulk_payments/index.html.erb"      => "admin-or-owner bg-blue-100",
-    "app/views/events/edit_staff.html.erb"             => "admin-or-owner bg-white",
+    "app/views/events/reconcile_affiliations/index.html.erb" => "admin-or-owner bg-blue-100",
+    "app/views/events/reconcile_affiliations/confirm.html.erb" => "admin-or-owner bg-blue-100",
+    "app/views/events/edit_staff.html.erb"             => "admin-or-owner bg-blue-100",
     "app/views/events/recipients.html.erb"             => "admin-or-owner bg-blue-100",
     "app/views/events/registrants.html.erb"         => "admin-or-owner bg-blue-100",
     "app/views/events/roster.html.erb"                 => "admin-or-owner bg-blue-100",
@@ -135,9 +155,10 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/confirm_reminder.html.erb"       => "admin-or-owner bg-blue-100",
     "app/views/event_registrations/index.html.erb"     => "admin-only bg-blue-100",
     "app/views/forms/index.html.erb"                   => "admin-only bg-blue-100",
+    "app/views/forms/results.html.erb"                 => "admin-only bg-blue-100",
     "app/views/forms/show.html.erb"                    => "admin-only bg-blue-100",
     "app/views/author_credit_divergences/index.html.erb" => "admin-only bg-blue-100",
-    "app/views/notifications/index.html.erb"           => "admin-only bg-white",
+    "app/views/notifications/index.html.erb"           => "admin-only bg-blue-100",
     "app/views/notifications/new.html.erb"             => "admin-only bg-blue-100",
     "app/views/organization_statuses/index.html.erb"   => "admin-only bg-blue-100",
     "app/views/quotes/index.html.erb"                  => "admin-only bg-blue-100",
@@ -163,6 +184,9 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/topic_subscription_types/new.html.erb"  => "admin-only bg-blue-100",
     "app/views/topic_subscription_types/edit.html.erb" => "admin-only bg-blue-100",
     "app/views/form_submissions/index.html.erb"        => "admin-only bg-blue-100",
+    "app/views/bulk_payments/index.html.erb"           => "admin-only bg-blue-100",
+    "app/views/form_answers/index.html.erb"            => "admin-only bg-blue-100",
+    "app/views/form_submissions/link_organization.html.erb" => "admin-only bg-blue-100",
     # show
     "app/views/banners/show.html.erb"                  => "admin-only bg-blue-100",
     "app/views/categories/show.html.erb"               => "admin-only bg-blue-100",
@@ -252,6 +276,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/callouts/resource.html.erb"         => "public",
     "app/views/events/callouts/videoconference.html.erb"  => "public",
     "app/views/events/callouts/staff.html.erb"            => "public",
+    "app/views/events/callouts/callout.html.erb"          => "public",
     "app/views/registration_ticket_callouts/show.html.erb" => "public",
 
     # ─── public standalone form (pretty URL, no account) ───
@@ -271,7 +296,11 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/event_registrations/transfer.html.erb"    => "admin-only bg-blue-100",
     "app/views/event_registrations/link_organization.html.erb" => "admin-only bg-blue-100",
     "app/views/users/confirm_email_change.html.erb"      => "admin-only bg-blue-100",
-    "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100"
+    "app/views/users/confirm_email_manual.html.erb"      => "admin-only bg-blue-100",
+
+    # ─── FileMaker archive viewer (FmArchivePolicy: admin-only) ───
+    "app/views/fm_archives/index.html.erb"               => "admin-only bg-blue-100",
+    "app/views/fm_archives/show.html.erb"                => "admin-only bg-blue-100"
   }.freeze
 
   EXPECTED_MAPPINGS.each do |view_path, expected_bg_class|

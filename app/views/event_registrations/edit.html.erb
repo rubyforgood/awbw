@@ -1,57 +1,57 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> border-primary/10 rounded-2xl border p-4 shadow-sm sm:p-6">
   <%# Top bar: back link + secondary links, matching the event pages. When the
       admin arrived from the bulk payments page, the back link returns there with
       the originating submission re-expanded instead of the registrants roster. %>
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
     <% if params[:return_to] == "bulk_payments" %>
       <%# Re-expand the originating submission's row and scroll to it on return. %>
-      <%= link_to bulk_payments_return_path(@event_registration.event), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to bulk_payments_return_path(@event_registration.event), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Bulk payments
       <% end %>
     <% elsif params[:return_to] == "preview_reminder" %>
-      <%= link_to preview_reminder_event_path(@event_registration.event), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to preview_reminder_event_path(@event_registration.event), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Send reminders
       <% end %>
     <% elsif params[:return_to] == "onboarding" %>
-      <%= link_to onboarding_event_row_path(@event_registration.event, @event_registration.id), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to onboarding_event_row_path(@event_registration.event, @event_registration.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
       <% end %>
     <% elsif params[:return_to] == "attendees" %>
-      <%= link_to attendees_events_path, class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to attendees_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Attendees
       <% end %>
     <% elsif params[:return_to] == "roster" %>
-      <%= link_to roster_event_path(@event_registration.event), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to roster_event_path(@event_registration.event), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Roster
       <% end %>
     <%# Two ways in from the recipients page: a recipient's name (back to their own
         card) and the feature-a-shout-out flow (back to the shout-outs section). %>
     <% elsif params[:return_to] == "recipient_card" %>
-      <%= link_to recipients_event_card_path(@event_registration.event, @event_registration.slug), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to recipients_event_card_path(@event_registration.event, @event_registration.slug), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Scholarship recipients
       <% end %>
     <% elsif params[:return_to] == "recipients" %>
-      <%= link_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to recipients_event_path(@event_registration.event, anchor: "shout-outs"), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Recipients
       <% end %>
     <% elsif params[:return_to] == "index" %>
-      <%= link_to event_registrations_path, class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to event_registrations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registrations
       <% end %>
     <% elsif params[:return_to] == "attendance" %>
-      <%= link_to attendance_event_path(@event_registration.event), class: "text-sm #{eyebrow_link_class}" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Sign-ins
+      <%= link_to attendance_event_path(@event_registration.event), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Timesheets
       <% end %>
     <% else %>
-      <%= link_to registrants_event_row_path(@event_registration.event, @event_registration.id), class: "text-sm #{eyebrow_link_class}" do %>
+      <%= link_to registrants_event_row_path(@event_registration.event, @event_registration.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Registrants
       <% end %>
     <% end %>
     <div class="flex items-center gap-3">
-      <%= link_to "View", event_registration_path(@event_registration), class: "text-sm #{eyebrow_link_class}" %>
-      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "View", event_registration_path(@event_registration), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     </div>
   </div>
 
@@ -62,6 +62,20 @@
              event: @event_registration.event,
              event_url: dashboard_event_path(@event_registration.event) %>
 
+  <%# Admin-only jump to the audit of the values this registration's form overwrote —
+      shown only once it has overwritten something on existing records. %>
+  <%= render "form_submissions/changes_link",
+             submission: @form_submission,
+             return_to: "event_registration",
+             extra_params: { event_registration_id: @event_registration.id },
+             label: "What this registration's form changed",
+             wrapper_class: "mt-4" %>
+
   <%= render "form", event_registration: @event_registration %>
   <%= render "shared/audit_info", resource: @event_registration %>
+  <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <div class="mt-4 flex justify-end">
+      <%= render "application/activity_log", record: @event_registration %>
+    </div>
+  <% end %>
 </div>

@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { isFacilitatorTitle } from "../lib/affiliation"
 
 export default class extends Controller {
   static targets = ["facilitatorSince", "affiliatedNote", "affiliatedNoteText", "memberSinceFlag", "affiliationsContainer", "programStatus"]
@@ -51,11 +52,7 @@ export default class extends Controller {
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
-    // Mirrors Affiliation#facilitator?: exact, case-sensitive, trimmed — so the
-    // live figure matches the server render.
-    const facilitatorAffiliations = affiliations.filter(a =>
-      a.title.trim() === "Facilitator"
-    )
+    const facilitatorAffiliations = affiliations.filter(a => isFacilitatorTitle(a.title))
     const facStartDates = facilitatorAffiliations.map(a => a.startDate).filter(Boolean)
     const facilitatorSince = facStartDates.length
       ? new Date(Math.min(...facStartDates.map(d => new Date(d))))
@@ -91,11 +88,17 @@ export default class extends Controller {
 
     // Mirrors OrganizationDecorator#organization_status_bucket.
     if (this.hasProgramStatusTarget) {
+      const started = a => !a.startDate || new Date(a.startDate) <= today
+      const notEnded = a => !a.endDate || new Date(a.endDate) >= today
       let bucket
       if (facilitatorAffiliations.length === 0) {
         bucket = "never_active"
+      } else if (facilitatorAffiliations.some(a => started(a) && notEnded(a))) {
+        bucket = "active"
+      } else if (facilitatorAffiliations.some(a => !started(a) && notEnded(a))) {
+        bucket = "upcoming"
       } else {
-        bucket = allFacInactive ? "formerly_active" : "active"
+        bucket = "formerly_active"
       }
       this.updateProgramStatus(bucket)
     }
@@ -211,7 +214,7 @@ export default class extends Controller {
     if (!target) return
     let html = ""
     if (endDate) {
-      html += '<i class="fa-solid fa-circle-xmark text-red-400 mr-1" title="No active affiliations"></i>'
+      html += '<i class="fa-solid fa-circle-xmark mr-1 text-red-400" title="No active affiliations"></i>'
     }
     html += sinceDate ? this.formatDate(sinceDate) : "—"
     if (endDate) html += ` – ${this.formatDate(endDate)}`

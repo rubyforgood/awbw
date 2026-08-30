@@ -66,7 +66,7 @@ class CommentsController < ApplicationController
   def setup_aggregated_context
     return if params[:for_person_id].blank?
     @aggregator_person = Person.find(params[:for_person_id]).decorate
-    @comment_targets = helpers.person_comment_targets(@aggregator_person)
+    @comment_targets = helpers.person_record_targets(@aggregator_person)
   end
 
   def set_commentable

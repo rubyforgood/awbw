@@ -21,7 +21,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def new
     authorize!
-    return if redirect_transferred_in_ce
 
     @ce_registration = @event_registration.continuing_education_registrations.build(
       professional_license: @event_registration.registrant.professional_licenses.first,
@@ -32,7 +31,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
   def create
     authorize!
-    return if redirect_transferred_in_ce
 
     @ce_registration = @event_registration.continuing_education_registrations.build(professional_license: license_for_create)
 
@@ -98,19 +96,6 @@ class ContinuingEducationRegistrationsController < ApplicationController
     redirect_to root_path, alert: "Registration not found.", status: :see_other unless @event_registration
   end
 
-  # A transferred-in reg's CE record is created by the transfer itself (carried
-  # from the source), so admins don't add one manually — send them to the source,
-  # where any additional CE belongs. The transfer's system-created record is exempt
-  # (it's built by the service, not this controller). (#1944)
-  def redirect_transferred_in_ce
-    return false unless @event_registration.transferred_in?
-
-    redirect_to edit_event_registration_path(@event_registration.transferred_from_registration),
-      alert: "This registrant transferred in from another event — manage their CE on the original registration.",
-      status: :see_other
-    true
-  end
-
   def license_for_create
     @event_registration.registrant.professional_licenses.first ||
       @event_registration.registrant.professional_licenses.build
@@ -130,9 +115,11 @@ class ContinuingEducationRegistrationsController < ApplicationController
       ce_registration.cost_cents = (cost.to_d * 100).round if cost.present?
     end
 
-    comments = params.fetch(:continuing_education_registration, {})
-      .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ])[:comments_attributes]
-    ce_registration.comments_attributes = comments if comments.present?
+    nested = params.fetch(:continuing_education_registration, {})
+      .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+              notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ])
+    ce_registration.comments_attributes = nested[:comments_attributes] if nested[:comments_attributes].present?
+    ce_registration.notifications_attributes = nested[:notifications_attributes] if nested[:notifications_attributes].present?
   end
 
   # Staff corrections to the registrant's attendance times, submitted alongside the

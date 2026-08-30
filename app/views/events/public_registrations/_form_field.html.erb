@@ -1,5 +1,8 @@
-<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false) %>
+<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false, param_scope: "public_registration", required: nil) %>
+<% param_scope = local_assigns.fetch(:param_scope, "public_registration") %>
 <% return if field.group_header? %>
+<%# Callers can force a field required (e.g. identity on a registration form); defaults to the field's own setting. %>
+<% required = local_assigns.fetch(:required, field.required) %>
 
 <% error = @field_errors&.dig(field.id) %>
 <% error_border = error ? "border-red-400 focus:border-red-500 focus:ring-red-500/30" : "border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500/30" %>
@@ -7,9 +10,9 @@
 
 <div class="mb-7">
   <div class="flex flex-wrap items-center gap-2 mb-1.5">
-    <label class="rich-label text-sm font-semibold text-gray-700" for="public_registration_form_fields_<%= field.id %>">
+    <label class="rich-label text-sm font-semibold text-gray-700" for="<%= param_scope %>_form_fields_<%= field.id %>">
       <%= form_label_html(label || field.name) %>
-      <% if field.required %>
+      <% if required %>
         <span class="text-red-500">*</span>
       <% end %>
     </label>
@@ -28,8 +31,8 @@
     <%= render "forms/dropdown_other_warning", field: field %>
   <% end %>
 
-  <% field_name = "public_registration[form_fields][#{field.id}]" %>
-  <% field_id = "public_registration_form_fields_#{field.id}" %>
+  <% field_name = "#{param_scope}[form_fields][#{field.id}]" %>
+  <% field_id = "#{param_scope}_form_fields_#{field.id}" %>
 
   <% case field.answer_type %>
   <% when "free_form_input_one_line" %>
@@ -37,7 +40,7 @@
       <select name="<%= field_name %>"
               id="<%= field_id %>"
               class="<%= input_classes %>"
-              <%= "required" if field.required %>>
+              <%= "required" if required %>>
         <option value="">Select a state</option>
         <% us_states.each do |name, abbr| %>
           <option value="<%= abbr %>" <%= "selected" if value == abbr %>><%= name %> (<%= abbr %>)</option>
@@ -57,7 +60,7 @@
                      end
         extra_attrs = []
         extra_attrs << 'min="1" step="1" pattern="[0-9]*" inputmode="numeric"' if field.number_integer?
-        extra_attrs << 'inputmode="url"' if field.field_identifier == "agency_website"
+        extra_attrs << 'inputmode="url"' if field.field_identifier == "organization_website"
         extra_attrs << %(maxlength="#{field.effective_max_characters}") if field.effective_max_characters
       %>
       <input type="<%= html_type %>"
@@ -65,7 +68,7 @@
              id="<%= field_id %>"
              value="<%= value %>"
              class="<%= input_classes %>"
-             <%= "required" if field.required %>
+             <%= "required" if required %>
              <%= raw(extra_attrs.join(" ")) %>>
     <% end %>
 
@@ -75,7 +78,7 @@
               rows="4"
               class="<%= input_classes %>"
               <%= "maxlength=\"#{field.effective_max_characters}\"".html_safe if field.effective_max_characters %>
-              <%= "required" if field.required %>><%= value %></textarea>
+              <%= "required" if required %>><%= value %></textarea>
 
   <% when "single_select_radio" %>
     <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
@@ -95,7 +98,7 @@
                    class="text-blue-600 focus:ring-blue-500"
                    <%= "data-specify-option-target=\"control\"".html_safe if is_specify %>
                    <%= "checked" if (is_specify ? specify_option_selected?(option_label, value) : value == option_value) || (value.blank? && field.field_identifier == "interested_in_more" && option_value == "Yes") %>
-                   <%= "required" if field.required %>>
+                   <%= "required" if required %>>
             <%= option_label %>
           </span>
           <% if option_description.present? %>
@@ -124,7 +127,7 @@
     <select name="<%= field_name %>"
             id="<%= field_id %>"
             class="<%= input_classes %>"
-            <%= "required" if field.required %>>
+            <%= "required" if required %>>
       <option value="">Select one</option>
       <%# A dropdown can't show subtext, so an option's description is folded into
           the label as "Name (description)". %>
@@ -135,7 +138,7 @@
     </select>
 
   <% when "multi_select_checkbox" %>
-    <% checkbox_name = "public_registration[form_fields][#{field.id}][]" %>
+    <% checkbox_name = "#{param_scope}[form_fields][#{field.id}][]" %>
     <% selected_values = Array(value) %>
     <%# Dynamic fields (e.g. additional_sectors) source options from Sector/Category
         data; everything else uses the field's own stored answer options. Sector and
@@ -188,7 +191,7 @@
           duplicate keys — and let the controller fall back to it. %>
       <% if retained_upload %>
         <input type="hidden"
-               name="public_registration[retained_uploads][<%= field.id %>]"
+               name="<%= param_scope %>[retained_uploads][<%= field.id %>]"
                value="<%= value %>">
         <p class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
           <i class="fa-solid fa-paperclip"></i><%= retained_upload.filename %> already uploaded — choose another file to replace it.
@@ -202,7 +205,7 @@
              data-file-preview-target="input"
              data-action="change->file-preview#update"
              class="block w-full text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 rounded-lg border <%= error_border %> bg-white px-2 py-2"
-             <%= "required" if field.required && retained_upload.nil? %>>
+             <%= "required" if required && retained_upload.nil? %>>
       <p data-file-preview-target="filename" class="mt-1.5 text-xs font-medium text-gray-600"></p>
       <p class="mt-1 text-xs text-gray-400">Accepted: <%= FormUploadAsset.accepted_types_label %> (max <%= FormUploadAsset.max_file_size_label %>)</p>
       <img data-file-preview-target="preview"

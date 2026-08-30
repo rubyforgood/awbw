@@ -1,0 +1,52 @@
+<% content_for(:page_title, "Confirm affiliation changes — #{@event.title}") %>
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-4 shadow sm:p-6">
+  <div class="mb-6">
+    <%= link_to "← Go back to edit", reconcile_affiliations_event_path(@event, outcome: @outcome), class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">Confirm affiliation changes</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Performing will make the <strong><%= @changes.size %></strong> <%= "change".pluralize(@changes.size) %> below. Nothing else is affected.
+  </p>
+
+  <% sections = {
+       create: [ "Create", "bg-blue-50 text-blue-800 border-blue-200", "A new facilitator affiliation is created for this organization." ],
+       reactivate: [ "Reactivate", "bg-green-50 text-green-800 border-green-200", "The end date this reconciliation set for this training is cleared, so the affiliation is active again. No second affiliation is created." ],
+       deactivate: [ "Deactivate", "bg-red-50 text-red-800 border-red-200", "The facilitator affiliation is given an end date of the day before this training, so the years before it stay on the record. Reversible." ],
+       retarget: [ "Move", "bg-blue-50 text-blue-800 border-blue-200", "The facilitator affiliation moves to the event they transferred to — re-dated to it and re-pointed at that registration. Nothing is ended." ],
+       delete: [ "Delete", "bg-red-100 text-red-900 border-red-300", "The facilitator affiliation is permanently deleted — this is what happens to a row this training created for someone who didn't attend. Job and other-org affiliations are untouched." ]
+     } %>
+
+  <div class="space-y-5">
+    <% sections.each do |action, (label, header_class, description)| %>
+      <% action_changes = @changes.select { |change| change.action == action } %>
+      <% next if action_changes.empty? %>
+      <section class="overflow-hidden rounded-lg border border-gray-200">
+        <div class="border-b px-4 py-2 <%= header_class %>">
+          <span class="text-sm font-semibold"><%= label %> (<%= action_changes.size %>)</span>
+          <p class="text-xs font-normal opacity-90"><%= description %></p>
+        </div>
+        <ul class="divide-y divide-gray-100 bg-white">
+          <% action_changes.each do |change| %>
+            <li class="px-4 py-2 text-sm">
+              <span class="font-medium text-gray-900"><%= change.person.decorate.full_name_with_display_name %></span>
+              <span class="text-gray-500">— <%= change.organization.name %></span>
+              <% if change.affiliation %>
+                <span class="text-gray-400">· <%= change.affiliation.decorate.period_label %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+
+  <div class="mt-6 flex items-center justify-between gap-3">
+    <%= link_to "← Go back to edit", reconcile_affiliations_event_path(@event, outcome: @outcome), class: "text-sm #{eyebrow_link_class}" %>
+    <%= form_with url: perform_reconcile_affiliations_event_path(@event), method: :post do %>
+      <% @outcome.each do |key, value| %><%= hidden_field_tag "outcome[#{key}]", value %><% end %>
+      <%= submit_tag "Perform changes", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>

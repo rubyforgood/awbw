@@ -1,15 +1,15 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:faqs) %> border border-gray-200 rounded-xl shadow p-6">
-        <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="<%= DomainTheme.bg_class_for(:faqs) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+        <div class="mb-4 flex flex-wrap justify-end gap-2">
           <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <%= link_to "FAQs", faqs_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <%= link_to "View", faq_path(@faq), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         </div>
-        <h1 class="text-2xl font-semibold text-gray-900 mb-3">
+        <h1 class="text-primary mb-3 font-display text-2xl font-semibold">
           Edit <%= @faq.class.model_name.human.downcase %>
         </h1>
 
-        <div class="bg-white rounded p-6">
+        <div class="rounded bg-white p-6">
           <div class="mt-4">
             <%= render "form" %>
             <%= render "shared/audit_info", resource: @faq %>

@@ -1,12 +1,18 @@
-RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
+RSpec.shared_examples "author_creditable" do |factory:, org_credited:, credits_creator: false, anonymous_when_unattributed: false|
   model = factory.to_s.camelize.constantize
   names_author = model.column_names.include?("author_id")
-  # What an unattributed record credits to: "AWBW Staff" for org-produced content,
-  # otherwise the generic facilitator label.
-  org_label = org_credited ? "AWBW Staff" : "AWBW Facilitator"
+  # What a record with nobody left to credit falls to: a generic label ("AWBW Staff"
+  # for org-produced content, otherwise the facilitator label), or "Anonymous" on the
+  # models that say so. A `credits_creator` model only gets here once the creator is
+  # gone or hidden too — otherwise it credits them by name.
+  unattributed_label = if anonymous_when_unattributed
+    "Anonymous"
+  else
+    org_credited ? "AWBW Staff" : "AWBW Facilitator"
+  end
 
-  # Only a model with an author_id credits a person; the idea models (no author_id)
-  # never credit whoever entered them, so they always fall to the generic label.
+  # Only a model with an author_id credits a person; without one, a record always
+  # falls to the generic label no matter who entered it.
   def credited_record(factory, user, person, names_author, **attrs)
     attrs[:author] = person if names_author
     create(factory, created_by: user, **attrs)
@@ -70,11 +76,11 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
       context "when the profile marks contributions anonymous" do
         before { person.update!(anonymous_contributions: true) }
 
-        # Behind a login, so a suppressed credit names the org rather than saying
-        # "Anonymous", which would read as being about the reader's access.
-        it "returns the generic label regardless of the name format" do
+        # A suppressed explicit-author credit reads the unattributed label rather
+        # than the profile name — the org label, or "Anonymous" for creator-legacy.
+        it "returns the unattributed label regardless of the name format" do
           person.update!(display_name_preference: "full_name")
-          expect(record.author_credit).to eq(org_label)
+          expect(record.author_credit).to eq(unattributed_label)
         end
 
         it "does not link the credit to a profile" do
@@ -87,7 +93,7 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
 
         it "stays suppressed even though the profile says otherwise" do
           person.update!(display_name_preference: "full_name", anonymous_contributions: false)
-          expect(record.author_credit).to eq(org_label)
+          expect(record.author_credit).to eq(unattributed_label)
         end
 
         it "does not link the credit to a profile" do
@@ -96,17 +102,44 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
       end
 
       context "when the author is removed" do
-        it "falls back to the generic label rather than crediting the creator" do
-          record.update!(author: nil, author_credit_preference: nil)
-          expect(record.missing_author_label).to eq(org_label)
-          expect(record.author_credit).to eq(org_label)
+        before { record.update!(author: nil, author_credit_preference: nil) }
+
+        it "uses the unattributed label as the missing-author label" do
+          expect(record.missing_author_label).to eq(unattributed_label)
+        end
+
+        if credits_creator
+          it "credits the creator's person by name instead of the generic label" do
+            expect(record.author_credit).to eq(person.name)
+          end
+        else
+          it "falls back to the generic label rather than crediting the creator" do
+            expect(record.author_credit).to eq(unattributed_label)
+          end
+        end
+
+        if credits_creator
+          it "formats the creator credit by their own profile preference" do
+            person.update!(display_name_preference: "first_name_only")
+            expect(record.author_credit).to eq(person.first_name)
+          end
+
+          it "links the credit to the creator's profile" do
+            expect(record.author_credit_person).to eq(person)
+          end
+
+          it "suppresses the credit when the creator opted out of being named" do
+            person.update!(anonymous_contributions: true)
+            expect(record.author_credit).to eq(unattributed_label)
+            expect(record.author_credit_person).to be_nil
+          end
         end
       end
     else
       context "on an idea record, which names no author" do
         it "always credits the generic label, never the creator" do
           person.update!(display_name_preference: "full_name")
-          expect(record.author_credit).to eq(org_label)
+          expect(record.author_credit).to eq(unattributed_label)
         end
 
         it "does not link the credit to a profile" do
@@ -171,6 +204,28 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
     end
   end
 
+  if names_author
+    describe ".credited_to_person" do
+      let(:person) { create(:person) }
+      let(:their_user) { create(:user, person: person) }
+
+      it "includes records they explicitly authored" do
+        record = create(factory, author: person, created_by: create(:user))
+        expect(model.credited_to_person(person)).to include(record)
+      end
+
+      it "includes unauthored records their user created (legacy fallback)" do
+        record = create(factory, author: nil, created_by: their_user)
+        expect(model.credited_to_person(person)).to include(record)
+      end
+
+      it "excludes records authored by someone else, even if their user created them" do
+        record = create(factory, author: create(:person), created_by: their_user)
+        expect(model.credited_to_person(person)).not_to include(record)
+      end
+    end
+  end
+
   describe ".by_credited_person_name" do
     if names_author
       let(:author_user) { create(:user, :with_person) }
@@ -222,6 +277,34 @@ RSpec.shared_examples "author_creditable" do |factory:, org_credited:|
       it "still matches the full name when the record asked for first_name_only" do
         record.update!(author_credit_preference: "first_name_only")
         expect(model.by_credited_person_name("Quixotel")).to include(record)
+      end
+
+      if credits_creator
+        context "when no author is named, so the creator is credited" do
+          before { record.update!(author: nil) }
+
+          it "matches the creator's person by name" do
+            expect(model.by_credited_person_name("Zephyrine")).to include(record)
+            expect(model.by_credited_person_name("Quixotel")).to include(record)
+          end
+
+          it "honors the creator's own display preference" do
+            person.update!(display_name_preference: "first_name_only")
+            expect(model.by_credited_person_name("Quixotel")).not_to include(record)
+          end
+
+          it "matches nothing when the creator opted out of being named" do
+            person.update!(anonymous_contributions: true)
+            expect(model.by_credited_person_name("Zephyrine")).not_to include(record)
+          end
+        end
+
+        it "does not reach the creator once someone else is the named author" do
+          record.update!(author: create(:person, first_name: "Corvid", last_name: "Talbotson"))
+
+          expect(model.by_credited_person_name("Zephyrine")).not_to include(record)
+          expect(model.by_credited_person_name("Corvid")).to include(record)
+        end
       end
     else
       it "matches nobody, since an idea names no author" do

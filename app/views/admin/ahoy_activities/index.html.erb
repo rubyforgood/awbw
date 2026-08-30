@@ -1,16 +1,16 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-primary/10 rounded-2xl shadow-sm p-6">
 
       <div class="flex flex-wrap items-center gap-y-2 mb-2">
         <%# Scoped to a person (from their edit page's History card, or the filter) —
             return to that person, not the generic Admin default. %>
         <% if @person %>
-          <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class}" do %>
+          <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
             <i class="fas fa-arrow-left"></i>
             <span><%= truncate(@person.name, length: 30) %></span>
           <% end %>
         <% elsif allowed_to?(:index?, with: Admin::HomePolicy) %>
-          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class}" do %>
+          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
             <i class="fas fa-arrow-left"></i>
             <span>Admin</span>
           <% end %>
@@ -21,7 +21,7 @@
       </div>
 
       <div class="flex items-baseline gap-3 mb-6 leading-none">
-        <h1 class="text-2xl font-semibold text-gray-900 leading-none">Activities</h1>
+        <h1 class="font-display text-2xl font-semibold text-primary leading-none">Activities</h1>
         <%= render "count" %>
       </div>
 
@@ -29,7 +29,7 @@
         <%= render "admin/shared/active_filters_subheader" %>
       </div>
 
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+      <div class="bg-white border border-primary/10 rounded-2xl shadow-sm p-6 mb-6">
         <%# Selects submit on change and the text boxes debounce-submit as you type,
             all into the activity_results frame — the filter form stays put (and
             focused) while just the rows swap. %>
@@ -51,11 +51,11 @@
 
             <div class="flex-1 min-w-0">
               <label class="<%= search_label_class %>">
-                Properties
+                Details
               </label>
               <%= text_field_tag :props,
                                  params[:props],
-                                 placeholder: "Search properties...",
+                                 placeholder: "Search details...",
                                  class: search_field_class %>
             </div>
 
@@ -91,7 +91,7 @@
               </label>
               <%= date_field_tag :from,
                                  params[:from],
-                                 class: search_field_class %>
+                                 class: date_filter_class(search_field_class, params[:from]) %>
             </div>
 
             <div class="flex-1 min-w-0">
@@ -100,7 +100,7 @@
               </label>
               <%= date_field_tag :to,
                                  params[:to],
-                                 class: search_field_class %>
+                                 class: date_filter_class(search_field_class, params[:to]) %>
             </div>
 
             <div class="flex-none w-24">

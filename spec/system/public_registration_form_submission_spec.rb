@@ -98,11 +98,11 @@ RSpec.describe "Public form submissions", type: :system do
         "mailing_country" => "United States",
         "phone" => "555-123-4567",
         "phone_type" => "Work",
-        "agency_name" => "Hope Center",
-        "agency_position" => "Art Therapist",
-        "agency_website" => "https://hope.example.org",
-        "agency_type" => "501c3/nonprofit",
-        "agency_country" => "United States",
+        "organization_name" => "Hope Center",
+        "organization_position" => "Art Therapist",
+        "organization_website" => "https://hope.example.org",
+        "organization_type" => "501c3/nonprofit",
+        "organization_country" => "United States",
         "primary_sector" => sector_education.id.to_s,
         "additional_sectors" => sector_mental_health.id.to_s,
         "primary_age_group" => age_adults.id.to_s,
@@ -240,11 +240,11 @@ RSpec.describe "Public form submissions", type: :system do
     it "incognito: creates the payer and saves the bulk payment submission" do
       visit new_event_bulk_payment_path(event)
 
-      fill_bp_text bp_field("payer_first_name"), with: "Pat"
-      fill_bp_text bp_field("payer_last_name"), with: "Morgan"
-      fill_bp_text bp_field("payer_email"), with: "pat.morgan@example.com"
-      fill_bp_text bp_field("payer_phone"), with: "555-987-6543"
-      fill_bp_text bp_field("payer_organization"), with: "Group Health"
+      fill_bp_text bp_field("first_name"), with: "Pat"
+      fill_bp_text bp_field("last_name"), with: "Morgan"
+      fill_bp_text bp_field("primary_email"), with: "pat.morgan@example.com"
+      fill_bp_text bp_field("phone"), with: "555-987-6543"
+      fill_bp_text bp_field("organization_name"), with: "Group Health"
       fill_bp_text bp_field("number_of_attendees"), with: "3"
       choose_bp_radio bp_field("payment_method"), "Check"
 
@@ -256,11 +256,11 @@ RSpec.describe "Public form submissions", type: :system do
 
       submission = FormSubmission.bulk_payment.find_by!(person: person, event: event)
       expect(answers_by_identifier(submission)).to include(
-        "payer_first_name" => "Pat",
-        "payer_last_name" => "Morgan",
-        "payer_email" => "pat.morgan@example.com",
-        "payer_phone" => "555-987-6543",
-        "payer_organization" => "Group Health",
+        "first_name" => "Pat",
+        "last_name" => "Morgan",
+        "primary_email" => "pat.morgan@example.com",
+        "phone" => "555-987-6543",
+        "organization_name" => "Group Health",
         "number_of_attendees" => "3",
         "payment_method" => "Check"
       )
@@ -273,7 +273,7 @@ RSpec.describe "Public form submissions", type: :system do
 
       visit new_event_bulk_payment_path(event)
 
-      expect(page).not_to have_selector("#bulk_payment_form_fields_#{bp_field('payer_first_name').id}")
+      expect(page).not_to have_selector("#bulk_payment_form_fields_#{bp_field('first_name').id}")
 
       fill_bp_text bp_field("number_of_attendees"), with: "2"
       choose_bp_radio bp_field("payment_method"), "Check"
@@ -399,15 +399,15 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("phone"), with: "555-123-4567"
     choose_pr_radio reg_field("phone_type"), "Work"
 
-    fill_pr_text reg_field("agency_name"), with: "Hope Center"
-    fill_pr_text reg_field("agency_position"), with: "Art Therapist"
-    fill_pr_text reg_field("agency_website"), with: "https://hope.example.org"
-    choose_pr_radio reg_field("agency_type"), "501c3/nonprofit"
-    fill_pr_text reg_field("agency_street"), with: "9 Center Ave"
-    fill_pr_text reg_field("agency_city"), with: "Pasadena"
-    select_pr reg_field("agency_state"), "California (CA)"
-    fill_pr_text reg_field("agency_zip"), with: "91101"
-    fill_pr_text reg_field("agency_country"), with: "United States"
+    fill_pr_text reg_field("organization_name"), with: "Hope Center"
+    fill_pr_text reg_field("organization_position"), with: "Art Therapist"
+    fill_pr_text reg_field("organization_website"), with: "https://hope.example.org"
+    choose_pr_radio reg_field("organization_type"), "501c3/nonprofit"
+    fill_pr_text reg_field("organization_street"), with: "9 Center Ave"
+    fill_pr_text reg_field("organization_city"), with: "Pasadena"
+    select_pr reg_field("organization_state"), "California (CA)"
+    fill_pr_text reg_field("organization_zip"), with: "91101"
+    fill_pr_text reg_field("organization_country"), with: "United States"
 
     select_pr reg_field("primary_sector"), "Education"
     check_pr_box reg_field("additional_sectors"), sector_mental_health.id.to_s

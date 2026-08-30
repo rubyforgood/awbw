@@ -26,20 +26,30 @@ class ScholarshipDecorator < ApplicationDecorator
     program&.program_location.presence || "—"
   end
 
-  # New / Ongoing / Reinstate relative to this recipient; blank when there's no
-  # program to assess.
+  # The program's New / Ongoing / Reinstated verdict, anchored on the start date of
+  # the training this award paid for — so each row is judged at its own event
+  # rather than at one page-wide date. Falls back to the year anchor when the award
+  # has no registration behind it. One rule for every surface (ADR-0001 D4).
+  def facilitator_program_status
+    return @facilitator_program_status if defined?(@facilitator_program_status)
+
+    @facilitator_program_status = program&.facilitator_program_status(as_of: object.event&.start_date)
+  end
+
   def program_status
-    program&.program_status(object.recipient).presence || "—"
+    facilitator_program_status&.label.presence || "—"
   end
 
   # Tailwind pill classes for the program-status badge.
   def program_status_classes
-    case program&.program_status(object.recipient)
-    when "Ongoing"   then "bg-blue-50 text-blue-700 border-blue-200"
-    when "New"       then "bg-indigo-50 text-indigo-700 border-indigo-200"
-    when "Reinstate" then "bg-purple-50 text-purple-700 border-purple-200"
-    else "bg-gray-50 text-gray-500 border-gray-200"
-    end
+    OrganizationDecorator.program_status_classes(facilitator_program_status&.status) ||
+      "bg-gray-50 text-gray-500 border-gray-200"
+  end
+
+  # Hover text naming the anchor date and the reasoning, worded exactly like the
+  # org profile's per-event chips.
+  def program_status_explanation
+    facilitator_program_status&.explanation
   end
 
   # The facilitator-training event(s) the recipient attended ("TAC"); titles
@@ -63,20 +73,23 @@ class ScholarshipDecorator < ApplicationDecorator
 
   AGREEMENT_STATUS_LABELS = {
     "declined" => "Declined",
-    "accepted" => "Signed",
-    "pending" => "Pending"
+    "accepted" => "Accepted",
+    "pending" => "Offered",
+    "support_requested" => "Requested"
   }.freeze
 
   AGREEMENT_STATUS_CLASSES = {
     "declined" => "bg-red-50 text-red-700 border-red-200",
     "accepted" => "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
-    "pending" => "bg-amber-50 text-amber-700 border-amber-200"
+    "pending" => "bg-amber-50 text-amber-700 border-amber-200",
+    "support_requested" => "bg-sky-50 text-sky-700 border-sky-200"
   }.freeze
 
   AGREEMENT_STATUS_ICONS = {
     "declined" => "fa-solid fa-circle-xmark",
     "accepted" => "fa-solid fa-file-signature",
-    "pending" => "fa-solid fa-file-signature"
+    "pending" => "fa-solid fa-file-signature",
+    "support_requested" => "fa-solid fa-hand-holding-dollar"
   }.freeze
 
   def agreement_status_label = AGREEMENT_STATUS_LABELS.fetch(object.agreement_response_status)
@@ -84,15 +97,45 @@ class ScholarshipDecorator < ApplicationDecorator
   def agreement_status_icon = AGREEMENT_STATUS_ICONS.fetch(object.agreement_response_status)
 
   # The agreement-status pill every surface that lists a scholarship renders, so
-  # the three states read the same everywhere: Declined (red), Signed (fuchsia),
-  # Pending (amber). Compact surfaces only need to flag the exception, so
-  # pending/signed render nothing unless `all_states:`. `prefix:` reads it as
-  # "Agreement declined" where the pill sits next to a tasks pill.
+  # the states read the same everywhere: Declined (red), Accepted (fuchsia),
+  # Offered (amber), Requested (sky). Compact surfaces only flag the states that
+  # need follow-up, so offered/accepted render nothing unless `all_states:` while
+  # declined and requested always show. `prefix:` reads it as "Agreement declined"
+  # where the pill sits next to a tasks pill.
   def agreement_status_badge(all_states: false, prefix: false, icon_size: "text-xs")
-    return unless all_states || object.agreement_declined?
+    return unless all_states || object.agreement_declined? || object.agreement_support_requested?
 
     label = prefix ? "Agreement #{agreement_status_label.downcase}" : agreement_status_label
     h.render "shared/badge", label: label, classes: agreement_status_classes,
              icon: [ agreement_status_icon, icon_size ].compact_blank.join(" ")
+  end
+
+  # One lifecycle status chip shared by the admin "Scholarship details" header and
+  # the recipient ticket callout, so both read the same: Declined → Support
+  # requested → Offered → (once accepted) Tasks outstanding → Tasks completed. The
+  # per-event agreement history timeline uses the shorter agreement_status_label.
+  def lifecycle_status_badge(icon_size: "text-xs")
+    label, classes, icon =
+      if object.agreement_declined?
+        [ "Declined", AGREEMENT_STATUS_CLASSES["declined"], "fa-solid fa-circle-xmark" ]
+      elsif object.agreement_support_requested?
+        [ "Support requested", AGREEMENT_STATUS_CLASSES["support_requested"], "fa-solid fa-hand-holding-dollar" ]
+      elsif !object.agreement_signed?
+        [ "Offered", AGREEMENT_STATUS_CLASSES["pending"], "fa-solid fa-file-signature" ]
+      elsif object.tasks_completed?
+        [ "Tasks completed", tasks_completed_classes, "fa-solid fa-circle-check" ]
+      else
+        [ "Tasks outstanding", AGREEMENT_STATUS_CLASSES["pending"], "fa-solid fa-clock" ]
+      end
+    h.render "shared/badge", label: label, classes: classes,
+             icon: [ icon, icon_size ].compact_blank.join(" ")
+  end
+
+  private
+
+  def tasks_completed_classes
+    [ DomainTheme.bg_class_for(:scholarships, intensity: 50),
+      DomainTheme.text_class_for(:scholarships, intensity: 700),
+      DomainTheme.border_class_for(:scholarships, intensity: 200) ].join(" ")
   end
 end

@@ -24,6 +24,25 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "registration status" do
+    it "flips an on-demand facilitator-training registration straight to attended" do
+      on_demand = create(:event, :published, :publicly_visible, facilitator_training: true, on_demand: true)
+      on_demand.event_forms.create!(form: form, role: "registration")
+
+      result = described_class.call(event: on_demand, registration_form: form,
+                                    form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com"))
+
+      expect(result.event_registration.status).to eq("attended")
+    end
+
+    it "leaves a scheduled event's registration as registered" do
+      result = described_class.call(event: event, registration_form: form,
+                                    form_params: base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com"))
+
+      expect(result.event_registration.status).to eq("registered")
+    end
+  end
+
   describe "affiliation creation" do
     # A facilitator affiliation is only minted off a facilitator-training event.
     let(:event) { create(:event, :published, :publicly_visible, facilitator_training: true) }
@@ -67,11 +86,11 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
         field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER) => "Counselor",
-        field_id("agency_street") => "1 Main St",
-        field_id("agency_city") => "Austin",
-        field_id("agency_state") => "TX",
-        field_id("agency_zip") => "78701",
-        field_id("agency_country") => "USA"
+        field_id("organization_street") => "1 Main St",
+        field_id("organization_city") => "Austin",
+        field_id("organization_state") => "TX",
+        field_id("organization_zip") => "78701",
+        field_id("organization_country") => "USA"
       )
       described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by(email: "sam@example.com")
@@ -259,8 +278,10 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
-  describe "mailing list consent" do
-    it "stamps the consent time and source when the registrant opts in" do
+  describe "News subscription capture" do
+    let!(:news) { create(:topic_subscription_type, name: "News") }
+
+    it "subscribes the registrant to News with the event as the source when they opt in" do
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
         field_id("communication_consent") => [ "Yes" ]
       )
@@ -268,33 +289,30 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       described_class.call(event: event, registration_form: form, form_params: params)
       person = Person.find_by!(email: "coco@example.com")
 
-      expect(person.mailing_list_consent_at).to be_present
-      expect(person.mailing_list_consent_source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
+      subscription = person.topic_subscriptions.active.for_topic_type(news).sole
+      expect(subscription.source).to eq("#{event.start_date.to_date.iso8601} #{event.title} registration")
     end
 
-    it "does not record consent when the box is left unchecked" do
+    it "does not subscribe when the consent box is left unchecked" do
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
         field_id("communication_consent") => [ "" ]
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
 
-      expect(Person.find_by!(email: "coco@example.com").mailing_list_consent_at).to be_nil
+      expect(Person.find_by!(email: "coco@example.com").topic_subscriptions).to be_empty
     end
 
-    it "never re-stamps or clears consent already on file" do
-      original = 1.year.ago
-      create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com",
-                      mailing_list_consent_at: original, mailing_list_consent_source: "Earlier")
+    it "does not add a second active subscription when one already exists" do
+      person = create(:person, first_name: "Coco", last_name: "Lee", email: "coco@example.com")
+      create(:topic_subscription, person: person, topic_subscription_type: news, source: "Earlier")
       params = base_form_params(first_name: "Coco", last_name: "Lee", email: "coco@example.com").merge(
         field_id("communication_consent") => [ "Yes" ]
       )
 
       described_class.call(event: event, registration_form: form, form_params: params)
-      person = Person.find_by!(email: "coco@example.com")
 
-      expect(person.mailing_list_consent_at).to be_within(1.second).of(original)
-      expect(person.mailing_list_consent_source).to eq("Earlier")
+      expect(person.topic_subscriptions.active.for_topic_type(news).sole.source).to eq("Earlier")
     end
   end
 
@@ -326,17 +344,17 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       it "fills website, agency type, and address country" do
         register_with_org(
-          field_id("agency_website") => "helpinghands.org",
-          field_id("agency_type") => "501c3/nonprofit",
-          field_id("agency_street") => "5 Oak Ave",
-          field_id("agency_city") => "Reno",
-          field_id("agency_state") => "NV",
-          field_id("agency_zip") => "89501",
-          field_id("agency_country") => "USA"
+          field_id("organization_website") => "helpinghands.org",
+          field_id("organization_type") => "501c3/nonprofit",
+          field_id("organization_street") => "5 Oak Ave",
+          field_id("organization_city") => "Reno",
+          field_id("organization_state") => "NV",
+          field_id("organization_zip") => "89501",
+          field_id("organization_country") => "USA"
         )
         organization.reload
 
-        expect(organization.agency_type).to eq("501c3/nonprofit")
+        expect(organization.organization_type).to eq("501c3/nonprofit")
         expect(organization.website_url).to include("helpinghands.org")
         expect(organization.addresses.find_by(primary: true).country).to eq("USA")
       end
@@ -345,9 +363,9 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       # that already existed — the admin linking page shows what they changed.
       it "records what the registrant's answers filled on the registration's org link" do
         result = register_with_org(
-          field_id("agency_website") => "helpinghands.org",
-          field_id("agency_city") => "Reno",
-          field_id("agency_state") => "NV"
+          field_id("organization_website") => "helpinghands.org",
+          field_id("organization_city") => "Reno",
+          field_id("organization_state") => "NV"
         )
 
         link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
@@ -358,7 +376,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       # pairing falls back to matching the org's current name against what the
       # registrant typed, which an admin renaming the org would silently break.
       it "pins the submission the registrant's answers came from on the org link" do
-        result = register_with_org(field_id("agency_website") => "helpinghands.org")
+        result = register_with_org(field_id("organization_website") => "helpinghands.org")
 
         link = result.event_registration.event_registration_organizations.find_by!(organization: organization)
         expect(link.form_submission).to eq(result.form_submission)
@@ -367,17 +385,17 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       it "overwrites an existing website with the latest answer" do
         organization.update!(website_url: "https://existing.org")
 
-        register_with_org(field_id("agency_website") => "helpinghands.org")
+        register_with_org(field_id("organization_website") => "helpinghands.org")
 
         expect(organization.reload.website_url).to include("helpinghands.org")
       end
 
       it "stores the org address as a work address" do
         register_with_org(
-          field_id("agency_street") => "5 Oak Ave",
-          field_id("agency_city") => "Reno",
-          field_id("agency_state") => "NV",
-          field_id("agency_zip") => "89501"
+          field_id("organization_street") => "5 Oak Ave",
+          field_id("organization_city") => "Reno",
+          field_id("organization_state") => "NV",
+          field_id("organization_zip") => "89501"
         )
 
         expect(organization.addresses.last.address_type).to eq("work")
@@ -387,8 +405,8 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       # through used to blow up the whole registration.
       it "stores the org address when the registrant skipped the street and ZIP" do
         result = register_with_org(
-          field_id("agency_city") => "Reno",
-          field_id("agency_state") => "NV"
+          field_id("organization_city") => "Reno",
+          field_id("organization_state") => "NV"
         )
 
         expect(result).to be_success
@@ -397,8 +415,8 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       it "saves no org address when the registrant skipped the state, leaving the registration intact" do
         result = register_with_org(
-          field_id("agency_street") => "5 Oak Ave",
-          field_id("agency_city") => "Reno"
+          field_id("organization_street") => "5 Oak Ave",
+          field_id("organization_city") => "Reno"
         )
 
         expect(result).to be_success
@@ -407,10 +425,10 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       it "makes the first org address primary" do
         register_with_org(
-          field_id("agency_street") => "5 Oak Ave",
-          field_id("agency_city") => "Reno",
-          field_id("agency_state") => "NV",
-          field_id("agency_zip") => "89501"
+          field_id("organization_street") => "5 Oak Ave",
+          field_id("organization_city") => "Reno",
+          field_id("organization_state") => "NV",
+          field_id("organization_zip") => "89501"
         )
 
         expect(organization.addresses.find_by(city: "Reno")).to be_primary
@@ -423,10 +441,10 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         )
 
         register_with_org(
-          field_id("agency_street") => "5 Oak Ave",
-          field_id("agency_city") => "Reno",
-          field_id("agency_state") => "NV",
-          field_id("agency_zip") => "89501"
+          field_id("organization_street") => "5 Oak Ave",
+          field_id("organization_city") => "Reno",
+          field_id("organization_state") => "NV",
+          field_id("organization_zip") => "89501"
         )
 
         expect(existing.reload).to be_primary
@@ -439,32 +457,32 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   describe "organization type sync" do
     let!(:organization) { create(:organization, name: "Helping Hands") }
 
-    def register_with_agency_type(value)
+    def register_with_organization_type(value)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
-        field_id("agency_type") => value
+        field_id("organization_type") => value
       )
       described_class.call(event: event, registration_form: form, form_params: params)
       organization.reload
     end
 
-    it "folds an 'Other' answer into agency_type and the stripped free text into agency_type_other" do
-      register_with_agency_type("Other: Equine therapy")
+    it "folds an 'Other' answer into organization_type and the stripped free text into organization_type_other" do
+      register_with_organization_type("Other: Equine therapy")
 
-      expect(organization.agency_type).to eq("Other")
-      expect(organization.agency_type_other).to eq("Equine therapy")
+      expect(organization.organization_type).to eq("Other")
+      expect(organization.organization_type_other).to eq("Equine therapy")
     end
 
     it "stores the answer as 'Other: <text>' on the form submission, like other specify options" do
-      register_with_agency_type("Other: Equine therapy")
+      register_with_organization_type("Other: Equine therapy")
 
       answer = FormAnswer.joins(:form_field)
-        .find_by(form_fields: { field_identifier: "agency_type" })
+        .find_by(form_fields: { field_identifier: "organization_type" })
       expect(answer.submitted_answer).to eq("Other: Equine therapy")
     end
 
     it "captures the org-type 'Other' as an OtherResponse owned by the organization" do
-      register_with_agency_type("Other: Equine therapy")
+      register_with_organization_type("Other: Equine therapy")
 
       response = organization.other_responses.sole
       expect([ response.text, response.kind, response.promotable? ])
@@ -472,34 +490,34 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
 
     it "does not capture an OtherResponse for a non-'Other' classification" do
-      register_with_agency_type("501c3/nonprofit")
+      register_with_organization_type("501c3/nonprofit")
 
       expect(organization.other_responses).to be_empty
     end
 
-    it "stores a non-'Other' classification with no agency_type_other" do
-      register_with_agency_type("501c3/nonprofit")
+    it "stores a non-'Other' classification with no organization_type_other" do
+      register_with_organization_type("501c3/nonprofit")
 
-      expect(organization.agency_type).to eq("501c3/nonprofit")
-      expect(organization.agency_type_other).to be_nil
+      expect(organization.organization_type).to eq("501c3/nonprofit")
+      expect(organization.organization_type_other).to be_nil
     end
 
     it "overwrites a previously stored type with the latest registrant's answer" do
-      organization.update!(agency_type: "501c3/nonprofit", agency_type_other: nil)
+      organization.update!(organization_type: "501c3/nonprofit", organization_type_other: nil)
 
-      register_with_agency_type("Other: Equine therapy")
+      register_with_organization_type("Other: Equine therapy")
 
-      expect(organization.agency_type).to eq("Other")
-      expect(organization.agency_type_other).to eq("Equine therapy")
+      expect(organization.organization_type).to eq("Other")
+      expect(organization.organization_type_other).to eq("Equine therapy")
     end
 
-    it "clears a stale agency_type_other when the latest answer is no longer 'Other'" do
-      organization.update!(agency_type: "Other", agency_type_other: "Equine therapy")
+    it "clears a stale organization_type_other when the latest answer is no longer 'Other'" do
+      organization.update!(organization_type: "Other", organization_type_other: "Equine therapy")
 
-      register_with_agency_type("Government agency")
+      register_with_organization_type("Government agency")
 
-      expect(organization.agency_type).to eq("Government agency")
-      expect(organization.agency_type_other).to be_nil
+      expect(organization.organization_type).to eq("Government agency")
+      expect(organization.organization_type_other).to be_nil
     end
   end
 

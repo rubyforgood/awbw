@@ -2,6 +2,7 @@ class EventRegistration < ApplicationRecord
   include RemoteSearchable
   include Registerable
   include Certifiable
+  include Communicable
 
   # Sentinel for the roster's Payment method filter that matches buddy-system
   # registrations (someone_else_will_pay), which isn't an expected_payment_method
@@ -12,7 +13,6 @@ class EventRegistration < ApplicationRecord
   belongs_to :event
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :event_registration_organizations, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :organizations, through: :event_registration_organizations
   has_many :allocations, as: :allocatable
   has_many :continuing_education_registrations, dependent: :destroy
@@ -33,7 +33,6 @@ class EventRegistration < ApplicationRecord
   has_one :transferred_to_registration, class_name: "EventRegistration",
     foreign_key: :transferred_from_registration_id, inverse_of: :transferred_from_registration, dependent: :nullify
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
   # Staff correct/add attendance times on the CE edit form; a row with no sign-in
   # time is an untouched blank and dropped.
   accepts_nested_attributes_for :event_attendance_time_entries, allow_destroy: true,
@@ -203,6 +202,19 @@ class EventRegistration < ApplicationRecord
   # Registrations whose event falls in the given calendar year. Uses a subquery
   # (via Event.in_year) so it composes with the other filters without extra joins.
   scope :in_event_year, ->(year) { where(event_id: Event.in_year(year.to_i)) }
+  # Registration date range, matched on when the registration was created. Accepts
+  # raw "YYYY-MM-DD" filter strings and no-ops on either end when blank/unparseable,
+  # so callers can pass params straight through.
+  scope :registered_between, ->(start_date, end_date) {
+    scope = all
+    if (from = parse_filter_date(start_date))
+      scope = scope.where(created_at: from.beginning_of_day..)
+    end
+    if (to = parse_filter_date(end_date))
+      scope = scope.where(created_at: ..to.end_of_day)
+    end
+    scope
+  }
   scope :registrant_state, ->(state) {
     joins(registrant: :addresses)
       .where(addresses: { inactive: false, state: state })
@@ -300,6 +312,13 @@ class EventRegistration < ApplicationRecord
     Allocation
       .where(allocatable_type: "EventRegistration", source_type: "Scholarship", source_id: scholarships.select(:id))
       .select(:allocatable_id)
+  end
+
+  def self.parse_filter_date(value)
+    return if value.blank?
+    Date.parse(value.to_s)
+  rescue ArgumentError, TypeError
+    nil
   end
   # Funding source of a registrant's scholarship. "awbw" = org-subsidized (no
   # grant, or a grant AWBW funded itself); "external" = grant-funded (drawn from an
@@ -454,24 +473,39 @@ class EventRegistration < ApplicationRecord
   }
   # The registrant's organization-LINKING status, not the org's own
   # OrganizationStatus: "linked" = at least one org linked; "unlinked" = none;
-  # "pending" = an agency name was submitted but nothing is linked yet (the Pending
-  # chip on the roster). Needs the event to resolve its agency_name field.
+  # "pending" = an organization name was submitted but nothing is linked yet (the
+  # Pending chip on the roster). Needs the event to resolve its organization-name
+  # field ("organization_name").
   scope :organization_linking_status, ->(value, event) {
     linked = EventRegistrationOrganization.select(:event_registration_id)
     case value
     when "linked" then where(id: linked)
     when "unlinked" then where.not(id: linked)
-    when "pending"
-      field = event.registration_form&.form_fields&.find_by(field_identifier: "agency_name")
-      next none unless field
-      submitted = FormAnswer.joins(:form_submission)
-        .where(form_field_id: field.id, form_submissions: { form_id: event.registration_form.id })
-        .where.not(submitted_answer: [ nil, "" ])
-        .select(Arel.sql("form_submissions.person_id"))
-      where(registrant_id: submitted).where.not(id: linked)
+    when "pending", "none"
+      answered = org_name_answer_person_ids(event)
+      # No organization field on the registration form: nobody could answer it,
+      # so every unlinked registration is "No org provided" and none is Pending.
+      next(value == "pending" ? none : where.not(id: linked)) if answered.nil?
+
+      scope = value == "pending" ? where(registrant_id: answered) : where.not(registrant_id: answered)
+      scope.where.not(id: linked)
     else all
     end
   }
+
+  # People who answered this event's registration form's organization-name field.
+  # Nil (not empty) when the form has no such field, so the caller can tell
+  # "nobody answered" from "there was nothing to answer".
+  def self.org_name_answer_person_ids(event)
+    form = event.registration_form
+    field = form&.form_fields&.find_by(field_identifier: "organization_name")
+    return nil unless field
+
+    FormAnswer.joins(:form_submission)
+      .where(form_field_id: field.id, form_submissions: { form_id: form.id })
+      .where.not(submitted_answer: [ nil, "" ])
+      .select(Arel.sql("form_submissions.person_id"))
+  end
   # Filter by how many form submissions the registrant made for this event:
   # none, at least one, or more than one.
   scope :submission_status, ->(value, event) {
@@ -564,8 +598,6 @@ class EventRegistration < ApplicationRecord
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     registrant&.preferred_email
   end
@@ -817,6 +849,23 @@ class EventRegistration < ApplicationRecord
     event_attendance_time_entries.sum { |entry| entry.duration_minutes.to_i }
   end
 
+  # Whether the training's sign-in/out phase is finished for this registrant: the
+  # event has ended and no attendance entry is still open. Gates when the CE
+  # callout's post-training form surfaces (see RegistrantCeForm) so it's filled at
+  # the end of the training rather than earlier.
+  def ce_signouts_complete?
+    event.ended? && event_attendance_time_entries.none?(&:open?)
+  end
+
+  # Whether the CE callout's post-training form requirement is satisfied: no form
+  # is attached to the CE callout, or the attached form has been completed. A
+  # completed form is a prerequisite for the CE certificate (see
+  # ContinuingEducationRegistration#certificate_available?).
+  def ce_form_requirement_met?
+    ce_form = RegistrantCeForm.new(self)
+    ce_form.form.nil? || ce_form.complete?
+  end
+
   # CE is now tracked as one or more ContinuingEducationRegistration records,
   # each against a professional license. These aggregate across them so callers
   # (callouts, onboarding, CSV) read a single registration-level figure.
@@ -904,11 +953,14 @@ class EventRegistration < ApplicationRecord
     end
   end
 
-  # True when a CE registration exists and every one is fully paid.
+  # True when the full CE amount due is paid across the whole transfer chain — every
+  # CE registration on this reg and on the reg(s) it transferred in from. After a
+  # transfer the money splits (the origin keeps a paid stub, this reg's live record
+  # carries the remaining balance), so a partly-paid balance riding forward still
+  # reads as unpaid. A chain with no CE anywhere isn't CE-registered, so it's not paid.
   def ce_paid_in_full?
-    return false unless ce_registered?
-
-    continuing_education_registrations.all?(&:paid_in_full?)
+    chain = continuing_education_registrations_across_transfers
+    chain.any? && chain.all?(&:paid_in_full?)
   end
 
   # Whether the attendance sign-in sheet is open to this registrant. Deliberately
@@ -923,6 +975,16 @@ class EventRegistration < ApplicationRecord
   # License numbers on file across this registration's CE registrations.
   def ce_license_numbers
     continuing_education_registrations.filter_map { |c| c.professional_license&.number }
+  end
+
+  # This reg's CE registrations plus those of every reg it transferred in from, so
+  # CE money can be read across the whole transfer chain — the origin's paid stub
+  # and this reg's live record together (see TransferContinuingEducation, #1944).
+  def continuing_education_registrations_across_transfers
+    own = continuing_education_registrations.to_a
+    return own unless transferred_in?
+
+    own + transferred_from_registration.continuing_education_registrations_across_transfers
   end
 
   # Read CE registrations from the in-memory collection rather than the DB when
@@ -990,6 +1052,22 @@ class EventRegistration < ApplicationRecord
   # marked complete on this registration.
   def completed_day_count
     DAY_FIELDS.first(event.day_count).count { |field| public_send(field) }
+  end
+
+  # The completed_day_* flags to set on a destination registration when this
+  # registration transfers into an event with `dest_day_count` days. Normally a
+  # straight per-day carry (day N here → day N there). When this event had more
+  # days than the destination, its later completed days have no matching day
+  # there, so they compress to the front: the destination is marked from day 1 up
+  # to however many were complete here, capped at its own day count — no
+  # completion falls off the end. (#2384)
+  def day_completion_carried_to(dest_day_count)
+    overflow = event.day_count > dest_day_count
+    filled = [ completed_day_count, dest_day_count ].min
+    DAY_FIELDS.each_with_index.to_h do |field, index|
+      completed = index < dest_day_count && (overflow ? index < filled : self[field])
+      [ field, completed ]
+    end
   end
 
   # The attendance status implied purely by how many days are marked complete:

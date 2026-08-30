@@ -1,13 +1,13 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <%# Opt out of the layout's max-w-7xl cap to match the wider report pages. %>
 <% content_for(:full_width, true) %>
-<% title = @signins_ce ? "CE sign-ins" : "Sign-ins" %>
+<% title = @signins_ce ? "CE timesheets" : "Timesheets" %>
 <% content_for(:page_title, title) %>
 
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
-  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border border-primary/10 rounded-2xl shadow-sm p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-      <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "← Reports", reports_events_path(report_to_hub_params), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <%= render "events/report_subnav", current: :signins %>
     </div>
 
@@ -41,7 +41,7 @@
                     title: report.event.title, class: "hover:text-gray-700 hover:underline" %>
               <span class="ml-1 normal-case font-normal text-gray-400"><%= event.date_range %></span>
             </h2>
-            <%= link_to "Open sign-ins →", attendance_event_path(report.event, ce: ("true" if report.ce_only?), return_to: "signins"),
+            <%= link_to "Open timesheets →", attendance_event_path(report.event, ce: ("true" if report.ce_only?), return_to: "signins"),
                   class: "text-xs font-medium text-teal-700 hover:underline" %>
           </div>
 

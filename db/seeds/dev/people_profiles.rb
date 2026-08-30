@@ -30,7 +30,8 @@ puts "Creating Persons and Affiliations for seed users…"
   Affiliation.create!(
     person: person,
     organization: org,
-    position: :leader,
+    title: Affiliation::FACILITATOR_TITLE,
+    primary_contact: true,
     start_date: 1.year.ago.to_date
   )
 end
@@ -182,7 +183,6 @@ Person.where(
       person: person,
       organization: org,
       title: title,
-      position: [ :default, :liaison, :leader, :assistant ].sample,
       start_date: rand(1..5).years.ago.to_date,
       inactive: [ false, false, false, true ].sample
     )

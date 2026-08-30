@@ -1,55 +1,42 @@
-<div class="flex items-center justify-center">
-  <div class="w-full max-w-md bg-white rounded-2xl shadow-lg mt-8 p-8">
+<% content_for(:page_bg_class, "public") %>
+<%= render layout: "devise/auth_card", locals: { title: "Welcome back!", subtitle: "Sign in to the AWBW Portal." } do %>
+  <%= simple_form_for(resource, url: session_path(resource_name)) do |f| %>
+    <% if resource.errors.any? %>
+      <%= render 'shared/errors', resource: resource %>
+    <% end %>
 
-    <%= render "layouts/mailer/logo" %>
-
-    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">
-      Welcome to our Portal
-    </h2>
-
-    <%= simple_form_for(resource, url: session_path(resource_name)) do |f| %>
-      <% if resource.errors.any? %>
-        <%= render 'shared/errors', resource: resource %>
-      <% end %>
-
-      <%= f.input :email,
-                  autofocus: true,
-                  required: true,
-                  input_html: { class: "w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" } %>
-      <div data-controller="password-toggle" class="input password required mb-4">
-        <label class="password required block font-medium mb-1 text-gray-700" for="user_password">Password <abbr title="required">*</abbr></label>
-        <div class="relative">
-          <%= f.password_field :password,
-                  class: "w-full form-control form-input password-field pr-10 rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-                  required: true,
-                  minlength: 5,
-                  autofocus: true,
-                  autocomplete: "current-password",
-                  autocorrect: "off",
-                  autocapitalize: "off",
-                  spellcheck: "false",
-                  data: { password_toggle_target: "input" } %>
-          <button
-            type="button"
-            class="toggle-password"
-            data-action="password-toggle#toggle"
-            aria-label="Toggle password visibility">
-            <i class="fa fa-eye" data-password-toggle-target="eyeOpen"></i>
-            <svg data-password-toggle-target="eyeClosed" style="display:none" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10c3 4 6.5 6 10 6s7-2 10-6"/><path d="M7.5 14l-1.5 3"/><path d="M12 16v3"/><path d="M16.5 14l1.5 3"/></svg>
-          </button>
-        </div>
+    <%= f.input :email,
+                autofocus: true,
+                required: true,
+                input_html: { class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" } %>
+    <div data-controller="password-toggle" class="input password required mb-4">
+      <label class="password required mb-1 block font-medium text-gray-700" for="user_password">Password <abbr title="required">*</abbr></label>
+      <div class="relative">
+        <%= f.password_field :password,
+                class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none form-control form-input password-field pr-10",
+                required: true,
+                minlength: 5,
+                autocomplete: "current-password",
+                autocorrect: "off",
+                autocapitalize: "off",
+                spellcheck: "false",
+                data: { password_toggle_target: "input" } %>
+        <button
+          type="button"
+          class="toggle-password"
+          data-action="password-toggle#toggle"
+          aria-label="Toggle password visibility">
+          <i class="fa fa-eye" data-password-toggle-target="eyeOpen"></i>
+          <svg data-password-toggle-target="eyeClosed" style="display:none" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10c3 4 6.5 6 10 6s7-2 10-6"/><path d="M7.5 14l-1.5 3"/><path d="M12 16v3"/><path d="M16.5 14l1.5 3"/></svg>
+        </button>
       </div>
+    </div>
 
-      <% if devise_mapping.rememberable? %>
-        <%= f.input :remember_me, as: :boolean, label: "Remember me" %>
-      <% end %>
-      <div class="text-center">
-        <%= f.button :submit, "Log in", class: "btn btn-primary" %>
-      </div>
-
+    <% if devise_mapping.rememberable? %>
+      <%= f.input :remember_me, as: :boolean, label: "Remember me" %>
     <% end %>
     <div class="mt-6 text-center">
-      <%= render "devise/shared/links" %>
+      <%= f.button :submit, "Log in", class: "btn btn-primary w-full justify-center" %>
     </div>
-  </div>
-</div>
+  <% end %>
+<% end %>

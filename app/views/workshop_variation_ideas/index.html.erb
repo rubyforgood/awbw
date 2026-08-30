@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas, intensity: 200) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:workshop_variation_ideas, intensity: 200) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-2xl font-semibold text-gray-900">
+        <div class="mb-6 flex items-center justify-between">
+          <h1 class="text-primary font-display text-2xl font-semibold">
             Workshop Variation Ideas (<%= @workshop_variation_ideas_count %>)
           </h1>
           <div class="flex gap-2">
@@ -20,21 +20,21 @@
           <table class="w-full border-collapse border border-gray-200">
             <thead class="bg-gray-100">
             <tr>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]"></th>
+              <th class="w-[2%] px-4 py-2 text-center text-sm font-semibold text-gray-700"></th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Name</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Description</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Author</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Promoted to</th>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Updated</th>
-              <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 w-[2%]">Actions</th>
+              <th class="w-[2%] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
             </tr>
             </thead>
 
             <tbody class="divide-y divide-gray-200">
             <% @workshop_variation_ideas.each do |workshop_variation_idea| %>
-              <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <tr class="transition-colors duration-150 hover:bg-gray-50">
                 <td class="px-4 py-2">
-                  <div class="w-12 h-9 rounded bg-gray-200 overflow-hidden">
+                  <div class="h-9 w-12 overflow-hidden rounded bg-gray-200">
                     <%= render "assets/display_image",
                                resource: workshop_variation_idea,
                                width: 12, height: 9,
@@ -45,7 +45,7 @@
                   </div>
                 </td>
                 <td class="px-4 py-2" title="<%= workshop_variation_idea.name %>">
-                  <div class="text-sm text-gray-800 font-semibold">
+                  <div class="text-sm font-semibold text-gray-800">
                     <%= link_to truncate(workshop_variation_idea.name, length: 30),
                                 workshop_variation_idea_path(workshop_variation_idea),
                                 class: "hover:text-blue-600 hover:underline" %>
@@ -66,10 +66,10 @@
                     </span>
                   <% end %>
                 </td>
-                <td class="px-4 py-2 text-sm text-center">
+                <td class="px-4 py-2 text-center text-sm">
                   <%= credited_author_link(workshop_variation_idea, class: "#{eyebrow_link_class}") %>
                 </td>
-                <td class="px-4 py-2 text-sm text-center whitespace-nowrap">
+                <td class="px-4 py-2 text-center text-sm whitespace-nowrap">
                   <% promoted_variation = workshop_variation_idea.workshop_variations.first %>
                   <% if promoted_variation %>
                     <%= link_to "Variation ##{promoted_variation.id}",
@@ -79,7 +79,7 @@
                     <span class="text-gray-300">--</span>
                   <% end %>
                 </td>
-                <td class="px-4 py-2 text-sm text-gray-500 text-center whitespace-nowrap"><%= workshop_variation_idea.updated_at&.strftime("%m/%d/%y") %></td>
+                <td class="px-4 py-2 text-center text-sm whitespace-nowrap text-gray-500"><%= workshop_variation_idea.updated_at&.strftime("%m/%d/%y") %></td>
                 <td class="px-4 py-2 text-center whitespace-nowrap">
                   <%= link_to "View", workshop_variation_idea_path(workshop_variation_idea), class: "btn btn-secondary-outline" %>
                 </td>
@@ -92,7 +92,7 @@
 
         <!-- Empty state -->
         <% unless @workshop_variation_ideas.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No workshop variation ideas found.
           </p>
         <% end %>

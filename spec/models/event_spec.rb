@@ -6,6 +6,24 @@ RSpec.describe Event, type: :model do
     it { should validate_presence_of(:start_date) }
     it { should validate_presence_of(:end_date) }
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
+
+    describe "end date not before start date" do
+      it "is invalid when the end date is before the start date" do
+        event = build(:event, start_date: Time.zone.parse("2026-09-14 09:00"), end_date: Time.zone.parse("2026-09-13 17:00"))
+        expect(event).not_to be_valid
+        expect(event.errors[:end_date]).to include("can't be before the start date")
+      end
+
+      it "is valid when the end date is on the same day as the start date" do
+        event = build(:event, start_date: Time.zone.parse("2026-09-14 09:00"), end_date: Time.zone.parse("2026-09-14 00:00"))
+        expect(event).to be_valid
+      end
+
+      it "is valid when the end date is after the start date" do
+        event = build(:event, start_date: Time.zone.parse("2026-09-14 09:00"), end_date: Time.zone.parse("2026-09-15 17:00"))
+        expect(event).to be_valid
+      end
+    end
   end
 
   describe "destroying with form submissions" do
@@ -46,6 +64,25 @@ RSpec.describe Event, type: :model do
         "1" => { person_id: create(:person).id, title: "Assistant" }
       })).to be(true)
       expect(event.event_staffs.reload.count).to eq(2)
+    end
+  end
+
+  describe "#starts_on" do
+    # A training's date is a fact about the training, not about who's looking: an
+    # admin in Hawaii and one in New York have to agree, or the dates they store and
+    # the verdicts they anchor drift apart.
+    it "reads the same calendar day whatever zone the reader is in" do
+      event = create(:event, start_date: Time.utc(2026, 8, 14, 5, 0), end_date: Time.utc(2026, 8, 14, 17, 0))
+
+      hawaii = Time.use_zone("Hawaii") { Event.find(event.id).starts_on }
+      sydney = Time.use_zone("Sydney") { Event.find(event.id).starts_on }
+
+      expect(hawaii).to eq(sydney)
+      expect(hawaii).to eq(Date.new(2026, 8, 13))
+    end
+
+    it "is nil without a start date" do
+      expect(build(:event, start_date: nil).starts_on).to be_nil
     end
   end
 

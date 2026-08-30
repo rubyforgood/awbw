@@ -1,56 +1,56 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="max-w-4xl mx-auto <%= DomainTheme.bg_class_for(:stories) %> border border-gray-200 rounded-xl shadow p-6">
-  <div class="flex flex-wrap justify-end gap-2 mb-4">
+<div class="mx-auto max-w-4xl <%= DomainTheme.bg_class_for(:stories) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4 flex flex-wrap justify-end gap-2">
     <%= link_to "← Choose a different file", new_story_import_path,
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <h1 class="text-3xl font-semibold text-gray-900 tracking-tight mb-1">
+  <h1 class="text-primary mb-1 font-display text-3xl font-semibold tracking-tight">
     Preview import
   </h1>
-  <p class="text-gray-600 mb-6">
+  <p class="mb-6 text-gray-600">
     Reviewing <span class="font-medium"><%= @filename %></span>.
     Nothing has been saved yet — confirm below to run the import.
   </p>
 
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+  <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
     <% [
          [ "Rows read", @result.rows_processed ],
          [ "Story ideas", @result.ideas_created ],
          [ "Connected stories", @result.stories_created ],
          [ "Rows skipped", @result.skipped.size ]
        ].each do |label, value| %>
-      <div class="bg-white rounded-lg border border-gray-200 p-4 text-center">
+      <div class="border-primary/10 rounded-2xl border bg-white p-4 text-center">
         <div class="text-2xl font-semibold text-gray-900"><%= value %></div>
-        <div class="text-xs text-gray-500 mt-1"><%= label %></div>
+        <div class="mt-1 text-xs text-gray-500"><%= label %></div>
       </div>
     <% end %>
   </div>
 
-  <h2 class="text-lg font-semibold text-gray-900 mb-2">Row-by-row</h2>
-  <p class="text-sm text-gray-500 mb-3">
-    <span class="inline-block w-2 h-2 rounded-full bg-amber-400 align-middle"></span> new record ·
-    <span class="inline-block w-2 h-2 rounded-full bg-gray-400 align-middle"></span> existing (reused) ·
-    <span class="inline-block w-2 h-2 rounded-full bg-blue-400 align-middle"></span> updated
+  <h2 class="mb-2 text-lg font-semibold text-gray-900">Row-by-row</h2>
+  <p class="mb-3 text-sm text-gray-500">
+    <span class="inline-block h-2 w-2 rounded-full bg-amber-400 align-middle"></span> new record ·
+    <span class="inline-block h-2 w-2 rounded-full bg-gray-400 align-middle"></span> existing (reused) ·
+    <span class="inline-block h-2 w-2 rounded-full bg-blue-400 align-middle"></span> updated
   </p>
 
   <% preview_cap = 300 %>
-  <div class="space-y-3 mb-6">
+  <div class="mb-6 space-y-3">
     <% @result.previews.first(preview_cap).each do |p| %>
-      <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="border-primary/10 rounded-2xl border bg-white p-4">
         <div class="flex items-start justify-between gap-3">
           <span class="font-medium text-gray-900"><%= p.title.presence || "(untitled)" %></span>
           <% if p.skipped_reason %>
-            <span class="shrink-0 text-xs font-medium rounded-full bg-gray-100 text-gray-600 px-2 py-0.5">Skipped — <%= p.skipped_reason %></span>
+            <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Skipped — <%= p.skipped_reason %></span>
           <% else %>
-            <span class="shrink-0 text-xs font-medium rounded-full px-2 py-0.5 <%= p.will_publish ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800" %>">
+            <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium <%= p.will_publish ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800" %>">
               <%= p.will_publish ? "Published story" : "Draft story" %><%= " + story idea" if p.creates_idea %>
             </span>
           <% end %>
         </div>
 
         <% unless p.skipped_reason %>
-          <dl class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+          <dl class="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
             <div>
               <dt class="inline text-gray-500">Organization:</dt>
               <dd class="inline text-gray-800">
@@ -83,7 +83,7 @@
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span class="text-xs text-gray-500">Sectors:</span>
               <% p.sectors.each do |name| %>
-                <span class="text-xs rounded-full bg-purple-100 text-purple-800 px-2 py-0.5"><%= name %></span>
+                <span class="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-800"><%= name %></span>
               <% end %>
             </div>
           <% end %>
@@ -92,7 +92,7 @@
             <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
               <span class="text-xs text-gray-500">Categories:</span>
               <% p.categories.each do |label| %>
-                <span class="text-xs rounded-full bg-lime-100 text-lime-800 px-2 py-0.5"><%= label %></span>
+                <span class="rounded-full bg-lime-100 px-2 py-0.5 text-xs text-lime-800"><%= label %></span>
               <% end %>
             </div>
           <% end %>
@@ -106,7 +106,7 @@
           <% end %>
 
           <% if p.warnings.any? %>
-            <ul class="mt-2 text-xs text-yellow-700 list-disc pl-5 space-y-0.5">
+            <ul class="mt-2 list-disc space-y-0.5 pl-5 text-xs text-yellow-700">
               <% p.warnings.first(6).each do |w| %>
                 <li><%= w %></li>
               <% end %>
@@ -121,11 +121,11 @@
   </div>
 
   <% if @result.warnings.any? %>
-    <details class="bg-yellow-50 rounded-lg border border-yellow-200 p-4 mb-6">
+    <details class="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
       <summary class="cursor-pointer font-medium text-yellow-800">
         <%= pluralize(@result.warnings.size, "warning") %> across all rows
       </summary>
-      <ul class="mt-3 text-sm text-yellow-800 list-disc pl-5 space-y-1">
+      <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-yellow-800">
         <% @result.warnings.first(100).each do |line| %>
           <li><%= line %></li>
         <% end %>
@@ -136,10 +136,10 @@
     </details>
   <% end %>
 
-  <div class="bg-white rounded-lg border border-gray-200 p-4">
+  <div class="border-primary/10 rounded-2xl border bg-white p-4">
     <%= form_with url: confirm_story_import_path, method: :post do |f| %>
       <%= f.hidden_field :signed_id, value: @blob.signed_id %>
-      <p class="text-sm text-gray-600 mb-3">
+      <p class="mb-3 text-sm text-gray-600">
         This will create <%= pluralize(@result.ideas_created, "story idea") %>
         and <%= pluralize(@result.stories_created, "connected story") %>.
       </p>

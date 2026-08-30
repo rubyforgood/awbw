@@ -1,5 +1,9 @@
 class StoryIdea < ApplicationRecord
   include AuthorCreditable
+  include Communicable
+  # The submitter is the author when none is named.
+  credits_creator
+
   include SearchCop
   search_scope :search do
     attributes :title, :body
@@ -8,6 +12,7 @@ class StoryIdea < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:query]) if params[:query].present?
+    results = results.where(id: by_credited_person_name(params[:author_name]).select("story_ideas.id")) if params[:author_name].present?
     results = results.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     results = results.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     results
@@ -24,7 +29,6 @@ class StoryIdea < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :stories
 
@@ -52,14 +56,11 @@ class StoryIdea < ApplicationRecord
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   def name
     "StoryIdea ##{id}"
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     created_by&.email
   end

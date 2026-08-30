@@ -188,7 +188,7 @@ class ReportsController < ApplicationController
 
     quotes = []
     quotes_params.each { |q|
-      quotes << Quote.new(quote: q[:quote], age: q[:age], gender: q[:gender])
+      quotes << Quote.new(body: q[:body], age: q[:age], gender: q[:gender])
     }
 
     @report.quotes = quotes

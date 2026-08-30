@@ -451,6 +451,63 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("A Window Between Worlds")
       end
 
+      it "renders a hidden fallback so unchecking the last org still submits an empty set" do
+        organization = create(:organization, name: "A Window Between Worlds")
+        existing_registration.organizations << organization
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include(
+          "<input type=\"hidden\" name=\"event_registration[organization_ids][]\" value=\"\""
+        )
+      end
+
+      it "shows the record's tracked changes in a change log" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            changes: { "status" => { "before" => "registered", "after" => "attended" } }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Change log")
+        # Rendered by the shared details partial: humanized field, before → after.
+        expect(response.body).to include("Status")
+        expect(response.body).to include("registered")
+        expect(response.body).to include("attended")
+      end
+
+      it "shows what a nested record said, not just that one changed" do
+        create(
+          :ahoy_event,
+          name: "update.event_registration",
+          resource_type: "EventRegistration",
+          resource_id: existing_registration.id,
+          properties: {
+            resource_type: "EventRegistration", resource_id: existing_registration.id,
+            association_changes: {
+              comments: [ { action: "added", type: "Comment", id: 1, attributes: { "body" => "Left a voicemail" } } ]
+            }
+          }
+        )
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Left a voicemail")
+      end
+
+      it "says the log is empty rather than disappearing when the record has no tracked activity" do
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Change log empty")
+      end
+
       it "shows a Delete button for a deletable registration" do
         get edit_event_registration_path(existing_registration)
 
@@ -479,12 +536,12 @@ RSpec.describe "EventRegistrations", type: :request do
         scholarship.save!
 
         get edit_event_registration_path(existing_registration)
-        expect(response.body).to include("Agreement pending")
+        expect(response.body).to include("Agreement offered")
 
         scholarship.update!(agreement_signed: true)
         get edit_event_registration_path(existing_registration)
-        expect(response.body).to include("Agreement signed")
-        expect(response.body).not_to include("Agreement pending")
+        expect(response.body).to include("Agreement accepted")
+        expect(response.body).not_to include("Agreement offered")
       end
 
       it "hides Delete and explains why for a registration with payment records" do
@@ -525,8 +582,13 @@ RSpec.describe "EventRegistrations", type: :request do
         source = create(:event_registration, event: source_event, status: "transferred_out")
         incoming = create(:event_registration, event: create(:event, ce_hours_offered: 6),
           registrant: source.registrant, transferred_from_registration: source)
-        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0, skip_event_defaults: true,
-          professional_license: create(:professional_license, person: source.registrant))
+        license = create(:professional_license, person: source.registrant)
+        # A real transfer leaves a matching stub on the source; that's what marks
+        # the destination record as transfer-carried.
+        source.continuing_education_registrations.create!(hours: 0, cost_cents: 4_000,
+          skip_event_defaults: true, professional_license: license)
+        incoming.continuing_education_registrations.create!(hours: 6, cost_cents: 0,
+          skip_event_defaults: true, professional_license: license)
 
         get edit_event_registration_path(incoming)
 
@@ -640,6 +702,16 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(existing_registration.reload.event_id).to eq(new_event.id)
       end
 
+      it "removes a linked organization when the last chip is unchecked" do
+        organization = create(:organization)
+        existing_registration.organizations << organization
+
+        patch event_registration_path(existing_registration),
+              params: { event_registration: { organization_ids: [ "" ] } }
+
+        expect(existing_registration.reload.organizations).to be_empty
+      end
+
       it "returns to the attendance report after saving when opened from it" do
         patch event_registration_path(existing_registration, return_to: "attendance"),
               params: { event_registration: { expected_payment_method: "Check" } }
@@ -647,10 +719,10 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response).to redirect_to(attendance_event_path(existing_registration.event))
       end
 
-      it "shows a sign-ins eyebrow when opened from the attendance report" do
+      it "shows a timesheets eyebrow when opened from the attendance report" do
         get edit_event_registration_path(existing_registration, return_to: "attendance")
 
-        expect(response.body).to include("Sign-ins")
+        expect(response.body).to include("Timesheets")
         expect(response.body).to include(attendance_event_path(existing_registration.event))
       end
 
@@ -806,6 +878,14 @@ RSpec.describe "EventRegistrations", type: :request do
           expect(response.body).not_to include("<option value=\"#{other_format.id}\"")
         end
 
+        it "offers same-format events even when they aren't published" do
+          unpublished = create(:event, title: "Unpublished Destination", published: false, on_demand: false)
+
+          get transfer_event_registration_path(source)
+
+          expect(response.body).to include("<option value=\"#{unpublished.id}\"")
+        end
+
         it "offers only other on-demand events when transferring out of one" do
           on_demand = create(:event, title: "Source On-Demand", on_demand: true)
           on_demand_source = create(:event_registration, event: on_demand, status: "transferred_out")
@@ -893,6 +973,23 @@ RSpec.describe "EventRegistrations", type: :request do
             completed_day_1: true, expected_payment_method: "Check",
             someone_else_will_pay: true, shoutout: true
           )
+        end
+
+        it "compresses carried days and flags the mismatch when the source had more days than the destination" do
+          three_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 14.days.from_now)
+          one_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 12.days.from_now)
+          big_source = create(:event_registration, event: three_day, status: "transferred_out",
+            completed_day_1: true, completed_day_2: true, completed_day_3: true)
+
+          post process_transfer_event_registration_path(big_source),
+               params: { destination_event_id: one_day.id }
+
+          incoming = EventRegistration.find_by(registrant: big_source.registrant, event: one_day)
+          expect(incoming.completed_day_1).to be(true)
+
+          get edit_event_registration_path(incoming)
+          expect(response.body).to include("had more days than this event")
+          expect(response.body).to include(three_day.decorate.month_year)
         end
 
         it "collapses a double transfer, pointing the new reg at the original and dropping the middle" do
@@ -1237,7 +1334,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          {  "agency_name" => org_name, "agency_position" => position }.each do |identifier, value|
+          {  "organization_name" => org_name, "organization_position" => position }.each do |identifier, value|
             next if value.nil?
             field = reg_form.form_fields.find_by(field_identifier: identifier) ||
               create(:form_field, form: reg_form, field_identifier: identifier)
@@ -1259,11 +1356,11 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "flags a persistent discrepancy on a linked org whose saved profile differs from the submission" do
-          organization.update!(name: "Acme", agency_type: "For-profit")
+          organization.update!(name: "Acme", organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_name" => "Acme", "agency_type" => "Government agency" }.each do |identifier, value|
+          { "organization_name" => "Acme", "organization_type" => "Government agency" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1276,13 +1373,13 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "does not flag the submitted answers against a second org the registrant never named" do
-          organization.update!(name: "Acme", agency_type: "For-profit")
-          other = create(:organization, name: "Zebra Center", agency_type: "School district")
+          organization.update!(name: "Acme", organization_type: "For-profit")
+          other = create(:organization, name: "Zebra Center", organization_type: "School district")
           create(:event_registration_organization, event_registration: existing_registration, organization: other)
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_name" => "Acme", "agency_type" => "Government agency" }.each do |identifier, value|
+          { "organization_name" => "Acme", "organization_type" => "Government agency" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1302,7 +1399,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_name" => "Acme", "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX" }.each do |identifier, value|
+          { "organization_name" => "Acme", "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1456,8 +1553,8 @@ RSpec.describe "EventRegistrations", type: :request do
         it "lists each registration-form submission with its own view link" do
           reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
-          field = reg_form.form_fields.find_by(field_identifier: "agency_name") ||
-            create(:form_field, form: reg_form, field_identifier: "agency_name")
+          field = reg_form.form_fields.find_by(field_identifier: "organization_name") ||
+            create(:form_field, form: reg_form, field_identifier: "organization_name")
           sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: sub1, form_field: field, submitted_answer: "First Org")
           sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
@@ -1474,8 +1571,8 @@ RSpec.describe "EventRegistrations", type: :request do
         it "shows a Create and link row for each distinct submitted org not in the database" do
           reg_form = Form.find_by(name: "Reg form") || create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form) unless event.registration_form
-          field = reg_form.form_fields.find_by(field_identifier: "agency_name") ||
-            create(:form_field, form: reg_form, field_identifier: "agency_name")
+          field = reg_form.form_fields.find_by(field_identifier: "organization_name") ||
+            create(:form_field, form: reg_form, field_identifier: "organization_name")
           sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: sub1, form_field: field, submitted_answer: "Alpha Agency")
           sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
@@ -1582,6 +1679,13 @@ RSpec.describe "EventRegistrations", type: :request do
         # off a facilitator-training event.
         let(:event) { create(:event, title: "Test Event", facilitator_training: true) }
 
+        it "redirects with an alert when submitted without choosing an organization" do
+          post select_organization_event_registration_path(existing_registration), params: { organization_id: "" }
+
+          expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+          expect(flash[:alert]).to be_present
+        end
+
         it "links the org to the registration and the person, then returns to the edit page" do
           expect {
             post select_organization_event_registration_path(existing_registration),
@@ -1590,6 +1694,28 @@ RSpec.describe "EventRegistrations", type: :request do
             .and change { regular_user.person.organizations.count }.by(1)
 
           expect(response).to redirect_to(link_organization_event_registration_path(existing_registration))
+        end
+
+        it "attributes the org fill to the submission that named it, so its changes audit updates" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+          { "organization_name" => organization.name, "organization_website" => "helpinghands.org" }.each do |identifier, value|
+            field = create(:form_field, form: reg_form, field_identifier: identifier)
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
+          end
+
+          tracked = []
+          allow_any_instance_of(Ahoy::Tracker).to receive(:track) do |_instance, name, props|
+            tracked << [ name, props ]
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          org_events = tracked.select { |name, _| name == "update.organization" }
+          expect(org_events).not_to be_empty
+          org_events.each { |_name, props| expect(props[:form_submission_id]).to eq(submission.id) }
         end
 
         it "creates a job affiliation and a facilitator affiliation from the submitted position" do
@@ -1612,6 +1738,53 @@ RSpec.describe "EventRegistrations", type: :request do
 
           expect(regular_user.person.affiliations.where(organization: organization).pluck(:title))
             .to contain_exactly("Facilitator")
+        end
+
+        it "back-applies the org link onto the submission that describes it" do
+          reg_form = create(:form, name: "Reg form")
+          create(:event_form, :registration, event: event, form: reg_form)
+          submission = create(:form_submission, person: regular_user.person, form: reg_form)
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(submission.reload.linked_organization_ids).to eq([ organization.id ])
+        end
+
+        it "back-applies the link to every submission that names the org, pinning one" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
+          sub2 = create(:form_submission, person: regular_user.person, form: reg_form)
+          [ sub1, sub2 ].each do |submission|
+            create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Helping Hands")
+          end
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(sub1.reload.linked_organization_ids).to include(organization.id)
+          expect(sub2.reload.linked_organization_ids).to include(organization.id)
+          # The link row still pins a single submission — only the metadata link fans out.
+          link = existing_registration.event_registration_organizations.find_by(organization: organization)
+          expect([ sub1.id, sub2.id ]).to include(link.form_submission_id)
+        end
+
+        it "leaves a submission that named a different org unlinked" do
+          reg_form = create(:form, name: "Reg form")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
+          create(:event_form, :registration, event: event, form: reg_form)
+          matching = create(:form_submission, person: regular_user.person, form: reg_form)
+          other = create(:form_submission, person: regular_user.person, form: reg_form)
+          create(:form_answer, form_submission: matching, form_field: field, submitted_answer: "Helping Hands")
+          create(:form_answer, form_submission: other, form_field: field, submitted_answer: "Beta Agency")
+
+          post select_organization_event_registration_path(existing_registration),
+            params: { organization_id: organization.id }
+
+          expect(matching.reload.linked_organization_ids).to include(organization.id)
+          expect(other.reload.linked_organization_ids).to be_empty
         end
 
         it "records the linking registration on the created affiliations" do
@@ -1641,7 +1814,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701", "agency_country" => "USA" }.each do |identifier, value|
+          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701", "organization_country" => "USA" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1666,11 +1839,11 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "fills the org's blank type and website from the submission and says so" do
-          organization.update!(agency_type: nil, website_url: nil)
+          organization.update!(organization_type: nil, website_url: nil)
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_website" => "helpinghands.org", "agency_type" => "501c3/nonprofit" }.each do |identifier, value|
+          { "organization_website" => "helpinghands.org", "organization_type" => "501c3/nonprofit" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1678,18 +1851,18 @@ RSpec.describe "EventRegistrations", type: :request do
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
           expect(organization.reload.website_url).to include("helpinghands.org")
-          expect(organization.agency_type).to eq("501c3/nonprofit")
+          expect(organization.organization_type).to eq("501c3/nonprofit")
           expect(flash[:notice]).to include("Saved from the form").and include("Type").and include("Website")
         end
 
         # The flash is gone by the next page load, so what the form changed on an
         # org that already existed is recorded on the link itself.
         it "records what the form filled on the link, and shows it on the page afterwards" do
-          organization.update!(agency_type: nil, website_url: nil)
+          organization.update!(organization_type: nil, website_url: nil)
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_website" => "helpinghands.org", "agency_city" => "Austin", "agency_state" => "TX" }.each do |identifier, value|
+          { "organization_website" => "helpinghands.org", "organization_city" => "Austin", "organization_state" => "TX" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1710,11 +1883,11 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "does not seed or report another org's answers when linking an extra organization" do
           create(:event_registration_organization, event_registration: existing_registration, organization: organization)
-          other = create(:organization, name: "Zebra Center", website_url: nil, agency_type: nil)
+          other = create(:organization, name: "Zebra Center", website_url: nil, organization_type: nil)
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_name" => "Helping Hands", "agency_website" => "helpinghands.org" }.each do |identifier, value|
+          { "organization_name" => "Helping Hands", "organization_website" => "helpinghands.org" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1733,7 +1906,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_name" => "Helping Hands", "agency_position" => "Counselor" }.each do |identifier, value|
+          { "organization_name" => "Helping Hands", "organization_position" => "Counselor" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1744,18 +1917,18 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "keeps curated type/website and warns about the discrepancy" do
-          organization.update!(agency_type: "For-profit", website_url: "https://curated.org")
+          organization.update!(organization_type: "For-profit", website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_website" => "https://other.org", "agency_type" => "Government agency" }.each do |identifier, value|
+          { "organization_website" => "https://other.org", "organization_type" => "Government agency" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
 
-          expect(organization.reload.agency_type).to eq("For-profit")
+          expect(organization.reload.organization_type).to eq("For-profit")
           expect(organization.website_url).to eq("https://curated.org")
           expect(flash[:warning]).to include("were not applied").and include("Government agency").and include("For-profit")
         end
@@ -1764,11 +1937,11 @@ RSpec.describe "EventRegistrations", type: :request do
         # the one whose note matters most — so the pin follows the submission that
         # describes the org, not the subset of answers that made it onto the record.
         it "pins the submission even when every answer conflicted and nothing was written" do
-          organization.update!(agency_type: "For-profit", website_url: "https://curated.org")
+          organization.update!(organization_type: "For-profit", website_url: "https://curated.org")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_website" => "https://other.org", "agency_type" => "Government agency" }.each do |identifier, value|
+          { "organization_website" => "https://other.org", "organization_type" => "Government agency" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1785,11 +1958,11 @@ RSpec.describe "EventRegistrations", type: :request do
         # what the registrant typed, so the sole-submission/sole-org fallback is what
         # paired them, and that fallback stops applying at the second linked org.
         it "keeps the discrepancy note on an org linked under a name the registrant didn't type" do
-          organization.update!(name: "Acme Corporation", agency_type: "For-profit")
+          organization.update!(name: "Acme Corporation", organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_name" => "Acme Inc", "agency_type" => "Government agency" }.each do |identifier, value|
+          { "organization_name" => "Acme Inc", "organization_type" => "Government agency" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1808,7 +1981,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_website")
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "<img src=x onerror=alert(1)>")
 
           post select_organization_event_registration_path(existing_registration), params: { organization_id: organization.id }
@@ -1823,7 +1996,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_city" => "Austin", "agency_state" => "TX" }.each do |identifier, value|
+          { "organization_city" => "Austin", "organization_state" => "TX" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1838,7 +2011,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1853,7 +2026,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1869,7 +2042,7 @@ RSpec.describe "EventRegistrations", type: :request do
           reg_form = create(:form, name: "Reg form")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
-          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1888,7 +2061,7 @@ RSpec.describe "EventRegistrations", type: :request do
         it "creates an org from the submitted name and links it" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Brand New Org")
@@ -1925,7 +2098,7 @@ RSpec.describe "EventRegistrations", type: :request do
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
-          { "agency_street" => "1 Main St", "agency_city" => "Austin", "agency_state" => "TX", "agency_zip" => "78701" }.each do |identifier, value|
+          { "organization_street" => "1 Main St", "organization_city" => "Austin", "organization_state" => "TX", "organization_zip" => "78701" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1942,11 +2115,11 @@ RSpec.describe "EventRegistrations", type: :request do
         it "populates the new org's website and type from the submission" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          name_field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
-          { "agency_website" => "helpinghands.org", "agency_type" => "501c3/nonprofit" }.each do |identifier, value|
+          { "organization_website" => "helpinghands.org", "organization_type" => "501c3/nonprofit" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1955,13 +2128,13 @@ RSpec.describe "EventRegistrations", type: :request do
 
           organization = Organization.find_by(name: "Brand New Org")
           expect(organization.website_url).to include("helpinghands.org")
-          expect(organization.agency_type).to eq("501c3/nonprofit")
+          expect(organization.organization_type).to eq("501c3/nonprofit")
         end
 
         it "links an existing org instead of creating a duplicate" do
           existing = create(:organization, name: "Existing Org")
           reg_form = create(:form, name: "Reg form")
-          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Existing Org")
@@ -1974,13 +2147,13 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "fills a blank website and type on an existing org from the submission" do
-          existing = create(:organization, name: "Existing Org", website_url: nil, agency_type: nil)
+          existing = create(:organization, name: "Existing Org", website_url: nil, organization_type: nil)
           reg_form = create(:form, name: "Reg form")
-          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          name_field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Existing Org")
-          { "agency_website" => "helpinghands.org", "agency_type" => "Government agency" }.each do |identifier, value|
+          { "organization_website" => "helpinghands.org", "organization_type" => "Government agency" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -1988,7 +2161,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post create_organization_event_registration_path(existing_registration)
 
           expect(existing.reload.website_url).to include("helpinghands.org")
-          expect(existing.agency_type).to eq("Government agency")
+          expect(existing.organization_type).to eq("Government agency")
           expect(existing_registration.event_registration_organizations.find_by(organization: existing).form_autofill_changes.map(&:description))
             .to contain_exactly("Website", "Type")
         end
@@ -1998,11 +2171,11 @@ RSpec.describe "EventRegistrations", type: :request do
         it "records no form fills on an org it created from the submission" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          name_field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
-          field = create(:form_field, form: reg_form, field_identifier: "agency_website")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_website")
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "brandnew.org")
 
           post create_organization_event_registration_path(existing_registration)
@@ -2018,7 +2191,7 @@ RSpec.describe "EventRegistrations", type: :request do
         it "pins the submission on an org it created from it" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          name_field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
@@ -2031,13 +2204,13 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "does not overwrite an existing org's curated website and type" do
-          existing = create(:organization, name: "Existing Org", website_url: "https://curated.org", agency_type: "For-profit")
+          existing = create(:organization, name: "Existing Org", website_url: "https://curated.org", organization_type: "For-profit")
           reg_form = create(:form, name: "Reg form")
-          name_field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          name_field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Existing Org")
-          { "agency_website" => "helpinghands.org", "agency_type" => "Government agency" }.each do |identifier, value|
+          { "organization_website" => "helpinghands.org", "organization_type" => "Government agency" }.each do |identifier, value|
             field = create(:form_field, form: reg_form, field_identifier: identifier)
             create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
           end
@@ -2045,7 +2218,7 @@ RSpec.describe "EventRegistrations", type: :request do
           post create_organization_event_registration_path(existing_registration)
 
           expect(existing.reload.website_url).to eq("https://curated.org")
-          expect(existing.agency_type).to eq("For-profit")
+          expect(existing.organization_type).to eq("For-profit")
         end
 
         it "does nothing when no organization name was submitted" do
@@ -2061,7 +2234,7 @@ RSpec.describe "EventRegistrations", type: :request do
         it "creates the specific submitted org named in the request" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           sub1 = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: sub1, form_field: field, submitted_answer: "Alpha Agency")
@@ -2077,7 +2250,7 @@ RSpec.describe "EventRegistrations", type: :request do
         it "rejects creating an org name the registrant didn't submit" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          field = create(:form_field, form: reg_form, field_identifier: "agency_name")
+          field = create(:form_field, form: reg_form, field_identifier: "organization_name")
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Alpha Agency")

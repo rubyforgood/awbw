@@ -70,6 +70,9 @@ module Events
 
       if result.success?
         registration = result.event_registration
+        # Stamp the just-created submission onto the request's buffered lifecycle
+        # events (flushed after this action) so every record it wrote is traceable.
+        Current.form_submission_id = result.form_submission&.id
 
         if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
@@ -99,9 +102,9 @@ module Events
         # Unlike the registration slug — an unguessable token handed to the
         # registrant — person ids are sequential, so this branch is not a
         # capability. It exists as the admin-side fallback for registrations with
-        # no slug, so gate it on the same access as the event's other submission
-        # views (or on the viewer being that person).
-        authorize! @event, to: :form_submissions? unless current_user&.person_id == person.id
+        # no slug, so the policy gates it on the same access as the event's other
+        # submission views (or on the viewer being that person).
+        authorize! @event, to: :person_form_submission?, context: { person: person }
         registration = @event.event_registrations.find_by(registrant: person)
       else
         redirect_to event_path(@event), alert: "Registration not found."

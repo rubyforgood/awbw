@@ -1,12 +1,12 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto max-w-3xl">
   <div class="mb-3">
-    <%= link_to notifications_path, class: "text-sm #{eyebrow_link_class}" do %>
+    <%= link_to notifications_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= t("communications.back_link") %>
     <% end %>
   </div>
-  <div class="<%= DomainTheme.bg_class_for(:admin_only) %> rounded-xl border border-gray-200 p-6 shadow">
-  <h1 class="mt-3 mb-1 text-2xl font-semibold text-gray-900"><%= t("communications.new") %></h1>
+  <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <h1 class="text-primary mt-3 mb-1 font-display text-2xl font-semibold"><%= t("communications.new") %></h1>
   <p class="mb-5 text-sm text-gray-500">
     Log a communication you had with a person by hand (a call, text, or email sent outside the portal).
   </p>
@@ -78,7 +78,7 @@
       </div>
 
       <div class="mt-6 flex items-center justify-end gap-3">
-        <%= link_to "Cancel", notifications_path, class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "Cancel", notifications_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= f.button :submit, t("communications.new"),
                      class: "btn btn-primary" %>
       </div>

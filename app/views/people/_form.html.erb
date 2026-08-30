@@ -80,7 +80,7 @@
     <div class="flex w-full flex-col items-center gap-4 md:w-1/6"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
   </div>
 
-  <div class="phones">
+  <div class="phones scroll-mt-4" id="phones">
     <div class="form-group space-y-4">
       <div class="mb-2 font-semibold text-gray-700">
         Phones
@@ -104,7 +104,7 @@
     </div>
   </div>
 
-  <div class="addresses">
+  <div class="addresses scroll-mt-4" id="addresses">
     <!-- Primary Address Choice -->
     <div class="flex flex-col gap-4 md:flex-row"><%# = f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %></div>
 
@@ -199,6 +199,32 @@
     <% end %>
   </div>
 
+  <!-- Staff tags (internal, admin-only) -->
+  <% if allowed_to?(:manage?, StaffTag) %>
+    <% staff_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
+      <div class="flex items-baseline justify-between">
+        <h3 class="font-semibold text-gray-700">Staff tags</h3>
+        <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
+      </div>
+      <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
+      <div class="flex flex-wrap content-start items-center gap-2 pt-1">
+        <%= f.simple_fields_for :staff_taggings, staff_owner.staff_taggings do |sfi| %>
+          <%= render "people/staff_tag_item_fields", f: sfi %>
+        <% end %>
+
+        <%= link_to_add_association "➕ Add staff tag",
+                                    f,
+                                    :staff_taggings,
+                                    partial: "people/staff_tag_item_fields",
+                                    render_options: {
+                                      locals: { collection: (@staff_tags_collection || [])
+                                        .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
+                                    class: "btn btn-secondary-outline" %>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Profile-specific Categories (other than age ranges) -->
   <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
   <% if other_category_types.present? %>
@@ -287,7 +313,7 @@
               <% end %>
             </p>
             <div class="mt-1 <%= "hidden" unless decorated.affiliated_since_note %>" data-affiliation-dates-target="affiliatedNote">
-              <span class="group/aff relative inline-flex items-center gap-1 cursor-help">
+              <span class="group/aff relative inline-flex cursor-help items-center gap-1">
                 <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
                 <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
                 <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
@@ -299,29 +325,39 @@
         </div>
       </div>
       <% if allowed_to?(:manage?, Person) %>
-        <div class="p-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="10" data-affiliation-dates-target="affiliationsContainer">
-          <% if f.object.affiliations.present? %>
-            <%= render "affiliations/header", label: "Organization" %>
-          <% end %>
-          <%= f.fields_for :affiliations do |affiliation_form| %>
-            <div data-paginated-fields-target="item">
-              <%= render "affiliation_fields",
-                         f: affiliation_form %>
-            </div>
-          <% end %>
-          <div data-paginated-fields-target="nav"></div>
-
-          <div class="mt-2"><%= link_to_add_association "➕ Add Affiliation",
-                                        f,
-                                        :affiliations,
-                                        class: "admin-only bg-blue-100 btn btn-secondary-outline" %></div>
-        </div>
+        <%= render "affiliations/editor", f: f, label: "Organization", scope: "person",
+              add_class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
       <% else %>
-        <% f.object.affiliations.each do |affiliation| %>
-          <div class="mb-2 ps-6">
-            <li><%= affiliation.title %> - <%= affiliation.persisted? ? (link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline") : affiliation.organization&.name %></li>
-          </div>
+        <% owner_affiliations = f.object.affiliations.select(&:persisted?) %>
+        <% if owner_affiliations.any? %>
+          <ul class="space-y-1.5 ps-6">
+            <% owner_affiliations.each do |affiliation| %>
+              <li class="flex flex-wrap items-center gap-2 text-gray-700">
+                <span class="font-medium"><%= affiliation.title.presence || Affiliation::FACILITATOR_TITLE %></span>
+                <span>–</span>
+                <%= link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline" %>
+                <span class="text-sm text-gray-500"><%= affiliation.decorate.period_label %></span>
+                <%= affiliation.decorate.status_badge %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="ps-6 text-gray-500 italic">No affiliations on record.</p>
         <% end %>
+        <div class="mt-4 ps-6 text-sm text-gray-600">
+          Affiliation records are maintained by AWBW staff. See something that needs correcting?
+          <%= link_to "Contact us to request a change",
+                      contact_us_path(return_to: "person_edit",
+                                      subject: "Request to update my affiliation history",
+                                      message: "Hi AWBW team,\n\nI'd like to request a change to my affiliation history. Here's what needs updating:\n\n"),
+                      class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>.
+        </div>
+      <% end %>
+
+      <%# Sending an agreement form is affiliation work — it's how a new job or
+          reinstatement starts — so it lives here, collapsed. %>
+      <% if person.persisted? && allowed_to?(:send_form_link?, person) %>
+        <%= render "agreement_form_links", person: person %>
       <% end %>
     </div>
   </div>
@@ -348,11 +384,11 @@
   </div>
 
   <div class="form-group space-y-4">
-    <div class="font-semibold text-gray-700 mb-2">
+    <div class="mb-2 font-semibold text-gray-700">
       Professional licenses
     </div>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <p class="text-sm text-gray-500 mb-3">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
+      <p class="mb-3 text-sm text-gray-500">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
       <%= f.simple_fields_for :professional_licenses do |license_form| %>
         <%= render "professional_licenses/professional_license_fields", f: license_form %>
       <% end %>
@@ -414,17 +450,34 @@
                         label: "FileMaker code",
                         input_html: { class: "w-full" },
                         wrapper_html: { class: "w-full" } %>
+            <%- if params[:admin] == "true" && f.object.filemaker_code.present? && FmRolodex.exists?(fm_id: f.object.filemaker_code) %>
+              <p class="mt-1 text-xs">
+                <%= link_to "View filemaker archive",
+                            fm_archive_path(f.object.filemaker_code, table: "rolodexes"),
+                            class: "text-blue-600 hover:text-blue-800 underline" %>
+              </p>
+            <% end %>
           </div>
         </div>
 
-        <div class="w-full">
-          <%= f.input :mailing_list_consented,
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <% if person.persisted? %>
+            <div class="w-full sm:flex-1">
+              <div class="mb-1 block font-medium text-gray-700">Mailing list</div>
+              <%= link_to decorated.news_subscriptions_path,
+                          class: "inline-flex items-center gap-1.5 text-sm #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 700)} #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 800, hover: true)}" do %>
+                <i class="fa-solid fa-envelope-open-text"></i>
+                News subscriptions
+              <% end %>
+              <p class="mt-1 text-xs text-gray-500">Mailing-list interest is tracked in topic subscriptions.</p>
+            </div>
+          <% end %>
+
+          <%= f.input :blog_contributor,
                       as: :boolean,
-                      label: "Consented to mailing list",
-                      hint: f.object.mailing_list_consent_at.present? ?
-                              "Consented #{f.object.mailing_list_consent_at.to_date.to_fs(:long)} (#{f.object.mailing_list_consent_source}). Uncheck to withdraw." :
-                              "No consent on file. Check to record consent.",
-                      wrapper_html: { class: "w-full" } %>
+                      label: "Blog contributor",
+                      hint: "Adds a badge to their profile.",
+                      wrapper_html: { class: "w-full sm:flex-1" } %>
         </div>
       </div>
     <% end %>
@@ -495,6 +548,7 @@
           <%= f.input :profile_show_workshop_variation_ideas, label: "Show variation ideas" %>
           <%= f.input :profile_show_workshop_ideas, label: "Show workshop ideas" %>
           <%= f.input :profile_show_workshop_logs, label: "Show workshop logs" %>
+          <%= f.input :profile_show_monthly_reports, label: "Show monthly reports" if f.object.any_monthly_reports? %>
           <%= f.input :profile_show_workshop_variations, label: "Show workshop variations" %>
           <%= f.input :profile_show_workshops, label: "Show workshops" %>
         </div>
@@ -503,55 +557,10 @@
   </div>
 
   <% if f.object.persisted? %>
-    <%# Communications — subjects are visible to the person; the body and the
-        add/edit controls are admin-only (gated inside the partial). %>
-    <%= render "notifications/communications", f: f, mark_admin_only: true,
-          title_key: "communications.title", none_key: "communications.none_for_person" %>
-
-    <!-- Comments -->
-    <% if allowed_to?(:manage?, Comment) %>
-      <section class="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm"
-               id="comments-section"
-               data-controller="paginated-fields edit-toggle"
-               data-paginated-fields-per-page-value="5">
-        <div class="admin-only flex items-center gap-3 border-b border-blue-200 bg-blue-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-blue-600">
-            <i class="fa-solid fa-comments"></i>
-          </span>
-          <h2 class="text-sm font-semibold text-gray-700">Comments</h2>
-          <% if @person.persisted? %>
-            <%= link_to all_comments_person_path(@person),
-                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
-                        target: "_blank", rel: "noopener" do %>
-              View all
-              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-            <% end %>
-          <% end %>
-        </div>
-
-        <div class="space-y-3 p-4">
-          <%= f.simple_fields_for :comments do |cf| %>
-            <%= render "comments/comment_fields", f: cf %>
-          <% end %>
-
-          <div data-paginated-fields-target="nav"></div>
-
-          <div class="flex items-center justify-between gap-2">
-            <%= link_to_add_association "➕ Add Comment",
-                                        f,
-                                        :comments,
-                                        partial: "comments/comment_fields",
-                                        class: "btn btn-secondary-outline" %>
-            <button type="button"
-                    class="cursor-pointer text-sm whitespace-nowrap text-gray-400 underline hover:text-blue-600"
-                    data-action="edit-toggle#toggle">
-              <span data-edit-toggle-target="editLabel">Edit Comments</span>
-              <span data-edit-toggle-target="viewLabel" class="hidden">Done Editing</span>
-            </button>
-          </div>
-        </div>
-      </section>
-    <% end %>
+    <%# Combined comments & communications — comment bodies/controls are admin-only
+        and communication subjects are visible to the person (gated in the partial). %>
+    <%= render "shared/comments_and_communications", f: f, mark_admin_only: true,
+          view_all_person: @person %>
   <% end %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">

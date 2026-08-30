@@ -1,0 +1,105 @@
+<%# Filter bar for the combined feed. Most filters are shared: the two models name
+    the same idea differently, so each side answers on its own column (author/from,
+    subject/topic, attached-to, follow-up). Only "Email topic" is communications-only.
+    Auto-submits into `frame` (collection Stimulus). Locals: url, frame, clear_path. %>
+<%# The record each entry hangs off — commentable_type for a comment,
+    noticeable_type for a communication. %>
+<% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
+<%= form_with url: url, method: :get,
+              data: { controller: "collection", turbo_frame: frame },
+              html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4" do |f| %>
+  <div class="flex items-center gap-2 text-gray-600">
+    <i class="fa-solid fa-filter text-xs"></i>
+    <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
+  </div>
+
+  <div class="flex flex-wrap items-end gap-3">
+    <div class="min-w-[150px] grow">
+      <label for="query" class="<%= search_label_class %>">Keyword</label>
+      <div class="relative">
+        <%= f.text_field :query, value: params[:query],
+                         placeholder: "Any text…",
+                         class: search_field_class(extra: "bg-white pr-10"),
+                         oninput: "this.form.requestSubmit()" %>
+        <%= render "shared/search_submit" %>
+      </div>
+    </div>
+
+    <div class="min-w-[150px] grow">
+      <label for="subject" class="<%= search_label_class %>">Subject or topic</label>
+      <%= f.text_field :subject, value: params[:subject],
+                       placeholder: "Comment topic / email subject…",
+                       class: search_field_class(extra: "bg-white"),
+                       oninput: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="min-w-[180px] grow">
+      <label for="author_id" class="<%= search_label_class %>">From or author</label>
+      <%= select_tag :author_id,
+                     options_for_select(User.where(id: params[:author_id]).map { |user| [ user.full_name_with_email, user.id ] }, params[:author_id]),
+                     include_blank: true, prompt: "Search staff by name",
+                     class: search_field_class(extra: "bg-white"),
+                     data: { controller: "remote-select", remote_select_model_value: "user" } %>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-end gap-3">
+    <div class="w-40">
+      <label for="kind" class="<%= search_label_class %>">Show</label>
+      <%= f.select :kind,
+                   options_for_select([ [ "Comments & communications", "" ], [ "Comments only", "comments" ], [ "Communications only", "communications" ] ], params[:kind]), {},
+                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="w-40">
+      <label for="source" class="<%= search_label_class %>">Attached to</label>
+      <%= f.select :source, options_for_select(attached_to_options, params[:source]), { include_blank: "All records" },
+                   class: search_field_class(extra: "bg-white search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="w-32">
+      <label for="follow_up" class="<%= search_label_class %>">Follow-up</label>
+      <%= f.select :follow_up,
+                   options_for_select([ [ "Needed", "needed" ], [ "Responded", "responded" ], [ "None needed", "none" ] ], params[:follow_up]),
+                   { include_blank: "All" },
+                   class: search_field_class(extra: "bg-white search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="w-36">
+      <label for="from" class="<%= search_label_class %>">From date</label>
+      <%= f.date_field :from, value: params[:from],
+                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:from]),
+                       onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="w-36">
+      <label for="to" class="<%= search_label_class %>">To date</label>
+      <%= f.date_field :to, value: params[:to],
+                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:to]),
+                       onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <%# Canned email-subject phrases — the one filter no comment can answer, so
+        picking one shows communications only. %>
+    <div class="w-32">
+      <label for="email_topic" class="<%= search_label_class %>">Email topic</label>
+      <%= f.select :email_topic,
+                   options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
+                   { include_blank: "All" },
+                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="shrink-0 pb-1">
+      <%= render "shared/search_clear", url: clear_path %>
+    </div>
+  </div>
+
+  <p class="text-xs text-gray-500">
+    A comment's follow-up flag stands in for a communication's responded flag, so "Responded"
+    matches communications only — as does picking an email topic.
+  </p>
+<% end %>

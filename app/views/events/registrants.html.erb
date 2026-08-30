@@ -3,13 +3,13 @@
     of the screen; the wrapper restores the layout's gutters at a wider bound. %>
 <% content_for(:full_width, true) %>
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
-<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border border-primary/10 rounded-2xl shadow-sm p-6">
   <%# Top bar: eyebrow + sub-nav, matching the other event pages. %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
     <% if params[:return_to] == "scholarships" %>
-      <%= link_to "← Events scholarships", scholarships_report_return_path, class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "← Events scholarships", scholarships_report_return_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% else %>
-      <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+      <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <% end %>
     <%= render "events/subnav", event: @event, current: :registrants %>
   </div>
@@ -35,7 +35,7 @@
       <% if @event.start_date.present? %>
         <p class="text-sm text-gray-500 mt-1"><%= @event.date_range %></p>
       <% end %>
-      <h1 class="text-3xl font-bold text-gray-900 mt-2 flex items-center justify-center gap-2">
+      <h1 class="font-display text-3xl font-bold text-primary mt-2 flex items-center justify-center gap-2">
         <i class="fa-solid fa-users <%= DomainTheme.text_class_for(:event_registrations, intensity: 800) %>"></i>
         Manage registrations
       </h1>

@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
 
-      <div class="flex flex-wrap items-center gap-y-2 mb-2">
+      <div class="mb-2 flex flex-wrap items-center gap-y-2">
         <% if allowed_to?(:index?, with: Admin::HomePolicy) %>
-          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class}" do %>
+          <%= link_to admin_path, class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
             <i class="fas fa-arrow-left"></i>
             <span>Admin</span>
           <% end %>
@@ -13,24 +13,24 @@
         </div>
       </div>
 
-      <div class="flex items-baseline gap-3 mb-6 leading-none">
-        <h1 class="text-2xl font-semibold text-gray-900 leading-none">Visits</h1>
-        <span class="text-sm text-gray-500 leading-none"><%= @visits.total_entries %> total</span>
+      <div class="mb-6 flex items-baseline gap-3 leading-none">
+        <h1 class="text-primary font-display text-2xl leading-none font-semibold">Visits</h1>
+        <span class="text-sm leading-none text-gray-500"><%= @visits.total_entries %> total</span>
       </div>
 
-      <div class="mb-6 text-sm min-h-10">
+      <div class="mb-6 min-h-10 text-sm">
         <%= render "admin/shared/active_filters_subheader" %>
       </div>
 
       <!-- Filters -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+      <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-6 shadow-sm">
         <%= form_with url: request.path, method: :get, local: true do %>
 
-          <div class="flex flex-wrap lg:flex-nowrap gap-4">
+          <div class="flex flex-wrap gap-4 lg:flex-nowrap">
 
             <!-- User Filter -->
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+            <div class="min-w-0 flex-1">
+              <label class="mb-1 block text-sm font-medium text-gray-600">
                 User
               </label>
               <%= text_field_tag :user_search,
@@ -40,13 +40,13 @@
             </div>
 
             <!-- Audience -->
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true %>
             </div>
 
             <!-- Time Period -->
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+            <div class="min-w-0 flex-1">
+              <label class="mb-1 block text-sm font-medium text-gray-600">
                 Time Period
               </label>
               <%= select_tag :time_period,
@@ -58,27 +58,27 @@
             </div>
 
             <!-- Date From -->
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+            <div class="min-w-0 flex-1">
+              <label class="mb-1 block text-sm font-medium text-gray-600">
                 From
               </label>
               <%= date_field_tag :from, params[:from],
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
+                                 class: date_filter_class("w-full px-3 py-2 border-gray-300 rounded-md shadow-sm", params[:from]) %>
             </div>
 
             <!-- Date To -->
-            <div class="flex-1 min-w-0">
-              <label class="block text-sm font-medium text-gray-600 mb-1">
+            <div class="min-w-0 flex-1">
+              <label class="mb-1 block text-sm font-medium text-gray-600">
                 To
               </label>
               <%= date_field_tag :to, params[:to],
-                                 class: "w-full px-3 py-2 border-gray-300 rounded-md shadow-sm" %>
+                                 class: date_filter_class("w-full px-3 py-2 border-gray-300 rounded-md shadow-sm", params[:to]) %>
             </div>
 
           </div>
 
           <!-- Quick Ranges -->
-          <div class="flex items-center gap-3 mt-6 text-sm">
+          <div class="mt-6 flex items-center gap-3 text-sm">
             <span class="text-gray-500">Quick:</span>
             <% safe_params = params.slice(:user_id, :user_search, :from, :to).to_unsafe_h %>
             <%= link_to "24h",
@@ -103,9 +103,9 @@
       </div>
 
       <!-- Table -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
         <table class="min-w-full divide-y divide-gray-200 text-sm">
-          <thead class="bg-gray-50 text-gray-600 uppercase tracking-wider text-xs">
+          <thead class="bg-gray-50 text-xs tracking-wider text-gray-600 uppercase">
           <tr>
             <th class="px-4 py-3 text-left">ID</th>
             <th class="px-4 py-3 text-left">Started</th>
@@ -118,12 +118,12 @@
 
           <tbody class="divide-y divide-gray-100">
           <% @visits.each do |visit| %>
-            <tr class="hover:bg-gray-50 transition">
+            <tr class="transition hover:bg-gray-50">
               <td class="px-4 py-3 text-gray-700">
                 <%= visit.id %>
               </td>
 
-              <td class="px-4 py-3 text-gray-500 whitespace-nowrap">
+              <td class="px-4 py-3 whitespace-nowrap text-gray-500">
                 <%= visit.started_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
               </td>
 
@@ -146,7 +146,7 @@
                             admin_activities_events_path(visit_id: visit.id) %>
               </td>
 
-              <td class="px-4 py-3 text-gray-500 max-w-xs">
+              <td class="max-w-xs px-4 py-3 text-gray-500">
                 <%= visit.user_agent %>
               </td>
             </tr>
@@ -155,7 +155,7 @@
         </table>
       </div>
 
-      <div class="flex justify-center mt-8">
+      <div class="mt-8 flex justify-center">
         <%= tailwind_paginate @visits %>
       </div>
 </div>

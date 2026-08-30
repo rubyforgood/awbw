@@ -1,0 +1,4 @@
+<%# The AWBW rainbow rule that tops a branded page card (matches awbw.org).
+    Pass rounded: true when the card is not clipping its own overflow, so the
+    rule still follows the card's rounded top corners. %>
+<div class="h-1.5 w-full <%= "rounded-t-2xl" if local_assigns[:rounded] %> bg-[linear-gradient(to_right,#4e8324,#d56027,#ffcb05,#992a5b,#41006c,#24479e)]"></div>

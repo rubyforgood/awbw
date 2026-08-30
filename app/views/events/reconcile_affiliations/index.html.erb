@@ -1,0 +1,186 @@
+<% content_for(:page_title, "Reconcile affiliations — #{@event.title}") %>
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<div class="max-w-5xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-4 sm:p-6">
+  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
+    <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+    <%= render "events/subnav", event: @event, current: :registrants %>
+  </div>
+
+  <h1 class="text-2xl font-semibold text-gray-900 mb-2">Reconcile affiliations</h1>
+
+  <div class="text-sm text-gray-600 space-y-2 mb-6">
+    <% if @event.facilitator_training? %>
+      <p>
+        This step brings facilitator affiliations in line with who registered and attended. Before the training it
+        <strong>creates</strong> any missing facilitator affiliations for linked organizations. After the training it
+        <strong>deletes</strong> the affiliation this training created for anyone who didn't turn up at all, and
+        <strong>ends</strong> it for anyone who attended only part of it. If that person is
+        later marked attended, an ending this step applied is <strong>undone</strong> rather than leaving them with a
+        second affiliation for an engagement that never broke. A return after a real lapse is still a
+        <strong>new</strong> affiliation, so the lapse stays visible. Anyone still marked <strong>Registered</strong> is left alone and listed
+        below — that's an unfilled roster, not an outcome. Job affiliations are never touched.
+      </p>
+      <p>
+        Only the row this training created is deleted — it recorded an assumption that never came true. An
+        <strong>older</strong> affiliation is ended the day before this training instead, so the period the person really
+        facilitated — and this organization's program status at every earlier training — stays as it was.
+      </p>
+    <% else %>
+      <p>
+        This event isn't a facilitator training, so any facilitator affiliation auto-created from it shouldn't exist.
+        This <strong>deletes</strong> those. Job affiliations are left untouched.
+      </p>
+    <% end %>
+    <p>Every facilitator affiliation for a linked organization is reconciled against attendance — including hand-entered ones. Review each row and pick an outcome: the suggested action is preselected, and every row also has a leave-as-is option.</p>
+    <% if @event.affiliations_reconciled_at %>
+      <p class="text-gray-500">Last reconciled <%= @event.affiliations_reconciled_at.to_fs(:long) %>.</p>
+    <% end %>
+    <% if @person_groups.any? && @event.affiliations_reconciliation_stale? %>
+      <p class="text-amber-700">Attendance has changed since the last reconciliation — apply again below to bring affiliations up to date.</p>
+    <% end %>
+  </div>
+
+  <% unless @has_rows %>
+    <div class="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-500">
+      <% if @event.facilitator_training? %>
+        No registrants have linked an organization, so there's nothing to reconcile.
+      <% else %>
+        No facilitator affiliations were created from this event, so there's nothing to remove.
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# One set of day ticks per registration, wherever it appears: the turbo replace
+      targets them by id, and a person with two linked orgs has rows in both sections. %>
+  <% ticked = Set.new %>
+  <% if @person_groups.any? %>
+    <% actionable_count = @person_groups.sum { |g| g[:rows].size } %>
+    <% color_class = {
+         red: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
+         green: "has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:checked]:border-green-300",
+         blue: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
+         gray: "has-[:checked]:bg-gray-100 has-[:checked]:text-gray-800 has-[:checked]:border-gray-400"
+       } %>
+    <% fa_hint = "facilitator affiliation (FA)" %>
+    <% outcome_options = {
+         create: [ [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Skip", :gray ] ],
+         deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
+         delete: [ [ "delete", "Delete", :red ], [ "keep", "Keep", :gray ] ],
+         reactivate: [ [ "reactivate", "Reactivate", :green ], [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Leave inactive", :gray ] ],
+         retarget: [ [ "retarget", "Move to the new event", :blue ], [ "keep", "Leave as is", :gray ] ]
+       } %>
+    <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
+
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <h2 class="text-base font-bold text-gray-900">To reconcile <span class="text-gray-400 font-normal">(<%= actionable_count %>)</span></h2>
+      <span class="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
+        <i class="fa-solid fa-triangle-exclamation"></i> May change affiliations — preview to confirm.
+      </span>
+    </div>
+
+    <%# The cards sit outside this form — the attendance chip renders its own and forms
+        can't nest — so the radios join it via the HTML form= attribute. %>
+    <%= form_with url: reconcile_affiliations_event_path(@event), method: :post, id: "reconcile_form", data: { turbo: false } do %><% end %>
+
+    <div class="space-y-4">
+      <% @person_groups.each do |group| %>
+        <section class="rounded-lg border border-gray-200 bg-white p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <%= link_to group[:person].decorate.full_name_with_display_name, edit_event_registration_path(group[:registration]), target: "_blank", rel: "noopener", class: "font-semibold text-gray-900 hover:underline hover:text-blue-700 shrink-0" %>
+              <% others = group[:other_facilitators] %>
+              <% if others.any? %>
+                <% note = "Also a facilitator at #{others.map { |a| a.organization.name }.to_sentence}." %>
+                <% anchor = others.one? ? dom_id(others.first) : "affiliations" %>
+                <%= link_to note, edit_person_path(group[:person], anchor: anchor), target: "_blank", rel: "noopener",
+                      title: note, class: "text-xs text-gray-500 truncate hover:underline hover:text-blue-700 min-w-0" %>
+              <% end %>
+            </div>
+            <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
+          </div>
+
+          <% if group[:registration]&.status == "incomplete_attendance" && ticked.add?(group[:registration].id) %>
+            <%= render "attendance_days", registration: group[:registration], event: @event %>
+          <% end %>
+
+          <div class="divide-y divide-gray-100 border-t border-gray-100">
+            <% group[:rows].each do |row| %>
+              <%# A row this training created has nothing to preserve, so Delete leads and
+                  Deactivate is shown but not selectable — the tooltip says why. %>
+              <% default_choice = row.action == :deactivate && row.minted_here ? "delete" : row.action.to_s %>
+              <% chosen = (@pre_outcome && @pre_outcome[row.key]) || default_choice %>
+              <div class="flex flex-wrap items-center gap-3 py-2">
+                <% if row.affiliation %>
+                  <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "flex-1 min-w-0 text-sm hover:underline" do %>
+                    <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
+                    <span class="text-gray-400">· <%= row.affiliation.decorate.period_label %></span>
+                  <% end %>
+                <% else %>
+                  <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
+                <% end %>
+                <div class="flex shrink-0 items-center gap-2">
+                  <% outcome_options[row.action].each do |value, label, color, hint| %>
+                    <% unavailable = value == "deactivate" && row.minted_here %>
+                    <label class="<%= button_base %> <%= unavailable ? "opacity-50 cursor-not-allowed" : color_class[color] %>" <%= tag.attributes(title: hint) %>>
+                      <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300", form: "reconcile_form", disabled: unavailable %>
+                      <%= label %>
+                      <%= render "tooltip", kind: value.to_sym %>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+      <%= submit_tag "Preview changes", form: "reconcile_form", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+
+  <% if @skipped_sections.any? %>
+    <% skipped_count = @skipped_sections.sum { |(_reason, rows)| rows.size } %>
+    <details open data-controller="toggle-details" class="mt-8 rounded-lg border border-gray-200 bg-white">
+      <summary class="relative cursor-pointer select-none px-4 py-3 pr-28 bg-gray-100 text-base font-bold text-gray-900 hover:bg-gray-200">
+        Not reconciled <span class="text-gray-400 font-normal">(<%= skipped_count %>)</span>
+        <button type="button" data-toggle-details-target="toggleBtn" data-action="toggle-details#toggleAll:prevent"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-normal text-blue-600 hover:underline">Collapse all</button>
+      </summary>
+      <div class="border-t border-gray-100 px-4 py-4 space-y-6">
+        <% @skipped_sections.each do |reason, rows| %>
+          <details open class="rounded-lg border border-gray-200 overflow-hidden">
+            <summary class="cursor-pointer select-none px-3 py-2 bg-gray-100 border-b border-gray-200 text-sm font-semibold text-gray-700 tracking-wide hover:bg-gray-200">
+              <%= reason %> <span class="text-gray-400 font-normal">(<%= rows.size %>)</span>
+            </summary>
+            <div class="divide-y divide-gray-100 border-t border-gray-100">
+              <% rows.each do |row| %>
+                <div class="flex flex-wrap items-center gap-3 px-3 py-2 text-sm text-gray-600">
+                  <span class="flex-1 min-w-0">
+                    <%= link_to row.person.decorate.full_name_with_display_name, edit_event_registration_path(row.registration), target: "_blank", rel: "noopener", class: "font-medium text-gray-800 hover:underline hover:text-blue-700" %> —
+                    <% if row.affiliation %>
+                      <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "hover:underline hover:text-blue-700" do %>
+                        <%= row.organization.name %> · <%= row.affiliation.decorate.period_label %>
+                      <% end %>
+                    <% else %>
+                      <span class="text-gray-400"><%= row.organization.name %></span>
+                    <% end %>
+                  </span>
+                  <% if reason == AffiliationServices::ReconcilePerson::ATTENDANCE_NOT_RECORDED && ticked.add?(row.registration&.id) %>
+                    <%= render "attendance_day_ticks", registration: row.registration, event: @event %>
+                  <% end %>
+                  <%= render "event_registrations/attendance_status_badge", registration: row.registration, return_to: "reconcile_affiliations" %>
+                  <% if row.registration&.status == "incomplete_attendance" && ticked.add?(row.registration.id) %>
+                    <div class="w-full"><%= render "attendance_days", registration: row.registration, event: @event %></div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+</div>

@@ -1,23 +1,23 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
-<div class="max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:events) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <%# Top bar: eyelash + sub-nav, matching the other event pages %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+    <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= render "events/subnav", event: @event, current: nil %>
   </div>
 
   <div class="mb-4">
-    <h1 class="text-2xl font-semibold text-gray-900">
+    <h1 class="text-primary font-display text-2xl font-semibold">
       <%= @invite_mode ? "Send Portal invite emails" : "Send bulk emails" %>
     </h1>
-    <p class="text-gray-600 mt-1">
+    <p class="mt-1 text-gray-600">
       <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
     </p>
   </div>
 
   <%# Banner: what this page does, plus a plain link to the other mode. %>
-  <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-baseline gap-2.5 text-sm text-gray-600">
-    <i class="fa-solid fa-circle-info text-gray-400 shrink-0"></i>
+  <div class="border-primary/10 mb-6 flex items-baseline gap-2.5 rounded-2xl border bg-gray-50 px-4 py-3 text-sm text-gray-600">
+    <i class="fa-solid fa-circle-info shrink-0 text-gray-400"></i>
     <p>
       <% if @invite_mode %>
         You're sending the standard Portal invite (confirmation) email to registrants
@@ -31,15 +31,15 @@
   </div>
   <% if @event_registrations.empty? %>
     <% if @invite_mode %>
-      <p class="text-gray-600 mb-4">Every registrant with an email already has a portal account — there's no one to invite.</p>
+      <p class="mb-4 text-gray-600">Every registrant with an email already has a portal account — there's no one to invite.</p>
     <% else %>
-      <p class="text-gray-600 mb-4">There are no registrants with an email address to send a reminder to.</p>
+      <p class="mb-4 text-gray-600">There are no registrants with an email address to send a reminder to.</p>
     <% end %>
     <%= link_to "Back to registrants", registrants_event_path(@event), class: "btn btn-secondary-outline" %>
   <% else %>
-    <h2 class="text-lg font-semibold text-gray-800 mb-2 pb-2 border-b border-gray-200">Recipients</h2>
+    <h2 class="mb-2 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Recipients</h2>
     <% if @invite_mode %>
-      <p class="text-gray-600 mb-3">
+      <p class="mb-3 text-gray-600">
         Only registrants with no Portal account yet are listed — a Portal invite
         (confirmation) email is for people who can't sign in. Filters keep everyone
         in the list and check
@@ -48,7 +48,7 @@
         <code class="font-mono">amy--aisha</code>).
       </p>
     <% else %>
-      <p class="text-gray-600 mb-3">
+      <p class="mb-3 text-gray-600">
         Choose who will receive this reminder. Filters keep everyone in the list and
         check the matches. Separate multiple values with
         <code class="font-mono">'--'</code> to match multiple values (e.g.
@@ -88,11 +88,11 @@
         </div>
       <% else %>
         <div class="my-14">
-          <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Email draft</h2>
-          <div class="bg-white border border-gray-200 rounded-lg p-6 pb-8 space-y-6">
+          <h2 class="mb-6 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Email draft</h2>
+          <div class="border-primary/10 space-y-6 rounded-2xl border bg-white p-6 pb-8">
             <div>
-              <h3 class="font-semibold text-gray-700 mb-2">Subject</h3>
-              <p class="text-gray-600 mb-2">
+              <h3 class="mb-2 font-semibold text-gray-700">Subject</h3>
+              <p class="mb-2 text-gray-600">
                 The subject line recipients will see. Edit it as you like — leave it as is to use the default.
               </p>
               <%= text_field_tag :custom_subject, @custom_subject,
@@ -100,15 +100,15 @@
                     data: { reminder_preview_target: "subjectInput", action: "input->reminder-preview#updateSubject" } %>
             </div>
             <div>
-              <h3 class="font-semibold text-gray-700 mb-2">Message</h3>
-              <p class="text-gray-600 mb-2">
+              <h3 class="mb-2 font-semibold text-gray-700">Message</h3>
+              <p class="mb-2 text-gray-600">
                 The intro shown near the top of the reminder, above the event details. Edit it or clear it as you like.
               </p>
               <%= text_area_tag :custom_message, @custom_message,
                     rows: 4,
                     class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm font-mono bg-white",
                     data: { reminder_preview_target: "input", action: "input->reminder-preview#update" } %>
-              <p class="text-xs text-gray-400 mt-1.5">
+              <p class="mt-1.5 text-xs text-gray-400">
                 Accepts basic HTML — bold, italics, links, lists, and line breaks.
               </p>
             </div>
@@ -119,20 +119,32 @@
                       data: { reminder_preview_target: "eventCardToggle", action: "reminder-preview#toggleEventCard" } %>
                 Hide the event details box
               </label>
-              <p class="text-xs text-gray-400 mt-1.5 ml-6">
-                Leaves out the grey box with the event's date, time, cost, and location — send just your message and the "View ticket" button.
+              <p class="mt-1.5 ml-6 text-xs text-gray-400">
+                Leaves out the grey box with the event's date, time, cost, and location.
               </p>
               <%# The toggle's only feedback is the preview below, which a screen
                   reader never sees change. Announce it instead. %>
               <p class="sr-only" role="status" aria-live="polite" data-reminder-preview-target="cardStatus"></p>
+            </div>
+            <div>
+              <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <%= check_box_tag :hide_ticket_button, "1", @hide_ticket_button,
+                      class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+                      data: { reminder_preview_target: "ticketButtonToggle", action: "reminder-preview#toggleTicketButton" } %>
+                Hide the "View ticket" button
+              </label>
+              <p class="text-xs text-gray-400 mt-1.5 ml-6">
+                Leaves out the "View ticket" button and its lead-in line — send a plain informational email with no link to the registrant's ticket.
+              </p>
+              <p class="sr-only" role="status" aria-live="polite" data-reminder-preview-target="ticketStatus"></p>
             </div>
           </div>
         </div>
       <% end %>
       <% if @reminder_preview_html.present? %>
         <div class="mb-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Preview (sample registrant)</h2>
-          <div class="border border-gray-200 rounded-lg bg-white overflow-hidden">
+          <h2 class="mb-3 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Preview (sample registrant)</h2>
+          <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white">
             <div class="border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700">
               <span class="font-semibold text-gray-500">Subject:</span>
               <% if @invite_mode %>
@@ -141,7 +153,7 @@
                 <span data-reminder-preview-target="subjectPreview"><%= @custom_subject %></span>
               <% end %>
             </div>
-            <div class="email-preview overflow-auto max-h-[70vh] p-4" style="font-family: Lato, sans-serif; zoom: 0.6;">
+            <div class="email-preview max-h-[70vh] overflow-auto p-4" style="font-family: Lato, sans-serif; zoom: 0.6;">
               <%= raw @reminder_preview_html %>
             </div>
           </div>

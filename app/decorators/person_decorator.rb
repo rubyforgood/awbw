@@ -8,12 +8,22 @@ class PersonDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 
-  def default_display_image
-    "missing.png"
-  end
-
   def primary_asset
     avatar
+  end
+
+  # The subscriptions index filtered to this person's News (mailing-list) topic —
+  # where mailing-list interest now lives since the person-level consent flag retired.
+  def news_subscriptions_path
+    h.topic_subscriptions_path(person_id: id, topic_subscription_type_id: TopicSubscriptionType.news&.id)
+  end
+
+  # Their name on the record, plus what the app calls them elsewhere when the two
+  # differ — an admin reconciling a roster needs to recognise both.
+  def full_name_with_display_name
+    return full_name.to_s.strip if name.to_s.strip == full_name.to_s.strip
+
+    "#{full_name.to_s.strip} (#{name})"
   end
 
   def pronouns_display
@@ -73,6 +83,29 @@ class PersonDecorator < ApplicationDecorator
     # preload affiliations don't fire a MIN(start_date) query per row.
     # `.minimum` would ignore the loaded records and hit the DB every time.
     @affiliated_since_date ||= affiliations.filter_map(&:start_date).min
+  end
+
+  # Facilitator-since year for list pages — the Ruby (no per-row query) twin of
+  # facilitator_since_date. Nil for someone who has never held a facilitator
+  # affiliation, so the column can't show an unrelated affiliation/membership year
+  # under a "Facilitator since" heading. For an actual facilitator whose rows carry
+  # no start date, falls back to the legacy member_since like the edit form.
+  def facilitator_since_year
+    facilitator_affiliations = affiliations.select(&:facilitator?)
+    return nil if facilitator_affiliations.none?
+
+    (facilitator_affiliations.filter_map(&:start_date).min || member_since)&.year
+  end
+
+  # The person's facilitator standing for list display: Active if any facilitator
+  # affiliation is current, Upcoming if one is scheduled but none active, otherwise
+  # Inactive — which covers both a lapsed facilitator and someone who was never a
+  # facilitator (neither is a currently-active facilitator).
+  def facilitator_status_label
+    facilitator_affiliations = affiliations.select(&:facilitator?)
+    return "Active" if facilitator_affiliations.any?(&:active?)
+    return "Upcoming" if facilitator_affiliations.any?(&:upcoming?)
+    "Inactive"
   end
 
   def facilitator_since_range

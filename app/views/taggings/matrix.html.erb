@@ -1,22 +1,22 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="tags-matrix bg-white border border-gray-200 rounded-xl shadow p-6">
+<div class="tags-matrix border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
     <div class="w-full">
       <div class="mb-10">
-        <h1 class="text-3xl font-semibold text-gray-900 mb-2">
+        <h1 class="text-primary mb-2 font-display text-3xl font-semibold">
           Tagging counts
         </h1>
-        <p class="text-gray-600 max-w-2xl">
+        <p class="max-w-2xl text-gray-600">
           Total tagged items by sector and category
         </p>
       </div>
 
       <!-- CARD BODY -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow">
+      <div class="border-primary/10 rounded-2xl border bg-white shadow-sm">
         <div class="overflow-x-auto">
           <table class="min-w-full text-sm">
 
             <!-- TABLE HEADER -->
-            <thead class="bg-gray-50 border-b border-gray-200">
+            <thead class="border-b border-gray-200 bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left font-semibold text-gray-700">
                 Tag
@@ -68,7 +68,7 @@
             <% end %>
 
             <!-- CATEGORIES HEADER -->
-            <tr class="bg-gray-100 border-t border-gray-200">
+            <tr class="border-t border-gray-200 bg-gray-100">
               <td colspan="<%= Tag::TAGGABLE_META.size + 1 %>"
                   class="px-4 py-2 font-semibold text-gray-700">
                 Categories

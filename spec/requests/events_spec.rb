@@ -370,7 +370,7 @@ RSpec.describe "Events", type: :request do
 
       # The four angles on this population sit on the eyebrow's row, each carrying the
       # report's own filters so switching angle keeps the same events in scope.
-      it "offers Details / Attendees / Scholarships / Sign-ins carrying the filters" do
+      it "offers Details / Attendees / Scholarships / Timesheets carrying the filters" do
         sign_in admin
         get participation_events_path(event_id: training_2026.id, event_type: "trainings")
 
@@ -378,7 +378,7 @@ RSpec.describe "Events", type: :request do
         expect(nav).to have_text("Details")
         expect(nav).to have_link("Attendees")
         expect(nav).to have_link("Scholarships")
-        expect(nav).to have_link("Sign-ins", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
+        expect(nav).to have_link("Timesheets", href: signins_events_path(event_id: training_2026.id, event_type: "trainings"))
         # Details is the current page, so it isn't a link.
         expect(nav).to have_no_link("Details")
       end
@@ -390,7 +390,7 @@ RSpec.describe "Events", type: :request do
 
           nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
           expect(nav).to have_link("Details")
-          expect(nav).to have_link("Sign-ins")
+          expect(nav).to have_link("Timesheets")
           expect(nav).to have_link("Scholarships")
           expect(nav).to have_no_link("Attendees")
         end
@@ -450,19 +450,19 @@ RSpec.describe "Events", type: :request do
           payment_status: "unpaid", funder: "external", search: "TAC")
 
         nav = Capybara.string(response.body).find("nav[aria-label='Report views']")
-        %w[ Attendees Scholarships Sign-ins ].each do |label|
+        %w[ Attendees Scholarships Timesheets ].each do |label|
           href = nav.find_link(label)[:href]
           expect(href).to include("scholarship=agreed", "payment_status=unpaid", "funder=external", "search=TAC")
         end
       end
 
-      it "links each event to its sign-ins, CE-scoped only when CE is enabled" do
+      it "links each event to its timesheets, CE-scoped only when CE is enabled" do
         training_2026.update!(ce_hours_offered: 6)
         sign_in admin
         get participation_events_path
-        expect(response.body).to include("CE sign-ins")
+        expect(response.body).to include("CE timesheets")
         expect(response.body).to include(attendance_event_path(training_2026))
-        expect(response.body).to include("Sign-ins →")
+        expect(response.body).to include("Timesheets →")
         expect(response.body).to include(attendance_event_path(webinar_2025))
       end
 
@@ -1236,6 +1236,15 @@ RSpec.describe "Events", type: :request do
         expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
       end
 
+      it "links a form to a callout via nested attributes" do
+        callout = create(:registration_ticket_callout, event:)
+        form = create(:form)
+        patch event_path(event), params: { event: {
+          registration_ticket_callouts_attributes: { "0" => { id: callout.id, form_id: form.id } }
+        } }
+        expect(callout.reload.form).to eq(form)
+      end
+
       it "adds event staff via nested attributes" do
         person = create(:person)
         patch event_path(event), params: { event: {
@@ -1384,6 +1393,23 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "Ticket forms columns" do
+      it "shows a completion column per form callout and links the submitter to their responses" do
+        form = create(:form, name: "Feedback")
+        field = create(:form_field, form:, name: "How was it?")
+        callout = create(:registration_ticket_callout, event:, form:, title: "Post-event survey")
+        EventRegistrationServices::CalloutFormSubmission.call(
+          registration:, callout:, form_params: { field.id.to_s => "Great" }
+        )
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Post-event survey")
+        expect(response.body).to include("Ticket forms")
+        expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
+      end
+    end
+
     context "Send bulk emails link" do
       it "reads 'Send bulk emails' with no filters and links without filter params" do
         get registrants_event_path(event)
@@ -1492,21 +1518,21 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("Any status")
     end
 
-    context "CE sign-ins link in bulk actions" do
+    context "CE timesheets link in bulk actions" do
       it "links to the CE attendance report for a CE-eligible event" do
         event.update!(ce_hours_offered: 6)
         get registrants_event_path(event)
 
-        expect(response.body).to include("CE sign-ins")
+        expect(response.body).to include("CE timesheets")
         expect(response.body).to include(attendance_event_path(event))
       end
 
-      it "links the generic sign-ins when the event offers no CE" do
+      it "links the generic timesheets when the event offers no CE" do
         event.update!(ce_hours_offered: 0)
         get registrants_event_path(event)
 
-        expect(response.body).not_to include("CE sign-ins")
-        expect(response.body).to include("Sign-ins")
+        expect(response.body).not_to include("CE timesheets")
+        expect(response.body).to include("Timesheets")
         expect(response.body).to include(attendance_event_path(event))
       end
     end
@@ -1691,12 +1717,12 @@ RSpec.describe "Events", type: :request do
           .at_css("tr#registrant-row-#{registration.id} td[data-column-toggle-col='organization']")&.text&.squish
       end
 
-      # Stores a submitted "agency_name" answer for the registrant, mirroring what
-      # public registration captures, so the Pending/None chip logic has data.
+      # Stores a submitted "organization_name" answer for the registrant, mirroring
+      # what public registration captures, so the Pending/None chip logic has data.
       def submit_agency_name(name)
         registration_form = Form.find_by(name: "Registration") || create(:form, name: "Registration")
-        field = registration_form.form_fields.find_by(field_identifier: "agency_name") ||
-          create(:form_field, form: registration_form, field_identifier: "agency_name")
+        field = registration_form.form_fields.find_by(field_identifier: "organization_name") ||
+          create(:form_field, form: registration_form, field_identifier: "organization_name")
         create(:event_form, :registration, event: event, form: registration_form) unless event.registration_form
         submission = create(:form_submission, person: person, form: registration_form)
         create(:form_answer, form_submission: submission, form_field: field, submitted_answer: name)
@@ -3120,7 +3146,7 @@ RSpec.describe "Events", type: :request do
           teens = create(:category, name: "Teens", category_type: age_range)
           primary_field = create(:form_field, form: registration_form, field_identifier: "primary_age_group",
                                               answer_type: :multi_select_checkbox)
-          additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_group",
+          additional_field = create(:form_field, form: registration_form, field_identifier: "additional_age_groups",
                                                  answer_type: :multi_select_checkbox)
           submission = create(:form_submission, person: person, form: registration_form)
           create(:form_answer, form_submission: submission, form_field: primary_field, submitted_answer: adults.id.to_s)
@@ -4034,7 +4060,7 @@ RSpec.describe "Events", type: :request do
         post send_reminder_event_path(event), params: { registration_ids: [] }
       }.not_to change(Notification, :count)
 
-      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0"))
+      expect(response).to redirect_to(preview_reminder_event_path(event, custom_message: "", custom_subject: "", hide_event_card: "0", hide_ticket_button: "0"))
     end
 
     it "logs an Ahoy event with the recipient count on a successful send" do

@@ -1,22 +1,22 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <% content_for(:full_width, true) %>
-<% title = @report.ce_only? ? "CE sign-ins" : "Sign-ins" %>
+<% title = @report.ce_only? ? "CE timesheets" : "Timesheets" %>
 <% content_for(:page_title, "#{title} — #{@event.title}") %>
 <% event = @event.decorate %>
 
 <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-  <div class="<%= DomainTheme.bg_class_for(:events) %> rounded-xl border border-gray-200 p-6 shadow">
-    <%# Sign-ins has no tab of its own, so nothing in the subnav is marked current. %>
+  <div class="<%= DomainTheme.bg_class_for(:events) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+    <%# Timesheets has no tab of its own, so nothing in the subnav is marked current. %>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% case params[:return_to] %>
       <% when "dashboard" %>
-        <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% when "registrants" %>
-        <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Registrants", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% when "signins" %>
-        <%= link_to "← All sign-ins", signins_events_path(report_to_hub_params.except(:period)), class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← All timesheets", signins_events_path(report_to_hub_params.except(:period)), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% else %>
-        <%= link_to "← Events participation", participation_events_path, class: "text-sm #{eyebrow_link_class}" %>
+        <%= link_to "← Events participation", participation_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
       <%= render "events/subnav", event: @event, current: :attendance %>
     </div>
@@ -93,7 +93,7 @@
               <span class="text-xs text-gray-400">Total <%= attendance_duration_label(@report.total_minutes(row)) %></span>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div class="overflow-hidden rounded-2xl border border-primary/10 bg-white">
               <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100"
                    style="grid-template-columns: minmax(11rem,1.2fr) 3fr minmax(5rem,auto)">
                 <div>Day</div>
@@ -132,7 +132,7 @@
             <span class="text-xs text-gray-400"><%= @report.registrations_present_on(date) %> of <%= @report.reported_registrations.size %> signed in</span>
           </div>
 
-          <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div class="overflow-hidden rounded-2xl border border-primary/10 bg-white">
             <div class="grid items-center gap-x-3 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100"
                  style="grid-template-columns: <%= @report.ce_only? ? "minmax(9rem,1.2fr) minmax(6rem,0.8fr) 3fr minmax(5rem,auto)" : "minmax(9rem,1.4fr) 3fr minmax(5rem,auto)" %>">
               <div>Name</div>

@@ -8,16 +8,30 @@ RSpec.describe "Forms", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "lists standalone forms" do
+      let(:frame_headers) { { "Turbo-Frame" => "forms_results" } }
+
+      it "renders the index shell" do
         create(:form, :standalone, name: "My Form")
         get forms_path
+        expect(response).to have_http_status(:success)
+      end
+
+      it "lists standalone forms in the results frame" do
+        create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
         expect(response).to have_http_status(:success)
         expect(response.body).to include("My Form")
       end
 
+      it "shows the form role in the results frame" do
+        create(:form, :standalone, name: "New Job Form", role: "new_job")
+        get forms_path, headers: frame_headers
+        expect(response.body).to include("New Job")
+      end
+
       it "shows the public link for a published form" do
         create(:form, :standalone, name: "Volunteer", slug: "volunteer", published: true)
-        get forms_path
+        get forms_path, headers: frame_headers
         expect(response.body).to include(public_form_path("volunteer"))
         expect(response.body).to include("/f/volunteer")
       end
@@ -25,28 +39,60 @@ RSpec.describe "Forms", type: :request do
       it "marks an event-connected unpublished form as an event form, not 'Not published'" do
         form = create(:form, :standalone, name: "Reg Form")
         EventForm.create!(form: form, event: create(:event), role: "registration")
-        get forms_path
+        get forms_path, headers: frame_headers
         expect(response.body).to include("Event form")
       end
 
       it "shows only the event-form chip, not a public link, when a published form is connected to an event" do
         form = create(:form, :standalone, name: "Dual Form", slug: "dual", published: true)
         EventForm.create!(form: form, event: create(:event), role: "registration")
-        get forms_path
+        get forms_path, headers: frame_headers
         expect(response.body).not_to include("/f/dual")
         expect(response.body).to include("Event form")
       end
 
       it "marks a standalone form with no events and no public link as not published" do
         create(:form, :standalone, name: "Orphan Form")
-        get forms_path
+        get forms_path, headers: frame_headers
         expect(response.body).to include("Not published")
       end
 
+      it "orders forms by name ascending by default" do
+        create(:form, :standalone, name: "Zebra")
+        create(:form, :standalone, name: "Alpha")
+        get forms_path, headers: frame_headers
+        expect(response.body.index("Alpha")).to be < response.body.index("Zebra")
+      end
+
+      it "sorts by name descending when requested" do
+        create(:form, :standalone, name: "Zebra")
+        create(:form, :standalone, name: "Alpha")
+        get forms_path(sort: "name", direction: "desc"), headers: frame_headers
+        expect(response.body.index("Zebra")).to be < response.body.index("Alpha")
+      end
+
       it "has no Delete link" do
-        form = create(:form, :standalone, name: "My Form")
-        get forms_path
+        create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
         expect(response.body).not_to include(">Delete<")
+      end
+
+      it "links the form name to its editor, breaking out of the lazy frame" do
+        form = create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
+        link = Nokogiri::HTML(response.body).css("a").find { |a| a.text.strip == "My Form" }
+        expect(link&.[]("href")).to eq(edit_form_path(form))
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+
+      it "targets the top frame from the row action links so they navigate the whole page" do
+        create(:form, :standalone, name: "My Form")
+        get forms_path, headers: frame_headers
+        doc = Nokogiri::HTML(response.body)
+        %w[Results View Edit].each do |label|
+          link = doc.css("a").find { |a| a.text.strip == label }
+          expect(link&.[]("data-turbo-frame")).to eq("_top"), "expected #{label} link to target _top"
+        end
       end
     end
 
@@ -69,7 +115,7 @@ RSpec.describe "Forms", type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.body).to include("Smart field settings")
-        expect(response.body).to include("agency_name")
+        expect(response.body).to include("organization_name")
         expect(response.body).to include("Looked up against existing organizations by exact name")
       end
 
@@ -204,18 +250,17 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).not_to include("Dashboard")
     end
 
-    it "offers only the standalone Preview link when no event is known" do
+    it "offers the preview (View) subnav tab but no live-form link when no event is known" do
       get edit_form_path(form)
-      expect(response.body).to include(">Preview<")
-      expect(response.body).not_to include(">View<")
+      expect(response.body).to include(">View<")
+      expect(response.body).not_to include(">Live form<")
     end
 
-    it "adds a View link to the live registration form when the event is known" do
+    it "adds a Live form link to the registration page when the event is known" do
       create(:event_form, form: form, event: event)
       get edit_form_path(form, event_id: event.id)
-      expect(response.body).to include(">View<")
+      expect(response.body).to include(">Live form<")
       expect(response.body).to include(new_event_public_registration_path(event))
-      expect(response.body).to include(">Preview<")
     end
   end
 
@@ -227,6 +272,15 @@ RSpec.describe "Forms", type: :request do
       get edit_form_path(form)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
+    end
+
+    it "shows the Duplicate form button posting to the copy action" do
+      form = create(:form, :standalone, name: "Test")
+      get edit_form_path(form)
+      doc = Nokogiri::HTML(response.body)
+      button = doc.css("a").find { |a| a.text.strip == "Duplicate form" }
+      expect(button&.[]("href")).to eq(copy_form_path(form))
+      expect(button["data-turbo-method"]).to eq("post")
     end
 
     it "renders the collapsible per-field options controls" do
@@ -716,14 +770,14 @@ RSpec.describe "Forms", type: :request do
     context "as admin" do
       before { sign_in admin }
 
-      it "creates a full copy named \"COPY of [name]\" and redirects to its editor" do
+      it "creates a full copy named \"DUPLICATE of [name]\" and redirects to its editor" do
         form = create(:form, :standalone, name: "Volunteer")
         create(:form_field, form: form, name: "First name")
 
         expect { post copy_form_path(form) }.to change(Form, :count).by(1)
 
-        copy = Form.find_by(name: "COPY of Volunteer")
-        expect(copy.name).to eq("COPY of Volunteer")
+        copy = Form.find_by(name: "DUPLICATE of Volunteer")
+        expect(copy.name).to eq("DUPLICATE of Volunteer")
         expect(copy.form_fields.map(&:name)).to eq([ "First name" ])
         expect(response).to redirect_to(edit_form_path(copy))
       end
@@ -769,6 +823,70 @@ RSpec.describe "Forms", type: :request do
       get form_path(form)
 
       expect(response.body).to include("Answers on file")
+    end
+  end
+
+  describe "GET /forms/:id/results" do
+    context "as admin" do
+      before { sign_in admin }
+
+      it "renders the results page with the aggregated select answers and text responses" do
+        form = create(:form, :standalone, name: "Survey")
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+
+        blue = create(:form_submission, form: form)
+        create(:form_answer, form_submission: blue, form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: blue, form_field: thoughts, submitted_answer: "Loved it")
+
+        red = create(:form_submission, form: form)
+        create(:form_answer, form_submission: red, form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Favorite color")
+        expect(response.body).to include("Any thoughts")
+        expect(response.body).to include("Loved it")
+      end
+
+      it "shows an empty state when the form has no submissions" do
+        form = create(:form, :standalone, name: "Untouched")
+        get results_form_path(form)
+        expect(response.body).to include("No submissions to this form yet")
+      end
+
+      it "shows the shared page subnav linking to the form's sibling pages" do
+        form = create(:form, :standalone, name: "Survey")
+        get results_form_path(form)
+        doc = Nokogiri::HTML(response.body)
+        nav = doc.at_css("nav[aria-label='Form pages']")
+        expect(nav).to be_present
+        hrefs = nav.css("a").map { |a| a["href"] }
+        expect(hrefs).to include(
+          form_path(form), edit_form_path(form), edit_sections_form_path(form)
+        )
+        expect(hrefs.any? { |h| h.start_with?(form_submissions_path) }).to be(true)
+        expect(hrefs).not_to include(copy_form_path(form))
+        active = nav.at_css("[aria-current='page']")
+        expect(active&.text&.strip).to eq("Results")
+      end
+
+      it "does not show the Duplicate form button on the results page" do
+        form = create(:form, :standalone, name: "Survey")
+        get results_form_path(form)
+        expect(response.body).not_to include("Duplicate form")
+      end
+    end
+
+    context "as a regular user" do
+      before { sign_in user }
+
+      it "denies access" do
+        form = create(:form, :standalone)
+        get results_form_path(form)
+        expect(response).to redirect_to(root_path)
+      end
     end
   end
 

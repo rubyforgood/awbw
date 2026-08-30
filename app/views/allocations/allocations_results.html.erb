@@ -1,5 +1,5 @@
 <%= turbo_frame_tag :allocations_results do %>
-  <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit">
+  <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm blur-on-submit">
     <% if @allocations.any? %>
       <% total = @allocations.respond_to?(:total_entries) ? @allocations.total_entries : @allocations.size %>
       <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">

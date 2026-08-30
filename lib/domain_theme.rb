@@ -1,27 +1,30 @@
 module DomainTheme
   # New colors must be added to the inline source in `application.tailwind.css`
   # for tailwind to generate the classes
+  # Domains on the AWBW brand palette use a `brand-*` scale (defined in
+  # application.tailwind.css); the rest still use Tailwind's stock hues. Both
+  # work the same way here — the helpers below just interpolate the name.
   COLORS = {
-    workshops:                :indigo,
-    workshop_variations:      :purple,
+    workshops:                :"brand-navy",
+    workshop_variations:      :"brand-pink",
     workshop_logs:            :teal,
-    resources:                :violet,
-    community_news:           :orange,
-    stories:                  :fuchsia,
-    events:                   :teal,
-    people:                   :cyan,
-    organizations:            :emerald,
+    resources:                :"brand-purple",
+    community_news:           :"brand-orange",
+    stories:                  :"brand-magenta",
+    events:                   :"brand-teal",
+    people:                   :"brand-cyan",
+    organizations:            :"brand-emerald",
     quotes:                   :slate,
     grants:                   :green,
 
-    tags:                     :lime,
+    tags:                     :"brand-amber",
     sectors:                  :lime,
     categories:               :lime,
     category_types:            :lime,
 
     forms:                    :purple,
-    faqs:                     :pink,
-    video_recordings:         :sky,
+    faqs:                     :"brand-green",
+    video_recordings:         :"brand-yellow",
 
     workshop_ideas:           :indigo,
     workshop_variation_ideas: :purple,
@@ -56,8 +59,11 @@ module DomainTheme
     program_reinstated:       :purple,
 
     # Org-wide program status (the stored organization_status): Active is the
-    # positive current state, Formerly active a lapsed one, Never active neutral.
+    # positive current state, Upcoming a not-yet-started one (blue — a benign
+    # not-active state, not an amber warning), Formerly active a lapsed one, Never
+    # active neutral.
     org_active:               :green,
+    org_upcoming:             :blue,
     org_formerly_active:      :orange,
     org_never_active:         :gray,
 

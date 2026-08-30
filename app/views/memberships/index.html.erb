@@ -2,17 +2,17 @@
 
 <% active_membership = @memberships.any? { |membership| !membership.cancelled? } %>
 
-<div class="mx-auto max-w-3xl bg-white border border-gray-200 rounded-xl shadow p-4 sm:p-6">
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
-    <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class}" do %>
+<div class="border-primary/10 mx-auto max-w-3xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= @person.full_name %>
     <% end %>
-    <%= link_to "All memberships", membership_invoices_path, class: "text-sm #{eyebrow_link_class}" %>
+    <%= link_to "All memberships", membership_invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <div class="flex flex-wrap items-end justify-between gap-2 mb-6">
+  <div class="mb-6 flex flex-wrap items-end justify-between gap-2">
     <div>
-      <h1 class="text-2xl font-bold mb-1">Memberships</h1>
+      <h1 class="text-primary mb-1 font-display text-2xl font-bold">Memberships</h1>
       <p class="text-sm text-gray-500"><%= @person.full_name %></p>
     </div>
     <% if !active_membership || params[:admin] == "true" %>
@@ -28,8 +28,8 @@
   <% else %>
     <div class="space-y-6">
       <% @memberships.each do |membership| %>
-        <div class="border border-gray-200 rounded-lg p-3 sm:p-4">
-          <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 mb-3">
+        <div class="border-primary/10 rounded-2xl border p-3 sm:p-4">
+          <div class="mb-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
             <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
               <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
               <span class="text-gray-600">Status: <span class="font-medium text-gray-800"><%= membership.status_label %></span></span>

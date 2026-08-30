@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { isFacilitatorTitle } from "../lib/affiliation";
 
 // Connects to data-controller="affiliation-facilitator-warning"
 //
@@ -65,8 +66,7 @@ export default class extends Controller {
       startDate,
       endDate,
       destroyed,
-      // Mirror Affiliation#facilitator?: exact, case-sensitive "Facilitator" (trimmed).
-      facilitator: title.trim() === "Facilitator",
+      facilitator: isFacilitatorTitle(title),
     };
   }
 

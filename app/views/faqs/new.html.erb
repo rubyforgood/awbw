@@ -1,12 +1,12 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:faqs) %> border border-gray-200 rounded-xl shadow p-6">
-        <div class="flex items-center justify-between mb-3">
-          <h1 class="text-2xl font-semibold text-gray-900">
+<div class="<%= DomainTheme.bg_class_for(:faqs) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+        <div class="mb-3 flex items-center justify-between">
+          <h1 class="text-primary font-display text-2xl font-semibold">
             New <%= @faq.class.model_name.human.downcase %>
           </h1>
         </div>
 
-        <div class="bg-white rounded p-6">
+        <div class="rounded bg-white p-6">
           <div class="mt-4">
             <%= render "form" %>
           </div>

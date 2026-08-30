@@ -23,12 +23,13 @@ class TopicSubscriptionDecorator < ApplicationDecorator
     h.render "shared/badge", label: label, classes: classes, icon: icon, icon_html: icon_html, href: href
   end
 
-  # The specific event this subscription narrows to, "Any — <topic>" for a broad
-  # subscription to an event-oriented topic, or "N/A" for topics with no event
-  # dimension (e.g. News).
+  # The specific event this subscription narrows to — its abbreviation when set,
+  # else the full title (via the event's compact label) — "Any — <topic>" for a
+  # broad subscription to an event-oriented topic, or nil for topics with no event
+  # dimension (e.g. News), so callers render nothing rather than an "N/A".
   def event_label
-    return interested_event.title if interested_event
-    topic_subscription_type&.event_selector? ? "Any — #{topic_label.downcase}" : "N/A"
+    return interested_event.decorate.compact_label if interested_event
+    "Any — #{topic_label.downcase}" if topic_subscription_type&.event_selector?
   end
 
   # A broad ("Any") subscription to an event-oriented topic — the case the index

@@ -52,6 +52,21 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to include("respond by email")
       end
 
+      it "prefills the subject and message from query params" do
+        get contact_us_path(subject: "Request to update my affiliation history",
+                            message: "Please fix my dates.")
+        expect(response.body).to include('value="Request to update my affiliation history"')
+        expect(response.body).to include("Please fix my dates.")
+      end
+
+      it "returns to the edit form when the request came from the person edit page" do
+        sign_in user
+        get contact_us_path(return_to: "person_edit")
+        expect(response.body).to include("Back to my profile")
+        expect(response.body).to include(edit_person_path(user.person, anchor: "affiliations"))
+        expect(response.body).to include('name="return_to" value="person_edit"')
+      end
+
       it "shows thank you message after form submission" do
         post contact_us_path, params: valid_params
         follow_redirect!
@@ -123,8 +138,8 @@ RSpec.describe "ContactUs", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("info@awbw.org")
       expect(response.body).to include("1029 1/2 W 24th Street")
-      # Rendered inside the story_shares layout
-      expect(response.body).to include("Get involved!")
+      # Rendered inside the story_shares layout (the get-involved band)
+      expect(response.body).to include("There's a place for you at AWBW")
       # Subject preset picker posts straight through as contact_us[subject]
       expect(response.body).to include('<select name="contact_us[subject]"')
       expect(response.body).to include("Interest in Windows Facilitator trainings")

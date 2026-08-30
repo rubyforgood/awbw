@@ -1,0 +1,16 @@
+<%# Shared chrome for a home-page section: the brand rule at the boundary, the
+    section's surface, its heading, and the caller's lazy frame as a block.
+    locals: title, subtitle (optional), surface (defaults to white). %>
+<% surface = local_assigns[:surface].presence || "bg-white" %>
+<section class="<%= surface %>">
+  <%= render "shared/brand_accent_strip" %>
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <div class="mb-8">
+      <h2 class="text-primary font-display text-3xl"><%= title %></h2>
+      <% if local_assigns[:subtitle].present? %>
+        <p class="mt-1 text-gray-600"><%= subtitle %></p>
+      <% end %>
+    </div>
+    <%= yield %>
+  </div>
+</section>

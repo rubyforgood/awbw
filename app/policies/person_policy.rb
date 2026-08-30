@@ -32,6 +32,8 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  # Admin-only for now; flips to `admin? || owner?` at profile launch, when the
+  # owner read-only affiliation view on the edit form goes live.
   def edit?
     admin?
   end
@@ -48,12 +50,16 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  def send_form_link?
+    admin?
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 
   relation_scope do |relation|
     next relation if admin?
-    relation.searchable.with_active_affiliations.where_user_not_locked
+    relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
   end
 
   private

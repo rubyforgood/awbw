@@ -16,6 +16,23 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
     end
   end
 
+  describe "#affiliation_choice_label" do
+    it "combines the event date, title, and linked orgs, omitting the registrant" do
+      event = create(:event, title: "Spring Training", start_date: Time.zone.parse("2026-03-14 10:00"))
+      org = create(:organization, name: "Sunrise House")
+      reg = create(:event_registration, event: event, organizations: [ org ]).decorate
+
+      expect(reg.affiliation_choice_label).to eq("2026-03-14 Spring Training — Sunrise House")
+    end
+
+    it "drops the org clause when the registration has no linked org" do
+      event = create(:event, title: "Spring Training", start_date: Time.zone.parse("2026-03-14 10:00"))
+      reg = create(:event_registration, event: event, organizations: []).decorate
+
+      expect(reg.affiliation_choice_label).to eq("2026-03-14 Spring Training")
+    end
+  end
+
   describe "#deletion_blocked_reason" do
     it "returns nil for a deletable registration" do
       reg = create(:event_registration, status: "registered")

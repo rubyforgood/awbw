@@ -1,19 +1,19 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% if params[:return_to] == "onboarding" && params[:event_id].present? %>
   <div class="mb-2">
-    <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm #{eyebrow_link_class}" do %>
+    <%= link_to onboarding_event_row_path(params[:event_id], params[:highlight]), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Onboarding
     <% end %>
   </div>
 <% end %>
-<div class="border border-gray-200 rounded-xl shadow overflow-hidden">
+<div class="border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
       <!-- User account header banner -->
       <div class="<%= DomainTheme.bg_class_for(:users, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:users, intensity: 300) %> px-8 py-3">
         <div class="flex items-center gap-2">
-          <svg class="w-5 h-5 <%= DomainTheme.text_class_for(:users, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="h-5 w-5 <%= DomainTheme.text_class_for(:users, intensity: 700) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:users, intensity: 900) %> uppercase tracking-wide">New User</span>
+          <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:users, intensity: 900) %> tracking-wide uppercase">New User</span>
         </div>
       </div>
       <div class="<%= DomainTheme.bg_class_for(:users) %> p-4 sm:p-8">

@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-  include AhoyTracking, TagAssignable
+  include AhoyTracking, TagAssignable, Dedupable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
   def index
@@ -170,8 +170,7 @@ class OrganizationsController < ApplicationController
       affiliations = affiliations.includes(:person) unless affiliations.loaded?
       sorted = affiliations.to_a
                              .sort_by { |affiliation|
-                               expired = affiliation.inactive? || (affiliation.end_date.present? && affiliation.end_date < Date.current)
-                               [ expired ? 1 : 0,
+                               [ affiliation.active? ? 0 : 1,
                                  affiliation.person&.first_name.to_s.downcase,
                                  affiliation.person&.last_name.to_s.downcase ]
                              }
@@ -237,7 +236,7 @@ class OrganizationsController < ApplicationController
   def organization_params
     params.require(:organization).permit(
       :name, :description, :start_date, :end_date, :mission_vision_values,
-      :agency_type, :agency_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
+      :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id, :high_profile,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
@@ -252,6 +251,7 @@ class OrganizationsController < ApplicationController
         :id,
         :person_id,
         :inactive,
+        :inactive_supplied,
         :primary_contact,
         :title,
         :start_date,
@@ -260,6 +260,7 @@ class OrganizationsController < ApplicationController
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
       addresses_attributes: [
         :id,
         :address_type,
@@ -280,6 +281,31 @@ class OrganizationsController < ApplicationController
         :_destroy
       ]
     )
+  end
+
+  def dedupe_config
+    {
+      model_class: Organization,
+      domain: :organizations,
+      candidate_finder: -> { OrganizationServices::DuplicateFinder.new.groups },
+      editable_columns: %w[
+        name filemaker_code email website_url organization_type description
+        mission_vision_values notes organization_status_id organization_obligation_id
+      ],
+      union_columns: %w[filemaker_code],
+      merge_keeper: ->(keep, delete) {
+        keep.filemaker_code = Organization.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
+      },
+      belongs_to_options: -> {
+        {
+          "organization_status_id" => OrganizationStatus.order(:name),
+          "organization_obligation_id" => OrganizationObligation.order(:name)
+        }
+      },
+      record_extras: ->(org) {
+        [ org.filemaker_code.presence && "FileMaker #{org.filemaker_code}", org.program_location ].compact.join(" · ").presence
+      }
+    }
   end
 
   def find_duplicate_organizations(name)

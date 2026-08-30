@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
-<div class="<%= DomainTheme.bg_class_for(:video_recordings, intensity: @video_recording.is_instructional? ? 100 : 50) %> border border-gray-200 rounded-xl shadow p-6">
+<%= render layout: "shared/show_page", locals: { domain: :video_recordings, surface: DomainTheme.bg_class_for(:video_recordings, intensity: @video_recording.is_instructional? ? 100 : 50) } do %>
       <!-- Top Right Utility Links -->
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
+      <div class="mb-4 flex flex-wrap justify-end gap-2">
         <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% if @video_recording.is_instructional? %>
           <%= link_to "Instructional videos", video_recordings_path(video_type: "instructional"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
@@ -18,11 +18,11 @@
       </div>
 
       <!-- Resource Card -->
-      <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <div class="space-y-6 rounded-lg bg-white p-6 shadow-md">
 
         <!-- Title -->
-        <div class="font-semibold text-gray-900 my-6">
-          <%= title_with_badges(@video_recording, font_size: "text-3xl") %>
+        <div class="my-6 font-semibold text-gray-900">
+          <%= title_with_badges(@video_recording, font_size: "text-3xl", display: true) %>
         </div>
 
         <!-- Embedded Video -->
@@ -49,11 +49,11 @@
         <!-- Back Button -->
         <div class="mt-8">
           <% if @video_recording.is_instructional? %>
-            <%= link_to "← Instructional videos", video_recordings_path(video_type: "instructional"), class: "text-sm #{eyebrow_link_class}" %>
+            <%= link_to "← Instructional videos", video_recordings_path(video_type: "instructional"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <% else %>
-            <%= link_to "← Videos", video_recordings_path(video_type: "all"), class: "text-sm #{eyebrow_link_class}" %>
+            <%= link_to "← Videos", video_recordings_path(video_type: "all"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
           <% end %>
         </div>
 
       </div>
-</div>
+<% end %>

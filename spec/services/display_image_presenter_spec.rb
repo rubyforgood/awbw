@@ -77,10 +77,46 @@ RSpec.describe DisplayImagePresenter do
         expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 1200, 1200 ])
       end
 
+      it "serves the named image_variant, overriding the width-based size inference" do
+        result = described_class.call(file: file, variant: :gallery, width: "full", height: "full", image_variant: :thumbnail, view_context: view_context)
+        expect(result.renderable).to be_a(ActiveStorage::VariantWithRecord)
+        expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 256, 256 ])
+      end
+
+      it "ignores an image_variant the attachment does not declare and falls back to inference" do
+        result = described_class.call(file: file, variant: :index, width: "full", height: "full", image_variant: :nonexistent, view_context: view_context)
+        expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 1200, 1200 ])
+      end
+
       it "builds alt text with filename" do
         result = described_class.call(file: file, idx: 0, item_type: "Main", view_context: view_context)
         expect(result.alt_text).to include("missing.png")
         expect(result.alt_text).to include("Main image 1")
+      end
+    end
+
+    context "when the attachment has no :card variant (e.g. Person#avatar)" do
+      let(:person) do
+        create(:person).tap do |p|
+          p.avatar.attach(
+            io: File.open(Rails.root.join("app", "assets", "images", "missing.png")),
+            filename: "missing.png",
+            content_type: "image/png"
+          )
+        end
+      end
+
+      it "degrades to a declared variant for a full-width display instead of raising" do
+        result = described_class.call(file: person.avatar, variant: :index, width: "full", height: "full", view_context: view_context)
+        expect(result.display_type).to eq(:active_storage)
+        expect(result.renderable).to be_a(ActiveStorage::VariantWithRecord)
+        expect(result.renderable.variation.transformations[:resize_to_limit]).to eq([ 256, 256 ])
+      end
+
+      it "uses the original file when no usable variant is declared" do
+        allow_any_instance_of(described_class).to receive(:variant_defined?).and_return(false)
+        result = described_class.call(file: person.avatar, variant: :index, width: "full", height: "full", view_context: view_context)
+        expect(result.renderable).to eq(person.avatar)
       end
     end
 

@@ -9,6 +9,7 @@ module NotificationServices
       custom_message: nil,
       custom_subject: nil,
       hide_event_card: false,
+      hide_ticket_button: false,
       sender: nil,
       bulk: false,
       deliver: true,
@@ -24,6 +25,7 @@ module NotificationServices
         custom_message: custom_message,
         custom_subject: custom_subject,
         hide_event_card: hide_event_card,
+        hide_ticket_button: hide_ticket_button,
         sender: sender,
         bulk: bulk
       )

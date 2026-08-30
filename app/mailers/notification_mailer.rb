@@ -178,14 +178,30 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  # A staff member sent this person the public link to one of the agreement
+  # forms (see Form.agreement_forms). The notification carries what was sent: the
+  # form name in custom_subject and the public form URL in custom_message.
+  def form_link_request(notification)
+    @person = notification.noticeable
+    @form_name = notification.custom_subject
+    @url = notification.custom_message
+    @sender = notification.sender
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Link to complete #{@form_name}"
+    )
+  end
+
   def form_submission_confirmation_fyi(notification)
     @submission = notification.noticeable
     @form = @submission.form
     @person = @submission.person
     @answers = @submission.form_answers.includes(:form_field)
 
+    submitter = @person&.full_name || "an anonymous respondent"
     mail(
-      subject: "#{FYI_PREFIX} New form submission: #{@form.display_name} by #{@person.full_name}"
+      subject: "#{FYI_PREFIX} New form submission: #{@form.display_name} by #{submitter}"
     )
   end
 

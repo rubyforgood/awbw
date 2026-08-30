@@ -5,7 +5,7 @@
 <%#
   Reached from an admin page (return_to): point the eyebrow back at that page
   instead of the registrant's ticket — the CE registration edit page, or the event's
-  CE sign-ins, whose registrant links land here. Each gated on access to the
+  CE timesheets, whose registrant links land here. Each gated on access to the
   destination so a registrant who lands on one of these URLs still gets the default
   ticket back.
 %>
@@ -17,7 +17,7 @@
      end
    when "attendance"
      if allowed_to?(:attendance?, @event)
-       { back_path: attendance_event_path(@event, ce: "true", anchor: "totals"), back_label: "Back to CE sign-ins" }
+       { back_path: attendance_event_path(@event, ce: "true", anchor: "totals"), back_label: "Back to CE timesheets" }
      end
    end || {} %>
 
@@ -375,6 +375,40 @@
           <% if signed_in || window_open %>Sign in when you arrive and sign out when you leave, breaks and lunch included, so your hours are recorded accurately.<br><% end %>
           You can add or correct any day's times yourself with <span class="font-medium text-teal-700">Edit</span> — during the training or after it.
         </p>
+      </section>
+    <% end %>
+
+    <%# The CE callout's post-training form (e.g. an evaluation). It opens only
+        once the registrant's sign-outs are complete, links to the form on its own
+        page (the generic callout-form flow) and returns here. Completing it is
+        required before the CE certificate is issued. %>
+    <% if @ce_form&.present? && (@ce_form.available? || sample_preview? || simulate_ce_paid) %>
+      <section id="ce-form" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-xs font-semibold tracking-wider text-gray-500 uppercase"><%= @ce_form.form.display_name %></h2>
+          <% if @ce_form.complete? %>
+            <%= render "shared/badge",
+                  label: "Submitted",
+                  classes: "bg-green-50 text-green-700 border-green-200",
+                  icon: "fa-solid fa-circle-check text-2xs" %>
+          <% end %>
+        </div>
+
+        <p class="mt-2 text-sm text-gray-600">
+          <%= @ce_form.complete? ? "Thanks — your responses are recorded. You can review or update them." : "Please complete this form to receive your CE certificate." %>
+        </p>
+
+        <div class="mt-4">
+          <% link_label = @ce_form.complete? ? "Review your responses" : "Complete the form" %>
+          <% if sample_preview? %>
+            <button type="button" disabled
+                    class="cursor-not-allowed rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60"><%= link_label %></button>
+          <% else %>
+            <%= link_to link_label,
+                  registration_callout_form_path(@event_registration.slug, @ce_callout, return_to: "ce"),
+                  class: "inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300" %>
+          <% end %>
+        </div>
       </section>
     <% end %>
   <% else %>

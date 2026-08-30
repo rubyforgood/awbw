@@ -34,10 +34,17 @@ RSpec.describe FacilitatorProgramStatus do
       expect(status_on.status).to eq(:ongoing)
     end
 
-    it "is :ongoing for a same-day (start == end) facilitation on the anchor" do
-      # A one-day program is active on its own day, even though it starts on the anchor.
+    it "is :new for a same-day (start == end) facilitation dated to the anchor" do
+      # start == end == the event date is the affiliation this training mints (D8),
+      # so a first-time org still reads New — not Ongoing.
       facilitator(start_date: anchor, end_date: anchor)
-      expect(status_on.status).to eq(:ongoing)
+      expect(status_on.status).to eq(:new)
+    end
+
+    it "is :new for an affiliation that starts on the anchor with a later end date" do
+      # Still the minted affiliation (starts on the event), just not open-ended.
+      facilitator(start_date: anchor, end_date: anchor + 30)
+      expect(status_on.status).to eq(:new)
     end
 
     it "is :reinstated for a same-day facilitation that ran before the anchor" do
@@ -56,6 +63,36 @@ RSpec.describe FacilitatorProgramStatus do
     end
   end
 
+  # Status is per-organization over ALL its facilitator affiliations (ADR-0001 D5),
+  # so a freshly-minted affiliation never downgrades a program that other affiliations
+  # already make Ongoing or Reinstated.
+  describe "combining multiple facilitator affiliations" do
+    it "is :ongoing when a prior active affiliation coexists with one minted at the anchor" do
+      facilitator(start_date: Date.new(2019, 3, 1))                 # prior, still active
+      facilitator(start_date: anchor)                              # minted at this training
+      expect(status_on.status).to eq(:ongoing)
+    end
+
+    it "is :reinstated when only lapsed history coexists with one minted at the anchor" do
+      facilitator(start_date: Date.new(2015, 1, 1), end_date: Date.new(2017, 1, 1))  # lapsed
+      facilitator(start_date: anchor)                                                # minted
+      expect(status_on.status).to eq(:reinstated)
+    end
+
+    it "is :ongoing when an active affiliation coexists with a lapsed one" do
+      facilitator(start_date: Date.new(2015, 1, 1), end_date: Date.new(2017, 1, 1))  # lapsed
+      facilitator(start_date: Date.new(2023, 1, 1))                                  # active
+      expect(status_on.status).to eq(:ongoing)
+    end
+
+    it "is :new only when every facilitator affiliation is dated on/after the anchor" do
+      facilitator(start_date: anchor)                     # minted, open-ended
+      facilitator(start_date: anchor, end_date: anchor)   # minted, same-day
+      facilitator(start_date: anchor + 5)                 # starts after the event
+      expect(status_on.status).to eq(:new)
+    end
+  end
+
   describe "the anchor" do
     it "reads as of the given date" do
       expect(status_on.as_of).to eq(anchor)
@@ -67,6 +104,27 @@ RSpec.describe FacilitatorProgramStatus do
 
       expect(status.as_of).to eq(Date.current.beginning_of_year)
       expect(status).to be_year_anchored
+    end
+
+    # The anchor is the event's start date, never "today", so an org whose only
+    # facilitator affiliation was minted at a training reads New at that training
+    # whenever you look — on any day of a multi-day event, and years afterward.
+    it "reads New at the training on every day of it and looking back" do
+      org = create(:organization)
+      training_start = Date.new(2026, 9, 10)
+      create(:affiliation, person: create(:person), organization: org,
+                           title: "Facilitator", start_date: training_start, end_date: nil)
+      org.reload
+
+      [ training_start, training_start + 1.day, training_start + 2.days ].each do |viewed_on|
+        travel_to(viewed_on) do
+          expect(org.facilitator_program_status(as_of: training_start).status).to eq(:new)
+        end
+      end
+
+      travel_to(training_start + 3.years) do
+        expect(org.facilitator_program_status(as_of: training_start).status).to eq(:new)
+      end
     end
   end
 

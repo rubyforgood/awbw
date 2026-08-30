@@ -1,0 +1,22 @@
+<%# Shared header for the form builder pages. Replaces the purple gradient slab
+    with the light identity band used across the rest of the portal: brand rule,
+    a domain tint, a circular icon badge, a domain-coloured eyebrow, and the
+    title in the display serif. Optional `meta` holds the right-hand stat chips.
+    locals: icon, eyebrow, title; optional meta. %>
+<%= render "shared/brand_accent_strip", rounded: true %>
+<div class="<%= DomainTheme.bg_class_for(:forms, intensity: 100) %> px-6 py-6 sm:px-8">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <span class="<%= DomainTheme.bg_class_for(:forms, intensity: 200) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
+        <i class="<%= icon %> text-xl" aria-hidden="true"></i>
+      </span>
+      <div class="min-w-0">
+        <p class="text-2xs <%= DomainTheme.text_class_for(:forms, intensity: 700) %> font-semibold tracking-widest uppercase"><%= eyebrow %></p>
+        <h1 class="text-primary font-display text-2xl leading-tight tracking-tight"><%= title %></h1>
+      </div>
+    </div>
+    <% if local_assigns[:meta].present? %>
+      <div class="flex flex-wrap items-center gap-2"><%= meta %></div>
+    <% end %>
+  </div>
+</div>

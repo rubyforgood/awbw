@@ -50,7 +50,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
-| Ship a user-facing feature | `config/features.yml` (the Features & tips seed — see below) |
+| Ship a user-facing feature **or improvement/change** | `config/features.yml` (the Features & tips seed — see below) |
 
 ## Code Style
 
@@ -240,6 +240,30 @@ reachable from several origins, the eyebrow must adapt to whichever one the user
   `EventHelper#bulk_payments_return_path` centralizes the expand + anchor logic for the bulk
   payments flow).
 
+## Form submission displays
+
+**A form submission's answers are shown on several different pages — know which is which
+before linking between them.** They share the answer-display partials
+(`form_submissions/submission`, `shared/form_answer_value`, the section grouping), so keep
+presentation in those partials, not forked per page.
+
+- **"Public submission" / "public form display" = the person's own slug-accessible view of
+  their submission, reached through the ticket** (and linkable from lists). Today that's the
+  event **public registration confirmation** (`events/public_registrations#show`,
+  `page_bg "public"`), accessed publicly via `?reg=<registration_slug>` (the unguessable
+  ticket token) or, for admins, `?person_id=` (gated by `person_form_submission?`). When
+  someone says "public form display," this is what they mean — **not** the admin `show`.
+- **Admin submission views** (both `page_bg admin-only`; both carry the admin-only "What this
+  submission changed" bar when `FormSubmissionChanges#edited?`):
+  - `form_submissions#show` — top-level `/form_submissions/:id` (admin-or-slug).
+  - `events/form_submissions#show` — event-scoped registrant submissions ("← Back to registrants").
+- **Link-organizations pages** (admin) also render a submission summary and the changes link:
+  `event_registrations/link_organization` and `form_submissions/link_organization`.
+- The **"What this submission changed"** audit page is `form_submissions#changes` (admin-only);
+  its eyebrow branches on `params[:return_to]` to return to whichever page linked in.
+- **Standalone (non-event) submissions currently have no submitter-facing view** — tracked in
+  rubyforgood/awbw#2407 (confirmation email → slug-based own-view reusing these partials).
+
 ## Page background class (`page_bg_class`)
 
 Every page view sets `<% content_for(:page_bg_class, "...") %>` at the top — the layout
@@ -291,9 +315,21 @@ see what the portal does. It is **database-backed** (`Feature` model) and edited
 in-app by super-admins — the rich `description` uses the Rhino WYSIWYG (so pages
 can carry screenshots), and each feature can link an external process doc.
 
-**Keep it current as you ship.** When you add a user-facing feature, append an
-entry to `config/features.yml` (the checked-in **seed**):
+**Keep it current as you ship.** When you ship anything a facilitator or admin
+would want to know about, append an entry to `config/features.yml` (the checked-in
+**seed**). This is **not just brand-new features** — a user-facing *improvement,
+change, or enhancement* to something that already exists (a new filter, an extra
+column, a reworked flow) belongs here too. If in doubt whether a change is "big
+enough," add it: a short entry is cheap and the page is where non-devs discover
+what changed.
 
+- **There is no separate "feature vs. update" flag** — every entry is just a
+  `Feature` row, and audience is the only axis (`display_status`). Signal that an
+  entry is a smaller update through its `summary`/`name` wording (e.g. "Filter
+  registrants by registration date"), not a schema field. (If we ever want the UI
+  to visually separate launches from tweaks, that's a `kind:` column on `Feature` +
+  `CATALOG_FIELDS` + a decorator badge — a deliberate change, not something to
+  fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
   sentences), `released_on` (ship date), plus optional `pro_tips` (list),
@@ -361,6 +397,7 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - Default branch is `main`
 - Commit messages should explain why, not what
 - CI runs via GitHub Actions (`.github/workflows/`)
+- **Don't follow, poll, or wait on CI.** After pushing or opening/updating a PR, never run `gh run watch`, `gh pr checks`, or spawn a background task to poll a CI run to completion. The user watches CI themselves. Push, report what you did, and end the turn — don't burn tokens waiting on the run.
 - **When rebasing onto main**, review incoming changes for their intent and flag any oversights — missing tests, incomplete migrations, broken assumptions, or conflicts between the two branches. Check both directions: schema/model changes on either branch that affect views, partials, or layouts on the other (e.g., main redesigned a table's CSS but your branch adds new columns to it, or vice versa)
 
 ## PRs
@@ -378,15 +415,17 @@ Follow the [Stimulus Handbook](https://stimulus.hotwired.dev/handbook/introducti
 - **Do not rename branches after creating a PR** — deleting the old remote branch auto-closes the PR on GitHub, and the head ref cannot be changed after creation
 - Use `docs/pull_request_template.md` for PR description structure
 - **Remove the `Closes …` line when there's no ticket** — it's a template placeholder. Keep it (with a real issue link) only when the PR closes a tracked ticket; otherwise drop the line entirely rather than leaving the placeholder.
-- **Keep descriptions as short as possible** — a few terse bullets, not paragraphs. Cut anything a reviewer can see from the diff; only keep what explains *why*.
-  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two bullets instead.
-  - **Short sentences.** Aim for one clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Prefer sentence fragments over full sentences when they're clear.
-  - **Group with headers** once the description covers more than one topic — a `##`/`###` header per section, bullets underneath — instead of a long undifferentiated list or run of paragraphs.
+- **Lead with one plain-language sentence** — right after the review-depth tag, write a single sentence a non-dev could read that says what changes and, when you know it, *why it matters* (the user problem or business reason it solves). This is the one line that must land; everything below it is supporting detail. Write it like you're telling a colleague, not filing a report.
+  - **Say the business reason when it's available, skip it when it isn't.** If the change fixes a pain point, unblocks a workflow, or was asked for, name that in plain terms ("facilitators couldn't tell which registrants had paid"). If no reason is known, don't invent one or pad — just describe the change plainly and move on.
+- **Keep the whole thing short enough to read in one glance** — the lead sentence plus at most a handful of bullets. If it's longer than a short screenful, cut. A reviewer skims first; make the main point impossible to miss.
+  - **Cut anything the diff already shows.** Only keep what a reader can't get from reading the code — the why, a non-obvious trade-off, a gotcha. Don't narrate the changes file by file.
+  - **Bullets over prose, always.** Never write a paragraph where a bullet works. One idea per bullet; if a bullet needs a comma-spliced second clause, split it into two.
+  - **Short, plain sentences.** One clause per bullet. Drop filler ("this PR", "in order to", "as well as"), hedging, and restating the ticket. Sentence fragments are fine when they're clear.
+  - **Group with headers only when you truly need them** — a `##`/`###` header per section once the description genuinely spans more than one topic. Don't reach for headers on a small PR; they add scaffolding that makes a short description feel long.
 - **Start the description with a review-depth tag** on its own single line, in the form `🤖 suggested review level: <N> <Name> <icon> <reason>`, followed by a blank line, then the rest of the description. The tag is the prefix, the level number, the level name, its icon, and a short reason — e.g. `🤖 suggested review level: 5 Inspect 🔬 substantive logic across 13 admin pages incl. filter behavior`. Always spell out the reason inline; never post the number/name/icon alone. The number is a 1–5 scale with three named levels (2 and 4 are unused in-betweens). The tag tells the reviewer how closely to look (depth of review, not how risky/good the change is):
   - **1 Skim 👀** — view-only: markup/copy/styling, no logic or data changes
   - **3 Read 📖** — light-logic: small, contained logic changes with low blast radius
   - **5 Inspect 🔬** — big change: substantive logic, migrations that rename or transform data (backfills), or wide-reaching changes that warrant careful review
-- Description must explain why the change was made, not just what
 - Include screenshots for UI changes
 - **On every push**, update the PR title and content to reflect the current diff — preserve any existing images/screenshots in the description
 - **On every push**, update AI instruction files if the diff adds, removes, or renames anything tracked in AGENTS.md — specifically: Stimulus controllers, services, model/controller concerns, mailers, rake tasks, and directory file counts
@@ -483,4 +522,4 @@ See `ai/` directory for executable scripts:
 
 > **"ai <name>" means the `ai/` script of that name** (e.g. "ai test" → `ai/test`, "ai security" → `ai/security`) — shell scripts in `ai/`, not slash-command skills. If a referenced `ai/<name>` script doesn't exist, ask what's intended rather than substituting a similarly named skill. Two are special — they print a trigger word, and the agent does the work directly rather than producing script output: (1) **"ai recap"** triggers the **Session recap** behavior above; never confuse it with the `/audit` design skill or the `ai/security` scan. (2) **"ai review"** (`ai/review`) triggers the **`ai-review` skill** — review the current workspace diff, post one inline comment per qualifying bug, then give a Recap + Risks + Outstanding decisions summary; it is not the `/audit` skill or the `/code-review` / `/review` skills.
 
-> **Which test command to run.** Bare "test"/"run tests" while iterating → `ai/test` (fast path). But when "test" is part of a **ship** flow — e.g. the user says **"commit push pr test"** (or any combination of commit / push / PR alongside test) — run the **full** suite with **`ai/test_extra`** (Vite build + all system specs), not the fast path. Before pushing or opening/updating a PR, the full suite is what verifies the change; the fast path is only for the inner loop. In such a combined ask, run `ai/test_extra` and only proceed to commit/push/PR once it's green (or the user says otherwise).
+> **Which test command to run.** Default to **`ai/test`** (fast path) for everything — bare "test"/"run tests" while iterating **and** ship flows like **"commit push"**, **"commit push pr"**, or **"commit push pr test"** (any combination of commit / push / PR, with or without "test"). The user watches the full suite on CI themselves, so **do not** run **`ai/test_extra`** (Vite build + all system specs) as part of a commit/push/PR flow. Run `ai/test_extra` **only** when the user explicitly asks for the full suite (e.g. "test_extra", "full tests", "run all system specs").

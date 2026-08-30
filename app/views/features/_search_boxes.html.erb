@@ -35,14 +35,14 @@
       <label for="released_from" class="<%= search_label_class %>">Released from</label>
       <%= f.date_field :released_from, value: params[:released_from],
             onchange: "this.form.requestSubmit()",
-            class: search_field_class %>
+            class: date_filter_class(search_field_class, params[:released_from]) %>
     </div>
 
     <div>
       <label for="released_to" class="<%= search_label_class %>">Released to</label>
       <%= f.date_field :released_to, value: params[:released_to],
             onchange: "this.form.requestSubmit()",
-            class: search_field_class %>
+            class: date_filter_class(search_field_class, params[:released_to]) %>
     </div>
 
     <div>

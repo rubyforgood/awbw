@@ -1,13 +1,22 @@
 <% content_for(:page_bg_class, "public") %>
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
-<div class="px-4 py-8 sm:px-6 lg:px-8">
-<div class="mx-auto w-full max-w-7xl rounded-xl border border-gray-200 bg-white p-6 shadow" id="contact-us-container">
+<% profile_return_path = (edit_person_path(current_user.person, anchor: "affiliations") if @return_to == "person_edit" && current_user&.person) %>
+<div class="border-primary/10 mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border bg-white shadow-sm" id="contact-us-container">
+  <%= render "shared/brand_accent_strip" %>
+  <div class="p-6">
+      <% if profile_return_path %>
+        <div class="mb-3">
+          <%= link_to profile_return_path, class: "text-sm #{eyebrow_link_class}" do %>
+            <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
+          <% end %>
+        </div>
+      <% end %>
       <!-- Header -->
       <header class="space-y-4">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900">
+        <h1 class="text-primary font-display text-3xl tracking-tight">
           Contact us
-        </h2>
+        </h1>
         <p class="max-w-2xl text-lg leading-relaxed text-gray-600">
           We welcome you to contact us with any questions. We are here to help.
         </p>
@@ -99,6 +108,10 @@
                 <div class="pt-2">
                   <%= link_to "Back to story share", story_shares_path, class: "btn btn-primary" %>
                 </div>
+              <% elsif profile_return_path %>
+                <div class="pt-2">
+                  <%= link_to "Back to my profile", profile_return_path, class: "btn btn-primary" %>
+                </div>
               <% end %>
             </div>
             <script>document.getElementById("thank-you").scrollIntoView({ behavior: "smooth", block: "center" });</script>
@@ -121,6 +134,9 @@
               <input type="hidden" name="contact_us[q]" value="general">
               <% if @from_story_share %>
                 <input type="hidden" name="from" value="story_share">
+              <% end %>
+              <% if @return_to.present? %>
+                <input type="hidden" name="return_to" value="<%= @return_to %>">
               <% end %>
               <% unless current_user %>
                 <!-- Name Row -->
@@ -204,6 +220,7 @@
                   </label>
                   <input type="text"
                          name="contact_us[subject]"
+                         value="<%= @prefilled_subject %>"
                          required
                          maxlength="100"
                          data-error-message="Subject line is required"
@@ -220,7 +237,7 @@
                           required
                           rows="6"
                           data-error-message="Message is required"
-                          class="w-full resize-none rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"></textarea>
+                          class="w-full resize-none rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"><%= @prefilled_message %></textarea>
                 <p class="field-error mt-1 hidden text-xs text-red-600"></p>
               </div>
               <!-- Submit -->
@@ -287,5 +304,5 @@
           <%= render "portal_contact_info" %>
         </div>
       <% end %>
+  </div>
     </div>
-</div>

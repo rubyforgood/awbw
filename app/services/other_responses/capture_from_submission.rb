@@ -23,6 +23,9 @@ module OtherResponses
     end
 
     def call
+      # "Other" responses are person-owned; an anonymous submission has no owner.
+      return unless @submission.person
+
       answers.each do |answer|
         field_identifier = answer.form_field&.field_identifier
         next unless capturable?(field_identifier)

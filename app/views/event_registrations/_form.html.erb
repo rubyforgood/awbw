@@ -18,6 +18,21 @@
             </p>
           </div>
         </div>
+      <% elsif f.object.transferred_in? && (transfer_source = f.object.transferred_from_registration) %>
+        <%# ---- Transferred-in notice (issue #1944): mirror the transferred-out lock
+            as a prominent in-frame card so admins/staff see the context. ---- %>
+        <div class="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
+          <i class="fa-solid fa-right-to-bracket mt-0.5 shrink-0 text-teal-600"></i>
+          <div>
+            <p class="font-semibold">This registration was transferred in from <%= transfer_source.event.decorate.title_with_month_year %>.</p>
+            <p class="mt-0.5 text-teal-800">
+              Their payment, scholarship, and continuing-education records live on the
+              <%= link_to "original registration", edit_event_registration_path(transfer_source, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>;
+              attendance and the certificate are earned here.
+              <%= link_to "Manage transfer", transfer_event_registration_path(transfer_source, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>.
+            </p>
+          </div>
+        </div>
       <% end %>
       <%# ---- Registrant + registration status — one compact card. The person on
           the left (registration date and submission links beneath); the status
@@ -141,7 +156,7 @@
               <p class="mt-1.5 text-xs text-teal-700">
                 <i class="fa-solid fa-right-to-bracket"></i>
                 Transferred in from
-                <%= link_to f.object.transferred_from_registration.event.title, edit_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
+                <%= link_to f.object.transferred_from_registration.event.decorate.title_with_month_year, edit_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
                 ·
                 <%= link_to "Manage transfer", transfer_event_registration_path(f.object.transferred_from_registration, return_to: params[:return_to].presence), class: "font-medium underline", data: { turbo_frame: "_top" } %>
               </p>
@@ -207,6 +222,12 @@
                   <%= "Day".pluralize(prior_days.size) %> <%= prior_days.to_sentence %> completed in prior training.
                 </p>
               <% end %>
+              <% if prior.event.day_count != f.object.event.day_count %>
+                <p class="text-2xs mt-0.5 text-amber-600">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  The prior training had <%= prior.event.day_count > f.object.event.day_count ? "more" : "fewer" %> days than this event.
+                </p>
+              <% end %>
             <% end %>
           </div>
         </div>
@@ -228,7 +249,7 @@
       <% show_ce = f.object.event&.ce_eligible? %>
       <% org_span = 1 + (show_scholarship ? 0 : 1) + (show_ce ? 0 : 1) %>
       <% org_span_class = { 1 => "sm:col-span-1", 2 => "sm:col-span-2", 3 => "sm:col-span-3" }.fetch(org_span) %>
-      <% active_orgs = f.object.registrant.affiliations.select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) }.map(&:organization).compact.uniq.sort_by(&:name) %>
+      <% active_orgs = f.object.registrant.affiliations.select(&:active?).map(&:organization).compact.uniq.sort_by(&:name) %>
       <% connected_org_ids = f.object.organizations.map(&:id) %>
       <% addable_orgs = active_orgs.reject { |org| connected_org_ids.include?(org.id) } %>
       <%= locked_fieldset(locked) do %>
@@ -242,6 +263,9 @@
           </div>
 
           <div class="flex flex-1 flex-col p-4">
+            <%# Fallback so unchecking every org chip still submits an empty organization_ids
+                array — otherwise no key is sent and the removal is silently dropped. %>
+            <input type="hidden" name="event_registration[organization_ids][]" value="">
             <div data-org-toggle-target="section" <%= "hidden" unless f.object.organizations.any? %>>
               <div class="flex flex-wrap gap-1.5" data-org-toggle-target="chips">
                 <%# Matched pair (like the registrants roster): the org name as a grey
@@ -340,58 +364,8 @@
       <% end %>
       <% end %>
 
-      <% if allowed_to?(:index?, with: NotificationPolicy) %>
-        <%= render "notifications/communications", f: f,
-              title_key: "communications.registration_title", none_key: "communications.none_for_registrant" %>
-      <% end %>
-
-      <%# ---- Comments ---- %>
-      <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" id="comments-section" data-controller="edit-toggle">
-        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:comments, f.object.comments.any?) %>">
-            <i class="fa-solid fa-message"></i>
-          </span>
-          <h2 class="text-sm font-semibold text-gray-700">Registration comments</h2>
-          <% if f.object.registrant %>
-            <%= link_to all_comments_person_path(f.object.registrant),
-                        class: "ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-transparent hover:text-gray-600 hover:underline",
-                        target: "_blank", rel: "noopener" do %>
-              View all
-              <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-            <% end %>
-          <% end %>
-        </div>
-
-        <div class="space-y-4 p-4" data-controller="paginated-fields" data-paginated-fields-per-page-value="5">
-          <div id="comment-list" class="space-y-4">
-            <%= f.simple_fields_for :comments do |cf| %>
-              <%= render "comments/comment_fields", f: cf %>
-            <% end %>
-          </div>
-
-          <div data-paginated-fields-target="nav"></div>
-
-          <div class="flex items-center justify-between gap-2">
-            <%= link_to_add_association f, :comments,
-                  partial: "comments/comment_fields",
-                  data: { association_insertion_node: "#comment-list", association_insertion_method: "append" },
-                  class: "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer" do %>
-              <i class="fa-solid fa-plus text-2xs"></i>
-              Add comment
-            <% end %>
-
-            <button
-              type="button"
-              class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-              data-action="edit-toggle#toggle"
-            >
-              <i class="fa-solid fa-pen text-2xs"></i>
-              <span data-edit-toggle-target="editLabel">Edit comments</span>
-              <span data-edit-toggle-target="viewLabel" class="hidden">Done editing</span>
-            </button>
-          </div>
-        </div>
-      </section>
+      <%# ---- Combined comments & communications ---- %>
+      <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.registrant %>
 
       <%# ---- Shout out — admin opts this registrant into the recipients page
           shout-out block and edits the text shown there. The text lives on the

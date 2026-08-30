@@ -15,19 +15,29 @@ RSpec.describe DomainTheme do
         .to eq("bg-gray-50")
     end
 
+    it "builds the same class shape for a brand-palette domain" do
+      expect(DomainTheme.bg_class_for(:workshops)).to eq("bg-brand-navy-50")
+      expect(DomainTheme.bg_class_for(:workshops, intensity: 700)).to eq("bg-brand-navy-700")
+      expect(DomainTheme.text_class_for(:stories, intensity: 700)).to eq("text-brand-magenta-700")
+      expect(DomainTheme.border_class_for(:events)).to eq("border-brand-teal-300")
+    end
+
     it "supports intensity overrides" do
-      expect(DomainTheme.bg_class_for(:events, intensity: 100))
-        .to eq("bg-teal-100")
+      color = DomainTheme.color_for(:people)
+      expect(DomainTheme.bg_class_for(:people, intensity: 100))
+        .to eq("bg-#{color}-100")
     end
 
     it "supports hover classes for 100's" do
-      expect(DomainTheme.bg_class_for(:stories, intensity: 200, hover: true))
-        .to eq("hover:bg-fuchsia-300")
+      color = DomainTheme.color_for(:people)
+      expect(DomainTheme.bg_class_for(:people, intensity: 200, hover: true))
+        .to eq("hover:bg-#{color}-300")
     end
 
     it "supports hover classes for 50" do
-      expect(DomainTheme.bg_class_for(:stories, intensity: 50, hover: true))
-        .to eq("hover:bg-fuchsia-100")
+      color = DomainTheme.color_for(:people)
+      expect(DomainTheme.bg_class_for(:people, intensity: 50, hover: true))
+        .to eq("hover:bg-#{color}-100")
     end
 
     it "defines a color for every taggable home type" do
@@ -39,7 +49,8 @@ RSpec.describe DomainTheme do
 
   describe ".text_class_for" do
     it "returns the correct Tailwind text class for a domain" do
-      expect(DomainTheme.text_class_for(:workshops)).to eq("text-indigo-800")
+      color = DomainTheme.color_for(:organizations)
+      expect(DomainTheme.text_class_for(:organizations)).to eq("text-#{color}-800")
     end
 
     it "supports intensity overrides" do
@@ -57,13 +68,24 @@ RSpec.describe DomainTheme do
     end
   end
 
+  describe "the brand palette" do
+    it "gives each domain on it a colour of its own" do
+      brand = DomainTheme::COLORS.select { |_, colour| colour.to_s.start_with?("brand-") }
+      shared = brand.group_by { |_, colour| colour }.select { |_, pairs| pairs.size > 1 }
+
+      expect(shared).to be_empty,
+        "domains sharing a brand colour: " +
+        shared.map { |colour, pairs| "#{colour} -> #{pairs.map(&:first).join(', ')}" }.join("; ")
+    end
+  end
+
   describe ".color_for" do
     it "returns configured color symbols" do
-      expect(DomainTheme.color_for(:workshops)).to eq(:indigo)
+      expect(DomainTheme.color_for(:quotes)).to eq(:slate)
     end
 
     it "symbolizes string keys" do
-      expect(DomainTheme.color_for("organizations")).to eq(:emerald)
+      expect(DomainTheme.color_for("users")).to eq(:rose)
     end
 
     it "returns gray for unknown keys" do

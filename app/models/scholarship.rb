@@ -1,15 +1,17 @@
 class Scholarship < ApplicationRecord
+  include Communicable
   belongs_to :recipient, class_name: "Person"
   belongs_to :grant, optional: true
   has_one :allocation, as: :source, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
-  has_many :notifications, as: :noticeable, dependent: :nullify
   has_many :agreement_responses, -> { chronological }, class_name: "ScholarshipAgreementResponse", dependent: :destroy
 
-  AGREEMENT_RESPONSE_STATUSES = %w[pending accepted declined].freeze
+  AGREEMENT_RESPONSE_STATUSES = %w[pending accepted declined support_requested].freeze
+
+  # Statuses that stash the recipient's free-text note for the history row.
+  REASON_BEARING_STATUSES = %w[declined support_requested].freeze
 
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
-  accepts_nested_attributes_for :notifications, allow_destroy: true, reject_if: proc { |attrs| attrs["email_subject"].blank? }
 
   validates :amount_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :agreement_response_status, inclusion: { in: AGREEMENT_RESPONSE_STATUSES }
@@ -17,6 +19,11 @@ class Scholarship < ApplicationRecord
   validate :allocation_must_be_valid
   validate :within_grant_budget, if: -> { grant && !agreement_declined? }
 
+  # A support request is really "please revisit my amount," so an admin changing
+  # the amount IS the response: reactivate the offer (back to pending) so the
+  # recipient sees Agree / Request / Decline again. A decline, by contrast, only
+  # reactivates via the explicit Re-offer action.
+  before_update :reoffer_support_request_on_amount_change
   # Allocation is zero while declined, else the amount — keeps allocation-based totals correct.
   after_update :sync_allocation_amount, if: -> { saved_change_to_amount_cents? || saved_change_to_agreement_response_status? }
   after_update :log_agreement_response, if: -> { saved_change_to_agreement_response_status? }
@@ -29,6 +36,19 @@ class Scholarship < ApplicationRecord
   scope :agreement_declined, -> { where(agreement_response_status: "declined") }
   # Declined awards drop out of every total.
   scope :not_declined, -> { where.not(agreement_response_status: "declined") }
+
+  # The training this award paid for: the event behind the registration its
+  # allocation funds. Nil for a grant-first award (no allocation yet) or one
+  # funding a CE registration / membership invoice instead of a training.
+  # Resolved through the recipient's own registrations (guaranteed to include this
+  # one by recipient_must_match_allocation_registrant) so a list page that preloads
+  # event_registrations → event pays no per-row query; walking allocatable.event
+  # would, since a polymorphic preload can't reach the event.
+  def event
+    return nil unless allocation&.allocatable_type == "EventRegistration"
+
+    recipient&.event_registrations&.find { |registration| registration.id == allocation.allocatable_id }&.event
+  end
 
   # Funding split (the app-wide convention, mirrored by EventDashboard and
   # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
@@ -67,6 +87,7 @@ class Scholarship < ApplicationRecord
   def agreement_pending? = agreement_response_status == "pending"
   def agreement_signed? = agreement_response_status == "accepted"
   def agreement_declined? = agreement_response_status == "declined"
+  def agreement_support_requested? = agreement_response_status == "support_requested"
   alias_method :agreement_signed, :agreement_signed?
 
   def agreement_signed=(value)
@@ -88,6 +109,15 @@ class Scholarship < ApplicationRecord
 
   def decline_agreement!(reason, by: "recipient")
     assign_agreement_response("declined", reason:, by:)
+    save!
+  end
+
+  # The recipient asking for more support instead of accepting or declining: the
+  # award stays live (allocation untouched, still counts in totals), and the
+  # amount they/their employer can contribute is stashed for the history row.
+  def request_additional_support!(contribution_cents:, reason: nil, by: "recipient")
+    assign_agreement_response("support_requested", reason:, by:)
+    @agreement_response_contribution_cents = contribution_cents
     save!
   end
 
@@ -114,8 +144,6 @@ class Scholarship < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  # Email the communications box matches notifications against. Uniform accessor
-  # so the shared notifications/_communications partial works across records.
   def communications_email
     recipient&.preferred_email
   end
@@ -157,8 +185,19 @@ class Scholarship < ApplicationRecord
   # after_update callback writes (they live on the response, not the scholarship).
   def assign_agreement_response(status, reason: nil, by: "admin")
     self.agreement_response_status = status
-    @agreement_response_reason = (status == "declined" ? reason.presence : nil)
+    @agreement_response_reason = (REASON_BEARING_STATUSES.include?(status) ? reason.presence : nil)
     @agreement_response_by = by
+  end
+
+  # Only when the amount alone moves on a still-support-requested award — an
+  # explicit status change in the same save (accept/decline toggle) wins. The
+  # resulting status change logs a "pending" history row via the after_update.
+  def reoffer_support_request_on_amount_change
+    return unless amount_cents_changed?
+    return if agreement_response_status_changed?
+    return unless agreement_support_requested?
+
+    self.agreement_response_status = "pending"
   end
 
   def sync_allocation_amount
@@ -174,10 +213,13 @@ class Scholarship < ApplicationRecord
       reason: @agreement_response_reason,
       responded_at: Time.current,
       responder: @agreement_response_by.presence || "admin",
-      amount_cents: amount_cents
+      responded_by: Current.user,
+      amount_cents: amount_cents,
+      contribution_cents: @agreement_response_contribution_cents
     )
     @agreement_response_reason = nil
     @agreement_response_by = nil
+    @agreement_response_contribution_cents = nil
   end
 
   # When a scholarship is awarded against an event registration, the registration

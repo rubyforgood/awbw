@@ -1,10 +1,19 @@
 class FormsController < ApplicationController
-  before_action :set_form, only: %i[show edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
+  before_action :set_form, only: %i[show results edit update destroy copy reorder_field reorder_fields edit_sections update_sections]
   before_action :set_dashboard_event, only: %i[show edit edit_sections update update_sections]
+
+  SORTABLE_COLUMNS = %w[name role fields submissions].freeze
 
   def index
     authorize!
-    @forms = Form.standalone.order(:name)
+    if turbo_frame_request?
+      @sort = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "name"
+      @sort_direction = params[:direction] == "desc" ? "desc" : "asc"
+      @forms = sorted_forms
+      render :forms_results
+    else
+      render :index
+    end
   end
 
   # Reference page for the field identifiers that wire a question to backend
@@ -26,6 +35,13 @@ class FormsController < ApplicationController
     # visibility. The conditional logic itself only runs on the live
     # registration and public registration forms.
     @form_fields = @form.form_fields.reorder(position: :asc)
+  end
+
+  # Aggregated rollup of this form's submissions: select/checkbox questions as
+  # charts, free-text questions as lists of the actual answers.
+  def results
+    authorize! @form
+    @aggregator = FormResponseAggregator.new(@form)
   end
 
   def new
@@ -83,7 +99,7 @@ class FormsController < ApplicationController
     authorize! @form
 
     copy = FormCopyService.new(@form).call
-    redirect_to edit_form_path(copy), notice: "Form copied. Now editing \"#{copy.display_name}\"."
+    redirect_to edit_form_path(copy), notice: "Form duplicated. Now editing \"#{copy.display_name}\"."
   end
 
   def edit_sections
@@ -130,6 +146,27 @@ class FormsController < ApplicationController
   end
 
   private
+
+  # Sorts the standalone forms for the index frame. Count columns join their
+  # association and order by the aggregate; direction is a symbol resolved from
+  # the whitelisted param, never interpolated into raw SQL.
+  def sorted_forms
+    direction = @sort_direction == "desc" ? :desc : :asc
+    case @sort
+    when "role"
+      Form.standalone.reorder(role: direction, name: :asc)
+    when "fields"
+      order_by_count(Form.standalone.left_joins(:form_fields), Arel.sql("COUNT(form_fields.id)"), direction)
+    when "submissions"
+      order_by_count(Form.standalone.left_joins(:form_submissions), Arel.sql("COUNT(form_submissions.id)"), direction)
+    else
+      Form.standalone.reorder(name: direction)
+    end
+  end
+
+  def order_by_count(scope, count_expr, direction)
+    scope.group(:id).reorder(direction == :desc ? count_expr.desc : count_expr.asc)
+  end
 
   # Custom section header ids that were present on the page but left unchecked,
   # i.e. the custom sections the user chose to remove.

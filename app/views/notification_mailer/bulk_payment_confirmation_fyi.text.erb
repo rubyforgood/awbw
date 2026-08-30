@@ -21,8 +21,8 @@ Event date
 Cost
 <%= @event.labelled_cost %>
 <% end %><% end %>
-<% if @answers["payer_organization"].present? %>Organization: <%= @answers["payer_organization"] %>
-<% end %><% if @answers["payer_phone"].present? %>Phone: <%= @answers["payer_phone"] %>
+<% if @answers["organization_name"].present? %>Organization: <%= @answers["organization_name"] %>
+<% end %><% if @answers["phone"].present? %>Phone: <%= @answers["phone"] %>
 <% end %><% if @answers["number_of_attendees"].present? %>Number of attendees: <%= @answers["number_of_attendees"] %>
 <% end %><% if @answers["payment_method"].present? %>Payment method: <%= @answers["payment_method"] %>
 <% end %>

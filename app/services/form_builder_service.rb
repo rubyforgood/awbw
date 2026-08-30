@@ -46,8 +46,8 @@ class FormBuilderService
     person_contact_info: %w[
       primary_email_type nickname pronouns secondary_email secondary_email_type
       mailing_street mailing_address_type mailing_city mailing_state mailing_zip mailing_country
-      phone phone_type agency_name agency_position agency_website agency_type
-      agency_street agency_city agency_state agency_zip agency_country
+      phone phone_type organization_name organization_position organization_website organization_type
+      organization_street organization_city organization_state organization_zip organization_country
     ],
     person_background: %w[racial_ethnic_identity],
     professional_info: %w[primary_sector additional_sectors primary_age_group additional_age_groups],
@@ -57,7 +57,7 @@ class FormBuilderService
     payment: %w[payment_method someone_else_will_pay],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    bulk_payment: %w[payer_first_name payer_last_name payer_email payer_phone payer_organization number_of_attendees payment_method bulk_payment_attendees]
+    bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
@@ -412,24 +412,24 @@ class FormBuilderService
 
     position = add_header(form, position, "Organization Information", group: "person_contact_info")
     position = add_field(form, position, "Organization Name", :free_form_input_one_line,
-                         key: "agency_name", group: "person_contact_info", required: false, width: :half)
+                         key: "organization_name", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Position / Title", :free_form_input_one_line,
-                         key: "agency_position", group: "person_contact_info", required: false, width: :half)
+                         key: "organization_position", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Organization Website", :free_form_input_one_line,
-                         key: "agency_website", group: "person_contact_info", required: false)
+                         key: "organization_website", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization Type", :single_select_radio,
-                         key: "agency_type", group: "person_contact_info", required: false,
-                         options: Organization::AGENCY_TYPES)
+                         key: "organization_type", group: "person_contact_info", required: false,
+                         options: Organization::ORGANIZATION_TYPES)
     position = add_field(form, position, "Organization Street Address", :free_form_input_one_line,
-                         key: "agency_street", group: "person_contact_info", required: false)
+                         key: "organization_street", group: "person_contact_info", required: false)
     position = add_field(form, position, "Organization City", :free_form_input_one_line,
-                         key: "agency_city", group: "person_contact_info", required: false, width: :third)
+                         key: "organization_city", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Organization State / Province", :free_form_input_one_line,
-                         key: "agency_state", group: "person_contact_info", required: false, width: :third)
+                         key: "organization_state", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Organization Zip / Postal Code", :free_form_input_one_line,
-                         key: "agency_zip", group: "person_contact_info", required: false, width: :third)
+                         key: "organization_zip", group: "person_contact_info", required: false, width: :third)
     position = add_field(form, position, "Organization Country", :free_form_input_one_line,
-                         key: "agency_country", group: "person_contact_info", required: false)
+                         key: "organization_country", group: "person_contact_info", required: false)
     position
   end
 
@@ -617,19 +617,19 @@ class FormBuilderService
     position = add_header(form, position, "Payer Information", group: "bulk_payment", visibility: :logged_out_only)
 
     position = add_field(form, position, "Payer first name", :free_form_input_one_line,
-                         key: "payer_first_name", group: "bulk_payment", required: true,
+                         key: "first_name", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer last name", :free_form_input_one_line,
-                         key: "payer_last_name", group: "bulk_payment", required: true,
+                         key: "last_name", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Payer email", :free_form_input_one_line,
-                         key: "payer_email", group: "bulk_payment", required: true,
+                         key: "primary_email", group: "bulk_payment", required: true,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Phone", :free_form_input_one_line,
-                         key: "payer_phone", group: "bulk_payment", required: false,
+                         key: "phone", group: "bulk_payment", required: false,
                          width: :half, visibility: :logged_out_only)
     position = add_field(form, position, "Organization", :free_form_input_one_line,
-                         key: "payer_organization", group: "bulk_payment", required: false,
+                         key: "organization_name", group: "bulk_payment", required: false,
                          visibility: :logged_out_only)
 
     position = add_header(form, position, "Payment Information", group: "bulk_payment")

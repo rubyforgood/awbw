@@ -1,13 +1,13 @@
 module OrganizationServices
   # Populate an organization's structured profile columns — website_url and
-  # agency_type/agency_type_other — from a registrant's submitted answers.
-  # A non-blank submitted value overwrites what's on file (the latest
+  # organization_type/organization_type_other — from a registrant's submitted
+  # answers. A non-blank submitted value overwrites what's on file (the latest
   # registration is the freshest source of truth; the prior value survives in
   # the Ahoy audit trail); a blank answer never clobbers existing data.
   #
   # The "Organization Type" answer folds an "Other" choice's free text in as
-  # "Other: <text>": we split the option label (drives agency_type) from the
-  # typed text (fills agency_type_other, cleared for non-"Other" so no stale
+  # "Other: <text>": we split the option label (drives organization_type) from the
+  # typed text (fills organization_type_other, cleared for non-"Other" so no stale
   # text lingers) and record the free text as an OtherResponse for the curation
   # queue. Shared by the public registration flow and the admin
   # create-and-link action so both build the org profile identically.
@@ -24,14 +24,14 @@ module OrganizationServices
     # OrganizationServices::ProfileDiff.
     Result = Struct.new(:organization, :changes, keyword_init: true)
 
-    def self.call(organization:, website: nil, agency_type: nil, overwrite: true)
-      new(organization:, website:, agency_type:, overwrite:).call
+    def self.call(organization:, website: nil, organization_type: nil, overwrite: true)
+      new(organization:, website:, organization_type:, overwrite:).call
     end
 
-    def initialize(organization:, website: nil, agency_type: nil, overwrite: true)
+    def initialize(organization:, website: nil, organization_type: nil, overwrite: true)
       @organization = organization
       @website = website
-      @agency_type = agency_type
+      @organization_type = organization_type
       @overwrite = overwrite
     end
 
@@ -41,8 +41,8 @@ module OrganizationServices
       # a blank or replaced something an admin may have curated.
       website_before = @organization.website_url
       @changes << change("website_url", "Website", @organization.website_url, website_before) if apply_value(:website_url, @website)
-      type_before = displayed_agency_type
-      @changes << change("agency_type", "Type", displayed_agency_type, type_before) if sync_agency_type
+      type_before = displayed_organization_type
+      @changes << change("organization_type", "Type", displayed_organization_type, type_before) if sync_organization_type
       Result.new(organization: @organization, changes: @changes)
     end
 
@@ -54,23 +54,23 @@ module OrganizationServices
       AutofillChange.new(field: field, label: label, value: value, previous_value: previous_value)
     end
 
-    def displayed_agency_type
-      other = @organization.agency_type_other
-      other.present? ? "#{@organization.agency_type}: #{other}" : @organization.agency_type
+    def displayed_organization_type
+      other = @organization.organization_type_other
+      other.present? ? "#{@organization.organization_type}: #{other}" : @organization.organization_type
     end
 
-    def sync_agency_type
-      raw = @agency_type&.strip
+    def sync_organization_type
+      raw = @organization_type&.strip
       return false if raw.blank?
-      return false if !@overwrite && @organization.agency_type.present?
+      return false if !@overwrite && @organization.organization_type.present?
 
       label, _separator, specified = raw.partition(":")
       label = label.strip
       return false if label.blank?
       other_text = FormField.other_option?(label) ? specified.strip.presence : nil
-      @organization.update!(agency_type: label, agency_type_other: other_text)
+      @organization.update!(organization_type: label, organization_type_other: other_text)
       capture_organization_type_other(other_text)
-      changed?(:agency_type, :agency_type_other)
+      changed?(:organization_type, :organization_type_other)
     end
 
     def capture_organization_type_other(text)

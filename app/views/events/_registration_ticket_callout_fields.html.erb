@@ -200,7 +200,7 @@
             built-in, which the app shows/hides from live balance status.
           %>
           <% unless f.object.payment? %>
-            <details class="group" <%= "open" if f.object.display_from.present? || f.object.payment_access_gated? %>>
+            <details class="group" <%= "open" if f.object.display_from.present? || f.object.payment_access_gated? || f.object.ce_payment_access_gated? %>>
               <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
                 <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
                 Visibility
@@ -220,13 +220,32 @@
                   <%= f.label :payment_access_gated, "Payment-gated", class: "block text-xs font-medium text-gray-600 mb-0.5" %>
 
                   <label class="flex items-center gap-2 text-sm text-gray-600"><%= f.check_box :payment_access_gated, class: "rounded border-gray-300 text-purple-600" %> Only show if paid or intends to pay</label>
+
+                  <label class="flex items-center gap-2 text-sm text-gray-600 mt-1"><%= f.check_box :ce_payment_access_gated, class: "rounded border-gray-300 text-purple-600" %> Only show if CE hours are paid</label>
                 </div>
               </div>
             </details>
           <% end %>
         </div>
 
-        <%# RIGHT COLUMN: linked resources. Opened on load only when resources are saved. %>
+        <%# RIGHT COLUMN: linked form (parallel to Type), then linked resources
+            (parallel to Visibility) — each its own toggle. %>
+        <div class="space-y-4">
+        <details class="group" <%= "open" if f.object.form_id.present? %>>
+          <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+            <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
+            Linked form
+          </summary>
+
+          <div class="mt-2">
+            <%= f.select :form_id,
+                  options_from_collection_for_select(@callout_forms, :id, :name, f.object.form_id),
+                  { include_blank: "No form" },
+                  class: "w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm" %>
+            <p class="text-xs text-gray-500 mt-0.5">Delivered inline on this callout's page (drips with the display date above).</p>
+          </div>
+        </details>
+
         <details class="group" <%= "open" if f.object.registration_ticket_callout_resources.any? %>>
           <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
             <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
@@ -262,6 +281,7 @@
             </div>
           </div>
         </details>
+        </div>
       </div>
 
       <%#

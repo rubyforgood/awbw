@@ -1,16 +1,16 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <% content_for(:full_width, true) %>
-<div class="<%= DomainTheme.bg_class_for(:events) %> border border-gray-200 rounded-xl shadow m-2 p-4">
+<div class="<%= DomainTheme.bg_class_for(:events) %> border-primary/10 m-2 rounded-2xl border p-4 shadow-sm">
   <%# Top bar: eyelash + sub-nav, matching the other event pages %>
-  <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6">
-    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+    <%= link_to "← Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= render "events/subnav", event: @event, current: :registrants %>
   </div>
 
-  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-semibold text-gray-900">Onboarding</h1>
-      <p class="text-gray-600 mt-1">
+      <h1 class="text-primary font-display text-2xl font-semibold">Onboarding</h1>
+      <p class="mt-1 text-gray-600">
         <%= @event.title %><% if @event.start_date.present? %> &bull; <%= @event.date_range %><% end %>
       </p>
     </div>

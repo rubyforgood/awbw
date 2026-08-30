@@ -23,6 +23,13 @@
      else
        [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
      end
+   when "callout_form"
+     callout = @event.registration_ticket_callouts.find_by(id: params[:callout_id])
+     if callout
+       [ registration_callout_form_path(@event_registration.slug, callout), "Back to #{callout.title}", "#{callout.title} detail" ]
+     else
+       [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
+     end
    else
      [ registration_ticket_path(@event_registration.slug), "Back to ticket", nil ]
    end %>

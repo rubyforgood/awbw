@@ -1,40 +1,40 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="min-h-screen py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="max-w-5xl mx-auto bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
-      <div class="flex flex-wrap justify-end gap-2 mb-4">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="border-primary/10 mx-auto max-w-5xl rounded-2xl border bg-white p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
+      <div class="mb-4 flex flex-wrap justify-end gap-2">
         <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= link_to "Category types", category_types_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= link_to "Categories", categories_path(category_type_id: @category_type.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <%= link_to "Edit", edit_category_type_path(@category_type), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
       </div>
-      <h1 class="text-2xl font-semibold text-gray-900 mb-6">
+      <h1 class="text-primary mb-6 font-display text-2xl font-semibold">
         Category type details: <%= @category_type.name %>
       </h1>
 
-      <div class="flex items-center gap-6 mt-2 mb-2">
+      <div class="mt-2 mb-2 flex items-center gap-6">
         <p class="text-gray-700">
           <span class="font-bold">Published:</span>
           <% if @category_type.published? %>
-            <span class="fa fa-check-circle text-green-500 ml-1"></span>
+            <span class="fa fa-check-circle ml-1 text-green-500"></span>
           <% else %>
-            <span class="text-gray-400 ml-1">--</span>
+            <span class="ml-1 text-gray-400">--</span>
           <% end %>
         </p>
         <p class="text-gray-700">
           <span class="font-bold">Story specific:</span>
           <% if @category_type.story_specific? %>
-            <span class="fa fa-check-circle text-green-500 ml-1"></span>
+            <span class="fa fa-check-circle ml-1 text-green-500"></span>
           <% else %>
-            <span class="text-gray-400 ml-1">--</span>
+            <span class="ml-1 text-gray-400">--</span>
           <% end %>
         </p>
         <p class="text-gray-700">
           <span class="font-bold">Profile specific:</span>
           <% if @category_type.profile_specific? %>
-            <span class="fa fa-check-circle text-green-500 ml-1"></span>
+            <span class="fa fa-check-circle ml-1 text-green-500"></span>
           <% else %>
-            <span class="text-gray-400 ml-1">--</span>
+            <span class="ml-1 text-gray-400">--</span>
           <% end %>
         </p>
         <p class="text-gray-700">
@@ -44,19 +44,19 @@
       </div>
 
       <!-- Associated Categories -->
-      <div class="pt-6 border-t border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">
+      <div class="border-t border-gray-200 pt-6">
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">
           Associated Categories
         </h2>
 
         <% if @category_type.categories.any? %>
           <ul class="space-y-2">
             <% @category_type.categories.order(:position, :name).each do |category| %>
-              <li class="bg-gray-50 border border-gray-200 rounded-md px-4 py-2">
+              <li class="rounded-md border border-gray-200 bg-gray-50 px-4 py-2">
                 <%= link_to taggings_path(category_names_all: category.name),
                             class: "font-medium text-gray-900 hover:text-blue-600" do %>
                   <%= category.name %>
-                  <span class="text-sm text-gray-500 ml-2">(<%= category.categorizable_items.count %> taggings)</span>
+                  <span class="ml-2 text-sm text-gray-500">(<%= category.categorizable_items.count %> taggings)</span>
                 <% end %>
               </li>
             <% end %>

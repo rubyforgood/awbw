@@ -46,7 +46,7 @@ RSpec.describe FormBuilderService do
       end
 
       it "leaves unlisted fields at full width" do
-        field = form.form_fields.find_by(field_identifier: "agency_website")
+        field = form.form_fields.find_by(field_identifier: "organization_website")
         expect(field.width).to eq("full")
       end
     end
@@ -56,31 +56,40 @@ RSpec.describe FormBuilderService do
 
       it "creates contact info fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
-        expect(keys).to include("nickname", "pronouns", "phone", "mailing_city", "agency_name")
+        expect(keys).to include("nickname", "pronouns", "phone", "mailing_city", "organization_name")
+      end
+
+      it "seeds the organization fields under the canonical organization_ identifiers" do
+        keys = form.form_fields.pluck(:field_identifier).compact
+        expect(keys).to include(
+          "organization_name", "organization_position", "organization_website", "organization_type",
+          "organization_street", "organization_city", "organization_state", "organization_zip"
+        )
+        expect(keys.grep(/\Aagency_/)).to be_empty
       end
 
       it "captures a mailing and organization country" do
         keys = form.form_fields.pluck(:field_identifier).compact
-        expect(keys).to include("mailing_country", "agency_country")
+        expect(keys).to include("mailing_country", "organization_country")
       end
 
       it "asks for the organization website and type before its street address" do
         positions = form.form_fields.where(
-          field_identifier: %w[agency_website agency_type agency_street]
+          field_identifier: %w[organization_website organization_type organization_street]
         ).pluck(:field_identifier, :position).to_h
-        expect(positions["agency_website"]).to be < positions["agency_street"]
-        expect(positions["agency_type"]).to be < positions["agency_street"]
+        expect(positions["organization_website"]).to be < positions["organization_street"]
+        expect(positions["organization_type"]).to be < positions["organization_street"]
       end
 
-      it "offers the agency type as the four organization classifications" do
-        field = form.form_fields.find_by(field_identifier: "agency_type")
+      it "offers the organization type as the four organization classifications" do
+        field = form.form_fields.find_by(field_identifier: "organization_type")
         expect(field.answer_options.pluck(:name)).to contain_exactly(
           "501c3/nonprofit", "For-profit", "Government agency", "Other"
         )
       end
 
-      it "treats the agency type 'Other' as a specify option that reveals a free-text box" do
-        field = form.form_fields.find_by(field_identifier: "agency_type")
+      it "treats the organization type 'Other' as a specify option that reveals a free-text box" do
+        field = form.form_fields.find_by(field_identifier: "organization_type")
         expect(field.specify_option_labels).to contain_exactly("Other")
       end
     end
@@ -127,23 +136,23 @@ RSpec.describe FormBuilderService do
     context "bulk_payment section" do
       let(:form) { described_class.new(name: "Test", sections: %i[bulk_payment], role: "bulk_payment").call }
 
-      it "creates payer fields including an optional phone field" do
+      it "creates payer fields using the shared canonical identifiers" do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include(
-          "payer_first_name", "payer_last_name", "payer_email", "payer_phone", "payer_organization"
+          "first_name", "last_name", "primary_email", "phone", "organization_name"
         )
       end
 
       it "makes the phone and organization fields optional" do
-        phone = form.form_fields.find_by(field_identifier: "payer_phone")
-        organization = form.form_fields.find_by(field_identifier: "payer_organization")
+        phone = form.form_fields.find_by(field_identifier: "phone")
+        organization = form.form_fields.find_by(field_identifier: "organization_name")
         expect(phone.required).to be(false)
         expect(organization.required).to be(false)
       end
 
       it "lays payer name, email, and phone fields out as halves" do
         widths = form.form_fields.where(
-          field_identifier: %w[payer_first_name payer_last_name payer_email payer_phone]
+          field_identifier: %w[first_name last_name primary_email phone]
         ).pluck(:width)
         expect(widths).to all(eq("half"))
       end

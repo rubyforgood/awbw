@@ -41,7 +41,7 @@ RSpec.describe OtherResponse, type: :model do
       expect(create(:other_response, field_identifier: "additional_sectors").kind).to eq("sector")
     end
 
-    it "is organization_type for the agency_type field" do
+    it "is organization_type for the organization_type field" do
       expect(create(:other_response, :organization_type).kind).to eq("organization_type")
     end
 

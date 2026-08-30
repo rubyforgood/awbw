@@ -12,7 +12,7 @@ class Resource < ApplicationRecord
   end
 
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
-  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship" ]
+  KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
   has_rich_text :rhino_body
 
@@ -20,6 +20,7 @@ class Resource < ApplicationRecord
   belongs_to :author, class_name: "Person", optional: true
   belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
+  belongs_to :organization, optional: true
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable

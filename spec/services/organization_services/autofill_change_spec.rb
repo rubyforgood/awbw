@@ -57,9 +57,9 @@ RSpec.describe OrganizationServices::AutofillChange do
     # The column is JSON, so keys come back as strings after a round trip through
     # the database but as symbols when a caller builds one by hand.
     it "accepts symbol keys" do
-      restored = described_class.from_json(field: "agency_type", label: "Type", value: "For-profit")
+      restored = described_class.from_json(field: "organization_type", label: "Type", value: "For-profit")
 
-      expect(restored).to have_attributes(field: "agency_type", value: "For-profit")
+      expect(restored).to have_attributes(field: "organization_type", value: "For-profit")
     end
 
     it "omits a nil scope rather than storing it" do

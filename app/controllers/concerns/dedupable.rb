@@ -3,14 +3,14 @@
 module Dedupable
   extend ActiveSupport::Concern
 
+  CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
+
   def dedupe_index
     authorize!
     config = dedupe_config
     mc = config[:model_class]
 
-    groups = mc.all.group_by { |r| r.name.to_s.strip.downcase }
-    @possible_duplicates = groups.select { |_name, records| records.size > 1 }
-    @records_for_select = mc.order(:name).map { |r| [ r.name, r.id ] }
+    @possible_duplicate_groups = dedupe_candidate_groups(config)
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/index"
@@ -38,9 +38,11 @@ module Dedupable
       return redirect_to url_for(action: :dedupe_index),
         alert: "#{mc.model_name.human} not found (ID: #{missing.join(', ')})."
     end
-    join_assoc, join_incl = dedupe_primary_join(mc)
-    @delete_items = @record_to_delete.public_send(join_assoc).includes(join_incl)
-    @keep_items = @record_to_keep.public_send(join_assoc).includes(join_incl)
+    deduper = ModelDeduper.new(model_class: mc)
+    @reassignment_delete = deduper.reassignment_preview(@record_to_delete)
+    @reassignment_keep = deduper.reassignment_preview(@record_to_keep)
+    @lost_references = deduper.lost_references(@record_to_delete)
+    @unhandled_references = deduper.unhandled_references(@record_to_delete)
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/preview"
@@ -76,11 +78,27 @@ module Dedupable
     record_to_delete = mc.find(params["#{mn}_to_delete_id"])
     record_to_keep = mc.find(params["#{mn}_to_keep_id"])
 
+    unhandled = ModelDeduper.new(model_class: mc).unhandled_references(record_to_delete)
+    if unhandled.any?
+      tables = unhandled.map { |ref| ref[:table] }.uniq.join(", ")
+      return redirect_to url_for(action: :dedupe_index),
+        alert: "Can't merge: #{tables} still reference this #{mc.model_name.human.downcase} and the deduper doesn't reassign them. A developer needs to teach ModelDeduper about them before merging."
+    end
+
     keep_param_key = "#{mn}_to_keep"
     if params[keep_param_key].present?
       editable = mc.column_names - %w[id created_at updated_at legacy_id]
       record_to_keep.update!(params.require(keep_param_key).permit(editable))
     end
+
+    # Combine values that must survive the merge rather than be replaced wholesale
+    # (e.g. an org's FileMaker codes), so the kept record keeps both records' links.
+    if (hook = config[:merge_keeper])
+      hook.call(record_to_keep, record_to_delete)
+      record_to_keep.save!
+    end
+
+    deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
 
     if respond_to?(:track_event, true)
       track_event("dedupe.#{mn}", {
@@ -88,11 +106,10 @@ module Dedupable
         resource_id: record_to_keep.id,
         deleted_record: record_to_delete.attributes,
         kept_record: { id: record_to_keep.id, name: record_to_keep.name },
-        associations_moved: record_to_delete.public_send(dedupe_primary_join(mc).first).count
+        associations_moved: deduper.reassignment_counts(record_to_delete).values.sum
       })
     end
 
-    deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0)
     deduper.merge(record_to_keep, record_to_delete)
 
     label = mc.model_name.human.pluralize
@@ -116,27 +133,23 @@ module Dedupable
     raise NotImplementedError, "#{self.class} must implement #dedupe_config"
   end
 
-  # Returns [association_name, includes_name] for the primary polymorphic join.
-  # e.g. [:categorizable_items, :categorizable]
-  def dedupe_primary_join(mc)
-    assoc = mc.reflect_on_all_associations(:has_many).find do |a|
-      next if a.options[:through]
-      begin
-        a.klass.reflect_on_all_associations(:belongs_to).any?(&:polymorphic?)
-      rescue NameError
-        false
-      end
-    end
-    raise "No polymorphic join found for #{mc.name}" unless assoc
+  # Candidate duplicate groups for the index. A config may supply a
+  # :candidate_finder (a callable returning objects that respond to #label,
+  # #records, and #reasons — e.g. OrganizationServices::DuplicateFinder); without
+  # one, fall back to exact normalized-name grouping.
+  def dedupe_candidate_groups(config)
+    finder = config[:candidate_finder]
+    return Array(finder.call) if finder
 
-    poly = assoc.klass.reflect_on_all_associations(:belongs_to).find(&:polymorphic?)
-    [ assoc.name, poly.name ]
+    config[:model_class].all
+      .group_by { |record| record.name.to_s.strip.downcase }
+      .select { |_name, records| records.size > 1 }
+      .map { |name, records| CandidateGroup.new(label: name, records: records, reasons: []) }
   end
 
   def build_dedupe_vars(config)
     mc = config[:model_class]
     mn = mc.model_name.singular
-    join_assoc, join_incl = dedupe_primary_join(mc)
     opts = config[:belongs_to_options]
 
     {
@@ -147,9 +160,9 @@ module Dedupable
       delete_id_param: "#{mn}_to_delete_id",
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
-      item_type_col: "#{join_incl}_type".to_sym,
-      item_id_col: "#{join_incl}_id".to_sym,
-      join_association: join_assoc,
+      search_model: mn,
+      editable_columns: config[:editable_columns],
+      union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       record_extras: config[:record_extras]
     }

@@ -10,19 +10,19 @@
   roster_path = registrants_event_path(source.event)
 %>
 <div class="mb-4">
-  <%= link_to roster_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+  <%= link_to roster_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
     <i class="fa-solid fa-arrow-left text-xs"></i>
     <%= source.event.title %> registrants
   <% end %>
 </div>
 
-<div class="<%= DomainTheme.bg_class_for(:event_registrations) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="<%= DomainTheme.bg_class_for(:event_registrations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mx-auto max-w-2xl space-y-6">
     <div class="flex items-center">
       <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100">
         <i class="fa-solid fa-right-from-bracket text-purple-600"></i>
       </div>
-      <h1 class="ml-3 text-xl font-semibold text-gray-900">Manage transfer</h1>
+      <h1 class="text-primary ml-3 font-display text-xl font-semibold">Manage transfer</h1>
     </div>
 
     <div class="rounded-lg bg-white p-4">
@@ -52,15 +52,15 @@
       <%# Plain-language "here's what happens to their data" block so an admin
           knowingly consents. The chain-collapse warning shows only when the reg
           being transferred is itself a transfer-in. (#1944) %>
-      <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div class="border-primary/10 mb-4 rounded-2xl border bg-gray-50 p-3">
         <p class="mb-2 text-xs font-semibold text-gray-700">What recording this transfer will do:</p>
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="rounded-md border border-gray-200 bg-white p-3">
             <p class="text-xs font-semibold text-gray-800">
               <i class="fa-solid fa-right-from-bracket text-gray-400"></i> This registration
             </p>
-            <p class="mb-2 truncate text-2xs text-gray-500" title="<%= source.event.title %>">
-              <%= source.event.title %><% if source.event.decorate.month_year %> <span class="text-gray-400">&middot;</span> <%= source.event.decorate.month_year %><% end %>
+            <p class="text-2xs mb-2 truncate text-gray-500" title="<%= source.event.title %>">
+              <%= source.event.decorate.title_with_month_year %>
             </p>
             <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
               <li>Marked "Transferred out" (not deleted)</li>
@@ -74,7 +74,7 @@
             <p class="text-xs font-semibold text-gray-800">
               <i class="fa-solid fa-right-to-bracket text-gray-400"></i> New registration
             </p>
-            <p class="mb-2 text-2xs text-gray-500">the event you pick</p>
+            <p class="text-2xs mb-2 text-gray-500">the event you pick</p>
             <ul class="list-disc space-y-1 pl-4 text-xs text-gray-600">
               <li>Created fresh — track attendance here</li>
               <li>Gets a copy of the linked organizations</li>

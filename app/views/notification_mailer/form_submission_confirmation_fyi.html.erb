@@ -1,12 +1,14 @@
-<% profile_url = person_url(@person) %>
-
 <p style="margin-bottom: 6px;">
   New form submission
 </p>
 
 <h1 style="margin: 0;">
-  <strong><%= @person.full_name %></strong>
-  (<%= @person.preferred_email %>)
+  <% if @person %>
+    <strong><%= @person.full_name %></strong>
+    (<%= @person.preferred_email %>)
+  <% else %>
+    <strong>Anonymous respondent</strong>
+  <% end %>
 </h1>
 
 <p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
@@ -32,8 +34,10 @@
     View submission
   </a>
 
-  <a href="<%= profile_url %>"
-     style="display:inline-block;background:#e5e7eb;color:#111827;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:bold;">
-    View profile
-  </a>
+  <% if @person %>
+    <a href="<%= person_url(@person) %>"
+       style="display:inline-block;background:#e5e7eb;color:#111827;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:bold;">
+      View profile
+    </a>
+  <% end %>
 </p>

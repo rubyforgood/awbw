@@ -1,0 +1,87 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<%# Eyebrow: back to the record whose combined section linked here, falling back
+    to the person's profile. %>
+<% return_record = notification_return_record %>
+<div class="mb-3">
+  <% if return_record %>
+    <%= link_to notification_return_path(return_record), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= noticeable_label(return_record) %>
+    <% end %>
+  <% else %>
+    <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to <%= @person.full_name %>
+    <% end %>
+  <% end %>
+</div>
+
+<%# The page keeps the admin-only policy marker, but the card carries the people
+    theme so the feed doesn't read as one flat blue wash. %>
+<div class="border-primary/10 overflow-hidden rounded-2xl border shadow-sm <%= DomainTheme.bg_class_for(:people, intensity: 50) %>">
+  <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people) %> px-8 py-3">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-comments <%= DomainTheme.text_class_for(:people, intensity: 700) %>"></i>
+      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:people, intensity: 900) %> tracking-wide uppercase"><%= t("communications.all_section_title") %></span>
+    </div>
+  </div>
+
+  <div class="space-y-6 p-4 sm:p-8">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h1 class="text-primary font-display text-2xl font-semibold"><%= @person.full_name %></h1>
+      <p class="text-sm text-gray-500">
+        <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
+      </p>
+    </div>
+
+    <%# Add-a-note / log-a-communication, each revealing a composer with a picker
+        for which of the person's records to file it against. %>
+    <div data-controller="panel-toggle">
+      <div class="flex flex-wrap justify-end gap-2">
+        <% [ [ "comment", t("communications.add_comment"), "fa-comment" ],
+             [ "communication", t("communications.add"), "fa-envelope" ] ].each do |name, label, icon| %>
+          <button type="button"
+                  class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                  data-panel-toggle-name="<%= name %>"
+                  data-panel-toggle-hidden-label="<%= label %>"
+                  data-panel-toggle-shown-label="Cancel"
+                  data-panel-toggle-target="button"
+                  data-action="panel-toggle#toggle"
+                  aria-expanded="false">
+            <i class="fa-solid <%= icon %> text-2xs"></i>
+            <span data-panel-toggle-target="label"><%= label %></span>
+          </button>
+        <% end %>
+      </div>
+
+      <div class="mt-3 hidden" data-panel-toggle-name="comment" data-panel-toggle-target="panel">
+        <%= render "comments/composer", person: @person, comment: @new_comment,
+                   comment_targets: @record_targets, stream: false %>
+      </div>
+      <div class="mt-3 hidden" data-panel-toggle-name="communication" data-panel-toggle-target="panel">
+        <%= render "notifications/composer", person: @person, notification: @new_notification, record_targets: @record_targets %>
+      </div>
+    </div>
+
+    <%# Jump straight to another person's combined feed. %>
+    <div class="flex items-center gap-2">
+      <label for="jump_person_id" class="text-xs font-semibold tracking-wide whitespace-nowrap text-gray-500 uppercase">Another person</label>
+      <%= select_tag :jump_person_id, options_for_select([]),
+                     include_blank: true, prompt: "Search people…",
+                     class: "min-w-[240px] rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500",
+                     data: { controller: "remote-select navigate-select",
+                             remote_select_model_value: "person",
+                             remote_select_exclude_value: @person.id,
+                             navigate_select_url_template_value: comments_and_communications_person_path("__ID__"),
+                             action: "change->navigate-select#navigate" } %>
+    </div>
+
+    <%= render "people/comments_and_communications_filters",
+               url: comments_and_communications_person_path(@person),
+               clear_path: comments_and_communications_person_path(@person),
+               frame: "comments_and_communications_results" %>
+
+    <% result_src = comments_and_communications_person_path(@person) + "?" + request.query_string %>
+    <%= turbo_frame_tag "comments_and_communications_results", src: result_src, data: { turbo: "temporary" } do %>
+      <div class="py-6 text-center text-sm text-gray-400">Loading comments &amp; communications…</div>
+    <% end %>
+  </div>
+</div>

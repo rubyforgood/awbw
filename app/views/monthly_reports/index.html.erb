@@ -1,9 +1,9 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
-<div class="w-full max-w-7xl mx-auto <%= DomainTheme.bg_class_for(:workshop_logs) %> border border-gray-200 rounded-xl shadow p-6">
+<div class="mx-auto w-full max-w-7xl <%= DomainTheme.bg_class_for(:workshop_logs) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="w-full">
-    <div class="flex items-start justify-between mb-6 gap-4 flex-wrap">
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div class="pr-6">
-        <h2 class="text-2xl font-semibold mb-2">Monthly reports</h2>
+        <h2 class="mb-2 text-2xl font-semibold">Monthly reports</h2>
         <% if @organization %>
           <p class="text-gray-600">
             for <%= link_to @organization.name, edit_organization_path(@organization), class: "text-gray-700 hover:underline font-medium" %>
@@ -13,7 +13,7 @@
         <% end %>
       </div>
 
-      <div class="flex gap-2 items-center text-right">
+      <div class="flex items-center gap-2 text-right">
         <% if @organization %>
           <%= link_to "Back to organization", edit_organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
