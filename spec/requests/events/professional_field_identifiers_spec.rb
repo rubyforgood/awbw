@@ -29,14 +29,14 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
   let!(:sector_hidden)    { create(:sector, name: "Hidden sector") }
 
   {
-    "canonical identifiers" => { primary_sector: "primary_sector", additional_sector: "additional_sectors" }
+    "canonical identifiers" => { primary_sector: "primary_sector", additional_sectors: "additional_sectors" }
   }.each do |scheme_name, ids|
     context "with #{scheme_name}" do
       let(:form) { build_professional_form(ids) }
-      let(:primary_sector_field)    { form.form_fields.find_by!(field_identifier: ids[:primary_sector]) }
-      let(:additional_sector_field) { form.form_fields.find_by!(field_identifier: ids[:additional_sector]) }
-      let(:primary_age_field)       { form.form_fields.find_by!(field_identifier: "primary_age_group") }
-      let(:additional_age_field)    { form.form_fields.find_by!(field_identifier: "additional_age_groups") }
+      let(:primary_sector_field)     { form.form_fields.find_by!(field_identifier: ids[:primary_sector]) }
+      let(:additional_sectors_field) { form.form_fields.find_by!(field_identifier: ids[:additional_sectors]) }
+      let(:primary_age_field)        { form.form_fields.find_by!(field_identifier: "primary_age_group") }
+      let(:additional_age_field)     { form.form_fields.find_by!(field_identifier: "additional_age_groups") }
 
       before { EventForm.create!(event: event, form: form, role: "registration") }
 
@@ -52,7 +52,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
         end
 
         it "renders the additional fields as checkboxes — sectors keep Other, age groups offer every published range" do
-          sector_values = checkbox_values(additional_sector_field)
+          sector_values = checkbox_values(additional_sectors_field)
           expect(sector_values).to include(sector_education.id.to_s, sector_mh.id.to_s)
           # The "Other" sector renders a free-text box, so its checkbox submits the
           # literal "Other" rather than the sector id.
@@ -77,7 +77,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
             fid("primary_email") => "robin.avery@example.com",
             fid("confirm_email") => "robin.avery@example.com",
             primary_sector_field.id.to_s => sector_education.id.to_s,
-            additional_sector_field.id.to_s => [ sector_mh.id.to_s, "Other: Equine therapy" ],
+            additional_sectors_field.id.to_s => [ sector_mh.id.to_s, "Other: Equine therapy" ],
             primary_age_field.id.to_s => age_adults.id.to_s,
             additional_age_field.id.to_s => [ age_teens.id.to_s, age_children.id.to_s ]
           } } }
@@ -91,7 +91,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
         it "stores each professional answer in form_answers" do
           expect(answers_by_identifier(submission)).to include(
             ids[:primary_sector] => sector_education.id.to_s,
-            ids[:additional_sector] => "#{sector_mh.id}, Other: Equine therapy",
+            ids[:additional_sectors] => "#{sector_mh.id}, Other: Equine therapy",
             "primary_age_group" => age_adults.id.to_s,
             "additional_age_groups" => "#{age_teens.id}, #{age_children.id}"
           )
@@ -147,12 +147,12 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
   # Builds a registration form with just the identity + professional sections.
   def build_professional_form(ids)
     form = FormBuilderService.new(
-      name: "Reg #{ids[:primary_sector]} / #{ids[:additional_sector]}",
+      name: "Reg #{ids[:primary_sector]} / #{ids[:additional_sectors]}",
       sections: %i[person_identifier professional_info],
       role: "registration"
     ).call
     rename_field(form, "primary_sector", ids[:primary_sector])
-    rename_field(form, "additional_sectors", ids[:additional_sector])
+    rename_field(form, "additional_sectors", ids[:additional_sectors])
     form
   end
 

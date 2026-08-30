@@ -18,8 +18,8 @@ class FormField < ApplicationRecord
   # Multi-select "additional sectors" field identifier.
   ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors].freeze
 
-  # Single-select "primary sector" field identifiers. Unlike the multi-select
-  # "additional" field, these omit the catch-all "Other" sector — a respondent's
+  # Single-select "primary sector" field identifier. Unlike the multi-select
+  # "additional" field, it omits the catch-all "Other" sector — a respondent's
   # primary sector must be a concrete sector.
   PRIMARY_SECTOR_FIELD_IDENTIFIERS = %w[primary_sector].freeze
 

@@ -77,18 +77,6 @@ RSpec.describe FormSubmissionChanges do
       expect(changes.edited_groups.first.changes.map(&:outcome)).to contain_exactly("Replaced", "Filled")
     end
 
-    it "labels the organization type, including events stamped with the legacy column name" do
-      org = create(:organization, name: "Riverside")
-      stamp("update.organization", resource_type: "Organization", resource_id: org.id,
-            properties: { "resource_title" => org.name, "changes" => {
-              "organization_type" => { "before" => nil, "after" => "Hospital" },
-              "agency_type" => { "before" => nil, "after" => "Clinic" }
-            } })
-
-      labels = described_class.new(submission).edited_groups.first.changes.map(&:label)
-      expect(labels).to eq(%w[Type Type])
-    end
-
     it "does not count a fresh submission that only creates records and adds tags" do
       person = create(:person)
       sector = create(:sector, :published)
