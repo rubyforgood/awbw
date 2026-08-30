@@ -42,7 +42,7 @@ RSpec.describe EventDashboard do
       create(:form_field, form: registration_form, field_identifier: "primary_age_group",
                           name: "Primary Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
-    let(:additional_age_group_field) do
+    let(:additional_age_groups_field) do
       create(:form_field, form: registration_form, field_identifier: "additional_age_groups",
                           name: "Additional Age Group(s) Served", answer_type: :multi_select_checkbox)
     end
@@ -112,10 +112,10 @@ RSpec.describe EventDashboard do
       # person1 → Adults + Teens (Adults dupes the primary answer, so it dedupes);
       # cancelled → Adults (ignored). This makes "All age groups" (primary +
       # additional) differ from the primary-only breakdown.
-      create(:form_answer, form_field: additional_age_group_field,
+      create(:form_answer, form_field: additional_age_groups_field,
                            submitted_answer: "#{age_group1.id}, #{age_group2.id}",
                            form_submission: create(:form_submission, person: person1, form: registration_form))
-      create(:form_answer, form_field: additional_age_group_field, submitted_answer: age_group1.id.to_s,
+      create(:form_answer, form_field: additional_age_groups_field, submitted_answer: age_group1.id.to_s,
                            form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
 
       # States from active registrant addresses; inactive address excluded.
@@ -311,7 +311,7 @@ RSpec.describe EventDashboard do
 
       it "counts sectors carried as a non-primary tag, overlapping the primary count" do
         # sector1 is a tag for person2, who named sector2 (not sector1) as primary.
-        expect(dashboard.additional_sector_count).to eq(1)
+        expect(dashboard.additional_sectors_count).to eq(1)
       end
 
       it "counts distinct registrants per primary sector, from the dropdown only" do

@@ -368,13 +368,13 @@ module EventRegistrationServices
 
     def assign_tags(person, organization)
       primary_sector_ids = collect_ids_across(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
-      additional_sector_ids = collect_ids_across(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
+      additional_sectors_ids = collect_ids_across(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
       primary_age_ids = collect_ids_across(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
       additional_age_ids = collect_ids_across(FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS)
 
-      if primary_sector_ids.any? || additional_sector_ids.any?
+      if primary_sector_ids.any? || additional_sectors_ids.any?
         SectorTagging.apply(person: person, organizations: [ organization ],
-                            primary_ids: primary_sector_ids, additional_ids: additional_sector_ids)
+                            primary_ids: primary_sector_ids, additional_ids: additional_sectors_ids)
       end
 
       if primary_age_ids.any? || additional_age_ids.any?
