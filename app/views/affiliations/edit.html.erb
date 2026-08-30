@@ -12,6 +12,7 @@
     past = light). Kept in sync as you type by the inactive-toggle controller. A
     blank title displays and saves as "Facilitator", so treat it as one here too. %>
 <% expired = @affiliation.inactive? || (@affiliation.end_date.present? && @affiliation.end_date < Date.current) %>
+<% upcoming = !expired && @affiliation.start_date.present? && @affiliation.start_date > Date.current %>
 <% displayed_title = @affiliation.title.presence || Affiliation::FACILITATOR_TITLE %>
 <% facilitator = displayed_title.strip == Affiliation::FACILITATOR_TITLE %>
 <% row_bg = facilitator ? "bg-purple-50 border-purple-200" : "bg-blue-50 border-blue-200" %>
@@ -167,8 +168,15 @@
                     type: "date",
                     value: @affiliation.start_date&.strftime("%Y-%m-%d"),
                     class: field_bg.call(@affiliation.start_date.present?),
-                    data: { inactive_toggle_target: "valueField", action: "change->inactive-toggle#paintFields" }
+                    data: { inactive_toggle_target: "valueField startDate", action: "change->inactive-toggle#paintFields change->inactive-toggle#updateBadges" }
                   } %>
+            <%# `[&:not(.hidden)]:inline-flex` so the chip lays out only when shown — a
+                plain `inline-flex` is emitted after `.hidden` in the compiled CSS and
+                would override it, keeping the chip permanently visible. %>
+            <span data-inactive-toggle-target="upcomingBadge"
+                  class="<%= "hidden" unless upcoming %> mt-1 items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 [&:not(.hidden)]:inline-flex">
+              <i class="fa-solid fa-clock"></i>Upcoming
+            </span>
           </div>
           <div class="w-40">
             <%= f.input :end_date,
@@ -181,6 +189,10 @@
                     class: field_bg.call(@affiliation.end_date.present?),
                     data: { inactive_toggle_target: "endDate valueField", action: "change->inactive-toggle#endDateChanged" }
                   } %>
+            <span data-inactive-toggle-target="inactiveBadge"
+                  class="<%= "hidden" unless expired %> mt-1 items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 [&:not(.hidden)]:inline-flex">
+              <i class="fa-solid fa-circle-minus"></i>Inactive
+            </span>
           </div>
         </div>
         <div class="w-40 self-center">
