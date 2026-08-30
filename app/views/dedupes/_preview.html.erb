@@ -159,3 +159,34 @@
     <% end %>
   <% end %>
 </div>
+
+<%# Read-only inventory of every parent (belongs_to) reference not already shown as an
+    editable field above — full visibility into what each record is linked to before merging. %>
+<%
+  shown_fk_names = columns.map(&:name)
+  linked_associations = model_class.reflect_on_all_associations(:belongs_to)
+                                   .reject { |assoc| shown_fk_names.include?(assoc.foreign_key.to_s) }
+  linked_display = ->(record) {
+    record ? (record.try(:name).presence || record.try(:title).presence || "##{record.id}") : "(none)"
+  }
+%>
+<% if linked_associations.any? %>
+  <div class="mt-6">
+    <h3 class="mb-2 text-sm font-semibold text-gray-700">Linked records <span class="font-normal text-gray-400">(read-only — for reference)</span></h3>
+    <div class="grid grid-cols-2 gap-x-6">
+      <% linked_associations.each_with_index do |assoc, index| %>
+        <% first = index.zero? %>
+        <% last = index == linked_associations.size - 1 %>
+        <% assoc_label = assoc.name.to_s.humanize %>
+        <div class="border-x border-b <%= border %> <%= "border-t" if first %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-tl-xl" if first %> <%= "rounded-bl-xl" if last %>">
+          <span class="w-full text-gray-400 sm:w-auto"><%= assoc_label %></span>
+          <span class="text-gray-900"><%= linked_display.call(record_to_delete.public_send(assoc.name)) %></span>
+        </div>
+        <div class="border-x border-b <%= border %> <%= "border-t" if first %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-tr-xl" if first %> <%= "rounded-br-xl" if last %>">
+          <span class="w-full text-gray-400 sm:w-auto"><%= assoc_label %></span>
+          <span class="text-gray-900"><%= linked_display.call(record_to_keep.public_send(assoc.name)) %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

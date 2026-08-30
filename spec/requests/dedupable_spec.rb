@@ -586,6 +586,16 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Deprecated")
       end
 
+      it "lists belongs_to references not shown as fields in a read-only Linked records section" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Linked records")
+        expect(response.body).to include("Created by")
+      end
+
       it "still renders the author picker when neither workshop has a person author" do
         keep.update!(author: nil)
         delete_rec.update!(author: nil)
