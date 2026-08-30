@@ -1,0 +1,8 @@
+<%# Spam trap — see Honeypot. Hidden off-screen at zero size rather than with
+    `display: none`, which many bots skip. Locals: scope (the param namespace
+    the surrounding form posts under). %>
+<div class="absolute top-0 left-0 -z-10 h-0 w-0 opacity-0" aria-hidden="true">
+  <label for="<%= Honeypot::FIELD_NAME %>"><%= Honeypot::LABEL %></label>
+  <input type="text" name="<%= scope %>[<%= Honeypot::FIELD_NAME %>]"
+         id="<%= Honeypot::FIELD_NAME %>" tabindex="-1" autocomplete="off">
+</div>

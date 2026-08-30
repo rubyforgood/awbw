@@ -16,6 +16,11 @@ module Events
     def create
       authorize! :form_submission
 
+      if Honeypot.tripped?(params, :bulk_payment)
+        redirect_to new_event_bulk_payment_path(@event)
+        return
+      end
+
       @form_params = params.dig(:bulk_payment, :form_fields)&.to_unsafe_h || {}
 
       @field_errors = validate_required_fields
