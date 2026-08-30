@@ -59,11 +59,13 @@
           <%= @monthly_report.created_by&.name %>
           <br><span class="text-gray-400"><%= @monthly_report.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
-        <div>
-          <span class="font-semibold text-gray-700">Updated by:</span>
-          <%= @updated_by&.name || "—" %>
-          <br><span class="text-gray-400"><%= @monthly_report.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
-        </div>
+        <% if @monthly_report.updated_at != @monthly_report.created_at %>
+          <div>
+            <span class="font-semibold text-gray-700">Updated by:</span>
+            <%= @monthly_report.updated_by&.name || "—" %>
+            <br><span class="text-gray-400"><%= @monthly_report.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
+          </div>
+        <% end %>
       </div>
     </div>
 

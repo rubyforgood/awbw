@@ -1,6 +1,7 @@
 class Report < ApplicationRecord
   belongs_to :owner, polymorphic: true, optional: true
   belongs_to :created_by, class_name: "User"
+  belongs_to :updated_by, class_name: "User", optional: true
   belongs_to :organization
   belongs_to :windows_type
   belongs_to :workshop, optional: true
