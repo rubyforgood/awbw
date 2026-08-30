@@ -6,11 +6,11 @@
   <div class="flex flex-wrap gap-2 mb-8">
     <% sectors.each do |sector| %>
       <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
-                  class: "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors" %>
+                  class: "inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-3 py-1 text-xs font-medium hover:bg-purple-200 transition-colors" %>
     <% end %>
     <% audiences.each do |category| %>
       <%= link_to category.decorate.display_name, story_shares_path(category_names_all: category.name),
-                  class: "bg-brand-amber-50 text-brand-amber-800 hover:bg-brand-amber-100 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors" %>
+                  class: "inline-flex items-center rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-medium hover:bg-gray-200 transition-colors" %>
     <% end %>
   </div>
 <% end %>
