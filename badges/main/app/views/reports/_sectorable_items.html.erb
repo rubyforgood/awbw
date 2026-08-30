@@ -7,7 +7,7 @@
   <div class="four-btn-row clearfix">
     <% @sectors.each do |sf| %>
       <div id="selector-button" class="btn-group" data-toggle="buttons">
-        <label class="btn btn-primary btn--small btn-blue btn-sectors btn-fs-medium
+        <label class="<%= button_classes(:primary) %> btn
  <%= "active" if @report and @report.sectorable_items.any?{|si| si.sector_id == sf[0].to_i } %>">
           <input name="sectorable_items[<%= i %>][sector_id]"
                  type="checkbox" value="<%= sf[0] %>"

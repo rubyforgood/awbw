@@ -137,7 +137,7 @@
 
     <div class="mt-6 flex items-center justify-end gap-3">
       <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>
-      <%= submit_tag "Preview changes", form: "reconcile_form", class: "btn btn-primary" %>
+      <%= submit_tag "Preview changes", form: "reconcile_form", class: button_classes(:primary) %>
     </div>
   <% end %>
 

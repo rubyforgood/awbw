@@ -190,14 +190,14 @@
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <% if f.object.scholarships.exists? %>
-        <span class="btn btn-danger-outline cursor-not-allowed opacity-50"
+        <span class="<%= button_classes(:danger_outline, extra: "cursor-not-allowed opacity-50") %>"
               title="Remove its scholarships before deleting this grant">Delete</span>
       <% else %>
-        <%= link_to "Delete", @grant, class: "btn btn-danger-outline",
+        <%= link_to "Delete", @grant, class: button_classes(:danger_outline),
                     data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this grant?" } %>
       <% end %>
     <% end %>
-    <%= link_to "Cancel", grants_path, class: "btn btn-secondary-outline" %>
-    <%= f.button :submit, class: "btn btn-primary" %>
+    <%= link_to "Cancel", grants_path, class: button_classes(:secondary_outline) %>
+    <%= f.button :submit, class: button_classes(:primary) %>
   </div>
 <% end %>

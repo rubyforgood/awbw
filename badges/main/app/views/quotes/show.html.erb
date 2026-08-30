@@ -76,7 +76,7 @@
                 <h3 class="text-sm font-medium text-gray-500">Workshop</h3>
                 <%= link_to @quote.workshop.title,
                             workshop_path(@quote.workshop),
-                            class: "btn btn-secondary-outline" %>
+                            class: button_classes(:secondary_outline) %>
               </div>
             <% end %>
 
@@ -86,7 +86,7 @@
                   <h3 class="text-sm font-medium text-gray-500"><%= qiq.quotable.class %></h3>
                   <%= link_to qiq.quotable.title,
                               polymorphic_path(qiq.quotable),
-                              class: "btn btn-secondary-outline" %>
+                              class: button_classes(:secondary_outline) %>
                 </div>
               <% end %>
             </div>

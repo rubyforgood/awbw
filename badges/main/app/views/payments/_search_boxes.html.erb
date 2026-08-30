@@ -112,7 +112,7 @@
       <div class="flex flex-col md:col-span-2">
         <span class="<%= label_class %>" aria-hidden="true">&nbsp;</span>
 
-        <%= link_to "Clear filters", payments_path, class: "btn btn-utility-outline flex-1 w-full justify-center", data: { action: "collection#clearAndSubmit" } %>
+        <%= link_to "Clear filters", payments_path, class: button_classes(:utility_outline, extra: "flex-1 w-full justify-center"), data: { action: "collection#clearAndSubmit" } %>
       </div>
     </div>
   <% end %>

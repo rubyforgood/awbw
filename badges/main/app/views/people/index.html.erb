@@ -42,7 +42,7 @@
         <% if allowed_to?(:new?, Person) %>
           <%= link_to "New Person",
                       new_person_path,
-                      class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+                      class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
         <% end %>
       </div>
     </div>

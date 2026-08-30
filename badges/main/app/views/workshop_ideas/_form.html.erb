@@ -1,4 +1,4 @@
-<div class="w-full mx-auto" data-controller="timeframe">
+<div class="mx-auto w-full" data-controller="timeframe">
   <%= simple_form_for @workshop_idea do |f| %>
     <!-- Errors -->
     <% if @workshop_idea.errors.any? %>
@@ -10,23 +10,23 @@
 
     <% promoted_to_workshop = f.object.workshops.any? %>
     <% if promoted_to_workshop %>
-      <div class="admin-only bg-yellow-100 m-3 p-3">
+      <div class="admin-only m-3 bg-yellow-100 p-3">
         This workshops idea has been promoted to a
         <% f.object.workshops.each do |workshop| %>
           <%= link_to "Workshop ##{workshop.id}",
-                      workshop_path(workshop), class: "btn btn-secondary-outline" %>
+                      workshop_path(workshop), class: button_classes(:secondary_outline) %>
         <% end %>
         and should not be edited here.
       </div>
     <% elsif allowed_to?(:manage?, WorkshopIdea) && f.object.persisted? %>
-      <div class="admin-only bg-blue-100 m-3 p-3">
+      <div class="admin-only m-3 bg-blue-100 p-3">
         <%= link_to "Promote to Workshop", new_workshop_path(workshop_idea_id: @workshop_idea.id),
-                    class: "btn btn-secondary-outline",
+                    class: button_classes(:secondary_outline),
                     data: { turbo_confirm: "All edits must be saved before promoting. Are you sure you wish to promote?" } %>
       </div>
     <% end %>
     <!-- Row 1 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
       <div>
         <%= f.input :title,
                     as: :text,
@@ -50,22 +50,22 @@
       </div>
 
       <div>
-        <label class="block text-md font-medium text-gray-700 mb-1">Timeframe / Duration</label>
+        <label class="mb-1 block text-md font-medium text-gray-700">Timeframe / Duration</label>
 
-        <div class="flex gap-x-2 font-bold text-xl items-center">
-          <span data-timeframe-target="output" class="text-gray-900 font-medium"><%= f.object.time_frame_total %></span>
+        <div class="flex items-center gap-x-2 text-xl font-bold">
+          <span data-timeframe-target="output" class="font-medium text-gray-900"><%= f.object.time_frame_total %></span>
         </div>
 
-        <p class="text-sm text-gray-500 mt-1">
+        <p class="mt-1 text-sm text-gray-500">
           Automatic total time, in 15min increments
         </p>
       </div>
     </div>
 
     <% if allowed_to?(:manage?, WorkshopIdea) %>
-      <div class="bg-white rounded pb-6">
-        <div class="admin-only bg-blue-100 flex gap-x-2 items-center p-3">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div class="rounded bg-white pb-6">
+        <div class="admin-only flex items-center gap-x-2 bg-blue-100 p-3">
+          <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
             <div>
               <div data-controller="searchable-select" data-searchable-select-mode-value="person">
                 <%= f.input :created_by_id,
@@ -227,15 +227,13 @@
         <button
           type="button"
           id="tags_button"
-          class="
-            flex items-center justify-between cursor-pointer w-full
-            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+          class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"tags":"hidden"}, {"tags_arrow":"rotate-180"}, {"tags_button":"rounded-md rounded-t-md"}]'>
           Tags
           <svg
             id="tags_arrow"
-            class="w-6 h-6 shrink-0"
+            class="h-6 w-6 shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg">
@@ -247,10 +245,10 @@
           </svg>
         </button>
 
-        <div id="tags" class="hidden border border-gray-300 p-4 rounded-b-md">
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
+        <div id="tags" class="hidden rounded-b-md border border-gray-300 p-4">
+          <div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
             <!-- Header -->
-            <h3 class="text-base font-semibold text-gray-800 mb-3">
+            <h3 class="mb-3 text-base font-semibold text-gray-800">
               Sectors
             </h3>
 
@@ -262,16 +260,14 @@
 
                 <label
                   for="<%= id %>"
-                  class="
-                    flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                    rounded-lg shadow-sm hover:bg-gray-100 transition">
+                  class="flex w-auto min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-100">
                   <%= check_box_tag "workshop[sector_ids][]",
                                     sector.id,
                                     @workshop&.sector_ids&.include?(sector.id),
                                     id: id,
                                     class: "h-4 w-4 text-blue-600 rounded" %>
 
-                  <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
+                  <span class="text-sm whitespace-nowrap text-gray-700"><%= sector.name %></span>
                 </label>
               <% end %>
             </div>
@@ -282,7 +278,7 @@
             <% @categories_grouped&.each do |type, cats| %>
               <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                 <!-- Header -->
-                <h3 class="text-base font-semibold text-gray-800 mb-3"><%= type.name.underscore.humanize %></h3>
+                <h3 class="mb-3 text-base font-semibold text-gray-800"><%= type.name.underscore.humanize %></h3>
 
                 <!-- Checkbox List -->
                 <div class="flex flex-wrap gap-3">
@@ -291,16 +287,14 @@
 
                     <label
                       for="<%= id %>"
-                      class="
-                        flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
+                      class="flex w-auto min-w-[180px] cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-100">
                       <%= check_box_tag "workshop[category_ids][]",
                                         category.id,
                                         @workshop&.category_ids&.include?(category.id),
                                         id: id,
                                         class: "h-4 w-4 text-blue-600 rounded" %>
 
-                      <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
+                      <span class="text-sm whitespace-nowrap text-gray-700"><%= category.name %></span>
                     </label>
                   <% end %>
                 </div>
@@ -315,15 +309,13 @@
         <button
           type="button"
           id="translations_button"
-          class="
-            flex items-center justify-between cursor-pointer w-full
-            bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+          class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"translations":"hidden"}, {"translations_arrow":"rotate-180"}, {"translations_button":"rounded-md rounded-t-md"}]'>
           Spanish Translations
           <svg
             id="translations_arrow"
-            class="w-6 h-6 shrink-0"
+            class="h-6 w-6 shrink-0"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg">
@@ -335,8 +327,8 @@
           </svg>
         </button>
 
-        <div id="translations" class="hidden border border-gray-300 p-4 rounded-b-md">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="translations" class="hidden rounded-b-md border border-gray-300 p-4">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <% @workshop&.decorate&.display_spanish_fields&.each do |field| %>
               <%= rhino_editor(f, field, label: field.to_s.humanize) %>
             <% end %>
@@ -349,15 +341,13 @@
           <button
             type="button"
             id="series_button"
-            class="
-              flex items-center justify-between cursor-pointer w-full
-              bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md"
+            class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
             data-action="dropdown#toggle"
             data-dropdown-payload-param='[{"series":"hidden"}, {"series_arrow":"rotate-180"}, {"series_button":"rounded-md rounded-t-md"}]'>
             Series workshops
             <svg
               id="series_arrow"
-              class="w-6 h-6 shrink-0"
+              class="h-6 w-6 shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
               xmlns="http://www.w3.org/2000/svg">
@@ -371,7 +361,7 @@
 
           <div
             id="series"
-            class="<%= "hidden" unless f.object.workshop_series_children.any? %> border border-gray-300 p-4 rounded-b-md">
+            class="<%= "hidden" unless f.object.workshop_series_children.any? %> rounded-b-md border border-gray-300 p-4">
             <p class="mb-2 text-sm text-gray-600">
               If this Workshop is a series, add the other "series workshops" below. You can also add a series-specific
               description for each workshop in the series, and the order in which they should appear. (The main workshop
@@ -394,13 +384,13 @@
   <%= render "shared/form_image_fields", f: f, include_primary_asset: false %>
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", @workshop_idea, class: "btn btn-danger-outline",
+        <%= link_to "Delete", @workshop_idea, class: button_classes(:danger_outline),
                     data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
       <%= link_to "Cancel",
                   (allowed_to?(:index?, WorkshopIdea) ? workshop_ideas_path : root_path),
-                  class: "btn btn-secondary-outline" %>
-      <%= f.button :submit, class: "btn btn-primary" %>
+                  class: button_classes(:secondary_outline) %>
+      <%= f.button :submit, class: button_classes(:primary) %>
     </div>
   <% end %>
 

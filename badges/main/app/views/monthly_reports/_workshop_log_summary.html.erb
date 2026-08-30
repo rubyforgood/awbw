@@ -4,7 +4,7 @@
     Workshop Log Summary
     <table class='table-striped table'>
       <div class='small js-workshop-logs-button-wrapper right'>
-        <%= link_to 'Add Workshop Log', new_workshop_log_path(windows_type_id: @form_builder.windows_type, organization_id: @organization&.id, month: @month, year: @year), class: "btn btn--small" %>
+        <%= link_to 'Add Workshop Log', new_workshop_log_path(windows_type_id: @form_builder.windows_type, organization_id: @organization&.id, month: @month, year: @year), class: button_classes(nil) %>
       </div>
       <th class='bold small'>Date</th>
       <th class='bold small'>Person/Workshop</th>

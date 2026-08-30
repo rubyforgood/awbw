@@ -3,21 +3,19 @@
 <% display_resource = activity.object || user %>
 
 <div
-  class="
-    bg-white border border-gray-200 rounded shadow-sm hover:shadow-md transition
-    overflow-hidden flex flex-col md:flex-row">
+  class="flex flex-col overflow-hidden rounded border border-gray-200 bg-white shadow-sm transition hover:shadow-md md:flex-row">
   <div class="w-60 items-center p-2">
     <div class="pt-2">
       <span class="font-bold"><%= activity.event.name.gsub("."," ").titleize %></span>
     </div>
 
-    <div class="text-sm text-gray-500 font-medium pt-2 whitespace-nowrap">
+    <div class="pt-2 text-sm font-medium whitespace-nowrap text-gray-500">
       <%= activity.occurred_at.in_time_zone.strftime("%m-%d-%Y @ %I:%M %p") %>
       <%= Rails.application.config.time_zone %>
     </div>
 
     <% unless params[:user_id].present? %>
-      <div class="text-sm text-gray-500 font-medium pt-2">
+      <div class="pt-2 text-sm font-medium text-gray-500">
         <% if user %>
           by
           <%= link_to user.full_name,
@@ -29,7 +27,7 @@
     <% end %>
   </div>
 
-  <div class="w-20 bg-white flex items-top justify-center pt-3">
+  <div class="items-top flex w-20 justify-center bg-white pt-3">
     <!-- Assets -->
     <%= render "assets/display_image",
                resource: display_resource,
@@ -63,16 +61,16 @@
                     class: "hover:underline" %>
       </h3>
 
-      <p class="text-sm text-gray-600 line-clamp-3 mt-1">
+      <p class="line-clamp-3 mt-1 text-sm text-gray-600">
         <%= detail %>
       </p>
 
-      <div class="flex justify-end mt-4 space-x-2">
+      <div class="mt-4 flex justify-end space-x-2">
         <% if activity.object.is_a?(Resource) && decorated_activity.downloadable_asset&.file&.attached? %>
           <%= link_to raw("<span class='fa fa-download'></span>"),
                       resource_download_path(activity),
                       data: { turbo_prefetch: false },
-                      class: "btn btn-utility" %>
+                      class: button_classes(:utility) %>
         <% end %>
       </div>
     <% end %>

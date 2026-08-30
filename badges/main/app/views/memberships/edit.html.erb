@@ -21,8 +21,8 @@
 
     <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
       <div class="ml-auto flex items-center gap-3">
-        <%= link_to "Cancel", person_memberships_path(@person), class: "btn btn-secondary-outline" %>
-        <%= f.button :submit, "Save cost", class: "btn btn-primary" %>
+        <%= link_to "Cancel", person_memberships_path(@person), class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, "Save cost", class: button_classes(:primary) %>
       </div>
     </div>
   <% end %>

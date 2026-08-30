@@ -16,7 +16,7 @@
       <p class="text-sm text-gray-500"><%= @person.full_name %></p>
     </div>
     <% if !active_membership || params[:admin] == "true" %>
-      <%= link_to new_person_membership_path(@person), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <%= link_to new_person_membership_path(@person), class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
         <i class="fa-solid fa-plus text-xs"></i>
         New membership
       <% end %>
@@ -37,18 +37,18 @@
 
             <div class="flex flex-wrap items-center gap-2">
               <% if !membership.covered_on? || params[:admin] == "true" %>
-                <%= link_to "Add invoice", new_membership_membership_invoice_path(membership), class: "btn btn-secondary-outline btn-sm" %>
+                <%= link_to "Add invoice", new_membership_membership_invoice_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
               <% end %>
-              <%= link_to "Edit cost", edit_membership_path(membership), class: "btn btn-secondary-outline btn-sm" %>
+              <%= link_to "Edit cost", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
 
               <% if !membership.cancelled? %>
                 <%= button_to "Cancel", membership_path(membership),
-                      method: :patch, class: "btn btn-secondary-outline btn-sm",
+                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
                       params: { membership: { cancelled: "1" } },
                       data: { turbo_confirm: "Stop renewing membership for #{@person.full_name}? They keep the invoice period they have already paid for." } %>
               <% elsif !active_membership %>
                 <%= button_to "Resume", membership_path(membership),
-                      method: :patch, class: "btn btn-secondary-outline btn-sm",
+                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
                       params: { membership: { cancelled: "0" } },
                       data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
               <% end %>

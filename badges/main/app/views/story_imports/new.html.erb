@@ -22,8 +22,8 @@
                          class: "block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none p-2" %>
       </div>
       <div class="flex items-center gap-2">
-        <%= f.submit "Preview import", class: "btn btn-primary-outline bg-blue-100" %>
-        <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline" %>
+        <%= f.submit "Preview import", class: button_classes(:primary_outline, extra: "bg-blue-100") %>
+        <%= link_to "Cancel", stories_path, class: button_classes(:secondary_outline) %>
       </div>
     <% end %>
   </div>

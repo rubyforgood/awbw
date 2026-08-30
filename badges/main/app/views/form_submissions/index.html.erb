@@ -152,7 +152,7 @@
             <span class="<%= search_label_class %>" aria-hidden="true">&nbsp;</span>
             <%# Plain navigation to the unfiltered index — a reset that never depends
                 on JS clearing each remote-select field. %>
-            <%= link_to "Clear filters", form_submissions_path(return_to: params[:return_to].presence), class: "btn btn-utility whitespace-nowrap" %>
+            <%= link_to "Clear filters", form_submissions_path(return_to: params[:return_to].presence), class: button_classes(:utility, extra: "whitespace-nowrap") %>
           </div>
         <% end %>
       </div>

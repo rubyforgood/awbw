@@ -1,13 +1,13 @@
 <%= simple_form_for(feature, html: { class: "space-y-6" }) do |f| %>
   <%= render "shared/errors", resource: feature if feature.errors.any? %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
     <%= f.input :name, input_html: { class: "w-full", maxlength: 150 } %>
     <%= f.input :released_on, as: :string,
                 input_html: { type: "date", value: feature.released_on, class: "w-full" } %>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
     <%= f.input :area,
                 collection: Feature::AREAS.map { |area| [ area[:label], area[:key] ] },
                 include_blank: false,
@@ -32,7 +32,7 @@
                      hint: "Add a step-by-step walkthrough and screenshots.") %>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
     <%= f.input :action_path, label: "\"Check out this feature\" link",
                 hint: "In-app path the detail page links to, e.g. /events.",
                 input_html: { class: "w-full", placeholder: "/events" } %>
@@ -45,13 +45,13 @@
               hint: "Optional link to a full write-up (e.g. a Google or Word doc).",
               input_html: { class: "w-full", placeholder: "https://…" } %>
 
-  <div class="admin-only bg-blue-100 rounded p-3">
+  <div class="admin-only rounded bg-blue-100 p-3">
     <%= f.input :published, as: :boolean,
                 hint: "Uncheck to keep a draft hidden from everyone but super-admins." %>
   </div>
 
   <div class="flex flex-wrap gap-2">
-    <%= f.button :submit, class: "btn btn-primary" %>
-    <%= link_to "Cancel", features_path, class: "btn btn-secondary-outline" %>
+    <%= f.button :submit, class: button_classes(:primary) %>
+    <%= link_to "Cancel", features_path, class: button_classes(:secondary_outline) %>
   </div>
 <% end %>

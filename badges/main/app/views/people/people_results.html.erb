@@ -120,10 +120,10 @@
                   <td class="justify-center gap-2 px-4 py-2">
                     <%= link_to "User", user_path(person.user),
                             data: { turbo_frame: "_top" },
-                            class: "admin-only bg-blue-100 btn btn-secondary-outline px-2.5 py-1 text-xs" if person.user %>
+                            class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") if person.user %>
                     <%= link_to "Edit", edit_person_path(person),
                             data: { turbo_frame: "_top" },
-                            class: "admin-only bg-blue-100 btn btn-secondary-outline px-2.5 py-1 text-xs" %>
+                            class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") %>
                   </td>
                 <% end %>
               </tr>

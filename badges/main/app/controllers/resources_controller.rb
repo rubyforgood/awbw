@@ -103,7 +103,6 @@ class ResourcesController < ApplicationController
   def update
     @resource = Resource.find(params[:id])
     authorize! @resource
-    @resource.created_by ||= current_user
     success = false
 
     Resource.transaction do
@@ -192,7 +191,7 @@ class ResourcesController < ApplicationController
   def load_forms
     form = @resource.form
     if form
-      @user_form = Report.new(created_by: current_user, owner: @resource)
+      @user_form = Report.new(owner: @resource)
       form.form_fields.where(status: 1).order(:position).each do |field|
         @user_form.report_form_field_answers.build(form_field: field)
       end

@@ -1,5 +1,5 @@
-<div class="bg-green-200 border-2 border-green-400 rounded-lg p-4 mb-4">
-  <h3 class="text-lg font-medium mb-4">New <%= @payment.type.to_s.underscore.humanize(capitalize: false) %></h3>
+<div class="mb-4 rounded-lg border-2 border-green-400 bg-green-200 p-4">
+  <h3 class="mb-4 text-lg font-medium">New <%= @payment.type.to_s.underscore.humanize(capitalize: false) %></h3>
 
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
     <%= hidden_field_tag "payment[allocatable_sgid]", @allocatable&.to_sgid&.to_s || params[:allocatable_sgid] %>
@@ -51,13 +51,13 @@
         label: "Additional designation" %>
     </div>
 
-    <div class="flex gap-2 mt-4">
-      <%= f.button :submit, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+    <div class="mt-4 flex gap-2">
+      <%= f.button :submit, class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
         <i class="fa-solid fa-plus text-xs"></i>
         Create payment
       <% end %>
 
-      <%= link_to "Cancel", allocations_path(allocatable_sgid: @allocatable&.to_sgid&.to_s || params[:allocatable_sgid]), class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel", allocations_path(allocatable_sgid: @allocatable&.to_sgid&.to_s || params[:allocatable_sgid]), class: button_classes(:secondary_outline) %>
     </div>
   <% end %>
 </div>

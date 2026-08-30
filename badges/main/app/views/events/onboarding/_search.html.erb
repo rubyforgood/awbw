@@ -18,9 +18,9 @@
     </div>
   </div>
 
-  <div class="w-full md:w-auto flex justify-end">
+  <div class="flex w-full justify-end md:w-auto">
     <%= link_to "Clear", onboarding_event_path(@event, hide: params[:hide].presence),
-                class: "btn btn-utility-outline",
+                class: button_classes(:utility_outline),
                 data: { action: "collection#clearAndSubmit" } %>
   </div>
 <% end %>

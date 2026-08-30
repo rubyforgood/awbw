@@ -18,9 +18,9 @@
     <div class="form-actions flex flex-wrap gap-3 mt-6 justify-end">
       <%% if allowed_to?(:destroy?, f.object) %>
         <%%= link_to "Delete", @<%= singular_table_name %>,
-                            class: "btn btn-danger-outline", data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %>
+                            class: button_classes(:danger_outline), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %>
       <%% end %>
-      <%%= link_to "Cancel", <%= plural_table_name %>_path, class: "btn btn-secondary-outline" %>
+      <%%= link_to "Cancel", <%= plural_table_name %>_path, class: button_classes(:secondary_outline) %>
       <%%= f.button :submit,
                   class: "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700
                           transition-colors duration-150" %>

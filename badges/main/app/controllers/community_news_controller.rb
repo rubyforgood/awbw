@@ -61,7 +61,6 @@ class CommunityNewsController < ApplicationController
 
   def create
     @community_news = CommunityNews.new(community_news_params)
-    @community_news.created_by = current_user
     authorize! @community_news
 
     success = false

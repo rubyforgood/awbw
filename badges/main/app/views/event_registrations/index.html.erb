@@ -21,7 +21,7 @@
               <% if allowed_to?(:new?, EventRegistration) %>
                 <%= link_to "New #{EventRegistration.model_name.human.downcase}",
                             new_event_registration_path(return_to: "index"),
-                            class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+                            class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
               <% end %>
             </div>
           </div>

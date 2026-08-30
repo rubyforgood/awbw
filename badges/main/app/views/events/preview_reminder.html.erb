@@ -35,7 +35,7 @@
     <% else %>
       <p class="mb-4 text-gray-600">There are no registrants with an email address to send a reminder to.</p>
     <% end %>
-    <%= link_to "Back to registrants", registrants_event_path(@event), class: "btn btn-secondary-outline" %>
+    <%= link_to "Back to registrants", registrants_event_path(@event), class: button_classes(:secondary_outline) %>
   <% else %>
     <h2 class="mb-2 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-800">Recipients</h2>
     <% if @invite_mode %>
@@ -160,8 +160,8 @@
         </div>
       <% end %>
       <div class="mt-8 flex justify-center gap-3">
-        <%= link_to "Cancel", registrants_event_path(@event), class: "btn btn-secondary-outline" %>
-        <%= f.submit(@invite_mode ? "Review & send invites" : "Review & send", class: "btn btn-primary") %>
+        <%= link_to "Cancel", registrants_event_path(@event), class: button_classes(:secondary_outline) %>
+        <%= f.submit(@invite_mode ? "Review & send invites" : "Review & send", class: button_classes(:primary)) %>
       </div>
     <% end %>
   <% end %>

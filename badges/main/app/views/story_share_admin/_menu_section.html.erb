@@ -38,6 +38,6 @@
                            remote_select_model_value: type,
                            remote_select_exclude_value: records.map(&:id).join(",") },
                    class: "w-72 rounded-lg border border-gray-300 px-3 py-2 text-sm" %>
-    <%= submit_tag "Add", class: "btn btn-primary" %>
+    <%= submit_tag "Add", class: button_classes(:primary) %>
   <% end %>
 </section>

@@ -60,21 +60,21 @@
               <% if story.external_link? %>
                 <%= link_to "View", story.link_target,
                                   target: "_blank", rel: "noopener noreferrer",
-                                  class: "btn btn-secondary-outline" %>
+                                  class: button_classes(:secondary_outline) %>
                 <% if allowed_to?(:edit?, story) %>
                   <%= link_to "Details", story_path(story, no_redirect: true),
                                     data: { turbo_frame: "_top" },
-                                    class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                                    class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
                 <% end %>
               <% else %>
                 <%= link_to "View", story_path(story),
                                   data: { turbo_frame: "_top" },
-                                  class: "btn btn-secondary-outline" %>
+                                  class: button_classes(:secondary_outline) %>
               <% end %>
               <% if allowed_to?(:edit?, story) %>
                 <%= link_to "Edit", edit_story_path(story.id),
                                   data: {turbo_frame: "_top"},
-                                  class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                                  class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
               <% end %>
             </td>
           </tr>
@@ -88,7 +88,7 @@
                 <%= link_to "Create a story",
                             new_story_path,
                             data: {turbo_frame: "_top"},
-                            class: "btn btn-primary" %>
+                            class: button_classes(:primary) %>
               </div>
             <% end %>
           </td>

@@ -57,7 +57,7 @@
                     method: :post,
                     data: { turbo: false } do %>
         <%= hidden_field_tag :confirm_action, "resend" %>
-        <button type="submit" class="btn btn-primary-outline">
+        <button type="submit" class="<%= button_classes(:primary_outline) %>">
           <i class="fa-solid fa-paper-plane"></i>
           Resend confirmation email
         </button>
@@ -68,7 +68,7 @@
                     method: :post,
                     data: { turbo: false } do %>
         <%= hidden_field_tag :confirm_action, "confirm" %>
-        <button type="submit" class="btn btn-warning-outline">
+        <button type="submit" class="<%= button_classes(:warning_outline) %>">
           <i class="fa-solid fa-check-circle"></i>
           Manually confirm email
         </button>
@@ -83,7 +83,7 @@
     </div>
 
     <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
-      <%= link_to "Cancel", edit_user_path(@user), class: "btn btn-secondary-outline" %>
+      <%= link_to "Cancel", edit_user_path(@user), class: button_classes(:secondary_outline) %>
     </div>
   </div>
 </div>

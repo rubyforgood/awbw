@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe UserStampable, type: :model do
-  # Banner carries both stamp columns and a required belongs_to :created_by.
+  # Banner carries both stamp columns, each a required belongs_to.
   let(:creator) { create(:user) }
   let(:editor)  { create(:user) }
 
@@ -10,32 +10,27 @@ RSpec.describe UserStampable, type: :model do
   end
 
   describe "on create" do
-    it "stamps updated_by from Current.user" do
-      banner = with_current(creator) { Banner.create!(content: "Hi", show: true) }
-
-      expect(banner.updated_by).to eq(creator)
-    end
-
-    it "stamps created_by from Current.user when the caller leaves it unset" do
+    it "stamps created_by and updated_by from Current.user" do
       banner = with_current(creator) { Banner.create!(content: "Hi", show: true) }
 
       expect(banner.created_by).to eq(creator)
+      expect(banner.updated_by).to eq(creator)
     end
 
-    it "satisfies required created_by/updated_by belongs_to without an explicit assignment" do
+    it "satisfies required belongs_to stamps without an explicit assignment" do
       expect { with_current(creator) { Banner.create!(content: "Hi", show: true) } }
         .not_to raise_error
     end
 
-    it "respects an explicitly assigned created_by" do
+    it "forces created_by to Current.user, ignoring a mass-assigned value" do
       banner = with_current(creator) { Banner.create!(content: "Hi", show: true, created_by: editor) }
 
-      expect(banner.created_by).to eq(editor)
+      expect(banner.created_by).to eq(creator)
     end
   end
 
   describe "on update" do
-    let!(:banner) { with_current(creator) { Banner.create!(content: "Hi", show: true, created_by: creator) } }
+    let!(:banner) { with_current(creator) { Banner.create!(content: "Hi", show: true) } }
 
     it "stamps updated_by with the current editor without touching created_by" do
       with_current(editor) { banner.update!(content: "Edited") }
@@ -74,6 +69,7 @@ RSpec.describe UserStampable, type: :model do
         Banner.create!(content: "Hi", show: true, created_by: creator, updated_by: creator)
       end
 
+      expect(banner.created_by).to eq(creator)
       expect(banner.updated_by).to eq(creator)
     end
   end

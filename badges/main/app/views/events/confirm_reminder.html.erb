@@ -92,8 +92,8 @@
       <%= hidden_field_tag :hide_ticket_button, (@hide_ticket_button ? "1" : "0") %>
     <% end %>
     <div class="flex justify-center gap-3">
-      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0"), hide_ticket_button: (@hide_ticket_button ? "1" : "0")), class: "btn btn-secondary-outline" %>
-      <%= f.submit(@invite_mode ? "Send invites" : "Send reminder", class: "btn btn-primary") %>
+      <%= link_to "Cancel", preview_reminder_event_path(@event, mode: (@invite_mode ? "invite" : nil), custom_subject: @custom_subject, custom_message: @custom_message, hide_event_card: (@hide_event_card ? "1" : "0"), hide_ticket_button: (@hide_ticket_button ? "1" : "0")), class: button_classes(:secondary_outline) %>
+      <%= f.submit(@invite_mode ? "Send invites" : "Send reminder", class: button_classes(:primary)) %>
     </div>
   <% end %>
 </div>

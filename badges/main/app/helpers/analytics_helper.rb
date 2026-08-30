@@ -9,7 +9,7 @@ module AnalyticsHelper
   def print_button(record,
                    printable_type: nil,
                    path: admin_analytics_print_path,
-                   button_class: "btn btn-utility",
+                   button_class: button_classes(:utility),
                    icon_class: "fas fa-print",
                    button_text: nil,
                    title: "Print",

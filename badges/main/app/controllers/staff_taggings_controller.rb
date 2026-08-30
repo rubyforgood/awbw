@@ -51,13 +51,6 @@ class StaffTaggingsController < ApplicationController
   def update
     authorize! @staff_tagging
     @staff_tagging.assign_attributes(staff_tagging_params)
-    @staff_tagging.comments.select(&:new_record?).each do |comment|
-      comment.created_by = current_user
-      comment.updated_by = current_user
-    end
-    @staff_tagging.comments.select { |comment| comment.persisted? && comment.body_changed? }.each do |comment|
-      comment.updated_by = current_user
-    end
 
     if @staff_tagging.save
       redirect_to staff_tagging_return_path, notice: "Staff tag updated.", status: :see_other

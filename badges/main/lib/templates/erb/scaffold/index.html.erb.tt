@@ -12,7 +12,7 @@
         <%% if allowed_to?(:new?, <%= singular_table_name.classify %>) %>
           <%%= link_to "New #{<%= singular_table_name.classify %>.model_name.human.downcase}",
                        new_<%= singular_table_name %>_path,
-                       class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+                       class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
         <%% end %>
       </div>
     </div>
@@ -47,7 +47,7 @@
               <%% end %>
               <td class="px-4 py-2 flex gap-2 justify-center">
                 <%%= link_to "Edit", edit_<%= singular_table_name %>_path(<%= singular_table_name %>),
-                            class: "btn btn-secondary-outline" %>
+                            class: button_classes(:secondary_outline) %>
               </td>
             </tr>
           <%% end %>

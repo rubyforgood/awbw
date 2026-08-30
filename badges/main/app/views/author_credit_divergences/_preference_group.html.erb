@@ -1,7 +1,7 @@
 <% person = group.person %>
 <% highlighted = params[:highlight].to_s == person.id.to_s %>
-<div id="<%= dom_id(person, :divergence) %>" class="overflow-hidden rounded-lg border shadow-sm scroll-mt-4 transition-colors duration-150 <%= highlighted ? "border-yellow-400 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200 bg-white" %>">
-  <div class="border-b border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+<div id="<%= dom_id(person, :divergence) %>" class="scroll-mt-4 overflow-hidden rounded-lg border shadow-sm transition-colors duration-150 <%= highlighted ? "border-yellow-400 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200 bg-white" %>">
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
     <%= link_to person.full_name, person_path(person),
                 target: "_blank", rel: "noopener", title: "Opens in a new tab",
                 class: "font-semibold text-gray-900 hover:underline" %>
@@ -14,7 +14,7 @@
   </div>
 
   <table class="w-full text-sm">
-    <thead class="text-left text-xs uppercase text-gray-500 bg-gray-50">
+    <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase">
       <tr>
         <th class="px-4 py-2 font-medium">Content</th>
         <th class="px-4 py-2 font-medium">Type</th>
@@ -49,7 +49,7 @@
     </tbody>
   </table>
 
-  <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+  <div class="border-t border-gray-200 bg-gray-50 px-4 py-3">
     <%= form_with url: update_person_author_credit_divergences_path, method: :patch,
                   class: "flex flex-wrap items-end gap-3" do %>
       <%= hidden_field_tag :id, person.id, id: nil %>
@@ -91,7 +91,7 @@
       </div>
 
       <%= submit_tag "Apply to profile",
-                     class: "btn btn-primary cursor-pointer" %>
+                     class: button_classes(:primary, extra: "cursor-pointer") %>
     <% end %>
   </div>
 </div>

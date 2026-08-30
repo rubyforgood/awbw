@@ -30,8 +30,8 @@
         </div>
 
         <div class="action-buttons mt-8 flex flex-wrap justify-center gap-3">
-          <%= link_to "Cancel", staff_taggings_path, class: "btn btn-secondary-outline" %>
-          <%= f.button :submit, "Create tagging", class: "btn btn-primary" %>
+          <%= link_to "Cancel", staff_taggings_path, class: button_classes(:secondary_outline) %>
+          <%= f.button :submit, "Create tagging", class: button_classes(:primary) %>
         </div>
       <% end %>
     </div>

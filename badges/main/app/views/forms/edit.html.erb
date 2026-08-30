@@ -268,14 +268,14 @@
       <div class="flex items-center gap-3">
         <% if allowed_to?(:destroy?, @form) %>
           <% if @form.event_forms.none? %>
-            <%= link_to "Delete", form_path(@form), class: "btn btn-danger-outline",
+            <%= link_to "Delete", form_path(@form), class: button_classes(:danger_outline),
                         data: { turbo_method: :delete, turbo_confirm: "Delete \"#{@form.display_name}\"?" } %>
           <% else %>
             <p class="text-sm text-gray-500">Can't delete — this form is linked to one or more events. Remove it from all events first.</p>
           <% end %>
         <% end %>
-        <%= f.submit "Save Changes", class: "btn btn-primary cursor-pointer ml-auto" %>
-        <%= link_to "Cancel", forms_path, class: "btn btn-secondary-outline" %>
+        <%= f.submit "Save Changes", class: button_classes(:primary, extra: "cursor-pointer ml-auto") %>
+        <%= link_to "Cancel", forms_path, class: button_classes(:secondary_outline) %>
       </div>
     </div>
   <% end %>

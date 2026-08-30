@@ -6,7 +6,7 @@
         <h1 class="text-primary font-display text-2xl font-semibold"><%= @record.class.name %></h1>
         <p class="text-sm text-gray-500">FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
       </div>
-      <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: "btn btn-primary-outline" %>
+      <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: button_classes(:primary_outline) %>
     </div>
 
     <div class="rounded-xl bg-white p-6">

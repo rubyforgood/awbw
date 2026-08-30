@@ -28,7 +28,7 @@
             Tagged people (<%= @taggings.size %>)
           </h2>
           <%= link_to "View as filtered roster", people_path(staff_tag_ids: @staff_tag.id, return_to: "staff_tag"),
-                      class: "btn btn-secondary-outline" %>
+                      class: button_classes(:secondary_outline) %>
         </div>
 
         <% if @taggings.any? %>

@@ -5,7 +5,7 @@
   data-sortable-id="<%= faq.id %>"
 >
 
-    <div class="flex items-center w-full cursor-pointer hover:bg-gray-50 rounded-md transition-colors duration-150 px-2">
+    <div class="flex w-full cursor-pointer items-center rounded-md px-2 transition-colors duration-150 hover:bg-gray-50">
     
 
       <% if faq_admin_mode? && allowed_to?(:edit?, faq) %>
@@ -15,7 +15,7 @@
 
         <div class="flex grow sm:items-center">
 
-          <div class="admin-only bg-blue-100 flex flex-col">
+          <div class="admin-only flex flex-col bg-blue-100">
             <span>
               <%= render "inline_edit", model: faq, attribute: :published, form_class: "md:min-w-44" do %>
                 <%= button_to faq_path(faq),
@@ -25,10 +25,10 @@
                   <% if faq.published? %>
                     <i class="fa-solid fa-toggle-on text-primary text-2xl"></i>
                   <% else %>
-                    <i class="fa-solid fa-toggle-off text-gray-400 text-2xl"></i>
+                    <i class="fa-solid fa-toggle-off text-2xl text-gray-400"></i>
                   <% end %>
                 <% end %>
-                <span class="hidden md:inline-block pl-1"><%= faq.published? ? "[PUBLISHED]" : "[UNPUBLISHED]" %>
+                <span class="hidden pl-1 md:inline-block"><%= faq.published? ? "[PUBLISHED]" : "[UNPUBLISHED]" %>
                 </span>
               <% end %>
             </span>
@@ -40,12 +40,12 @@
                               params: { faq: { publicly_visible: !faq.publicly_visible? } },
                               class: "cursor-pointer pl-2" do %>
                   <% if faq.publicly_visible? %>
-                    <i class="fa-solid fa-toggle-on text-green-600 text-2xl"></i>
+                    <i class="fa-solid fa-toggle-on text-2xl text-green-600"></i>
                   <% else %>
-                    <i class="fa-solid fa-toggle-off text-gray-400 text-2xl"></i>
+                    <i class="fa-solid fa-toggle-off text-2xl text-gray-400"></i>
                   <% end %>
                 <% end %>
-                <span class="hidden md:inline-block pl-1"><%= faq.publicly_visible? ? "[PUBLIC]" : "[NOT PUBLIC]" %>
+                <span class="hidden pl-1 md:inline-block"><%= faq.publicly_visible? ? "[PUBLIC]" : "[NOT PUBLIC]" %>
                 </span>
               <% end %>
             </span>
@@ -55,7 +55,7 @@
 
           <div class="grow">
             <%= render "inline_edit", model: faq, attribute: :question, form_class: "sm:pl-0 flex", frame_class: "flex flex-wrap sm:flex-nowrap w-full items-center gap-2" do %>
-              <span class="w-full text-lg font-bold border-transparent peer-has-hover:border peer-has-hover:border-gray-300  peer-has-hover:shadow-sm peer-has-hover:rounded-md peer-has-hover:p-1"
+              <span class="w-full border-transparent text-lg font-bold peer-has-hover:rounded-md peer-has-hover:border peer-has-hover:border-gray-300 peer-has-hover:p-1 peer-has-hover:shadow-sm"
                 data-action="click->dropdown#toggle"
                 data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]' >
                 <%= faq.question %></span>
@@ -68,24 +68,24 @@
           </div>
         </div>
       <% else %>
-        <span class="w-full text-lg font-bold py-2 pl-4"
+        <span class="w-full py-2 pl-4 text-lg font-bold"
               data-action="click->dropdown#toggle"
               data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]' >
           <%= faq.question %></span>
       <% end %>
 
       <% if faq_admin_mode? && allowed_to?(:destroy?, faq) %>
-        <div class="flex flex-col mx-3">
+        <div class="mx-3 flex flex-col">
           <span class="admin-only bg-blue-100">
             <%= link_to faq, data: {
                               turbo_method: :delete,
                               turbo_confirm: "Confirm: Delete FAQ?" } do %>
 
-              <button class="p-1 rounded-md hover:bg-danger transition">
+              <button class="hover:bg-danger rounded-md p-1 transition">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 200 200"
-                  class="h-8 w-8 fill-current text-danger hover:text-white"
+                  class="text-danger h-8 w-8 fill-current hover:text-white"
                 >
                   <path
                     d="M119.032 145.698h-37.4c-6.2 0-11.3-5.1-11.3-11.3v-50.7c0-1.1.9-2 2-2h56c1.1 0 2 .9 2 2v50.7c0 6.2-5.1 11.3-11.3 11.3zm-44.7-60v48.7c0 4 3.3 7.3 7.3 7.3h37.3c4 0 7.3-3.3 7.3-7.3v-48.7h-51.9zM138.332 73.598h-76c-1.1 0-2-.9-2-2s.9-2 2-2h76c1.1 0 2 .9 2 2s-.9 2-2 2z"
@@ -104,14 +104,14 @@
 
       <button
         type="button"
-        class="py-5 font-medium text-left cursor-pointer"
+        class="cursor-pointer py-5 text-left font-medium"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"<%= dom_id faq, :answer %>":"hidden"}, {"<%= dom_id faq, :arrow %>":"rotate-180"}]'
       >
 
         <svg
           id="<%= dom_id faq, :arrow %>"
-          class="w-6 h-6 shrink-0"
+          class="h-6 w-6 shrink-0"
           fill="curentColor"
           viewBox="0 0 20 20"
           xmlns="http://www.w3.org/2000/svg"
@@ -128,17 +128,17 @@
 
   <div
     id="<%= dom_id faq, :answer %>"
-    class="hidden pb-4 pt-2 md:px-6"
+    class="hidden pt-2 pb-4 md:px-6"
     data-dropdown-target="content">
     <strong class="sr-only">Answer:</strong>
 
     <%= render "inline_edit", model: faq, attribute: :answer, frame_class: "flex flex-col" do %>
       <% if faq_admin_mode? && allowed_to?(:edit?, faq) %>
-        <%= link_to("Edit", edit_faq_path(faq), class: "btn btn-secondary-outline self-end admin-only bg-blue-100") %>
+        <%= link_to("Edit", edit_faq_path(faq), class: button_classes(:secondary_outline, extra: "self-end admin-only bg-blue-100")) %>
 
       <% end %>
 
-      <span class="prose max-w-none text-gray-600 px-6" data-turbo="false"><!--email_off--><%= simple_format(faq.answer) %><!--email_on--></span>
+      <span class="max-w-none px-6 prose text-gray-600" data-turbo="false"><!--email_off--><%= simple_format(faq.answer) %><!--email_on--></span>
     <% end %>
   </div>
 

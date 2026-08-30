@@ -25,8 +25,6 @@ class CommentsController < ApplicationController
   def create
     authorize!
     @comment = @commentable.comments.build(comment_params)
-    @comment.created_by = current_user
-    @comment.updated_by = current_user
 
     if @comment.save
       @created_comment = @comment
@@ -43,7 +41,6 @@ class CommentsController < ApplicationController
   def update
     @comment = @commentable.comments.find(params[:id])
     authorize! @comment
-    @comment.updated_by = current_user
     @comment.update(comment_params)
     setup_aggregated_context if aggregated?
 

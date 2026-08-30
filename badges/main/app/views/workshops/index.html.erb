@@ -9,7 +9,7 @@
   <% if allowed_to?(:new?, Workshop) %>
     <%= link_to "New workshop",
                 new_workshop_path,
-                class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+                class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
   <% end %>
 <% end %>
 <% subtitle = capture do %>

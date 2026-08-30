@@ -3,14 +3,14 @@
   sort_base = params.permit(:title, :query, :published, :year, :author_id, :number_of_items_per_page).to_h.symbolize_keys
   sort_link = sort_header_link(frame: "community_news_results", path: ->(p) { community_news_index_path(p) }, base: sort_base)
 %>
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm <%= 'animate-fade blur-on-submit' if @community_news.any? %>">
+<div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm <%= 'animate-fade blur-on-submit' if @community_news.any? %>">
   <table class="w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("title", "Title") %></th>
         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("author", "Author") %></th>
         <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("organization", "Organization") %></th>
-        <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[7rem]"><%= sort_link.call("created_at", "Created At") %></th>
+        <th class="min-w-[7rem] px-6 py-3 text-center text-sm font-semibold whitespace-nowrap text-gray-700"><%= sort_link.call("created_at", "Created At") %></th>
         <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
       </tr>
     </thead>
@@ -18,8 +18,8 @@
     <tbody class="divide-y divide-gray-100">
       <% if @community_news.any? %>
         <% @community_news.each do |news| %>
-          <tr class="hover:bg-gray-50 transition">
-            <td class="px-4 py-2 text-sm text-gray-800 flex items-center gap-2">
+          <tr class="transition hover:bg-gray-50">
+            <td class="flex items-center gap-2 px-4 py-2 text-sm text-gray-800">
               <!-- BOOKMARK -->
               <span class="pointer-events-auto">
                 <%= render "bookmarks/editable_bookmark_icon", resource: news.object %>
@@ -47,7 +47,7 @@
 
             <td class="px-6 py-4 text-gray-600"><%= news.organization&.name || "—" %></td>
 
-            <td class="px-6 py-4 text-center text-sm text-gray-500 whitespace-nowrap"><%= news.created_at.strftime("%b %d, %Y") %></td>
+            <td class="px-6 py-4 text-center text-sm whitespace-nowrap text-gray-500"><%= news.created_at.strftime("%b %d, %Y") %></td>
 
             <td class="px-6 py-4 text-right">
               <div class="inline-flex gap-2">
@@ -55,26 +55,26 @@
                   <%= link_to "Edit",
                               edit_community_news_path(news),
                               data: {turbo_frame: "_top"},
-                              class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+                              class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
                 <% end %>
 
                 <%= link_to "View",
                             community_news_path(news),
                             target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
-                            class: "btn btn-secondary-outline" %>
+                            class: button_classes(:secondary_outline) %>
               </div>
             </td>
           </tr>
         <% end %>
       <% else %>
         <tr>
-          <td colspan="5" class="text-center py-16">
-            <h2 class="text-gray-600 text-lg mb-2">No community news yet</h2>
+          <td colspan="5" class="py-16 text-center">
+            <h2 class="mb-2 text-lg text-gray-600">No community news yet</h2>
             <% if allowed_to?(:new?, CommunityNews) %>
               <div class="admin-only bg-blue-100 p-3">
                 <%= link_to "Create a community news",
                             new_community_news_path,
-                            class: "btn btn-primary" %>
+                            class: button_classes(:primary) %>
               </div>
             <% end %>
           </td>

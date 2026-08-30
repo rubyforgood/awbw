@@ -16,7 +16,7 @@
                         class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
             <%= link_to "New #{Sector.model_name.human.downcase}",
                         new_sector_path,
-                        class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+                        class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
           </div>
         </div>
 
@@ -72,10 +72,10 @@
                     <td class="px-4 py-2 text-center">
                       <%= link_to "Edit",
                                   edit_sector_path(sector),
-                                  class: "btn btn-secondary-outline whitespace-nowrap" %>
+                                  class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
                       <%= link_to "Taggings (#{@taggings_counts[sector.id].to_i})",
                                   taggings_path(sector_names_all: sector.name),
-                                  class: "btn btn-secondary-outline whitespace-nowrap" %>
+                                  class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
                     </td>
 
                   </tr>

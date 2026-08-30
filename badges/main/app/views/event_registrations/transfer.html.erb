@@ -115,8 +115,8 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <%= link_to "Back to registrants", roster_path, class: "btn btn-secondary-outline" %>
-          <%= submit_tag(pending ? "Perform transfer" : "Change destination", class: "btn btn-primary ml-auto") %>
+          <%= link_to "Back to registrants", roster_path, class: button_classes(:secondary_outline) %>
+          <%= submit_tag(pending ? "Perform transfer" : "Change destination", class: button_classes(:primary, extra: "ml-auto")) %>
         </div>
       <% end %>
     </section>
@@ -132,7 +132,7 @@
         <% end %>
       </p>
       <%= link_to revert_transfer_event_registration_path(source, return_to: @return_to.presence),
-            class: "btn btn-danger",
+            class: button_classes(:danger),
             data: { turbo_method: :patch, turbo_confirm: "Undo this transfer? #{source.registrant.first_name} goes back to #{restore_label} on #{source.event.title}." } do %>
         <i class="fa-solid fa-rotate-left"></i>
         <%= pending ? "They didn't transfer out — undo" : "Undo transfer" %>

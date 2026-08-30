@@ -461,7 +461,7 @@
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
       <% if allowed_to?(:destroy?, f.object) && f.object.deletable? %>
         <%= link_to event_registration_path(@event_registration, return_to: params[:return_to].presence),
-                    class: "btn btn-danger-outline",
+                    class: button_classes(:danger_outline),
                     data: { turbo: true, turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } do %>
           <i class="fa-solid fa-trash-can"></i>
           Delete
@@ -494,8 +494,8 @@
       end %>
 
       <div class="ml-auto flex items-center gap-3">
-        <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
-        <%= f.button :submit, f.object.persisted? ? "Save changes" : "Submit", class: "btn btn-primary" %>
+        <%= link_to "Cancel", cancel_path, class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, f.object.persisted? ? "Save changes" : "Submit", class: button_classes(:primary) %>
       </div>
     </div>
   </div>
