@@ -2504,6 +2504,7 @@
   area: people
   display_status: admin_facing
   released_on: 2026-08-30
+  pr_number: 2433
   action_path: "/people/dedupe_index"
   summary: >-
     Admins can now merge two duplicate person records into one. The deduper
