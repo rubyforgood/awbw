@@ -106,11 +106,11 @@
               </p>
               <% if @from_story_share %>
                 <div class="pt-2">
-                  <%= link_to "Back to story share", story_shares_path, class: "btn btn-primary" %>
+                  <%= link_to "Back to story share", story_shares_path, class: button_classes(:primary) %>
                 </div>
               <% elsif profile_return_path %>
                 <div class="pt-2">
-                  <%= link_to "Back to my profile", profile_return_path, class: "btn btn-primary" %>
+                  <%= link_to "Back to my profile", profile_return_path, class: button_classes(:primary) %>
                 </div>
               <% end %>
             </div>
@@ -243,7 +243,7 @@
               <!-- Submit -->
               <div class="flex justify-end">
                 <button type="submit"
-                        class="btn btn-primary">
+                        class="<%= button_classes(:primary) %>">
                   Submit
                 </button>
               </div>

@@ -12,9 +12,9 @@
     <div class="col-md-8 form-group">
       <div class='btn-container windows-type btns-aligned'>
         <%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
-        class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '4'}") %>
+        class: button_classes(:primary)) %>
         <%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
-        class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '2'}") %>
+        class: button_classes(:primary)) %>
       </div>
     </div>
     <div class='col-md-8'>
@@ -106,7 +106,7 @@
           </div><!-- bold -->
 
           <div class="form-group">
-            <%= f.label :image, class: "btn btn-primary btn--small" do %>
+            <%= f.label :image, class: button_classes(:primary) do %>
               <input type="file" id="report_image" name="image" >
               Choose File
             <% end %>
@@ -119,7 +119,7 @@
           </div>
 
           <div class="form-group">
-            <%= f.label :form_file, class: "btn btn-primary btn--small" do %>
+            <%= f.label :form_file, class: button_classes(:primary) do %>
               <%= f.file_field :form_file, class: '', id: 'report_form_file'%>
               Choose File
             <% end %>
@@ -136,7 +136,7 @@
   <div class="row">
     <div class="col-md-8 align-right">
       <div class="action-buttons mt-8 flex justify-center gap-3">
-        <%= f.button :submit, class: "btn btn-primary btn-blue btn-filled" %>
+        <%= f.button :submit, class: button_classes(:primary) %>
       </div>
     </div>
   </div>

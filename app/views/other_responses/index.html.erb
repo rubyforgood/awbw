@@ -84,7 +84,7 @@
                         <%= text_field_tag :new_sector_name, group[:display_text],
                                            "aria-label": "New sector name",
                                            class: "flex-1 min-w-0 rounded-md border-gray-300 text-sm" %>
-                        <%= submit_tag "Create sector", class: "btn btn-primary-outline text-sm whitespace-nowrap",
+                        <%= submit_tag "Create sector", class: button_classes(:primary_outline, extra: "whitespace-nowrap"),
                                        data: { turbo_confirm: "Create the sector “#{group[:display_text]}” and tag all #{group[:count]} people?" } %>
                       <% end %>
                       <%= form_with url: promote_other_responses_path, method: :post,
@@ -98,7 +98,7 @@
                                        include_blank: "Select a sector…",
                                        "aria-label": "Existing sector to merge into",
                                        class: "flex-1 min-w-0 rounded-md border-gray-300 text-sm" %>
-                        <%= submit_tag "Merge", class: "btn btn-secondary-outline text-sm whitespace-nowrap",
+                        <%= submit_tag "Merge", class: button_classes(:secondary_outline, extra: "whitespace-nowrap"),
                                        data: { turbo_confirm: "Map “#{group[:display_text]}” into the chosen sector for all #{group[:count]} people?" } %>
                       <% end %>
                     </div>

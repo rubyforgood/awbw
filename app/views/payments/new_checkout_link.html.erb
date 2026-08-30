@@ -23,9 +23,9 @@
 
       <div class="flex gap-2">
         <%= link_to "Open in new tab", @checkout_url, target: "_blank",
-                    class: "btn btn-primary inline-flex items-center gap-1.5" %>
+                    class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") %>
         <%= link_to "Close", payments_path,
-                    class: "btn btn-secondary-outline" %>
+                    class: button_classes(:secondary_outline) %>
       </div>
     </div>
   <% else %>
@@ -49,11 +49,11 @@
         </div>
 
         <div class="flex gap-2">
-          <%= button_tag class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+          <%= button_tag class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
             <i class="fa-solid fa-link text-xs"></i>
             Generate Link
           <% end %>
-          <%= link_to "Cancel", payments_path, class: "btn btn-secondary-outline" %>
+          <%= link_to "Cancel", payments_path, class: button_classes(:secondary_outline) %>
         </div>
       <% end %>
     </div>

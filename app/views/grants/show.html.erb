@@ -23,7 +23,7 @@
         <p class="mt-1 text-gray-600"><%= grant_funder_badge(grant) %></p>
       </div>
       <% if allowed_to?(:edit?, @grant) %>
-        <%= link_to "Edit", edit_grant_path(@grant), class: "btn btn-primary-outline" %>
+        <%= link_to "Edit", edit_grant_path(@grant), class: button_classes(:primary_outline) %>
       <% end %>
     </div>
   </div>

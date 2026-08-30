@@ -47,7 +47,7 @@
                      class: field_class %>
     </div>
     <div class="flex w-full items-end md:w-auto">
-      <%= link_to "Clear filters", grants_path, class: "btn btn-utility-outline", data: { action: "collection#clearAndSubmit" } %>
+      <%= link_to "Clear filters", grants_path, class: button_classes(:utility_outline), data: { action: "collection#clearAndSubmit" } %>
     </div>
   </div>
 <% end %>

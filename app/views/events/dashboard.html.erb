@@ -19,7 +19,7 @@
       <% if allowed_to?(:edit?, @event) %>
         <%= render "form_actions_menu", sample_return_to: "dashboard" %>
       <% end %>
-      <button onclick="window.print();" class="btn btn-utility-outline">
+      <button onclick="window.print();" class="<%= button_classes(:utility_outline) %>">
         <i class="fa-solid fa-print"></i> Print
       </button>
     </div>

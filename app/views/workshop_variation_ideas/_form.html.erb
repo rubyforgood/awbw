@@ -16,7 +16,7 @@
         This workshop variation idea has been promoted to a
         <% f.object.workshop_variations.each do |workshop_variation| %>
           <%= link_to "Workshop Variation ##{workshop_variation.id}",
-                      workshop_variation_path(workshop_variation), class: "btn btn-secondary-outline" %>
+                      workshop_variation_path(workshop_variation), class: button_classes(:secondary_outline) %>
         <% end %>
         and should not be edited here.
       </div>
@@ -130,7 +130,7 @@
     <%= render "shared/form_image_fields", f: f, include_primary_asset: false unless promoted_to_variation %>
     <div class="action-buttons mt-8 flex justify-center gap-3 pt-6">
       <% if allowed_to?(:destroy?, f.object) && f.object.workshop_variations.none? && !promoted_to_variation %>
-        <%= link_to "Delete", @workshop_variation_idea, class: "admin-only bg-blue-100 btn btn-danger-outline",
+        <%= link_to "Delete", @workshop_variation_idea, class: button_classes(:danger_outline, extra: "admin-only bg-blue-100"),
                     data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
       <% cancel_path =
@@ -143,8 +143,8 @@
            end %>
       <%= link_to "Cancel",
                   cancel_path,
-                  class: "btn btn-secondary-outline" %>
-      <%= f.button :submit, class: "btn btn-primary", disabled: promoted_to_variation %>
+                  class: button_classes(:secondary_outline) %>
+      <%= f.button :submit, class: button_classes(:primary), disabled: promoted_to_variation %>
     </div>
   <% end %>
 </div>

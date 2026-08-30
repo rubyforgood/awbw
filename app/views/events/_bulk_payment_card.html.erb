@@ -116,7 +116,7 @@
 
                     <span class="text-xs text-gray-500">$</span>
                     <%= number_field_tag :amount_dollars, nil, step: "0.01", min: "0.01", class: "w-20 rounded-lg border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none", placeholder: "0.00" %>
-                    <%= button_tag "Allocate", class: "btn btn-primary btn-xs cursor-pointer" %>
+                    <%= button_tag "Allocate", class: button_classes(:primary, extra: "cursor-pointer") %>
                   <% end %>
                 <% end %>
 
@@ -181,7 +181,7 @@
                    class: "w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring focus:ring-blue-200 focus:border-blue-500" %>
           </div>
 
-          <%= button_tag "Link", class: "btn btn-primary" %>
+          <%= button_tag "Link", class: button_classes(:primary) %>
         <% end %>
       </div>
     </div>

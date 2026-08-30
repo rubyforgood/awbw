@@ -21,7 +21,7 @@
         </p>
         <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
         <%= button_to "Set up annual membership", membership_checkouts_path,
-                      class: "btn btn-primary",
+                      class: button_classes(:primary),
                       data: { turbo: false } %>
       <% end %>
     </div>

@@ -1,12 +1,12 @@
-<div class="bg-green-200 border-2 border-green-400 rounded-lg p-4" data-controller="conditional-fields">
-  <h3 class="text-lg font-medium mb-4">Record Payment</h3>
+<div class="rounded-lg border-2 border-green-400 bg-green-200 p-4" data-controller="conditional-fields">
+  <h3 class="mb-4 text-lg font-medium">Record Payment</h3>
   <%= form_tag bulk_payments_event_path(@event) do %>
     <%= hidden_field_tag :submission_id, submission.id %>
     <%= hidden_field_tag :currency, "usd" %>
 
     <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700">Payment Type</label>
         <%= select_tag :payment_type,
              options_for_select([["Cash", "CashPayment"], ["Check", "CheckPayment"]]),
              prompt: "Select type...",
@@ -15,7 +15,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700">Amount ($)</label>
         <%= number_field_tag :amount_dollars, nil,
              step: "0.01", min: "0.01", placeholder: "0.00",
              class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
@@ -23,33 +23,33 @@
       </div>
 
       <div data-conditional-fields-target="field" data-show-when="CheckPayment">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Check Number</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700">Check Number</label>
         <%= text_field_tag :check_number, nil,
              class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
              placeholder: "Check #" %>
       </div>
 
       <div data-conditional-fields-target="field" data-show-when="CheckPayment">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Memo</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700">Memo</label>
         <%= text_field_tag :memo, nil,
              class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
              placeholder: "Optional" %>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 mt-4">
+    <div class="mt-4 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Payer</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700">Payer</label>
         <%= select_tag :payer_sgid, nil,
              prompt: "Search people and organizations",
              required: true,
              data: { controller: "remote-select", remote_select_model_value: "person_or_organization" },
              class: "bg-white w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" %>
-        <p class="text-xs text-gray-500 mt-1">Whose account is the money coming from?</p>
+        <p class="mt-1 text-xs text-gray-500">Whose account is the money coming from?</p>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Additional designation</label>
+        <label class="mb-1 block text-sm font-medium text-gray-700">Additional designation</label>
         <%= select_tag :additional_designation_sgid, nil,
              prompt: "Search people and organizations",
              include_blank: true,
@@ -58,8 +58,8 @@
       </div>
     </div>
 
-    <div class="flex gap-2 mt-4">
-      <%= button_tag class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+    <div class="mt-4 flex gap-2">
+      <%= button_tag class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
         <i class="fa-solid fa-plus text-xs"></i>
         Create payment
       <% end %>

@@ -4,14 +4,14 @@
 <% placeholder_select_class = "#{field_class} search-select-placeholder" %>
 <% kinds = ProfessionalLicense.where.not(kind: [ nil, "" ]).distinct.order(:kind).limit(20).pluck(:kind) %>
 
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+<div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
   <%= form_tag professional_licenses_path, method: :get, class: "space-y-4",
     data: {
       controller: "collection",
       turbo_frame: "professional_licenses_results"
     }, autocomplete: "off" do %>
-    <div class="flex flex-wrap md:flex-nowrap items-end gap-4">
-      <div class="flex-1 min-w-[200px]">
+    <div class="flex flex-wrap items-end gap-4 md:flex-nowrap">
+      <div class="min-w-[200px] flex-1">
         <label for="person_query" class="<%= label_class %>">Registrant</label>
         <%= text_field_tag "person_query", params[:person_query],
           class: field_class,
@@ -35,8 +35,8 @@
       </div>
     </div>
 
-    <div class="flex gap-2 justify-end">
-      <%= submit_tag "Search", class: "btn btn-primary" %>
+    <div class="flex justify-end gap-2">
+      <%= submit_tag "Search", class: button_classes(:primary) %>
       <%= render "shared/search_clear", url: professional_licenses_path %>
     </div>
   <% end %>

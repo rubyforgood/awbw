@@ -39,14 +39,14 @@
   </div>
 
   <div id="infinite-scrolling" class="hide">
-    <div class="pagination flex justify-center mt-6">
+    <div class="pagination mt-6 flex justify-center">
       <%= tailwind_paginate(@stories) %>
     </div>
   </div>
 
   <% if @resources.next_page %>
     <div class="btn_container">
-      <div id="load_more" class="btn btn-primary btn-lg">
+      <div id="load_more" class="<%= button_classes(:primary) %>">
         Load More
       </div>
     </div>

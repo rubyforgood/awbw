@@ -23,7 +23,7 @@
               No person!
               <%= link_to "Create person",
                           new_person_path(user_id: @user.id),
-                          class: "btn btn-warning px-2 py-1" %>
+                          class: button_classes(:warning, size: nil, extra: "px-2 py-1") %>
             </div>
           <% end %>
           <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
@@ -77,24 +77,24 @@
                 <% if @user.confirmed_at.nil? || @user.unconfirmed_email.present? %>
                   <%= link_to "Confirm or resend email",
                               confirm_email_manual_user_path(@user),
-                              class: "btn btn-warning-outline text-sm" %>
+                              class: button_classes(:warning_outline) %>
                 <% end %>
                 <% unless @user.confirmed_at.present? %>
                   <%= button_to "Resend invite email",
                                 send_welcome_instructions_user_path(@user),
                                 method: :post,
                                 form_class: "inline",
-                                class: "btn btn-secondary-outline text-sm" %>
+                                class: button_classes(:secondary_outline) %>
                 <% end %>
                 <%= button_to "Send reset password email",
                               send_reset_password_instructions_user_path(@user),
                               method: :post,
                               form_class: "inline",
-                              class: "btn btn-secondary-outline text-sm" %>
+                              class: button_classes(:secondary_outline) %>
                 <% if current_user == @user %>
                   <%= link_to "Change password",
                               change_password_path,
-                              class: "btn btn-secondary-outline text-sm" %>
+                              class: button_classes(:secondary_outline) %>
                 <% end %>
               </div>
             </div>

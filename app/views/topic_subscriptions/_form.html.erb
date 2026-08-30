@@ -150,7 +150,7 @@
   <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.person %>
 
   <div class="flex justify-end gap-2">
-    <%= link_to "Cancel", cancel_path, class: "btn btn-utility-outline", data: { action: "dirty-form#confirmCancel" } %>
-    <%= f.submit submit_label, class: "btn btn-primary" %>
+    <%= link_to "Cancel", cancel_path, class: button_classes(:utility_outline), data: { action: "dirty-form#confirmCancel" } %>
+    <%= f.submit submit_label, class: button_classes(:primary) %>
   </div>
 <% end %>

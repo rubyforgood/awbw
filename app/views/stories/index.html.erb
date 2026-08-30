@@ -10,7 +10,7 @@
   <% if allowed_to?(:new?, Story) %>
     <%= link_to "New Story",
                 new_story_path,
-                class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+                class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
   <% end %>
 <% end %>
 <%= render layout: "shared/index_page",

@@ -9,7 +9,7 @@
           <div class="flex gap-2">
             <%= link_to "New workshop variation idea",
                         new_workshop_variation_idea_path,
-                        class: "btn btn-primary-outline" %>
+                        class: button_classes(:primary_outline) %>
           </div>
         </div>
 
@@ -81,7 +81,7 @@
                 </td>
                 <td class="px-4 py-2 text-center text-sm whitespace-nowrap text-gray-500"><%= workshop_variation_idea.updated_at&.strftime("%m/%d/%y") %></td>
                 <td class="px-4 py-2 text-center whitespace-nowrap">
-                  <%= link_to "View", workshop_variation_idea_path(workshop_variation_idea), class: "btn btn-secondary-outline" %>
+                  <%= link_to "View", workshop_variation_idea_path(workshop_variation_idea), class: button_classes(:secondary_outline) %>
                 </td>
               </tr>
             <% end %>

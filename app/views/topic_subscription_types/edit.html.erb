@@ -14,13 +14,13 @@
     <div class="flex flex-wrap gap-2">
       <% if @topic_subscription_type.archived? %>
         <%= button_to unarchive_topic_subscription_type_path(@topic_subscription_type), method: :patch,
-              class: "btn btn-utility-outline inline-flex items-center gap-1.5" do %>
+              class: button_classes(:utility_outline, extra: "inline-flex items-center gap-1.5") do %>
           <i class="fa-solid fa-box-open"></i>
           Restore
         <% end %>
       <% else %>
         <%= button_to archive_topic_subscription_type_path(@topic_subscription_type), method: :patch,
-              class: "btn btn-utility-outline inline-flex items-center gap-1.5" do %>
+              class: button_classes(:utility_outline, extra: "inline-flex items-center gap-1.5") do %>
           <i class="fa-solid fa-box-archive"></i>
           Archive
         <% end %>
@@ -28,7 +28,7 @@
 
       <% if @topic_subscription_type.topic_subscriptions.none? %>
         <%= button_to topic_subscription_type_path(@topic_subscription_type), method: :delete,
-              class: "btn btn-danger-outline inline-flex items-center gap-1.5",
+              class: button_classes(:danger_outline, extra: "inline-flex items-center gap-1.5"),
               data: { turbo_confirm: "Delete this topic?" } do %>
           <i class="fa-solid fa-trash-can"></i>
           Delete

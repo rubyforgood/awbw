@@ -9,7 +9,7 @@
               data-controller="confirm-email"
               data-confirm-email-user-id-value="<%= @user.id %>"
               data-action="click->confirm-email#confirm"
-              class="btn btn-sm btn-primary">
+              class="<%= button_classes(:primary, size: :sm) %>">
         Manually confirm email
       </button>
     </div>

@@ -7,7 +7,7 @@
   <h1 class="text-primary mb-4 font-display text-2xl font-semibold">Edit workshop variation: <%= @workshop_variation.name %></h1>
   <% if @workshop_variation.workshop.present? %>
     <p class="mb-4">Workshop: <%= link_to("#{@workshop_variation.workshop.name} (#{@workshop_variation.workshop.windows_type&.short_name || 'Combined'})",
-                                        workshop_path(@workshop_variation.workshop), class: "btn btn-secondary-outline") %></p>
+                                        workshop_path(@workshop_variation.workshop), class: button_classes(:secondary_outline)) %></p>
   <% end %>
 
   <div class="mt-4">

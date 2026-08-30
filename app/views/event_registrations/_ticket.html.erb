@@ -90,12 +90,12 @@
           <div>
             <% if preview %>
               <button type="button" disabled
-                      class="btn btn-accent cursor-not-allowed px-6 py-2 font-telefon text-sm uppercase opacity-60">Pay with Credit Card</button>
+                      class="<%= button_classes(:accent, size: nil, extra: "cursor-not-allowed px-6 py-2 font-telefon text-sm uppercase opacity-60") %>">Pay with Credit Card</button>
             <% else %>
               <%= button_to "Pay with Credit Card",
                             registration_pay_path(event_registration.slug),
                             data: { turbo: false },
-                            class: "btn btn-accent px-6 py-2 text-sm uppercase font-telefon" %>
+                            class: button_classes(:accent, size: nil, extra: "px-6 py-2 text-sm uppercase font-telefon") %>
             <% end %>
           </div>
         </div>

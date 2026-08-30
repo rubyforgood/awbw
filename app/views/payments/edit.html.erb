@@ -42,8 +42,8 @@
           label: "Form Submission ID" %>
       </div>
       <div class="action-buttons mt-8 flex justify-center gap-3">
-        <%= link_to "Cancel", payment_path(@payment), class: "btn btn-secondary-outline" %>
-        <%= f.button :submit, "Save", class: "btn btn-primary" %>
+        <%= link_to "Cancel", payment_path(@payment), class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, "Save", class: button_classes(:primary) %>
       </div>
     <% end %>
     <%= render "shared/audit_info", resource: @payment %>

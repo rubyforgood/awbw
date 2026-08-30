@@ -4,8 +4,8 @@
     <!-- Errors -->
     <%= render "shared/errors", resource: @sector if @sector.errors.any? %>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-      <div class="md:col-span-3 space-y-6">
+    <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-4">
+      <div class="space-y-6 md:col-span-3">
         <!-- Name -->
         <div>
           <%= f.input :name,
@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="admin-only bg-blue-100 rounded mt-6 md:mt-0 p-3">
+      <div class="admin-only mt-6 rounded bg-blue-100 p-3 md:mt-0">
         <%= render "shared/visibility_info", flags: %i[published] %>
         <div class="grid grid-cols-1 items-center">
           <%= visibility_flag_input f, :published %>
@@ -42,11 +42,11 @@
 
     <div class="action-buttons mt-8 flex justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", @sector, class: "btn btn-danger-outline",
+        <%= link_to "Delete", @sector, class: button_classes(:danger_outline),
                     data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
       <% end %>
-      <%= link_to "Cancel", sectors_path, class: "btn btn-secondary-outline" %>
-      <%= f.button :submit, class: "btn btn-primary" %>
+      <%= link_to "Cancel", sectors_path, class: button_classes(:secondary_outline) %>
+      <%= f.button :submit, class: button_classes(:primary) %>
     </div>
 
   </div>

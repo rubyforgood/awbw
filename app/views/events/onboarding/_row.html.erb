@@ -235,7 +235,7 @@
         <% if person.user.present? %>
           <%= render "users/confirmed_status", user: person.user, invite_params: onboarding_back, return_params: onboarding_back %>
         <% else %>
-          <%= link_to "+User", new_user_path(person_id: person.id, **onboarding_back), class: "btn btn-secondary-outline", data: { turbo_frame: "_top" } %>
+          <%= link_to "+User", new_user_path(person_id: person.id, **onboarding_back), class: button_classes(:secondary_outline), data: { turbo_frame: "_top" } %>
         <% end %>
       </td>
 

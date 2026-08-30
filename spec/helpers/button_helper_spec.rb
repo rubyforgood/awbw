@@ -28,6 +28,14 @@ RSpec.describe ButtonHelper, type: :helper do
       expect(result).to include("px-10", "text-2xl")
     end
 
+    it "yields base (and size) with no color when the variant is nil" do
+      result = helper.button_classes(nil, extra: "bg-orange-600 text-white")
+
+      expect(result).to include("inline-flex", "rounded-lg", "px-4", "py-2")
+      expect(result).to include("bg-orange-600", "text-white")
+      expect(result).not_to include("bg-primary", "bg-secondary")
+    end
+
     it "appends extra classes" do
       expect(helper.button_classes(:primary, extra: "whitespace-nowrap")).to include("whitespace-nowrap")
     end

@@ -44,13 +44,13 @@
                                     f,
                                     :event_staffs,
                                     data: { association_insertion_node: "#event-staffs", association_insertion_method: "append" },
-                                    class: "btn btn-secondary-outline" %>
+                                    class: button_classes(:secondary_outline) %>
       </div>
     </div>
 
     <div class="flex justify-center gap-3">
-      <%= link_to "Cancel", staff_event_path(@event), class: "btn btn-secondary-outline" %>
-      <%= f.button :submit, "Save staff", class: "btn btn-primary" %>
+      <%= link_to "Cancel", staff_event_path(@event), class: button_classes(:secondary_outline) %>
+      <%= f.button :submit, "Save staff", class: button_classes(:primary) %>
     </div>
   <% end %>
 </div>

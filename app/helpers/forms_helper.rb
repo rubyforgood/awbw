@@ -31,7 +31,7 @@ module FormsHelper
     return unless allowed_to?(:copy?, form)
 
     link_to copy_form_path(form),
-      class: "btn btn-sm btn-secondary-outline inline-flex items-center gap-1.5 whitespace-nowrap",
+      class: button_classes(:secondary_outline, size: :sm, extra: "inline-flex items-center gap-1.5 whitespace-nowrap"),
       data: { turbo_method: :post, turbo_confirm: %(Make a full duplicate of "#{form.display_name}"?) } do
       safe_join([ content_tag(:i, "", class: "fa-solid fa-clone"), "Duplicate form" ])
     end

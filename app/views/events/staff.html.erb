@@ -21,7 +21,7 @@
   <div class="relative mb-8">
     <% if allowed_to?(:edit_staff?, @event) %>
       <div class="flex justify-end gap-3 mb-4 sm:mb-0 sm:absolute sm:right-0 sm:top-0 print:hidden">
-        <%= link_to edit_staff_event_path(@event), class: "admin-only btn btn-primary btn--small" do %>
+        <%= link_to edit_staff_event_path(@event), class: button_classes(:primary, extra: "admin-only") do %>
           <i class="fa-solid fa-pen"></i> Edit staff
         <% end %>
       </div>

@@ -43,8 +43,8 @@
       </label>
 
       <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
-        <%= link_to "Skip", user_path(@user), class: "btn btn-secondary-outline" %>
-        <button type="submit" class="btn btn-primary">Continue</button>
+        <%= link_to "Skip", user_path(@user), class: button_classes(:secondary_outline) %>
+        <button type="submit" class="<%= button_classes(:primary) %>">Continue</button>
       </div>
     <% end %>
   </div>

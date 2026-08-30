@@ -13,9 +13,9 @@
       <div class="col-md-8 form-group">
         <div class='btn-container windows-type btns-aligned'>
           <%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
-              class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '4'}") %>
+              class: button_classes(:primary)) %>
           <%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
-              class: "btn btn-primary btn--small #{'btn-active' if params['form_builder_id'] == '2'}") %>
+              class: button_classes(:primary)) %>
         </div>
       </div>
     </div>
@@ -24,10 +24,10 @@
       <div class="col-md-8 form-group">
         <div class='btn-container windows-type btns-aligned'>
           <%= link_to("Adult Monthly Report", "/reports/monthly?form_builder_id=4",
-        class: "btn btn-primary btn--small") %>
+        class: button_classes(:primary)) %>
 
           <%= link_to("Children's Monthly Report", "/reports/monthly?form_builder_id=2",
-        class: "btn btn-primary btn--small") %>
+        class: button_classes(:primary)) %>
         </div>
      </div>
     </div>
@@ -178,7 +178,7 @@
   <!-- ######### row 3 ########## -->
   <div class="row">
     <div class="col-md-8 align-right">
-      <%= f.button :submit, id: "btn_submit", class: "btn btn-primary" %>
+      <%= f.button :submit, id: "btn_submit", class: button_classes(:primary) %>
     </div>
   </div>
 <% end %>

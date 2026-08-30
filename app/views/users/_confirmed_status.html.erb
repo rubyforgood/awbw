@@ -10,7 +10,7 @@
 <% else %>
   <%= link_to "Invite",
               send_welcome_instructions_user_path(user, **(invite_params || {})),
-              class: "btn btn-secondary-outline",
+              class: button_classes(:secondary_outline),
               data: { turbo_method: :post, turbo_frame: "_top" } %>
 <% end %>
 <% if user.unconfirmed_email.present? %>

@@ -81,8 +81,8 @@
 
         <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
           <div class="flex items-center gap-3">
-            <%= f.submit "Submit", class: "btn btn-primary cursor-pointer" %>
-            <%= link_to "Cancel", forms_path, class: "btn btn-secondary-outline" %>
+            <%= f.submit "Submit", class: button_classes(:primary, extra: "cursor-pointer") %>
+            <%= link_to "Cancel", forms_path, class: button_classes(:secondary_outline) %>
           </div>
         </div>
       <% end %>

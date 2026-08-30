@@ -12,11 +12,11 @@
 
       <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="mb-6 flex items-center justify-between">
           <h1 class="text-2xl font-semibold text-gray-900">
             <%= WorkshopLog.model_name.human.pluralize %> (<%= number_with_delimiter(workshop_logs_count) %>)
           </h1>
-          <div class="flex gap-2 items-center">
+          <div class="flex items-center gap-2">
             <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
             <% if allowed_to?(:manage?, WorkshopLog) %>
               <% if params[:created_by_id].present? %>
@@ -29,7 +29,7 @@
                         new_workshop_log_path(organization_id: params[:organization_id],
                                               workshop_id: params[:workshop_id],
                                               created_by_id: current_user.id),
-                        class: "btn btn-primary" %>
+                        class: button_classes(:primary) %>
           </div>
         </div>
 
@@ -37,13 +37,13 @@
         <%= render "workshop_logs/search_boxes" %>
 
         <div class="overflow-x-auto">
-          <table class="table normal light table-striped js-workshop-logs">
+          <table class="normal light table-striped js-workshop-logs table">
             <thead>
             <!-- Top-tier grouping -->
             <tr>
               <th colspan="4"></th>
-              <th colspan="3" class="px-4 py-2 text-center text-sm font-semibold text-white bg-blue-500"># Ongoing</th>
-              <th colspan="3" class="px-4 py-2 text-center text-sm font-semibold text-white bg-green-500"># First-time</th>
+              <th colspan="3" class="bg-blue-500 px-4 py-2 text-center text-sm font-semibold text-white"># Ongoing</th>
+              <th colspan="3" class="bg-green-500 px-4 py-2 text-center text-sm font-semibold text-white"># First-time</th>
             </tr>
 
             <!-- Second-tier column headers -->
@@ -51,17 +51,17 @@
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Date</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Workshop</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Author</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-purple-200">Participants</th>
+              <th class="bg-purple-200 px-4 py-2 text-left text-sm font-semibold text-gray-700">Participants</th>
 
               <!-- Ongoing -->
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-blue-200">children</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-blue-200">teens</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-blue-200">adults</th>
+              <th class="bg-blue-200 px-4 py-2 text-left text-sm font-semibold text-gray-700">children</th>
+              <th class="bg-blue-200 px-4 py-2 text-left text-sm font-semibold text-gray-700">teens</th>
+              <th class="bg-blue-200 px-4 py-2 text-left text-sm font-semibold text-gray-700">adults</th>
 
               <!-- First-time -->
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-green-200">children</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-green-200">teens</th>
-              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 bg-green-200">adults</th>
+              <th class="bg-green-200 px-4 py-2 text-left text-sm font-semibold text-gray-700">children</th>
+              <th class="bg-green-200 px-4 py-2 text-left text-sm font-semibold text-gray-700">teens</th>
+              <th class="bg-green-200 px-4 py-2 text-left text-sm font-semibold text-gray-700">adults</th>
 
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Action</th>
             </tr>
@@ -85,7 +85,7 @@
                 <% page_totals[:teens_first_time]    += log.teens_first_time.to_i %>
                 <% page_totals[:adults_first_time]   += log.adults_first_time.to_i %>
 
-                <tr id="workshop_log_<%= log.id %>" class="hover:bg-gray-50 transition-colors duration-150">
+                <tr id="workshop_log_<%= log.id %>" class="transition-colors duration-150 hover:bg-gray-50">
                   <td class="px-2 text-left text-xs whitespace-nowrap">
                     <%= link_to (log.workshop_held_on || log.created_at)&.strftime("%b %d, %Y"), workshop_log_path(log) %>
                     <%= render "workshop_logs/content_icons", workshop_log: log %>
@@ -103,28 +103,28 @@
                     <%= credited_author_link(log) %>
                   </td>
 
-                  <td class="text-center font-bold text-lg bg-purple-100"><%= display_count(log.total_attendance) %></td>
+                  <td class="bg-purple-100 text-center text-lg font-bold"><%= display_count(log.total_attendance) %></td>
 
                   <!-- Ongoing -->
-                  <td class="text-center bg-blue-100"><%= display_count(log.children_ongoing) %></td>
-                  <td class="text-center bg-blue-100"><%= display_count(log.teens_ongoing) %></td>
-                  <td class="text-center bg-blue-100"><%= display_count(log.adults_ongoing) %></td>
+                  <td class="bg-blue-100 text-center"><%= display_count(log.children_ongoing) %></td>
+                  <td class="bg-blue-100 text-center"><%= display_count(log.teens_ongoing) %></td>
+                  <td class="bg-blue-100 text-center"><%= display_count(log.adults_ongoing) %></td>
 
                   <!-- First-time -->
-                  <td class="text-center bg-green-100"><%= display_count(log.children_first_time) %></td>
-                  <td class="text-center bg-green-100"><%= display_count(log.teens_first_time) %></td>
-                  <td class="text-center bg-green-100"><%= display_count(log.adults_first_time) %></td>
+                  <td class="bg-green-100 text-center"><%= display_count(log.children_first_time) %></td>
+                  <td class="bg-green-100 text-center"><%= display_count(log.teens_first_time) %></td>
+                  <td class="bg-green-100 text-center"><%= display_count(log.adults_first_time) %></td>
 
                   <td class="text-center whitespace-nowrap">
                     <% if allowed_to?(:edit?, log) %>
                       <%= link_to "Edit",
                                   edit_workshop_log_path(log),
-                                  class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                                  class: button_classes(:secondary_outline, size: nil, extra: "text-xs px-2 py-1") %>
                     <% end %>
                     <% if allowed_to?(:show?, log) %>
                       <%= link_to "View",
                                   workshop_log_path(log),
-                                  class: "btn btn-secondary-outline text-xs px-2 py-1" %>
+                                  class: button_classes(:secondary_outline, size: nil, extra: "text-xs px-2 py-1") %>
                     <% end %>
                     <%= render "bookmarks/editable_bookmark_icon", resource: log %>
                   </td>
@@ -136,44 +136,44 @@
             <tfoot>
             <% if workshop_logs_count > @per_page.to_i %>
               <!-- Subtotal for this page -->
-              <tr class="font-semibold text-sm bg-gray-50 border-t border-gray-300">
-                <td colspan="3" class="text-right pr-2 text-sm font-semibold text-gray-700">Subtotal (this page):</td>
-                <td class="text-center font-bold text-lg bg-purple-200 text-gray-900">
+              <tr class="border-t border-gray-300 bg-gray-50 text-sm font-semibold">
+                <td colspan="3" class="pr-2 text-right text-sm font-semibold text-gray-700">Subtotal (this page):</td>
+                <td class="bg-purple-200 text-center text-lg font-bold text-gray-900">
                   <%= page_totals.values.sum %>
                 </td>
 
-                <td class="text-center font-bold text-lg bg-blue-200 text-gray-900"><%= page_totals[:children_ongoing] %></td>
-                <td class="text-center font-bold text-lg bg-blue-200 text-gray-900"><%= page_totals[:teens_ongoing] %></td>
-                <td class="text-center font-bold text-lg bg-blue-200 text-gray-900"><%= page_totals[:adults_ongoing] %></td>
+                <td class="bg-blue-200 text-center text-lg font-bold text-gray-900"><%= page_totals[:children_ongoing] %></td>
+                <td class="bg-blue-200 text-center text-lg font-bold text-gray-900"><%= page_totals[:teens_ongoing] %></td>
+                <td class="bg-blue-200 text-center text-lg font-bold text-gray-900"><%= page_totals[:adults_ongoing] %></td>
 
-                <td class="text-center font-bold text-lg bg-green-200 text-gray-900"><%= page_totals[:children_first_time] %></td>
-                <td class="text-center font-bold text-lg bg-green-200 text-gray-900"><%= page_totals[:teens_first_time] %></td>
-                <td class="text-center font-bold text-lg bg-green-200 text-gray-900"><%= page_totals[:adults_first_time] %></td>
+                <td class="bg-green-200 text-center text-lg font-bold text-gray-900"><%= page_totals[:children_first_time] %></td>
+                <td class="bg-green-200 text-center text-lg font-bold text-gray-900"><%= page_totals[:teens_first_time] %></td>
+                <td class="bg-green-200 text-center text-lg font-bold text-gray-900"><%= page_totals[:adults_first_time] %></td>
               </tr>
             <% end %>
             <!-- Grant total -->
             <tr class="bold small">
               <% grand_total_text = "Grand Total#{ " (all pages)" if workshop_logs_count > @per_page.to_i }" %>
-              <td colspan="3" class="text-right pr-2 text-sm font-semibold"><%= grand_total_text %>:</td>
-              <td class="text-center font-bold text-xl text-white bg-purple-500">
+              <td colspan="3" class="pr-2 text-right text-sm font-semibold"><%= grand_total_text %>:</td>
+              <td class="bg-purple-500 text-center text-xl font-bold text-white">
                 <%= grand_totals.sum %>
               </td>
-              <td class="text-center font-bold text-xl text-white bg-blue-500">
+              <td class="bg-blue-500 text-center text-xl font-bold text-white">
                 <%= grand_totals[0] %>
               </td>
-              <td class="text-center font-bold text-xl text-white bg-blue-500">
+              <td class="bg-blue-500 text-center text-xl font-bold text-white">
                 <%= grand_totals[1] %>
               </td>
-              <td class="text-center font-bold text-xl text-white bg-blue-500">
+              <td class="bg-blue-500 text-center text-xl font-bold text-white">
                 <%= grand_totals[2] %>
               </td>
-              <td class="text-center font-bold text-xl text-white bg-green-500">
+              <td class="bg-green-500 text-center text-xl font-bold text-white">
                 <%= grand_totals[3] %>
               </td>
-              <td class="text-center font-bold text-xl text-white bg-green-500">
+              <td class="bg-green-500 text-center text-xl font-bold text-white">
                 <%= grand_totals[4] %>
               </td>
-              <td class="text-center font-bold text-xl text-white bg-green-500">
+              <td class="bg-green-500 text-center text-xl font-bold text-white">
                 <%= grand_totals[5] %>
               </td>
             </tr>
@@ -183,7 +183,7 @@
 
         <!-- Empty state -->
         <% unless workshop_logs.any? %>
-          <p class="text-gray-500 text-center py-6">
+          <p class="py-6 text-center text-gray-500">
             No <%= WorkshopLog.model_name.human.pluralize.downcase %> found.
           </p>
         <% end %>

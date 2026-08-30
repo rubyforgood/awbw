@@ -12,7 +12,7 @@
 
     <% if allowed_to?(:create?, Feature) %>
       <div class="admin-only flex flex-wrap items-center justify-end gap-2 rounded-lg bg-blue-100 p-2">
-        <%= link_to new_feature_path, class: "btn btn-primary-outline" do %>
+        <%= link_to new_feature_path, class: button_classes(:primary_outline) do %>
           <i class="fa-solid fa-plus"></i> New feature
         <% end %>
       </div>

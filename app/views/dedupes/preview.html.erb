@@ -16,7 +16,7 @@
         </p>
       </div>
       <%= link_to url_for(action: :dedupe_preview, @dedupe[:delete_id_param] => @record_to_keep.id, @dedupe[:keep_id_param] => @record_to_delete.id),
-                  class: "btn btn-secondary-outline btn-sm shrink-0" do %>
+                  class: button_classes(:secondary_outline, size: :sm, extra: "shrink-0") do %>
         <i class="fa-solid fa-arrows-rotate"></i> Swap
       <% end %>
     </div>
@@ -106,10 +106,10 @@
             <i class="fa-solid fa-ban"></i> Merge disabled — unhandled associations (see above).
           </span>
         <% end %>
-        <%= link_to "Cancel", url_for(action: :dedupe_index), class: "btn btn-secondary-outline" %>
+        <%= link_to "Cancel", url_for(action: :dedupe_index), class: button_classes(:secondary_outline) %>
         <%= f.submit "Merge #{@dedupe[:model_label_plural].downcase}",
                      disabled: blocked,
-                     class: "btn btn-danger #{"cursor-not-allowed opacity-50" if blocked}" %>
+                     class: button_classes(:danger, extra: ("cursor-not-allowed opacity-50" if blocked)) %>
       </div>
     <% end %>
 

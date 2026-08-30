@@ -144,9 +144,9 @@
         and <%= pluralize(@result.stories_created, "connected story") %>.
       </p>
       <div class="flex items-center gap-2">
-        <%= f.submit "Confirm import", class: "btn btn-primary-outline bg-blue-100",
+        <%= f.submit "Confirm import", class: button_classes(:primary_outline, extra: "bg-blue-100"),
                      data: { turbo_confirm: "Create #{@result.ideas_created} story ideas and #{@result.stories_created} stories?" } %>
-        <%= link_to "Cancel", stories_path, class: "btn btn-secondary-outline" %>
+        <%= link_to "Cancel", stories_path, class: button_classes(:secondary_outline) %>
       </div>
     <% end %>
   </div>

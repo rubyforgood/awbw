@@ -99,7 +99,7 @@
                                     f,
                                     :contact_methods,
                                     partial: "contact_methods/contact_method_fields",
-                                    class: "btn btn-secondary-outline" %>
+                                    class: button_classes(:secondary_outline) %>
       </div>
     </div>
   </div>
@@ -121,7 +121,7 @@
         <%= link_to_add_association "➕ Add address",
                                     f,
                                     :addresses,
-                                    class: "btn btn-secondary-outline" %>
+                                    class: button_classes(:secondary_outline) %>
       </div>
     </div>
   </div>
@@ -166,7 +166,7 @@
                                       locals: { collection: (@sectors_collection || [])
                                         .reject { |_, id| (@current_sector_ids || []).include?(id) },
                                                 show_admin_flags: true } },
-                                    class: "btn btn-secondary-outline" %>
+                                    class: button_classes(:secondary_outline) %>
         <%= render "people/other_sector_responses", responses: @person.other_sector_responses, dismissable: true, curatable: true, return_to: "person_edit" %>
       </div>
     </div>
@@ -193,7 +193,7 @@
                                     render_options: {
                                       locals: { collection: (@age_ranges_collection || [])
                                         .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
-                                    class: "btn btn-secondary-outline" %>
+                                    class: button_classes(:secondary_outline) %>
         </div>
       </div>
     <% end %>
@@ -220,7 +220,7 @@
                                     render_options: {
                                       locals: { collection: (@staff_tags_collection || [])
                                         .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
-                                    class: "btn btn-secondary-outline" %>
+                                    class: button_classes(:secondary_outline) %>
       </div>
     </div>
   <% end %>
@@ -326,7 +326,7 @@
       </div>
       <% if allowed_to?(:manage?, Person) %>
         <%= render "affiliations/editor", f: f, label: "Organization", scope: "person",
-              add_class: "admin-only bg-blue-100 btn btn-secondary-outline" %>
+              add_class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
       <% else %>
         <% owner_affiliations = f.object.affiliations.select(&:persisted?) %>
         <% if owner_affiliations.any? %>
@@ -396,7 +396,7 @@
                                   f,
                                   :professional_licenses,
                                   partial: "professional_licenses/professional_license_fields",
-                                  class: "btn btn-secondary-outline" %>
+                                  class: button_classes(:secondary_outline) %>
     </div>
   </div>
 
@@ -565,12 +565,12 @@
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
-      <%= link_to "Delete", @person, class: "btn btn-danger-outline",
+      <%= link_to "Delete", @person, class: button_classes(:danger_outline),
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
 
-    <%= link_to "Cancel", people_path, class: "btn btn-secondary-outline",
+    <%= link_to "Cancel", people_path, class: button_classes(:secondary_outline),
                 data: { action: "click->dirty-form#confirmCancel" } %>
-    <%= f.button :submit, class: "btn btn-primary" %>
+    <%= f.button :submit, class: button_classes(:primary) %>
   </div>
 <% end %>
