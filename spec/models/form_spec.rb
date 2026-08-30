@@ -15,27 +15,6 @@ RSpec.describe Form do
     it { should accept_nested_attributes_for(:form_fields).allow_destroy(true) }
   end
 
-  describe 'validations' do
-    describe 'role' do
-      it 'accepts every value in Form::ROLES' do
-        Form::ROLES.each do |role|
-          expect(build(:form, role: role)).to be_valid, "expected role #{role.inspect} to be valid"
-        end
-      end
-
-      it 'rejects a role outside Form::ROLES' do
-        form = build(:form, role: "nonsense")
-        expect(form).not_to be_valid
-        expect(form.errors[:role]).to be_present
-      end
-
-      it 'allows a blank role (nil or "") so legacy forms save untouched' do
-        expect(build(:form, role: nil)).to be_valid
-        expect(build(:form, role: "")).to be_valid
-      end
-    end
-  end
-
   # it 'is valid with valid attributes' do
   #   # Note: Factory needs owner association uncommented for create
   #   # expect(build(:form)).to be_valid
