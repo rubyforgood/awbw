@@ -554,6 +554,16 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Keep Workshop", "Delete Workshop")
       end
 
+      it "links each record's title to its edit page" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("href=\"#{edit_workshop_path(keep)}\"")
+        expect(response.body).to include("href=\"#{edit_workshop_path(delete_rec)}\"")
+      end
+
       it "surfaces each workshop's author with a searchable picker on the kept record" do
         get dedupe_preview_workshops_path(
           workshop_to_keep_id: keep.id,

@@ -41,11 +41,21 @@
   <!-- Column headers -->
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> flex items-center gap-2 px-5 py-3">
     <i class="fa-solid fa-trash-can text-red-400"></i>
-    <span class="font-semibold text-gray-900"><%= model_label %> to delete: <strong><%= record_to_delete.name %></strong></span>
+    <span class="font-semibold text-gray-900"><%= model_label %> to delete:</span>
+    <%= link_to edit_polymorphic_path(record_to_delete), target: "_blank", rel: "noopener",
+                class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
+      <strong><%= record_to_delete.name %></strong>
+      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
+    <% end %>
   </div>
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> flex items-center gap-2 px-5 py-3">
     <i class="fa-solid fa-circle-check text-emerald-500"></i>
-    <span class="font-semibold text-gray-900"><%= model_label %> to keep: <strong><%= record_to_keep.name %></strong></span>
+    <span class="font-semibold text-gray-900"><%= model_label %> to keep:</span>
+    <%= link_to edit_polymorphic_path(record_to_keep), target: "_blank", rel: "noopener",
+                class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
+      <strong><%= record_to_keep.name %></strong>
+      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
+    <% end %>
   </div>
 
   <!-- ID row -->
