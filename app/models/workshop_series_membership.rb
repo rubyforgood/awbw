@@ -1,6 +1,8 @@
 class WorkshopSeriesMembership < ApplicationRecord
   belongs_to :workshop_parent, class_name: "Workshop"
   belongs_to :workshop_child, class_name: "Workshop"
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   # Validations
   validates :position, presence: true, numericality: { only_integer: true, greater_than: 0 }

@@ -1,6 +1,8 @@
 class SectorableItem < ApplicationRecord
   belongs_to :sector
   belongs_to :sectorable, polymorphic: true, touch: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :people, through: :sectorable_items, source: :sectorable, source_type: "Person"
 
   # Validations

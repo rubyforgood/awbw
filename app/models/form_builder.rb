@@ -1,5 +1,7 @@
 class FormBuilder < ApplicationRecord
   belongs_to :windows_type
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :forms, as: :owner
 
   # Validations

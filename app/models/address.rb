@@ -1,4 +1,7 @@
 class Address < ApplicationRecord
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
+
   LOCALITIES = [ "LA City", "LA County", "Southern CA", "Northern CA",
                 "Central CA", "Orange County", "Outside CA", "Outside USA", "Unknown" ]
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", "unknown" ].freeze

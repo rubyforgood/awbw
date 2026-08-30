@@ -1,6 +1,8 @@
 class EventRegistrationChecklistCompletion < ApplicationRecord
   belongs_to :event_registration
   belongs_to :completed_by, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
 
   validates :step,
     presence: true,

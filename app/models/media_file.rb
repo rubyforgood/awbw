@@ -1,6 +1,8 @@
 class MediaFile < ApplicationRecord
   belongs_to :report, optional: true
   belongs_to :workshop_log, optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   # Images
   has_one_attached :file
 

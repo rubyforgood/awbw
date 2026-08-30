@@ -1,5 +1,7 @@
 class FormField < ApplicationRecord
   belongs_to :form, inverse_of: :form_fields
+  belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :updated_by, class_name: "User", optional: true
   has_many :form_field_answer_options, dependent: :destroy
   has_many :report_form_field_answers, dependent: :destroy
   has_many :form_answers, dependent: :nullify
