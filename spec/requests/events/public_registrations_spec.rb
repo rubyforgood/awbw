@@ -416,7 +416,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Healthcare")
     end
 
-    it "renders the agency website as a text input so bare domains pass validation" do
+    it "renders the organization website as a text input so bare domains pass validation" do
       website_field = create(:form_field, form: form, answer_type: :free_form_input_one_line,
              field_identifier: "organization_website", name: "Organization website", required: false)
 
