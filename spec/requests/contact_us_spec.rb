@@ -8,7 +8,7 @@ RSpec.describe "ContactUs", type: :request do
         first_name: "Jane",
         last_name: "Smith",
         from: "jane@example.com",
-        agency: "Test Agency",
+        organization: "Test Organization",
         subject: "Test Subject",
         message: "Test message",
         q: "general"
@@ -28,12 +28,12 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).not_to include("Hello,")
       end
 
-      it "shows form fields for name, email, and agency" do
+      it "shows form fields for name, email, and organization" do
         get contact_us_path
         expect(response.body).to include('name="contact_us[first_name]"')
         expect(response.body).to include('name="contact_us[last_name]"')
         expect(response.body).to include('name="contact_us[from]"')
-        expect(response.body).to include('name="contact_us[agency]"')
+        expect(response.body).to include('name="contact_us[organization]"')
       end
 
       it "does not show adult or children program options" do
@@ -97,7 +97,7 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to include("reply by email to #{user.email}")
       end
 
-      it "does not show visible form fields for name, email, and agency" do
+      it "does not show visible form fields for name, email, and organization" do
         get contact_us_path
         expect(response.body).to include('type="hidden"')
         expect(response.body).to include('name="contact_us[first_name]"')
@@ -111,7 +111,7 @@ RSpec.describe "ContactUs", type: :request do
             first_name: user.person.first_name,
             last_name: user.person.last_name,
             from: user.email,
-            agency: "",
+            organization: "",
             subject: "Test",
             message: "Test",
             q: "general"
@@ -196,7 +196,7 @@ RSpec.describe "ContactUs", type: :request do
             first_name: user.person.first_name,
             last_name: user.person.last_name,
             from: user.email,
-            agency: "",
+            organization: "",
             subject: "Test Subject from logged in user",
             message: "Test message from logged in user",
             q: "general"

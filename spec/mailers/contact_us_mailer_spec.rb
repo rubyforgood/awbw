@@ -9,7 +9,7 @@ RSpec.describe ContactUsMailer do
         q: 'general',
         first_name: 'John',
         last_name: 'Doe',
-        agency: 'Test Agency',
+        organization: 'Test Organization',
         message: 'This is a test message'
       }
 
@@ -27,7 +27,7 @@ RSpec.describe ContactUsMailer do
         q: nil,
         first_name: 'John',
         last_name: 'Doe',
-        agency: 'Test Agency',
+        organization: 'Test Organization',
         message: 'This is a test message'
       }
 
@@ -43,7 +43,7 @@ RSpec.describe ContactUsMailer do
         q: 'general',
         first_name: 'John',
         last_name: 'Doe',
-        agency: 'Test Agency',
+        organization: 'Test Organization',
         message: 'This is a test message'
       }
 
@@ -51,7 +51,7 @@ RSpec.describe ContactUsMailer do
 
       expect(mail.body.encoded).to include('John Doe')
       expect(mail.body.encoded).to include('This is a test message')
-      expect(mail.body.encoded).to include('Test Agency')
+      expect(mail.body.encoded).to include('Test Organization')
     end
 
     it 'renders the email content correctly for logged in user' do
@@ -62,7 +62,7 @@ RSpec.describe ContactUsMailer do
         q: 'general',
         first_name: user.person.first_name,
         last_name: user.person.last_name,
-        agency: 'Test Agency',
+        organization: 'Test Organization',
         message: 'This is a test message from logged in user'
       }
 
