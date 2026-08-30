@@ -77,7 +77,32 @@
                  editable_columns: @dedupe[:editable_columns],
                  union_columns: @dedupe[:union_columns],
                  form_builder: f,
-                 belongs_to_options: @dedupe[:belongs_to_options] %>
+                 belongs_to_options: @dedupe[:belongs_to_options],
+                 remote_select_options: @dedupe[:remote_select_options],
+                 field_notes: @dedupe[:field_notes],
+                 deprecated_columns: @dedupe[:deprecated_columns],
+                 preview_images: @dedupe[:preview_images] %>
+
+      <!-- Attached images: moved to the keeper only when it has none, else dropped -->
+      <% if @attachment_plan.present? %>
+        <div class="mt-6 rounded-xl border border-gray-200 bg-white p-4">
+          <p class="text-sm font-semibold text-gray-800">Attached images</p>
+          <ul class="mt-2 space-y-1 text-sm">
+            <% @attachment_plan.each do |entry| %>
+              <li class="flex items-center gap-2">
+                <span class="font-medium text-gray-700"><%= entry[:label] %></span>
+                <% if entry[:action] == :move %>
+                  <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Moves to keeper</span>
+                  <span class="text-gray-500">— the kept <%= @dedupe[:model_label].downcase %> has none</span>
+                <% else %>
+                  <span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">Dropped</span>
+                  <span class="text-gray-500">— the kept <%= @dedupe[:model_label].downcase %> already has one</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
 
       <!-- Lost with the deleted record -->
       <% if @lost_references.any? %>

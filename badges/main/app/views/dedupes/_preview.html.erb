@@ -27,6 +27,12 @@
     end
   bt_associations = model_class.reflect_on_all_associations(:belongs_to).index_by { |a| a.foreign_key.to_s }
   belongs_to_options ||= {}
+  remote_select_options ||= {}
+  field_notes ||= {}
+  deprecated_columns ||= []
+  preview_images ||= nil
+  delete_images = preview_images ? Array(preview_images.call(record_to_delete)) : []
+  keep_images = preview_images ? Array(preview_images.call(record_to_keep)) : []
 %>
 
 <div class="mb-6 grid grid-cols-2 gap-x-6"
@@ -38,11 +44,21 @@
   <!-- Column headers -->
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> flex items-center gap-2 px-5 py-3">
     <i class="fa-solid fa-trash-can text-red-400"></i>
-    <span class="font-semibold text-gray-900"><%= model_label %> to delete: <strong><%= record_to_delete.name %></strong></span>
+    <span class="font-semibold text-gray-900"><%= model_label %> to delete:</span>
+    <%= link_to edit_polymorphic_path(record_to_delete), target: "_blank", rel: "noopener",
+                class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
+      <strong><%= record_to_delete.name %></strong>
+      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
+    <% end %>
   </div>
   <div class="border <%= border %> rounded-t-xl <%= header_bg %> flex items-center gap-2 px-5 py-3">
     <i class="fa-solid fa-circle-check text-emerald-500"></i>
-    <span class="font-semibold text-gray-900"><%= model_label %> to keep: <strong><%= record_to_keep.name %></strong></span>
+    <span class="font-semibold text-gray-900"><%= model_label %> to keep:</span>
+    <%= link_to edit_polymorphic_path(record_to_keep), target: "_blank", rel: "noopener",
+                class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
+      <strong><%= record_to_keep.name %></strong>
+      <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
+    <% end %>
   </div>
 
   <!-- ID row -->
@@ -52,6 +68,46 @@
   <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm">
     <span class="text-gray-400">ID</span> <span class="ml-2 text-gray-900"><%= record_to_keep.id %></span>
   </div>
+
+  <!-- Photos: attached images on each record, side by side, with what happens on merge -->
+  <% if preview_images && (delete_images.any? || keep_images.any?) %>
+    <!-- Left: the deleted record's photos move to the keeper -->
+    <div class="border-x border-b <%= border %> bg-white px-5 py-3">
+      <div class="mb-2 flex flex-wrap items-center gap-2">
+        <p class="text-2xs font-semibold tracking-widest text-gray-400 uppercase">Photos</p>
+        <% if delete_images.any? %>
+          <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Move to the kept <%= model_label.downcase %></span>
+        <% end %>
+      </div>
+      <% if delete_images.any? %>
+        <div class="flex flex-wrap gap-2">
+          <% delete_images.first(12).each do |image| %>
+            <%= image_tag url_for(image), loading: "lazy", class: "h-16 w-16 rounded object-cover ring-1 ring-gray-200" %>
+          <% end %>
+        </div>
+      <% else %>
+        <span class="text-sm text-gray-400">No photos</span>
+      <% end %>
+    </div>
+    <!-- Right: the keeper's own photos stay -->
+    <div class="border-x border-b <%= border %> bg-white px-5 py-3">
+      <div class="mb-2 flex flex-wrap items-center gap-2">
+        <p class="text-2xs font-semibold tracking-widest text-gray-400 uppercase">Photos</p>
+        <% if keep_images.any? %>
+          <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Kept</span>
+        <% end %>
+      </div>
+      <% if keep_images.any? %>
+        <div class="flex flex-wrap gap-2">
+          <% keep_images.first(12).each do |image| %>
+            <%= image_tag url_for(image), loading: "lazy", class: "h-16 w-16 rounded object-cover ring-1 ring-gray-200" %>
+          <% end %>
+        </div>
+      <% else %>
+        <span class="text-sm text-gray-400"><%= delete_images.any? ? "None yet — the photos on the left move here" : "No photos" %></span>
+      <% end %>
+    </div>
+  <% end %>
 
   <!-- Field rows -->
   <%= form_builder.fields_for keep_param_key, record_to_keep do |keep_f| %>
@@ -74,27 +130,44 @@
         union_column = union_columns.include?(col.name)
         merged_in = union_column && delete_val.to_s.split(",").map(&:strip).reject(&:blank?).difference(keep_val.to_s.split(",").map(&:strip)).any?
         is_different = !union_column && delete_val != keep_val
+        deprecated = deprecated_columns.include?(col.name)
       %>
 
       <!-- Left: read-only -->
-      <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm">
+      <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %>">
         <span class="w-full text-gray-400 sm:w-auto"><%= label %></span>
-        <span class="text-gray-900 <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
+        <% if deprecated %>
+          <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Deprecated</span>
+        <% end %>
+        <span class="<%= deprecated ? "text-gray-400 italic" : "text-gray-900" %> <%= "font-semibold" if col.name == "name" %>"><%= display_val %></span>
         <% if merged_in %>
           <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-800">Kept on merge</span>
-        <% elsif is_different %>
+        <% elsif is_different && !deprecated %>
           <span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">Will be dropped</span>
         <% end %>
       </div>
 
       <!-- Right: editable -->
-      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm">
-        <label class="mb-1 block text-gray-400"><%= label %></label>
+      <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm <%= "opacity-60" if deprecated %>">
+        <label class="mb-1 flex items-center gap-2 text-gray-400">
+          <%= label %>
+          <% if deprecated %>
+            <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">Deprecated</span>
+          <% end %>
+        </label>
         <% if col.type == :boolean %>
           <label class="inline-flex items-center gap-2">
             <%= keep_f.check_box col.name.to_sym, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-200" %>
             <span class="text-gray-600">Yes</span>
           </label>
+        <% elsif col_assoc && remote_select_options[col.name].present? %>
+          <%
+            current = record_to_keep.public_send(col_assoc.name)
+            current_option = current ? [ [ (current.try(:remote_search_label)&.dig(:label) || current.name), current.id ] ] : []
+          %>
+          <%= keep_f.select col.name.to_sym, current_option, { include_blank: true },
+                            class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200",
+                            data: { controller: "remote-select", remote_select_model_value: remote_select_options[col.name] } %>
         <% elsif col_assoc && belongs_to_options[col.name].present? %>
           <%= keep_f.collection_select col.name.to_sym, belongs_to_options[col.name], :id, :name, {}, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
         <% elsif col.type == :integer && col_assoc.nil? %>
@@ -105,6 +178,9 @@
           <%= keep_f.text_field col.name.to_sym, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 #{"font-semibold" if col.name == "name"} focus:border-blue-500 focus:ring-blue-200" %>
         <% else %>
           <span class="text-gray-500"><%= record_to_keep.public_send(col_assoc.name)&.try(:name) || "(none)" %></span>
+        <% end %>
+        <% if field_notes[col.name].present? %>
+          <p class="mt-1 text-xs text-gray-500"><%= field_notes[col.name] %></p>
         <% end %>
       </div>
     <% end %>
@@ -118,11 +194,11 @@
     delete_total = reassignment_delete.sum { |entry| entry[:count] }
     keep_total = reassignment_keep.sum { |entry| entry[:count] }
   %>
-  <div class="border-x border-b <%= border %> bg-white px-5 py-3">
-    <h3 class="text-sm font-semibold text-gray-700">Records that will move <span class="font-normal text-gray-400">(<%= delete_total %>)</span></h3>
+  <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records that will move <span class="ml-1 text-gray-400 normal-case">(<%= delete_total %>)</span></h3>
   </div>
-  <div class="border-x border-b <%= border %> bg-white px-5 py-3">
-    <h3 class="text-sm font-semibold text-gray-700">Records already here <span class="font-normal text-gray-400">(<%= keep_total %>)</span></h3>
+  <div class="border-x border-t-2 border-b <%= border %> <%= header_bg %> px-5 py-3">
+    <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Records already here <span class="ml-1 text-gray-400 normal-case">(<%= keep_total %>)</span></h3>
   </div>
 
   <% if labels.empty? %>
@@ -136,3 +212,35 @@
     <% end %>
   <% end %>
 </div>
+
+<%# Read-only inventory of every parent (belongs_to) reference not already shown as an
+    editable field above — full visibility into what each record is linked to before merging. %>
+<%
+  shown_fk_names = columns.map(&:name)
+  linked_associations = model_class.reflect_on_all_associations(:belongs_to)
+                                   .reject { |assoc| shown_fk_names.include?(assoc.foreign_key.to_s) }
+  linked_display = ->(record) {
+    record ? (record.try(:name).presence || record.try(:title).presence || "##{record.id}") : "(none)"
+  }
+%>
+<% if linked_associations.any? %>
+  <div class="mt-6">
+    <div class="rounded-t-xl border-x border-t border-b <%= border %> <%= header_bg %> px-5 py-3">
+      <h3 class="text-2xs font-semibold tracking-widest text-gray-600 uppercase">Linked records <span class="ml-1 text-gray-400 normal-case">(read-only — for reference)</span></h3>
+    </div>
+    <div class="grid grid-cols-2 gap-x-6">
+      <% linked_associations.each_with_index do |assoc, index| %>
+        <% last = index == linked_associations.size - 1 %>
+        <% assoc_label = assoc.name.to_s.humanize %>
+        <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-bl-xl" if last %>">
+          <span class="w-full text-gray-400 sm:w-auto"><%= assoc_label %></span>
+          <span class="text-gray-900"><%= linked_display.call(record_to_delete.public_send(assoc.name)) %></span>
+        </div>
+        <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm <%= "rounded-br-xl" if last %>">
+          <span class="w-full text-gray-400 sm:w-auto"><%= assoc_label %></span>
+          <span class="text-gray-900"><%= linked_display.call(record_to_keep.public_send(assoc.name)) %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

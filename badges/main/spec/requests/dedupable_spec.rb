@@ -508,4 +508,191 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
   end
+
+  # ============================================================
+  # WORKSHOPS — dedupe wired through WorkshopsController on the
+  # config-driven Dedupable pattern, matched by title.
+  # ============================================================
+
+  describe "Workshops" do
+    describe "GET dedupe_index" do
+      it "surfaces title-matched candidate groups for an admin" do
+        sign_in admin
+        create(:workshop, title: "Paper Bag Puppets")
+        create(:workshop, title: "paper bag puppets")
+
+        get dedupe_index_workshops_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Same title")
+      end
+
+      it "denies access to a regular user" do
+        sign_in regular_user
+        get dedupe_index_workshops_path
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      let!(:keep_author) { create(:person, first_name: "Ada", last_name: "Keeper") }
+      let!(:delete_author) { create(:person, first_name: "Ben", last_name: "Duplicate") }
+      let!(:keep) { create(:workshop, title: "Keep Workshop", author: keep_author) }
+      let!(:delete_rec) { create(:workshop, title: "Delete Workshop", author: delete_author) }
+      before do
+        sign_in admin
+        create(:workshop_log, workshop: delete_rec)
+      end
+
+      it "renders the preview with a reassignment summary" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Keep Workshop", "Delete Workshop")
+      end
+
+      it "links each record's title to its edit page" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("href=\"#{edit_workshop_path(keep)}\"")
+        expect(response.body).to include("href=\"#{edit_workshop_path(delete_rec)}\"")
+      end
+
+      it "surfaces each workshop's author with a searchable picker on the kept record" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Author")
+        expect(response.body).to include("Ada Keeper", "Ben Duplicate")
+        expect(response.body).to include("[workshop_to_keep][author_id]")
+        expect(response.body).to include('data-controller="remote-select"')
+        expect(response.body).to include('data-remote-select-model-value="person"')
+      end
+
+      it "notes that Full name is the legacy author and Author should be a person" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Legacy (not referenced)")
+        expect(response.body).to include("Credited author")
+      end
+
+      it "marks the legacy Full name field as deprecated" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Deprecated")
+      end
+
+      it "lists belongs_to references not shown as fields in a read-only Linked records section" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Linked records")
+        expect(response.body).to include("Created by")
+      end
+
+      it "shows a thumbnail on the deleted workshop as moving to the keeper" do
+        blob = ActiveStorage::Blob.create_before_direct_upload!(
+          filename: "thumb.png", byte_size: 1, checksum: "x", content_type: "image/png"
+        )
+        ActiveStorage::Attachment.create!(name: "thumbnail", record: delete_rec, blob: blob)
+
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Attached images")
+        expect(response.body).to include("Moves to keeper")
+      end
+
+      it "renders each workshop's photos and shows the deleted record's moving to the keeper" do
+        blob = ActiveStorage::Blob.create_and_upload!(
+          io: StringIO.new("img"), filename: "del.png", content_type: "image/png"
+        )
+        ActiveStorage::Attachment.create!(name: "thumbnail", record: delete_rec, blob: blob)
+
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Photos")
+        expect(response.body).to include("active_storage/blobs")
+        expect(response.body).to include("Move to the kept workshop")
+      end
+
+      it "still renders the author picker when neither workshop has a person author" do
+        keep.update!(author: nil)
+        delete_rec.update!(author: nil)
+
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("[workshop_to_keep][author_id]")
+        expect(response.body).to include('data-controller="remote-select"')
+      end
+    end
+
+    describe "POST dedupe_perform" do
+      let!(:keep) { create(:workshop, title: "Keeper Workshop") }
+      let!(:delete_rec) { create(:workshop, title: "Duplicate Workshop") }
+      let!(:log) { create(:workshop_log, workshop: delete_rec) }
+
+      it "merges, reassigns FK associations, and deletes the duplicate" do
+        sign_in admin
+
+        expect {
+          post dedupe_perform_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+        }.to change(Workshop, :count).by(-1)
+
+        expect(response).to redirect_to(workshops_path)
+        expect(Workshop.exists?(delete_rec.id)).to be false
+        expect(log.reload.workshop_id).to eq(keep.id)
+      end
+
+      it "applies keep-field edits before merging" do
+        sign_in admin
+
+        post dedupe_perform_workshops_path, params: {
+          workshop_to_delete_id: delete_rec.id,
+          workshop_to_keep_id: keep.id,
+          workshop_to_keep: { title: "Canonical Workshop" }
+        }
+
+        expect(keep.reload.title).to eq("Canonical Workshop")
+      end
+
+      it "denies access to a regular user and does not merge" do
+        sign_in regular_user
+
+        expect {
+          post dedupe_perform_workshops_path, params: {
+            workshop_to_delete_id: delete_rec.id,
+            workshop_to_keep_id: keep.id
+          }
+        }.not_to change(Workshop, :count)
+      end
+    end
+  end
 end

@@ -252,4 +252,61 @@ RSpec.describe ModelDeduper do
       expect(service.lost_references(create(:organization))).to eq([])
     end
   end
+
+  describe "movable attachments (Workshop thumbnail/header)" do
+    subject(:service) do
+      described_class.new(model_class: Workshop, dry_run: false, logger: logger, movable_attachments: %w[thumbnail header])
+    end
+
+    def attach_thumbnail(workshop)
+      blob = ActiveStorage::Blob.create_before_direct_upload!(
+        filename: "thumb.png", byte_size: 1, checksum: "x", content_type: "image/png"
+      )
+      ActiveStorage::Attachment.create!(name: "thumbnail", record: workshop, blob: blob)
+    end
+
+    it "moves the attachment to the keeper when the keeper has none" do
+      keep = create(:workshop, title: "Keeper")
+      delete_rec = create(:workshop, title: "Duplicate")
+      attachment = attach_thumbnail(delete_rec)
+
+      service.merge(keep, delete_rec)
+
+      expect(Workshop.exists?(delete_rec.id)).to be false
+      expect(attachment.reload.record_id).to eq(keep.id)
+      expect(keep.reload.thumbnail).to be_attached
+    end
+
+    it "drops the deleted record's attachment when the keeper already has one" do
+      keep = create(:workshop, title: "Keeper")
+      delete_rec = create(:workshop, title: "Duplicate")
+      attach_thumbnail(keep)
+      dupe_attachment = attach_thumbnail(delete_rec)
+
+      service.merge(keep, delete_rec)
+
+      expect(keep.reload.thumbnail).to be_attached
+      expect(ActiveStorage::Attachment.exists?(dupe_attachment.id)).to be false
+    end
+
+    it "reports move vs drop in #attachment_plan" do
+      keep = create(:workshop, title: "Keeper")
+      delete_rec = create(:workshop, title: "Duplicate")
+      attach_thumbnail(delete_rec)
+
+      plan = service.attachment_plan(keep, delete_rec)
+      expect(plan).to include(a_hash_including(name: "thumbnail", action: :move))
+
+      attach_thumbnail(keep)
+      plan = service.attachment_plan(keep.reload, delete_rec)
+      expect(plan).to include(a_hash_including(name: "thumbnail", action: :drop))
+    end
+
+    it "excludes movable attachments from #lost_references" do
+      workshop = create(:workshop)
+      attach_thumbnail(workshop)
+
+      expect(service.lost_references(workshop)).to eq([])
+    end
+  end
 end
