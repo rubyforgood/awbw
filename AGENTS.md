@@ -153,7 +153,7 @@ This codebase (Rails 8.1)
 | `StaffTaggable` | Adds the polymorphic `staff_taggings`/`staff_tags` associations for internal admin StaffTags (Person today) |
 | `TagFilterable` | Scope-based filtering by tag names |
 | `Trendable` | Trending metrics tracking |
-| `UserStampable` | Stamps `updated_by_id` from `Current.user` on every write (no-op without the column) |
+| `UserStampable` | Stamps `created_by_id` (at create, if unset) and `updated_by_id` (every write) from `Current.user` (no-op without the column) |
 | `WindowsTypeFilterable` | Filter by WindowsType association |
 
 ## Controllers

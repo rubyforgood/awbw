@@ -18,9 +18,6 @@ class StaffTagging < ApplicationRecord
     staff_taggable.try(:preferred_email)
   end
 
-  before_create :stamp_created_by
-  before_save :stamp_updated_by
-
   scope :for_staff_tag, ->(ids) {
     tag_ids = Array(ids).reject(&:blank?)
     return all if tag_ids.empty?
@@ -59,15 +56,5 @@ class StaffTagging < ApplicationRecord
     results = results.matching_text(params[:query]) if params[:query].present?
     results = results.matching_content(params[:content]) if params[:content].present?
     results
-  end
-
-  private
-
-  def stamp_created_by
-    self.created_by ||= Current.user
-  end
-
-  def stamp_updated_by
-    self.updated_by = Current.user if Current.user
   end
 end
