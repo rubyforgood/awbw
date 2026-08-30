@@ -11,17 +11,23 @@ RSpec.describe UserStampable, type: :model do
 
   describe "on create" do
     it "stamps updated_by from Current.user" do
-      banner = with_current(creator) { Banner.create!(content: "Hi", show: true, created_by: creator) }
+      banner = with_current(creator) { Banner.create!(content: "Hi", show: true) }
 
       expect(banner.updated_by).to eq(creator)
     end
 
-    it "satisfies a required belongs_to :updated_by without an explicit assignment" do
-      expect { with_current(creator) { Banner.create!(content: "Hi", show: true, created_by: creator) } }
+    it "stamps created_by from Current.user when the caller leaves it unset" do
+      banner = with_current(creator) { Banner.create!(content: "Hi", show: true) }
+
+      expect(banner.created_by).to eq(creator)
+    end
+
+    it "satisfies required created_by/updated_by belongs_to without an explicit assignment" do
+      expect { with_current(creator) { Banner.create!(content: "Hi", show: true) } }
         .not_to raise_error
     end
 
-    it "leaves created_by to the caller" do
+    it "respects an explicitly assigned created_by" do
       banner = with_current(creator) { Banner.create!(content: "Hi", show: true, created_by: editor) }
 
       expect(banner.created_by).to eq(editor)
@@ -49,6 +55,16 @@ RSpec.describe UserStampable, type: :model do
       with_current(editor) { banner.save! }
 
       expect(banner.reload.updated_by).to eq(creator)
+    end
+
+    it "never backfills created_by on update — only stamps it at create" do
+      tag = StaffTag.create!(name: "Legacy tag")
+      expect(tag.created_by).to be_nil
+
+      with_current(editor) { tag.update!(name: "Edited tag") }
+
+      expect(tag.reload.created_by).to be_nil
+      expect(tag.updated_by).to eq(editor)
     end
   end
 
