@@ -423,7 +423,7 @@ class EventRegistrationsController < ApplicationController
     # button can't be used to create an arbitrary org — it only resolves a pending
     # submitted name. A specific name is passed when there are several submissions;
     # otherwise default to the first submitted name.
-    submitted_names = submitted_agency_names(@event_registration)
+    submitted_names = submitted_organization_names(@event_registration)
     requested = params[:organization_name].presence
     name = requested ? submitted_names.find { |submitted| submitted.casecmp?(requested) } : submitted_names.first
     if name.blank?
@@ -686,7 +686,7 @@ class EventRegistrationsController < ApplicationController
 
   # Distinct, non-blank org names the registrant typed across their registration-form
   # submissions (case-insensitive dedupe, first spelling wins).
-  def submitted_agency_names(registration)
+  def submitted_organization_names(registration)
     registration_submission_entries(registration)
       .filter_map { |entry| entry[:org_name].presence&.strip }
       .uniq { |name| name.downcase }

@@ -20,8 +20,8 @@ class EventDashboard
   end
 
   # Active registrations with no organization linked (via
-  # EventRegistrationOrganization) — flags registrants still needing an agency
-  # linked, mirroring the "Unlinked" registrants filter.
+  # EventRegistrationOrganization) — flags registrants still needing an
+  # organization linked, mirroring the "Unlinked" registrants filter.
   def unlinked_registration_count
     @unlinked_registration_count ||= active_registrations.where.not(id: linked_registration_ids).count
   end
