@@ -17,10 +17,6 @@ class OrganizationPolicy < ApplicationPolicy
     show?
   end
 
-  def dedupe?
-    admin?
-  end
-
 
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping

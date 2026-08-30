@@ -6,7 +6,7 @@ module Dedupable
   CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
 
   def dedupe_index
-    authorize! to: :dedupe?
+    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
 
@@ -17,7 +17,7 @@ module Dedupable
   end
 
   def dedupe_preview
-    authorize! to: :dedupe?
+    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
     mn = mc.model_name.singular
@@ -50,7 +50,7 @@ module Dedupable
   end
 
   def dedupe_update_keep
-    authorize! to: :dedupe?
+    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
     mn = mc.model_name.singular
@@ -71,7 +71,7 @@ module Dedupable
   end
 
   def dedupe_perform
-    authorize! to: :dedupe?
+    authorize! :dedupe, to: :dedupe?
     config = dedupe_config
     mc = config[:model_class]
     mn = mc.model_name.singular

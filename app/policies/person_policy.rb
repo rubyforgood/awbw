@@ -54,10 +54,6 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
-  def dedupe?
-    admin?
-  end
-
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 
