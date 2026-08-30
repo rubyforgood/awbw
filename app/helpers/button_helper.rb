@@ -36,8 +36,12 @@ module ButtonHelper
     utility_outline: "border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
   }.freeze
 
+  # `variant: nil` yields the shared base (+ size) with no color, for the few
+  # call sites that supply their own colors (e.g. a dynamic/custom fill) yet
+  # still want BUTTON_BASE as the single source of truth rather than inlining it.
   def button_classes(variant = :primary, size: :md, extra: nil)
-    tokens = [ BUTTON_BASE, BUTTON_VARIANTS.fetch(variant) ]
+    tokens = [ BUTTON_BASE ]
+    tokens << BUTTON_VARIANTS.fetch(variant) if variant
     tokens << BUTTON_SIZES.fetch(size) if size
     tokens << extra if extra.present?
     tokens.join(" ")
