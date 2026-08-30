@@ -41,6 +41,9 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
   # assertions must issue the frame request (Turbo-Frame header) the browser sends.
   let(:frame_headers) { { "Turbo-Frame" => "activity_results" } }
 
+  # The visits page lazy-loads its rows the same way, in the visit_results frame.
+  let(:visits_frame_headers) { { "Turbo-Frame" => "visit_results" } }
+
   # ============================================================
   # AS A GUEST
   # ============================================================
@@ -190,6 +193,34 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("auth.account_deactivated")
         expect(response.body).not_to include("create.bookmark")
+      end
+
+      it "filters events by resource title from their properties" do
+        create(:ahoy_event, name: "view.workshop_match", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: { "resource_title" => "Feelings Collage" })
+        create(:ahoy_event, name: "view.workshop_miss", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: { "resource_title" => "Anger Masks" })
+
+        get index_path, params: { resource_name: "feelings", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("view.workshop_match")
+        expect(response.body).not_to include("view.workshop_miss")
+      end
+
+      it "surfaces a resource title chip in the applied filters" do
+        get index_path, params: { resource_name: "Feelings Collage" }
+
+        expect(response.body).to include("Resource title: Feelings Collage")
+      end
+
+      it "sorts events by activity name" do
+        get index_path, params: { sort: "name", direction: "asc", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body.index("auth.login")).to be < response.body.index("create.bookmark")
       end
 
       it "filters events by free-text user search across person and user fields" do
@@ -376,20 +407,20 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
     end
 
     describe "GET /admin/activities/visits" do
-      it "renders ok" do
+      it "renders the shell ok on a full-page load" do
         get visits_path
         expect(response).to have_http_status(:ok)
       end
 
       it "filters visits by user_id" do
-        get visits_path, params: { user_id: user.id }
+        get visits_path, params: { user_id: user.id }, headers: visits_frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(user.full_name)
       end
 
       it "filters visits by visit_id" do
-        get visits_path, params: { visit_id: visit_for_user.id }
+        get visits_path, params: { visit_id: visit_for_user.id }, headers: visits_frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(visit_for_user.id.to_s)
@@ -404,7 +435,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         other.person.update!(first_name: "Zoltan", last_name: "Nonmatch")
         create(:ahoy_visit, user: other, started_at: 1.day.ago)
 
-        get visits_path, params: { user_search: "Hernandez", time_period: "all_time", audience: %w[visitors users staff] }
+        get visits_path, params: { user_search: "Hernandez", time_period: "all_time", audience: %w[visitors users staff] }, headers: visits_frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Rudy Hernandez")
@@ -416,10 +447,52 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
             params: {
               from: 3.days.ago.to_date.to_s,
               to: 1.day.ago.to_date.to_s
-            }
+            },
+            headers: visits_frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(visit_for_user.id.to_s)
+      end
+
+      it "filters visits by IP address (exact match)" do
+        create(:ahoy_visit, ip: "203.0.113.9", started_at: 1.day.ago)
+        create(:ahoy_visit, ip: "198.51.100.1", started_at: 1.day.ago)
+
+        get visits_path, params: { ip: "203.0.113.9", time_period: "all_time", audience: %w[visitors users staff] }, headers: visits_frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("203.0.113.9")
+        expect(response.body).not_to include("198.51.100.1")
+      end
+
+      it "filters visits by user agent (partial match)" do
+        match = create(:ahoy_visit, user_agent: "Mozilla/5.0 iPhone Safari", started_at: 1.day.ago)
+        miss  = create(:ahoy_visit, user_agent: "Mozilla/5.0 Windows Edge", started_at: 1.day.ago)
+
+        get visits_path, params: { user_agent: "iPhone", time_period: "all_time", audience: %w[visitors users staff] }, headers: visits_frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(match.user_agent)
+        expect(response.body).not_to include(miss.user_agent)
+      end
+
+      it "surfaces IP and user agent chips in the applied filters" do
+        get visits_path, params: { ip: "203.0.113.9", user_agent: "iPhone" }
+
+        expect(response.body).to include("IP: 203.0.113.9")
+        expect(response.body).to include("User agent: iPhone")
+      end
+
+      it "sorts visits by events count ascending" do
+        get visits_path, params: { sort: "events_count", direction: "asc", time_period: "all_time", audience: %w[visitors users staff] }, headers: visits_frame_headers
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "sorts visits by session duration" do
+        get visits_path, params: { sort: "duration", direction: "desc", time_period: "all_time", audience: %w[visitors users staff] }, headers: visits_frame_headers
+
+        expect(response).to have_http_status(:ok)
       end
     end
 

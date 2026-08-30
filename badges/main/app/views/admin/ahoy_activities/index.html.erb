@@ -51,6 +51,16 @@
 
             <div class="flex-1 min-w-0">
               <label class="<%= search_label_class %>">
+                Resource title
+              </label>
+              <%= text_field_tag :resource_name,
+                                 params[:resource_name],
+                                 placeholder: "e.g. a workshop name",
+                                 class: search_field_class %>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <label class="<%= search_label_class %>">
                 Details
               </label>
               <%= text_field_tag :props,
@@ -117,7 +127,7 @@
 
           <div class="flex items-center gap-3 mt-6 text-sm">
             <span class="text-gray-500">Quick:</span>
-            <% safe_params = params.slice(:event_name, :visit_id, :props, :person_id, :user_search, :from, :to).to_unsafe_h %>
+            <% safe_params = params.slice(:event_name, :visit_id, :props, :resource_name, :person_id, :user_search, :from, :to).to_unsafe_h %>
             <%= link_to "24h",
                         url_for(safe_params.merge(from: 1.day.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
