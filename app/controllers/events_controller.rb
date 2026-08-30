@@ -520,7 +520,6 @@ class EventsController < ApplicationController
   def create
     authorize!
     @event = Event.new(event_params)
-    @event.created_by ||= current_user
 
     success = false
 

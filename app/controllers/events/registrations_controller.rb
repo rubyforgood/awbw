@@ -169,9 +169,7 @@ module Events
       person = Person.create!(
         first_name: current_user.first_name,
         last_name: current_user.last_name,
-        email: current_user.email,
-        created_by: current_user,
-        updated_by: current_user
+        email: current_user.email
       )
       current_user.update!(person: person)
       person

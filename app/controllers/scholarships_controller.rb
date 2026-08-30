@@ -74,7 +74,6 @@ class ScholarshipsController < ApplicationController
     authorize! @scholarship
 
     @scholarship.assign_attributes(scholarship_params)
-    attribute_comment_authorship
 
     if @scholarship.save
       redirect_to scholarship_save_path, notice: "Scholarship updated."
@@ -291,17 +290,5 @@ class ScholarshipsController < ApplicationController
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
     )
-  end
-
-  # Stamp authorship on comments edited through the scholarship form: author + editor
-  # on new ones, editor on existing ones whose body changed.
-  def attribute_comment_authorship
-    @scholarship.comments.select(&:new_record?).each do |c|
-      c.created_by = current_user
-      c.updated_by = current_user
-    end
-    @scholarship.comments.select { |c| c.persisted? && c.body_changed? }.each do |c|
-      c.updated_by = current_user
-    end
   end
 end

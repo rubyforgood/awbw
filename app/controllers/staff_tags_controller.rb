@@ -33,8 +33,6 @@ class StaffTagsController < ApplicationController
 
   def create
     @staff_tag = StaffTag.new(staff_tag_params)
-    @staff_tag.created_by = current_user
-    @staff_tag.updated_by = current_user
     authorize! @staff_tag
 
     if @staff_tag.save
@@ -47,7 +45,6 @@ class StaffTagsController < ApplicationController
 
   def update
     authorize! @staff_tag
-    @staff_tag.updated_by = current_user
 
     if @staff_tag.update(staff_tag_params)
       redirect_to @staff_tag, notice: "Staff tag was successfully updated.", status: :see_other
