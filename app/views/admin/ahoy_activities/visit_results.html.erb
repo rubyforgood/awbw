@@ -28,6 +28,7 @@
         <th class="px-4 py-3 text-left"><%= sort_link.call("user", "User") %></th>
         <th class="px-4 py-3 text-left">IP</th>
         <th class="px-4 py-3 text-left"><%= sort_link.call("events_count", "Activities") %></th>
+        <th class="px-4 py-3 text-left"><%= sort_link.call("duration", "Duration") %></th>
         <th class="px-4 py-3 text-left">User Agent</th>
       </tr>
       </thead>
@@ -63,15 +64,26 @@
                           admin_activities_events_path(visit_id: visit.id) %>
             </td>
 
-            <td class="max-w-xs px-4 py-3 text-gray-500 truncate" title="<%= visit.user_agent %>">
+            <td class="px-4 py-3 whitespace-nowrap text-gray-500">
+              <% duration = visit.attributes["duration_minutes"]&.to_i %>
+              <% if duration.nil? %>
+                <span class="text-gray-400 italic">—</span>
+              <% elsif duration < 1 %>
+                &lt; 1 min
+              <% else %>
+                <%= duration %> min
+              <% end %>
+            </td>
+
+            <td class="max-w-xs truncate px-4 py-3 text-gray-500" title="<%= visit.user_agent %>">
               <%= visit.user_agent %>
             </td>
           </tr>
         <% end %>
       <% else %>
         <tr>
-          <td colspan="6" class="text-center py-16">
-            <h2 class="text-gray-600 text-lg">No visits found</h2>
+          <td colspan="7" class="py-16 text-center">
+            <h2 class="text-lg text-gray-600">No visits found</h2>
           </td>
         </tr>
       <% end %>

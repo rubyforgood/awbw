@@ -195,6 +195,34 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("create.bookmark")
       end
 
+      it "filters events by resource title from their properties" do
+        create(:ahoy_event, name: "view.workshop_match", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: { "resource_title" => "Feelings Collage" })
+        create(:ahoy_event, name: "view.workshop_miss", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: { "resource_title" => "Anger Masks" })
+
+        get index_path, params: { resource_name: "feelings", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("view.workshop_match")
+        expect(response.body).not_to include("view.workshop_miss")
+      end
+
+      it "surfaces a resource title chip in the applied filters" do
+        get index_path, params: { resource_name: "Feelings Collage" }
+
+        expect(response.body).to include("Resource title: Feelings Collage")
+      end
+
+      it "sorts events by activity name" do
+        get index_path, params: { sort: "name", direction: "asc", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body.index("auth.login")).to be < response.body.index("create.bookmark")
+      end
+
       it "filters events by free-text user search across person and user fields" do
         rudy = create(:user, :with_person, email: "rudy-login@example.com")
         rudy.person.update!(
@@ -457,6 +485,12 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
 
       it "sorts visits by events count ascending" do
         get visits_path, params: { sort: "events_count", direction: "asc", time_period: "all_time", audience: %w[visitors users staff] }, headers: visits_frame_headers
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "sorts visits by session duration" do
+        get visits_path, params: { sort: "duration", direction: "desc", time_period: "all_time", audience: %w[visitors users staff] }, headers: visits_frame_headers
 
         expect(response).to have_http_status(:ok)
       end
