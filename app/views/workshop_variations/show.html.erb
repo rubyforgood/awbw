@@ -16,7 +16,7 @@
     <div class="space-y-6 rounded-lg bg-white p-6 shadow-md">
       <div class="workshop">
         Workshop: <%= link_to("#{@workshop_variation.workshop.name} (#{@workshop_variation.workshop.windows_type&.short_name || 'Combined'})",
-                               workshop_path(@workshop_variation.workshop), class: "btn btn-secondary-outline") %>
+                               workshop_path(@workshop_variation.workshop), class: button_classes(:secondary_outline)) %>
       </div>
 
       <% if @workshop_variation.workshop_variation_idea.present? && allowed_to?(:edit?, @workshop_variation) %>
@@ -26,7 +26,7 @@
             <span class="text-sm font-medium <%= DomainTheme.text_class_for(:workshop_variations) %>">Promoted from:</span>
             <%= link_to @workshop_variation.workshop_variation_idea.name,
                         workshop_variation_idea_path(@workshop_variation.workshop_variation_idea),
-                        class: "btn btn-secondary-outline text-sm" %>
+                        class: button_classes(:secondary_outline) %>
           </div>
         </div>
       <% end %>

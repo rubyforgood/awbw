@@ -15,7 +15,7 @@
       </p>
     </div>
     <%= link_to onboarding_event_path(@event, format: :csv, status_filter: params[:status_filter].presence, keyword: params[:keyword].presence),
-          class: "btn btn-secondary-outline",
+          class: button_classes(:secondary_outline),
           data: { turbo: false } do %>
       <i class="fa-solid fa-file-csv"></i> Export CSV
     <% end %>

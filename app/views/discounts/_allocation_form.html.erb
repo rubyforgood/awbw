@@ -1,5 +1,5 @@
-<div class="bg-green-200 border-2 border-green-400 rounded-lg p-4 mb-4">
-  <h3 class="text-lg font-medium mb-4">New discount</h3>
+<div class="mb-4 rounded-lg border-2 border-green-400 bg-green-200 p-4">
+  <h3 class="mb-4 text-lg font-medium">New discount</h3>
   <%= form_with model: Discount.new, url: discounts_path do |f| %>
     <%= hidden_field_tag :"discount[allocatable_sgid]", params[:allocatable_sgid] %>
 
@@ -15,9 +15,9 @@
       <%= render "allocations/allocated_to", allocatable: @allocatable %>
     </div>
 
-    <div class="flex gap-2 mt-4">
-      <%= f.submit "Submit", class: "btn btn-primary" %>
-      <%= link_to "Cancel", allocations_path(allocatable_sgid: params[:allocatable_sgid]), class: "btn btn-secondary-outline" %>
+    <div class="mt-4 flex gap-2">
+      <%= f.submit "Submit", class: button_classes(:primary) %>
+      <%= link_to "Cancel", allocations_path(allocatable_sgid: params[:allocatable_sgid]), class: button_classes(:secondary_outline) %>
     </div>
   <% end %>
 </div>

@@ -36,8 +36,15 @@ module ButtonHelper
     utility_outline: "border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
   }.freeze
 
+  # `variant` and `size` each take `nil` to opt that layer out and let the call
+  # site supply its own: `variant: nil` drops the color (a custom/dynamic fill),
+  # `size: nil` drops the padding + text-size (call site sets its own via
+  # `extra:` — see BUTTON_SIZES for why they'd otherwise collide). The `if`
+  # guards are what make those nils skip the `fetch` instead of raising; base
+  # stays the single source of truth either way rather than being inlined.
   def button_classes(variant = :primary, size: :md, extra: nil)
-    tokens = [ BUTTON_BASE, BUTTON_VARIANTS.fetch(variant) ]
+    tokens = [ BUTTON_BASE ]
+    tokens << BUTTON_VARIANTS.fetch(variant) if variant
     tokens << BUTTON_SIZES.fetch(size) if size
     tokens << extra if extra.present?
     tokens.join(" ")

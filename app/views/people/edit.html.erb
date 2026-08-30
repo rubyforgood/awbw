@@ -26,7 +26,7 @@
       No user!
       <%= link_to "Create user",
                   new_user_path(person_id: @person.id),
-                  class: "btn btn-warning px-2 py-1" %>
+                  class: button_classes(:warning, size: nil, extra: "px-2 py-1") %>
     </div>
   <% end %>
   <% if @person.user %>

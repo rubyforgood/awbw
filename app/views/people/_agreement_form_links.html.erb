@@ -54,7 +54,7 @@
                 <%= link_to "Registration form", new_event_public_registration_path(on_demand_training), target: "_blank", rel: "noopener",
                             class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
                 <%= link_to "Send link", send_form_link_person_path(person, event_id: on_demand_training.id),
-                            class: "btn btn-secondary-outline whitespace-nowrap",
+                            class: button_classes(:secondary_outline, extra: "whitespace-nowrap"),
                             data: { turbo_method: :post,
                                     turbo_confirm: "Email the #{on_demand_training.decorate.title_with_month_year} registration link to #{person.preferred_email.presence || "this person"}?" } %>
               </li>
@@ -72,7 +72,7 @@
                 <%= link_to "Registration form", new_event_public_registration_path(event), target: "_blank", rel: "noopener",
                             class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
                 <%= link_to "Send link", send_form_link_person_path(person, event_id: event.id),
-                            class: "btn btn-secondary-outline whitespace-nowrap",
+                            class: button_classes(:secondary_outline, extra: "whitespace-nowrap"),
                             data: { turbo_method: :post,
                                     turbo_confirm: "Email the #{event.decorate.title_with_month_year} registration link to #{person.preferred_email.presence || "this person"}?" } %>
               </li>
@@ -95,7 +95,7 @@
             /f/<%= form.slug %>
           <% end %>
           <%= link_to "Send link", send_form_link_person_path(person, form_id: form.id),
-                      class: "btn btn-secondary-outline whitespace-nowrap",
+                      class: button_classes(:secondary_outline, extra: "whitespace-nowrap"),
                       data: { turbo_method: :post,
                               turbo_confirm: "Email the #{form.display_name} link to #{person.preferred_email.presence || "this person"}?" } %>
         </li>

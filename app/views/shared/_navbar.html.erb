@@ -5,11 +5,7 @@
         <!-- Mobile menu button -->
         <button
           type="button"
-          class="
-            relative inline-flex items-center justify-center rounded-md p-2 text-gray-400
-            hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1
-            focus:outline-indigo-500
-          "
+          class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500"
           data-action="dropdown#toggle"
           data-dropdown-payload-param='[{"mobile-menu":"hidden block"}]'
         >
@@ -54,7 +50,7 @@
           <% end %>
         </div>
 
-        <div class="hidden grow md:ml-6 md:block content-center">
+        <div class="hidden grow content-center md:ml-6 md:block">
           <%= render "shared/navbar_menu" %>
         </div>
       </div>
@@ -62,16 +58,15 @@
       <% unless user_signed_in? %>
         <%= link_to "Log In", 
             new_user_session_path, 
-            class: "justify-self-end btn btn-primary-outline bg-white hover:bg-primary hover:border-white" %>
+            class: button_classes(:primary_outline, extra: "justify-self-end bg-white hover:bg-primary hover:border-white") %>
       <% end %>
 
       <div class="absolute inset-y-0 right-0 flex items-center pr-2 md:static md:inset-auto md:ml-6 md:pr-0">
         <% if user_signed_in? %>
-          <div class="relative md:hidden mr-2" data-controller="dropdown">
+          <div class="relative mr-2 md:hidden" data-controller="dropdown">
             <button
               type="button"
-              class="flex items-center gap-1 rounded-md px-3 py-1 text-sm font-medium cursor-pointer
-                     text-gray-300 hover:bg-white/5 hover:text-white"
+              class="flex cursor-pointer items-center gap-1 rounded-md px-3 py-1 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white"
               data-action="dropdown#toggle"
               data-dropdown-payload-param='[{"mobile-create-menu":"hidden"}]'>
               <span class="text-base font-bold text-blue-400">+</span>
@@ -80,7 +75,7 @@
 
             <div
               id="mobile-create-menu"
-              class="hidden absolute right-0 mt-2 w-60 rounded-md bg-white py-1 shadow-lg outline outline-black/5"
+              class="absolute right-0 mt-2 hidden w-60 rounded-md bg-white py-1 shadow-lg outline outline-black/5"
               data-dropdown-target="content">
 
               <%= link_to new_workshop_variation_idea_path,

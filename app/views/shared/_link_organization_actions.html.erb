@@ -28,7 +28,7 @@
                       method: :post,
                       params: { organization_name: creatable_name, return_to: return_to },
                       form: { class: "shrink-0", data: { turbo_frame: "_top" } },
-                      class: "btn btn-primary shrink-0 w-48 justify-center focus:ring-primary cursor-pointer" do %>
+                      class: button_classes(:primary, extra: "shrink-0 w-48 justify-center focus:ring-primary cursor-pointer") do %>
           Create and link
         <% end %>
       </div>
@@ -49,7 +49,7 @@
           <div class="min-w-0">
             <p class="font-medium text-gray-800"><%= org.name %><% if org.city_state.present? %> <span class="text-xs text-gray-500">· <%= org.city_state %></span><% end %></p>
           </div>
-          <%= submit_tag "Link organization", class: "btn btn-primary cursor-pointer" %>
+          <%= submit_tag "Link organization", class: button_classes(:primary, extra: "cursor-pointer") %>
         <% end %>
       <% end %>
     </div>
@@ -69,6 +69,6 @@
                      prompt: "Type to search organizations…" %>
     </div>
     <%= submit_tag "Link organization",
-                   class: "btn #{create_is_primary ? "btn-primary-outline" : "btn-primary"} shrink-0 w-48 justify-center focus:ring-primary cursor-pointer" %>
+                   class: button_classes(create_is_primary ? :primary_outline : :primary, extra: "shrink-0 w-48 justify-center focus:ring-primary cursor-pointer") %>
   <% end %>
 </div>

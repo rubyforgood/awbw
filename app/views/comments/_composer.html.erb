@@ -36,7 +36,7 @@
     </div>
 
     <div class="mt-3 flex items-center gap-x-3">
-      <%= f.submit "Add comment", class: "btn btn-secondary-outline" %>
+      <%= f.submit "Add comment", class: button_classes(:secondary_outline) %>
       <label class="inline-flex items-center cursor-pointer select-none" title="Flag this note for follow-up">
         <%= f.check_box :flagged, class: "peer sr-only" %>
         <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>

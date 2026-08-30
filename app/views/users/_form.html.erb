@@ -135,11 +135,11 @@
 
   <div class="flex justify-center gap-3 pt-2">
     <% if allowed_to?(:destroy?, f.object) && f.object.deletable? %>
-      <%= link_to "Delete", @user, class: "btn btn-danger-outline",
+      <%= link_to "Delete", @user, class: button_classes(:danger_outline),
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
-    <%= link_to "Cancel", users_path, class: "btn btn-secondary-outline",
+    <%= link_to "Cancel", users_path, class: button_classes(:secondary_outline),
                 data: { action: "click->dirty-form#confirmCancel" } %>
-    <%= f.button :submit, class: "btn btn-primary" %>
+    <%= f.button :submit, class: button_classes(:primary) %>
   </div>
 <% end %>

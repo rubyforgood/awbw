@@ -27,7 +27,7 @@
       <%# Carry the index's filters so the form prefills from them (person, topic)
           and the eyebrow/Cancel/post-save redirect land back on this filtered
           list; a person filter reads as person context and returns to their page. %>
-      <%= link_to new_topic_subscription_path(topic_subscription_index_filters.merge(return_to: params[:person_id].present? ? "person" : "index")), class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+      <%= link_to new_topic_subscription_path(topic_subscription_index_filters.merge(return_to: params[:person_id].present? ? "person" : "index")), class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
         <i class="fa-solid fa-plus text-xs"></i>
         New subscription
       <% end %>

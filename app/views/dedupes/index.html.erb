@@ -44,8 +44,8 @@
       </div>
       <div class="flex justify-end gap-3 pt-2">
         <%= link_to "Clear", url_for(action: :dedupe_index),
-                    class: "btn btn-secondary-outline" %>
-        <%= f.submit "Preview merge", class: "btn btn-primary" %>
+                    class: button_classes(:secondary_outline) %>
+        <%= f.submit "Preview merge", class: button_classes(:primary) %>
       </div>
     <% end %>
 

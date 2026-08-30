@@ -36,7 +36,7 @@
 
           <% if check.any? && check.repairable? %>
             <%= button_to check.repair_label, admin_data_health_repair_path(check: check.key),
-                  method: :post, class: "btn btn-danger-outline shrink-0",
+                  method: :post, class: button_classes(:danger_outline, extra: "shrink-0"),
                   form: { data: { turbo_confirm: "#{check.repair_label} for #{check.count} #{'record'.pluralize(check.count)}? This can't be undone." } } %>
           <% elsif check.any? %>
             <span class="shrink-0 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">

@@ -93,7 +93,7 @@
                     ends those automatically, so the manual button has to match. %>
                 <% if scenario == "new_job" && !affiliation.inactive_on? && !matches_submitted %>
                   <%= button_to "End", end_affiliation_path(affiliation, form_submission_id: submission.id, end_date: end_on.iso8601),
-                                class: "btn btn-secondary-outline whitespace-nowrap",
+                                class: button_classes(:secondary_outline, extra: "whitespace-nowrap"),
                                 form: { data: { turbo_confirm: "End #{person.name}'s affiliation with #{affiliation.organization.name} as of #{end_on.to_fs(:long)} (the day before this agreement)?" } } %>
                 <% elsif submission.scenario_ended_affiliation_ids.include?(affiliation.id) %>
                   <%= link_to "Edit", edit_affiliation_path(affiliation), class: "text-sm text-blue-600 hover:underline" %>
@@ -117,7 +117,7 @@
                     return_params: { return_to: "form_submission", form_submission_id: submission.id } %>
       <% else %>
         <span class="text-sm text-gray-500">No account yet.</span>
-        <%= link_to "Create user", new_user_path(person_id: person.id), class: "btn btn-secondary-outline whitespace-nowrap" %>
+        <%= link_to "Create user", new_user_path(person_id: person.id), class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
       <% end %>
     </div>
   </div>

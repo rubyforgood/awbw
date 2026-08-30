@@ -39,19 +39,19 @@
 
       <div class="mt-4 flex flex-wrap gap-2">
         <% if @feature.action_path.present? %>
-          <%= link_to @feature.resolved_action_url, class: "btn btn-primary" do %>
+          <%= link_to @feature.resolved_action_url, class: button_classes(:primary) do %>
             <i class="fa-solid fa-arrow-up-right-from-square"></i> Check out this feature
           <% end %>
         <% end %>
         <% if @feature.external_url.present? %>
           <%= link_to safe_url(@feature.external_url), target: "_blank", rel: "noopener noreferrer",
-                      class: "btn btn-secondary-outline" do %>
+                      class: button_classes(:secondary_outline) do %>
             <i class="fa-solid fa-book"></i> Full guide
           <% end %>
         <% end %>
         <% if @feature.pr_url.present? && allowed_to?(:create?, Feature) %>
           <%= link_to @feature.pr_url, target: "_blank", rel: "noopener noreferrer",
-                      class: "admin-only bg-blue-100 btn btn-secondary-outline" do %>
+                      class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") do %>
             <i class="fa-solid fa-code-pull-request"></i> View the pull request
           <% end %>
         <% end %>
@@ -78,9 +78,9 @@
 
       <% if allowed_to?(:update?, @feature) %>
         <div class="mt-8 flex flex-wrap gap-2 border-t border-gray-200 pt-4">
-          <%= link_to "Edit", edit_feature_path(@feature), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+          <%= link_to "Edit", edit_feature_path(@feature), class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
           <%= button_to "Delete", feature_path(@feature), method: :delete,
-                        class: "admin-only bg-blue-100 btn btn-danger-outline",
+                        class: button_classes(:danger_outline, extra: "admin-only bg-blue-100"),
                         form: { data: { turbo_confirm: "Delete this feature? This can't be undone." } } %>
         </div>
       <% end %>

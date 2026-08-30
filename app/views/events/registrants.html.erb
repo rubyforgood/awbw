@@ -26,7 +26,7 @@
       <% end %>
       <%= render "bulk_actions_menu" %>
       <% if allowed_to?(:new?, EventRegistration) %>
-        <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "registrants"), class: "admin-only bg-blue-100 btn btn-primary-outline" %>
+        <%= link_to "Add registrant", new_event_registration_path(event_id: @event.id, return_to: "registrants"), class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") %>
       <% end %>
     </div>
 

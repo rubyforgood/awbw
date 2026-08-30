@@ -21,7 +21,7 @@
     <%= link_to "Register",
                 event_registrant_registration_path(event_id: event),
                 data: { turbo_method: :post },
-                class: "btn btn-primary-outline text-sm" %>
+                class: button_classes(:primary_outline) %>
   <% else %>
     <span class="text-sm text-gray-500 italic">Registration closed</span>
   <% end %>

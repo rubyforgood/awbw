@@ -25,14 +25,14 @@
   "#{ "Full-text: " + params[:query] if params[:query].present? }",
 ].flatten.reject(&:blank?).sort %>
 
-<div id="filters_applied" class="flex justify-between items-center">
-  <div class="flex gap-1 items-center">
-    <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">
+<div id="filters_applied" class="flex items-center justify-between">
+  <div class="flex items-center gap-1">
+    <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
       Filters applied
     </h3>
     <% if filters_applied.any? %>
       <%= filters_applied.to_sentence %>
-      <%= link_to "Clear filters", workshops_path, class: "btn btn-primary", data: { action: "collection#clearAndSubmit" } %>
+      <%= link_to "Clear filters", workshops_path, class: button_classes(:primary), data: { action: "collection#clearAndSubmit" } %>
     <% else %>
       None
     <% end %>

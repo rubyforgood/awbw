@@ -5,12 +5,12 @@
     <% if @event.videoconference_url.present? %>
       <% if @event_registration.videoconference_details_visible? %>
         <div>
-          <p class="text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">Join link</p>
+          <p class="mb-2 text-xs font-medium tracking-wide text-gray-400 uppercase">Join link</p>
           <%= link_to @event.videoconference_url, target: "_blank", rel: "noopener",
-                      class: "btn btn-primary font-semibold" do %>
+                      class: button_classes(:primary, extra: "font-semibold") do %>
             <i class="fa-solid fa-video"></i> Join on <%= @event.videoconference_domain %>
           <% end %>
-          <p class="mt-2 text-xs text-gray-500 break-all"><%= @event.videoconference_url %></p>
+          <p class="mt-2 text-xs break-all text-gray-500"><%= @event.videoconference_url %></p>
           <%= render "events/videoconference_connection", event: @event %>
         </div>
       <% else %>
@@ -18,7 +18,7 @@
         <% paid = @event_registration.payment_access_granted? %>
         <% reveal = @event.videoconference_details_available_from %>
         <% date_met = reveal.blank? || Time.current >= reveal %>
-        <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600 space-y-2">
+        <div class="space-y-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
           <p class="font-medium text-gray-700">The videoconference link unlocks once both of these are met:</p>
           <ul class="space-y-1">
             <li class="flex items-center gap-2">
@@ -39,11 +39,11 @@
     <% end %>
 
     <div class="border-t border-gray-100 pt-5">
-      <div class="flex items-center gap-1 mb-2">
-        <p class="text-xs font-medium uppercase tracking-wide text-gray-400">Add to your calendar</p>
+      <div class="mb-2 flex items-center gap-1">
+        <p class="text-xs font-medium tracking-wide text-gray-400 uppercase">Add to your calendar</p>
         <%= render "events/videoconference_calendar_notice", event: @event, registration: @event_registration %>
       </div>
-      <div class="flex flex-wrap gap-1 items-center text-sm text-blue-600 font-medium"><%= @event.calendar_links(show_videoconference_details: @event_registration.videoconference_details_visible?, re_add_url: registration_videoconference_url(@event_registration.slug), payment_pending: !@event_registration.payment_access_granted?) %></div>
+      <div class="flex flex-wrap items-center gap-1 text-sm font-medium text-blue-600"><%= @event.calendar_links(show_videoconference_details: @event_registration.videoconference_details_visible?, re_add_url: registration_videoconference_url(@event_registration.slug), payment_pending: !@event_registration.payment_access_granted?) %></div>
     </div>
   </div>
 <% end %>

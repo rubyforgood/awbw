@@ -221,7 +221,7 @@
     <%# turbo: true re-enables Turbo for this link since the surrounding form sets
         turbo: false — turbo_method: :delete needs Turbo to issue the DELETE. %>
     <%= link_to scholarship_path(f.object, return_to: params[:return_to].presence, participant: params[:participant].presence),
-                class: "btn btn-danger-outline",
+                class: button_classes(:danger_outline),
                 data: { turbo: true, turbo_method: :delete, turbo_confirm: "Remove this scholarship?" } do %>
       <i class="fa-solid fa-trash-can"></i>
       Delete
@@ -229,7 +229,7 @@
   <% end %>
 
   <div class="ml-auto flex items-center gap-3">
-    <%= link_to "Cancel", cancel_path, class: "btn btn-secondary-outline" %>
-    <%= f.submit f.object.persisted? ? "Save changes" : "Submit", class: "btn btn-primary" %>
+    <%= link_to "Cancel", cancel_path, class: button_classes(:secondary_outline) %>
+    <%= f.submit f.object.persisted? ? "Save changes" : "Submit", class: button_classes(:primary) %>
   </div>
 </div>

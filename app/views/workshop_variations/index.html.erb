@@ -2,7 +2,7 @@
 <% actions = capture do %>
   <%= link_to "New #{WorkshopVariation.model_name.human.downcase}",
               new_workshop_variation_path,
-              class: "btn btn-primary-outline" %>
+              class: button_classes(:primary_outline) %>
 <% end %>
 <%= render layout: "shared/index_page",
            locals: { domain: :workshop_variations, eyebrow: "Curriculum",

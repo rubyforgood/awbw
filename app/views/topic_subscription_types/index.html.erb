@@ -10,7 +10,7 @@
       <h1 class="font-display text-2xl font-semibold text-primary">Subscription topics</h1>
       <p class="text-gray-600 mt-1">The topics people can subscribe to. Archive a topic to retire it without losing existing subscriptions.</p>
     </div>
-    <%= link_to new_topic_subscription_type_path, class: "btn btn-primary inline-flex items-center gap-1.5" do %>
+    <%= link_to new_topic_subscription_type_path, class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
       <i class="fa-solid fa-plus text-xs"></i>
       New topic
     <% end %>

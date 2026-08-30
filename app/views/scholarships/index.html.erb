@@ -17,7 +17,7 @@
       </div>
 
       <div class="shrink-0 text-end text-right">
-        <%= link_to grants_path, class: "btn btn-primary-outline" do %>
+        <%= link_to grants_path, class: button_classes(:primary_outline) do %>
           <i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>
           <%= Grant.model_name.human.pluralize %>
         <% end %>

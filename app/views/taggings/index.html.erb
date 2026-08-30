@@ -27,7 +27,7 @@
             <% if filtered_sectors.any? && allowed_to?(:edit?, filtered_sectors.first) %>
               <% filtered_sectors.each do |sector| %>
                 <%= link_to edit_sector_path(sector),
-                            class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" do %>
+                            class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100 whitespace-nowrap") do %>
                   Edit sector<%= " (#{sector.name})" if filtered_sectors.size > 1 %>
                 <% end %>
               <% end %>
@@ -43,7 +43,7 @@
             <% if filtered_categories.any? && allowed_to?(:edit?, filtered_categories.first) %>
               <% filtered_categories.each do |category| %>
                 <%= link_to edit_category_path(category),
-                            class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" do %>
+                            class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100 whitespace-nowrap") do %>
                   Edit category<%= " (#{category.name})" if filtered_categories.size > 1 %>
                 <% end %>
               <% end %>
@@ -130,7 +130,7 @@
         <div class="flex-shrink-0">
           <%= link_to "Manage staff tags",
                       staff_tags_path,
-                      class: "admin-only bg-blue-100 btn btn-secondary-outline whitespace-nowrap" %>
+                      class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100 whitespace-nowrap") %>
         </div>
       </div>
 

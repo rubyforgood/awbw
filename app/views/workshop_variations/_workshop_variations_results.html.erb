@@ -79,7 +79,7 @@
               <%= link_to "Edit",
                           edit_workshop_variation_path(workshop_variation),
                           data: { turbo_frame: "_top" },
-                          class: "btn btn-secondary-outline" %>
+                          class: button_classes(:secondary_outline) %>
             </td>
           </tr>
         <% end %>
@@ -92,7 +92,7 @@
                 <%= link_to "New #{WorkshopVariation.model_name.human.downcase}",
                             new_workshop_variation_path,
                             data: { turbo_frame: "_top" },
-                            class: "btn btn-primary" %>
+                            class: button_classes(:primary) %>
               </div>
             <% end %>
           </td>

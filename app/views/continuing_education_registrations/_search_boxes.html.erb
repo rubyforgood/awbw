@@ -6,7 +6,7 @@
 <% ce_events = Event.where(id: ce_event_ids).order(start_date: :desc) %>
 <% scoped_license = ProfessionalLicense.find_by(id: params[:professional_license_id]) %>
 
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+<div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
   <%= render "shared/filtered_to", record: scoped_license,
         clear_path: continuing_education_registrations_path(request.query_parameters.except("professional_license_id")) %>
   <%= form_tag continuing_education_registrations_path, method: :get, class: "space-y-4",
@@ -15,7 +15,7 @@
       turbo_frame: "continuing_education_registrations_results"
     }, autocomplete: "off" do %>
     <%= hidden_field_tag "professional_license_id", params[:professional_license_id] if params[:professional_license_id].present? %>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div>
         <label for="event_id" class="<%= label_class %>">Event</label>
         <%= select_tag "event_id",
@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div>
         <label for="issued_from" class="<%= label_class %>">Issued from</label>
         <%= date_field_tag "issued_from", params[:issued_from], class: date_filter_class(field_class, params[:issued_from]) %>
@@ -57,8 +57,8 @@
       </div>
     </div>
 
-    <div class="md:col-span-3 flex gap-2 justify-end">
-      <%= submit_tag "Search", class: "btn btn-primary" %>
+    <div class="flex justify-end gap-2 md:col-span-3">
+      <%= submit_tag "Search", class: button_classes(:primary) %>
       <%= render "shared/search_clear", url: continuing_education_registrations_path %>
     </div>
   <% end %>

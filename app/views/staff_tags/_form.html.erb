@@ -27,11 +27,11 @@
 
     <div class="action-buttons mt-8 flex flex-wrap justify-center gap-3">
       <% if allowed_to?(:destroy?, f.object) %>
-        <%= link_to "Delete", @staff_tag, class: "btn btn-danger-outline",
+        <%= link_to "Delete", @staff_tag, class: button_classes(:danger_outline),
                     data: { turbo_method: :delete, turbo_confirm: "Delete this staff tag? Unpublish it instead if it's still in use." } %>
       <% end %>
-      <%= link_to "Cancel", staff_tags_path, class: "btn btn-secondary-outline" %>
-      <%= f.button :submit, class: "btn btn-primary" %>
+      <%= link_to "Cancel", staff_tags_path, class: button_classes(:secondary_outline) %>
+      <%= f.button :submit, class: button_classes(:primary) %>
     </div>
   </div>
 <% end %>

@@ -24,13 +24,13 @@
 
       <div class="flex shrink-0 items-center gap-2 text-end text-right">
         <% if allowed_to?(:index?, Scholarship) %>
-          <%= link_to scholarships_path, class: "btn btn-primary-outline" do %>
+          <%= link_to scholarships_path, class: button_classes(:primary_outline) do %>
             <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
             <%= Scholarship.model_name.human.pluralize %>
           <% end %>
         <% end %>
         <% if allowed_to?(:new?, Grant) %>
-          <%= link_to new_grant_path, class: "admin-only bg-blue-100 btn btn-primary-outline" do %>
+          <%= link_to new_grant_path, class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") do %>
             <i class="fa-solid fa-plus" aria-hidden="true"></i>
             New <%= Grant.model_name.human.downcase %>
           <% end %>

@@ -14,7 +14,7 @@
       <h1 class="text-primary mb-4 font-display text-2xl font-semibold">Edit workshop variation idea: <%= @workshop_variation_idea.name %></h1>
       <% if @workshop_variation_idea.workshop.present? %>
         <p class="mb-4">Workshop: <%= link_to("#{@workshop_variation_idea.workshop.title} (#{@workshop_variation_idea.workshop.windows_type&.short_name || 'Combined'})",
-                                            workshop_path(@workshop_variation_idea.workshop), class: "btn btn-secondary-outline") %></p>
+                                            workshop_path(@workshop_variation_idea.workshop), class: button_classes(:secondary_outline)) %></p>
       <% end %>
 
       <% visible_variations = allowed_to?(:manage?, WorkshopVariation) ? @workshop_variation_idea.workshop_variations : @workshop_variation_idea.workshop_variations.where(published: true) %>
@@ -37,7 +37,7 @@
             <span class="text-sm font-medium <%= DomainTheme.text_class_for(:workshop_variation_ideas) %>">This idea has not been promoted yet.</span>
             <%= link_to "Promote to Workshop Variation",
                         new_workshop_variation_path(workshop_variation_idea_id: @workshop_variation_idea.id),
-                        class: "btn btn-secondary-outline text-sm" %>
+                        class: button_classes(:secondary_outline) %>
           </div>
         </div>
       <% end %>

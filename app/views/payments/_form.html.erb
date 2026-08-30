@@ -1,5 +1,5 @@
-<div id="payment-form" class="max-w-2xl mx-auto">
-  <h1 class="text-2xl font-bold mb-6">New <%= @payment.type.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></h1>
+<div id="payment-form" class="mx-auto max-w-2xl">
+  <h1 class="mb-6 text-2xl font-bold">New <%= @payment.type.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></h1>
   <%= simple_form_for @payment, as: :payment, url: payments_path do |f| %>
     <%= f.input :type, as: :hidden %>
 
@@ -40,6 +40,6 @@
       <%= f.input :check_number, input_html: { class: "bg-white" } %>
       <%= f.input :memo, label: "Memo", input_html: { class: "bg-white", placeholder: "Memo line on the check" } %>
     <% end %>
-    <div class="mt-6"><%= f.button :submit, "Submit", class: "btn btn-primary" %><%= link_to "Cancel", payments_path, class: "btn btn-secondary-outline ml-2" %></div>
+    <div class="mt-6"><%= f.button :submit, "Submit", class: button_classes(:primary) %><%= link_to "Cancel", payments_path, class: button_classes(:secondary_outline, extra: "ml-2") %></div>
   <% end %>
 </div>

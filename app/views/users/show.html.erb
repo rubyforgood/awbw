@@ -18,7 +18,7 @@
             Not associated with a person
             <%= link_to "Create person",
                         new_person_path(user_id: @user.id),
-                        class: "btn btn-warning px-2 py-1" %>
+                        class: button_classes(:warning, size: nil, extra: "px-2 py-1") %>
           </div>
         <% end %>
         <% unless @user.confirmed_at.present? %>
@@ -26,7 +26,7 @@
                         send_welcome_instructions_user_path(@user),
                         method: :post,
                         form_class: "inline",
-                        class: "btn btn-secondary-outline" %>
+                        class: button_classes(:secondary_outline) %>
         <% end %>
         <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% if allowed_to?(:index?, User) %>

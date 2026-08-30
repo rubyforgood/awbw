@@ -108,8 +108,8 @@
       <%= f.hidden_field :signed_id, value: @blob.signed_id %>
       <%= f.hidden_field :event_id, value: @event.id %>
       <div class="flex items-center gap-2">
-        <%= f.submit "Import #{@result.registrations_total} registrations", class: "btn btn-primary-outline bg-blue-100" %>
-        <%= link_to "Cancel", new_event_registration_import_path(event_id: @event.id), class: "btn btn-secondary-outline" %>
+        <%= f.submit "Import #{@result.registrations_total} registrations", class: button_classes(:primary_outline, extra: "bg-blue-100") %>
+        <%= link_to "Cancel", new_event_registration_import_path(event_id: @event.id), class: button_classes(:secondary_outline) %>
       </div>
     <% end %>
   </div>

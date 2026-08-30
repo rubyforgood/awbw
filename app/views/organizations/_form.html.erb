@@ -49,7 +49,7 @@
                                               .reject { |_, id| (@current_sector_ids || []).include?(id) }
                                           }
                                         },
-                                      class: "btn btn-secondary-outline" %>
+                                      class: button_classes(:secondary_outline) %>
           </div>
         </div>
 
@@ -248,7 +248,7 @@
                                       collection: Sector.published.where.not(name: f.object.sector_list)
                                     }
                                   },
-                                  class: "btn btn-secondary-outline" %>
+                                  class: button_classes(:secondary_outline) %>
     </div>
   </div>
 
@@ -341,10 +341,10 @@
       </div>
       <% if allowed_to?(:manage?, Organization) %>
         <%= render "affiliations/editor", f: f, label: "Person", scope: "organization",
-              add_class: "btn btn-secondary-outline" %>
+              add_class: button_classes(:secondary_outline) %>
       <% else %>
         <% f.object.user&.person&.affiliations&.each do |affiliation| %>
-          <div class="ps-6 mb-2">
+          <div class="mb-2 ps-6">
             <li><%= affiliation.title %> - <%= person_profile_button(affiliation.user.person, subtitle: (affiliation.user.person.preferred_email if affiliation.user.person.profile_show_email? || allowed_to?(:manage?, Person))) if affiliation.persisted? && affiliation.user.person %></li>
           </div>
         <% end %>
@@ -412,11 +412,11 @@
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
-      <%= link_to "Delete", @organization, class: "btn btn-danger-outline",
+      <%= link_to "Delete", @organization, class: button_classes(:danger_outline),
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
 
-    <%= link_to "Cancel", organizations_path, class: "btn btn-secondary-outline" %>
-    <%= f.button :submit, class: "btn btn-primary" %>
+    <%= link_to "Cancel", organizations_path, class: button_classes(:secondary_outline) %>
+    <%= f.button :submit, class: button_classes(:primary) %>
   </div>
 <% end %>
