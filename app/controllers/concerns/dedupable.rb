@@ -135,6 +135,8 @@ module Dedupable
   #   remote_select_options: Hash of { belongs_to column_name => search model } rendering an
   #                       ajax-search TomSelect picker on the keeper instead of a fixed dropdown —
   #                       for a target set too large to enumerate (e.g. author_id => "person") (optional)
+  #   field_notes:        Hash of { column_name => hint } rendered under the keeper's field, to guide
+  #                       an admin on what to enter (e.g. full_name is a legacy free-text author) (optional)
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
@@ -174,6 +176,7 @@ module Dedupable
       union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},
+      field_notes: config[:field_notes] || {},
       record_extras: config[:record_extras]
     }
   end

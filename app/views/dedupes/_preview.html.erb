@@ -28,6 +28,7 @@
   bt_associations = model_class.reflect_on_all_associations(:belongs_to).index_by { |a| a.foreign_key.to_s }
   belongs_to_options ||= {}
   remote_select_options ||= {}
+  field_notes ||= {}
 %>
 
 <div class="mb-6 grid grid-cols-2 gap-x-6"
@@ -114,6 +115,9 @@
           <%= keep_f.text_field col.name.to_sym, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 #{"font-semibold" if col.name == "name"} focus:border-blue-500 focus:ring-blue-200" %>
         <% else %>
           <span class="text-gray-500"><%= record_to_keep.public_send(col_assoc.name)&.try(:name) || "(none)" %></span>
+        <% end %>
+        <% if field_notes[col.name].present? %>
+          <p class="mt-1 text-xs text-gray-500"><%= field_notes[col.name] %></p>
         <% end %>
       </div>
     <% end %>

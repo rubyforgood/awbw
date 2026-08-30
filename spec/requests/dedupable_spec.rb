@@ -567,6 +567,16 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include('data-remote-select-model-value="person"')
       end
 
+      it "notes that Full name is the legacy author and Author should be a person" do
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Legacy free-text author name")
+        expect(response.body).to include("Credited author")
+      end
+
       it "still renders the author picker when neither workshop has a person author" do
         keep.update!(author: nil)
         delete_rec.update!(author: nil)
