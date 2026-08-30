@@ -43,6 +43,23 @@
       </div>
     <% end %>
 
+    <!-- Model-specific heads-up notes (non-blocking): e.g. the kept person will have two logins -->
+    <% if @merge_notes.present? %>
+      <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <div class="flex items-start gap-3">
+          <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
+          <div class="text-sm text-blue-800">
+            <p class="font-semibold text-blue-900">Before you merge</p>
+            <ul class="mt-1 list-inside list-disc">
+              <% @merge_notes.each do |note| %>
+                <li><%= note %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
     <%= form_with url: url_for(action: :dedupe_perform), method: :post,
                   data: { turbo: false,
                           turbo_confirm: "Merge these #{@dedupe[:model_label_plural].downcase}? This can't be undone." } do |f| %>
@@ -103,7 +120,7 @@
       <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
         <% if blocked %>
           <span class="text-sm text-red-700">
-            <i class="fa-solid fa-ban"></i> Merge disabled — unhandled associations (see above).
+            <i class="fa-solid fa-ban"></i> Merge disabled (see above).
           </span>
         <% end %>
         <%= link_to "Cancel", url_for(action: :dedupe_index), class: "btn btn-secondary-outline" %>
