@@ -230,7 +230,7 @@ module EventRegistrationServices
       OrganizationServices::SyncProfile.call(
         organization: organization,
         website: field_value("organization_website"),
-        agency_type: field_value("organization_type")
+        organization_type: field_value("organization_type")
       )
     end
 

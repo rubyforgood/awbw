@@ -46,14 +46,14 @@ class OrganizationDecorator < ApplicationDecorator
                   class: "inline-flex shrink-0 items-center justify-center w-5 h-5 rounded-full border text-xs font-semibold #{self.class.program_status_classes(status)}")
   end
 
-  # The stored agency_type, folding any value no longer offered (e.g. the legacy
-  # "Other (please specify below)") into "Other" so the select can't silently
-  # reclassify the org — see AGENCY_TYPES. Blank stays blank.
-  def agency_type_option
-    return object.agency_type if object.agency_type.blank?
-    return object.agency_type if Organization::AGENCY_TYPES.include?(object.agency_type)
+  # The stored organization_type, folding any value no longer offered (e.g. the
+  # legacy "Other (please specify below)") into "Other" so the select can't
+  # silently reclassify the org — see ORGANIZATION_TYPES. Blank stays blank.
+  def organization_type_option
+    return object.organization_type if object.organization_type.blank?
+    return object.organization_type if Organization::ORGANIZATION_TYPES.include?(object.organization_type)
 
-    Organization::AGENCY_TYPE_OTHER
+    Organization::ORGANIZATION_TYPE_OTHER
   end
 
   # Star marking a high-profile organization, shown next to the org name on list

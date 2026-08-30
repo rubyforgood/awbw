@@ -23,7 +23,7 @@ else
   phone = maria.contact_methods.where(kind: :phone).order(:id).first ||
     maria.contact_methods.create!(kind: :phone, value: "(310) 555-0199", contact_type: "personal", primary: true)
   phone.update!(value: "(310) 555-0199")
-  org&.update!(website_url: "newsite.org", agency_type: "Hospital")
+  org&.update!(website_url: "newsite.org", organization_type: "Hospital")
 
   submission = FormSubmission.find_or_create_by!(person: maria, form: registration_form, event: event, role: "registration") do |record|
     record.created_at = 2.days.ago
@@ -58,7 +58,7 @@ else
     if org
       edits << { name: "update.organization", type: "Organization", id: org.id, title: org.name,
                  changes: { "website_url" => { "before" => "oldsite.org", "after" => "newsite.org" },
-                            "agency_type" => { "before" => "Nonprofit", "after" => "Hospital" } } }
+                            "organization_type" => { "before" => "Nonprofit", "after" => "Hospital" } } }
     end
 
     edits.each do |edit|

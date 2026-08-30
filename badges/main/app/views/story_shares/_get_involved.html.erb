@@ -1,14 +1,15 @@
-<section class="bg-white py-16 -mx-2 sm:-mx-6 lg:-mx-8">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-    <h2 class="font-telefon text-4xl text-black mb-8">Get involved!</h2>
+<section class="bg-brand-cream -mx-2 py-16 sm:-mx-6 lg:-mx-8">
+  <div class="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+    <p class="text-brand-orange-600 mb-2 text-sm font-semibold tracking-widest uppercase">Get involved</p>
+    <h2 class="text-brand-navy-900 mb-8 font-display text-4xl tracking-tight">There's a place for you at AWBW</h2>
 
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+    <div class="flex flex-col justify-center gap-4 sm:flex-row">
       <%= awbw_menu_link "Attend our training", "/programs/facilitator-trainings/",
-                         html_class: "inline-flex items-center justify-center px-8 py-4 rounded-md font-telefon text-xl text-white bg-purple-900 hover:bg-purple-100 hover:text-purple-900 transition-colors duration-500" %>
+                         html_class: "bg-brand-navy-800 hover:bg-brand-navy-900 inline-flex items-center justify-center rounded-full px-8 py-4 font-display text-lg text-white transition-colors" %>
       <%= awbw_menu_link "Support our program", "/ways-to-give/",
-                         html_class: "inline-flex items-center justify-center px-8 py-4 rounded-md font-telefon text-xl text-white bg-purple-900 hover:bg-purple-100 hover:text-purple-900 transition-colors duration-500" %>
+                         html_class: "bg-brand-magenta-600 hover:bg-brand-magenta-700 inline-flex items-center justify-center rounded-full px-8 py-4 font-display text-lg text-white transition-colors" %>
       <%= link_to "Share your story", new_story_share_path,
-                  class: "inline-flex items-center justify-center px-8 py-4 rounded-md font-telefon text-xl text-purple-900 border-2 border-purple-900 hover:bg-purple-100 hover:border-purple-100 transition-colors duration-500" %>
+                  class: "border-brand-navy-800 text-brand-navy-800 hover:bg-brand-navy-50 inline-flex items-center justify-center rounded-full border-2 px-8 py-4 font-display text-lg transition-colors" %>
     </div>
   </div>
 </section>

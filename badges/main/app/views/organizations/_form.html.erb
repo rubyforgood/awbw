@@ -109,18 +109,18 @@
 
   <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
     <div class="flex flex-col">
-      <% agency_type_option = f.object.decorate.agency_type_option %>
-      <%= f.input :agency_type,
+      <% organization_type_option = f.object.decorate.organization_type_option %>
+      <%= f.input :organization_type,
                   label: "Organization Type",
                   as: :select,
                   required: true,
-                  collection: Organization::AGENCY_TYPES,
-                  selected: agency_type_option,
+                  collection: Organization::ORGANIZATION_TYPES,
+                  selected: organization_type_option,
                   input_html: {
-                    value: agency_type_option,
+                    value: organization_type_option,
                     class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
-      <%= f.input :agency_type_other,
+      <%= f.input :organization_type_other,
                   label: "Organization Type Other",
                   hint: "Please specify if 'Other' selected",
                   input_html: {

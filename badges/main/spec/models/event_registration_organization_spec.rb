@@ -53,9 +53,9 @@ RSpec.describe EventRegistrationOrganization, type: :model do
     it "keeps what is already recorded when a later submission adds another field" do
       link.record_autofill([ change("website_url", "Website", "https://a.org") ])
 
-      link.record_autofill([ change("agency_type", "Type", "For-profit") ])
+      link.record_autofill([ change("organization_type", "Type", "For-profit") ])
 
-      expect(link.reload.form_autofill_changes.map(&:field)).to eq(%w[website_url agency_type])
+      expect(link.reload.form_autofill_changes.map(&:field)).to eq(%w[website_url organization_type])
     end
 
     # The note answers "what did this registration put on the org", so a corrected
@@ -97,9 +97,9 @@ RSpec.describe EventRegistrationOrganization, type: :model do
     # The column is a display aid, not a ledger — a row written before a key
     # existed should degrade, not break the linking page.
     it "skips a stored entry with no field rather than raising" do
-      link.update!(form_autofill_changes: [ { "label" => "Website" }, { "field" => "agency_type", "label" => "Type", "value" => "For-profit" } ])
+      link.update!(form_autofill_changes: [ { "label" => "Website" }, { "field" => "organization_type", "label" => "Type", "value" => "For-profit" } ])
 
-      expect(link.reload.form_autofill_changes.map(&:field)).to eq([ "agency_type" ])
+      expect(link.reload.form_autofill_changes.map(&:field)).to eq([ "organization_type" ])
     end
 
     # Matches only a statement that starts with UPDATE — "updated_at" appears in
