@@ -13,27 +13,48 @@
 
   <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <h1 class="text-primary font-display text-2xl font-semibold">Bulk payments</h1>
-    <div class="flex items-center gap-3">
-      <%= link_to event_invoice_path(@event),
-                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
-        <i class="fa-solid fa-file-invoice-dollar text-xs"></i> Blank invoice
-      <% end %>
-      <p class="text-sm text-gray-500"><%= @submissions.size %> submission<%= "s" unless @submissions.size == 1 %></p>
-    </div>
+    <%= link_to event_invoice_path(@event),
+                class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
+      <i class="fa-solid fa-file-invoice-dollar text-xs"></i> Blank invoice
+    <% end %>
   </div>
 
-  <% if @submissions.any? %>
-    <div class="grid grid-cols-1 gap-3">
-      <% @submissions.each do |submission| %>
-        <%= render "events/bulk_payment_card", submission: submission,
-              event_registrations: @event_registrations,
-              allocated_by_registration: @allocated_by_registration %>
-      <% end %>
+  <%# Filter by the payment method the payer chose. Auto-submits into the results
+      frame on change so only the list swaps. %>
+  <%= form_with url: bulk_payments_event_path(@event), method: :get, autocomplete: "off",
+        data: { controller: "collection", turbo_frame: "bulk_payments_results" },
+        class: "border-primary/10 mb-6 rounded-2xl border bg-white p-4 shadow-sm" do %>
+    <div class="mb-3 flex items-center gap-2 text-gray-600">
+      <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
+      <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>
     </div>
-  <% else %>
-    <div class="border-primary/10 rounded-2xl border bg-white py-16 text-center">
-      <i class="fa-regular fa-receipt mb-3 text-4xl text-gray-300"></i>
-      <p class="text-gray-500">No bulk payment submissions yet.</p>
+    <div class="flex flex-wrap items-end gap-3">
+      <%= render "events/filter_select", param: :payment_method, label: "Payment method",
+            options: FormSubmission::PAYMENT_METHOD_FILTER_OPTIONS, selected: @payment_method,
+            blank: "Any payment method", field_class: search_field_class %>
+      <div class="flex items-end">
+        <%= render "shared/search_clear", url: bulk_payments_event_path(@event) %>
+      </div>
     </div>
+  <% end %>
+
+  <%= turbo_frame_tag :bulk_payments_results do %>
+    <div class="mb-3 text-sm text-gray-500">
+      <%= pluralize(@submissions.size, "submission") %><%= " · #{@payment_method}" if @payment_method %>
+    </div>
+    <% if @submissions.any? %>
+      <div class="grid grid-cols-1 gap-3">
+        <% @submissions.each do |submission| %>
+          <%= render "events/bulk_payment_card", submission: submission,
+                event_registrations: @event_registrations,
+                allocated_by_registration: @allocated_by_registration %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="border-primary/10 rounded-2xl border bg-white py-16 text-center">
+        <i class="fa-regular fa-receipt mb-3 text-4xl text-gray-300"></i>
+        <p class="text-gray-500"><%= @payment_method ? "No bulk payments match this filter." : "No bulk payment submissions yet." %></p>
+      </div>
+    <% end %>
   <% end %>
 </div>

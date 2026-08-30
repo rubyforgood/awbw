@@ -5,11 +5,14 @@ module Events
 
     def index
       authorize! @event
-      track_view("events.bulk_payments", { event_id: @event.id })
+      # Skip on the filter turbo-frame reload so filtering doesn't double-count views.
+      track_view("events.bulk_payments", { event_id: @event.id }) unless turbo_frame_request?
 
+      @payment_method = params[:payment_method].presence
       @event_registrations = @event.event_registrations.active.not_transferred_in.includes(:registrant)
       @submissions = @event.form_submissions
                            .where(role: "bulk_payment")
+                           .payment_method(@payment_method)
                            .includes(:person, form_answers: :form_field, payment: :allocations)
                            .order(created_at: :desc)
       @allocated_by_registration = allocated_cents_by_registration(@event_registrations)

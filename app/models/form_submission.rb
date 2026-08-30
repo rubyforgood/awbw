@@ -58,6 +58,17 @@ class FormSubmission < ApplicationRecord
     end
   }
 
+  # The bulk payments "Payment method" filter vocabulary — the method the payer
+  # chose on the form (stored as the `payment_method` answer). Same options the
+  # form offers (FormBuilderService::PAYMENT_METHOD_OPTIONS), value == label.
+  PAYMENT_METHOD_FILTER_OPTIONS = FormBuilderService::PAYMENT_METHOD_OPTIONS.map { |method| [ method, method ] }.freeze
+
+  scope :payment_method, ->(value) {
+    next all if value.blank?
+    joins(form_answers: :form_field)
+      .where(form_fields: { field_identifier: "payment_method" }, form_answers: { submitted_answer: value })
+  }
+
   # Submitted on `created_at` — there is no separate submitted_at column.
   scope :submitted_between, ->(start_date, end_date) {
     scope = all
