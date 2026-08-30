@@ -532,7 +532,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (12 files):
+Located in `lib/tasks/` (13 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
@@ -544,3 +544,4 @@ Located in `lib/tasks/` (12 files):
 - `migrate_workshop_logs.rake` — Workshop log migration
 - `backfill_user_stamps.rake` — Backfill `created_by_id`/`updated_by_id` on legacy rows from the Ahoy trail (`data:backfill_user_stamps`)
 - `backfill_notification_stamps.rake` — Backfill notifications' `created_by_id`/`updated_by_id` from `sender_id`, nil-only (`data:backfill_notification_stamps`)
+- `resolve_resource_organizations.rake` — Link resources to organizations from the legacy `agency` free-text name (`data:resolve_resource_organizations`, match-or-create, idempotent, DRY_RUN)
