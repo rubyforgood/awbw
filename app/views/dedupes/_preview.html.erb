@@ -27,6 +27,7 @@
     end
   bt_associations = model_class.reflect_on_all_associations(:belongs_to).index_by { |a| a.foreign_key.to_s }
   belongs_to_options ||= {}
+  remote_select_options ||= {}
 %>
 
 <div class="mb-6 grid grid-cols-2 gap-x-6"
@@ -95,6 +96,14 @@
             <%= keep_f.check_box col.name.to_sym, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-200" %>
             <span class="text-gray-600">Yes</span>
           </label>
+        <% elsif col_assoc && remote_select_options[col.name].present? %>
+          <%
+            current = record_to_keep.public_send(col_assoc.name)
+            current_option = current ? [ [ (current.try(:remote_search_label)&.dig(:label) || current.name), current.id ] ] : []
+          %>
+          <%= keep_f.select col.name.to_sym, current_option, { include_blank: true },
+                            class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200",
+                            data: { controller: "remote-select", remote_select_model_value: remote_select_options[col.name] } %>
         <% elsif col_assoc && belongs_to_options[col.name].present? %>
           <%= keep_f.collection_select col.name.to_sym, belongs_to_options[col.name], :id, :name, {}, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
         <% elsif col.type == :integer && col_assoc.nil? %>

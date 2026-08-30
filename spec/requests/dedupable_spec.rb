@@ -554,7 +554,7 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Keep Workshop", "Delete Workshop")
       end
 
-      it "surfaces each workshop's author so it can be edited on the kept record" do
+      it "surfaces each workshop's author with a searchable picker on the kept record" do
         get dedupe_preview_workshops_path(
           workshop_to_keep_id: keep.id,
           workshop_to_delete_id: delete_rec.id
@@ -563,6 +563,21 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Author")
         expect(response.body).to include("Ada Keeper", "Ben Duplicate")
         expect(response.body).to include("[workshop_to_keep][author_id]")
+        expect(response.body).to include('data-controller="remote-select"')
+        expect(response.body).to include('data-remote-select-model-value="person"')
+      end
+
+      it "still renders the author picker when neither workshop has a person author" do
+        keep.update!(author: nil)
+        delete_rec.update!(author: nil)
+
+        get dedupe_preview_workshops_path(
+          workshop_to_keep_id: keep.id,
+          workshop_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("[workshop_to_keep][author_id]")
+        expect(response.body).to include('data-controller="remote-select"')
       end
     end
 

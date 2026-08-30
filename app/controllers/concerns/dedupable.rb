@@ -132,6 +132,9 @@ module Dedupable
   #   model_class:        The ActiveRecord model (e.g. Category)
   #   domain:             Symbol for DomainTheme (e.g. :categories) (optional, derived from model)
   #   belongs_to_options: Hash or Proc of { column_name => collection } for select fields (optional)
+  #   remote_select_options: Hash of { belongs_to column_name => search model } rendering an
+  #                       ajax-search TomSelect picker on the keeper instead of a fixed dropdown —
+  #                       for a target set too large to enumerate (e.g. author_id => "person") (optional)
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
@@ -170,6 +173,7 @@ module Dedupable
       editable_columns: config[:editable_columns],
       union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
+      remote_select_options: config[:remote_select_options] || {},
       record_extras: config[:record_extras]
     }
   end

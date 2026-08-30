@@ -77,7 +77,8 @@
                  editable_columns: @dedupe[:editable_columns],
                  union_columns: @dedupe[:union_columns],
                  form_builder: f,
-                 belongs_to_options: @dedupe[:belongs_to_options] %>
+                 belongs_to_options: @dedupe[:belongs_to_options],
+                 remote_select_options: @dedupe[:remote_select_options] %>
 
       <!-- Lost with the deleted record -->
       <% if @lost_references.any? %>

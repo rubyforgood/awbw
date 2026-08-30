@@ -181,12 +181,8 @@ class WorkshopsController < ApplicationController
       domain: :workshops,
       candidate_finder: -> { WorkshopServices::DuplicateFinder.new.groups },
       editable_columns: %w[title full_name author_id featured published windows_type_id],
-      belongs_to_options: -> {
-        {
-          "author_id" => Person.joins(:workshops_as_author).distinct.order(:last_name, :first_name),
-          "windows_type_id" => WindowsType.order(:name)
-        }
-      },
+      belongs_to_options: -> { { "windows_type_id" => WindowsType.order(:name) } },
+      remote_select_options: { "author_id" => "person" },
       record_extras: ->(workshop) {
         [ workshop.windows_type&.name, workshop.author&.name ].compact.join(" · ").presence
       }
