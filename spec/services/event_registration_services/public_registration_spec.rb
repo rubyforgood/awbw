@@ -82,7 +82,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(organization.reload.facilitator_status_on(event.start_date.to_date)).to eq(:new)
     end
 
-    it "links the created affiliations to the agency address built from the form" do
+    it "links the created affiliations to the organization address built from the form" do
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
         field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
         field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER) => "Counselor",
@@ -103,7 +103,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(linked.map(&:organization_address)).to all(eq(address))
     end
 
-    it "leaves the affiliations' organization address nil when no agency city was typed" do
+    it "leaves the affiliations' organization address nil when no organization city was typed" do
       person = register_with(position: "Counselor")
 
       expect(person.affiliations.where(organization: organization).map(&:organization_address)).to all(be_nil)
@@ -342,7 +342,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         described_class.call(event: event, registration_form: form, form_params: params)
       end
 
-      it "fills website, agency type, and address country" do
+      it "fills website, organization type, and address country" do
         register_with_org(
           field_id("organization_website") => "helpinghands.org",
           field_id("organization_type") => "501c3/nonprofit",
