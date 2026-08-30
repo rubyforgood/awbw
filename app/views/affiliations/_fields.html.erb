@@ -85,19 +85,6 @@
             label: label,
             label_html: { class: "block text-sm font-medium text-gray-700 mb-1 xl:hidden" } %>
         <% end %>
-        <%# `[&:not(.hidden)]:inline-flex` so the badge lays out only when shown:
-            a plain `inline-flex` here is emitted after `.hidden` in the compiled
-            CSS and would override it, leaving the badge permanently visible. %>
-        <div class="mt-1 flex flex-wrap gap-1">
-          <span data-inactive-toggle-target="inactiveBadge"
-                class="<%= "hidden" unless expired %> [&:not(.hidden)]:inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-            <i class="fa-solid fa-circle-minus"></i>Inactive
-          </span>
-          <span data-inactive-toggle-target="upcomingBadge"
-                class="<%= "hidden" unless upcoming %> [&:not(.hidden)]:inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-            <i class="fa-solid fa-clock"></i>Upcoming
-          </span>
-        </div>
       </div>
 
       <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
@@ -130,6 +117,13 @@
                       style: "height: 42px;",
                       data: { inactive_toggle_target: "valueField startDate", action: "change->affiliation-dates#recalculate change->inactive-toggle#paintFields change->inactive-toggle#updateBadges" }
                     } %>
+        <%# `[&:not(.hidden)]:inline-flex` so the chip lays out only when shown — a
+            plain `inline-flex` is emitted after `.hidden` in the compiled CSS and
+            would override it, keeping the chip permanently visible. %>
+        <span data-inactive-toggle-target="upcomingBadge"
+              class="<%= "hidden" unless upcoming %> [&:not(.hidden)]:inline-flex mt-1 items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+          <i class="fa-solid fa-clock"></i>Upcoming
+        </span>
       </div>
 
       <div class="w-full sm:w-[150px] xl:w-auto min-w-0">
@@ -148,6 +142,10 @@
                         action: "change->inactive-toggle#endDateChanged change->affiliation-dates#recalculate"
                       }
                     } %>
+        <span data-inactive-toggle-target="inactiveBadge"
+              class="<%= "hidden" unless expired %> [&:not(.hidden)]:inline-flex mt-1 items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+          <i class="fa-solid fa-circle-minus"></i>Inactive
+        </span>
       </div>
 
       <%# Address sits left of Primary at every width; on mobile the two share the
