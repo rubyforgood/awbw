@@ -40,19 +40,6 @@ class UsersController < ApplicationController
     user_auth_events = user_auth_events_base(@user)
     @last_admin_event = user_auth_events.where(name: %w[auth.admin_granted auth.admin_revoked]).order(time: :desc).first
     @last_lock_event = user_auth_events.where(name: %w[auth.account_locked auth.account_unlocked]).order(time: :desc).first
-
-    # Fall back to ahoy events for created_by/updated_by if not set on the model
-    unless @user.created_by
-      create_event = Ahoy::Event.where(name: "create.user", resource_type: "User", resource_id: @user.id)
-                                .order(time: :asc).first
-      @created_by_fallback = create_event&.user
-    end
-
-    unless @user.updated_by
-      update_event = Ahoy::Event.where(name: "update.user", resource_type: "User", resource_id: @user.id)
-                                .order(time: :desc).first
-      @updated_by_fallback = update_event&.user
-    end
   end
 
   def new

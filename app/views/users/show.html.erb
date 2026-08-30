@@ -172,13 +172,13 @@
               <dd class="text-gray-900"><%= @user.created_at.present? ? l(@user.created_at, format: :long) : "—" %></dd>
 
               <dt class="font-medium text-gray-500">Created by</dt>
-              <dd class="text-gray-900"><%= (@user.created_by || @created_by_fallback)&.name.presence || "—" %></dd>
+              <dd class="text-gray-900"><%= @user.created_by&.name.presence || "—" %></dd>
 
               <dt class="font-medium text-gray-500">Updated at</dt>
               <dd class="text-gray-900"><%= l(@user.updated_at, format: :long) %></dd>
 
               <dt class="font-medium text-gray-500">Updated by</dt>
-              <dd class="text-gray-900"><%= (@user.updated_by || @updated_by_fallback)&.name.presence || "—" %></dd>
+              <dd class="text-gray-900"><%= @user.updated_by&.name.presence || "—" %></dd>
             </dl>
           </div>
 
