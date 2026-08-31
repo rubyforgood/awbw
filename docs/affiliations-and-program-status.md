@@ -127,11 +127,17 @@ as two periods, not one unbroken range.
 
 - **A title that isn't exactly "Facilitator."**
 - **A non-training event.** Attendance alone confers nothing.
-- **A training the person didn't complete.** A no-show, a cancellation, or a transfer
-  out never made anyone a facilitator, so it counts toward nothing: not New / Ongoing /
-  Reinstated, not "Facilitators since", not Active / Formerly active.
+- **A training the person didn't complete.** Only an **Attended** training confers
+  facilitation. A no-show, a cancellation, a transfer out, or a **partial attendance**
+  counts toward nothing: not New / Ongoing / Reinstated, not "Facilitators since", not
+  Active / Formerly active.
 - **A facilitator affiliation that starts and ends on the same day**, which is the
   trace a not-completed training leaves behind.
+
+A partial attendance is still **kept on the record** — the affiliation and its
+comments stay, and the organization still appears normally in that training's own
+dashboard and report figures, because it was an active registration. What it doesn't
+do is give the organization a facilitation period going forward.
 
 On the org edit page, a training the org **only** registered for inactively gets a
 **red attendance chip** — "No show", "Cancelled", "Transferred out" — instead of a
@@ -236,10 +242,6 @@ dates alone would still read as active for the rest of the day.
 
 ## Known gaps
 
-- **Partial attendance.** Someone marked *incomplete attendance* has their affiliation
-  ended on the training day itself, which is the same shape a no-show leaves — so it
-  currently drops out of the program figures alongside the no-shows. Whether a partial
-  attendance should count as a brief facilitation is under review.
 - **A person's own page still shows the training.** The organization's figures ignore a
   not-completed training; the person's own facilitator dates are a separate question
   and are unchanged.

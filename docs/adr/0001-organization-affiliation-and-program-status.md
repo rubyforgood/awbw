@@ -261,6 +261,13 @@ anchored verdict, and not the "now" question of D3:
 - `Organization.program_status` — the index filter — drops it too, so the SQL filter
   and the chip it filters on still agree (D3).
 
+**Only an attended training confers facilitation.** A *partial* attendance
+(`incomplete_attendance`) leaves the same zero-length shape — ADR-0003 D6 ends that row
+rather than deleting it, and an end date can't precede its own start — and it counts for
+nothing here either. Being present for part of a training is kept **on the record**
+(the row and its comments survive); it is not a facilitation period. ADR-0003 D6 is
+amended to match.
+
 The rule lives in one place at each end: `Affiliation#zero_length?` and its SQL twin
 `Affiliation.zero_length` / `.with_duration`, locked together by an agreement spec.
 Person-level facilitator surfaces (`PersonDecorator`) are unchanged — they answer a

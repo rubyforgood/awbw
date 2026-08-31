@@ -129,10 +129,10 @@ class Affiliation < ApplicationRecord
     title.to_s.strip == FACILITATOR_TITLE
   end
 
-  # Starts and ends on the same day — the shape a no-show / cancelled /
-  # transferred-out training leaves once its minted facilitator row is deactivated
-  # (ADR-0001 D8a). It represents no facilitation, so no organization-level reading
-  # of the facilitator program counts it. In-memory twin of the .zero_length scope.
+  # Starts and ends on the same day — the shape a training leaves when nobody
+  # completed it: a no-show, a cancellation, a transfer out, or a partial attendance
+  # (only an attended training confers facilitation, ADR-0001 D8a). No organization-level
+  # reading of the program counts it. In-memory twin of the .zero_length scope.
   def zero_length?
     end_date.present? && end_date == start_date
   end
