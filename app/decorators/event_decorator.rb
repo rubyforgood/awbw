@@ -1,6 +1,8 @@
 class EventDecorator < ApplicationDecorator
   decorates_association :bookmarkable
 
+  LEGACY_CTA_FONT = "font-family: 'Telefon Bold', sans-serif;".freeze
+
   def videoconference_domain
     URI.parse(videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call"
   end
@@ -394,6 +396,28 @@ class EventDecorator < ApplicationDecorator
 
   def breadcrumbs
     "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
+  end
+
+  # Whether the show page is wearing a branded frame. "none" is the frozen legacy
+  # layout, so it keeps the orange/green buttons it shipped with; every other
+  # template gets the gold brand CTA.
+  def branded_page?
+    template != Event::TEMPLATE_NONE
+  end
+
+  # Classes for the show page's calls to action (register, view ticket). Read off
+  # the event rather than passed in as a view local so a Turbo re-render of the
+  # registration section matches whichever page it lands in.
+  def cta_classes(register: false)
+    return h.brand_cta_classes(register: register, extra: "px-10 py-3 text-2xl") if branded_page?
+
+    h.button_classes(register ? :accent : :success, size: nil, extra: "px-10 py-2 text-2xl uppercase")
+  end
+
+  # The legacy buttons carry the Telefon Bold face inline; the brand CTA gets it
+  # from font-display, so this is nil there and the attribute is dropped.
+  def cta_style
+    LEGACY_CTA_FONT unless branded_page?
   end
 
   def labelled_cost

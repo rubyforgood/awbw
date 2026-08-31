@@ -68,7 +68,8 @@
 
   <% if local_assigns.fetch(:sample, false) %>
     <div class="mt-4 flex flex-col items-center gap-2">
-      <span class="<%= brand_cta_classes(register: true, extra: "px-10 py-3 text-2xl") %>">Register</span>
+      <span class="<%= button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase") %>"
+            style="<%= EventDecorator::LEGACY_CTA_FONT %>">Register</span>
       <span class="text-xs text-gray-500 italic">Sample preview</span>
     </div>
   <% else %>

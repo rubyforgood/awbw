@@ -17,8 +17,9 @@ class Event < ApplicationRecord
   # admin-curated content (header image, details, description) — respecting every
   # autoshow_* toggle — in a branded frame. Keyed hash carries the picker label
   # and blurb; render each via app/views/events/templates/_<key>.html.erb.
+  TEMPLATE_NONE = "none".freeze
   TEMPLATES = {
-    "none" => { label: "None (current)", blurb: "Plain white page — your content exactly as authored." },
+    TEMPLATE_NONE => { label: "None (current)", blurb: "Plain white page — your content exactly as authored." },
     "centered" => { label: "Centered", blurb: "Brand-polished centered layout with a rainbow accent and gold button." },
     "editorial" => { label: "Editorial", blurb: "Warm cream page with the description on a white paper card. Best for text-heavy events." },
     "sidebar" => { label: "Details sidebar", blurb: "Two columns: description on the left, a sticky details and register card on the right." },
