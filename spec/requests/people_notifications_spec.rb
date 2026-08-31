@@ -139,11 +139,13 @@ RSpec.describe "Person notifications", type: :request do
       get edit_person_path(person)
 
       doc = Nokogiri::HTML(response.body)
-      # Only admins reach the profile, so nothing inside the section carries the blue
-      # admin-only wash — buttons and cards alike render on the plain white card.
+      # Only admins reach the profile, so nothing inside the section carries the
+      # `admin-only` wash — buttons and cards alike render on the plain white card.
+      # (Per-author identity chips may independently be blue: chip_color hashes the
+      # author id onto a palette that includes bg-blue-100, so don't ban that class
+      # outright — the wash is signalled by the admin-only marker.)
       section = doc.at_css("#comments-section").to_s
       expect(section).not_to include("admin-only")
-      expect(section).not_to include("bg-blue-100")
       expect(response.body).to include("Internal staff note")
     end
   end
