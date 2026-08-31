@@ -141,8 +141,16 @@ class FormField < ApplicationRecord
     :multi_select_checkbox,
     :group_header,
     :single_select_dropdown,
-    :file_upload
+    :file_upload,
+    :slider
   ]
+
+  # Bounds for the :slider answer type. It stores a whole number in this inclusive
+  # range (the percentage/rating sliders on the annual evaluation are all 0–100);
+  # per-field configurable bounds are a future enhancement.
+  SLIDER_MIN = 0
+  SLIDER_MAX = 100
+  SLIDER_STEP = 1
 
   enum :input_type, [
     :text_alphanumeric,
@@ -171,6 +179,7 @@ class FormField < ApplicationRecord
     "single_select_radio" => "Single select radio",
     "single_select_dropdown" => "Single select dropdown",
     "multi_select_checkbox" => "Multiple select checkbox",
+    "slider" => "Slider (0–100)",
     "file_upload" => "File upload",
     "no_user_input" => "Informational-only"
   }.freeze
@@ -343,6 +352,19 @@ class FormField < ApplicationRecord
     return if value.to_s.length <= limit
 
     "must be #{limit} #{"character".pluralize(limit)} or fewer"
+  end
+
+  # Returns a validation error string when a submitted slider value isn't a whole
+  # number within the slider's bounds, or nil when it passes / does not apply.
+  # Blank values are left to the presence (required) check.
+  def slider_range_error(value)
+    return unless slider?
+    return if value.blank?
+
+    number = Integer(value.to_s, exception: false)
+    return if number && number.between?(SLIDER_MIN, SLIDER_MAX)
+
+    "must be a whole number between #{SLIDER_MIN} and #{SLIDER_MAX}"
   end
 
   # True when this field's selectable options come from Sector/Category data

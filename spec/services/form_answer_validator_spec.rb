@@ -47,6 +47,22 @@ RSpec.describe FormAnswerValidator do
     end
   end
 
+  describe "slider range" do
+    let(:field) { create(:form_field, form: form, answer_type: :slider, required: false) }
+
+    it "accepts a whole number within bounds" do
+      expect(validate(field, "75")).to eq({})
+    end
+
+    it "rejects a value outside the bounds" do
+      expect(validate(field, "150")).to eq(field.id => "must be a whole number between 0 and 100")
+    end
+
+    it "rejects a non-integer value" do
+      expect(validate(field, "50.5")).to eq(field.id => "must be a whole number between 0 and 100")
+    end
+  end
+
   describe "email format" do
     let(:field) { create(:form_field, form: form, field_identifier: "primary_email") }
 

@@ -3311,3 +3311,14 @@
     Consultant. Every other event keeps the standard certificate of completion.
   action_path: /events
   pr_number: 2504
+- name: "Slider questions on forms"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-31
+  summary: >-
+    The form builder has a new "Slider (0–100)" question type — a drag-to-set
+    percentage slider, for questions like "what percentage of your workshops are
+    one-on-one?" The picked number rides in a bubble above the handle as the
+    respondent drags.
+  pro_tips:
+    - "Pick it from a question's type dropdown, same as radio or checkbox. It stores a whole number from 0 to 100."

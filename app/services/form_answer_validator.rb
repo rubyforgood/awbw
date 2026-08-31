@@ -45,6 +45,8 @@ class FormAnswerValidator
       "must be a whole number"
     elsif field.email_field? && value.to_s !~ EMAIL_FORMAT
       "must be a valid email address"
+    elsif field.slider?
+      field.slider_range_error(value)
     else
       field.min_words_error(value) || field.max_characters_error(value) || field.answer_inclusion_error(value)
     end

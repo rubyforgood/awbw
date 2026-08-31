@@ -177,6 +177,42 @@
       <% end %>
     <% end %>
 
+  <% when "slider" %>
+    <%# A 0–100 slider whose handle and a synced number box drive one hidden value.
+        The number box lets someone type an exact figure; the controller keeps the
+        two in step and stores a whole number. %>
+    <div data-controller="slider"
+         data-slider-min-value="<%= FormField::SLIDER_MIN %>"
+         data-slider-max-value="<%= FormField::SLIDER_MAX %>">
+      <div class="flex items-center gap-4">
+        <input type="range"
+               min="<%= FormField::SLIDER_MIN %>"
+               max="<%= FormField::SLIDER_MAX %>"
+               step="<%= FormField::SLIDER_STEP %>"
+               value="<%= value.presence || FormField::SLIDER_MIN %>"
+               data-slider-target="range"
+               data-action="input->slider#rangeChanged"
+               class="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-gray-200 accent-blue-600"
+               aria-label="<%= strip_tags(label || field.name) %>">
+        <input type="number"
+               name="<%= field_name %>"
+               id="<%= field_id %>"
+               min="<%= FormField::SLIDER_MIN %>"
+               max="<%= FormField::SLIDER_MAX %>"
+               step="<%= FormField::SLIDER_STEP %>"
+               value="<%= value %>"
+               data-slider-target="number"
+               data-action="input->slider#numberChanged"
+               class="w-20 shrink-0 rounded-lg border bg-white px-2.5 py-2 text-center text-sm text-gray-900 shadow-sm <%= error_border %>"
+               <%= "required" if required %>>
+      </div>
+      <div class="mt-1 flex justify-between text-xs text-gray-400">
+        <span><%= FormField::SLIDER_MIN %></span>
+        <span><%= (FormField::SLIDER_MIN + FormField::SLIDER_MAX) / 2 %></span>
+        <span><%= FormField::SLIDER_MAX %></span>
+      </div>
+    </div>
+
   <% when "file_upload" %>
     <%# Direct upload: the file streams to storage via JS and the input's value
         becomes a signed blob id, submitted as a normal param — so the form needs

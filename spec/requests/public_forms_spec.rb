@@ -121,6 +121,41 @@ RSpec.describe "PublicForms", type: :request do
     end
   end
 
+  describe "slider fields" do
+    let!(:slider_field) do
+      create(:form_field, form: form, name: "What percentage are one-on-one?", answer_type: :slider, required: false)
+    end
+
+    def slider_params(value)
+      params = submission_params
+      params[:public_registration][:form_fields][slider_field.id.to_s] = value
+      params
+    end
+
+    it "renders a range and number input for a slider question" do
+      get public_form_path(form.slug)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('data-controller="slider"')
+      expect(response.body).to include('type="range"')
+    end
+
+    it "persists a valid slider value" do
+      post public_form_path(form.slug), params: slider_params("40")
+
+      answer = FormAnswer.find_by(form_field: slider_field)
+      expect(answer.submitted_answer).to eq("40")
+    end
+
+    it "rejects an out-of-range slider value" do
+      expect { post public_form_path(form.slug), params: slider_params("150") }
+        .not_to change(FormSubmission, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("between 0 and 100")
+    end
+  end
+
   describe "GET /f/:slug/thank-you" do
     it "renders a confirmation" do
       get thank_you_public_form_path(form.slug)
