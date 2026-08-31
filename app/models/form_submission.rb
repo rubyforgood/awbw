@@ -58,6 +58,17 @@ class FormSubmission < ApplicationRecord
     end
   }
 
+  # The bulk payments "Payment method" filter vocabulary — the method the payer
+  # chose on the form (stored as the `payment_method` answer). Same options the
+  # form offers (FormBuilderService::PAYMENT_METHOD_OPTIONS), value == label.
+  PAYMENT_METHOD_FILTER_OPTIONS = FormBuilderService::PAYMENT_METHOD_OPTIONS.map { |method| [ method, method ] }.freeze
+
+  scope :payment_method, ->(value) {
+    next all if value.blank?
+    joins(form_answers: :form_field)
+      .where(form_fields: { field_identifier: "payment_method" }, form_answers: { submitted_answer: value })
+  }
+
   # Submitted on `created_at` — there is no separate submitted_at column.
   scope :submitted_between, ->(start_date, end_date) {
     scope = all
@@ -78,10 +89,18 @@ class FormSubmission < ApplicationRecord
     )
   }
 
+  # One box across everything a payer typed: the linked person's name/email (when
+  # they have an account), every submitted answer (payer name/email, organization,
+  # attendees), and the raw metadata. LEFT join so account-less payers — common for
+  # bulk payments — are searchable too.
   scope :search, ->(query) {
-    joins(:person).where(
-      "CONCAT_WS(' ', people.first_name, people.last_name) LIKE :q OR people.email LIKE :q OR people.email_2 LIKE :q",
-      q: "%#{sanitize_sql_like(query)}%"
+    q = "%#{sanitize_sql_like(query)}%"
+    left_joins(:person).where(
+      "CONCAT_WS(' ', people.first_name, people.last_name) LIKE :q " \
+      "OR people.email LIKE :q OR people.email_2 LIKE :q " \
+      "OR CAST(form_submissions.metadata AS CHAR) LIKE :q " \
+      "OR EXISTS (SELECT 1 FROM form_answers WHERE form_answers.form_submission_id = form_submissions.id AND form_answers.submitted_answer LIKE :q)",
+      q: q
     )
   }
 
@@ -179,6 +198,8 @@ class FormSubmission < ApplicationRecord
     results = results.where(role: params[:role]) if params[:role].present?
     results = results.for_organization(params[:organization_id]) if params[:organization_id].present?
     results = results.search(params[:search]) if params[:search].present?
+    results = results.payment_status(params[:payment_status]) if params[:payment_status].present?
+    results = results.payment_method(params[:payment_method]) if params[:payment_method].present?
     results = results.org_link_status(params[:org_status]) if params[:org_status].present?
     results = results.account_status(params[:account_status]) if params[:account_status].present?
     results = results.scenario(params[:scenario]) if params[:scenario].present?

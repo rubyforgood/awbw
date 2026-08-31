@@ -2837,3 +2837,17 @@
   pro_tips:
     - "No chip means the affiliation is active right now — a chip only appears for a future start or a past end."
     - "The chips look and behave the same on the person editor, the organization editor, and the standalone affiliation edit page."
+
+- name: "Search and filter the bulk payments dashboards"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-08-30
+  pr_number: 2006
+  summary: >-
+    Both bulk payment pages now share one filter bar — search across payer name,
+    email, organization, and submitted details, plus payment method and status
+    filters. Each payer row on an event's dashboard also shows chips for attendees
+    who aren't registered or aren't paid in full.
+  pro_tips:
+    - "The search box finds payers even when they have no Portal account — it looks at everything they typed on the form and the submission's saved details, not just a linked person."
+    - "The red \"not registered\" and amber \"unpaid\" chips sit next to the payment status, so you can spot who still needs follow-up before the money is settled."
