@@ -81,7 +81,7 @@ module Events
       @submission = FormSubmission.bulk_payment.find_by!(slug: params[:slug])
       authorize! @submission, to: :show?, context: { slug: params[:slug] }
 
-      payer_email = @submission.person.preferred_email.presence ||
+      payer_email = @submission.person&.preferred_email.presence ||
                     @submission.answers_by_identifier["primary_email"]&.strip
 
       if payer_email.present?

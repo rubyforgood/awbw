@@ -109,7 +109,14 @@ class AllocationsController < ApplicationController
   private
 
   def source_path(source)
-    polymorphic_path(source.becomes(source.class.base_class))
+    polymorphic_path(source.becomes(source.class.base_class), return_params)
+  end
+
+  # Carry the origin context (e.g. return_to=bulk_payments + the expanded card's
+  # submission id) onto the source page so its eyebrow returns where the admin
+  # came from rather than the generic index.
+  def return_params
+    params.permit(:return_to, :expand, :event_id).to_h.compact_blank
   end
 
   def find_source(type, id)

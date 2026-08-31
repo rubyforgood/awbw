@@ -6,6 +6,31 @@ RSpec.describe "Payments", type: :request do
 
   before { sign_in admin }
 
+  describe "GET /payments/:id eyebrow" do
+    let(:event) { create(:event, cost_cents: 5000) }
+    let(:submission) { create(:form_submission, event: event, role: "bulk_payment") }
+    let(:payment) { create(:payment, form_submission: submission, amount_cents: 5000, amount_cents_remaining: 5000) }
+
+    it "returns to the expanded bulk-payment card when arrived from bulk payments" do
+      get payment_path(payment, return_to: "bulk_payments", expand: submission.id)
+
+      expect(response.body).to include("← Bulk payments")
+      expect(response.body).to include(bulk_payments_event_path(event, expand: submission.id, anchor: "payment-card-#{submission.id}"))
+    end
+
+    it "carries the return context onto the Allocate link" do
+      get payment_path(payment, return_to: "bulk_payments", expand: submission.id)
+
+      expect(response.body).to match(%r{/allocations/new\?expand=#{submission.id}&amp;return_to=bulk_payments})
+    end
+
+    it "falls back to the payments index otherwise" do
+      get payment_path(payment)
+
+      expect(response.body).to include("← Payments")
+    end
+  end
+
   describe "POST /payments" do
     context "when allocating to a fully-paid EventRegistration" do
       let(:event) { create(:event, cost_cents: 10_000) }

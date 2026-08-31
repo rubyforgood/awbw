@@ -320,6 +320,28 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
       expect(response.body).to include(event_bulk_payment_path(event, slug: submission.slug))
     end
 
+    # Bulk payment payers routinely have no account, so `person` is nil on their
+    # own ticket — the page has to fall back to the name they typed.
+    it "renders for an account-less payer, showing the name they typed" do
+      anon = create(:form_submission, person: nil, form: form, event: event, role: "bulk_payment")
+      anon.form_answers.create!(form_field: payer_first_name_field, submitted_answer: "Dana")
+      anon.form_answers.create!(form_field: payer_last_name_field, submitted_answer: "Doe")
+
+      get bulk_payment_ticket_path(anon.slug)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Dana Doe")
+    end
+
+    it "falls back to a placeholder when an account-less payer typed no name" do
+      anon = create(:form_submission, person: nil, form: form, event: event, role: "bulk_payment")
+
+      get bulk_payment_ticket_path(anon.slug)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Anonymous payer")
+    end
+
     it "returns 404 for an unknown slug" do
       get bulk_payment_ticket_path("nope")
 
@@ -357,6 +379,18 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
       }.to change(Notification, :count).by(1)
 
       expect(response).to redirect_to(bulk_payment_ticket_path(submission.slug))
+      expect(flash[:notice]).to eq("Confirmation email sent.")
+    end
+
+    it "re-sends to the typed email when the payer has no account" do
+      anon = create(:form_submission, person: nil, form: form, event: event, role: "bulk_payment")
+      anon.form_answers.create!(form_field: payer_email_field, submitted_answer: "dana@example.com")
+
+      expect {
+        post bulk_payment_resend_confirmation_path(anon.slug)
+      }.to change(Notification, :count).by(1)
+
+      expect(response).to redirect_to(bulk_payment_ticket_path(anon.slug))
       expect(flash[:notice]).to eq("Confirmation email sent.")
     end
   end

@@ -1,6 +1,26 @@
 class FormSubmissionDecorator < ApplicationDecorator
   delegate_all
 
+  # The payer's display name/email. Prefer the linked person's account; fall
+  # back to what the payer typed on the form — bulk-payment payers routinely
+  # have no account, so `person` is nil — then a neutral placeholder for the name.
+  def payer_name
+    return object.person.name if object.person
+    typed_payer_name || "Anonymous payer"
+  end
+
+  # The payer-facing ticket shows this in preference to the account, since a
+  # signed-in facilitator can submit on someone else's behalf — `person` is then
+  # the facilitator, not the payer whose name is on the form.
+  def typed_payer_name
+    [ answers_by_identifier["first_name"], answers_by_identifier["last_name"] ].compact_blank.join(" ").presence
+  end
+
+  def payer_email
+    return object.person.email if object.person
+    answers_by_identifier["primary_email"].presence
+  end
+
   def matched_attendees(event_registrations)
     object.bulk_payment_attendees.map do |attendee|
       first = attendee["first_name"]&.strip
