@@ -14,6 +14,16 @@
 <% end %>
 
 <div class="mx-auto w-full max-w-7xl px-2 sm:px-6 lg:px-8">
+  <% if params[:template].present? && allowed_to?(:edit?, @event) %>
+    <div class="border-brand-navy-200 bg-brand-navy-50 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
+      <span class="text-brand-navy-800 text-sm">
+        Previewing the <span class="font-semibold"><%= Event::TEMPLATES.dig(@event.template, :label) %></span> template — not yet saved.
+      </span>
+      <%= link_to "Apply & edit", edit_event_path(@event, template: @event.template),
+                  class: "rounded-md bg-brand-navy-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-navy-900" %>
+    </div>
+  <% end %>
+
   <% if @preview %>
     <div class="mb-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
       <span><span class="font-medium">Preview</span> — unsaved changes</span>

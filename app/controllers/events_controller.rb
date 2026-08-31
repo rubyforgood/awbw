@@ -34,6 +34,12 @@ class EventsController < ApplicationController
 
   def show
     authorize! @event
+    # Editors can preview any display template via ?template= without saving it
+    # (used by the templates gallery). Ignored for everyone else so the public
+    # page stays deterministic.
+    if params[:template].present? && Event::TEMPLATE_KEYS.include?(params[:template]) && allowed_to?(:edit?, @event)
+      @event.template = params[:template]
+    end
     @event = @event.decorate
     track_view(@event)
   end
@@ -158,6 +164,9 @@ class EventsController < ApplicationController
     # Materialize any missing built-in callouts so the editor shows them all
     # (idempotent; heals events created before a built-in existed).
     BuiltinCallouts.seed(@event)
+    # Arriving from a template preview ("Apply & edit") pre-selects that template
+    # in the form so submitting saves it; the admin can still change or cancel.
+    @event.template = params[:template] if params[:template].present? && Event::TEMPLATE_KEYS.include?(params[:template])
     set_form_variables
   end
 

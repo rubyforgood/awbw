@@ -196,15 +196,29 @@ RSpec.describe "Events", type: :request do
     context "display templates" do
       let(:templated_event) { create(:event, :published, :publicly_visible, title: "Templated event") }
 
-      before { sign_in admin }
-
       it "renders every template without error" do
+        sign_in admin
         Event::TEMPLATE_KEYS.each do |key|
           templated_event.update!(template: key)
           get event_path(templated_event)
           expect(response).to have_http_status(:ok), "template #{key} failed to render"
           expect(response.body).to include("Templated event")
         end
+      end
+
+      it "lets an editor preview an unsaved template via ?template" do
+        sign_in admin
+        templated_event.update!(template: "none")
+        get event_path(templated_event, template: "hero")
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Apply &amp; edit")
+      end
+
+      it "ignores ?template for a non-editor" do
+        sign_in user
+        get event_path(templated_event, template: "hero")
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Apply &amp; edit")
       end
     end
   end
@@ -1044,6 +1058,11 @@ RSpec.describe "Events", type: :request do
       get edit_event_path(event)
       expect(response.body).not_to include("Preview scholarship form")
       expect(response.body).not_to include("Preview bulk payment page")
+    end
+
+    it "pre-selects the template passed via ?template so submitting saves it" do
+      get edit_event_path(event, template: "hero")
+      expect(Capybara.string(response.body)).to have_checked_field("event[template]", with: "hero")
     end
 
     it "renders the visibility flags, including publicly registerable, with definitions" do

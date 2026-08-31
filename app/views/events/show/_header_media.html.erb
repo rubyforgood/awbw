@@ -1,7 +1,9 @@
-<%# Admin-uploaded header content (usually a banner image). Rendered as-authored;
-    the template frames it. Shared by every branded template. %>
+<%# Admin-uploaded header content (usually a banner image). Rendered as-authored,
+    but images are capped to a banner height and centered so a large or square
+    image can't swallow the whole page — applies to the live page and the gallery
+    preview alike. %>
 <% if event.rhino_header.present? %>
-  <div class="rhino-centered max-w-none prose prose-img:w-full prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
+  <div class="rhino-centered prose max-w-none prose-img:mx-auto prose-img:max-h-80 prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
     <%= event.rhino_header %>
   </div>
 <% end %>

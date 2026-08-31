@@ -6,8 +6,8 @@
 <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
 <%# ---- HEADER CONTENT ---- %>
 <% if event.rhino_header.present? %>
-  <div class="rhino-centered mb-4 max-w-none prose prose-img:w-full prose-img:max-w-full prose-em:text-inherit prose-strong:text-inherit">
-    <%= event.rhino_header %>
+  <div class="mb-4">
+    <%= render "events/show/header_media", event: event %>
   </div>
 <% end %>
 
