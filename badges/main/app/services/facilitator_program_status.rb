@@ -16,7 +16,9 @@ class FacilitatorProgramStatus
   def initialize(affiliations, as_of: nil)
     @as_of = (as_of || Date.current.beginning_of_year).to_date
     @year_anchored = as_of.nil?
-    @facilitators = affiliations.select { |affiliation| affiliation.facilitator? && affiliation.start_date }
+    @facilitators = affiliations.select do |affiliation|
+      affiliation.facilitator? && affiliation.start_date && !affiliation.zero_length?
+    end
   end
 
   # Views that show a year-anchored figure add a caveat saying so.
@@ -83,8 +85,9 @@ class FacilitatorProgramStatus
   def month(date) = date&.strftime("%b %Y")
 
   # Strictly before: an affiliation starting ON the anchor is the one this event
-  # minted (ADR-0001 D8), so a first-time org still reads New at its own training —
-  # including a same-day (start == end) affiliation dated to the event.
+  # minted (ADR-0001 D8), so a first-time org still reads New at its own training.
+  # Zero-length (start == end) rows are already dropped in the initializer (D8a), so
+  # a no-show at an earlier training can't count as prior history here.
   def earlier
     @earlier ||= @facilitators.select { |affiliation| affiliation.start_date < as_of }
   end

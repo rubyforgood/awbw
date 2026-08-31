@@ -187,6 +187,13 @@ class OrganizationsController < ApplicationController
       Event.none
     end
 
+    # Trainings the org only ever registered for inactively — a no-show,
+    # cancellation, or transfer out with no active registration there. These earn a
+    # red attendance chip on the edit form instead of a program-status one, since a
+    # no-show confers no facilitation (ADR-0001 D8a). One representative
+    # registration per training, newest first.
+    @organization_inactive_training_registrations = inactive_only_training_registrations
+
     @org_categories_grouped = Category
       .includes(:category_type)
       .published
@@ -304,6 +311,22 @@ class OrganizationsController < ApplicationController
         [ org.filemaker_code.presence && "FileMaker #{org.filemaker_code}", org.program_location ].compact.join(" · ").presence
       }
     }
+  end
+
+  # One inactive registration per training the org never actively attended, newest
+  # first — the source for the edit form's red attendance chips (ADR-0001 D8a).
+  def inactive_only_training_registrations
+    return [] unless @organization.persisted?
+
+    active_event_ids = @organization.event_registrations.active.select(:event_id)
+    @organization.event_registrations.inactive
+                 .joins(:event)
+                 .where(events: { facilitator_training: true })
+                 .where.not(event_id: active_event_ids)
+                 .includes(:event)
+                 .sort_by { |registration| registration.event.start_date || Date.new(1900, 1, 1) }
+                 .reverse
+                 .uniq(&:event_id)
   end
 
   def find_duplicate_organizations(name)

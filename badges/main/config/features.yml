@@ -27,6 +27,18 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "No-show trainings no longer count toward program status"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-31
+  summary: >-
+    No-show, cancelled, and transferred-out trainings no longer count as
+    facilitation: not toward New / Ongoing / Reinstated, not toward
+    "Facilitators since", and not toward Active / Formerly active. On the org
+    edit page they now show a red attendance chip instead.
+  action_path: /organizations
+  pr_number: 2464
+
 - name: "Set who a workshop log is credited to"
   area: content
   display_status: admin_facing
@@ -2969,3 +2981,15 @@
   pro_tips:
     - "Change your answers any time by reopening the survey, or from your profile directly."
     - "Admins: on a registration form the change shows up on the submission's \"What this submission changed\" page, like any other profile edit."
+
+- name: "Reconciled-away registrations hidden on profiles, flagged for staff"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-31
+  summary: >-
+    A person's profile no longer shows event cards for registrations that were
+    reconciled away — cancelled, no-show, or transferred out. Admins and the
+    person themselves still see those cards, tinted blue and marked with the
+    attendance status, so the history isn't lost.
+  pro_tips:
+    - "Everyone else sees only active registrations (registered, attended, incomplete)."

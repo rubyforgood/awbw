@@ -205,5 +205,31 @@ RSpec.describe "facilitator affiliation math" do
       expect(Affiliation.exists?(minted.id)).to be(false)
       expect(bucket).to eq(:never_active)
     end
+
+    # Deactivating (rather than deleting) the row the training minted clamps its end
+    # to its own start, leaving a zero-length row. Both questions must read that as
+    # no facilitation, or the org edit form shows "Formerly active" beside a red
+    # no-show chip (ADR-0001 D8a).
+    it "leaves a deactivated no-show reading New and Never active, with no facilitator period" do
+      person = create(:person)
+      event = create(:event, :ended, facilitator_training: true)
+      anchor = event.start_date.to_date
+      registration = create(:event_registration, event: event, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: registration, organization: organization)
+      minted = create(:affiliation, organization: organization, person: person, title: "Facilitator",
+                                    start_date: anchor, event_registration: registration)
+
+      AffiliationServices::ReconcilePerson.new(
+        person: person, organization: organization, event: event,
+        registration: registration, include_unowned: true
+      ).perform(:deactivate, affiliation: minted)
+
+      expect(minted.reload.end_date).to eq(minted.start_date)
+      expect(status_on(anchor)).to eq(:new)
+      expect(status_on(anchor + 1.year)).to eq(:new)
+      expect(bucket).to eq(:never_active)
+      expect(organization.reload.decorate.program_since_display).to eq("")
+      expect(Organization.program_status(:never_active)).to include(organization)
+    end
   end
 end

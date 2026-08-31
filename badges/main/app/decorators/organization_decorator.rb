@@ -99,11 +99,11 @@ class OrganizationDecorator < ApplicationDecorator
   # "Facilitators since" — facilitators only, at month precision, since the exact
   # start/lapse month is the point. Blank when the org has never facilitated.
   def program_since_display(affiliations = object.affiliations)
-    AffiliationPeriods.label(affiliations.select(&:facilitator?), precision: :month) || ""
+    AffiliationPeriods.label(facilitations(affiliations), precision: :month) || ""
   end
 
   def program_since_date
-    @program_since_date ||= object.affiliations.select(&:facilitator?).filter_map(&:start_date).min
+    @program_since_date ||= facilitations.filter_map(&:start_date).min
   end
 
   # A grey secondary line under "Facilitators since", shown only when the earliest
@@ -127,7 +127,7 @@ class OrganizationDecorator < ApplicationDecorator
   # never feeds into this (ADR-0001 D3). Upcoming (a facilitator scheduled but not
   # started) is distinct from Active and from a lapsed Formerly active.
   def organization_status_bucket
-    facilitators = object.affiliations.select(&:facilitator?)
+    facilitators = facilitations
     return :never_active if facilitators.none?
     return :active if facilitators.any?(&:active?)
     return :upcoming if facilitators.any?(&:upcoming?)
@@ -222,6 +222,15 @@ class OrganizationDecorator < ApplicationDecorator
   end
 
   private
+
+  # The facilitator rows that record real facilitation. A zero-length (start ==
+  # end) row is a no-show's deactivated stub, not a term served, so it feeds
+  # neither "Facilitators since" nor the Active / Formerly active bucket —
+  # matching FacilitatorProgramStatus (ADR-0001 D8a). Reads already-loaded
+  # affiliations, so list pages can pass their preloaded ones.
+  def facilitations(affiliations = object.affiliations)
+    affiliations.select { |affiliation| affiliation.facilitator? && !affiliation.zero_length? }
+  end
 
   def badge(label, key)
     {

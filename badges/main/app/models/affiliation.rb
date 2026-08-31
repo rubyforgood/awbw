@@ -78,6 +78,16 @@ class Affiliation < ApplicationRecord
   # title index usable). Titles are normalized on write, so no TRIM is needed.
   scope :facilitators, -> { where("affiliations.title = BINARY ?", FACILITATOR_TITLE) }
 
+  # SQL twin of #zero_length? — a row that starts and ends on the same day, and so
+  # records no facilitation (ADR-0001 D8a). `with_duration` is its complement: an
+  # unstarted or genuinely-spanning row. Kept in lock-step with the predicate by an
+  # executable agreement spec.
+  scope :zero_length, -> { where("affiliations.end_date = affiliations.start_date") }
+  scope :with_duration, -> {
+    where("affiliations.end_date IS NULL OR affiliations.start_date IS NULL
+           OR affiliations.end_date <> affiliations.start_date")
+  }
+
   # Affiliations whose #status_on(date) equals the given status, expressed in SQL
   # so it composes as a subquery (e.g. person-id narrowing). Kept in lock-step with
   # #status_on by an executable agreement spec.
@@ -117,6 +127,14 @@ class Affiliation < ApplicationRecord
   # An executable agreement spec locks the two together.
   def facilitator?
     title.to_s.strip == FACILITATOR_TITLE
+  end
+
+  # Starts and ends on the same day — the shape a training leaves when nobody
+  # completed it: a no-show, a cancellation, a transfer out, or a partial attendance
+  # (only an attended training confers facilitation, ADR-0001 D8a). No organization-level
+  # reading of the program counts it. In-memory twin of the .zero_length scope.
+  def zero_length?
+    end_date.present? && end_date == start_date
   end
 
   # Genuinely active now — the in-memory twin of the `active` scope and of

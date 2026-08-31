@@ -118,9 +118,12 @@ class Organization < ApplicationRecord
   # Off facilitator affiliations only, never the legacy organization_status, so the
   # filter and the status chip can't disagree (ADR-0001 D3).
   scope :program_status, ->(bucket) {
-    fac_ids = Affiliation.facilitators.select(:organization_id)
-    active_fac_ids = Affiliation.facilitators.active.select(:organization_id)
-    upcoming_fac_ids = Affiliation.facilitators.with_status("Upcoming").select(:organization_id)
+    # with_duration for the same reason the chip drops zero-length rows: a no-show's
+    # deactivated stub is not facilitation (ADR-0001 D8a).
+    facilitations = Affiliation.facilitators.with_duration
+    fac_ids = facilitations.select(:organization_id)
+    active_fac_ids = facilitations.active.select(:organization_id)
+    upcoming_fac_ids = facilitations.with_status("Upcoming").select(:organization_id)
     case bucket.to_s
     when "active"            then where(id: active_fac_ids)
     when "upcoming"          then where(id: upcoming_fac_ids).where.not(id: active_fac_ids)

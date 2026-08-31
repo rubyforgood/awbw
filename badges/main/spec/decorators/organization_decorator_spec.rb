@@ -37,6 +37,12 @@ RSpec.describe OrganizationDecorator do
       create(:affiliation, organization: organization, person: create(:person), title: "Facilitator", start_date: Date.new(2024, 2, 1), end_date: nil)
       expect(organization.reload.decorate.program_since_display).to eq("Jan 2015 – Jun 2018, Feb 2024")
     end
+
+    it "ignores a zero-length row, which records no facilitation (ADR-0001 D8a)" do
+      create(:affiliation, organization: organization, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1), inactive: true)
+      expect(organization.reload.decorate.program_since_display).to eq("")
+    end
   end
 
   describe "#affiliated_since_note" do
@@ -119,6 +125,18 @@ RSpec.describe OrganizationDecorator do
       create(:affiliation, organization: org, person: person, title: "Facilitator", start_date: 3.years.ago, end_date: 1.year.ago)
       create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: 1.month.from_now, end_date: nil)
       expect(org.reload.decorate.organization_status_bucket).to eq(:upcoming)
+    end
+
+    it "is :never_active when the only facilitator row is a no-show's zero-length stub" do
+      # Same rule as the anchored verdict: start == end is no facilitation, so the
+      # org never became active (ADR-0001 D8a).
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator",
+                           start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1), inactive: true)
+
+      expect(org.reload.decorate.organization_status_bucket).to eq(:never_active)
+      expect(Organization.program_status(:never_active)).to include(org)
+      expect(Organization.program_status(:formerly_active)).not_to include(org)
     end
   end
 
