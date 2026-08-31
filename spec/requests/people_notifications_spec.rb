@@ -133,19 +133,17 @@ RSpec.describe "Person notifications", type: :request do
       expect(id_fields).not_to include(autoemail.id.to_s)
     end
 
-    it "flags the add buttons admin-only but leaves the comment cards untinted" do
+    it "leaves the whole comments & communications section untinted on the admin-only profile" do
       create(:comment, commentable: person, body: "Internal staff note", created_by: admin)
 
       get edit_person_path(person)
 
       doc = Nokogiri::HTML(response.body)
-      # The buttons carry the staff-only signal...
-      buttons = doc.css("#comments-section a").select { |a| a["class"].to_s.include?("admin-only") }
-      expect(buttons.map(&:text).map(&:strip)).to include(a_string_matching(/Add comment/))
-      # ...while the cards stay on the comments theme, so the page isn't a wall of blue.
-      card = doc.at_css("#comments-section .nested-fields > div")
-      expect(card["class"]).not_to include("admin-only")
-      expect(card["class"]).not_to include("bg-blue-100")
+      # Only admins reach the profile, so nothing inside the section carries the blue
+      # admin-only wash — buttons and cards alike render on the plain white card.
+      section = doc.at_css("#comments-section").to_s
+      expect(section).not_to include("admin-only")
+      expect(section).not_to include("bg-blue-100")
       expect(response.body).to include("Internal staff note")
     end
   end

@@ -558,9 +558,10 @@
 
   <% if f.object.persisted? %>
     <%# Combined comments & communications — comment bodies/controls are admin-only
-        and communication subjects are visible to the person (gated in the partial). %>
-    <%= render "shared/comments_and_communications", f: f, mark_admin_only: true,
-          view_all_person: @person %>
+        and communication subjects are visible to the person (gated in the partial).
+        Only admins reach the profile, so the section skips the blue admin-only wash
+        and renders on a plain white card. %>
+    <%= render "shared/comments_and_communications", f: f, view_all_person: @person %>
   <% end %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">
