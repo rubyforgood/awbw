@@ -250,6 +250,24 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Minimum of 5 words.")
     end
 
+    # A double-click used to fire two POSTs and create duplicate people and
+    # registrations — worst on paid events, which opt out of Turbo (turbo: false)
+    # and so lose even Turbo's own submitter disabling.
+    it "guards the form against double-submit on a free event" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include('data-controller="submit-once"')
+    end
+
+    it "guards the form against double-submit on a paid event that opts out of Turbo" do
+      event.update!(cost_cents: 5_000)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include('data-controller="submit-once"')
+      expect(response.body).to include('data-turbo="false"')
+    end
+
     it "surfaces the CE deadlines on the continuing education section" do
       ce = FormBuilderService.new(name: "CE", sections: %i[continuing_education], role: "continuing_education").call
       event.event_forms.create!(form: ce, role: "continuing_education")
