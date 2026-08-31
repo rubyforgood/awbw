@@ -7,6 +7,18 @@ RSpec.describe "Allocations", type: :request do
 
   before { sign_in admin }
 
+  describe "GET /allocations/new" do
+    let(:submission) { create(:form_submission, event: event, role: "bulk_payment") }
+    let(:payment)    { create(:payment, form_submission: submission, amount_cents: 5000, amount_cents_remaining: 5000) }
+
+    it "posts the allocation back with the return context so the eyebrow survives the round trip" do
+      get new_allocation_path(source_sgid: payment.to_sgid.to_s, return_to: "bulk_payments", expand: submission.id)
+
+      expect(response.body).to include("action=\"/allocations?expand=#{submission.id}&amp;return_to=bulk_payments\"")
+      expect(response.body).to match(%r{/payments/#{payment.id}\?expand=#{submission.id}&amp;return_to=bulk_payments})
+    end
+  end
+
   describe "GET /allocations scoped to a membership invoice" do
     let(:term) { create(:membership_invoice, cost_cents: 2_500) }
 

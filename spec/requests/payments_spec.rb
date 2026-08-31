@@ -18,6 +18,12 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include(bulk_payments_event_path(event, expand: submission.id, anchor: "payment-card-#{submission.id}"))
     end
 
+    it "carries the return context onto the Allocate link" do
+      get payment_path(payment, return_to: "bulk_payments", expand: submission.id)
+
+      expect(response.body).to match(%r{/allocations/new\?expand=#{submission.id}&amp;return_to=bulk_payments})
+    end
+
     it "falls back to the payments index otherwise" do
       get payment_path(payment)
 
