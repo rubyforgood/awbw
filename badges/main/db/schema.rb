@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_220445) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -322,14 +322,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["creator_id"], name: "index_blazer_queries_on_creator_id"
-  end
-
-  create_table "bookmark_annotations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.text "annotation", size: :long
-    t.integer "bookmark_id"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.index ["bookmark_id"], name: "index_bookmark_annotations_on_bookmark_id"
   end
 
   create_table "bookmarks", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2317,7 +2309,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
   add_foreign_key "blazer_dashboard_queries", "blazer_queries", column: "query_id"
   add_foreign_key "blazer_dashboards", "users", column: "creator_id"
   add_foreign_key "blazer_queries", "users", column: "creator_id"
-  add_foreign_key "bookmark_annotations", "bookmarks"
   add_foreign_key "bookmarks", "users"
   add_foreign_key "categories", "category_types"
   add_foreign_key "categories", "users", column: "created_by_id"
