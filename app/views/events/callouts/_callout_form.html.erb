@@ -34,7 +34,7 @@
         <dl class="space-y-4">
           <% submission.form_answers.includes(:form_field).order(:id).each do |answer| %>
             <div>
-              <dt class="text-sm font-semibold text-gray-900"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></dt>
+              <dt class="rich-label text-sm font-semibold text-gray-900"><%= form_label_html(answer.question_name_when_answered.presence || answer.form_field&.name) %></dt>
               <dd class="text-sm whitespace-pre-line text-gray-700"><%= answer.submitted_answer.presence || "—" %></dd>
             </div>
           <% end %>

@@ -149,12 +149,12 @@ class FormBuilderService
     post_event_feedback: [ "How would you rate this event?", "What did you find most valuable?", "Any suggestions for improvement?" ],
     day_1_survey: [
       CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
-      "The Touchstone Journey workshop supported my personal growth.",
-      "The Touchstone Journey workshop supported my professional growth.",
-      "The Creating A Safer/Braver Place workshop supported my personal growth.",
-      "The Creating A Safer/Braver Place workshop supported my professional growth.",
-      "The Take A Break, Self-Regulate workshop supported my personal growth.",
-      "The Take A Break, Self-Regulate workshop supported my professional growth.",
+      "The Touchstone Journey workshop supported my <em>personal</em> growth.",
+      "The Touchstone Journey workshop supported my <em>professional</em> growth.",
+      "The Creating A Safer/Braver Place workshop supported my <em>personal</em> growth.",
+      "The Creating A Safer/Braver Place workshop supported my <em>professional</em> growth.",
+      "The Take A Break, Self-Regulate workshop supported my <em>personal</em> growth.",
+      "The Take A Break, Self-Regulate workshop supported my <em>professional</em> growth.",
       "The breakout rooms supported me in sharing about my experience and connect with other trainees.",
       "I was able to practice grounding and self-regulation during the training.",
       "What I learned today better prepared me to facilitate art workshops.",
@@ -167,10 +167,10 @@ class FormBuilderService
     ],
     day_2_survey: [
       CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
-      "The Monster In Me workshop supported my personal growth.",
-      "The Monster In Me workshop supported my professional growth.",
-      "The Claiming Who I Am workshop supported my personal growth.",
-      "The Claiming Who I Am workshop supported my professional growth.",
+      "The Monster In Me workshop supported my <em>personal</em> growth.",
+      "The Monster In Me workshop supported my <em>professional</em> growth.",
+      "The Claiming Who I Am workshop supported my <em>personal</em> growth.",
+      "The Claiming Who I Am workshop supported my <em>professional</em> growth.",
       "The breakout rooms supported me in sharing about my experience and connect with other trainees.",
       "What I learned today better prepared me to facilitate art workshops that honor intersectionality.",
       "Having time to dive into topics related to questions and challenges helped me feel more prepared to facilitate art workshops.",
@@ -191,8 +191,8 @@ class FormBuilderService
       "Anything else you'd like us to know?"
     ],
     content_sharing_preferences: [
-      "How may we display the content you share (reflections, quotes, artwork)?",
-      "Display my name as…"
+      "Display my name as…",
+      "How may we display the content you share (reflections, quotes, artwork)?"
     ],
     bulk_payment: [
       "Payer first name", "Payer last name", "Payer email", "Phone", "Organization",
@@ -713,17 +713,17 @@ class FormBuilderService
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          key: "d1_clarity_part_two_detail", group: "day_1_survey", required: false)
 
-    position = add_field(form, position, "The Touchstone Journey workshop supported my personal growth.", :single_select_radio,
+    position = add_field(form, position, "The Touchstone Journey workshop supported my <em>personal</em> growth.", :single_select_radio,
                          key: "d1_touchstone_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Touchstone Journey workshop supported my professional growth.", :single_select_radio,
+    position = add_field(form, position, "The Touchstone Journey workshop supported my <em>professional</em> growth.", :single_select_radio,
                          key: "d1_touchstone_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my personal growth.", :single_select_radio,
+    position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my <em>personal</em> growth.", :single_select_radio,
                          key: "d1_safer_braver_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my professional growth.", :single_select_radio,
+    position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my <em>professional</em> growth.", :single_select_radio,
                          key: "d1_safer_braver_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my personal growth.", :single_select_radio,
+    position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my <em>personal</em> growth.", :single_select_radio,
                          key: "d1_take_a_break_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my professional growth.", :single_select_radio,
+    position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my <em>professional</em> growth.", :single_select_radio,
                          key: "d1_take_a_break_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
                          key: "d1_breakout_rooms", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
@@ -761,13 +761,13 @@ class FormBuilderService
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          key: "d2_clarity_part_two_detail", group: "day_2_survey", required: false)
 
-    position = add_field(form, position, "The Monster In Me workshop supported my personal growth.", :single_select_radio,
+    position = add_field(form, position, "The Monster In Me workshop supported my <em>personal</em> growth.", :single_select_radio,
                          key: "d2_monster_personal", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Monster In Me workshop supported my professional growth.", :single_select_radio,
+    position = add_field(form, position, "The Monster In Me workshop supported my <em>professional</em> growth.", :single_select_radio,
                          key: "d2_monster_professional", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Claiming Who I Am workshop supported my personal growth.", :single_select_radio,
+    position = add_field(form, position, "The Claiming Who I Am workshop supported my <em>personal</em> growth.", :single_select_radio,
                          key: "d2_claiming_personal", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Claiming Who I Am workshop supported my professional growth.", :single_select_radio,
+    position = add_field(form, position, "The Claiming Who I Am workshop supported my <em>professional</em> growth.", :single_select_radio,
                          key: "d2_claiming_professional", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
                          key: "d2_breakout_rooms", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
@@ -814,12 +814,12 @@ class FormBuilderService
   def build_content_sharing_preferences_fields(form, position)
     position = add_header(form, position, "Sharing preferences", group: "content_sharing")
 
-    position = add_field(form, position, "How may we display the content you share (reflections, quotes, artwork)?", :single_select_radio,
-                         key: "anonymous_contributions", group: "content_sharing",
-                         options: Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.values)
     position = add_field(form, position, "Display my name as…", :single_select_radio,
                          key: "display_name_preference", group: "content_sharing",
                          options: Person::DISPLAY_NAME_PREFERENCE_LABELS.values)
+    position = add_field(form, position, "How may we display the content you share (reflections, quotes, artwork)?", :single_select_radio,
+                         key: "anonymous_contributions", group: "content_sharing",
+                         options: Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.values)
     position
   end
 

@@ -9,7 +9,7 @@
 <% back_label = local_assigns.fetch(:back_label, "Back to ticket") %>
 <%# Most callout pages are a narrow card; the single-resource page passes a wider
     value so a multi-page PDF preview has room for the browser's page sidebar. %>
-<% container_width = local_assigns.fetch(:container_width, "max-w-3xl") %>
+<% container_width = local_assigns.fetch(:container_width, "max-w-4xl") %>
 <% if back_path %>
   <div class="<%= container_width %> mx-auto px-4 pt-4">
     <%= link_to back_path,

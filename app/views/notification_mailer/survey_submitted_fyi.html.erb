@@ -10,7 +10,7 @@
 
 <% @answers.each do |answer| %>
   <p style="font-size:14px;color:#374151;margin:0 0 12px;">
-    <strong style="display:block;color:#111827;"><%= answer.name %></strong>
+    <strong style="display:block;color:#111827;"><%= form_label_html(answer.name) %></strong>
     <%= answer.submitted_answer.presence || "—" %>
   </p>
 <% end %>
