@@ -2,7 +2,11 @@
 <% content_for(:full_width, true) %>
 
 <div class="mx-auto w-full max-w-7xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
-  <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% if @sample_event && params[:event_id].present? %>
+    <%= link_to "← Back to event", edit_event_path(@sample_event, section: "page_content", anchor: "page_content_button"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% else %>
+    <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% end %>
   <h1 class="text-brand-navy-900 mt-2 font-display text-3xl font-semibold">Event display templates</h1>
   <p class="mt-2 max-w-2xl text-gray-600">
     Every template frames the same content — header image, details, description — and respects each event's show/hide toggles.

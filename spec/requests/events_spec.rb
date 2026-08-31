@@ -1065,6 +1065,16 @@ RSpec.describe "Events", type: :request do
       expect(Capybara.string(response.body)).to have_checked_field("event[template]", with: "hero")
     end
 
+    it "opens the Event show page section when arriving with ?section=page_content" do
+      get edit_event_path(event, section: "page_content")
+      expect(Capybara.string(response.body).find("#page_content", visible: :all)[:class]).not_to include("hidden")
+    end
+
+    it "leaves the Event show page section collapsed by default" do
+      get edit_event_path(event)
+      expect(Capybara.string(response.body).find("#page_content", visible: :all)[:class]).to include("hidden")
+    end
+
     it "renders the visibility flags, including publicly registerable, with definitions" do
       get edit_event_path(event)
 

@@ -530,19 +530,22 @@
     <% end %>
 
     <%# ---- PAGE CONTENT (header + description) ---- %>
+    <%# Opened + scrolled to when arriving from the templates preview/gallery
+        (?section=page_content) so the layout picker is right there. %>
+    <% open_show_page = params[:section] == "page_content" %>
     <div class="page-content-section" data-controller="dropdown">
       <button
         type="button"
         id="page_content_button"
-        class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
+        class="flex w-full cursor-pointer scroll-mt-24 items-center justify-between <%= open_show_page ? "rounded-t-md" : "rounded-md" %> bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"page_content":"hidden"}, {"page_content_arrow":"rotate-180"}, {"page_content_button":"rounded-md rounded-t-md"}]'
       >
         Event show page
-        <i id="page_content_arrow" class="fa-solid fa-chevron-down h-4 w-4 transition-transform duration-300"></i>
+        <i id="page_content_arrow" class="fa-solid fa-chevron-down h-4 w-4 transition-transform duration-300 <%= "rotate-180" if open_show_page %>"></i>
       </button>
 
-      <div id="page_content" class="hidden rounded-b-md border border-gray-300 p-4">
+      <div id="page_content" class="<%= "hidden" unless open_show_page %> rounded-b-md border border-gray-300 p-4">
         <div class="form-group mb-6">
           <label class="control-label mb-1 block font-semibold">Layout template</label>
           <p class="mb-3 text-sm text-gray-500">

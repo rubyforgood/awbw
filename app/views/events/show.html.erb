@@ -19,7 +19,7 @@
       <span class="text-brand-navy-800 text-sm">
         Previewing the <span class="font-semibold"><%= Event::TEMPLATES.dig(@event.template, :label) %></span> template — not yet saved.
       </span>
-      <%= link_to "Apply & edit", edit_event_path(@event, template: @event.template),
+      <%= link_to "Apply & edit", edit_event_path(@event, template: @event.template, section: "page_content", anchor: "page_content_button"),
                   class: "rounded-md bg-brand-navy-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-navy-900" %>
     </div>
   <% end %>
