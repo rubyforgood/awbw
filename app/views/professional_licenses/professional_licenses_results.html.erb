@@ -28,7 +28,7 @@
               <tr class="transition-colors duration-150 hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-900">
                   <% if license.person %>
-                    <%= person_edit_button(license.person, compact: true, data: { turbo_frame: "_top" }) %>
+                    <%= person_edit_button(license.person, compact: true) %>
                   <% else %>
                     <span class="text-gray-400">—</span>
                   <% end %>

@@ -26,7 +26,7 @@
               <% if user.person %>
                 <% cache [user.person, "edit_button"] do %>
                   <% show_email = user.person.profile_show_email? || allowed_to?(:manage?, Person) %>
-                  <%= person_edit_button(user.person, subtitle: (user.person.preferred_email if show_email), data: { turbo_frame: "_top" }) %>
+                  <%= person_edit_button(user.person, subtitle: (user.person.preferred_email if show_email)) %>
                 <% end %>
               <% else %>
                 <%= link_to "Create person",
