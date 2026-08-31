@@ -29,12 +29,9 @@
 <% if variant == "rail" %>
   <div class="divide-y divide-brand-navy-100">
     <% rows.each do |row| %>
-      <div class="flex items-start gap-3 py-2.5">
-        <i class="fa-solid <%= row[:icon] %> mt-1 text-brand-navy-400" aria-hidden="true"></i>
-        <div>
-          <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= row[:label] %></div>
-          <div class="font-semibold text-brand-navy-900"><%= row[:value] %></div>
-        </div>
+      <div class="py-2.5">
+        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= row[:label] %></div>
+        <div class="font-semibold text-brand-navy-900"><%= row[:value] %></div>
       </div>
     <% end %>
   </div>
