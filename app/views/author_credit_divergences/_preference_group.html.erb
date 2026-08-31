@@ -2,7 +2,7 @@
 <% highlighted = params[:highlight].to_s == person.id.to_s %>
 <div id="<%= dom_id(person, :divergence) %>" class="scroll-mt-4 overflow-hidden rounded-lg border shadow-sm transition-colors duration-150 <%= highlighted ? "border-yellow-400 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200 bg-white" %>">
   <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
-    <%= link_to person.full_name, person_path(person),
+    <%= link_to person.full_name, edit_person_path(person),
                 target: "_blank", rel: "noopener", title: "Opens in a new tab",
                 class: "font-semibold text-gray-900 hover:underline" %>
     <% if person.author_credit_reconciled_at.present? %>

@@ -179,11 +179,11 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "#to_value / #from_value" do
-    it "links the resolved contact to their profile" do
+    it "links the resolved contact to their edit page" do
       person = create(:person, email: "kim@example.com")
       decorated = create(:notification, recipient_email: "kim@example.com").decorate
 
-      expect(decorated.to_value).to include("href=\"#{Rails.application.routes.url_helpers.person_path(person)}\"")
+      expect(decorated.to_value).to include("href=\"#{Rails.application.routes.url_helpers.edit_person_path(person)}\"")
     end
 
     it "links an unresolved contact email as a mailto" do

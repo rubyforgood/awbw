@@ -17,7 +17,7 @@ class FormSubmissionDecorator < ApplicationDecorator
   end
 
   def payer_email
-    return object.person.email if object.person
+    return object.person.preferred_email if object.person
     answers_by_identifier["primary_email"].presence
   end
 

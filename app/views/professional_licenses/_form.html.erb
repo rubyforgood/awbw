@@ -14,14 +14,14 @@
 
   <% if professional_license.persisted? %>
     <div>
-      <span class="<%= label_class %>">Registrant</span>
+      <span class="<%= label_class %>">Person</span>
       <p class="font-medium text-gray-900">
-        <%= link_to professional_license.person.full_name, person_path(professional_license.person), class: "text-primary hover:text-primary-dark hover:underline", data: { turbo_frame: "_top" } %>
+        <%= person_edit_button(professional_license.person, compact: true, width_class: "w-fit", data: { turbo_frame: "_top" }) %>
       </p>
     </div>
   <% else %>
     <div>
-      <label for="professional_license_person_id" class="<%= label_class %>">Registrant</label>
+      <label for="professional_license_person_id" class="<%= label_class %>">Person</label>
       <%= f.collection_select :person_id,
             (professional_license.person.present? ? [ professional_license.person ] : []),
             :id, :full_name,

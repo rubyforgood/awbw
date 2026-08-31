@@ -38,4 +38,58 @@ RSpec.describe PersonHelper, type: :helper do
       end
     end
   end
+
+  describe "#person_edit_button" do
+    let(:person) { create(:person, first_name: "Aisha", last_name: "Sharma") }
+
+    it "links to the person's edit page, not the profile" do
+      html = helper.person_edit_button(person)
+
+      expect(html).to include(%(href="#{edit_person_path(person)}"))
+      expect(html).not_to include(%(href="#{person_path(person)}"))
+    end
+
+    it "reads 'Edit' before the person's name and shows no avatar" do
+      html = helper.person_edit_button(person)
+
+      expect(html).to include("Edit")
+      expect(html).to include("Aisha Sharma")
+      expect(html).not_to include("rounded-full")
+    end
+
+    it "shows the full name even when the person's display preference is abbreviated" do
+      person.update!(display_name_preference: "first_name_only")
+
+      expect(helper.person_edit_button(person)).to include("Aisha Sharma")
+    end
+
+    it "renders the email subtitle when given" do
+      expect(helper.person_edit_button(person, subtitle: "aisha@example.com")).to include("aisha@example.com")
+    end
+
+    it "reads inline in :prefix layout and stacks in :eyebrow layout" do
+      expect(helper.person_edit_button(person, layout: :prefix)).to include("items-baseline gap-1.5")
+      expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-baseline gap-1.5")
+    end
+  end
+
+  describe "#user_button" do
+    let(:user) { create(:user, person: create(:person, first_name: "Cara", last_name: "Lang")) }
+
+    it "links to the user's show page for a viewer who may see it" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(true)
+      html = helper.user_button(user)
+
+      expect(html).to include(%(href="#{user_path(user)}"))
+      expect(html).to include("Cara Lang")
+    end
+
+    it "renders a plain name, not a link, when the viewer may not see the user" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(false)
+      html = helper.user_button(user)
+
+      expect(html).not_to include("href=")
+      expect(html).to include("Cara Lang")
+    end
+  end
 end

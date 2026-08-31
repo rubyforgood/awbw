@@ -2,8 +2,9 @@ require "rails_helper"
 
 RSpec.describe FormSubmissionDecorator do
   describe "#payer_name / #payer_email" do
-    it "uses the linked person's account when present" do
-      person = build(:person, first_name: "Priya", last_name: "Patel", email: "priya@example.com")
+    it "uses the linked person's account, preferring the account email" do
+      user = build(:user, email: "priya@example.com")
+      person = build(:person, first_name: "Priya", last_name: "Patel", user: user, email: "typed@example.com")
       submission = build(:form_submission, person: person).decorate
 
       expect(submission.payer_name).to eq(person.name)

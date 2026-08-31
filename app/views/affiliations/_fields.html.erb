@@ -64,7 +64,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-1 xl:hidden"><%= label %></label>
           <% if person_side %>
             <% show_email = record.profile_show_email? || allowed_to?(:manage?, Person) %>
-            <%= person_profile_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, inactive: expired && !facilitator, tint: pill_tint) %>
+            <%= person_edit_button(record, truncate_at: 25, subtitle: (record.preferred_email if show_email), compact: true, inactive: expired && !facilitator, tint: pill_tint) %>
           <% else %>
             <%= organization_profile_button(record, truncate_at: 25, compact: true, inactive: expired && !facilitator, tint: pill_tint) %>
           <% end %>

@@ -26,8 +26,14 @@
           <% scholarships.each do |scholarship| %>
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= scholarship.recipient&.full_name || "Unknown recipient" %>
-                <%= scholarship.decorate.agreement_status_badge %>
+                <div class="flex items-center gap-2">
+                  <% if scholarship.recipient %>
+                    <%= person_edit_button(scholarship.recipient, compact: true, width_class: "w-fit", data: { turbo_frame: "_top" }) %>
+                  <% else %>
+                    <span class="text-gray-500">Unknown recipient</span>
+                  <% end %>
+                  <%= scholarship.decorate.agreement_status_badge %>
+                </div>
               </td>
               <%# Declined awards don't draw down the grant, so the amount is struck through. %>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-right <%= scholarship.agreement_declined? ? "text-gray-400 line-through" : "text-gray-900" %>">
