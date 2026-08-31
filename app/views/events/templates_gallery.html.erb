@@ -17,11 +17,12 @@
     <div class="mt-6 flex flex-wrap justify-center gap-6 sm:justify-start">
       <% Event::TEMPLATES.each do |key, meta| %>
         <%= link_to event_path(@sample_event, template: key), target: "_blank", rel: "noopener",
-              class: "group block w-96 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-brand-navy-400 hover:shadow-md" do %>
-          <%# Render the real template at desktop width, then scale the whole thing
-              down so the card shows a faithful reduced-size preview of the page. %>
-          <div class="relative h-80 overflow-hidden border-b border-gray-200 bg-white">
-            <div class="pointer-events-none absolute top-0 left-0 origin-top-left" style="width: 1200px; transform: scale(0.32)">
+              class: "group block w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-brand-navy-400 hover:shadow-md" do %>
+          <%# Render the real template at desktop width, then zoom the whole thing
+              down so the card shows a faithful reduced-size preview. zoom (not
+              transform) also shrinks the layout box, so the cards tile cleanly. %>
+          <div class="h-80 overflow-hidden border-b border-gray-200 bg-white">
+            <div class="pointer-events-none" style="width: 1200px; zoom: 0.3">
               <%= render "events/templates/#{key}", event: @sample_event, sample: true %>
             </div>
           </div>
