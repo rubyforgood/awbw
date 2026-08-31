@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_200133) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -347,7 +347,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.text "description"
-    t.integer "legacy_id"
     t.string "name"
     t.integer "position", null: false
     t.boolean "published", default: false
@@ -368,7 +367,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.boolean "is_primary", default: false, null: false
-    t.integer "legacy_id"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
     t.index ["categorizable_type", "categorizable_id"], name: "idx_on_categorizable_type_categorizable_id_ccce65d80c"
@@ -382,7 +380,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
     t.string "display_text"
-    t.string "legacy_id"
     t.string "name"
     t.boolean "profile_specific", default: false, null: false
     t.boolean "published", default: false
@@ -1175,8 +1172,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.string "filemaker_code"
     t.boolean "high_profile", default: false, null: false
     t.string "internal_id"
-    t.boolean "legacy", default: false
-    t.integer "legacy_id"
     t.integer "location_id"
     t.text "mission_vision_values"
     t.string "name"
@@ -1416,7 +1411,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
 
   create_table "permissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
-    t.integer "legacy_id"
     t.string "security_cat"
     t.datetime "updated_at", precision: nil, null: false
   end
@@ -1440,7 +1434,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
   create_table "quotable_item_quotes", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
-    t.integer "legacy_id"
     t.integer "quotable_id"
     t.string "quotable_type"
     t.integer "quote_id"
@@ -1460,8 +1453,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.integer "created_by_id"
     t.string "gender", limit: 1
     t.boolean "inactive", default: true
-    t.boolean "legacy", default: false
-    t.integer "legacy_id"
     t.text "original_body", size: :long
     t.boolean "published", default: false, null: false
     t.string "speaker_name"
@@ -1610,9 +1601,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.boolean "hidden_from_search", default: false, null: false
     t.boolean "inactive", default: true
     t.string "kind"
-    t.boolean "legacy"
     t.string "legacy_author_name"
-    t.integer "legacy_id"
     t.boolean "male", default: false
     t.integer "organization_id"
     t.integer "position"
@@ -1886,8 +1875,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.string "last_name", default: ""
     t.datetime "last_sign_in_at", precision: nil
     t.string "last_sign_in_ip"
-    t.boolean "legacy", default: false
-    t.integer "legacy_id"
     t.datetime "locked_at"
     t.text "notes", size: :long
     t.bigint "person_id"
@@ -2190,7 +2177,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_011834) do
     t.text "introduction_spanish", size: :long
     t.integer "led_count", default: 0
     t.boolean "legacy", default: false
-    t.integer "legacy_id"
     t.text "materials", size: :long
     t.text "materials_spanish", size: :long
     t.string "misc1"

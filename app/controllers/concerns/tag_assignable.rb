@@ -15,7 +15,7 @@ module TagAssignable
       # The form only edits certain category types (e.g. age ranges + workshop
       # settings). Preserve taggings of every other type the form never shows so
       # saving can't silently drop them — and assign the union so the join rows
-      # for preserved categories stay intact (is_primary/legacy_id untouched).
+      # for preserved categories stay intact (is_primary untouched).
       managed_type_ids = Array(params[key][:managed_category_type_ids]).reject(&:blank?).map(&:to_i)
       preserved = record.categories.reject { |category| managed_type_ids.include?(category.category_type_id) }
       record.categories = (preserved + selected).uniq

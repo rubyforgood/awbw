@@ -317,7 +317,7 @@ category_type_categories = [
   # ["Service Population", "Substance Abuse"], # now a Sector
   # ["Service Population", "Veterans & Military"], # now a Sector
 ]
-category_type_categories.each do |category_type_name, category_name, _legacy_id|
+category_type_categories.each do |category_type_name, category_name|
   next if category_type_name.nil?
 
   ct = find_or_create_by_name!(CategoryType, category_type_name, published: true)
