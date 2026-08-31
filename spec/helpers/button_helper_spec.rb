@@ -75,4 +75,26 @@ RSpec.describe ButtonHelper, type: :helper do
       expect { helper.button_classes(:nope) }.to raise_error(KeyError)
     end
   end
+
+  describe "#brand_cta_classes" do
+    it "renders the gold fill with the raised and pressed edge tokens" do
+      result = helper.brand_cta_classes
+
+      expect(result).to include("bg-brand-yellow-400", "text-brand-navy-900")
+      expect(result).to include("shadow-brand-cta", "active:shadow-brand-cta-pressed")
+    end
+
+    it "takes the edge from the theme token rather than a hard-coded hex" do
+      expect(helper.brand_cta_classes).not_to match(/#[0-9a-f]{6}/i)
+    end
+
+    it "layers the display face on register buttons only" do
+      expect(helper.brand_cta_classes(register: true)).to include("font-display", "uppercase")
+      expect(helper.brand_cta_classes).not_to include("font-display")
+    end
+
+    it "appends extra classes" do
+      expect(helper.brand_cta_classes(extra: "px-10 py-3")).to include("px-10", "py-3")
+    end
+  end
 end
