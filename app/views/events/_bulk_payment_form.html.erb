@@ -1,6 +1,7 @@
-<div class="rounded-lg border-2 border-green-400 bg-green-200 p-4" data-controller="conditional-fields">
-  <h3 class="mb-4 text-lg font-medium">Record Payment</h3>
-  <%= form_tag bulk_payments_event_path(@event) do %>
+<div class="overflow-hidden rounded-lg border <%= DomainTheme.border_class_for(:payments) %> <%= DomainTheme.bg_class_for(:payments) %>" data-controller="conditional-fields">
+  <div class="px-3 py-2 text-xs font-medium tracking-wide uppercase <%= DomainTheme.bg_class_for(:payments, intensity: 100) %> <%= DomainTheme.text_class_for(:payments, intensity: 700) %>">Add payment</div>
+
+  <%= form_tag bulk_payments_event_path(@event), class: "p-3" do %>
     <%= hidden_field_tag :submission_id, submission.id %>
     <%= hidden_field_tag :currency, "usd" %>
 
@@ -59,7 +60,7 @@
     </div>
 
     <div class="mt-4 flex gap-2">
-      <%= button_tag class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
+      <%= button_tag class: button_classes(:success, extra: "inline-flex items-center gap-1.5") do %>
         <i class="fa-solid fa-plus text-xs"></i>
         Create payment
       <% end %>

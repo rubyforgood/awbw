@@ -1,6 +1,8 @@
 <% allocations = payment.allocations.includes(:allocatable) %>
+<% bordered = local_assigns.fetch(:bordered, true) %>
+<% pad = bordered ? "" : "px-3 py-2" %>
 <% if allocations.any? %>
-  <div class="overflow-hidden rounded-lg border border-gray-200">
+  <div class="overflow-hidden <%= "rounded-lg border border-gray-200" if bordered %>">
     <table class="min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-100">
         <tr>
@@ -40,9 +42,9 @@
       </tbody>
     </table>
   </div>
-  <div class="text-right text-sm font-medium text-gray-500">
+  <div class="<%= pad %> text-right text-sm font-medium text-gray-500">
     <%= dollars_from_cents(payment.amount_cents_remaining) %> remaining
   </div>
 <% else %>
-  <p class="text-sm text-gray-400 italic">No allocations yet. <%= dollars_from_cents(payment.amount_cents_remaining) %> remaining.</p>
+  <p class="<%= pad %> text-sm text-gray-400 italic">No allocations yet. <%= dollars_from_cents(payment.amount_cents_remaining) %> remaining.</p>
 <% end %>
