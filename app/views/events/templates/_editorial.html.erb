@@ -4,10 +4,10 @@
 <%= render "events/show/rainbow" %>
 
 <div class="bg-brand-cream w-full">
-  <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
     <% if event.rhino_header.present? %>
       <div class="rounded-2xl bg-white p-2 shadow-sm">
-        <div class="aspect-video overflow-hidden rounded-xl">
+        <div class="aspect-video overflow-hidden rounded-2xl">
           <%= render "events/show/header_media", event: event, fill: "cover" %>
         </div>
       </div>

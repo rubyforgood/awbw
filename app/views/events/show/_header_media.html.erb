@@ -5,7 +5,10 @@
 <% fill = local_assigns.fetch(:fill, false) %>
 <% if event.rhino_header.present? %>
   <% if fill == "cover" %>
-    <div class="h-full [&_img]:h-full [&_img]:w-full [&_img]:object-cover">
+    <%# Round the <img> itself, not just an overflow-hidden frame: overflow
+        clipping can fail to round the top corners, so the image carries its own
+        radius. %>
+    <div class="h-full [&_img]:h-full [&_img]:w-full [&_img]:rounded-2xl [&_img]:object-cover">
       <%= event.rhino_header %>
     </div>
   <% else %>
