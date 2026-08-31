@@ -2160,7 +2160,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_220445) do
     t.boolean "published", default: false, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
-    t.integer "variation_id"
     t.integer "windows_type_id"
     t.integer "workshop_id"
     t.bigint "workshop_variation_idea_id"
