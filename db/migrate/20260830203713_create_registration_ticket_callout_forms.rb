@@ -18,16 +18,7 @@ class CreateRegistrationTicketCalloutForms < ActiveRecord::Migration[8.1]
       add_foreign_key :registration_ticket_callout_forms, :forms, column: :form_id
     end
 
-    if column_exists?(:registration_ticket_callouts, :form_id)
-      execute <<~SQL.squish
-        INSERT INTO registration_ticket_callout_forms
-          (registration_ticket_callout_id, form_id, display_from, position, created_at, updated_at)
-        SELECT id, form_id, display_from, 1, NOW(), NOW()
-        FROM registration_ticket_callouts
-        WHERE form_id IS NOT NULL
-      SQL
-      remove_reference :registration_ticket_callouts, :form, foreign_key: true
-    end
+    remove_reference :registration_ticket_callouts, :form, foreign_key: true if column_exists?(:registration_ticket_callouts, :form_id)
   end
 
   def down
@@ -35,14 +26,6 @@ class CreateRegistrationTicketCalloutForms < ActiveRecord::Migration[8.1]
       add_reference :registration_ticket_callouts, :form, type: :integer, foreign_key: true, null: true
     end
 
-    if table_exists?(:registration_ticket_callout_forms)
-      execute <<~SQL.squish
-        UPDATE registration_ticket_callouts c
-        INNER JOIN registration_ticket_callout_forms cf
-          ON cf.registration_ticket_callout_id = c.id AND cf.position = 1
-        SET c.form_id = cf.form_id
-      SQL
-      drop_table :registration_ticket_callout_forms
-    end
+    drop_table :registration_ticket_callout_forms, if_exists: true
   end
 end
