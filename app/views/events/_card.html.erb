@@ -44,8 +44,10 @@
     <div class="mt-auto flex items-end justify-between gap-3">
       <!-- When + where -->
       <div class="min-w-0 text-sm leading-snug">
-        <div class="font-medium text-gray-900"><%= datetime[:date] %></div>
-        <div class="text-gray-500"><%= datetime[:time] %></div>
+        <div class="flex flex-wrap items-baseline gap-x-2">
+          <span class="font-medium whitespace-nowrap text-gray-900"><%= datetime[:date] %></span>
+          <span class="whitespace-nowrap text-gray-500"><%= datetime[:time] %></span>
+        </div>
         <% if location_text.present? %>
           <div class="mt-1 font-medium <%= DomainTheme.text_class_for(:events, intensity: 700) %>"><%= location_text %></div>
         <% end %>
