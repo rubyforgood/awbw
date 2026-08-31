@@ -73,20 +73,12 @@ class FormBuilderService
     payment: %w[payment_method someone_else_will_pay],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    day_1_survey: %w[
-      d1_clarity_part_one d1_clarity_part_one_detail d1_clarity_part_two d1_clarity_part_two_detail
-      d1_touchstone_personal d1_touchstone_professional d1_safer_braver_personal d1_safer_braver_professional
-      d1_take_a_break_personal d1_take_a_break_professional d1_breakout_rooms d1_grounding
-      d1_prepared_facilitate d1_prepared_trauma_informed d1_review_reflect
-      d1_improvements d1_enjoyed d1_recommend d1_comments
-    ],
-    day_2_survey: %w[
-      d2_clarity_part_one d2_clarity_part_one_detail d2_clarity_part_two d2_clarity_part_two_detail
-      d2_monster_personal d2_monster_professional d2_claiming_personal d2_claiming_professional
-      d2_breakout_rooms d2_intersectionality d2_questions_challenges d2_review_reflect d2_warmup_importance
-      d2_improvements d2_enjoyed d2_stay_in_touch d2_support_needs d2_recommend d2_comments
-    ],
-    recipient_survey: %w[impact insights more_valuable facilitate_likelihood anything_else],
+    # Only the clarity radios carry an identifier — they're the per-resource fan-out
+    # anchors the seeder links topics to. Every other survey question is answer-only
+    # (stored on the form submission), so it needs no identifier.
+    day_1_survey: %w[d1_clarity_part_one d1_clarity_part_two],
+    day_2_survey: %w[d2_clarity_part_one d2_clarity_part_two],
+    recipient_survey: %w[],
     content_sharing_preferences: %w[anonymous_contributions display_name_preference],
     bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
@@ -416,7 +408,7 @@ class FormBuilderService
     position
   end
 
-  def add_field(form, position, field_name, answer_type, key:, group:, required: true, subtitle: nil, options: nil, datatype: nil, visibility: nil, width: :full)
+  def add_field(form, position, field_name, answer_type, group:, key: nil, required: true, subtitle: nil, options: nil, datatype: nil, visibility: nil, width: :full)
     position += 1
     field = form.form_fields.create!(
       name: field_name,
@@ -706,44 +698,44 @@ class FormBuilderService
                          key: "d1_clarity_part_one", group: "day_1_survey", subtitle: "Day 1 — Part One",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
-                         key: "d1_clarity_part_one_detail", group: "day_1_survey", required: false)
+                         group: "day_1_survey", required: false)
     position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
                          key: "d1_clarity_part_two", group: "day_1_survey", subtitle: "Day 1 — Part Two",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
-                         key: "d1_clarity_part_two_detail", group: "day_1_survey", required: false)
+                         group: "day_1_survey", required: false)
 
     position = add_field(form, position, "The Touchstone Journey workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         key: "d1_touchstone_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Touchstone Journey workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         key: "d1_touchstone_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         key: "d1_safer_braver_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         key: "d1_safer_braver_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         key: "d1_take_a_break_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         key: "d1_take_a_break_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
-                         key: "d1_breakout_rooms", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "I was able to practice grounding and self-regulation during the training.", :single_select_radio,
-                         key: "d1_grounding", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "What I learned today better prepared me to facilitate art workshops.", :single_select_radio,
-                         key: "d1_prepared_facilitate", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "What I learned today better prepared me to utilize trauma informed practices during art workshops.", :single_select_radio,
-                         key: "d1_prepared_trauma_informed", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "Taking time to review and reflect after each workshop on how an element of the arc of healing connected to a part of the workshop structure will support me in facilitating art workshops.", :single_select_radio,
-                         key: "d1_review_reflect", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
 
     position = add_field(form, position, "Please tell us what aspects of day 1 of the training could be improved.", :free_form_input_paragraph,
-                         key: "d1_improvements", group: "day_1_survey", required: false)
+                         group: "day_1_survey", required: false)
     position = add_field(form, position, "Please tell us what aspects of day 1 you enjoyed the most.", :free_form_input_paragraph,
-                         key: "d1_enjoyed", group: "day_1_survey", required: false)
+                         group: "day_1_survey", required: false)
     position = add_field(form, position, "Imagine how you would share your experience of this training with someone who is considering attending. Please share in a couple of sentences what you would say or tell them.", :free_form_input_paragraph,
-                         key: "d1_recommend", group: "day_1_survey", required: false)
+                         group: "day_1_survey", required: false)
     position = add_field(form, position, "Comments", :free_form_input_paragraph,
-                         key: "d1_comments", group: "day_1_survey", required: false)
+                         group: "day_1_survey", required: false)
     position
   end
 
@@ -754,44 +746,44 @@ class FormBuilderService
                          key: "d2_clarity_part_one", group: "day_2_survey", subtitle: "Day 2 — Part 1",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
-                         key: "d2_clarity_part_one_detail", group: "day_2_survey", required: false)
+                         group: "day_2_survey", required: false)
     position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
                          key: "d2_clarity_part_two", group: "day_2_survey", subtitle: "Day 2 — Part 2",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
-                         key: "d2_clarity_part_two_detail", group: "day_2_survey", required: false)
+                         group: "day_2_survey", required: false)
 
     position = add_field(form, position, "The Monster In Me workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         key: "d2_monster_personal", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Monster In Me workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         key: "d2_monster_professional", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Claiming Who I Am workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         key: "d2_claiming_personal", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The Claiming Who I Am workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         key: "d2_claiming_professional", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
-                         key: "d2_breakout_rooms", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "What I learned today better prepared me to facilitate art workshops that honor intersectionality.", :single_select_radio,
-                         key: "d2_intersectionality", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "Having time to dive into topics related to questions and challenges helped me feel more prepared to facilitate art workshops.", :single_select_radio,
-                         key: "d2_questions_challenges", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "Taking time to review and reflect after each workshop on how an element of the arc of healing connected to a part of the workshop structure will support me in facilitating art workshops.", :single_select_radio,
-                         key: "d2_review_reflect", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "To best prepare art workshop participants to create, I understand the importance of providing a warm-up before the creation portion of the art workshop.", :single_select_radio,
-                         key: "d2_warmup_importance", group: "day_2_survey", options: CLARITY_OPTIONS)
+                         group: "day_2_survey", options: CLARITY_OPTIONS)
 
     position = add_field(form, position, "Please tell us what aspects of day 2 of the training could be improved.", :free_form_input_paragraph,
-                         key: "d2_improvements", group: "day_2_survey", required: false)
+                         group: "day_2_survey", required: false)
     position = add_field(form, position, "Please tell us what aspects of day 2 of the training you enjoyed the most.", :free_form_input_paragraph,
-                         key: "d2_enjoyed", group: "day_2_survey", required: false)
+                         group: "day_2_survey", required: false)
     position = add_field(form, position, "Would you like your name and email address included on a list we will share with your fellow trainees (for those who would like to stay in touch)?", :single_select_radio,
-                         key: "d2_stay_in_touch", group: "day_2_survey", required: false, options: %w[Yes No])
+                         group: "day_2_survey", required: false, options: %w[Yes No])
     position = add_field(form, position, "How can we better support your needs and those of your art workshop participants?", :free_form_input_paragraph,
-                         key: "d2_support_needs", group: "day_2_survey", required: false)
+                         group: "day_2_survey", required: false)
     position = add_field(form, position, "Imagine how you would share your experience of this training with someone who is considering attending. Please share in a couple of sentences what you would say or tell them.", :free_form_input_paragraph,
-                         key: "d2_recommend", group: "day_2_survey", required: false)
+                         group: "day_2_survey", required: false)
     position = add_field(form, position, "Comments", :free_form_input_paragraph,
-                         key: "d2_comments", group: "day_2_survey", required: false)
+                         group: "day_2_survey", required: false)
     position
   end
 
@@ -799,15 +791,15 @@ class FormBuilderService
     position = add_header(form, position, "Post-training recipient questions", group: "recipient_survey")
 
     position = add_field(form, position, "How did participating in this training impact you personally and/or professionally?", :free_form_input_paragraph,
-                         key: "impact", group: "recipient_survey", required: true)
+                         group: "recipient_survey", required: true)
     position = add_field(form, position, "What insights, tools, or facilitation skills from the training stood out most to you?", :free_form_input_paragraph,
-                         key: "insights", group: "recipient_survey", required: true)
+                         group: "recipient_survey", required: true)
     position = add_field(form, position, "What would have made the training more valuable for you?", :free_form_input_paragraph,
-                         key: "more_valuable", group: "recipient_survey", required: false)
+                         group: "recipient_survey", required: false)
     position = add_field(form, position, "How likely are you to facilitate an AWBW art workshop in the next 3 months?", :single_select_radio,
-                         key: "facilitate_likelihood", group: "recipient_survey", options: LIKELIHOOD_OPTIONS)
+                         group: "recipient_survey", options: LIKELIHOOD_OPTIONS)
     position = add_field(form, position, "Anything else you'd like us to know?", :free_form_input_paragraph,
-                         key: "anything_else", group: "recipient_survey", required: false)
+                         group: "recipient_survey", required: false)
     position
   end
 

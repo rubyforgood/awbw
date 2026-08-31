@@ -184,16 +184,7 @@ class SmartFormFields
     scholarship_eligibility scholarship_contribution impact_description
     implementation_plan additional_comments
     event_rating most_valuable improvement_suggestions
-    d1_clarity_part_one d1_clarity_part_one_detail d1_clarity_part_two d1_clarity_part_two_detail
-    d1_touchstone_personal d1_touchstone_professional d1_safer_braver_personal d1_safer_braver_professional
-    d1_take_a_break_personal d1_take_a_break_professional d1_breakout_rooms d1_grounding
-    d1_prepared_facilitate d1_prepared_trauma_informed d1_review_reflect
-    d1_improvements d1_enjoyed d1_recommend d1_comments
-    d2_clarity_part_one d2_clarity_part_one_detail d2_clarity_part_two d2_clarity_part_two_detail
-    d2_monster_personal d2_monster_professional d2_claiming_personal d2_claiming_professional
-    d2_breakout_rooms d2_intersectionality d2_questions_challenges d2_review_reflect d2_warmup_importance
-    d2_improvements d2_enjoyed d2_stay_in_touch d2_support_needs d2_recommend d2_comments
-    impact insights more_valuable facilitate_likelihood anything_else
+    d1_clarity_part_one d1_clarity_part_two d2_clarity_part_one d2_clarity_part_two
     anonymous_contributions display_name_preference
   ].freeze
 
