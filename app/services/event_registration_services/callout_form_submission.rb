@@ -4,8 +4,9 @@ module EventRegistrationServices
   #
   # A survey-role form additionally: fans a per-resource "clarity" field out to one
   # answer per linked resource, writes the anonymity / name-display answers through
-  # to the Person (#profile_changes reports real changes for Ahoy), and stamps
-  # post_survey_completed_at for a recipient's post-event survey.
+  # to the Person (PersonServices::SyncSharingPreferences, the same write-through the
+  # registration form runs; #profile_changes reports real changes for Ahoy), and
+  # stamps post_survey_completed_at for a recipient's post-event survey.
   class CalloutFormSubmission
     attr_reader :submission, :profile_changes
 
@@ -68,34 +69,19 @@ module EventRegistrationServices
         field.form_field_resources.includes(:resource).each do |link|
           raw = per_resource[link.resource_id.to_s] || per_resource[link.resource_id]
           next if raw.blank?
-          question = "#{field.name} #{link.resource.title}"
+          question = field.per_resource_question(link.resource)
           record = @submission.form_answers.find_or_initialize_by(form_field: nil, question_name_when_answered: question)
           record.update!(submitted_answer: raw)
         end
       end
     end
 
-    # Write the two identified questions to the Person, recording only real changes.
+    # The same content-sharing write-through the registration flow runs, so the two
+    # questions behave identically wherever they're asked.
     def sync_profile(person)
-      apply_profile_change(person, :anonymous_contributions,
-        Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.invert[value_for("anonymous_contributions")])
-      apply_profile_change(person, :display_name_preference,
-        Person::DISPLAY_NAME_PREFERENCE_LABELS.invert[value_for("display_name_preference")])
-      person.save! if person.changed?
-    end
-
-    def apply_profile_change(person, attribute, new_value)
-      return if new_value.nil?
-      current = person.public_send(attribute)
-      return if current == new_value
-      @profile_changes[attribute] = [ current, new_value ]
-      person.public_send("#{attribute}=", new_value)
-    end
-
-    # The submitted label for a field identified by its field_identifier.
-    def value_for(field_identifier)
-      field = @form.form_fields.find_by(field_identifier: field_identifier)
-      field && @form_params[field.id.to_s]
+      @profile_changes = PersonServices::SyncSharingPreferences.call(
+        person: person, form: @form, form_params: @form_params
+      ).changes
     end
 
     # A form delivered on the scholarship callout is a scholarship recipient's final

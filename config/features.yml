@@ -2957,13 +2957,15 @@
     - "The email lists the submitted answers and links the submitter and event."
     - "It sends on each submission; the subject says \"New\" for a first submission and \"Updated\" when the registrant edits their answers."
 
-- name: "Post-event survey sets your content-sharing preferences"
+- name: "Content-sharing questions set your profile preferences"
   area: registration
   display_status: user_facing
   released_on: 2026-08-30
   summary: >-
-    The survey's anonymity and display-name questions write straight through to
-    your profile — answering them updates how your contributed content is credited
-    (anonymous, or shown under your chosen name format).
+    The anonymity and display-name questions now write straight through to your
+    profile — answering them on a registration form or a post-event survey updates
+    how your contributed content is credited (anonymous, or shown under your chosen
+    name format).
   pro_tips:
     - "Change your answers any time by reopening the survey, or from your profile directly."
+    - "Admins: on a registration form the change shows up on the submission's \"What this submission changed\" page, like any other profile edit."

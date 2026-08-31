@@ -99,6 +99,25 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       )
     end
 
+    # The clarity pair share a prompt and differ only by subtitle, so the snapshot
+    # sentence has to keep them apart or one answer overwrites the other.
+    it "keeps two same-named fan-out questions on separate answers" do
+      part_two = create(:form_field, form:, answer_type: :single_select_radio,
+        name: clarity_field.name, subtitle: "Part Two")
+      create(:form_field_resource, form_field: part_two, resource: triple_focus)
+      clarity_field.update!(subtitle: "Part One")
+
+      submission = submit(answers, clarity: clarity.merge(
+        part_two.id.to_s => { triple_focus.id.to_s => "No" }
+      ))
+
+      expect(submission.form_answers.where(form_field: nil).pluck(:question_name_when_answered, :submitted_answer))
+        .to include(
+          [ "Part One: #{clarity_field.name} Triple Focus", "Yes" ],
+          [ "Part Two: #{clarity_field.name} Triple Focus", "No" ]
+        )
+    end
+
     it "writes the two profile questions through to the Person and reports the changes" do
       service = described_class.call(registration:, callout:, form:, form_params: answers, clarity_params: clarity)
 

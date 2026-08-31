@@ -203,6 +203,14 @@ class FormField < ApplicationRecord
     selectable? && form_field_resources.any?
   end
 
+  # The sentence one fanned-out copy is asked, stored, and shown under. The answer
+  # keeps a nil form_field, so this string is also its key: the subtitle leads so two
+  # fan-out questions sharing a name (the clarity pair, which differ only by their
+  # "Part One" / "Part Two" subtitle) can't collide on one answer row.
+  def per_resource_question(resource)
+    [ subtitle.presence, "#{name} #{resource.title}" ].compact.join(": ")
+  end
+
   # True for fields whose answer options are tied to backend logic (currently the
   # payment-method field's Stripe wiring) and so should be shown read-only in the
   # form builder rather than freely edited.
