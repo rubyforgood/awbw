@@ -1,43 +1,55 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Keeps a slider form field's range handle and its number box in step: dragging
-// the handle fills the number box, typing a number moves the handle (clamped to
-// the field's bounds), and the range track fills up to the current value. The
-// number input carries the submitted value; the range is display/entry only.
+// A slider form field: dragging the range handle shows the picked number in a
+// bubble above it, fills the track up to that point, and writes the whole number
+// to a hidden input (the submitted value). The hidden input stays blank until
+// the person interacts, so an untouched required slider still fails presence
+// validation — a range input on its own would always post its default.
 export default class extends Controller {
-  static targets = ["range", "number"]
+  static targets = ["range", "value", "bubble"]
   static values = { min: Number, max: Number }
 
+  // Thumb width, used to nudge the bubble so it stays centered over the handle
+  // as it travels the track.
+  thumbWidth = 16
+
   connect() {
-    // A prefilled/re-rendered value lives on the number box — mirror it onto the
-    // handle. An untouched field leaves the number box blank so "required" still
-    // catches a non-answer.
-    if (this.numberTarget.value !== "") this.rangeTarget.value = this.numberTarget.value
-    this.paint()
-  }
-
-  rangeChanged() {
-    this.numberTarget.value = this.rangeTarget.value
-    this.paint()
-  }
-
-  numberChanged() {
-    if (this.numberTarget.value === "") {
-      this.rangeTarget.value = this.minValue
-      this.paint()
-      return
+    // A prefilled/re-rendered value lives on the hidden input — mirror it onto
+    // the handle and show the bubble.
+    if (this.valueTarget.value !== "") {
+      this.rangeTarget.value = this.valueTarget.value
+      this.render()
+    } else {
+      this.paintTrack()
     }
-    const clamped = Math.min(Math.max(Number(this.numberTarget.value), this.minValue), this.maxValue)
-    this.numberTarget.value = clamped
-    this.rangeTarget.value = clamped
-    this.paint()
   }
 
-  // Fills the track from the left up to the handle, since native range inputs
-  // only color the thumb.
-  paint() {
-    const percent = ((this.rangeTarget.value - this.minValue) / (this.maxValue - this.minValue)) * 100
+  update() {
+    this.valueTarget.value = this.rangeTarget.value
+    this.render()
+  }
+
+  render() {
+    this.bubbleTarget.textContent = this.rangeTarget.value
+    this.bubbleTarget.classList.remove("hidden")
+    this.positionBubble()
+    this.paintTrack()
+  }
+
+  get percent() {
+    return (this.rangeTarget.value - this.minValue) / (this.maxValue - this.minValue)
+  }
+
+  positionBubble() {
+    const offset = (0.5 - this.percent) * this.thumbWidth
+    this.bubbleTarget.style.left = `calc(${this.percent * 100}% + ${offset}px)`
+  }
+
+  // Native range inputs only color the thumb, so fill the track from the left up
+  // to the current value.
+  paintTrack() {
+    const filled = this.percent * 100
     this.rangeTarget.style.background =
-      `linear-gradient(to right, var(--color-primary, #2563eb) ${percent}%, #e5e7eb ${percent}%)`
+      `linear-gradient(to right, var(--color-primary, #2563eb) ${filled}%, #e5e7eb ${filled}%)`
   }
 }
