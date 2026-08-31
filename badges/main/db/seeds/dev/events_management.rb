@@ -330,6 +330,30 @@ Event.where.not(videoconference_url: [ nil, "" ]).find_each do |vc_event|
   vc.update!(payment_access_gated: false) if vc&.published?
 end
 
+# Give a handful of events a real primary image so the event cards render artwork
+# instead of the theme_default placeholder. Idempotent: skips events that already
+# have a primary image attached.
+puts "Attaching event card images…"
+event_card_images = {
+  "A Year of Healing and Rebuilding Together Wellness Day" => "event_wellness_day_lineage_of_love.webp",
+  "AWBW Facilitator Training" => "event_facilitator_training_supplies.webp",
+  "Art as Healing: Virtual Group Session" => "event_awbw_virtual_session.webp",
+  "Annual Celebration of Voices" => "event_toolkit_launch.webp"
+}
+event_card_images.each do |event_title, filename|
+  event = Event.find_by(title: event_title)
+  next unless event
+  next if event.primary_asset&.file&.attached?
+
+  asset = event.primary_asset || event.build_primary_asset(created_by: admin_user)
+  asset.file.attach(
+    io: File.open(Rails.root.join("db/seeds/dev/files", filename)),
+    filename: filename,
+    content_type: "image/webp"
+  )
+  asset.save!
+end
+
 # Seed the "Before you attend" details — the materials/art-supply info that used to
 # live in a long confirmation email and that registrants routinely missed. Shown on
 # its own ticket-linked page (and via the prominent amber call-out on the ticket).

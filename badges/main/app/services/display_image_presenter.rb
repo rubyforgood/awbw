@@ -154,6 +154,8 @@ class DisplayImagePresenter
       "gallery-size #{w} #{h} #{object_fit} rounded border border-gray-300 shadow-sm hover:opacity-90 transition-opacity #{@extra_image_classes}"
     when :index
       "w-full h-full #{object_fit} #{@extra_image_classes}"
+    when :banner
+      "w-full h-full #{object_fit} #{@extra_image_classes}"
     end
 
     if type == :active_storage
@@ -171,6 +173,7 @@ class DisplayImagePresenter
     when :hero then "mb-8"
     when :gallery then "flex grow"
     when :index then "index-size #{w} #{h} shrink-0 overflow-hidden rounded border border-gray-300"
+    when :banner then "h-full w-full"
     end
   end
 

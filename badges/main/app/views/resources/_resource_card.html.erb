@@ -56,7 +56,7 @@
                 class: button_classes(:utility)
               ) %>
         <% end %>
-        <% if controller_name == "resources" &&  allowed_to?(:edit?, resource) %>
+        <% if controller_path == "resources" && allowed_to?(:edit?, resource) %>
           <%= link_to(
                 content_tag(:span, "", class: "far fa-edit"),
                 edit_resource_path(resource.object),

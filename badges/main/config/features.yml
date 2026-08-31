@@ -2851,3 +2851,17 @@
   pro_tips:
     - "The search box finds payers even when they have no Portal account — it looks at everything they typed on the form and the submission's saved details, not just a linked person."
     - "The red \"not registered\" and amber \"unpaid\" chips sit next to the payment status, so you can spot who still needs follow-up before the money is settled."
+
+- name: "Refreshed event cards"
+  area: events
+  display_status: public_facing
+  released_on: 2026-08-30
+  action_path: "/events"
+  pr_number: 2443
+  summary: >-
+    Event cards on the home page and the Events page now lead with a large banner
+    image, with the location, date, and time laid out below and the Register button
+    beside them. Events without their own image show a branded placeholder.
+  pro_tips:
+    - "Add a primary image when editing an event and it shows on the card — otherwise a default AWBW placeholder is used."
+    - "The home page highlights events two-per-row with larger images, while the full Events page shows a denser three-per-row grid."
