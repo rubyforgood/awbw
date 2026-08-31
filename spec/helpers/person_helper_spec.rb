@@ -62,8 +62,8 @@ RSpec.describe PersonHelper, type: :helper do
     end
 
     it "reads inline in :prefix layout and stacks in :eyebrow layout" do
-      expect(helper.person_edit_button(person, layout: :prefix)).to include("items-center gap-1.5")
-      expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-center gap-1.5")
+      expect(helper.person_edit_button(person, layout: :prefix)).to include("items-baseline gap-1.5")
+      expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-baseline gap-1.5")
     end
   end
 end

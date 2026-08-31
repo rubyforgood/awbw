@@ -97,15 +97,16 @@ module PersonHelper
                     overflow-hidden" do
       eyebrow = content_tag(:span, "Edit", class: "shrink-0 text-2xs text-gray-400 uppercase")
       name = content_tag(:span, full_name, class: "truncate font-semibold #{name_text_size} #{palette[:text]}")
+      subtitle_tag = person_button_subtitle(subtitle)
 
-      heading_class = layout == :eyebrow ? "flex flex-col leading-tight" : "flex items-center gap-1.5 leading-none"
-      heading = content_tag(:div, safe_join([ eyebrow, name ]), class: "#{heading_class} text-left min-w-0")
-
-      content_tag(
-        :div,
-        heading + person_button_subtitle(subtitle),
-        class: "flex flex-col leading-tight text-left min-w-0"
-      )
+      if layout == :eyebrow
+        content_tag(:div, safe_join([ eyebrow, name, subtitle_tag ]), class: "flex flex-col leading-tight text-left min-w-0")
+      else
+        # Eyebrow to the left of a name/email column so the email reads parallel
+        # below the name (not indented under the "Edit" tag).
+        name_block = content_tag(:div, safe_join([ name, subtitle_tag ]), class: "flex flex-col leading-tight min-w-0")
+        content_tag(:div, safe_join([ eyebrow, name_block ]), class: "flex items-baseline gap-1.5 text-left min-w-0")
+      end
     end
   end
 
