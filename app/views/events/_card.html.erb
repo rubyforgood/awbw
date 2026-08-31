@@ -1,6 +1,9 @@
 <% event = event.decorate %>
 <% ended = event.ended? %>
 <% registered = current_user && event.actively_registered?(current_user.person) %>
+<% location_text = [ event.location&.name, (event.videoconference_label if event.autoshow_videoconference_label) ].compact_blank.join(" · ") %>
+<% datetime = event.card_datetime %>
+<% register_class = button_classes(:accent_outline, size: nil, extra: "px-4 py-2 text-sm uppercase leading-tight font-telefon") %>
 
 <%= tag.div id: dom_id(event, :card),
             class: class_names(
@@ -22,6 +25,13 @@
                  file: event.display_image %>
     <% end %>
 
+    <!-- Format tag -->
+    <% if location_text.present? %>
+      <div class="absolute top-3 left-3 z-10">
+        <span class="inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-medium shadow-sm backdrop-blur <%= DomainTheme.text_class_for(:events, intensity: 800) %>"><%= location_text %></span>
+      </div>
+    <% end %>
+
     <!-- Bookmark -->
     <div class="absolute top-3 right-3 z-10">
       <div class="rounded-full bg-white/85 p-1 shadow-sm backdrop-blur">
@@ -39,17 +49,10 @@
     <% end %>
 
     <div class="mt-auto flex items-end justify-between gap-3">
-      <!-- Location + date + time -->
-      <% datetime = event.card_datetime %>
-      <% location_text = [ event.location&.name, (event.videoconference_label if event.autoshow_videoconference_label) ].compact_blank.join(" · ") %>
-      <div class="flex min-w-0 flex-col gap-2">
-        <% if location_text.present? %>
-          <span class="inline-flex w-fit max-w-full items-center truncate rounded-full px-2.5 py-0.5 text-xs font-medium <%= DomainTheme.bg_class_for(:events, intensity: 50) %> <%= DomainTheme.text_class_for(:events, intensity: 800) %>"><%= location_text %></span>
-        <% end %>
-        <div class="text-sm leading-snug">
-          <div class="font-medium text-gray-900"><%= datetime[:date] %></div>
-          <div class="text-gray-500"><%= datetime[:time] %></div>
-        </div>
+      <!-- Date + time -->
+      <div class="min-w-0 text-sm leading-snug">
+        <div class="font-medium text-gray-900"><%= datetime[:date] %></div>
+        <div class="text-gray-500"><%= datetime[:time] %></div>
       </div>
 
       <!-- Actions -->
@@ -70,7 +73,7 @@
             <% if registration&.slug.present? %>
               <%= link_to "View ticket", registration_ticket_path(registration.slug),
                           data: { turbo_frame: "_top" },
-                          class: button_classes(:success, size: nil, extra: "px-3 py-2 text-xs uppercase leading-tight font-telefon") %>
+                          class: button_classes(:success, size: nil, extra: "px-4 py-2 text-sm uppercase leading-tight font-telefon") %>
             <% end %>
           <% elsif event.ended? %>
             <span class="text-sm text-gray-500 italic">Event ended</span>
@@ -82,18 +85,18 @@
                 <%= button_to "Register",
                             event_registrant_registration_path(event_id: event),
                             data: { turbo: !event.object.cost_cents.to_i.positive? },
-                            class: button_classes(:accent_outline, size: nil, extra: "px-3 py-2 text-xs uppercase leading-tight font-telefon") %>
+                            class: register_class %>
               <% else %>
                 <%= link_to "Register",
                             new_event_public_registration_path(event),
                             data: { turbo_frame: "_top" },
-                            class: button_classes(:accent_outline, size: nil, extra: "px-3 py-2 text-xs uppercase leading-tight font-telefon") %>
+                            class: register_class %>
               <% end %>
             <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
               <%= link_to "Register",
                           new_event_public_registration_path(event),
                           data: { turbo_frame: "_top" },
-                          class: button_classes(:accent_outline, size: nil, extra: "px-3 py-2 text-xs uppercase leading-tight font-telefon") %>
+                          class: register_class %>
             <% end %>
           <% else %>
             <span class="text-sm text-gray-500 italic">Registration closed</span>
