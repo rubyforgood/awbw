@@ -31,7 +31,7 @@
           <div class="md:w-72">
             <span class="<%= search_label_class %>">Person</span>
             <% if taggable.is_a?(Person) %>
-              <%= person_profile_button(taggable, subtitle: taggable.preferred_email, data: { turbo_frame: "_top" }, width_class: "w-full") %>
+              <%= person_edit_button(taggable, subtitle: taggable.preferred_email, data: { turbo_frame: "_top" }, width_class: "w-full") %>
             <% else %>
               <span class="font-semibold text-gray-800"><%= taggable&.name %></span>
             <% end %>

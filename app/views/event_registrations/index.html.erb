@@ -58,7 +58,7 @@
                     <tr id="<%= dom_id(event_registration) %>" class="transition-colors duration-150 hover:bg-gray-50">
                       <td class="px-3 py-1 align-middle text-sm text-gray-800">
                         <div class="flex items-center gap-2">
-                          <%= person_profile_button(event_registration.registrant, compact: true) %>
+                          <%= person_edit_button(event_registration.registrant, compact: true) %>
                           <% if submitted_pairs.include?([ event_registration.registrant_id, event_registration.event_id ]) %>
                             <i class="fa-solid fa-file-lines shrink-0 text-green-600" title="Completed registration form"></i>
                           <% elsif events_with_forms.include?(event_registration.event_id) %>

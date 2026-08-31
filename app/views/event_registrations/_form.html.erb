@@ -71,7 +71,7 @@
            data-attendance-status-day-count-value="<%= f.object.event.day_count %>">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
           <div class="min-w-0 flex-1">
-            <%= person_profile_button(f.object.registrant, subtitle: f.object.registrant.preferred_email) %>
+            <%= person_edit_button(f.object.registrant, subtitle: f.object.registrant.preferred_email) %>
           </div>
 
           <%# ---- User account — a grey box whose border + icon flag the account

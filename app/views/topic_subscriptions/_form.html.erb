@@ -82,6 +82,21 @@
         <p class="text-xs text-gray-500">A new person will be created and linked to this subscription.</p>
       </div>
     </div>
+  <% elsif @topic_subscription.person %>
+    <%# Person — shown as an edit-button card with a pencil that reveals the
+        picker (edit-toggle), matching the Topic/Event fields below. %>
+    <div data-controller="edit-toggle">
+      <span class="<%= label_class %>">Person</span>
+      <div class="flex items-center gap-2">
+        <div class="min-w-0" data-edit-toggle-target="view">
+          <%= person_edit_button(@topic_subscription.person, subtitle: @topic_subscription.person.preferred_email, width_class: "w-fit max-w-md") %>
+        </div>
+        <div class="hidden flex-1" data-edit-toggle-target="edit"><%= person_select %></div>
+        <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change person">
+          <i class="fa-solid fa-pen text-2xs"></i>
+        </button>
+      </div>
+    </div>
   <% else %>
     <div>
       <%= f.label :person_id, "Person", class: label_class %>
@@ -131,16 +146,37 @@
   </div>
 
   <%# Organization — optional narrowing to a specific org, unrelated to the topic's
-      event dimension, so it's always shown (not gated on the topic like Event). %>
-  <div>
-    <%= f.label :organization_id, "Organization", class: label_class %>
+      event dimension, so it's always shown (not gated on the topic like Event).
+      When one is set, show its profile button (linking to the org profile) with a
+      pencil that reveals the picker; otherwise show the picker directly. %>
+  <% organization_select = capture do %>
     <%= f.select :organization_id,
       options_for_select(Organization.where(id: @topic_subscription.organization_id).map { |o| [ o.name, o.id ] }, @topic_subscription.organization_id),
       { include_blank: true, prompt: "Search for an organization" },
       class: field_class,
       data: { controller: "remote-select", remote_select_model_value: "organization" } %>
-    <p class="mt-1 text-xs text-gray-500">Optional — narrow this subscription to a specific organization.</p>
-  </div>
+  <% end %>
+  <% if @topic_subscription.organization %>
+    <div data-controller="edit-toggle">
+      <span class="<%= label_class %>">Organization</span>
+      <div class="flex items-center gap-2">
+        <div class="min-w-0 max-w-md" data-edit-toggle-target="view">
+          <%= organization_profile_button(@topic_subscription.organization) %>
+        </div>
+        <div class="hidden flex-1" data-edit-toggle-target="edit"><%= organization_select %></div>
+        <button type="button" class="<%= pencil_class %>" data-action="edit-toggle#toggle" aria-label="Change organization">
+          <i class="fa-solid fa-pen text-2xs"></i>
+        </button>
+      </div>
+      <p class="mt-1 text-xs text-gray-500">Optional — narrow this subscription to a specific organization.</p>
+    </div>
+  <% else %>
+    <div>
+      <%= f.label :organization_id, "Organization", class: label_class %>
+      <%= organization_select %>
+      <p class="mt-1 text-xs text-gray-500">Optional — narrow this subscription to a specific organization.</p>
+    </div>
+  <% end %>
 
   <div>
     <%= f.label :source, class: label_class %>
