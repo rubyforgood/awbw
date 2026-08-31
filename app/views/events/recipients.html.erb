@@ -240,10 +240,10 @@
                 <% end %>
               <% end %>
             </div>
-            <%# Recipient name on the right, bold and linked to their profile, with
+            <%# Recipient name on the right, bold and linked to their edit page, with
                 their primary sector and age group in parens, then their shout-out text. %>
             <div class="text-sm text-gray-700 sm:col-span-2">
-              <%= link_to shoutout.recipient.name, person_path(shoutout.recipient),
+              <%= link_to shoutout.recipient.name, edit_person_path(shoutout.recipient),
                           class: "font-semibold text-gray-900 hover:underline" %>
               <% meta = [ shoutout.sector, shoutout.age_group ].compact_blank %>
               <% if meta.any? %><span class="text-gray-500">(<%= meta.join(", ") %>)</span><% end %>

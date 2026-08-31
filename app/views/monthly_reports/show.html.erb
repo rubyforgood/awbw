@@ -55,13 +55,13 @@
         </div>
         <div>
           <span class="font-semibold text-gray-700">Created by:</span>
-          <%= @monthly_report.created_by&.name %>
+          <%= user_button(@monthly_report.created_by) if @monthly_report.created_by %>
           <br><span class="text-gray-400"><%= @monthly_report.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
         <% if @monthly_report.updated_at != @monthly_report.created_at %>
           <div>
             <span class="font-semibold text-gray-700">Updated by:</span>
-            <%= @monthly_report.updated_by&.name || "—" %>
+            <%= @monthly_report.updated_by ? user_button(@monthly_report.updated_by) : "—" %>
             <br><span class="text-gray-400"><%= @monthly_report.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
           </div>
         <% end %>
