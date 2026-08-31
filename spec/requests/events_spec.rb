@@ -220,6 +220,14 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Gallery sample")
     end
 
+    it "previews the event named by event_id" do
+      chosen = create(:event, :published, title: "Chosen event", start_date: 2.years.ago, end_date: 2.years.ago + 1.day)
+      sign_in admin
+      get templates_gallery_events_path(event_id: chosen.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Chosen event")
+    end
+
     it "forbids a non-admin without events" do
       sign_in user
       get templates_gallery_events_path

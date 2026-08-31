@@ -38,13 +38,17 @@ class EventsController < ApplicationController
     track_view(@event)
   end
 
-  # Admin-facing gallery that renders every display template with a real recent
-  # event, so admins can compare layouts before picking one on the event form.
-  # Read-only (`sample: true`) so it never builds live registration routes or
-  # duplicate registration_section dom_ids across the stacked templates.
+  # Admin-facing gallery that renders every display template as a scaled preview,
+  # so admins can compare layouts before picking one on the event form. Previews
+  # the event named by ?event_id (scoped to what the viewer may see), else the most
+  # recent one. Read-only (`sample: true`) so it never builds live registration
+  # routes or duplicate registration_section dom_ids across the previews.
   def templates_gallery
     authorize!
-    @sample_event = authorized_scope(Event.all).order(start_date: :desc).first&.decorate
+    scope = authorized_scope(Event.all)
+    @sample_event = scope.find_by(id: params[:event_id]) if params[:event_id].present?
+    @sample_event ||= scope.order(start_date: :desc).first
+    @sample_event = @sample_event&.decorate
   end
 
   # Cross-event revenue report over paid events, grouped by year. Shares the
