@@ -113,6 +113,12 @@ class EventRegistrationDecorator < ApplicationDecorator
     ATTENDANCE_STATUS_ICONS.fetch(status, "fa-question")
   end
 
+  # Pill bundle for the profile event card's status marker, reusing the shared
+  # status SSOT so label, icon, and colors stay in one place.
+  def attendance_status_badge
+    { label: attendance_status_label, icon: attendance_status_icon, classes: attendance_status_classes }
+  end
+
   def title
     name
   end
