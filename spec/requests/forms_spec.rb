@@ -768,6 +768,24 @@ RSpec.describe "Forms", type: :request do
       expect(field.answer_options.map(&:name)).not_to include("No")
     end
 
+    it "links a resource to a field, making it a per-resource question" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form:, name: "Was it clear for")
+      resource = create(:resource, title: "Touchstone Journey")
+
+      expect {
+        patch form_path(form), params: {
+          form: { form_fields_attributes: { "0" => {
+            id: field.id, name: field.name, answer_type: field.answer_type,
+            form_field_resources_attributes: { "0" => { resource_id: resource.id } }
+          } } }
+        }
+      }.to change { field.reload.form_field_resources.count }.by(1)
+
+      expect(field.per_resource?).to be(true)
+      expect(field.resources).to include(resource)
+    end
+
     it "saves the per-field width, minimum word count, and maximum character count" do
       form = create(:form, :standalone)
       patch form_path(form), params: {

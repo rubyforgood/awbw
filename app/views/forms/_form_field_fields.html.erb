@@ -191,6 +191,27 @@
             <% end %>
           </div>
         <% end %>
+
+        <%# Linking resources fans this one question out into one input per resource
+            (the title appended to the prompt) — e.g. a clarity question asked once
+            per training topic. %>
+        <% unless field.group_header? %>
+          <details class="group border-t border-gray-100 pt-3" <%= "open" if field.form_field_resources.any? %>>
+            <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+              <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
+              Fan out per resource
+            </summary>
+            <div class="mt-2 space-y-2 pl-1">
+              <p class="text-xs text-gray-500">Link resources to repeat this question once per resource, with the resource title appended to the prompt.</p>
+              <%= f.fields_for :form_field_resources do |rf| %>
+                <%= render "forms/form_field_resource_fields", f: rf %>
+              <% end %>
+              <%= link_to_add_association "+ Add resource", f, :form_field_resources,
+                    partial: "forms/form_field_resource_fields",
+                    class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} font-medium" %>
+            </div>
+          </details>
+        <% end %>
       </div>
     </div>
   <% end %>

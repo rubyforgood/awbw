@@ -1,0 +1,19 @@
+<%# One linked-resource row on a form field. Linking any resource turns the field
+    into a "per-resource" question — the form repeats it once per linked resource,
+    with the resource title appended to the prompt. Added a row at a time (cocoon). %>
+<div class="nested-fields flex items-center gap-2">
+  <% resource = f.object.resource %>
+  <select
+    name="<%= f.field_name(:resource_id) %>"
+    id="<%= f.field_id(:resource_id) %>"
+    data-controller="remote-select"
+    data-remote-select-model-value="resource"
+    class="flex-1 min-w-0 rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm">
+    <option value="">Type to search resources…</option>
+    <% if resource %>
+      <option value="<%= resource.id %>" selected><%= resource.title %></option>
+    <% end %>
+  </select>
+  <%= link_to_remove_association "✖", f,
+        class: "shrink-0 text-gray-400 hover:text-red-600 font-bold text-xs" %>
+</div>
