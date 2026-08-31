@@ -3,7 +3,8 @@
   attendees = @submission.bulk_payment_attendees
   total_cents = @payment&.amount_cents || @submission.bulk_payment_amount_cents(@event)
   answers = @submission.answers_by_identifier
-  payer_name = [ answers["first_name"], answers["last_name"] ].compact_blank.join(" ").presence || @submission.person.name
+  payer = @submission.decorate
+  payer_name = payer.typed_payer_name || payer.payer_name
   payer_organization = answers["organization_name"]
   attendee_count = @submission.bulk_payment_attendee_count
 %>
@@ -96,7 +97,7 @@
       <div class="space-y-3 text-center">
         <div class="space-y-1">
           <h3 class="text-xs font-medium tracking-wide text-gray-500 uppercase">Payer</h3>
-          <p class="text-2xl font-bold break-words text-gray-900"><%= payer_name.presence || "—" %></p>
+          <p class="text-2xl font-bold break-words text-gray-900"><%= payer_name %></p>
           <% if payer_organization.present? %>
             <p class="text-sm break-words text-gray-500"><%= payer_organization %></p>
           <% end %>

@@ -6,8 +6,14 @@ class FormSubmissionDecorator < ApplicationDecorator
   # have no account, so `person` is nil — then a neutral placeholder for the name.
   def payer_name
     return object.person.name if object.person
-    typed = [ answers_by_identifier["first_name"], answers_by_identifier["last_name"] ].compact_blank.join(" ")
-    typed.presence || "Anonymous payer"
+    typed_payer_name || "Anonymous payer"
+  end
+
+  # The payer-facing ticket shows this in preference to the account, since a
+  # signed-in facilitator can submit on someone else's behalf — `person` is then
+  # the facilitator, not the payer whose name is on the form.
+  def typed_payer_name
+    [ answers_by_identifier["first_name"], answers_by_identifier["last_name"] ].compact_blank.join(" ").presence
   end
 
   def payer_email
