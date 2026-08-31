@@ -20,12 +20,12 @@
 <% end %>
 <tr class="border-t border-gray-100 group hover:bg-gray-50 <%= "cursor-pointer" if row_path %> transition-colors"
     <% if row_path %>onclick="window.location='<%= row_path %>'"<% end %>>
-  <td class="py-1 text-gray-700 w-full"><span class="<%= "group-hover:underline" if row_path %>"><%= row.city %></span></td>
+  <td class="w-full py-1 text-gray-700"><span class="<%= "group-hover:underline" if row_path %>"><%= row.city %></span></td>
   <% unless metrics == :scholarships %>
-    <td class="py-1 pl-3 text-right tabular-nums whitespace-nowrap font-medium text-gray-700 min-w-[3ch]"><%= row.registrant_count %></td>
+    <td class="min-w-[3ch] py-1 pl-3 text-right font-medium whitespace-nowrap text-gray-700 tabular-nums"><%= row.registrant_count %></td>
   <% end %>
   <% unless metrics == :registrants %>
-    <td class="py-1 pl-2 text-right tabular-nums whitespace-nowrap text-gray-400 min-w-[4ch]">
+    <td class="min-w-[4ch] py-1 pl-2 text-right whitespace-nowrap text-gray-400 tabular-nums">
       <% if row.scholarship_count.positive? %>
         <% scholarship_figure = capture do %><% if metrics == :both %>(<% end %><i class="fa-solid fa-graduation-cap <%= DomainTheme.text_class_for(:scholarships, intensity: 600) %>" aria-hidden="true"></i> <span class="font-medium <%= DomainTheme.text_class_for(:scholarships, intensity: 700) %>"><%= row.scholarship_count %></span><% if metrics == :both %>)<% end %><% end %>
         <% if scholarship_path %>

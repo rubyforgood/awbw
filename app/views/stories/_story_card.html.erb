@@ -1,6 +1,6 @@
-<div class="relative bg-white rounded-xl shadow-sm hover:shadow-md transition p-4">
+<div class="relative rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
   <!-- BOOKMARK COLUMN (not inside link) -->
-  <div class="absolute top-4 right-4 z-20 pointer-events-auto">
+  <div class="pointer-events-auto absolute top-4 right-4 z-20">
     <%= render "bookmarks/editable_bookmark_icon", resource: story.object %>
   </div>
   <!-- CLICKABLE CARD -->
@@ -11,11 +11,11 @@
     <!-- LEFT: TEXT (leave right padding equal to bookmark width) -->
     <div class="flex-1 pr-12">
       <!-- <-- This prevents text going under bookmark -->
-      <h3 class="text-lg font-semibold text-gray-900 leading-tight"><%= story.title %></h3>
-      <p class="text-gray-600 text-sm mt-1 line-clamp-3"><%= story.rhino_body&.plain_text_body&.truncate(250) %></p>
+      <h3 class="text-lg leading-tight font-semibold text-gray-900"><%= story.title %></h3>
+      <p class="line-clamp-3 mt-1 text-sm text-gray-600"><%= story.rhino_body&.plain_text_body&.truncate(250) %></p>
     </div>
     <!-- RIGHT: IMAGE -->
-    <div class="w-24 h-14 rounded bg-gray-200 mr-9">
+    <div class="mr-9 h-14 w-24 rounded bg-gray-200">
       <%= render "assets/display_image",
                  resource: story,
                  width: 24, height: 14,

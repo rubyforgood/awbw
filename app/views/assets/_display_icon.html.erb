@@ -4,11 +4,7 @@
 <% width ||= nil %>
 
 <div
-  class="
-    flex items-center justify-center
-    bg-gray-100 border border-gray-300 rounded
-    w-full h-full
-  "
+  class="flex h-full w-full items-center justify-center rounded border border-gray-300 bg-gray-100"
 >
   <%= render "resources/resource_icon",
              kind: resource.try(:kind),

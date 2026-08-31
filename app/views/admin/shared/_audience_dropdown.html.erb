@@ -18,18 +18,18 @@
     <button type="button"
             data-action="dropdown#toggle"
             data-dropdown-payload-param='[{"<%= dropdown_id %>":"hidden"}]'
-            class="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-transparent text-sm text-gray-700">
+            class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500">
       <span><%= button_label %></span>
-      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
       </svg>
     </button>
 
     <div id="<%= dropdown_id %>"
          data-dropdown-target="content"
-         class="hidden absolute z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 min-w-[160px]">
+         class="absolute z-10 mt-1 hidden min-w-[160px] rounded-md border border-gray-200 bg-white p-3 shadow-lg">
       <% labels_map.each do |value, label| %>
-        <label class="flex items-center gap-2 cursor-pointer py-1">
+        <label class="flex cursor-pointer items-center gap-2 py-1">
           <%= check_box_tag "audience[]", value, selected.include?(value),
                             onchange: (auto_submit ? "this.closest('form').submit()" : nil),
                             class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>

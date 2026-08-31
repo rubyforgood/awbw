@@ -1,10 +1,10 @@
 <!-- Floating Help Button -->
 <div id="fab-container"
-     class="fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden">
+     class="fixed right-6 bottom-6 z-50 flex flex-col items-end print:hidden">
 
   <!-- Hidden menu items -->
   <div id="fab-menu"
-     class="hidden flex flex-col items-start space-y-2 mb-2 p-4 bg-white border border-gray-300 rounded-lg shadow-md transition-all duration-300">
+     class="mb-2 flex hidden flex-col items-start space-y-2 rounded-lg border border-gray-300 bg-white p-4 shadow-md transition-all duration-300">
  
   <%= link_to faqs_path, class: "flex items-center space-x-2 text-gray-800 px-3 py-2 rounded hover:bg-gray-100 w-max" do %>
     <i class="fas fa-question-circle"></i> 
@@ -33,8 +33,7 @@
   <!-- Main round button -->
   <button id="fab-button"
           type="button"
-          class="bg-primary text-white w-10 h-10 rounded-full shadow-lg flex items-center
-                 justify-center text-lg font-bold hover:bg-primary/90 transition">
+          class="bg-primary hover:bg-primary/90 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-lg transition">
     ?
   </button>
 </div>

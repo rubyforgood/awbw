@@ -3,11 +3,7 @@
   <div class="relative flex items-center">
     <button
       type="button"
-      class="
-        flex items-center gap-2 rounded-md bg-white px-4 py-1 mt-1 text-sm font-semibold text-gray-900
-        shadow-sm border border-gray-200 hover:bg-gray-50 active:bg-gray-100
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-        transition cursor-pointer"
+      class="mt-1 flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-1 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none active:bg-gray-100"
       data-action="dropdown#toggle"
       data-dropdown-payload-param='[{"workshop-dropdown":"hidden"}]'
     >
@@ -17,7 +13,7 @@
     <!-- Dropdown menu -->
    <div
   id="workshop-dropdown"
-  class="absolute right-0 top-11 mt-2 w-60 rounded-md bg-white py-1 shadow-lg outline outline-black/5 transition transition-discrete hidden"
+  class="absolute top-11 right-0 mt-2 hidden w-60 rounded-md bg-white py-1 shadow-lg outline outline-black/5 transition transition-discrete"
   data-dropdown-target="content">
   <%= link_to new_workshop_variation_idea_path,
               class: "flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>

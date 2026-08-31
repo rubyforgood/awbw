@@ -7,12 +7,12 @@
   <% CalloutContent.segments(content).each do |segment| %>
     <% if segment.type == :toggle %>
       <%= render layout: "events/callouts/toggle", locals: { summary: segment.summary, open: segment.open } do %>
-        <div class="rich-label prose prose-sm max-w-none prose-a:text-blue-700 prose-li:my-0.5">
+        <div class="rich-label max-w-none prose prose-sm prose-li:my-0.5 prose-a:text-blue-700">
           <%= form_label_html(segment.html) %>
         </div>
       <% end %>
     <% else %>
-      <div class="rich-label prose max-w-none text-gray-700 leading-relaxed prose-headings:text-gray-800 prose-a:text-blue-700">
+      <div class="rich-label max-w-none prose leading-relaxed text-gray-700 prose-a:text-blue-700 prose-headings:text-gray-800">
         <%= form_label_html(segment.html) %>
       </div>
     <% end %>

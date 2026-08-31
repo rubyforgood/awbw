@@ -22,13 +22,10 @@
     type="button"
     data-action="dropdown#toggle"
     data-dropdown-payload-param='[{"<%= field %>-dropdown":"hidden"},{"<%= field %>-arrow":"rotate-180"},{"<%= field %>-button":"rounded-md rounded-t-md"}]'
-    class="
-      flex items-center justify-between cursor-pointer w-full
-      bg-gray-500 text-white hover:bg-gray-300 px-3 py-2 rounded-md
-    "
+    class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
   >
     <%= label_tag %>
-    <i id="<%= field %>-arrow" class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"></i>
+    <i id="<%= field %>-arrow" class="fa-solid fa-chevron-down h-4 w-4 transition-transform duration-300"></i>
   </button>
 
   <div id="<%= field %>-dropdown" class="<%= class_names(hidden: hidden) %>"><%= yield %></div>

@@ -1,6 +1,6 @@
 <%= turbo_frame_tag "person_workshop_variations_section" do %>
   <% if workshop_variations.any? %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+    <div class="grid grid-cols-1 gap-6 blur-on-submit sm:grid-cols-2 lg:grid-cols-3">
       <% workshop_variations.each do |workshop_variation| %>
         <%= render "show_card",
                    record_title: "#{workshop_variation.name}<br>" +

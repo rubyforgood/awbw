@@ -1,10 +1,10 @@
 <%# Renders one EventReceipt as a printable document. Mirrors the invoice layout
     but adds the payment ledger and a balance summary that reconciles to $0.
     `receipt` is an EventReceipt. %>
-<article class="mx-auto max-w-3xl bg-white text-gray-800 px-8 py-10 print:px-0 print:py-0 print:max-w-none">
+<article class="mx-auto max-w-3xl bg-white px-8 py-10 text-gray-800 print:max-w-none print:px-0 print:py-0">
   <%# Header: issuer details (left) + brand logo (right) %>
   <header class="flex items-start justify-between gap-6">
-    <address class="not-italic text-sm leading-snug">
+    <address class="text-sm leading-snug not-italic">
       <p class="font-medium"><%= receipt.issuer_name %></p>
       <% receipt.issuer_address_lines.each do |line| %>
         <p><%= line %></p>
@@ -16,7 +16,7 @@
 
   <div class="my-8 flex flex-col items-center gap-3">
     <h1 class="text-center text-3xl font-semibold tracking-wide">RECEIPT</h1>
-    <span class="inline-flex items-center gap-1.5 rounded-full border border-green-600 bg-green-50 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-green-700">
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-green-600 bg-green-50 px-3 py-1 text-sm font-semibold tracking-wide text-green-700 uppercase">
       <i class="fa-solid fa-circle-check"></i> Paid in full
     </span>
   </div>
@@ -36,7 +36,7 @@
   </div>
 
   <%# Attention %>
-  <div class="space-y-1 mt-5">
+  <div class="mt-5 space-y-1">
     <p class="text-sm font-bold">Attention:</p>
     <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm">
       <%= receipt.attention.presence || "—" %>
@@ -44,7 +44,7 @@
   </div>
 
   <%# Meta row: number / date / client id %>
-  <div class="mt-6 rounded-lg border border-gray-300 grid grid-cols-3 divide-x divide-gray-200 text-center">
+  <div class="mt-6 grid grid-cols-3 divide-x divide-gray-200 rounded-lg border border-gray-300 text-center">
     <% [
          [ "Receipt Number", receipt.number ],
          [ "Date Paid", receipt.date&.strftime("%-d %b, %Y") ],
@@ -52,30 +52,30 @@
        ].each do |label, value| %>
       <div class="px-3 py-3">
         <p class="text-xs font-bold text-gray-600"><%= label %></p>
-        <p class="text-sm mt-1"><%= value.presence || " " %></p>
+        <p class="mt-1 text-sm"><%= value.presence || " " %></p>
       </div>
     <% end %>
   </div>
 
   <%# Charges %>
-  <table class="w-full mt-8 text-sm">
+  <table class="mt-8 w-full text-sm">
     <thead>
       <tr class="border-b border-gray-300 text-xs font-bold text-gray-700">
-        <th class="text-left py-2 pr-3">Date</th>
-        <th class="text-left py-2 pr-3">Description</th>
-        <th class="text-right py-2 px-3 whitespace-nowrap">Quantity/Units</th>
-        <th class="text-right py-2 px-3 whitespace-nowrap">Unit Price</th>
-        <th class="text-right py-2 pl-3 whitespace-nowrap">Amount</th>
+        <th class="py-2 pr-3 text-left">Date</th>
+        <th class="py-2 pr-3 text-left">Description</th>
+        <th class="px-3 py-2 text-right whitespace-nowrap">Quantity/Units</th>
+        <th class="px-3 py-2 text-right whitespace-nowrap">Unit Price</th>
+        <th class="py-2 pl-3 text-right whitespace-nowrap">Amount</th>
       </tr>
     </thead>
     <tbody>
       <% receipt.line_items.each do |item| %>
         <tr class="border-b border-gray-100">
-          <td class="py-2 pr-3 whitespace-nowrap align-top"><%= item.date&.strftime("%m/%d/%y") %></td>
+          <td class="py-2 pr-3 align-top whitespace-nowrap"><%= item.date&.strftime("%m/%d/%y") %></td>
           <td class="py-2 pr-3 align-top"><%= item.description %></td>
-          <td class="py-2 px-3 text-right tabular-nums align-top"><%= item.quantity %></td>
-          <td class="py-2 px-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.unit_price_cents) %></td>
-          <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(item.amount_cents) %></td>
+          <td class="px-3 py-2 text-right align-top tabular-nums"><%= item.quantity %></td>
+          <td class="px-3 py-2 text-right align-top whitespace-nowrap tabular-nums"><%= dollars_from_cents(item.unit_price_cents) %></td>
+          <td class="py-2 pl-3 text-right align-top whitespace-nowrap tabular-nums"><%= dollars_from_cents(item.amount_cents) %></td>
         </tr>
       <% end %>
     </tbody>
@@ -83,27 +83,27 @@
 
   <%# Payment ledger: every allocation that settled the balance %>
   <div class="mt-8">
-    <p class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Payments &amp; credits</p>
+    <p class="mb-2 text-xs font-bold tracking-wide text-gray-700 uppercase">Payments &amp; credits</p>
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-gray-300 text-xs font-bold text-gray-700">
-          <th class="text-left py-2 pr-3">Date</th>
-          <th class="text-left py-2 pr-3">Method</th>
-          <th class="text-right py-2 pl-3 whitespace-nowrap">Amount</th>
+          <th class="py-2 pr-3 text-left">Date</th>
+          <th class="py-2 pr-3 text-left">Method</th>
+          <th class="py-2 pl-3 text-right whitespace-nowrap">Amount</th>
         </tr>
       </thead>
       <tbody>
         <% if receipt.entries.any? %>
           <% receipt.entries.each do |entry| %>
             <tr class="border-b border-gray-100">
-              <td class="py-2 pr-3 whitespace-nowrap align-top"><%= entry.date&.strftime("%m/%d/%y") %></td>
+              <td class="py-2 pr-3 align-top whitespace-nowrap"><%= entry.date&.strftime("%m/%d/%y") %></td>
               <td class="py-2 pr-3 align-top">
                 <%= entry.method %>
                 <% if entry.reference.present? %>
                   <span class="text-xs text-gray-500">· <%= entry.reference %></span>
                 <% end %>
               </td>
-              <td class="py-2 pl-3 text-right tabular-nums align-top whitespace-nowrap"><%= dollars_from_cents(entry.amount_cents) %></td>
+              <td class="py-2 pl-3 text-right align-top whitespace-nowrap tabular-nums"><%= dollars_from_cents(entry.amount_cents) %></td>
             </tr>
           <% end %>
         <% else %>
@@ -129,7 +129,7 @@
       <div class="mt-1 flex items-center justify-between border-t border-gray-300 pt-2 font-bold">
         <dt>Balance due</dt>
         <dd>
-          <span class="inline-block rounded-md border border-green-500 bg-green-50 px-3 py-1 text-green-700 tabular-nums whitespace-nowrap"><%= dollars_from_cents(receipt.balance_cents) %></span>
+          <span class="inline-block rounded-md border border-green-500 bg-green-50 px-3 py-1 whitespace-nowrap text-green-700 tabular-nums"><%= dollars_from_cents(receipt.balance_cents) %></span>
         </dd>
       </div>
     </dl>

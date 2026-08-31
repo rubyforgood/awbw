@@ -39,7 +39,7 @@
   <%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
 
   <% if hint %>
-    <p class="text-gray-500 text-sm"><%= hint.html_safe %></p>
+    <p class="text-sm text-gray-500"><%= hint.html_safe %></p>
   <% end %>
 
   <div class="flex flex-col items-center gap-2">
@@ -70,21 +70,20 @@
 
         <%# ---------- PLACEHOLDER ---------- %>
       <% else %>
-        <div class="relative w-32 h-32">
+        <div class="relative h-32 w-32">
           <img id="<%= image_dom_id %>"
                data-file-preview-target="preview"
-               class="hidden w-32 h-32 object-cover border border-gray-300 shadow-sm">
+               class="hidden h-32 w-32 border border-gray-300 object-cover shadow-sm">
 
           <div data-file-preview-target="placeholder"
-               class="absolute inset-0 flex items-center justify-center
-                      border border-gray-300 shadow-sm bg-gray-50 text-gray-400 text-6xl">
+               class="absolute inset-0 flex items-center justify-center border border-gray-300 bg-gray-50 text-6xl text-gray-400 shadow-sm">
             <i class="fa-regular fa-image"></i>
           </div>
         </div>
       <% end %>
 
       <div data-file-preview-target="filename"
-           class="text-center text-sm text-gray-500 break-all max-w-[8rem]">
+           class="max-w-[8rem] text-center text-sm break-all text-gray-500">
         <%= if blob.present? && blob.respond_to?(:persisted?) && blob.persisted?
               link_to(blob.filename.to_s, url_for(file), class: "underline cursor-zoom-in", target: "_blank", rel: "noopener noreferrer", title: "Open image in a new tab")
             else
@@ -110,7 +109,7 @@
                            class: "absolute inset-0 w-full h-full opacity-0 cursor-pointer" %>
 
           <button type="button"
-                  class="w-full py-2 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50">
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
             Choose file
           </button>
         </div>
@@ -129,7 +128,7 @@
       </div>
 
       <% if accepted_label.present? %>
-        <p class="text-gray-400 text-xs mt-1">Accepts: <%= accepted_label %></p>
+        <p class="mt-1 text-xs text-gray-400">Accepts: <%= accepted_label %></p>
       <% end %>
     <% end %>
 
@@ -137,8 +136,8 @@
 </div>
 
 <% if asset.errors[:file].any? %>
-  <div class="mt-2 mx-auto w-fit rounded-md border border-red-200 bg-red-50 px-3 py-2 text-center">
-    <p class="text-red-600 text-sm">
+  <div class="mx-auto mt-2 w-fit rounded-md border border-red-200 bg-red-50 px-3 py-2 text-center">
+    <p class="text-sm text-red-600">
       <i class="fa-solid fa-circle-exclamation mr-1"></i>
       File type not accepted
     </p>

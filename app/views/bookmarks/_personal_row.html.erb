@@ -3,8 +3,7 @@
 <div
   id="bookmarkable-<%= bookmarkable.id %>"
   class="
-    flex flex-col md:flex-row <%= "admin-only bg-blue-100" unless bookmarkable.published? %> border-b
-    border-gray-200 list-group-item-custom gap-4 py-4 mb-0">
+    flex flex-col md:flex-row <%= "admin-only bg-blue-100" unless bookmarkable.published? %> mb-0 list-group-item-custom gap-4 border-b border-gray-200 py-4">
   <div
     id="bookmarkable-<%= bookmarkable.id %>-anchor"
     style="position: relative; top: -200px;"></div>
@@ -12,7 +11,7 @@
   <%= render "bookmarks/editable_bookmark_icon", resource: bookmarkable.object %>
 
   <!-- 1️⃣ Media -->
-  <div class="flex flex-col items-center w-12">
+  <div class="flex w-12 flex-col items-center">
     <!-- Assets -->
     <%= render "assets/display_image",
                resource: bookmarkable,
@@ -21,15 +20,15 @@
                file: bookmark.decorate.display_image %>
 
     <!-- Type -->
-    <div class="mt-1 text-xs text-gray-600 font-medium text-center">
+    <div class="mt-1 text-center text-xs font-medium text-gray-600">
       <%= bookmarkable.object.class.model_name.human.upcase %>
     </div>
   </div>
 
 
   <!-- 2️⃣ Title / author / metadata -->
-  <div class="flex flex-col gap-1 min-w-[60ch] max-w-[60ch] break-words">
-    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+  <div class="flex max-w-[60ch] min-w-[60ch] flex-col gap-1 break-words">
+    <h3 class="flex items-center gap-2 text-lg font-bold text-gray-800">
       <% if bookmarkable.respond_to?(:type) %>
         <% type_name = " (#{bookmarkable.type})" %>
       <% elsif bookmarkable.respond_to?(:windows_type) %>
@@ -49,7 +48,7 @@
     </div>
     <% tag_list = bookmark.bookmarkable_type == "Workshop" ? collect_all_tags(bookmarkable) : [] %>
     <div class="text-sm text-gray-600">
-      Bookmarked by community <%= bookmark.bookmarkable.bookmarks_count %> times<% if tag_list.any? %>, <span class="group relative inline-block"><span class="cursor-help">Tags: <%= tag_list.count %></span><div class="hidden group-hover:block absolute left-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10 min-w-[300px] max-w-[500px]"><div class="text-sm text-gray-800"><%= tag_list.join(", ") %></div></div></span><% end %>
+      Bookmarked by community <%= bookmark.bookmarkable.bookmarks_count %> times<% if tag_list.any? %>, <span class="group relative inline-block"><span class="cursor-help">Tags: <%= tag_list.count %></span><div class="absolute top-full left-0 z-10 mt-1 hidden max-w-[500px] min-w-[300px] rounded-lg border border-gray-300 bg-white p-3 shadow-lg group-hover:block"><div class="text-sm text-gray-800"><%= tag_list.join(", ") %></div></div></span><% end %>
     </div>
   </div>
 

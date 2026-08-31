@@ -7,7 +7,7 @@
 <%# Attended is a completed attendance only; a partial one is reported beside it
     rather than folded in, since its scholarship and fees still count in the money
     columns to the right. %>
-<td class="px-3 py-2 border border-gray-200 text-right whitespace-nowrap">
+<td class="border border-gray-200 px-3 py-2 text-right whitespace-nowrap">
   <% if event && source.attended_count.positive? %>
     <%= link_to source.attended_count, attended_registrants_path(event),
           class: "text-blue-600 hover:text-blue-800 hover:underline",
@@ -24,10 +24,10 @@
   <%= render "scholarships_report_combined_cell", count: source.unfunded_count, cents: source.unfunded_cents, start: false, emphasis: false %>
   <%= render "scholarships_report_combined_cell", count: source.scholarship_count, cents: source.scholarship_cents, start: false, emphasis: true %>
 <% else %>
-  <td class="px-3 py-2 border border-gray-200 text-right border-l-2 border-l-fuchsia-200"><%= source.funded_count %></td>
-  <td class="px-3 py-2 border border-gray-200 text-right"><%= source.unfunded_count %></td>
-  <td class="px-3 py-2 border border-gray-200 text-right font-semibold text-gray-900"><%= source.scholarship_count %></td>
-  <td class="px-3 py-2 border border-gray-200 text-right border-l-2 border-l-fuchsia-200"><%= dollars_from_cents(source.funded_cents) %></td>
-  <td class="px-3 py-2 border border-gray-200 text-right"><%= dollars_from_cents(source.unfunded_cents) %></td>
-  <td class="px-3 py-2 border border-gray-200 text-right font-semibold text-gray-900"><%= dollars_from_cents(source.scholarship_cents) %></td>
+  <td class="border border-l-2 border-gray-200 border-l-fuchsia-200 px-3 py-2 text-right"><%= source.funded_count %></td>
+  <td class="border border-gray-200 px-3 py-2 text-right"><%= source.unfunded_count %></td>
+  <td class="border border-gray-200 px-3 py-2 text-right font-semibold text-gray-900"><%= source.scholarship_count %></td>
+  <td class="border border-l-2 border-gray-200 border-l-fuchsia-200 px-3 py-2 text-right"><%= dollars_from_cents(source.funded_cents) %></td>
+  <td class="border border-gray-200 px-3 py-2 text-right"><%= dollars_from_cents(source.unfunded_cents) %></td>
+  <td class="border border-gray-200 px-3 py-2 text-right font-semibold text-gray-900"><%= dollars_from_cents(source.scholarship_cents) %></td>
 <% end %>

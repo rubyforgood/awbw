@@ -1,4 +1,4 @@
-<h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 text-center">
+<h3 class="mb-4 text-center text-sm font-semibold tracking-wide text-gray-500 uppercase">
   <% if @sector_names.present? %>
     Explore other sectors
   <% else %>
@@ -6,7 +6,7 @@
   <% end %>
 </h3>
 
-<div class="flex flex-wrap justify-center gap-2 mb-6">
+<div class="mb-6 flex flex-wrap justify-center gap-2">
   <% @sectors.each do |sector| %>
     <% next if sector.name == @sector_names %>
     <%= render "sectors/tagging_label", sector: sector %>

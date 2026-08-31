@@ -1,8 +1,8 @@
 <%# Persisted addresses start collapsed to a single-line header; new/blank ones
     stay expanded so their fields are ready to fill in. Native <details>/<summary>
     toggles the editable fields on click — no JavaScript needed. %>
-<details class="nested-fields group rounded-lg bg-white border border-gray-200 p-6 mb-4"<%= " open".html_safe unless f.object.persisted? %>>
-  <summary class="flex items-center justify-between gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+<details class="nested-fields group mb-4 rounded-lg border border-gray-200 bg-white p-6"<%= " open".html_safe unless f.object.persisted? %>>
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
     <div class="text-lg font-semibold text-gray-800">
       Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
     </div>
@@ -15,7 +15,7 @@
   <%# Organization addresses are always "work" — the type designation only matters
       for Person addresses — so persist it with a hidden field rather than a selector. %>
   <%= f.hidden_field :address_type, value: "work" %>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
     <div class="flex items-center gap-6">
       <%= f.input :primary,
                   as: :boolean,
@@ -35,7 +35,7 @@
 
 
   <!-- LA-SPECIFIC FIELDS -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
     <%= f.input :locality,
                 label: "Locality",
                 as: :select,
@@ -79,7 +79,7 @@
   </div>
 
   <!-- ADDRESS BLOCK -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
     <%= f.input :street_address,
                 label: "Street Address",
                 input_html: {
@@ -111,7 +111,7 @@
 
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
     <%= f.input :district,
                 label: "District",
                 input_html: {

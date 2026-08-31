@@ -1,15 +1,15 @@
-<div class="admin-only bg-blue-100 border border-blue-200 rounded-lg shadow-sm">
-  <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-blue-200">
+<div class="admin-only rounded-lg border border-blue-200 bg-blue-100 shadow-sm">
+  <div class="section-header flex flex-col justify-between gap-2 border-b border-blue-200 px-6 py-3 sm:flex-row sm:items-center sm:px-7">
     <h2 class="text-xl font-semibold text-gray-800">Membership</h2>
     <%= link_to "Manage membership", person_memberships_path(person), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <div class="section-content px-3 sm:px-4 py-4">
+  <div class="section-content px-3 py-4 sm:px-4">
     <% if membership.blank? %>
-      <p class="text-gray-500 italic px-3">No membership yet.</p>
+      <p class="px-3 text-gray-500 italic">No membership yet.</p>
     <% else %>
       <div class="px-3">
-        <div class="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-sm">
+        <div class="mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
           <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
           <span class="text-gray-600">Status: <span class="font-medium text-gray-800"><%= membership.status_label %></span></span>
         </div>

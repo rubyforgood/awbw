@@ -17,11 +17,11 @@
     <%= image_tag profile_person.avatar.variant(:thumbnail),
                   class: "h-5 w-5 rounded-full object-cover border border-sky-300" %>
   <% else %>
-    <span class="h-5 w-5 rounded-full flex items-center justify-center bg-sky-200 text-sky-700 font-bold text-xs border border-sky-300">
+    <span class="flex h-5 w-5 items-center justify-center rounded-full border border-sky-300 bg-sky-200 text-xs font-bold text-sky-700">
       <%= profile_person.name.first.upcase %>
     </span>
   <% end %>
   <% if show_name %>
-    <span class="font-semibold text-sky-800 truncate"><%= profile_person.name %></span>
+    <span class="truncate font-semibold text-sky-800"><%= profile_person.name %></span>
   <% end %>
 <% end %>

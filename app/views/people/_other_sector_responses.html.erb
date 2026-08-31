@@ -9,7 +9,7 @@
 <% curatable = local_assigns.fetch(:curatable, false) %>
 <% return_to = local_assigns.fetch(:return_to, nil) %>
 <% responses.each do |response| %>
-  <span class="inline-flex items-center rounded-md border border-gray-300 bg-white text-gray-600 px-3 py-1 text-sm font-medium"
+  <span class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-600"
         title="Other response entered during registration">
     <% if curatable %>
       <%= link_to response.text,

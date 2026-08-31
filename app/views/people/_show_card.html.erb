@@ -12,18 +12,13 @@
 
   <!-- CARD -->
   <div class="
-    flex flex-row flex-wrap h-full
-    <%= bg_color %> border border-gray-200 rounded-xl shadow-sm hover:shadow-md
-    transition-all overflow-hidden cursor-pointer">
+    flex h-full flex-row flex-wrap
+    <%= bg_color %> cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
 
     <!-- LEFT SIDE -->
-    <div class="
-      flex-shrink-0
-      w-18 md:w-24
-      flex flex-col items-center text-center justify-start py-4 pb-3 px-3
-      border-b md:border-b-0 md:border-r border-gray-200">
+    <div class="flex w-18 flex-shrink-0 flex-col items-center justify-start border-b border-gray-200 px-3 py-4 pb-3 text-center md:w-24 md:border-r md:border-b-0">
       <!-- IMAGE -->
-      <div class="relative w-12 h-12 md:w-16 md:h-16">
+      <div class="relative h-12 w-12 md:h-16 md:w-16">
         <%= link_to record.link_target, data: { turbo_frame: "_top"}, class: "block w-full h-full" do %>
           <%= render "assets/display_image",
                      resource: record.object,
@@ -37,13 +32,13 @@
     </div>
 
     <!-- RIGHT SIDE -->
-    <div class="flex-1 min-w-0 pl-4 pr-10 py-1 flex flex-col justify-between">
+    <div class="flex min-w-0 flex-1 flex-col justify-between py-1 pr-10 pl-4">
       <% if anonymous %>
         <%# Admin/owner-only marker: this credit renders "Anonymous" publicly, so
             the item is hidden from everyone else. %>
-        <span class="inline-flex items-center pl-2 pr-3 py-0.5 mt-2 rounded-full text-xs font-medium bg-blue-100 text-gray-600 whitespace-nowrap"
+        <span class="mt-2 inline-flex items-center rounded-full bg-blue-100 py-0.5 pr-3 pl-2 text-xs font-medium whitespace-nowrap text-gray-600"
               title="Credited as Anonymous — hidden from public author credit">
-          <span class="inline-flex justify-center w-5"><i class="fa-solid fa-eye-slash"></i></span>
+          <span class="inline-flex w-5 justify-center"><i class="fa-solid fa-eye-slash"></i></span>
           <span class="ml-1">Anonymous</span>
         </span>
       <% end %>
@@ -56,7 +51,7 @@
                                 record_title: record_title).html_safe %>
         <% end %>
       </div>
-      <div class="text-gray-400 text-sm mb-2">
+      <div class="mb-2 text-sm text-gray-400">
         <%= record.created_at.strftime("%b %d, %Y") %>
       </div>
     </div>

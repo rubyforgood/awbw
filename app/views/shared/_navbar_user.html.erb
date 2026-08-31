@@ -5,8 +5,7 @@
 
   <button
     type="button"
-    class="relative flex rounded-full focus-visible:outline-2
-           focus-visible:outline-offset-2 focus-visible:outline-indigo-500 cursor-pointer"
+    class="relative flex cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
     data-action="dropdown#toggle"
     data-dropdown-payload-param='[{"avatar-dropdown":"hidden"}]'>
     <span class="sr-only">Open user menu</span>
@@ -18,8 +17,7 @@
                     class: "size-10 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10" %>
     <% else %>
       <span id="avatar-image"
-            class="size-10 rounded-full bg-sky-200 text-sky-700 font-bold text-lg
-                   flex items-center justify-center border border-sky-300 shadow-sm">
+            class="flex size-10 items-center justify-center rounded-full border border-sky-300 bg-sky-200 text-lg font-bold text-sky-700 shadow-sm">
         <%= (person&.first_name.presence || user.first_name.presence || user.email).to_s.first.upcase %>
       </span>
     <% end %>
@@ -27,7 +25,7 @@
 
   <!-- Dropdown menu -->
   <div
-    class="absolute right-0 mt-2 w-56 rounded-md bg-white py-1 shadow-lg outline outline-black/5 hidden"
+    class="absolute right-0 mt-2 hidden w-56 rounded-md bg-white py-1 shadow-lg outline outline-black/5"
     id="avatar-dropdown"
     data-dropdown-target="content">
 

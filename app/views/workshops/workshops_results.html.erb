@@ -7,13 +7,13 @@
 
   <div id="workshops-list" class="mt-6">
     <% if @workshops.any? %>
-      <div class="space-y-4 animate-fade blur-on-submit">
+      <div class="animate-fade space-y-4 blur-on-submit">
         <% @workshops.each do |workshop| %>
           <%= render "workshops/index_row", workshop: workshop.decorate,
                    breadcrumb: "Workshops", link_route: workshop_path(workshop) %>
         <% end %>
       </div>
-      <div class="pagination flex justify-center mt-12"><%= tailwind_paginate @workshops %></div>
+      <div class="pagination mt-12 flex justify-center"><%= tailwind_paginate @workshops %></div>
     <% else %>
       <p class="text-gray-600">
         Your search returned no results. Please try again.
