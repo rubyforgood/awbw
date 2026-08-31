@@ -439,11 +439,18 @@ class EventDecorator < ApplicationDecorator
     "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
   end
 
+  # The template key the show page renders, which it interpolates into a partial
+  # path. #preview renders unsaved, unvalidated attributes, so an unknown value
+  # falls back to the legacy frame instead of raising MissingTemplate.
+  def display_template
+    Event::TEMPLATE_KEYS.include?(template) ? template : Event::TEMPLATE_NONE
+  end
+
   # Whether the show page is wearing a branded frame. "none" is the frozen legacy
   # layout, so it keeps the orange/green buttons it shipped with; every other
   # template gets the gold brand CTA.
   def branded_page?
-    template != Event::TEMPLATE_NONE
+    display_template != Event::TEMPLATE_NONE
   end
 
   # Classes for the show page's calls to action (register, view ticket). Read off

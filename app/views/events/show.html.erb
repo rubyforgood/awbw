@@ -14,12 +14,12 @@
 <% end %>
 
 <div class="mx-auto w-full max-w-7xl px-2 sm:px-6 lg:px-8">
-  <% if params[:template].present? && allowed_to?(:edit?, @event) %>
+  <% if Event::TEMPLATE_KEYS.include?(params[:template]) && allowed_to?(:edit?, @event) %>
     <div class="border-brand-navy-200 bg-brand-navy-50 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
       <span class="text-brand-navy-800 text-sm">
-        Previewing the <span class="font-semibold"><%= Event::TEMPLATES.dig(@event.template, :label) %></span> template — not yet saved.
+        Previewing the <span class="font-semibold"><%= Event::TEMPLATES.dig(@event.display_template, :label) %></span> template — not yet saved.
       </span>
-      <%= link_to "Apply & edit", edit_event_path(@event, template: @event.template, section: "page_content", anchor: "page_content_button"),
+      <%= link_to "Apply & edit", edit_event_path(@event, template: @event.display_template, section: "page_content", anchor: "page_content_button"),
                   class: "rounded-md bg-brand-navy-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-navy-900" %>
     </div>
   <% end %>
@@ -54,7 +54,7 @@
 </div>
 
 <%# ---- DISPLAY TEMPLATE ---- (frames the admin-curated content; honors autoshow_*) %>
-<%= render "events/templates/#{@event.template}", event: @event, sample: false %>
+<%= render "events/templates/#{@event.display_template}", event: @event, sample: false %>
 
 <% if @preview %>
   <div class="mx-auto w-full max-w-7xl px-2 sm:px-6 lg:px-8">

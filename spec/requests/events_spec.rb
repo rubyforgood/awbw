@@ -220,6 +220,13 @@ RSpec.describe "Events", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include("Apply &amp; edit")
       end
+
+      it "shows no preview banner for an unknown ?template" do
+        sign_in admin
+        get event_path(templated_event, template: "bogus")
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Apply &amp; edit")
+      end
     end
   end
 
@@ -1379,6 +1386,18 @@ RSpec.describe "Events", type: :request do
       it "logs an Ahoy page-view event" do
         expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "view.events.preview", { event_id: event.id })
         patch preview_event_path(event), params: { event: { title: "Preview Title" } }
+      end
+
+      it "previews the submitted display template" do
+        patch preview_event_path(event), params: { event: { template: "hero" } }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("from-brand-navy-950")
+      end
+
+      it "falls back to the none template when the submitted one is unknown" do
+        patch preview_event_path(event), params: { event: { template: "bogus" } }
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("from-brand-navy-950")
       end
     end
 

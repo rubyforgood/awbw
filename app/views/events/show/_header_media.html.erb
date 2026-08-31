@@ -5,10 +5,11 @@
 <% fill = local_assigns.fetch(:fill, false) %>
 <% if event.rhino_header.present? %>
   <% if fill == "cover" %>
-    <%# Round the <img> itself, not just an overflow-hidden frame: overflow
-        clipping can fail to round the top corners, so the image carries its own
-        radius. %>
-    <div class="h-full [&_img]:h-full [&_img]:w-full [&_img]:rounded-2xl [&_img]:object-cover">
+    <%# Pin the image to the frame rather than sizing it in flow: rich text nests
+        it in auto-height wrappers, so a percentage height resolves to auto and
+        object-cover would have no box to cover. Rounding rides on the <img>
+        because overflow clipping can fail to round the top corners. %>
+    <div class="relative h-full [&_img]:absolute [&_img]:inset-0 [&_img]:m-0 [&_img]:h-full [&_img]:w-full [&_img]:rounded-2xl [&_img]:object-cover">
       <%= event.rhino_header %>
     </div>
   <% else %>
