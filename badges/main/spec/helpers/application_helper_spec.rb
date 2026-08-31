@@ -53,6 +53,38 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#credited_author_edit_button" do
+    let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
+    let(:workshop) { create(:workshop, author_credit_preference: "full_name") }
+
+    before { allow(workshop).to receive(:author).and_return(person) }
+
+    it "links to the person edit page when the viewer can edit people" do
+      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(true)
+
+      html = helper.credited_author_edit_button(workshop)
+      expect(html).to include("<a")
+      expect(html).to include(edit_person_path(person))
+      expect(html).to include("Ada Lovelace")
+    end
+
+    it "falls back to the profile byline when the viewer cannot edit people" do
+      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(false)
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+
+      html = helper.credited_author_edit_button(workshop)
+      expect(html).to include(person_path(person))
+      expect(html).not_to include(edit_person_path(person))
+    end
+
+    it "stays plain text for a suppressed (anonymous) credit" do
+      anonymous = create(:workshop, author_credit_preference: "anonymous")
+      allow(anonymous).to receive(:author).and_return(person)
+
+      expect(helper.credited_author_edit_button(anonymous)).to eq("AWBW Staff")
+    end
+  end
+
   describe "#timezone_visibility_hint" do
     let(:me) { create(:user) }
     let(:other) { create(:user) }

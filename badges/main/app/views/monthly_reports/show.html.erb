@@ -21,18 +21,8 @@
     <div class="border-primary/10 rounded-2xl border bg-gray-50 p-4 text-sm text-gray-600">
       <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
-          <span class="font-semibold text-gray-700">Submitted by:</span>
-          <% if @monthly_report.created_by&.person %>
-            <%= person_edit_button(@monthly_report.created_by.person, compact: true, width_class: "inline-flex w-fit", data: { turbo_frame: "_top" }) %>
-          <% elsif @monthly_report.created_by %>
-            <%= user_button(@monthly_report.created_by, data: { turbo_frame: "_top" }) %>
-          <% else %>
-            —
-          <% end %>
-        </div>
-        <div>
           <span class="font-semibold text-gray-700">Author credit:</span>
-          <%= credited_author_link(@monthly_report) %>
+          <%= credited_author_edit_button(@monthly_report) %>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Organization:</span>
@@ -53,18 +43,6 @@
           <span class="font-semibold text-gray-700">Report date:</span>
           <%= @monthly_report.date&.strftime("%B %d, %Y") || "—" %>
         </div>
-        <div>
-          <span class="font-semibold text-gray-700">Created by:</span>
-          <%= user_button(@monthly_report.created_by) if @monthly_report.created_by %>
-          <br><span class="text-gray-400"><%= @monthly_report.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
-        </div>
-        <% if @monthly_report.updated_at != @monthly_report.created_at %>
-          <div>
-            <span class="font-semibold text-gray-700">Updated by:</span>
-            <%= @monthly_report.updated_by ? user_button(@monthly_report.updated_by) : "—" %>
-            <br><span class="text-gray-400"><%= @monthly_report.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
-          </div>
-        <% end %>
       </div>
     </div>
 

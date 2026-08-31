@@ -27,6 +27,17 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Set who a workshop log is credited to"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-08-31
+  summary: >-
+    Admins can now credit a workshop log to a specific person on its edit page,
+    separate from the account that entered it. Editing a log also no longer
+    changes who is recorded as having submitted it.
+  action_path: /workshop_logs
+  pr_number: 2460
+
 - name: "Pick a layout template for each event page"
   area: events
   display_status: user_facing

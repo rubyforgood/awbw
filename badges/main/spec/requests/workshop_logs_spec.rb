@@ -69,15 +69,15 @@ RSpec.describe "/workshop_logs", type: :request do
       expect(page).to have_link(user.name, href: person_path(person))
     end
 
-    it "renders the creator as plain text when they have no person record" do
+    it "shows the facilitator author credit, not the submitting account, when the creator has no person record" do
       workshop_log = create(:workshop_log, created_by: user, organization: organization,
                             workshop: workshop, windows_type: windows_type, workshop_held_on: 1.day.ago)
 
       get workshop_log_path(workshop_log)
 
       page = Capybara.string(response.body)
-      expect(page).to have_text(user.name)
-      expect(page).not_to have_link(user.name)
+      expect(page).not_to have_text(user.name)
+      expect(page).to have_text(AuthorCreditable::FACILITATOR_AUTHOR_LABEL)
     end
 
     it "shows the external title in the heading and beside the Workshop label when there is no workshop" do
@@ -112,7 +112,7 @@ RSpec.describe "/workshop_logs", type: :request do
       let(:admin) { create(:user, :admin) }
       before { sign_in admin }
 
-      it "renders the organization and creator as links" do
+      it "renders the organization as a link and the author credit as an edit-person link" do
         person = create(:person, user: user)
         create(:affiliation, person: person, organization: organization)
         workshop_log = create(:workshop_log, created_by: user, organization: organization,
@@ -122,7 +122,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
         page = Capybara.string(response.body)
         expect(page).to have_link(organization.name, href: organization_path(organization))
-        expect(page).to have_link(user.name, href: person_path(person))
+        expect(page).to have_link(user.name, href: edit_person_path(person))
       end
     end
   end
@@ -416,6 +416,60 @@ RSpec.describe "/workshop_logs", type: :request do
           workshop_log: invalid_attributes
         }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+  end
+
+  describe "PATCH /update" do
+    let!(:combined_windows_type) { create(:windows_type, :combined) }
+    let!(:form_builder) do
+      fb = FormBuilder.create!(windows_type_id: combined_windows_type.id, name: "Combined form")
+      fb.forms.create!
+      fb
+    end
+    let(:submitter) { create(:user, person: create(:person)) }
+    let(:workshop_log) do
+      create(:workshop_log, created_by: submitter, organization: organization,
+                            workshop: workshop, windows_type: combined_windows_type, workshop_held_on: 1.day.ago)
+    end
+
+    context "as an admin" do
+      let(:admin) { create(:user, :admin) }
+      before { sign_in admin }
+
+      it "does not overwrite the original submitter when an admin edits the log" do
+        patch workshop_log_path(workshop_log), params: {
+          workshop_log: valid_attributes.merge(adults_ongoing: 9)
+        }
+
+        expect(workshop_log.reload.created_by).to eq(submitter)
+        expect(workshop_log.adults_ongoing).to eq(9)
+      end
+
+      it "reassigns the credited author to the chosen person" do
+        new_author = create(:person)
+
+        patch workshop_log_path(workshop_log), params: {
+          workshop_log: valid_attributes.merge(author_id: new_author.id)
+        }
+
+        expect(workshop_log.reload.author).to eq(new_author)
+      end
+
+      it "renders the author picker on the edit form" do
+        get edit_workshop_log_path(workshop_log)
+
+        expect(response.body).to include("workshop_log[author_id]")
+      end
+    end
+
+    context "as the owner" do
+      before { sign_in submitter }
+
+      it "does not render the author picker on the edit form" do
+        get edit_workshop_log_path(workshop_log)
+
+        expect(response.body).not_to include("workshop_log[author_id]")
       end
     end
   end

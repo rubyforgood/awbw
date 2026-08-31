@@ -56,7 +56,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
-      it "renders the organization and creator as links" do
+      it "renders the organization as a link and the author credit as an edit-person link" do
         creator_person = create(:person, user: regular_user)
         org = create(:organization, name: "Community Arts Project")
         idea = create(:workshop_variation_idea, valid_attributes.merge(organization_id: org.id))
@@ -65,7 +65,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
 
         page = Capybara.string(response.body)
         expect(page).to have_link(org.name, href: organization_path(org))
-        expect(page).to have_link(regular_user.name, href: person_path(creator_person))
+        expect(page).to have_link(regular_user.name, href: edit_person_path(creator_person))
       end
     end
 
@@ -209,14 +209,14 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
         expect(page).to have_link(regular_user.name, href: person_path(person))
       end
 
-      it "renders the creator as plain text when they have no person record" do
+      it "shows the facilitator author credit, not the submitting account, when the creator has no person record" do
         idea = create(:workshop_variation_idea, valid_attributes)
 
         get workshop_variation_idea_path(idea)
 
         page = Capybara.string(response.body)
-        expect(page).to have_text(regular_user.name)
-        expect(page).not_to have_link(regular_user.name)
+        expect(page).not_to have_text(regular_user.name)
+        expect(page).to have_text(AuthorCreditable::FACILITATOR_AUTHOR_LABEL)
       end
 
       it "redirects from another's workshop_variation_idea to root" do
