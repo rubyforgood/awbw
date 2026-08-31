@@ -2993,3 +2993,18 @@
     attendance status, so the history isn't lost.
   pro_tips:
     - "Everyone else sees only active registrations (registered, attended, incomplete)."
+
+- name: "Merge duplicate registrations"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-31
+  action_path: "/event_registrations/dedupe_index"
+  summary: >-
+    A new "Dedupe" tool on the Event registrations page finds and merges duplicate
+    registrations — the same person signed up for one event under two different
+    people records. It suggests likely matches, previews exactly what moves, and
+    combines the two registrations into one.
+  pro_tips:
+    - "Duplicates are suggested when two registrations for the same event have registrants with a matching name, email, or FileMaker code."
+    - "Merging combines the registrations only — the two people stay separate, so merge them in the People deduper too if they're the same person."
+    - "The preview shows every attendance, payment, and organization link that moves to the kept registration before you confirm, and blocks the merge if anything can't be moved safely."

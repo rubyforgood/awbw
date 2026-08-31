@@ -1,4 +1,6 @@
 class EventRegistrationsController < ApplicationController
+  include Dedupable
+
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
@@ -506,6 +508,30 @@ class EventRegistrationsController < ApplicationController
   end
 
   private
+
+  def dedupe_config
+    {
+      model_class: EventRegistration,
+      domain: :event_registrations,
+      candidate_finder: -> { EventRegistrationServices::DuplicateFinder.new.groups },
+      editable_columns: %w[
+        status expected_payment_method fee_note shoutout intends_to_pay
+        someone_else_will_pay invoice_requested scholarship_requested w9_requested
+        payment_unresolved
+      ],
+      # The (registrant_id, event_id) index means two registrations only ever
+      # collide when their registrants are different Person records. Merging keeps
+      # them separate — say so, so the admin also merges the people if they match.
+      merge_notes: ->(keep, delete) {
+        next [] if keep.registrant_id == delete.registrant_id
+
+        [ "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person." ]
+      },
+      record_extras: ->(registration) {
+        [ registration.registrant&.preferred_email.presence, registration.status&.humanize ].compact.join(" · ").presence
+      }
+    }
+  end
 
   def redirect_after_failed_create(alert)
     case params[:return_to]
