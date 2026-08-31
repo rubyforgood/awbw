@@ -177,7 +177,7 @@ module Events
 
     def set_event_registration
       @event_registration = EventRegistration
-        .includes(event: { registration_ticket_callouts: :resources })
+        .includes(event: { registration_ticket_callouts: [ :resources, :registration_ticket_callout_forms ] })
         .find_by!(slug: params[:slug])
     end
 
