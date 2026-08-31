@@ -31,7 +31,7 @@
     attendee[:matches].present? && attendee[:matches].none? { |reg| allocated_by_registration.fetch(reg.id, 0) >= event_cost_cents }
   } %>
 
-<div id="payment-card-<%= submission.id %>" data-controller="dropdown" class="bg-white border rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow transition-colors duration-150 scroll-mt-4 <%= highlighted ? "border-yellow-500 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200" %>">
+<div id="payment-card-<%= submission.id %>" data-controller="dropdown" class="bg-brand-cream border rounded-xl shadow-sm px-4 py-3 hover:shadow-md transition-shadow transition-colors duration-150 scroll-mt-4 <%= highlighted ? "border-yellow-500 bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "border-gray-200" %>">
   <%#
     Fixed column template (shared by every card so columns align row-to-row):
     name | email | method | amount | badge | date | submission | chevron.
@@ -101,12 +101,12 @@
     </button>
   </div>
 
-  <div id="<%= content_id %>" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3" data-dropdown-target="content">
+  <div id="<%= content_id %>" class="hidden mt-3 pt-3 border-t border-primary/10 space-y-3" data-dropdown-target="content">
     <% if linked_regs.any? %>
-      <div class="border-b border-gray-200 pt-2 space-y-1.5">
-        <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Linked registrations</h4>
+      <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <div class="grid grid-cols-2 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide bg-gray-100 px-3 py-2"><span>Linked registrants</span><span>Allocations</span></div>
 
-        <div class="divide-y divide-gray-100">
+        <div class="px-3 divide-y divide-gray-100">
           <% linked_regs.each do |reg| %>
             <% allocated_cents = allocated_by_registration.fetch(reg.id, 0) %>
             <% remaining_cents = [event_cost_cents - allocated_cents, 0].max %>
@@ -158,10 +158,8 @@
       </div>
     <% end %>
 
-    <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Submitted names</h4>
-
-    <div class="border border-gray-200 rounded-lg overflow-hidden">
-      <div class="grid grid-cols-2 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide bg-gray-100 px-3 py-2"><span>First Last Email</span><span>Potential match</span></div>
+    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div class="grid grid-cols-2 gap-x-4 text-xs font-medium text-gray-400 uppercase tracking-wide bg-gray-100 px-3 py-2"><span>Submitted names</span><span>Potential match</span></div>
 
       <% if attendee_matches.present? %>
         <div class="px-3">
@@ -180,7 +178,9 @@
                   <% end %>
                 </div>
 
-                <% if best && !linked_ids.include?(best.id) %>
+                <% if best && linked_ids.include?(best.id) %>
+                  <span class="text-xs text-gray-400 font-medium whitespace-nowrap">Linked above</span>
+                <% elsif best %>
                   <%= form_tag link_bulk_payment_event_path(@event), class: "p-4" do %>
                     <%= hidden_field_tag :submission_id, submission.id %>
                     <%= hidden_field_tag :event_registration_id, best.id %>
@@ -213,9 +213,9 @@
     </div>
 
     <% if payment %>
-      <div class="border-t border-gray-200 pt-2 space-y-2">
-        <h4 class="text-xs font-medium text-gray-400 uppercase tracking-wide">Payment allocations</h4>
-        <div id="<%= dom_id(payment, :allocations) %>"><%= render "events/payment_allocations", payment: payment, return_params: { return_to: "bulk_payments", expand: submission.id } %></div>
+      <div id="<%= dom_id(payment, :allocations) %>" class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <div class="bg-gray-100 px-3 py-2 text-xs font-medium tracking-wide text-gray-400 uppercase">Payment allocations</div>
+        <%= render "events/payment_allocations", payment: payment, bordered: false, return_params: { return_to: "bulk_payments", expand: submission.id } %>
       </div>
     <% else %>
       <%= render "events/bulk_payment_form", submission: submission %>
