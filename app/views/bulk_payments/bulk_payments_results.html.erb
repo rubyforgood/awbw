@@ -24,8 +24,9 @@
             <% highlighted = params[:highlight].to_s == submission.id.to_s %>
             <tr id="<%= form_submission_row_id(submission) %>" class="scroll-mt-24 border-b border-gray-100 text-sm text-gray-800 transition-colors duration-150 last:border-0 <%= highlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-500" : "" %>">
               <td class="px-4 py-3">
-                <div class="font-medium text-gray-900"><%= submission.person&.name %></div>
-                <div class="break-all text-gray-500"><%= submission.person&.email %></div>
+                <% payer = submission.decorate %>
+                <div class="font-medium text-gray-900"><%= payer.payer_name %></div>
+                <div class="break-all text-gray-500"><%= payer.payer_email %></div>
               </td>
               <td class="px-4 py-3">
                 <% if event %>

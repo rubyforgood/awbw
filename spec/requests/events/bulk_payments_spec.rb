@@ -81,6 +81,21 @@ RSpec.describe "Events::BulkPayments", type: :request do
     end
 
 
+    # Regression: an account-less payer (person_id nil — a supported case) used
+    # to make the card raise on `submission.person.name`, 500 the Turbo-Frame
+    # response, and surface the "Oopsie!" error box in place of the results.
+    it "renders an account-less submission through the filter frame with the typed payer name" do
+      anon = create(:form_submission, person: nil, form: form, event: event, role: "bulk_payment")
+      anon.form_answers.create!(form_field: payer_first_name_field, submitted_answer: "Dana")
+      anon.form_answers.create!(form_field: payer_last_name_field, submitted_answer: "Doe")
+
+      get bulk_payments_event_path(event), headers: { "Turbo-Frame" => "bulk_payments_results" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("id=\"bulk_payments_results\"")
+      expect(response.body).to include("Dana Doe")
+    end
+
     it "shows a grey \"Paid\" instead of an orange balance when the registration is fully covered" do
       attendee = create(:person, first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com")
       registration = create(:event_registration, event: event, registrant: attendee, status: "registered")

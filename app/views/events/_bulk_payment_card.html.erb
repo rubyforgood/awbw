@@ -38,8 +38,8 @@
   %>
 
   <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_8rem_6rem_13rem_7rem_auto_1.5rem]">
-    <span class="text-sm font-medium text-gray-900 min-w-0 lg:truncate"><%= submission.person.name %></span>
-    <span class="text-sm text-gray-500 min-w-0 break-all lg:break-normal lg:truncate"><%= submission.person.email %></span>
+    <span class="text-sm font-medium text-gray-900 min-w-0 lg:truncate"><%= submission.payer_name %></span>
+    <span class="text-sm text-gray-500 min-w-0 break-all lg:break-normal lg:truncate"><%= submission.payer_email %></span>
     <span class="text-sm text-gray-500 min-w-0 whitespace-nowrap lg:truncate"><%= payment_method.presence || "—" %></span>
     <span class="text-sm text-gray-500 whitespace-nowrap tabular-nums lg:text-right"><% amount_cents = payment&.amount_cents || submission.bulk_payment_amount_cents(@event) %><%= dollars_from_cents(amount_cents) %></span>
     <div class="flex min-w-0 flex-col gap-1">
