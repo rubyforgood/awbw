@@ -16,6 +16,19 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  # Takes the FormSubmission directly (not a Notification record, unlike the others).
+  # `updated:` distinguishes an edit to an existing submission from a first one.
+  def callout_form_submitted_fyi(form_submission, updated: false)
+    @form_submission = form_submission
+    @person = form_submission.person
+    @event = form_submission.event
+    @form = form_submission.form
+    @answers = form_submission.form_answers.order(:id)
+    @verb = updated ? "Updated" : "New"
+
+    mail(subject: "#{FYI_PREFIX} #{@verb} #{@form.name} submission from #{@person.full_name}")
+  end
+
   def event_registration_cancelled_fyi(notification)
     @event_registration = notification.noticeable
     @event = @event_registration.event.decorate

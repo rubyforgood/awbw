@@ -277,9 +277,9 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).not_to include("Dashboard")
     end
 
-    it "offers the preview (View) subnav tab but no live-form link when no event is known" do
+    it "offers the Preview subnav tab but no live-form link when no event is known" do
       get edit_form_path(form)
-      expect(response.body).to include(">View<")
+      expect(response.body).to include(">Preview<")
       expect(response.body).not_to include(">Live form<")
     end
 
@@ -299,6 +299,23 @@ RSpec.describe "Forms", type: :request do
       get edit_form_path(form)
       expect(response).to have_http_status(:success)
       expect(response.body).to include("First Name")
+    end
+
+    it "reveals the fan-out panel and its help text on a choice field, hiding it on a free-form one" do
+      form = create(:form, :standalone)
+      choice = create(:form_field, form:, answer_type: :single_select_radio, name: "Was it clear for")
+      free_form = create(:form_field, form:, answer_type: :free_form_input_paragraph, name: "Please elaborate.")
+
+      get edit_form_path(form)
+      doc = Nokogiri::HTML(response.body)
+
+      fanout_panel = ->(field) {
+        doc.at_css("#form_field_#{field.id}").css("details").find { |node| node.text.include?("Fan out per resource") }
+      }
+
+      expect(fanout_panel[choice]["class"]).not_to include("hidden")
+      expect(fanout_panel[choice].text).to include("Works on choice questions only")
+      expect(fanout_panel[free_form]["class"]).to include("hidden")
     end
 
     it "shows the Duplicate form button posting to the copy action" do
@@ -766,6 +783,24 @@ RSpec.describe "Forms", type: :request do
       }.to change { field.reload.form_field_answer_options.count }.by(-1)
 
       expect(field.answer_options.map(&:name)).not_to include("No")
+    end
+
+    it "links a resource to a field, making it a per-resource question" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form:, answer_type: :single_select_radio, name: "Was it clear for")
+      resource = create(:resource, title: "Touchstone Journey")
+
+      expect {
+        patch form_path(form), params: {
+          form: { form_fields_attributes: { "0" => {
+            id: field.id, name: field.name, answer_type: field.answer_type,
+            form_field_resources_attributes: { "0" => { resource_id: resource.id } }
+          } } }
+        }
+      }.to change { field.reload.form_field_resources.count }.by(1)
+
+      expect(field.per_resource?).to be(true)
+      expect(field.resources).to include(resource)
     end
 
     it "saves the per-field width, minimum word count, and maximum character count" do

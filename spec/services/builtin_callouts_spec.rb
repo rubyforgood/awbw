@@ -2,14 +2,16 @@ require "rails_helper"
 
 RSpec.describe BuiltinCallouts do
   describe "#build" do
-    it "builds all eight built-ins as unsaved in-memory rows on a new event" do
+    it "builds the built-ins as unsaved in-memory rows on a new event" do
       event = Event.new
 
       built = described_class.build(event)
 
+      # No dates on a bare Event, so day_count is 1 and the Day 2 survey is skipped.
       expect(built.map(&:builtin_key)).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours",
-        "videoconference", "staff", "handouts", "faq"
+        "videoconference", "staff", "handouts", "faq",
+        "feedback_surveys"
       )
       expect(built).to all(be_new_record)
       expect(event.registration_ticket_callouts).to match_array(built)
@@ -22,7 +24,8 @@ RSpec.describe BuiltinCallouts do
       built = described_class.build(event)
 
       expect(built).to be_empty
-      expect(event.registration_ticket_callouts.builtin.count).to eq(8)
+      # 8 originals + the single post-event survey built-in.
+      expect(event.registration_ticket_callouts.builtin.count).to eq(9)
     end
 
     it "builds a paid event's Payment card with the W-9 link (subtitle) in memory" do
@@ -39,7 +42,7 @@ RSpec.describe BuiltinCallouts do
   end
 
   describe "#seed" do
-    it "materializes all eight built-in callouts for every event" do
+    it "materializes the built-in callouts for every event" do
       event = create(:event, cost_cents: 0) # free, no scholarship form, no VC link
 
       described_class.seed(event)
@@ -47,7 +50,8 @@ RSpec.describe BuiltinCallouts do
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours",
-        "videoconference", "staff", "handouts", "faq"
+        "videoconference", "staff", "handouts", "faq",
+        "feedback_surveys"
       )
     end
 
@@ -60,7 +64,7 @@ RSpec.describe BuiltinCallouts do
       described_class.seed(event)
 
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key)).to eq(
-        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate faq feedback_surveys]
       )
     end
 
@@ -248,7 +252,8 @@ RSpec.describe BuiltinCallouts do
       keys = event.registration_ticket_callouts.builtin.pluck(:builtin_key)
       expect(keys).to contain_exactly(
         "payment", "certificate", "scholarship", "ce_hours",
-        "videoconference", "staff", "faq"
+        "videoconference", "staff", "faq",
+        "feedback_surveys"
       )
     end
 
@@ -260,7 +265,7 @@ RSpec.describe BuiltinCallouts do
 
       expect(event.registration_ticket_callouts.ordered.first).to eq(custom)
       expect(event.registration_ticket_callouts.ordered.map(&:builtin_key).compact).to eq(
-        %w[payment scholarship ce_hours videoconference staff handouts certificate faq]
+        %w[payment scholarship ce_hours videoconference staff handouts certificate faq feedback_surveys]
       )
     end
   end
@@ -297,6 +302,66 @@ RSpec.describe BuiltinCallouts do
       callout = create(:registration_ticket_callout, title: "Parking", builtin_key: nil)
 
       expect { described_class.reset(callout) }.not_to change { callout.reload.title }
+    end
+  end
+
+  describe "the feedback surveys built-in" do
+    def seed_survey_templates
+      FormBuilderService.new(name: "Day 1 Survey", sections: [ :day_1_survey ], role: "day_1_survey").call
+      FormBuilderService.new(name: "Day 2 Survey", sections: [ :day_2_survey ], role: "day_2_survey").call
+      FormBuilderService.new(name: "Post-Event Survey", sections: [ :post_event_feedback ], role: "feedback_surveys").call
+      FormBuilderService.new(name: "Post-Training Recipients Survey", sections: [ :recipient_survey ], role: "recipient_survey").call
+    end
+
+    it "seeds a single Feedback surveys callout" do
+      event = create(:event)
+
+      described_class.seed(event)
+
+      expect(event.registration_ticket_callouts.pluck(:builtin_key)).to include("feedback_surveys")
+    end
+
+    it "links the Day 1 and overall surveys but omits Day 2 on a one-day event (recipients survey lives on the scholarship callout)" do
+      seed_survey_templates
+      event = create(:event, start_date: Time.zone.local(2026, 9, 10, 9), end_date: Time.zone.local(2026, 9, 10, 17))
+
+      described_class.seed(event)
+
+      callout = event.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys")
+      expect(callout.forms.map(&:name)).to contain_exactly("Day 1 Survey", "Post-Event Survey")
+    end
+
+    it "links the Day 2 form on a multi-day event" do
+      seed_survey_templates
+      event = create(:event, start_date: Time.zone.local(2026, 9, 10, 9), end_date: Time.zone.local(2026, 9, 11, 17))
+
+      described_class.seed(event)
+
+      callout = event.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys")
+      expect(callout.forms.map(&:name)).to contain_exactly("Day 1 Survey", "Day 2 Survey", "Post-Event Survey")
+    end
+
+    it "drips each linked evaluation on its own date" do
+      seed_survey_templates
+      event = create(:event, start_date: Time.zone.local(2026, 9, 10, 9), end_date: Time.zone.local(2026, 9, 11, 17))
+
+      described_class.seed(event)
+
+      callout = event.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys")
+      by_name = callout.registration_ticket_callout_forms.includes(:form).index_by { |link| link.form.name }
+      expect(by_name["Day 1 Survey"].display_from).to eq(Time.zone.local(2026, 9, 10, 16, 30))
+      expect(by_name["Day 2 Survey"].display_from).to eq(Time.zone.local(2026, 9, 11, 16, 30))
+    end
+
+    it "links the recipients survey (no drip) onto the scholarship callout" do
+      seed_survey_templates
+      event = create(:event)
+
+      described_class.seed(event)
+
+      callout = event.registration_ticket_callouts.find_by(builtin_key: "scholarship")
+      expect(callout.forms.map(&:name)).to contain_exactly("Post-Training Recipients Survey")
+      expect(callout.registration_ticket_callout_forms.first.display_from).to be_nil
     end
   end
 end

@@ -18,7 +18,7 @@
       </div>
     <% else %>
       <div class="py-2">
-        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide"><%= display_question_label(field, response) %></dt>
+        <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
         <dd class="mt-1 text-sm text-gray-900">
           <%# Resolves the sector / age-group ids stored behind the professional
               fields to their names; free-text ("Other: …") and plain answers pass

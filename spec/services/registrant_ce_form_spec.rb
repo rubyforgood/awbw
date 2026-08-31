@@ -17,7 +17,7 @@ RSpec.describe RegistrantCeForm do
     end
 
     it "is nil when the CE callout has no form" do
-      callout.update!(form: nil)
+      callout.forms.destroy_all
       expect(described_class.new(registration).form).to be_nil
     end
 
@@ -62,12 +62,12 @@ RSpec.describe RegistrantCeForm do
     end
 
     it "is false when a required field is unanswered" do
-      EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form_params: {})
+      EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:, form_params: {})
       expect(described_class.new(registration)).not_to be_complete
     end
 
     it "is true when every required field is answered" do
-      EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:,
+      EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:,
         form_params: { required_field.id.to_s => "Great" })
       expect(described_class.new(registration)).to be_complete
     end

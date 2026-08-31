@@ -2906,3 +2906,66 @@
   pro_tips:
     - "This covers people cards on registrants, notifications, membership invoices, professional licenses, monthly reports, users, and the affiliation and staff editors."
     - "The full name shows here for admins even if the person set their public credit to a first name or initials — that preference still governs public-facing pages, not the admin editor."
+
+- name: "Attach several forms to a ticket callout"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-30
+  summary: >-
+    A registration-ticket callout can now deliver more than one form. The callout
+    editor's single "Linked form" picker is now "Linked forms" — add as many as you
+    like, each with its own optional display date so it drips open on that date.
+  pro_tips:
+    - "Leave a form's display date blank to open it as soon as the callout itself opens; set one to hold the form back until later. The callout's own display date always wins, so no form opens before its callout does."
+    - "Each linked form gets its own completion column on the registrants roster, under the Ticket forms switch."
+
+- name: "Feedback surveys on your registration ticket"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-30
+  summary: >-
+    Training feedback surveys now live on your registration ticket. A "Feedback
+    surveys" callout opens the Day 1 / Day 2 evaluations and an overall post-event
+    survey, each on its own date; submit one and it collapses to a "Completed"
+    toggle you can reopen to edit.
+  pro_tips:
+    - "Scholarship recipients get their recipients survey on their own scholarship page, once their agreement is signed and their tasks are complete."
+    - "Reopen any completed survey to review or edit your answers."
+
+- name: "Scholarship recipient survey gates the certificate"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-30
+  summary: >-
+    Scholarship recipients get their own survey on their scholarship page, and it
+    gates their certificate. Until they submit it the recipient sits at "Survey
+    pending" on the registrants roster and can't be marked complete.
+  pro_tips:
+    - "The survey shows on the recipient's scholarship page once they've signed their agreement and their scholarship tasks are marked complete (plus any display date on the scholarship callout's linked form)."
+    - "Setup: run `bin/rails data:seed_survey_forms` to create the survey forms, then open the callout editor on the scholarship callout and Restore default so it links the recipients survey."
+    - "To record a survey received another way (e.g. on paper), use the Survey received toggle on the registration edit page — it satisfies the gate without a digital submission."
+
+- name: "Staff notified when a post-event survey is submitted"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-30
+  summary: >-
+    Every post-event survey submission — Day 1, Day 2, or the recipients survey —
+    sends a FYI email with the submitter's answers to the default notification
+    address, so staff see feedback without opening the registrant's record.
+  pro_tips:
+    - "The email lists the submitted answers and links the submitter and event."
+    - "It sends on each submission; the subject says \"New\" for a first submission and \"Updated\" when the registrant edits their answers."
+
+- name: "Content-sharing questions set your profile preferences"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-30
+  summary: >-
+    The anonymity and display-name questions now write straight through to your
+    profile — answering them on a registration form or a post-event survey updates
+    how your contributed content is credited (anonymous, or shown under your chosen
+    name format).
+  pro_tips:
+    - "Change your answers any time by reopening the survey, or from your profile directly."
+    - "Admins: on a registration form the change shows up on the submission's \"What this submission changed\" page, like any other profile edit."

@@ -21,7 +21,7 @@
             <% submission = answer.form_submission %>
             <tr class="border-b border-gray-100 align-top text-sm text-gray-500 last:border-0">
               <td class="px-4 py-3">
-                <span class="font-medium text-gray-700"><%= answer.form_field&.name.presence || answer.question_name_when_answered %></span>
+                <span class="rich-label font-medium text-gray-700"><%= form_label_html(answer.form_field&.name.presence || answer.question_name_when_answered) %></span>
                 <% if answer.form_field %>
                   <span class="ml-1.5 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 align-middle text-xs font-medium whitespace-nowrap text-gray-500">
                     <%= FormField::ANSWER_TYPE_LABELS[answer.form_field.answer_type] %>

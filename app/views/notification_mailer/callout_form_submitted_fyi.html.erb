@@ -1,0 +1,16 @@
+<h1 style="font-size:18px;color:#111827;"><%= @verb %> <%= @form.name %> submission</h1>
+
+<p style="font-size:14px;color:#374151;">
+  From: <strong><%= @person.full_name %></strong><br>
+  <% if @event %>Event: <%= @event.title %><br><% end %>
+  Submitted: <%= @form_submission.created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+</p>
+
+<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;">
+
+<% @answers.each do |answer| %>
+  <p style="font-size:14px;color:#374151;margin:0 0 12px;">
+    <strong style="display:block;color:#111827;"><%= form_label_html(answer.question_name_when_answered.presence || answer.form_field&.name) %></strong>
+    <%= answer.submitted_answer.presence || "—" %>
+  </p>
+<% end %>

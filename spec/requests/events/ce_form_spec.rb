@@ -38,7 +38,7 @@ RSpec.describe "Events::Callouts CE form", type: :request do
     it "rejects a submit before sign-outs are complete" do
       travel_to Time.zone.local(2026, 7, 23, 10, 0)
       expect {
-        post registration_callout_form_submit_path(registration.slug, callout),
+        post registration_callout_form_submit_path(registration.slug, callout, form),
           params: { callout_form: { form_fields: { field.id.to_s => "Great" } } }
       }.not_to change { FormSubmission.count }
       expect(response).to redirect_to(registration_ce_path(registration.slug))

@@ -161,7 +161,7 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       expect(ce_reg.certificate_available?).to be(false)
 
       EventRegistrationServices::CalloutFormSubmission.call(
-        registration: ce_reg.event_registration, callout: callout,
+        registration: ce_reg.event_registration, callout: callout, form:,
         form_params: { required_field.id.to_s => "Great" }
       )
       expect(ce_reg.reload.certificate_available?).to be(true)

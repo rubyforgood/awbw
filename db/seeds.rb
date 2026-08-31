@@ -506,3 +506,9 @@ canonical_names = workshop_settings.map { |name, _| name.downcase }
 workshop_settings_type.categories
   .reject { |cat| canonical_names.include?(cat.name.downcase) }
   .each { |cat| cat.update!(published: false) }
+
+# Post-event survey templates — the standalone forms the Day 1 / Day 2 / Scholarship
+# recipients survey callouts deliver inline. Shared with the data:seed_survey_forms
+# task so prod can create them without the full seed. Idempotent on form name.
+puts "Creating post-event survey forms…"
+SurveyFormSeeder.call

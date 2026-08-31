@@ -54,6 +54,16 @@ module Events
 
       @scholarship = @event_registration.effective_scholarship
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
+
+      # The recipients survey, delivered here once the recipient has signed their
+      # agreement and finished their tasks (and any drip date has passed).
+      @recipient_survey_link = @event.recipient_survey_form_link
+      @recipient_survey_available = @recipient_survey_link.present? && @event_registration.recipient_survey_available?
+      if @recipient_survey_available
+        @recipient_survey_submission = FormSubmission.find_by(person: @event_registration.registrant,
+          event: @event, form: @recipient_survey_link.form)
+        @recipient_survey_editing = @recipient_survey_submission.nil? || params[:edit].to_i == @recipient_survey_link.form_id
+      end
     end
 
     # The Agree button (agreement=yes) records an "accepted" response.
@@ -309,36 +319,46 @@ module Events
       @faq_content = callout&.description
     end
 
-    # A callout that delivers a form inline: the registrant fills it out here and
-    # sees their responses on return. The reg slug is the authorization.
+    # A callout that delivers one or more forms inline: each linked form drips on
+    # its own date, is filled here, and shows its answers on return. The reg slug
+    # is the authorization. Forms already submitted collapse to a completed toggle.
     def callout
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
       return redirect_to registration_ticket_path(@event_registration.slug) if @callout.hidden? || !@callout.delivers_form?
       # The CE callout's form is a post-training step — it opens only once the
       # registrant's sign-outs are complete, and it lives on the CE page.
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
+      # The scholarship callout delivers the recipients survey inline on its own
+      # page (gated on agreement + tasks), not the generic callout-forms page.
+      return redirect_to registration_scholarship_path(@event_registration.slug) if @callout.builtin_key == "scholarship"
 
-      @form = @callout.form
+      @callout_forms = @callout.registration_ticket_callout_forms.includes(:form)
       @resource_cards = @callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to: "callout_form")
-      unless @callout.dripping?
-        @submission = callout_submission
-        @editing = @submission.nil? || params[:edit].present?
-      end
+      @submissions = callout_submissions
+      @editing_form_id = params[:edit].to_i if params[:edit].present?
     end
 
     def submit_callout
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
-      if @callout.hidden? || !@callout.delivers_form? || @callout.dripping?
-        redirect_to registration_callout_form_path(@event_registration.slug, @callout)
+      callout_form = @callout.registration_ticket_callout_forms.find_by(form_id: params[:form_id])
+      form = callout_form&.form
+      if @callout.hidden? || callout_form.nil? || callout_form.dripping? || recipient_survey_locked?
+        redirect_to callout_form_landing(@callout, callout_form)
         return
       end
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
-      EventRegistrationServices::CalloutFormSubmission.call(
-        registration: @event_registration, callout: @callout, form_params: callout_form_params
+      service = EventRegistrationServices::CalloutFormSubmission.call(
+        registration: @event_registration, callout: @callout, form: form,
+        form_params: callout_form_params, clarity_params: callout_clarity_params
       )
+      # A profile write-through (anonymity / name questions) is Ahoy-tracked, and
+      # staff get a heads-up on the submission. The CE callout runs its own flow, so
+      # it opts out of the FYI.
+      track_profile_changes(service.profile_changes)
+      NotificationMailer.callout_form_submitted_fyi(service.submission, updated: service.edited?).deliver_later unless @callout.ce_config?
 
-      redirect_to registration_callout_form_path(@event_registration.slug, @callout),
+      redirect_to callout_form_landing(@callout, callout_form),
                   notice: "Thanks! Your responses have been submitted."
     end
 
@@ -361,9 +381,27 @@ module Events
       (amount * 100).to_i
     end
 
-    def callout_submission
-      FormSubmission.find_by(person: @event_registration.registrant, form: @callout.form, event: @event,
-                             role: EventRegistrationServices::CalloutFormSubmission.role_for(@callout))
+    # The registrant's submission for each of the callout's forms, keyed by form_id
+    # (missing entries mean not yet submitted). Each carries the form's own role.
+    def callout_submissions
+      forms = @callout.forms.to_a
+      FormSubmission.where(person: @event_registration.registrant, event: @event, form: forms)
+                    .index_by(&:form_id)
+    end
+
+    # A form on the scholarship callout can't be filled until the recipient has
+    # signed their agreement and finished their tasks — guards a direct POST past
+    # the page gate.
+    def recipient_survey_locked?
+      @callout.builtin_key == "scholarship" && !@event_registration.recipient_survey_available?
+    end
+
+    # Where to send the registrant after landing on / submitting a callout form. The
+    # scholarship callout's survey lives on the scholarship page; everything else
+    # returns to the generic callout-forms page, anchored to the form.
+    def callout_form_landing(callout, callout_form)
+      return registration_scholarship_path(@event_registration.slug) if callout.builtin_key == "scholarship"
+      registration_callout_form_path(@event_registration.slug, callout, anchor: callout_form && "form-#{callout_form.form_id}")
     end
 
     # The CE callout's form is a post-training step gated on sign-out completion —
@@ -377,6 +415,11 @@ module Events
 
     def callout_form_params
       params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
+    end
+
+    # Per-resource "clarity" answers: { field_id => { resource_id => answer } }.
+    def callout_clarity_params
+      params.dig(:callout_form, :clarity)&.to_unsafe_h || {}
     end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of
@@ -412,6 +455,13 @@ module Events
       return "Signed out at #{time}." if entry.attendance_date == Time.zone.today
 
       "Signed out for #{entry.attendance_date.strftime("%a, %b %-d")} at #{time}."
+    end
+
+    # One Ahoy event per profile field the survey actually changed.
+    def track_profile_changes(changes)
+      changes.each do |attribute, (from, to)|
+        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to)
+      end
     end
 
     # Whether the event's built-in callout for this key is materialized and

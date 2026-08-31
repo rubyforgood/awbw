@@ -1,0 +1,14 @@
+<%= @verb %> <%= @form.name %> submission
+==========================
+
+From: <%= @person.full_name %>
+<% if @event %>Event: <%= @event.title %>
+<% end %>Submitted: <%= @form_submission.created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+------------------------------------------------------------
+
+<% @answers.each do |answer| %>
+<%= strip_tags(answer.question_name_when_answered.presence || answer.form_field&.name) %>
+<%= answer.submitted_answer.presence || "—" %>
+
+<% end %>
