@@ -72,6 +72,7 @@
 
       <%= link_to event_bulk_payment_path(@event, **submission_show_params, return_to: "bulk_payments", expand: submission.id),
                   title: "View form submission",
+                  data: { turbo_frame: "_top" },
                   class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
         <i class="fa-solid fa-file-lines text-xs"></i>
         Submission - ID: <%= submission.id %>
@@ -80,6 +81,7 @@
       <% if submission.slug.present? %>
         <%= link_to bulk_payment_ticket_path(submission.slug, return_to: "bulk_payments", expand: submission.id),
                     title: "View ticket",
+                    data: { turbo_frame: "_top" },
                     class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors whitespace-nowrap" do %>
           <i class="fa-solid fa-ticket text-xs"></i>
           Ticket
@@ -113,11 +115,12 @@
             <% reg_paid_in_full = allocated_cents >= event_cost_cents %>
 
             <div class="grid grid-cols-2 gap-x-4 items-center py-2">
-              <div class="min-w-0"><%= person_edit_button(reg.registrant, subtitle: reg.registrant.preferred_email, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
+              <div class="min-w-0"><%= person_edit_button(reg.registrant, subtitle: reg.registrant.preferred_email, data: { turbo_frame: "_top" }, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
 
               <div class="flex flex-wrap items-center gap-4">
                 <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
                             title: "View #{reg.registrant.name}'s registration for #{@event.title}",
+                            data: { turbo_frame: "_top" },
                             class: "inline-flex items-center w-24 gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                   <i class="fa-solid fa-clipboard-list text-gray-400"></i>
 
@@ -130,6 +133,7 @@
 
                 <%= link_to allocations_path(allocatable_sgid: reg.to_sgid.to_s, return_to: "bulk_payments", expand: submission.id),
                             title: "View registration allocations",
+                            data: { turbo_frame: "_top" },
                             class: "inline-flex items-center w-24 gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                   <i class="fa-solid fa-list-check text-gray-400"></i>
                   <span class="text-green-600 tabular-nums"><%= dollars_from_cents(allocated_cents) %></span>
@@ -172,7 +176,7 @@
               <div class="flex flex-wrap gap-2 items-center">
                 <div class="grow">
                   <% if best %>
-                    <%= person_edit_button(best.registrant, compact: true, width_class: "w-auto") %>
+                    <%= person_edit_button(best.registrant, subtitle: best.registrant.preferred_email, compact: true, width_class: "w-auto", data: { turbo_frame: "_top" }) %>
                   <% else %>
                     <span class="text-gray-400 text-xs">No match</span>
                   <% end %>
@@ -202,7 +206,7 @@
 
           <div class="w-64">
             <%= select_tag :event_registration_id,
-                   options_from_collection_for_select(unlinked_regs, :id, ->(r) { "#{r.registrant.name} — #{r.registrant.email}" }),
+                   options_from_collection_for_select(unlinked_regs, :id, ->(r) { "#{r.registrant.name} — #{r.registrant.preferred_email}" }),
                    prompt: "Select registrant...",
                    class: "w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring focus:ring-blue-200 focus:border-blue-500" %>
           </div>
