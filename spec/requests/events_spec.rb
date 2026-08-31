@@ -242,6 +242,23 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Chosen event")
     end
 
+    it "lets an event owner in, previewing their own event rather than someone else's" do
+      create(:event, :published, title: "Owned event", created_by: user)
+      sign_in user
+      get templates_gallery_events_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Owned event")
+      expect(response.body).not_to include("Gallery sample")
+    end
+
+    it "does not let an owner preview an event_id they do not own" do
+      create(:event, :published, created_by: user)
+      sign_in user
+      get templates_gallery_events_path(event_id: sample.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Gallery sample")
+    end
+
     it "forbids a non-admin without events" do
       sign_in user
       get templates_gallery_events_path

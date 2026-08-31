@@ -6,6 +6,8 @@ RSpec.describe EventPolicy, type: :policy do
   let(:published_event) { build_stubbed :event, :published }
   let(:public_event) { build_stubbed :event, publicly_visible: true  }
   let(:unpublished_event) { build_stubbed :event, :unpublished }
+  let(:owned_unpublished_event) { build_stubbed :event, :unpublished, created_by: regular_user }
+  let(:owned_ended_event) { build_stubbed :event, :published, :ended, created_by: regular_user }
   let(:ended_event) { build_stubbed :event, :published, :ended }
   let(:open_registration_event) { build_stubbed :event, registration_close_date: 1.day.from_now }
   let(:closed_registration_event) { build_stubbed :event, registration_close_date: 1.day.ago }
@@ -123,6 +125,18 @@ RSpec.describe EventPolicy, type: :policy do
 
         it { is_expected.not_to be_allowed_to(:show?) }
       end
+
+      context "with the event's owner" do
+        subject { policy_for(record: owned_unpublished_event, user: regular_user) }
+
+        it { is_expected.to be_allowed_to(:show?) }
+      end
+    end
+
+    context "when the owner's event has ended" do
+      subject { policy_for(record: owned_ended_event, user: regular_user) }
+
+      it { is_expected.to be_allowed_to(:show?) }
     end
   end
 

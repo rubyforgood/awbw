@@ -44,14 +44,15 @@ class EventsController < ApplicationController
     track_view(@event)
   end
 
-  # Admin-facing gallery that renders every display template as a scaled preview,
-  # so admins can compare layouts before picking one on the event form. Previews
-  # the event named by ?event_id (scoped to what the viewer may see), else the most
-  # recent one. Read-only (`sample: true`) so it never builds live registration
-  # routes or duplicate registration_section dom_ids across the previews.
+  # Gallery that renders every display template as a scaled preview, so admins and
+  # event owners can compare layouts before picking one on the event form. Previews
+  # the event named by ?event_id, else the most recent one — drawn from the
+  # :reportable scope, so an owner only ever previews their own events' content.
+  # Read-only (`sample: true`) so it never builds live registration routes or
+  # duplicate registration_section dom_ids across the previews.
   def templates_gallery
     authorize!
-    scope = authorized_scope(Event.all)
+    scope = authorized_scope(Event.all, as: :reportable)
     @sample_event = scope.find_by(id: params[:event_id]) if params[:event_id].present?
     @sample_event ||= scope.order(start_date: :desc).first
     @sample_event = @sample_event&.decorate
