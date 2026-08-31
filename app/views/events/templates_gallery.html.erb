@@ -16,8 +16,11 @@
 
     <div class="mt-6 flex flex-wrap justify-center gap-6 sm:justify-start">
       <% Event::TEMPLATES.each do |key, meta| %>
-        <%= link_to event_path(@sample_event, template: key), target: "_blank", rel: "noopener",
-              class: "group block w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-brand-navy-400 hover:shadow-md" do %>
+        <%# Card is a div, not a link: the scaled preview contains its own <a> links
+            (from the description), and nesting anchors is invalid HTML — the browser
+            would eject the preview out of the card. A transparent stretched link
+            sits over the whole card instead. %>
+        <div class="group hover:border-brand-navy-400 relative w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
           <%# Render the real template at desktop width, then zoom the whole thing
               down so the card shows a faithful reduced-size preview. zoom (not
               transform) also shrinks the layout box, so the cards tile cleanly. %>
@@ -33,7 +36,10 @@
             </div>
             <span class="text-brand-navy-600 mt-0.5 shrink-0 text-xs font-semibold opacity-0 transition group-hover:opacity-100">Open →</span>
           </div>
-        <% end %>
+          <%= link_to event_path(@sample_event, template: key), target: "_blank", rel: "noopener", class: "absolute inset-0" do %>
+            <span class="sr-only">Open <%= meta[:label] %> preview</span>
+          <% end %>
+        </div>
       <% end %>
     </div>
   <% else %>
