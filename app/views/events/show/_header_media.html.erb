@@ -1,15 +1,11 @@
 <%# Admin-uploaded header content (usually a banner image).
     Default: rendered as-authored, images capped to a banner height and centered.
-    fill "cover" (navy hero) — image covers its frame edge-to-edge (crops).
-    fill "width" (details sidebar) — image spans full width at its natural aspect. %>
+    fill "cover": the image covers its frame edge-to-edge — used by the branded
+    templates inside a fixed-aspect, rounded, overflow-hidden frame. %>
 <% fill = local_assigns.fetch(:fill, false) %>
 <% if event.rhino_header.present? %>
   <% if fill == "cover" %>
     <div class="h-full [&_img]:h-full [&_img]:w-full [&_img]:object-cover">
-      <%= event.rhino_header %>
-    </div>
-  <% elsif fill == "width" %>
-    <div class="[&_img]:block [&_img]:w-full">
       <%= event.rhino_header %>
     </div>
   <% else %>
