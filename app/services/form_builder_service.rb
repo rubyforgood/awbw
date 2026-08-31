@@ -17,6 +17,11 @@ class FormBuilderService
   # resource title appended to this prompt.
   CLARITY_PROMPT = "Overall, was the information presented in a clear and concise manner for".freeze
 
+  # The per-workshop growth questions fan out the same way — the workshop title lands
+  # after the prompt. Shared with the seeder, which matches these fields by prompt.
+  GROWTH_PERSONAL_PROMPT = "This workshop supported my <em>personal</em> growth:".freeze
+  GROWTH_PROFESSIONAL_PROMPT = "This workshop supported my <em>professional</em> growth:".freeze
+
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
     person_contact_info: { label: "Person contact info", method: :build_person_contact_info_fields },
@@ -73,11 +78,11 @@ class FormBuilderService
     payment: %w[payment_method someone_else_will_pay],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    # Only the fan-out anchors carry an identifier — the clarity radios and the
-    # per-workshop growth questions the seeder links resources to. Every other survey
-    # question is answer-only (stored on the form submission), so it needs no identifier.
-    day_1_survey: %w[d1_clarity_part_one d1_clarity_part_two d1_growth_personal d1_growth_professional],
-    day_2_survey: %w[d2_clarity_part_one d2_clarity_part_two d2_growth_personal d2_growth_professional],
+    # Every survey question is answer-only (stored on the form submission, not written
+    # to any other record), so none carry an identifier. The seeder finds the fan-out
+    # questions by their prompt text instead.
+    day_1_survey: %w[],
+    day_2_survey: %w[],
     recipient_survey: %w[],
     content_sharing_preferences: %w[anonymous_contributions display_name_preference],
     bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
@@ -689,22 +694,22 @@ class FormBuilderService
     position = add_header(form, position, "Day 1 evaluation", group: "day_1_survey")
 
     position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
-                         key: "d1_clarity_part_one", group: "day_1_survey", subtitle: "Day 1 — Part One",
+                         group: "day_1_survey", subtitle: "Day 1 — Part One",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          group: "day_1_survey", required: false)
     position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
-                         key: "d1_clarity_part_two", group: "day_1_survey", subtitle: "Day 1 — Part Two",
+                         group: "day_1_survey", subtitle: "Day 1 — Part Two",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          group: "day_1_survey", required: false)
 
     # Fanned per workshop (seeded resource links) — the workshop name lands after
     # the prompt, so the text stays generic.
-    position = add_field(form, position, "This workshop supported my <em>personal</em> growth:", :single_select_radio,
-                         key: "d1_growth_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "This workshop supported my <em>professional</em> growth:", :single_select_radio,
-                         key: "d1_growth_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, GROWTH_PERSONAL_PROMPT, :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, GROWTH_PROFESSIONAL_PROMPT, :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
                          group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "I was able to practice grounding and self-regulation during the training.", :single_select_radio,
@@ -731,22 +736,22 @@ class FormBuilderService
     position = add_header(form, position, "Day 2 evaluation", group: "day_2_survey")
 
     position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
-                         key: "d2_clarity_part_one", group: "day_2_survey", subtitle: "Day 2 — Part 1",
+                         group: "day_2_survey", subtitle: "Day 2 — Part 1",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          group: "day_2_survey", required: false)
     position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
-                         key: "d2_clarity_part_two", group: "day_2_survey", subtitle: "Day 2 — Part 2",
+                         group: "day_2_survey", subtitle: "Day 2 — Part 2",
                          options: CLARITY_OPTIONS)
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          group: "day_2_survey", required: false)
 
     # Fanned per workshop (seeded resource links) — the workshop name lands after
     # the prompt, so the text stays generic.
-    position = add_field(form, position, "This workshop supported my <em>personal</em> growth:", :single_select_radio,
-                         key: "d2_growth_personal", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "This workshop supported my <em>professional</em> growth:", :single_select_radio,
-                         key: "d2_growth_professional", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, GROWTH_PERSONAL_PROMPT, :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, GROWTH_PROFESSIONAL_PROMPT, :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
                          group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "What I learned today better prepared me to facilitate art workshops that honor intersectionality.", :single_select_radio,

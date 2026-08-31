@@ -184,8 +184,6 @@ class SmartFormFields
     scholarship_eligibility scholarship_contribution impact_description
     implementation_plan additional_comments
     event_rating most_valuable improvement_suggestions
-    d1_clarity_part_one d1_clarity_part_two d1_growth_personal d1_growth_professional
-    d2_clarity_part_one d2_clarity_part_two d2_growth_personal d2_growth_professional
     anonymous_contributions display_name_preference
   ].freeze
 

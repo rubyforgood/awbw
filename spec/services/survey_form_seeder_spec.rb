@@ -29,24 +29,36 @@ RSpec.describe SurveyFormSeeder do
     )
   end
 
-  describe "clarity resource links" do
-    it "links a clarity question to its topic resources when they exist" do
+  describe "fan-out resource links" do
+    # The clarity Part One question, matched by prompt + subtitle (no identifier).
+    def part_one_field
+      Form.find_by(name: "Day 1 Survey").form_fields
+          .find_by(name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part One")
+    end
+
+    it "links a fan-out question to its topic resources when they exist" do
       touchstone = create(:resource, title: "The Touchstone Journey")
       described_class.call
 
-      field = Form.find_by(name: "Day 1 Survey").form_fields.find_by(field_identifier: "d1_clarity_part_one")
-      expect(field.resources).to include(touchstone)
-      expect(field.per_resource?).to be(true)
+      expect(part_one_field.resources).to include(touchstone)
+      expect(part_one_field.per_resource?).to be(true)
+    end
+
+    it "links the growth questions over the day's workshops" do
+      SurveyFormSeeder::DAY_1_WORKSHOPS.each { |title| create(:resource, title:) }
+      described_class.call
+
+      growth = Form.find_by(name: "Day 1 Survey").form_fields.find_by(name: FormBuilderService::GROWTH_PERSONAL_PROMPT)
+      expect(growth.resources.map(&:title)).to match_array(SurveyFormSeeder::DAY_1_WORKSHOPS)
     end
 
     it "skips a topic whose resource isn't present, and is idempotent" do
       described_class.call
-      field = Form.find_by(name: "Day 1 Survey").form_fields.find_by(field_identifier: "d1_clarity_part_one")
-      expect(field.resources).to be_empty
+      expect(part_one_field.resources).to be_empty
 
       create(:resource, title: "The Touchstone Journey")
-      expect { described_class.new.link_fanout_resources }.to change { field.reload.resources.count }.by(1)
-      expect { described_class.new.link_fanout_resources }.not_to change { field.reload.resources.count }
+      expect { described_class.new.link_fanout_resources }.to change { part_one_field.reload.resources.count }.by(1)
+      expect { described_class.new.link_fanout_resources }.not_to change { part_one_field.reload.resources.count }
     end
   end
 end
