@@ -4,7 +4,7 @@
 <% if allocations.any? %>
   <div class="overflow-hidden <%= "rounded-lg border border-gray-200" if bordered %>">
     <table class="min-w-full divide-y divide-gray-200 text-sm">
-      <thead class="bg-gray-100">
+      <thead class="<%= "bg-gray-100" if bordered %>">
         <tr>
           <th class="px-3 py-2 text-left text-sm font-semibold text-gray-700">Allocated to</th>
           <th class="px-3 py-2 text-left text-sm font-semibold text-gray-700">Amount</th>
