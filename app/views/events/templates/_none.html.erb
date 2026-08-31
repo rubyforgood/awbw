@@ -4,10 +4,10 @@
     not here. `sample` swaps live registration for a static button in the gallery.
     The show page runs full-width, so this frame restores the standard container. %>
 <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-<%# ---- HEADER CONTENT ---- %>
+<%# ---- HEADER CONTENT ---- (full width, as authored — legacy behavior) %>
 <% if event.rhino_header.present? %>
-  <div class="mb-4">
-    <%= render "events/show/header_media", event: event %>
+  <div class="rhino-centered mb-4 max-w-none prose prose-img:w-full prose-img:max-w-full prose-em:text-inherit prose-strong:text-inherit">
+    <%= event.rhino_header %>
   </div>
 <% end %>
 
@@ -67,7 +67,7 @@
 
   <% if local_assigns.fetch(:sample, false) %>
     <div class="mt-4 flex flex-col items-center gap-2">
-      <span class="<%= button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase") %>" style="font-family: 'Telefon Bold', sans-serif;">Register</span>
+      <span class="<%= brand_cta_classes(register: true, extra: "px-10 py-3 text-2xl") %>">Register</span>
       <span class="text-xs text-gray-500 italic">Sample preview</span>
     </div>
   <% else %>

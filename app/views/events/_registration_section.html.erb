@@ -25,19 +25,16 @@
             <%= button_to button_text,
                           event_registrant_registration_path(event_id: event),
                           data: { turbo: !event.object.cost_cents.to_i.positive? },
-                          class: button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
-                          style: "font-family: 'Telefon Bold', sans-serif;" %>
+                          class: brand_cta_classes(register: true, extra: "px-10 py-3 text-2xl") %>
           <% else %>
             <%= link_to button_text,
                         new_event_public_registration_path(event),
-                        class: button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
-                        style: "font-family: 'Telefon Bold', sans-serif;" %>
+                        class: brand_cta_classes(register: true, extra: "px-10 py-3 text-2xl") %>
           <% end %>
         <% elsif event.object.public_registration_enabled? && event.object.event_forms.registration.exists? %>
           <%= link_to button_text,
                       new_event_public_registration_path(event),
-                      class: button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
-                      style: "font-family: 'Telefon Bold', sans-serif;" %>
+                      class: brand_cta_classes(register: true, extra: "px-10 py-3 text-2xl") %>
         <% end %>
       <% else %>
         <span class="text-2xl font-bold text-blue-400 italic">Registration closed</span>
@@ -47,27 +44,25 @@
     <% if registered %>
       <% registration = event.active_registration_for(current_user&.person) %>
       <%= link_to "View ticket", registration_ticket_path(registration.slug),
-                  class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
-                  style: "font-family: 'Telefon Bold', sans-serif;" %>
+                  class: brand_cta_classes(extra: "px-10 py-3 text-2xl") %>
     <% elsif slug_registered %>
       <%= link_to "View ticket", registration_ticket_path(slug_registration.slug),
-                  class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
-                  style: "font-family: 'Telefon Bold', sans-serif;" %>
+                  class: brand_cta_classes(extra: "px-10 py-3 text-2xl") %>
     <% end %>
   </div>
 
   <% if (registered || slug_registered) && !event.ended? %>
     <!-- CALENDAR LINKS -->
     <% calendar_registration = registered ? event.active_registration_for(current_user&.person) : slug_registration %>
-    <div class="flex flex-col items-center mt-4">
-      <div class="flex items-center gap-1 mb-2">
-        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">
+    <div class="mt-4 flex flex-col items-center">
+      <div class="mb-2 flex items-center gap-1">
+        <p class="text-xs font-bold tracking-wide text-gray-400 uppercase">
           Add to Your Calendar
         </p>
         <%= render "events/videoconference_calendar_notice", event: event, registration: calendar_registration %>
       </div>
       <% calendar_re_add_url = calendar_registration ? registration_videoconference_url(calendar_registration.slug) : event_url(event) %>
-      <div class="flex gap-2 items-center text-sm text-gray-700"><%= event.calendar_links(show_videoconference_details: calendar_registration&.videoconference_details_visible?, re_add_url: calendar_re_add_url, payment_pending: calendar_registration ? !calendar_registration.payment_access_granted? : false) %></div>
+      <div class="flex items-center gap-2 text-sm text-gray-700"><%= event.calendar_links(show_videoconference_details: calendar_registration&.videoconference_details_visible?, re_add_url: calendar_re_add_url, payment_pending: calendar_registration ? !calendar_registration.payment_access_granted? : false) %></div>
     </div>
   <% end %>
 <% end %>

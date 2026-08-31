@@ -5,7 +5,7 @@
     registration_section dom_ids. %>
 <% if local_assigns.fetch(:sample, false) %>
   <div class="flex flex-col items-center gap-2">
-    <span class="bg-brand-yellow-400 text-brand-navy-950 rounded-full px-8 py-3 font-semibold shadow-sm">Register</span>
+    <span class="<%= brand_cta_classes(register: true, extra: "px-10 py-3 text-2xl") %>">Register</span>
     <span class="text-xs text-gray-500 italic">Sample preview</span>
   </div>
 <% else %>

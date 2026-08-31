@@ -22,7 +22,7 @@ class Event < ApplicationRecord
     "centered" => { label: "Centered", blurb: "Brand-polished centered layout with a rainbow accent and gold button." },
     "editorial" => { label: "Editorial", blurb: "Warm cream page with the description on a white paper card. Best for text-heavy events." },
     "sidebar" => { label: "Details sidebar", blurb: "Two columns: description on the left, a sticky details and register card on the right." },
-    "hero" => { label: "Navy hero", blurb: "Bold navy hero with the title and details beside your framed header image." }
+    "hero" => { label: "Navy hero", blurb: "Bold navy hero with the title and details beside your header image." }
   }.freeze
   TEMPLATE_KEYS = TEMPLATES.keys.freeze
 
