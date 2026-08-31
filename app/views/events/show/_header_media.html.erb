@@ -1,14 +1,19 @@
 <%# Admin-uploaded header content (usually a banner image).
-    Default: rendered as-authored, images capped to a banner height and centered
-    so a large or square image can't swallow the page.
-    fill: true (navy hero) — the image covers its frame edge-to-edge, no mat. %>
+    Default: rendered as-authored, images capped to a banner height and centered.
+    fill "cover" (navy hero) — image covers its frame edge-to-edge (crops).
+    fill "width" (details sidebar) — image spans full width at its natural aspect. %>
+<% fill = local_assigns.fetch(:fill, false) %>
 <% if event.rhino_header.present? %>
-  <% if local_assigns.fetch(:fill, false) %>
+  <% if fill == "cover" %>
     <div class="h-full [&_img]:h-full [&_img]:w-full [&_img]:object-cover">
       <%= event.rhino_header %>
     </div>
+  <% elsif fill == "width" %>
+    <div class="[&_img]:block [&_img]:w-full">
+      <%= event.rhino_header %>
+    </div>
   <% else %>
-    <div class="rhino-centered prose max-w-none prose-img:mx-auto prose-img:max-h-80 prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
+    <div class="rhino-centered max-w-none prose prose-img:mx-auto prose-img:max-h-80 prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
       <%= event.rhino_header %>
     </div>
   <% end %>

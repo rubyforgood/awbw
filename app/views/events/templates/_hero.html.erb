@@ -16,7 +16,7 @@
     <% if event.rhino_header.present? %>
       <div class="min-h-64 rounded-2xl bg-white/95 p-2 shadow-xl">
         <div class="h-full overflow-hidden rounded-xl">
-          <%= render "events/show/header_media", event: event, fill: true %>
+          <%= render "events/show/header_media", event: event, fill: "cover" %>
         </div>
       </div>
     <% end %>
