@@ -88,6 +88,10 @@ precedence order:
 - Facilitator affiliation(s), but **all ended** → **Formerly active**
 - **No** facilitator affiliation → **Never active**
 
+"Facilitator affiliation" here means one that records real facilitation: a
+zero-length (`start == end`) row is a no-show's deactivated stub and counts for
+nothing, on this question as on the anchored one (D8a).
+
 Upcoming is distinct from Formerly active: an org whose only facilitator is
 scheduled for a future training was never active, so it must not read as
 "Formerly active".
@@ -246,8 +250,21 @@ A no-show / cancelled / transferred-out facilitator-training registration leaves
 dated to the training, then reconciliation ends it — and it can't end before it
 starts, so `deactivation_end_date` clamps the end to the start date
 (`AffiliationServices::ReconcilePerson`). That row represents **no facilitation**, so
-`FacilitatorProgramStatus` **drops every zero-length facilitator affiliation** before
-judging (`Affiliation#zero_length?`).
+**no organization-level reading of the facilitator program counts it** — not the
+anchored verdict, and not the "now" question of D3:
+
+- `FacilitatorProgramStatus` drops it before judging New / Ongoing / Reinstated.
+- `OrganizationDecorator` drops it from **"Facilitators since"** (`program_since_display`
+  / `program_since_date`) and from the **Active / Formerly active / Never active**
+  bucket, so an org whose only Facilitator row is a no-show's stub reads **Never
+  active** with no facilitator period rather than "Formerly active · Aug 2026 – Aug 2026".
+- `Organization.program_status` — the index filter — drops it too, so the SQL filter
+  and the chip it filters on still agree (D3).
+
+The rule lives in one place at each end: `Affiliation#zero_length?` and its SQL twin
+`Affiliation.zero_length` / `.with_duration`, locked together by an agreement spec.
+Person-level facilitator surfaces (`PersonDecorator`) are unchanged — they answer a
+different question (ADR-0003) and no organization status is read from them.
 
 **This reverses D8's same-day handling.** D8 read a same-day (`start == end`)
 affiliation dated to the event as the training's own minted row, so a first-time org
