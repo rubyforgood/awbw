@@ -11,10 +11,12 @@
   <% prefill = submission&.form_answers&.find_by(form_field: nil, question_name_when_answered: "#{field.name} #{resource.title}")&.submitted_answer %>
   <fieldset class="mb-7">
     <legend class="rich-label mb-1.5 text-sm font-semibold text-gray-700"><%= form_label_html(field.name) %> <strong><%= resource.title %></strong></legend>
-    <div class="flex flex-wrap gap-3">
+    <%# Card-style radios, matching the shared form-field partial so every question
+        reads the same. %>
+    <div class="mt-1 flex flex-wrap gap-2.5">
       <% options.each do |option| %>
-        <label class="inline-flex items-center gap-1.5 text-sm text-gray-700">
-          <%= radio_button_tag "callout_form[clarity][#{field.id}][#{resource.id}]", option, prefill == option %>
+        <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900">
+          <%= radio_button_tag "callout_form[clarity][#{field.id}][#{resource.id}]", option, prefill == option, class: "text-blue-600 focus:ring-blue-500" %>
           <%= option %>
         </label>
       <% end %>
