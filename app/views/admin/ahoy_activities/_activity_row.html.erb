@@ -15,7 +15,8 @@
     <% if event.user %>
       <%= link_to event.user.full_name,
                   user_path(event.user),
-                  class: "text-indigo-600 hover:underline" %>
+                  class: "text-indigo-600 hover:underline",
+                  data: { turbo_frame: "_top" } %>
     <% else %>
       <span class="text-gray-400 italic">Guest</span>
     <% end %>

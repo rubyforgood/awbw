@@ -11,11 +11,13 @@ module ApplicationHelper
   # anonymous and legacy free-text credits never link to a profile.
   def credited_author_link(record, **link_options)
     person = record.author_credit_person
-    if person&.profile_is_searchable
-      link_to record.author_credit, person_path(person), **link_options
-    else
-      record.author_credit
-    end
+    return record.author_credit unless person&.profile_is_searchable
+
+    # Break out of any lazy results frame this byline renders in — a no-op on a
+    # full page, but it stops the person link from loading into (and "Oopsie"-ing)
+    # a `*_results` frame. Callers can still override via their own data: hash.
+    link_options[:data] = { turbo_frame: "_top" }.merge(link_options[:data] || {})
+    link_to record.author_credit, person_path(person), **link_options
   end
 
   # The credited author as an admin edit-person card, for the workshop log /
