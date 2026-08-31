@@ -1,0 +1,25 @@
+<%# Centered — brand-polished centered layout: a cream card holds the header
+    image, and a second cream card below holds the title, details and body. %>
+<% sample = local_assigns.fetch(:sample, false) %>
+<%= render "events/show/rainbow" %>
+
+<div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+  <% if event.rhino_header.present? %>
+    <div class="aspect-video overflow-hidden rounded-2xl">
+      <%= render "events/show/header_media", event: event, fill: "cover" %>
+    </div>
+  <% end %>
+
+  <div class="bg-brand-cream mt-8 rounded-2xl p-8 text-center sm:p-12">
+    <%= render "events/show/title", event: event,
+          heading_class: "font-display text-4xl font-semibold leading-tight text-brand-navy-900 sm:text-5xl" %>
+    <div class="mt-6"><%= render "events/show/details", event: event, variant: "chips" %></div>
+    <div class="mt-7 flex flex-col items-center gap-2"><%= render "events/show/actions", event: event, sample: sample %></div>
+
+    <hr class="border-brand-navy-200 mx-auto my-8 max-w-3xl">
+
+    <div class="mx-auto max-w-3xl text-left">
+      <%= render "events/show/description", event: event %>
+    </div>
+  </div>
+</div>

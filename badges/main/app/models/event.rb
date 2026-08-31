@@ -12,6 +12,21 @@ class Event < ApplicationRecord
   # who see past and unpublished events there).
   CARD_ARCHIVE_AGE = 1.month
 
+  # Display templates for the public show page. "none" is the plain current
+  # layout (white page, content as-authored); the rest wrap the same
+  # admin-curated content (header image, details, description) — respecting every
+  # autoshow_* toggle — in a branded frame. Keyed hash carries the picker label
+  # and blurb; render each via app/views/events/templates/_<key>.html.erb.
+  TEMPLATE_NONE = "none".freeze
+  TEMPLATES = {
+    TEMPLATE_NONE => { label: "None (current)", blurb: "Plain white page — your content exactly as authored." },
+    "centered" => { label: "Centered", blurb: "Brand-polished centered layout with a rainbow accent and gold button." },
+    "editorial" => { label: "Editorial", blurb: "Warm cream page with the description on a white paper card. Best for text-heavy events." },
+    "sidebar" => { label: "Details sidebar", blurb: "Two columns: description on the left, a sticky details and register card on the right." },
+    "hero" => { label: "Navy hero", blurb: "Bold navy hero with the title and details beside your header image." }
+  }.freeze
+  TEMPLATE_KEYS = TEMPLATES.keys.freeze
+
   has_rich_text :rhino_header
   has_rich_text :rhino_description
 
@@ -60,6 +75,7 @@ class Event < ApplicationRecord
   # Validations
   validates_presence_of :title, :start_date, :end_date
   validates_inclusion_of :published, in: [ true, false ]
+  validates :template, inclusion: { in: TEMPLATE_KEYS }
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
   validates :title, length: { maximum: 255 }
   validates :abbreviation, length: { maximum: 255 }

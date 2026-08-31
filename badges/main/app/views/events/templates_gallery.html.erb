@@ -1,0 +1,54 @@
+<% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
+<% content_for(:full_width, true) %>
+
+<div class="mx-auto w-full max-w-7xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
+  <% if @sample_event && params[:event_id].present? %>
+    <%= link_to "← Back to event", edit_event_path(@sample_event, section: "page_content", anchor: "page_content_button"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% else %>
+    <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% end %>
+  <h1 class="text-brand-navy-900 mt-2 font-display text-3xl font-semibold">Event display templates</h1>
+  <p class="mt-2 max-w-2xl text-gray-600">
+    Every template frames the same content — header image, details, description — and respects each event's show/hide toggles.
+    Pick one per event under <span class="font-semibold">Event show page → Layout template</span>.
+  </p>
+
+  <% if @sample_event %>
+    <p class="mt-3 text-sm text-gray-500">
+      Previewing <span class="text-brand-navy-800 font-semibold"><%= @sample_event.title %></span>. Previews are scaled down and not interactive.
+    </p>
+
+    <div class="mt-6 flex flex-wrap justify-center gap-6 sm:justify-start">
+      <% Event::TEMPLATES.each do |key, meta| %>
+        <%# Card is a div, not a link: the scaled preview contains its own <a> links
+            (from the description), and nesting anchors is invalid HTML — the browser
+            would eject the preview out of the card. A transparent stretched link
+            sits over the whole card instead. %>
+        <div class="group hover:border-brand-navy-400 relative w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
+          <%# Render the real template at desktop width, then zoom the whole thing
+              down so the card shows a faithful reduced-size preview. zoom (not
+              transform) also shrinks the layout box, so the cards tile cleanly. %>
+          <div class="h-80 overflow-hidden border-b border-gray-200 bg-white">
+            <div class="pointer-events-none" style="width: 1200px; zoom: 0.3">
+              <%= render "events/templates/#{key}", event: @sample_event, sample: true %>
+            </div>
+          </div>
+          <div class="flex items-start justify-between gap-2 border-t border-gray-200 bg-gray-50 p-4">
+            <div>
+              <h2 class="text-brand-navy-900 font-display text-lg font-semibold"><%= meta[:label] %></h2>
+              <p class="mt-1 text-sm text-gray-500"><%= meta[:blurb] %></p>
+            </div>
+            <span class="text-brand-navy-600 mt-0.5 shrink-0 text-xs font-semibold opacity-0 transition group-hover:opacity-100">Open →</span>
+          </div>
+          <%= link_to event_path(@sample_event, template: key), target: "_blank", rel: "noopener", class: "absolute inset-0" do %>
+            <span class="sr-only">Open <%= meta[:label] %> preview</span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
+      No event to preview yet — create an event, then reopen this page.
+    </p>
+  <% end %>
+</div>

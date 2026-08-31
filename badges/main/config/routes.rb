@@ -203,6 +203,7 @@ Rails.application.routes.draw do
       get :program_statuses
       get :attendees
       get :signins
+      get :templates_gallery
     end
     member do
       get :dashboard

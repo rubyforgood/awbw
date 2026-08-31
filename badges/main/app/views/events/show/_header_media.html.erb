@@ -1,0 +1,20 @@
+<%# Admin-uploaded header content (usually a banner image).
+    Default: rendered as-authored, images capped to a banner height and centered.
+    fill "cover": the image covers its frame edge-to-edge — used by the branded
+    templates inside a fixed-aspect, rounded, overflow-hidden frame. %>
+<% fill = local_assigns.fetch(:fill, false) %>
+<% if event.rhino_header.present? %>
+  <% if fill == "cover" %>
+    <%# Pin the image to the frame rather than sizing it in flow: rich text nests
+        it in auto-height wrappers, so a percentage height resolves to auto and
+        object-cover would have no box to cover. Rounding rides on the <img>
+        because overflow clipping can fail to round the top corners. %>
+    <div class="relative h-full [&_img]:absolute [&_img]:inset-0 [&_img]:m-0 [&_img]:h-full [&_img]:w-full [&_img]:rounded-2xl [&_img]:object-cover">
+      <%= event.rhino_header %>
+    </div>
+  <% else %>
+    <div class="rhino-centered max-w-none prose prose-img:mx-auto prose-img:max-h-80 prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
+      <%= event.rhino_header %>
+    </div>
+  <% end %>
+<% end %>

@@ -1,4 +1,8 @@
-<% content_for(:page_bg_class, "admin-or-public-or-authpublished") %>
+<% content_for(:page_bg_class, "admin-or-owner-or-public-or-authpublished") %>
+<%# Full width so each display template controls its own measure and can run its
+    background edge-to-edge (navy hero, cream editorial). The admin nav row and
+    preview banners below restore a standard container. %>
+<% content_for(:full_width, true) %>
 
 <% content_for :head do %>
   <%= @event.ga4_snippet&.html_safe %>
@@ -9,128 +13,54 @@
   <%= @event.gtm_body_snippet&.html_safe %>
 <% end %>
 
-<% if @preview %>
-  <div class="mb-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
-    <span><span class="font-medium">Preview</span> — unsaved changes</span>
-    <button onclick="window.close()" class="<%= button_classes(:secondary_outline, size: :sm) %>">Close preview</button>
-  </div>
-<% else %>
-<!-- Top Right Actions -->
-<div class="mb-4 flex flex-wrap items-center gap-2">
-  <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-  <div class="ml-auto flex flex-wrap gap-1">
-  <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-  <% if @event.event_registrations.active.exists? %>
-    <%= link_to "Meet the staff", staff_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-  <% end %>
-  <% if allowed_to?(:dashboard?, @event) %>
-    <%= link_to "Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1 admin-only bg-blue-100" %>
-  <% end %>
-  <% if allowed_to?(:manage?, @event) %>
-    <%= link_to "Registrations", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1 admin-only bg-blue-100" %>
-  <% end %>
-  <span class="inline-block text-sm"><%= render "bookmarks/editable_bookmark_button", resource: @event.object %></span>
-  </div>
-</div>
-<% end %>
-
-<%# ---- SOCIAL SHARE SIDEBAR ---- %>
-<%= render "events/social_share_sidebar", share_url: event_url(@event), share_title: @event.title %>
-
-<%# ---- HEADER CONTENT ---- %>
-<% if @event.rhino_header.present? %>
-  <div class="rhino-centered mb-4 max-w-none prose prose-img:w-full prose-img:max-w-full prose-em:text-inherit prose-strong:text-inherit">
-    <%= @event.rhino_header %>
-  </div>
-<% end %>
-
-<%# ---- TITLE ---- %>
-<% if @event.autoshow_title %>
-  <div class="mx-auto mb-4 max-w-2xl text-center">
-    <% if @event.pre_title.present? %>
-      <p class="mb-2 font-telefon text-base font-semibold text-gray-700" style="font-size: 42px"><%= @event.pre_title %></p>
-    <% end %>
-    <h1 class="text-primary font-display" style="font-size: 53px"><%= @event.title %></h1>
-  </div>
-<% end %>
-
-<%# ---- EVENT DETAILS (conditional on autoshow) ---- %>
-<div class="mb-4 space-y-2 text-center">
-  <% if @event.autoshow_pre_date_text && @event.pre_date_text.present? %>
-    <div class="text-primary font-bold uppercase" style="font-size: 24px"><%= @event.pre_date_text %></div>
-  <% end %>
-
-  <% if @event.autoshow_date || @event.autoshow_time %>
-    <%# Date is the headline (upper-cased, no weekday, includes the year); the
-        time sits smaller below in natural case so am/pm read lowercase. %>
-    <div>
-      <% if @event.autoshow_date %>
-        <div class="text-primary font-bold uppercase" style="font-size: 35px">
-          <%= event_dates_label(@event) %>
-        </div>
-      <% end %>
-      <% if @event.autoshow_time %>
-        <div class="text-primary mt-2 font-bold" style="font-size: 24px">
-          <%= event_times_label(@event) %>
-        </div>
-      <% end %>
+<div class="mx-auto w-full max-w-7xl px-2 sm:px-6 lg:px-8">
+  <% if Event::TEMPLATE_KEYS.include?(params[:template]) && allowed_to?(:edit?, @event) %>
+    <div class="border-brand-navy-200 bg-brand-navy-50 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
+      <span class="text-brand-navy-800 text-sm">
+        Previewing the <span class="font-semibold"><%= Event::TEMPLATES.dig(@event.display_template, :label) %></span> template — not yet saved.
+      </span>
+      <%= link_to "Apply & edit", edit_event_path(@event, template: @event.display_template, section: "page_content", anchor: "page_content_button"),
+                  class: "rounded-md bg-brand-navy-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-navy-900" %>
     </div>
   <% end %>
 
-  <% if @event.autoshow_cost && @event.labelled_cost %>
-    <div class="text-primary text-xl font-bold uppercase"><%= @event.labelled_cost %></div>
-  <% end %>
-
-  <% if @event.autoshow_location && @event.location.present? %>
-    <div class="text-base text-gray-700"><%= @event.location.name %></div>
-  <% end %>
-
-  <% if @event.autoshow_videoconference_label && @event.videoconference_label.present? %>
-    <div class="text-base text-gray-700"><%= @event.videoconference_label %></div>
-  <% end %>
-
-  <%= render "events/videoconference_link", event: @event %>
-
-  <% unless current_user && @event.actively_registered?(current_user.person) %>
-    <% if @event.autoshow_registration_close && @event.registration_close_date %>
-      <div class="text-base text-gray-700">
-        <% tz_abbr = @event.start_date.in_time_zone(Time.zone).strftime("%Z") %>
-        Registration closes <%= @event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %l:%M %P") %> <%= tz_abbr %>
+  <% if @preview %>
+    <div class="mb-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
+      <span><span class="font-medium">Preview</span> — unsaved changes</span>
+      <button onclick="window.close()" class="<%= button_classes(:secondary_outline, size: :sm) %>">Close preview</button>
+    </div>
+  <% else %>
+    <!-- Top Right Actions -->
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+      <div class="ml-auto flex flex-wrap gap-1">
+        <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% if @event.event_registrations.active.exists? %>
+          <%= link_to "Meet the staff", staff_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
+        <% if allowed_to?(:dashboard?, @event) %>
+          <%= link_to "Dashboard", dashboard_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1 admin-only bg-blue-100" %>
+        <% end %>
+        <% if allowed_to?(:manage?, @event) %>
+          <%= link_to "Registrations", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1 admin-only bg-blue-100" %>
+        <% end %>
+        <span class="inline-block text-sm"><%= render "bookmarks/editable_bookmark_button", resource: @event.object %></span>
       </div>
-    <% end %>
-  <% end %>
-
-  <% if @event.autoshow_registration %>
-    <div class="mt-4">
-      <%= render "events/registration_section", event: @event, instance: 1, button_text: "Register" %>
     </div>
   <% end %>
 
-  <% if @event.bulk_payment_form %>
-    <div class="mt-4">
-      <%= link_to Form::BULK_PAYMENT_PUBLIC_NAME,
-                  new_event_bulk_payment_path(@event),
-                  class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
-                  style: "font-family: 'Telefon Bold', sans-serif;" %>
-    </div>
-  <% end %>
+  <%# ---- SOCIAL SHARE SIDEBAR ---- %>
+  <%= render "events/social_share_sidebar", share_url: event_url(@event), share_title: @event.title %>
 </div>
 
-<%# ---- DESCRIPTION ---- %>
-<% if @event.rhino_description.present? %>
-  <div class="mb-12 max-w-none prose prose-img:w-full prose-img:max-w-full prose-em:text-inherit prose-strong:text-inherit">
-    <%= @event.rhino_description %>
-  </div>
-<% end %>
-
-<%# ---- GALLERY IMAGES ---- %>
-<div class="mb-12">
-  <%= render "assets/display_gallery_media", resource: @event, link: true %>
-</div>
+<%# ---- DISPLAY TEMPLATE ---- (frames the admin-curated content; honors autoshow_*) %>
+<%= render "events/templates/#{@event.display_template}", event: @event, sample: false %>
 
 <% if @preview %>
-  <div class="mt-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
-    <span><span class="font-medium">Preview</span> — unsaved changes</span>
-    <button onclick="window.close()" class="<%= button_classes(:secondary_outline, size: :sm) %>">Close preview</button>
+  <div class="mx-auto w-full max-w-7xl px-2 sm:px-6 lg:px-8">
+    <div class="mt-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
+      <span><span class="font-medium">Preview</span> — unsaved changes</span>
+      <button onclick="window.close()" class="<%= button_classes(:secondary_outline, size: :sm) %>">Close preview</button>
+    </div>
   </div>
 <% end %>
