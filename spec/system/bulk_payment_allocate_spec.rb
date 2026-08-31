@@ -42,7 +42,7 @@ RSpec.describe "Bulk payment event card interactions", type: :system do
 
     within("#payment-card-#{submission.id}") { click_link "Submission - ID: #{submission.id}" }
 
-    expect(page).to have_current_path(/bulk_payment/)
+    expect(page).to have_current_path(%r{/bulk_payment\?})
     expect(page).not_to have_content("Oopsie!")
   end
 
