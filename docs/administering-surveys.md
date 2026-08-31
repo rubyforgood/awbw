@@ -1,8 +1,8 @@
 # Administering training surveys (Day 1, Day 2, Post-event & Recipients)
 
-This is a plain-language guide for staff. It explains how the training surveys
-reach registrants, what was set up for you automatically, and how to change any of
-it yourself — no coding required.
+You can now administer forms (surveys) through the Ticket! This doc walks through how
+the training surveys reach registrants, what was set up for you automatically, and how
+to change any of it yourself.
 
 If a step below says "ask a developer," that's a one-time technical task; everything
 else you can do from the Portal.
