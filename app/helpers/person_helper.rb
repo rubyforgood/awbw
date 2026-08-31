@@ -20,7 +20,7 @@ module PersonHelper
     show_email_change = unconfirmed_email.present?
 
     link_to person_path(person, **path_params),
-            data: { turbo_prefetch: false }.merge(data),
+            data: { turbo_prefetch: false, turbo_frame: "_top" }.merge(data),
             title: hover_title,
             class: "group relative flex items-center gap-2
                     #{width_class} #{padding}

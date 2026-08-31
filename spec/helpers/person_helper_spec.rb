@@ -37,6 +37,23 @@ RSpec.describe PersonHelper, type: :helper do
         expect(helper.person_profile_button(person)).not_to include("fa-triangle-exclamation")
       end
     end
+
+    context "frame breakout" do
+      let(:unconfirmed) { nil }
+      let(:authorized) { true }
+
+      it "defaults the profile link to _top so it can't Oopsie a lazy results frame" do
+        link = Nokogiri::HTML(helper.person_profile_button(person)).at_css("a")
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+
+      it "lets a caller override the frame target" do
+        link = Nokogiri::HTML(
+          helper.person_profile_button(person, data: { turbo_frame: "people_results" })
+        ).at_css("a")
+        expect(link["data-turbo-frame"]).to eq("people_results")
+      end
+    end
   end
 
   describe "#person_edit_button" do
