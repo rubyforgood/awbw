@@ -4,6 +4,7 @@
 <% location_text = [ event.location&.name, (event.videoconference_label if event.autoshow_videoconference_label) ].compact_blank.join(" · ") %>
 <% datetime = event.card_datetime %>
 <% register_class = button_classes(:accent_outline, size: nil, extra: "px-4 py-2 text-sm uppercase leading-tight font-telefon") %>
+<% on_home = controller_path.start_with?("home/") %>
 
 <%= tag.div id: dom_id(event, :card),
             class: class_names(
@@ -49,13 +50,13 @@
           <span class="whitespace-nowrap text-gray-500"><%= datetime[:time] %></span>
         </div>
         <% if location_text.present? %>
-          <div class="mt-1 font-medium <%= DomainTheme.text_class_for(:events, intensity: 700) %>"><%= location_text %></div>
+          <div class="mt-1 font-medium text-gray-600"><%= location_text %></div>
         <% end %>
       </div>
 
       <!-- Actions -->
       <div class="flex shrink-0 flex-col items-end gap-2">
-        <% if allowed_to?(:dashboard?, event) %>
+        <% if !on_home && allowed_to?(:dashboard?, event) %>
           <%= link_to "Dashboard",
                     dashboard_event_path(event),
                     data: { turbo_frame: "_top" },
