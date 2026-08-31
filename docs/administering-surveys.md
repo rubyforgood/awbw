@@ -42,7 +42,7 @@ It also set up two **built-in callouts** on every event:
 - **Feedback surveys** — carries the Day 1, Day 2, and Post-Event surveys for
   *everyone*, each opening on its own date.
 - **Scholarship** — carries the Recipients survey, shown *only to scholarship
-  recipients* after they've finished their scholarship steps.
+  recipients* after they've finished their scholarship tasks.
 
 These are **starting points you can edit.** Nothing is locked. Changing a form or a
 callout for one event only affects that event.
