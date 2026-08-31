@@ -14,7 +14,7 @@
     </div>
 
     <% if event.rhino_header.present? %>
-      <div class="aspect-[4/3] rounded-2xl shadow-xl">
+      <div class="aspect-[4/3] overflow-hidden rounded-2xl shadow-xl">
         <%= render "events/show/header_media", event: event, fill: "cover" %>
       </div>
     <% end %>
