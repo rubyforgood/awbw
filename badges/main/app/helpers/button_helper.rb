@@ -63,9 +63,10 @@ module ButtonHelper
   end
 
   # The AWBW brand CTA button (marketing "Donate" / "Explore" style): gold fill,
-  # navy label, with a raised darker-gold bottom edge that presses on click.
+  # navy label, with a raised darker-gold bottom edge that presses on click. The
+  # edge comes from the --shadow-brand-cta theme token so it tracks the gold.
   # Register buttons layer on `font-display uppercase` — see BRAND_CTA_REGISTER.
-  BRAND_CTA = "inline-flex items-center justify-center gap-2 rounded-lg bg-brand-yellow-400 font-bold text-brand-navy-900 shadow-[0_4px_0_#bd9500] transition hover:bg-brand-yellow-300 active:translate-y-0.5 active:shadow-[0_2px_0_#bd9500]".freeze
+  BRAND_CTA = "inline-flex items-center justify-center gap-2 rounded-lg bg-brand-yellow-400 font-bold text-brand-navy-900 shadow-brand-cta transition hover:bg-brand-yellow-300 active:translate-y-0.5 active:shadow-brand-cta-pressed".freeze
   BRAND_CTA_REGISTER = "font-display tracking-wide uppercase".freeze
 
   def brand_cta_classes(register: false, extra: nil)
