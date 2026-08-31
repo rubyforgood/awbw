@@ -2226,8 +2226,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_220445) do
     t.text "optional_materials", size: :long
     t.text "optional_materials_spanish", size: :long
     t.string "photo_caption"
-    t.text "project", size: :long
-    t.text "project_spanish", size: :long
     t.string "pub_issue"
     t.boolean "publicly_featured", default: false, null: false
     t.boolean "publicly_visible", default: false, null: false
