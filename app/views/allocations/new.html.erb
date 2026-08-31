@@ -1,6 +1,8 @@
 <div class="mx-auto max-w-2xl" data-controller="search-type-select">
   <h1 class="text-primary mb-6 font-display text-2xl font-bold">New Allocation</h1>
-  <%= simple_form_for @allocation, url: allocations_path do |f| %>
+  <%# The origin context rides on the form action so the create redirect can put
+      the admin back where they came from, the way revert does. %>
+  <%= simple_form_for @allocation, url: allocations_path(return_to: params[:return_to], expand: params[:expand]) do |f| %>
     <%= f.hidden_field :source_type %>
     <%= f.hidden_field :source_id %>
     <% source = @source || (@allocation.source if @allocation.source.present?) %>
@@ -43,7 +45,7 @@
     <div class="mt-6">
       <%= f.button :submit, "Submit", class: button_classes(:primary) %>
       <% if source.present? %>
-        <%= link_to "Cancel", payment_path(source), class: button_classes(:secondary_outline, extra: "ml-2") %>
+        <%= link_to "Cancel", payment_path(source, return_to: params[:return_to], expand: params[:expand]), class: button_classes(:secondary_outline, extra: "ml-2") %>
       <% else %>
         <%= link_to "Cancel", payments_path, class: button_classes(:secondary_outline, extra: "ml-2") %>
       <% end %>

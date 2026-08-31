@@ -306,6 +306,29 @@ follow this). Match the existing pattern:
   it must stay identical across `index.html.erb`, the results view, the filter
   form's `data-turbo-frame`, request-spec `Turbo-Frame` headers, and
   `turbo-frame#…` view-spec selectors. Only the filename and render target change.
+- **The results response must never 500 — a raise becomes "Oopsie!".** When the
+  frame request errors (or returns a document without the matching frame), the
+  `turbo:frame-missing` handler (`app/frontend/javascript/turbo-events.js`)
+  swaps the frame for an "Oopsie! Something went wrong" box — the row data just
+  vanishes, with no server error page to hint why. The usual culprit is a
+  **row/card partial dereferencing a nil association** (an `optional:`/polymorphic
+  FK, an account-less `person`, a not-yet-linked `event`/`organization`,
+  `created_by`/`updated_by`): use safe navigation (`&.`) or a decorator fallback
+  for anything that can realistically be nil, and remember these lists routinely
+  include edge-case records the happy-path factory doesn't. **Cover it with a
+  request spec that sends the `Turbo-Frame` header and includes the nil-association
+  record**, asserting `:ok` and that the body contains the frame id — a plain
+  full-page `get` in a spec won't reproduce a frame-only failure the same way.
+- **A link inside the results frame that navigates *away* must break out with
+  `data: { turbo_frame: "_top" }`** (or the whole frame needs `target: "_top"`).
+  Otherwise Turbo loads the destination *into* the results frame; the destination
+  has no matching frame, so it's the same `turbo:frame-missing` "Oopsie!". Row
+  links to detail/edit pages (grants, people, organizations, workshops, resources,
+  video_recordings all do this) carry `_top`; only in-frame drivers that *should*
+  stay — pagination, the filter form (which drives the frame from outside), and
+  in-card forms answering with turbo streams — omit it. When a results frame's
+  cards contain several such links, prefer `turbo_frame_tag :x_results,
+  target: "_top"` so no link can be forgotten.
 
 ## Features & tips page (`/features`)
 

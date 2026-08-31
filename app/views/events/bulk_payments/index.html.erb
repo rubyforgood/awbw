@@ -23,7 +23,12 @@
         frame: "bulk_payments_results", scoped_to_event: true %>
 
   <% any_filter = request.query_parameters.slice("search", "payment_method", "payment_status", "start_date", "end_date").any? { |_, v| v.present? } %>
-  <%= turbo_frame_tag :bulk_payments_results do %>
+  <%# target: "_top" so the cards' links (submission, ticket, allocations,
+      registration) navigate the whole page — their destinations have no
+      bulk_payments_results frame, so an in-frame load would 500 into "Oopsie!".
+      The filter form drives this frame externally; the in-card forms answer with
+      turbo streams, so neither is affected. %>
+  <%= turbo_frame_tag :bulk_payments_results, target: "_top" do %>
     <div class="mb-3 text-sm text-gray-500">
       <%= pluralize(@submissions.size, "submission") %>
     </div>
