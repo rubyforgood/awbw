@@ -23,6 +23,16 @@ RSpec.describe "Events attendees", type: :request do
   # The charts are lazy-loaded into their own frame, only when the admin reveals them.
   let(:charts_frame_headers) { { "Turbo-Frame" => "attendees_charts" } }
 
+  describe "roster away-links break out of the results frame" do
+    it "gives the registrant name link data-turbo-frame=_top so it doesn't Oopsie the frame" do
+      sign_in admin
+      get attendees_events_url, headers: frame_headers
+
+      expect(response).to have_http_status(:ok)
+      expect_frame_breakout(response.body, "/event_registrations/#{attendee_registration.id}/edit")
+    end
+  end
+
   describe "GET /events/attendees" do
     context "as a user who owns no events" do
       it "redirects — there is nothing for them to report on" do

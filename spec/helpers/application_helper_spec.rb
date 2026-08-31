@@ -51,6 +51,26 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(result).to eq("AWBW Staff")
       expect(result).not_to include("<a")
     end
+
+    it "breaks the author link out to _top so it can't Oopsie a lazy results frame" do
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      link = Nokogiri::HTML.fragment(helper.credited_author_link(workshop)).at_css("a")
+      expect(link["data-turbo-frame"]).to eq("_top")
+    end
+
+    it "lets a caller override the frame target" do
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      link = Nokogiri::HTML.fragment(
+        helper.credited_author_link(workshop, data: { turbo: false })
+      ).at_css("a")
+      expect(link["data-turbo"]).to eq("false")
+    end
   end
 
   describe "#credited_author_edit_button" do

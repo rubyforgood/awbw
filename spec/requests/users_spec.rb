@@ -39,6 +39,15 @@ RSpec.describe "/users", type: :request do
         get users_url
         expect(response).to be_successful
       end
+
+      it "renders the lazy results frame, including an account with no linked person" do
+        create(:user, person: nil)
+
+        get users_url, headers: { "Turbo-Frame" => "users_results" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("users_results")
+      end
     end
 
     context "as regular_user" do
