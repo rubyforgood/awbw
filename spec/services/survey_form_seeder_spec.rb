@@ -1,11 +1,12 @@
 require "rails_helper"
 
 RSpec.describe SurveyFormSeeder do
-  it "creates the three survey template forms with their roles" do
-    expect { described_class.call }.to change(Form, :count).by(3)
+  it "creates the survey template forms with their roles" do
+    expect { described_class.call }.to change(Form, :count).by(4)
 
     expect(Form.find_by(name: "Day 1 Survey").role).to eq("day_1_survey")
     expect(Form.find_by(name: "Day 2 Survey").role).to eq("day_2_survey")
+    expect(Form.find_by(name: "Post-Event Survey").role).to eq("post_event_survey")
     expect(Form.find_by(name: "Post-Training Recipients Survey").role).to eq("recipient_survey")
   end
 
@@ -25,7 +26,7 @@ RSpec.describe SurveyFormSeeder do
 
   it "reports the names it created" do
     expect(described_class.call).to contain_exactly(
-      "Day 1 Survey", "Day 2 Survey", "Post-Training Recipients Survey"
+      "Day 1 Survey", "Day 2 Survey", "Post-Event Survey", "Post-Training Recipients Survey"
     )
   end
 

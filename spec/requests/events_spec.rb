@@ -1166,7 +1166,7 @@ RSpec.describe "Events", type: :request do
         # the single post-event survey callout.
         expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
           "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq",
-          "post_event_survey"
+          "feedback_surveys"
         )
         payment = created.registration_ticket_callouts.find_by(builtin_key: "payment")
         expect(payment.title).to eq("Pay your balance")

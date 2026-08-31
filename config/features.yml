@@ -2919,15 +2919,15 @@
     - "Leave a form's display date blank to show it right away; set one to open the form later."
     - "Each linked form gets its own completion column on the registrants roster, under the Ticket forms switch."
 
-- name: "Post-event surveys on your registration ticket"
+- name: "Feedback surveys on your registration ticket"
   area: registration
   display_status: user_facing
   released_on: 2026-08-30
   summary: >-
-    Training evaluations now live right on your registration ticket. A "Post-event
-    survey" callout opens the Day 1 and (for multi-day trainings) Day 2 evaluations,
-    each on its own date; once you submit one it collapses to a "Completed" toggle
-    you can reopen to review or edit.
+    Training feedback surveys now live on your registration ticket. A "Feedback
+    surveys" callout opens the Day 1 / Day 2 evaluations and an overall post-event
+    survey, each on its own date; submit one and it collapses to a "Completed"
+    toggle you can reopen to edit.
   pro_tips:
     - "Scholarship recipients get their recipients survey on their own scholarship page, once their agreement is signed and their tasks are complete."
     - "Reopen any completed survey to review or edit your answers."

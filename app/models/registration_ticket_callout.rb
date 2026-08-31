@@ -13,14 +13,14 @@ class RegistrationTicketCallout < ApplicationRecord
   BUILTIN_KEYS = %w[
     payment certificate scholarship ce_hours art_supplies
     videoconference staff handouts faq
-    post_event_survey
+    feedback_surveys
   ].freeze
 
   # "Content" built-in callouts render their own editable copy/resources (like custom
   # callouts), on the generic callout page. "Behavioral" built-in callouts (the rest)
   # render live per-registration status through BuiltinCalloutCards#card_for — the row
   # still owns the editable title/subtitle/text, order, visibility, and resources.
-  CONTENT_BUILTIN_KEYS = %w[ art_supplies handouts faq post_event_survey ].freeze
+  CONTENT_BUILTIN_KEYS = %w[ art_supplies handouts faq feedback_surveys ].freeze
 
   # Behavioral built-ins that also carry event-level config edited inline in their
   # row (CE hours offered / cost); their text lives on the row like everything else.

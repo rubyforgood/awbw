@@ -1,7 +1,8 @@
 # Creates the standalone survey template forms the built-in callouts deliver: the
-# Day 1 and Day 2 training evaluations (everyone, on the Post-event survey callout)
-# and the scholarship recipients survey (on the scholarship callout). Built once
-# from the form-builder presets, then left for staff to edit in the builder.
+# Day 1 / Day 2 evaluations and the overall post-event survey (everyone, on the
+# Feedback surveys callout), and the scholarship recipients survey (on the
+# scholarship callout). Built once from the form-builder presets, then left for
+# staff to edit in the builder.
 #
 # Idempotent on form name, so it's safe to run repeatedly — in db/seeds and as the
 # `data:seed_survey_forms` task for prod. Returns the names it created (skipping
@@ -10,6 +11,7 @@ class SurveyFormSeeder
   TEMPLATES = [
     { name: "Day 1 Survey", role: "day_1_survey", sections: %i[day_1_survey content_sharing_preferences] },
     { name: "Day 2 Survey", role: "day_2_survey", sections: %i[day_2_survey content_sharing_preferences] },
+    { name: "Post-Event Survey", role: "post_event_survey", sections: %i[post_event_feedback content_sharing_preferences] },
     { name: "Post-Training Recipients Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
   ].freeze
 

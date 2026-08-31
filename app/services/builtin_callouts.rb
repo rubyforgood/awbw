@@ -311,22 +311,23 @@ class BuiltinCallouts
         hidden: ->(_event) { true }
       },
       {
-        builtin_key: "post_event_survey",
-        title: "Post-event survey",
+        builtin_key: "feedback_surveys",
+        title: "Feedback surveys",
         subtitle: "Share your feedback on the training",
         callout_type: "action",
         icon_class: "fa-solid fa-clipboard-list",
         color_class: "fuchsia",
         hidden: ->(_event) { true },
-        # The everyone-facing evaluations — one callout that drips the Day 1
-        # evaluation and (multi-day events only) the Day 2 evaluation, each on its
-        # own date. Rows whose template isn't seeded yet resolve to nil and are
-        # skipped. The scholarship-only recipients survey lives on the scholarship
-        # callout instead.
+        # The everyone-facing feedback surveys — one callout that drips the Day 1
+        # evaluation, the Day 2 evaluation (multi-day events only), and the overall
+        # post-event survey, each on its own date. Rows whose template isn't seeded
+        # yet resolve to nil and are skipped. The scholarship-only recipients survey
+        # lives on the scholarship callout instead.
         forms: ->(event) {
           [
             { form: Form.standalone.find_by(name: "Day 1 Survey"), display_from: survey_drip(event, 1) },
-            ({ form: Form.standalone.find_by(name: "Day 2 Survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2)
+            ({ form: Form.standalone.find_by(name: "Day 2 Survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2),
+            { form: Form.standalone.find_by(name: "Post-Event Survey"), display_from: (event.end_date - 30.minutes if event.end_date) }
           ].compact
         }
       }
