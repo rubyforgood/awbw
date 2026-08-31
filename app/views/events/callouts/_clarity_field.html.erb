@@ -6,7 +6,7 @@
   <% next unless resource %>
   <% prefill = submission&.form_answers&.find_by(form_field: nil, question_name_when_answered: "#{field.name} #{resource.title}")&.submitted_answer %>
   <fieldset class="mb-7">
-    <legend class="mb-1.5 text-sm font-semibold text-gray-700"><%= field.name %> <strong><%= resource.title %></strong></legend>
+    <legend class="rich-label mb-1.5 text-sm font-semibold text-gray-700"><%= form_label_html(field.name) %> <strong><%= resource.title %></strong></legend>
     <div class="flex flex-wrap gap-3">
       <% field.form_field_answer_options.includes(:answer_option).each do |ffo| %>
         <% option = ffo.answer_option.name %>

@@ -108,8 +108,8 @@ end
 # The training-topic resources the survey clarity questions fan out over. In prod
 # these already exist; locally we create minimal records so the seeded links form.
 puts "Creating survey clarity topic resources…"
-SurveyFormSeeder::CLARITY_RESOURCES.values.flatten.uniq.each do |title|
+SurveyFormSeeder::FANOUT_RESOURCES.values.flatten.uniq.each do |title|
   Resource.where(title: title).first_or_create!(kind: "Handout", published: true,
     created_by_id: User.all.sample&.id)
 end
-SurveyFormSeeder.new.link_clarity_resources
+SurveyFormSeeder.new.link_fanout_resources

@@ -8,7 +8,7 @@
     id="<%= f.field_id(:resource_id) %>"
     data-controller="remote-select"
     data-remote-select-model-value="resource"
-    class="flex-1 min-w-0 rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm">
+    class="min-w-0 flex-1 rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
     <option value="">Type to search resources…</option>
     <% if resource %>
       <option value="<%= resource.id %>" selected><%= resource.title %></option>

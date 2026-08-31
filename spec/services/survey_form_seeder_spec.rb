@@ -45,8 +45,8 @@ RSpec.describe SurveyFormSeeder do
       expect(field.resources).to be_empty
 
       create(:resource, title: "The Touchstone Journey")
-      expect { described_class.new.link_clarity_resources }.to change { field.reload.resources.count }.by(1)
-      expect { described_class.new.link_clarity_resources }.not_to change { field.reload.resources.count }
+      expect { described_class.new.link_fanout_resources }.to change { field.reload.resources.count }.by(1)
+      expect { described_class.new.link_fanout_resources }.not_to change { field.reload.resources.count }
     end
   end
 end

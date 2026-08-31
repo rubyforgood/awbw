@@ -73,11 +73,11 @@ class FormBuilderService
     payment: %w[payment_method someone_else_will_pay],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
-    # Only the clarity radios carry an identifier — they're the per-resource fan-out
-    # anchors the seeder links topics to. Every other survey question is answer-only
-    # (stored on the form submission), so it needs no identifier.
-    day_1_survey: %w[d1_clarity_part_one d1_clarity_part_two],
-    day_2_survey: %w[d2_clarity_part_one d2_clarity_part_two],
+    # Only the fan-out anchors carry an identifier — the clarity radios and the
+    # per-workshop growth questions the seeder links resources to. Every other survey
+    # question is answer-only (stored on the form submission), so it needs no identifier.
+    day_1_survey: %w[d1_clarity_part_one d1_clarity_part_two d1_growth_personal d1_growth_professional],
+    day_2_survey: %w[d2_clarity_part_one d2_clarity_part_two d2_growth_personal d2_growth_professional],
     recipient_survey: %w[],
     content_sharing_preferences: %w[anonymous_contributions display_name_preference],
     bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
@@ -141,12 +141,8 @@ class FormBuilderService
     post_event_feedback: [ "How would you rate this event?", "What did you find most valuable?", "Any suggestions for improvement?" ],
     day_1_survey: [
       CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
-      "The Touchstone Journey workshop supported my <em>personal</em> growth.",
-      "The Touchstone Journey workshop supported my <em>professional</em> growth.",
-      "The Creating A Safer/Braver Place workshop supported my <em>personal</em> growth.",
-      "The Creating A Safer/Braver Place workshop supported my <em>professional</em> growth.",
-      "The Take A Break, Self-Regulate workshop supported my <em>personal</em> growth.",
-      "The Take A Break, Self-Regulate workshop supported my <em>professional</em> growth.",
+      "This workshop supported my <em>personal</em> growth:",
+      "This workshop supported my <em>professional</em> growth:",
       "The breakout rooms supported me in sharing about my experience and connect with other trainees.",
       "I was able to practice grounding and self-regulation during the training.",
       "What I learned today better prepared me to facilitate art workshops.",
@@ -159,10 +155,8 @@ class FormBuilderService
     ],
     day_2_survey: [
       CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
-      "The Monster In Me workshop supported my <em>personal</em> growth.",
-      "The Monster In Me workshop supported my <em>professional</em> growth.",
-      "The Claiming Who I Am workshop supported my <em>personal</em> growth.",
-      "The Claiming Who I Am workshop supported my <em>professional</em> growth.",
+      "This workshop supported my <em>personal</em> growth:",
+      "This workshop supported my <em>professional</em> growth:",
       "The breakout rooms supported me in sharing about my experience and connect with other trainees.",
       "What I learned today better prepared me to facilitate art workshops that honor intersectionality.",
       "Having time to dive into topics related to questions and challenges helped me feel more prepared to facilitate art workshops.",
@@ -705,18 +699,12 @@ class FormBuilderService
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          group: "day_1_survey", required: false)
 
-    position = add_field(form, position, "The Touchstone Journey workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Touchstone Journey workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Creating A Safer/Braver Place workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Take A Break, Self-Regulate workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    # Fanned per workshop (seeded resource links) — the workshop name lands after
+    # the prompt, so the text stays generic.
+    position = add_field(form, position, "This workshop supported my <em>personal</em> growth:", :single_select_radio,
+                         key: "d1_growth_personal", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "This workshop supported my <em>professional</em> growth:", :single_select_radio,
+                         key: "d1_growth_professional", group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
                          group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "I was able to practice grounding and self-regulation during the training.", :single_select_radio,
@@ -753,14 +741,12 @@ class FormBuilderService
     position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
                          group: "day_2_survey", required: false)
 
-    position = add_field(form, position, "The Monster In Me workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Monster In Me workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Claiming Who I Am workshop supported my <em>personal</em> growth.", :single_select_radio,
-                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
-    position = add_field(form, position, "The Claiming Who I Am workshop supported my <em>professional</em> growth.", :single_select_radio,
-                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    # Fanned per workshop (seeded resource links) — the workshop name lands after
+    # the prompt, so the text stays generic.
+    position = add_field(form, position, "This workshop supported my <em>personal</em> growth:", :single_select_radio,
+                         key: "d2_growth_personal", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "This workshop supported my <em>professional</em> growth:", :single_select_radio,
+                         key: "d2_growth_professional", group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
                          group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "What I learned today better prepared me to facilitate art workshops that honor intersectionality.", :single_select_radio,
