@@ -272,8 +272,9 @@ module AffiliationServices
     end
 
     # Only the row this training minted, and only when the person didn't turn up at
-    # all. Partial attendance is something that happened: they were here for part of
-    # it, and deleting the row would erase that rather than record it as brief.
+    # all. A partial attendance is kept as an auditable record that they were here —
+    # it confers no facilitation either way (ADR-0001 D8a), but the row and its
+    # comments survive.
     def discardable?(affiliation)
       minted_here?(affiliation) && !partially_attended?
     end

@@ -72,11 +72,18 @@ RSpec.describe EventProgramStatusReport do
       expect(column.ongoing_count).to eq(2)
     end
 
-    it "counts only organizations on active registrations" do
-      cancelled_org = create(:organization, name: "Cancelled")
-      represent(cancelled_org, spring, status: "cancelled")
+    it "counts only organizations on active registrations, whatever the inactive status" do
+      # A no-show / cancelled / transferred-out registration never became
+      # facilitation, so an org that only ever registered inactively stays out of
+      # the counts (ADR-0001 D8a).
+      EventRegistration::INACTIVE_STATUSES.each do |status|
+        inactive_org = create(:organization, name: "Inactive #{status}")
+        represent(inactive_org, spring, status: status)
+      end
 
-      expect(report.years.first.columns.first.organization_count).to eq(3)
+      column = report.years.first.columns.first
+      expect(column.organization_count).to eq(3)
+      expect(column.statuses.keys).to match_array([ brand_new.id, established.id, lapsed.id ])
     end
 
     it "reads each organization as of the training it attended, not as of today" do

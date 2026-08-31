@@ -1,0 +1,11 @@
+<%# Trainings the org only registered for inactively (no-show / cancelled /
+    transferred out, never an active registration there). A no-show confers no
+    facilitation, so these read as a red attendance chip rather than a
+    program-status one (ADR-0001 D8a). %>
+<% registrations.each do |registration| %>
+  <% event = registration.event %>
+  <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700"
+        title="<%= "#{event.title} — #{registration.attendance_status_label}: no active registration, so no program status." %>">
+    <%= registration.attendance_status_label %><%= " · #{event.start_date.strftime('%b %Y')}" if event.start_date %> · <%= event.decorate.compact_label.truncate(40) %>
+  </span>
+<% end %>

@@ -185,9 +185,19 @@ facilitator affiliation depends on what that row represents:
   (`incomplete_attendance`) — **ended**, not deleted. Provenance is not the whole
   test: the question is whether anything happened. A no-show or a cancellation means
   the assumption never came true and there is nothing to keep; a partial attendance
-  means they were here, and deleting the row would erase that instead of recording a
-  facilitator term that was brief. It same-days (the end date can't precede its own
-  start), so it reads as a term that began and ended on the training's day.
+  means they were here, so the row and its comments stay **on the record**. It
+  same-days (the end date can't precede its own start).
+
+  **Kept on the record is not the same as counted.** This bullet originally read that
+  same-day row as "a facilitator term that was brief"; it is not one.
+  [ADR-0001](0001-organization-affiliation-and-program-status.md) **D8a** drops every
+  zero-length row from every organization-level figure, and **only an attended training
+  confers facilitation** — so a partial attendance leaves an auditable row that counts
+  toward nothing. Two consequences to know: the bulk reconcile page **disables
+  Deactivate for a row this training minted** and preselects Delete, so in practice
+  these rows are usually deleted by an admin rather than same-dayed; and the org still
+  appears normally *at that training* either way, because `incomplete_attendance` is an
+  active registration status.
 
 **Everything ends the day BEFORE the training. One rule, no exceptions**, matching
 `AffiliationServices::ApplyScenarioEndDating`

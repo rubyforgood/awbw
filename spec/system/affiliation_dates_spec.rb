@@ -172,5 +172,19 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
       expect(program).to have_text("Jan 2018 – Dec 2019, May 2021", wait: 5)
     end
+
+    # The live preview reads the same rule as the server: a zero-length row is a
+    # no-show's deactivated stub, not facilitation (ADR-0001 D8a). If the JS twin
+    # kept it, the chip would flip to "Formerly active" on load.
+    it "ignores a zero-length facilitator row, matching the server render" do
+      no_show_org = create(:organization)
+      create(:affiliation, person: org_person, organization: no_show_org, title: "Facilitator",
+             start_date: "2026-08-01", end_date: "2026-08-01", inactive: true)
+
+      visit_and_wait edit_organization_path(no_show_org)
+
+      expect(find("[data-affiliation-dates-target='facilitatorSince']")).to have_text("—")
+      expect(find("[data-affiliation-dates-target='programStatus']")).to have_text("Never active")
+    end
   end
 end

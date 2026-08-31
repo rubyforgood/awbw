@@ -329,12 +329,15 @@
               <p>Overall status first (Active / Formerly active / Never active), then the facilitator-program status as of each event's date:<br>
                 • <span class="font-medium">New</span> — no facilitator affiliations yet<br>
                 • <span class="font-medium">Ongoing</span> — has an active facilitator<br>
-                • <span class="font-medium">Reinstated</span> — new again, but formerly active (all prior facilitations had ended).</p>
+                • <span class="font-medium">Reinstated</span> — new again, but formerly active (all prior facilitations had ended).<br>
+                A <span class="font-medium text-red-700">red chip</span> marks a training the org only registered for inactively (no show / cancelled / transferred out). It is not facilitation, so it counts toward neither the overall status nor the program status.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 pt-1">
               <%= org_decorated.organization_status_chip(data: { affiliation_dates_target: "programStatus" }, admin: allowed_to?(:manage?, Organization)) %>
               <%= render "organizations/program_status_event_chips",
                          organization: f.object, events: org_events, return_to: "organization_edit" %>
+              <%= render "organizations/inactive_training_chips",
+                         registrations: @organization_inactive_training_registrations || [] %>
             </div>
           </div>
         <% end %>

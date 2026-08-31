@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { isFacilitatorTitle } from "../lib/affiliation"
+import { isFacilitatorTitle, isZeroLength } from "../lib/affiliation"
 
 export default class extends Controller {
   static targets = ["facilitatorSince", "affiliatedNote", "affiliatedNoteText", "memberSinceFlag", "affiliationsContainer", "programStatus"]
@@ -52,7 +52,11 @@ export default class extends Controller {
     const now = new Date()
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
-    const facilitatorAffiliations = affiliations.filter(a => isFacilitatorTitle(a.title))
+    const titled = affiliations.filter(a => isFacilitatorTitle(a.title))
+    // The org form (mergedPeriods) reads the organization's program, which zero-length
+    // rows play no part in (ADR-0001 D8a) — matching OrganizationDecorator. The person
+    // form reports that person's own dates, so it keeps them.
+    const facilitatorAffiliations = this.mergedPeriodsValue ? titled.filter(a => !isZeroLength(a)) : titled
     const facStartDates = facilitatorAffiliations.map(a => a.startDate).filter(Boolean)
     const facilitatorSince = facStartDates.length
       ? new Date(Math.min(...facStartDates.map(d => new Date(d))))

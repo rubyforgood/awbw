@@ -187,6 +187,34 @@ RSpec.describe Affiliation, type: :model do
     end
   end
 
+  describe '.zero_length / .with_duration' do
+    let!(:zero_length) { create(:affiliation, start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 1)) }
+    let!(:spanning) { create(:affiliation, start_date: Date.new(2026, 8, 1), end_date: Date.new(2026, 8, 2)) }
+    let!(:open_ended) { create(:affiliation, start_date: Date.new(2026, 8, 1), end_date: nil) }
+    let!(:no_start) { create(:affiliation, start_date: nil, end_date: Date.new(2026, 8, 1)) }
+    let!(:no_dates) { create(:affiliation, start_date: nil, end_date: nil) }
+
+    it 'matches only rows that start and end on the same day' do
+      expect(described_class.zero_length).to contain_exactly(zero_length)
+    end
+
+    it 'is partitioned by .with_duration, which keeps rows missing either date' do
+      expect(described_class.with_duration).to contain_exactly(spanning, open_ended, no_start, no_dates)
+    end
+  end
+
+  describe 'zero-length seam (#zero_length? <-> .zero_length agree)' do
+    it '.zero_length returns exactly the saved rows whose #zero_length? is true' do
+      day = Date.new(2026, 8, 1)
+      [ [ day, day ], [ day, day + 1 ], [ day, nil ], [ nil, day ], [ nil, nil ] ]
+        .each { |start_date, end_date| create(:affiliation, start_date: start_date, end_date: end_date) }
+
+      in_ruby = described_class.all.select(&:zero_length?).map(&:id).sort
+      expect(described_class.zero_length.ids.sort).to eq(in_ruby)
+      expect(described_class.with_duration.ids.sort).to eq(described_class.all.reject(&:zero_length?).map(&:id).sort)
+    end
+  end
+
   describe 'title normalization on write' do
     it 'stores the title trimmed' do
       affiliation = create(:affiliation, title: "  Facilitator ")

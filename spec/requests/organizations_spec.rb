@@ -205,6 +205,38 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).to include("Qwultz Training")
       expect(response.body).not_to include("Zibberpicnic Social")
     end
+
+    it "renders a red attendance chip for a training the org only registered for inactively" do
+      organization = Organization.create!(valid_attributes)
+      no_show_training = create(:event, title: "Skipped Training", abbreviation: "SKP101",
+                                        facilitator_training: true, start_date: Date.new(2026, 8, 1))
+      registration = create(:event_registration, registrant: create(:person),
+                                                 event: no_show_training, status: "no_show")
+      registration.event_registration_organizations.create!(organization: organization)
+
+      get edit_organization_url(organization)
+
+      chip = Capybara.string(response.body).all("span", text: /SKP101/).first
+      expect(chip.native.text).to match(/No show .* SKP101/)
+      expect(chip[:class]).to include("text-red-700")
+    end
+
+    it "keeps a training's program-status chip when the org has any active registration there" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person),
+                           title: "Facilitator", start_date: Date.new(2020, 1, 1))
+      training = create(:event, title: "Half Skipped", abbreviation: "HLF101",
+                                facilitator_training: true, start_date: Date.new(2026, 8, 1))
+      [ "registered", "no_show" ].each do |status|
+        registration = create(:event_registration, registrant: create(:person), event: training, status: status)
+        registration.event_registration_organizations.create!(organization: organization)
+      end
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to match(/Ongoing .* HLF101/)
+      expect(response.body).not_to match(/No show .* HLF101/)
+    end
   end
 
   describe "POST /create" do
