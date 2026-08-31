@@ -38,7 +38,7 @@
     attendance chip (No show / Cancelled / Transferred out) instead of a
     program-status one.
   action_path: /organizations
-  pr_number: 2454
+  pr_number: 2464
 
 - name: "Set who a workshop log is credited to"
   area: content
