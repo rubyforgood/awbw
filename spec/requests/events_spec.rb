@@ -192,6 +192,78 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("88285411273")
       end
     end
+
+    context "display templates" do
+      let(:templated_event) { create(:event, :published, :publicly_visible, title: "Templated event") }
+
+      it "renders every template without error" do
+        sign_in admin
+        Event::TEMPLATE_KEYS.each do |key|
+          templated_event.update!(template: key)
+          get event_path(templated_event)
+          expect(response).to have_http_status(:ok), "template #{key} failed to render"
+          expect(response.body).to include("Templated event")
+        end
+      end
+
+      it "lets an editor preview an unsaved template via ?template" do
+        sign_in admin
+        templated_event.update!(template: "none")
+        get event_path(templated_event, template: "hero")
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Apply &amp; edit")
+      end
+
+      it "ignores ?template for a non-editor" do
+        sign_in user
+        get event_path(templated_event, template: "hero")
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Apply &amp; edit")
+      end
+    end
+  end
+
+  describe "GET /templates_gallery" do
+    let!(:sample) { create(:event, :published, title: "Gallery sample") }
+
+    it "renders the gallery of all templates for an admin" do
+      sign_in admin
+      get templates_gallery_events_path
+      expect(response).to have_http_status(:ok)
+      Event::TEMPLATES.each_value { |meta| expect(response.body).to include(meta[:label]) }
+      expect(response.body).to include("Gallery sample")
+    end
+
+    it "previews the event named by event_id" do
+      chosen = create(:event, :published, title: "Chosen event", start_date: 2.years.ago, end_date: 2.years.ago + 1.day)
+      sign_in admin
+      get templates_gallery_events_path(event_id: chosen.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Chosen event")
+    end
+
+    it "lets an event owner in, previewing their own event rather than someone else's" do
+      create(:event, :published, title: "Owned event", created_by: user)
+      sign_in user
+      get templates_gallery_events_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Owned event")
+      expect(response.body).not_to include("Gallery sample")
+    end
+
+    it "does not let an owner preview an event_id they do not own" do
+      create(:event, :published, created_by: user)
+      sign_in user
+      get templates_gallery_events_path(event_id: sample.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Gallery sample")
+    end
+
+    it "forbids a non-admin without events" do
+      sign_in user
+      get templates_gallery_events_path
+      expect(response).not_to have_http_status(:ok)
+    end
   end
 
   describe "GET /revenue" do
@@ -1003,6 +1075,21 @@ RSpec.describe "Events", type: :request do
       get edit_event_path(event)
       expect(response.body).not_to include("Preview scholarship form")
       expect(response.body).not_to include("Preview bulk payment page")
+    end
+
+    it "pre-selects the template passed via ?template so submitting saves it" do
+      get edit_event_path(event, template: "hero")
+      expect(Capybara.string(response.body)).to have_checked_field("event[template]", with: "hero")
+    end
+
+    it "opens the Event show page section when arriving with ?section=page_content" do
+      get edit_event_path(event, section: "page_content")
+      expect(Capybara.string(response.body).find("#page_content", visible: :all)[:class]).not_to include("hidden")
+    end
+
+    it "leaves the Event show page section collapsed by default" do
+      get edit_event_path(event)
+      expect(Capybara.string(response.body).find("#page_content", visible: :all)[:class]).to include("hidden")
     end
 
     it "renders the visibility flags, including publicly registerable, with definitions" do

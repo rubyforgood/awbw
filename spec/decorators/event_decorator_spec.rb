@@ -1,6 +1,27 @@
 require 'rails_helper'
 
 RSpec.describe EventDecorator do
+  describe "call-to-action styling" do
+    it "keeps the legacy orange register button on the none template" do
+      event = build(:event, template: "none").decorate
+      expect(event).not_to be_branded_page
+      expect(event.cta_classes(register: true)).to include("bg-accent")
+      expect(event.cta_style).to eq(described_class::LEGACY_CTA_FONT)
+    end
+
+    it "keeps the legacy green view-ticket button on the none template" do
+      event = build(:event, template: "none").decorate
+      expect(event.cta_classes).to include("bg-success")
+    end
+
+    it "uses the gold brand CTA on a branded template" do
+      event = build(:event, template: "hero").decorate
+      expect(event).to be_branded_page
+      expect(event.cta_classes(register: true)).to include("bg-brand-yellow-400")
+      expect(event.cta_style).to be_nil
+    end
+  end
+
   describe "#videoconference_domain" do
     it "extracts domain name from URL" do
       event = build(:event, videoconference_url: "https://www.zoom.us/j/123").decorate

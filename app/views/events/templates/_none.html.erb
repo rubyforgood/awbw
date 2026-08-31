@@ -1,0 +1,104 @@
+<%# "None" — the plain, pre-brand layout, preserved as-is (white page, centred,
+    content exactly as authored). This is the frozen legacy frame; new display
+    logic belongs in the shared events/show partials and the branded templates,
+    not here. `sample` swaps live registration for a static button in the gallery.
+    The show page runs full-width, so this frame restores the standard container. %>
+<div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+<%# ---- HEADER CONTENT ---- (full width, as authored — legacy behavior).
+    Tall images are capped so they don't dominate; wide banners are unaffected. %>
+<% if event.rhino_header.present? %>
+  <div class="rhino-centered mb-4 max-h-[42rem] overflow-hidden max-w-none prose prose-img:w-full prose-img:max-w-full prose-em:text-inherit prose-strong:text-inherit">
+    <%= event.rhino_header %>
+  </div>
+<% end %>
+
+<%# ---- TITLE ---- %>
+<% if event.autoshow_title %>
+  <div class="mx-auto mb-4 max-w-2xl text-center">
+    <% if event.pre_title.present? %>
+      <p class="mb-2 font-telefon text-base font-semibold text-gray-700" style="font-size: 42px"><%= event.pre_title %></p>
+    <% end %>
+    <h1 class="text-primary font-display" style="font-size: 53px"><%= event.title %></h1>
+  </div>
+<% end %>
+
+<%# ---- EVENT DETAILS (conditional on autoshow) ---- %>
+<div class="mb-4 space-y-2 text-center">
+  <% if event.autoshow_pre_date_text && event.pre_date_text.present? %>
+    <div class="text-primary font-bold uppercase" style="font-size: 24px"><%= event.pre_date_text %></div>
+  <% end %>
+
+  <% if event.autoshow_date || event.autoshow_time %>
+    <div>
+      <% if event.autoshow_date %>
+        <div class="text-primary font-bold uppercase" style="font-size: 35px">
+          <%= event_dates_label(event) %>
+        </div>
+      <% end %>
+      <% if event.autoshow_time %>
+        <div class="text-primary mt-2 font-bold" style="font-size: 24px">
+          <%= event_times_label(event) %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if event.autoshow_cost && event.labelled_cost %>
+    <div class="text-primary text-xl font-bold uppercase"><%= event.labelled_cost %></div>
+  <% end %>
+
+  <% if event.autoshow_location && event.location.present? %>
+    <div class="text-base text-gray-700"><%= event.location.name %></div>
+  <% end %>
+
+  <% if event.autoshow_videoconference_label && event.videoconference_label.present? %>
+    <div class="text-base text-gray-700"><%= event.videoconference_label %></div>
+  <% end %>
+
+  <%= render "events/videoconference_link", event: event %>
+
+  <% unless current_user && event.actively_registered?(current_user.person) %>
+    <% if event.autoshow_registration_close && event.registration_close_date %>
+      <div class="text-base text-gray-700">
+        <% tz_abbr = event.start_date.in_time_zone(Time.zone).strftime("%Z") %>
+        Registration closes <%= event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %l:%M %P") %> <%= tz_abbr %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if local_assigns.fetch(:sample, false) %>
+    <div class="mt-4 flex flex-col items-center gap-2">
+      <span class="<%= button_classes(:accent, size: nil, extra: "px-10 py-2 text-2xl uppercase") %>"
+            style="<%= EventDecorator::LEGACY_CTA_FONT %>">Register</span>
+      <span class="text-xs text-gray-500 italic">Sample preview</span>
+    </div>
+  <% else %>
+    <% if event.autoshow_registration %>
+      <div class="mt-4">
+        <%= render "events/registration_section", event: event, instance: 1, button_text: "Register" %>
+      </div>
+    <% end %>
+
+    <% if event.bulk_payment_form %>
+      <div class="mt-4">
+        <%= link_to Form::BULK_PAYMENT_PUBLIC_NAME,
+                    new_event_bulk_payment_path(event),
+                    class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
+                    style: "font-family: 'Telefon Bold', sans-serif;" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
+<%# ---- DESCRIPTION ---- %>
+<% if event.rhino_description.present? %>
+  <div class="mb-12 max-w-none prose prose-img:w-full prose-img:max-w-full prose-em:text-inherit prose-strong:text-inherit">
+    <%= event.rhino_description %>
+  </div>
+<% end %>
+
+<%# ---- GALLERY IMAGES ---- %>
+<div class="mb-12">
+  <%= render "assets/display_gallery_media", resource: event, link: true %>
+</div>
+</div>

@@ -1,0 +1,10 @@
+<%# Event title + optional pre-title, gated on autoshow_title. Presentation
+    classes come from the calling template so each frame controls size/colour. %>
+<% if event.autoshow_title %>
+  <div class="<%= local_assigns.fetch(:wrapper_class, "") %>">
+    <% if event.pre_title.present? %>
+      <p class="<%= local_assigns.fetch(:pretitle_class, "mb-2 text-sm font-semibold uppercase tracking-widest text-brand-orange-600") %>"><%= event.pre_title %></p>
+    <% end %>
+    <h1 class="<%= local_assigns.fetch(:heading_class, "font-display text-4xl font-semibold leading-tight text-brand-navy-900 sm:text-5xl") %>"><%= event.title %></h1>
+  </div>
+<% end %>

@@ -23,6 +23,16 @@ class EventPolicy < ApplicationPolicy
     admin? || owns_events?
   end
 
+  # The display-template gallery, reached from the event form's layout picker.
+  # Its own rule rather than an alias of new?: the controller authorizes without a
+  # record, so owner? has no Event to check and any manage?-derived rule would
+  # collapse to admin-only — locking out the event owners who reach it from the
+  # form. Gated on "has events to preview", with the :reportable scope narrowing
+  # the sample event to their own.
+  def templates_gallery?
+    admin? || owns_events?
+  end
+
   # A single-event slice of those reports — reached from the per-event Reports and
   # Roster tabs, which pass event_id — is visible to that event's owner too. The
   # controller resolves event_id to the Event and authorizes against it here, so
@@ -42,8 +52,11 @@ class EventPolicy < ApplicationPolicy
     relation.where(created_by_id: user.id)
   end
 
+  # Owners see their own event's page unconditionally — same as an admin — so they
+  # can preview a draft (unpublished, not yet publicly visible) or a past event
+  # before anyone else can, which is what the layout-template previews rely on.
   def show?
-    return true if admin?
+    return true if admin? || owner?
 
     if record.ended?
       authenticated? && record.published? && record.actively_registered?(user.person)
@@ -188,6 +201,7 @@ class EventPolicy < ApplicationPolicy
                   :public_registration_enabled,
                   :signed_in_one_click_enabled,
                   :autoshow_registration_details,
+                  :template,
                   :hint_dates,
                   :hint_times,
                   :hint_registration_cost,

@@ -17,6 +17,9 @@ RSpec.describe "page_bg_class alignment with policies" do
   #   "public"                                        → true
   #   "admin-or-auth"                                 → authenticated?
   #   "admin-or-public-or-authpublished"              → admin? || publicly_visible? || (authenticated? && published?)
+  #   "admin-or-owner-or-public-or-authpublished"     → the same, plus owner? — an
+  #                                                     event owner sees their own
+  #                                                     draft/past event page
   #   "admin-or-owner"                                → admin? || owner? (manage?,
   #                                                     dashboard?, edit?, the report
   #                                                     suite — a bg-* utility may ride
@@ -62,7 +65,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     # ─── admin-or-public-or-authpublished ───
     # (policy: admin? || publicly_visible? || (authenticated? && published?))
     "app/views/community_news/show.html.erb"           => "admin-or-public-or-authpublished",
-    "app/views/events/show.html.erb"                   => "admin-or-public-or-authpublished",
+    "app/views/events/show.html.erb"                   => "admin-or-owner-or-public-or-authpublished",
     "app/views/faqs/show.html.erb"                     => "admin-or-public-or-authpublished",
     "app/views/resources/show.html.erb"                => "admin-or-public-or-authpublished",
     "app/views/stories/show.html.erb"                  => "admin-or-public-or-authpublished",
@@ -151,6 +154,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/scholarships.html.erb"           => "admin-or-owner bg-blue-100",
     "app/views/events/program_statuses.html.erb"       => "admin-or-owner bg-blue-100",
     "app/views/events/attendees.html.erb"              => "admin-or-owner bg-blue-100",
+    "app/views/events/templates_gallery.html.erb"      => "admin-or-owner bg-blue-100",
     "app/views/events/preview_reminder.html.erb"       => "admin-or-owner bg-blue-100",
     "app/views/events/confirm_reminder.html.erb"       => "admin-or-owner bg-blue-100",
     "app/views/event_registrations/index.html.erb"     => "admin-only bg-blue-100",
