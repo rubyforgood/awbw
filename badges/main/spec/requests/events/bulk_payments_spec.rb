@@ -106,6 +106,76 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("New allocation")
     end
+
+    context "payment method filter" do
+      let(:check_payer) { create(:person, first_name: "Chesney", last_name: "Checkwriter") }
+      let(:card_payer) { create(:person, first_name: "Carla", last_name: "Cardholder") }
+      let!(:check_submission) { create(:form_submission, person: check_payer, form: form, event: event, role: "bulk_payment") }
+      let!(:card_submission) { create(:form_submission, person: card_payer, form: form, event: event, role: "bulk_payment") }
+
+      before do
+        check_submission.form_answers.create!(form_field: payment_method_field, submitted_answer: "Check")
+        card_submission.form_answers.create!(form_field: payment_method_field, submitted_answer: FormBuilderService::PAYMENT_METHOD_PAY_NOW)
+      end
+
+      it "shows only submissions matching the selected payment method" do
+        get bulk_payments_event_path(event, payment_method: "Check")
+
+        expect(response.body).to include("Chesney")
+        expect(response.body).not_to include("Carla")
+      end
+
+      it "shows every submission when no method is selected" do
+        get bulk_payments_event_path(event)
+
+        expect(response.body).to include("Chesney")
+        expect(response.body).to include("Carla")
+      end
+    end
+
+    context "search" do
+      let(:priya) { create(:person, first_name: "Priya", last_name: "Patel") }
+      let(:sam) { create(:person, first_name: "Sam", last_name: "Jonesborough") }
+      let!(:priya_sub) { create(:form_submission, person: priya, form: form, event: event, role: "bulk_payment") }
+      let!(:sam_sub) { create(:form_submission, person: sam, form: form, event: event, role: "bulk_payment") }
+
+      it "narrows the list to matches on the shared search box" do
+        get bulk_payments_event_path(event, search: "Priya")
+
+        expect(response.body).to include("Priya")
+        expect(response.body).not_to include("Jonesborough")
+      end
+    end
+
+    context "status chips" do
+      let!(:attendees_field) do
+        create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees")
+      end
+
+      it "flags attendees who aren't registered yet" do
+        submission.form_answers.create!(
+          form_field: attendees_field,
+          submitted_answer: [ { first_name: "Nomatch", last_name: "Person", email: "nomatch@example.com" } ].to_json
+        )
+
+        get bulk_payments_event_path(event)
+
+        expect(response.body).to include("not registered")
+      end
+
+      it "flags a matched registration that isn't paid in full" do
+        attendee = create(:person, first_name: "Owen", last_name: "Owing", email: "owen@example.com")
+        create(:event_registration, event: event, registrant: attendee, status: "registered")
+        submission.form_answers.create!(
+          form_field: attendees_field,
+          submitted_answer: [ { first_name: "Owen", last_name: "Owing", email: "owen@example.com" } ].to_json
+        )
+
+        get bulk_payments_event_path(event)
+
+        expect(response.body).to include("unpaid")
+      end
+    end
   end
 
   describe "POST /events/:id/allocate_bulk_payment" do

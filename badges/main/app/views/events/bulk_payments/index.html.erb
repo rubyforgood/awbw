@@ -13,27 +13,33 @@
 
   <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <h1 class="text-primary font-display text-2xl font-semibold">Bulk payments</h1>
-    <div class="flex items-center gap-3">
-      <%= link_to event_invoice_path(@event),
-                  class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
-        <i class="fa-solid fa-file-invoice-dollar text-xs"></i> Blank invoice
-      <% end %>
-      <p class="text-sm text-gray-500"><%= @submissions.size %> submission<%= "s" unless @submissions.size == 1 %></p>
-    </div>
+    <%= link_to event_invoice_path(@event),
+                class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors" do %>
+      <i class="fa-solid fa-file-invoice-dollar text-xs"></i> Blank invoice
+    <% end %>
   </div>
 
-  <% if @submissions.any? %>
-    <div class="grid grid-cols-1 gap-3">
-      <% @submissions.each do |submission| %>
-        <%= render "events/bulk_payment_card", submission: submission,
-              event_registrations: @event_registrations,
-              allocated_by_registration: @allocated_by_registration %>
-      <% end %>
+  <%= render "bulk_payments/filters", url: bulk_payments_event_path(@event),
+        frame: "bulk_payments_results", scoped_to_event: true %>
+
+  <% any_filter = request.query_parameters.slice("search", "payment_method", "payment_status", "start_date", "end_date").any? { |_, v| v.present? } %>
+  <%= turbo_frame_tag :bulk_payments_results do %>
+    <div class="mb-3 text-sm text-gray-500">
+      <%= pluralize(@submissions.size, "submission") %>
     </div>
-  <% else %>
-    <div class="border-primary/10 rounded-2xl border bg-white py-16 text-center">
-      <i class="fa-regular fa-receipt mb-3 text-4xl text-gray-300"></i>
-      <p class="text-gray-500">No bulk payment submissions yet.</p>
-    </div>
+    <% if @submissions.any? %>
+      <div class="grid grid-cols-1 gap-3">
+        <% @submissions.each do |submission| %>
+          <%= render "events/bulk_payment_card", submission: submission,
+                event_registrations: @event_registrations,
+                allocated_by_registration: @allocated_by_registration %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="border-primary/10 rounded-2xl border bg-white py-16 text-center">
+        <i class="fa-regular fa-receipt mb-3 text-4xl text-gray-300"></i>
+        <p class="text-gray-500"><%= any_filter ? "No bulk payments match these filters." : "No bulk payment submissions yet." %></p>
+      </div>
+    <% end %>
   <% end %>
 </div>

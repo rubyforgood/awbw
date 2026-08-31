@@ -52,6 +52,26 @@ RSpec.describe "BulkPayments", type: :request do
         expect(response.body).not_to include("form-submission-row-#{theirs.id}")
       end
 
+      it "finds an account-less payer by a submitted answer such as their organization" do
+        event = create(:event)
+        submission = create(:form_submission, role: "bulk_payment", event: event, person: nil)
+        field = create(:form_field, form: submission.form, field_identifier: "payer_organization", name: "Organization")
+        submission.form_answers.create!(form_field: field, submitted_answer: "Westside Shelter")
+
+        get bulk_payments_path(search: "Westside"), headers: frame_headers
+
+        expect(response.body).to include("form-submission-row-#{submission.id}")
+      end
+
+      it "matches on the submission metadata" do
+        event = create(:event)
+        submission = create(:form_submission, role: "bulk_payment", event: event, metadata: { "note" => "VIP donor" })
+
+        get bulk_payments_path(search: "VIP donor"), headers: frame_headers
+
+        expect(response.body).to include("form-submission-row-#{submission.id}")
+      end
+
       it "filters by payment status" do
         event = create(:event)
         unpaid = create(:form_submission, role: "bulk_payment", event: event)
