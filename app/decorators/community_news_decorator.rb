@@ -2,7 +2,8 @@ class CommunityNewsDecorator < ApplicationDecorator
   include ::Linkable
 
   def detail(length: nil)
-    length ? body&.truncate(length) : body
+    text = rhino_body&.to_plain_text
+    length ? text&.truncate(length) : text
   end
 
   def external_url
