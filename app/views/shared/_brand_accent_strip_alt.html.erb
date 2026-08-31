@@ -1,0 +1,6 @@
+<%# The second AWBW rainbow rule — gold and teal where shared/_brand_accent_strip
+    runs yellow and purple. Used by the branded event templates and the
+    story-shares footer. Same locals as that partial: pass rounded: true when the
+    container is not clipping its own overflow, so the rule still follows the
+    container's rounded top corners. %>
+<div class="h-1.5 w-full <%= "rounded-t-2xl" if local_assigns[:rounded] %> bg-[linear-gradient(to_right,#4e8324,#d56027,#e0b528,#9b2c5e,#24479e,#3aa0a0)]"></div>
