@@ -266,7 +266,7 @@ class Event < ApplicationRecord
   def recipient_survey_drip_open?(now = Time.current)
     link = recipient_survey_form_link
     return false unless link
-    link.display_from.blank? || link.display_from <= now
+    !link.dripping?(now)
   end
 
   def registerable?

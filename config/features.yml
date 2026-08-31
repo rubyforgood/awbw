@@ -2916,7 +2916,7 @@
     editor's single "Linked form" picker is now "Linked forms" — add as many as you
     like, each with its own optional display date so it drips open on that date.
   pro_tips:
-    - "Leave a form's display date blank to show it right away; set one to open the form later."
+    - "Leave a form's display date blank to open it as soon as the callout itself opens; set one to hold the form back until later. The callout's own display date always wins, so no form opens before its callout does."
     - "Each linked form gets its own completion column on the registrants roster, under the Ticket forms switch."
 
 - name: "Feedback surveys on your registration ticket"

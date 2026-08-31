@@ -16,8 +16,15 @@ class RegistrationTicketCalloutForm < ApplicationRecord
 
   scope :ordered, -> { order(:position, :id) }
 
-  # Drips like a callout: hidden until its own date passes. A blank date is open.
+  # When this form opens: the later of the callout's own drip date and this row's.
+  # The callout's date withholds all of its page content, so a row can't open ahead
+  # of the page carrying it. Nil when neither is set.
+  def available_from
+    [ registration_ticket_callout&.display_from, display_from ].compact.max
+  end
+
+  # Drips like a callout: hidden until it opens. No date either side is open.
   def dripping?(now = Time.current)
-    display_from.present? && display_from > now
+    available_from.present? && available_from > now
   end
 end

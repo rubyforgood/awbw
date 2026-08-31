@@ -55,6 +55,38 @@ RSpec.describe "Callout inline form", type: :request do
     end
   end
 
+  # The callout row's own display date withholds its page content (the card still
+  # shows on the ticket), so it has to gate the forms it delivers too — not just
+  # each row's own date.
+  describe "a callout whose own display date has not arrived" do
+    let(:dripping_callout) do
+      create(:registration_ticket_callout, event:, form:, description: "",
+             display_from: 1.day.from_now)
+    end
+
+    it "withholds the form from the page" do
+      get registration_callout_form_path(registration.slug, dripping_callout)
+
+      expect(response.body).not_to include("callout_form[form_fields][#{field.id}]")
+      expect(response.body).to include("Available")
+    end
+
+    it "refuses a submission posted straight at the endpoint" do
+      expect {
+        post registration_callout_form_submit_path(registration.slug, dripping_callout, form),
+             params: { callout_form: { form_fields: { field.id.to_s => "Too early" } } }
+      }.not_to change(FormSubmission, :count)
+    end
+
+    it "opens the form once that date passes" do
+      dripping_callout.update!(display_from: 1.day.ago)
+
+      get registration_callout_form_path(registration.slug, dripping_callout)
+
+      expect(response.body).to include("callout_form[form_fields][#{field.id}]")
+    end
+  end
+
   describe "a callout that delivers several forms, each on its own drip date" do
     let(:day1) { create(:form, name: "Day 1 Survey") }
     let(:day2) { create(:form, name: "Day 2 Survey") }
