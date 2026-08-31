@@ -4,7 +4,7 @@ module ButtonHelper
   # markup via a helper rather than extracting them into @apply CSS). Tailwind
   # scans this file (see the @source in application.tailwind.css), so the class
   # strings below generate exactly like inline utilities.
-  BUTTON_BASE = "inline-flex items-center gap-2 rounded-lg font-medium shadow-sm " \
+  BUTTON_BASE = "inline-flex items-center gap-2 font-medium shadow-sm " \
                 "transition-colors duration-200 focus:outline-none focus:ring-2 " \
                 "focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed".freeze
 
@@ -17,8 +17,18 @@ module ButtonHelper
     sm: "px-3 py-1 text-xs"
   }.freeze
 
+  # Shape owns the border-radius so a call site can pick the marketing pill
+  # (`shape: :pill`) without splicing a conflicting `rounded-*` into `extra:`.
+  # `:default` keeps the standard rounded-lg every existing button already used.
+  BUTTON_SHAPES = {
+    default: "rounded-lg",
+    pill: "rounded-full"
+  }.freeze
+
   BUTTON_VARIANTS = {
     primary: "border border-primary bg-primary text-white hover:bg-white hover:text-primary",
+    brand: "bg-brand-yellow-400 text-brand-navy-900 hover:bg-brand-yellow-600",
+    brand_raised: "bg-brand-yellow-400 text-brand-navy-900 font-bold border-b-4 border-brand-yellow-600 hover:bg-brand-yellow-500 hover:border-brand-yellow-700",
     accent: "border-2 border-accent bg-accent text-white hover:bg-white hover:text-accent",
     success: "border-2 border-success bg-success text-white hover:bg-white hover:text-success",
     secondary: "border border-secondary bg-secondary text-white hover:bg-white hover:text-secondary",
@@ -36,16 +46,18 @@ module ButtonHelper
     utility_outline: "border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
   }.freeze
 
-  # `variant` and `size` each take `nil` to opt that layer out and let the call
-  # site supply its own: `variant: nil` drops the color (a custom/dynamic fill),
-  # `size: nil` drops the padding + text-size (call site sets its own via
-  # `extra:` — see BUTTON_SIZES for why they'd otherwise collide). The `if`
-  # guards are what make those nils skip the `fetch` instead of raising; base
-  # stays the single source of truth either way rather than being inlined.
-  def button_classes(variant = :primary, size: :md, extra: nil)
+  # `variant`, `size`, and `shape` each take `nil` to opt that layer out and let
+  # the call site supply its own: `variant: nil` drops the color (a custom/dynamic
+  # fill), `size: nil` drops the padding + text-size, `shape: nil` drops the
+  # border-radius (call site sets its own via `extra:` — see BUTTON_SIZES for why
+  # they'd otherwise collide). The `if` guards are what make those nils skip the
+  # `fetch` instead of raising; base stays the single source of truth either way
+  # rather than being inlined.
+  def button_classes(variant = :primary, size: :md, shape: :default, extra: nil)
     tokens = [ BUTTON_BASE ]
     tokens << BUTTON_VARIANTS.fetch(variant) if variant
     tokens << BUTTON_SIZES.fetch(size) if size
+    tokens << BUTTON_SHAPES.fetch(shape) if shape
     tokens << extra if extra.present?
     tokens.join(" ")
   end
