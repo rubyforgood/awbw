@@ -148,8 +148,8 @@ facilitator affiliations by a single class, `FacilitatorProgramStatus`:
 
 - **New** — no facilitator affiliation started **before** the anchor (strict `<`).
   An affiliation dated **on** the anchor is the one this event mints (D8), so a
-  first-time org reads New at its own training — including a **same-day**
-  (`start == end`) affiliation dated to the event.
+  first-time org reads New at its own training. A **zero-length** (`start == end`)
+  row is dropped as non-facilitation before judging (D8a).
 - **Ongoing** — an earlier facilitator affiliation is **still active** on the
   anchor (no end date, or it ends on/after it).
 - **Reinstated** — earlier facilitator affiliation(s) existed but **all ended**
@@ -238,6 +238,32 @@ history" for its own training. An event with no start date is the one gap — th
 affiliation then falls back to the creation date. That event has no anchor either,
 so both its dashboard and the annual report read it as year-anchored (D7) rather
 than one of them silently using "today".
+
+### D8a — Zero-length facilitator affiliations don't count as facilitation
+
+A no-show / cancelled / transferred-out facilitator-training registration leaves a
+**zero-length** (`start_date == end_date`) Facilitator affiliation: D8 mints the row
+dated to the training, then reconciliation ends it — and it can't end before it
+starts, so `deactivation_end_date` clamps the end to the start date
+(`AffiliationServices::ReconcilePerson`). That row represents **no facilitation**, so
+`FacilitatorProgramStatus` **drops every zero-length facilitator affiliation** before
+judging (`Affiliation#zero_length?`).
+
+**This reverses D8's same-day handling.** D8 read a same-day (`start == end`)
+affiliation dated to the event as the training's own minted row, so a first-time org
+still read **New** at that training. That verdict is unchanged — a dropped row leaves
+no facilitator history, which is still New — but the *reason* is now "no facilitation
+here," not "minted here." What D8 got wrong is the **later** anchor: a zero-length row
+from an earlier no-show would count as prior-but-ended history and wrongly **Reinstate**
+the org at a later training, or let a no-show **invent a New** at an event nobody
+attended. Neither happens now. Open-ended minted rows (`end_date` nil) are untouched;
+only genuinely zero-length rows are dropped.
+
+The org **edit form** makes this legible: a training the org **only** registered for
+inactively (no active registration there) gets a **red attendance chip** — "No show" /
+"Cancelled" / "Transferred out" — instead of a program-status chip
+(`organizations/_inactive_training_chips`). A training keeps its program-status chip if
+the org has **any** active registration there.
 
 ### D9 — Annual reporting counts organizations two ways
 

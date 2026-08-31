@@ -35,8 +35,9 @@ RSpec.describe FacilitatorProgramStatus do
     end
 
     it "is :new for a same-day (start == end) facilitation dated to the anchor" do
-      # start == end == the event date is the affiliation this training mints (D8),
-      # so a first-time org still reads New — not Ongoing.
+      # A zero-length row is what a no-show / cancelled training leaves (ADR-0001
+      # D8a); it represents no facilitation and is dropped, so a first-time org
+      # still reads New.
       facilitator(start_date: anchor, end_date: anchor)
       expect(status_on.status).to eq(:new)
     end
@@ -47,9 +48,11 @@ RSpec.describe FacilitatorProgramStatus do
       expect(status_on.status).to eq(:new)
     end
 
-    it "is :reinstated for a same-day facilitation that ran before the anchor" do
+    it "is :new for a zero-length facilitation that ran before the anchor" do
+      # A no-show at an earlier training leaves a same-day row (ADR-0001 D8a). It is
+      # not prior facilitation, so it must not reinstate the org at a later date.
       facilitator(start_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 1, 1))
-      expect(status_on.status).to eq(:reinstated)
+      expect(status_on.status).to eq(:new)
     end
 
     it "is :reinstated when every earlier facilitator affiliation has ended" do

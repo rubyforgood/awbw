@@ -119,6 +119,14 @@ class Affiliation < ApplicationRecord
     title.to_s.strip == FACILITATOR_TITLE
   end
 
+  # Starts and ends on the same day — the shape a no-show / cancelled /
+  # transferred-out training leaves once its minted facilitator row is deactivated
+  # (ADR-0001 D8a). It represents no facilitation, so program-status classification
+  # drops it.
+  def zero_length?
+    end_date.present? && end_date == start_date
+  end
+
   # Genuinely active now — the in-memory twin of the `active` scope and of
   # status_on == "Active", so already-loaded affiliations can be filtered in Ruby
   # without another query (e.g. on list pages that preload affiliations). A

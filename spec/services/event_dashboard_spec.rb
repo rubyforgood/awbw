@@ -219,6 +219,22 @@ RSpec.describe EventDashboard do
         expect(dashboard.program_status_counts).to eq(new: 3, ongoing: 0, reinstated: 0)
       end
 
+      it "excludes organizations that only registered inactively, for every inactive status" do
+        # A no-show / cancelled / transferred-out registration confers no
+        # facilitation, so an org that only registered inactively stays out of the
+        # breakdown (ADR-0001 D8a).
+        EventRegistration::INACTIVE_STATUSES.each do |status|
+          person = create(:person)
+          organization = create(:organization, name: "Only #{status}")
+          create(:affiliation, person: person, organization: organization)
+          registration = create(:event_registration, event: event, registrant: person, status: status)
+          registration.event_registration_organizations.create!(organization: organization)
+        end
+
+        expect(dashboard.organizations).to contain_exactly(org_a, org_b, org_c)
+        expect(dashboard.program_status_counts.values.sum).to eq(3)
+      end
+
       it "totals the program-status breakdown to the organization count" do
         expect(dashboard.program_status_counts.values.sum).to eq(dashboard.organization_count)
       end

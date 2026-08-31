@@ -27,6 +27,19 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "No-show trainings no longer count toward program status"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-31
+  summary: >-
+    A registrant who was a no-show, cancelled, or transferred out never became a
+    facilitator, so that training no longer counts an organization as New,
+    Ongoing, or Reinstated. On the org edit page those trainings now show a red
+    attendance chip (No show / Cancelled / Transferred out) instead of a
+    program-status one.
+  action_path: /organizations
+  pr_number: 2454
+
 - name: "Set who a workshop log is credited to"
   area: content
   display_status: admin_facing
