@@ -28,4 +28,25 @@ RSpec.describe SurveyFormSeeder do
       "Day 1 Survey", "Day 2 Survey", "Post-Training Recipients Survey"
     )
   end
+
+  describe "clarity resource links" do
+    it "links a clarity question to its topic resources when they exist" do
+      touchstone = create(:resource, title: "The Touchstone Journey")
+      described_class.call
+
+      field = Form.find_by(name: "Day 1 Survey").form_fields.find_by(field_identifier: "d1_clarity_part_one")
+      expect(field.resources).to include(touchstone)
+      expect(field.per_resource?).to be(true)
+    end
+
+    it "skips a topic whose resource isn't present, and is idempotent" do
+      described_class.call
+      field = Form.find_by(name: "Day 1 Survey").form_fields.find_by(field_identifier: "d1_clarity_part_one")
+      expect(field.resources).to be_empty
+
+      create(:resource, title: "The Touchstone Journey")
+      expect { described_class.new.link_clarity_resources }.to change { field.reload.resources.count }.by(1)
+      expect { described_class.new.link_clarity_resources }.not_to change { field.reload.resources.count }
+    end
+  end
 end

@@ -13,6 +13,16 @@ class SurveyFormSeeder
     { name: "Post-Training Recipients Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
   ].freeze
 
+  # Each clarity question (by field_identifier) fans out over the training topics it
+  # asks about — resources matched by title. A sensible default split; admins adjust
+  # it per form in the editor's "Fan out per resource".
+  CLARITY_RESOURCES = {
+    "d1_clarity_part_one" => [ "The Touchstone Journey", "Creating A Safer/Braver Place" ],
+    "d1_clarity_part_two" => [ "The Take A Break, Self-Regulate" ],
+    "d2_clarity_part_one" => [ "The Monster In Me" ],
+    "d2_clarity_part_two" => [ "Claiming Who I Am" ]
+  }.freeze
+
   def self.call
     new.call
   end
@@ -29,6 +39,21 @@ class SurveyFormSeeder
       FormBuilderService.new(name: template[:name], sections: template[:sections], role: template[:role]).call
       @created << template[:name]
     end
+    link_clarity_resources
     @created
+  end
+
+  # Link each clarity question to its topics (resources matched by title). Idempotent
+  # — skips existing links and skips a resource that isn't present (prod already has
+  # them; the dev sample seed creates them). Safe to call on its own after the forms
+  # and resources exist.
+  def link_clarity_resources
+    CLARITY_RESOURCES.each do |identifier, titles|
+      FormField.where(field_identifier: identifier).find_each do |field|
+        Resource.where(title: titles).find_each do |resource|
+          field.form_field_resources.find_or_create_by!(resource: resource)
+        end
+      end
+    end
   end
 end
