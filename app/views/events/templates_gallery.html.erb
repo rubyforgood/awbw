@@ -3,7 +3,7 @@
 
 <div class="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
   <%= link_to "← Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-  <h1 class="mt-2 font-display text-3xl font-semibold text-brand-navy-900">Event display templates</h1>
+  <h1 class="text-brand-navy-900 mt-2 font-display text-3xl font-semibold">Event display templates</h1>
   <p class="mt-2 max-w-2xl text-gray-600">
     Every template frames the same content — header image, details, description — and respects each event's show/hide toggles.
     Pick one per event under <span class="font-semibold">Event show page → Layout template</span>.
@@ -18,14 +18,14 @@
 
 <% if @sample_event %>
   <p class="mx-auto mt-4 w-full max-w-7xl px-4 text-sm text-gray-500 sm:px-6 lg:px-8">
-    Previewing with <span class="font-semibold text-brand-navy-800"><%= @sample_event.title %></span>. Register buttons are inert here.
+    Previewing with <span class="text-brand-navy-800 font-semibold"><%= @sample_event.title %></span>. Register buttons are inert here.
   </p>
 
   <% Event::TEMPLATES.each do |key, meta| %>
-    <section class="mt-8 border-t-4 border-brand-navy-200">
+    <section class="border-brand-navy-200 mt-8 border-t-4">
       <div class="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-wrap items-baseline justify-between gap-x-4">
-          <h2 class="font-display text-xl font-semibold text-brand-navy-900"><%= meta[:label] %></h2>
+          <h2 class="text-brand-navy-900 font-display text-xl font-semibold"><%= meta[:label] %></h2>
           <span class="text-sm text-gray-500"><%= meta[:blurb] %></span>
         </div>
       </div>

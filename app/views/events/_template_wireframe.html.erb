@@ -1,0 +1,65 @@
+<%# Tiny schematic of each display template for the layout picker. Custom
+    illustrative graphics (not domain theming), so the brand hexes are inline. %>
+<% case key %>
+<% when "none" %>
+  <svg viewBox="0 0 120 80" class="w-full rounded border border-gray-200 bg-white" role="img" aria-label="Plain centered layout">
+    <rect x="30" y="10" width="60" height="18" rx="2" fill="#e2e8f0"/>
+    <rect x="38" y="34" width="44" height="4" rx="2" fill="#94a3b8"/>
+    <rect x="46" y="42" width="28" height="3" rx="1.5" fill="#cbd5e1"/>
+    <rect x="24" y="54" width="72" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="24" y="60" width="72" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="24" y="66" width="52" height="3" rx="1.5" fill="#e2e8f0"/>
+  </svg>
+<% when "centered" %>
+  <svg viewBox="0 0 120 80" class="w-full rounded border border-gray-200 bg-white" role="img" aria-label="Centered brand layout">
+    <rect x="0" y="0" width="24" height="4" fill="#4e8324"/>
+    <rect x="24" y="0" width="24" height="4" fill="#d56027"/>
+    <rect x="48" y="0" width="24" height="4" fill="#e0b528"/>
+    <rect x="72" y="0" width="24" height="4" fill="#9b2c5e"/>
+    <rect x="96" y="0" width="24" height="4" fill="#24479e"/>
+    <rect x="34" y="12" width="52" height="16" rx="2" fill="#fcfaeb"/>
+    <rect x="38" y="14" width="44" height="12" rx="1" fill="#e2e8f0"/>
+    <rect x="40" y="34" width="40" height="4" rx="2" fill="#253f7b"/>
+    <rect x="48" y="42" width="24" height="3" rx="1.5" fill="#cbd5e1"/>
+    <rect x="50" y="49" width="20" height="6" rx="3" fill="#ffcb05"/>
+    <rect x="30" y="61" width="60" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="30" y="67" width="60" height="3" rx="1.5" fill="#e2e8f0"/>
+  </svg>
+<% when "editorial" %>
+  <svg viewBox="0 0 120 80" class="w-full rounded border border-gray-200" role="img" aria-label="Cream editorial layout">
+    <rect width="120" height="80" fill="#fcfaeb"/>
+    <rect x="30" y="8" width="60" height="16" rx="2" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="34" y="10" width="52" height="12" rx="1" fill="#e2e8f0"/>
+    <rect x="42" y="28" width="36" height="4" rx="2" fill="#253f7b"/>
+    <rect x="48" y="35" width="24" height="2.5" rx="1" fill="#cbd5e1"/>
+    <rect x="24" y="42" width="72" height="32" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="30" y="48" width="60" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="30" y="54" width="60" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="30" y="60" width="44" height="3" rx="1.5" fill="#e2e8f0"/>
+  </svg>
+<% when "sidebar" %>
+  <svg viewBox="0 0 120 80" class="w-full rounded border border-gray-200 bg-white" role="img" aria-label="Details sidebar layout">
+    <rect x="12" y="8" width="96" height="16" rx="2" fill="#e2e8f0"/>
+    <rect x="12" y="30" width="40" height="4" rx="2" fill="#253f7b"/>
+    <rect x="12" y="38" width="60" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="12" y="44" width="60" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="12" y="50" width="60" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="12" y="56" width="48" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="80" y="30" width="28" height="40" rx="3" fill="#ffffff" stroke="#24479e"/>
+    <rect x="84" y="35" width="20" height="3" rx="1.5" fill="#cbd5e1"/>
+    <rect x="84" y="41" width="20" height="3" rx="1.5" fill="#cbd5e1"/>
+    <rect x="84" y="52" width="20" height="6" rx="3" fill="#ffcb05"/>
+  </svg>
+<% when "hero" %>
+  <svg viewBox="0 0 120 80" class="w-full rounded border border-gray-200 bg-white" role="img" aria-label="Navy hero layout">
+    <rect x="0" y="0" width="120" height="40" fill="#24479e"/>
+    <rect x="10" y="10" width="30" height="4" rx="2" fill="#ffcb05"/>
+    <rect x="10" y="18" width="40" height="4" rx="2" fill="#ffffff"/>
+    <rect x="10" y="26" width="24" height="3" rx="1.5" fill="#a8c1f4"/>
+    <rect x="70" y="8" width="40" height="24" rx="2" fill="#ffffff"/>
+    <rect x="73" y="11" width="34" height="18" rx="1" fill="#cbd5e1"/>
+    <rect x="20" y="50" width="80" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="20" y="56" width="80" height="3" rx="1.5" fill="#e2e8f0"/>
+    <rect x="20" y="62" width="56" height="3" rx="1.5" fill="#e2e8f0"/>
+  </svg>
+<% end %>

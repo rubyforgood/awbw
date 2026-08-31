@@ -3,7 +3,7 @@
 <% sample = local_assigns.fetch(:sample, false) %>
 <%= render "events/show/rainbow" %>
 
-<div class="w-full bg-brand-cream">
+<div class="bg-brand-cream w-full">
   <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
     <% if event.rhino_header.present? %>
       <div class="rounded-2xl bg-white p-2 shadow-sm">
@@ -14,7 +14,7 @@
     <div class="mx-auto mt-10 max-w-2xl text-center">
       <%= render "events/show/title", event: event,
             heading_class: "font-display text-4xl font-semibold leading-tight text-brand-navy-900 sm:text-5xl" %>
-      <div class="mx-auto my-5 h-px w-24 bg-brand-navy-200"></div>
+      <div class="bg-brand-navy-200 mx-auto my-5 h-px w-24"></div>
       <%= render "events/show/details", event: event, variant: "line" %>
       <div class="mt-7 flex flex-col items-center gap-2"><%= render "events/show/actions", event: event, sample: sample %></div>
     </div>

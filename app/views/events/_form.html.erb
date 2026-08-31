@@ -549,14 +549,17 @@
             How the public event page frames your header, details, and description — the same content and show/hide toggles, in a different design.
             <%= link_to "Preview all templates", templates_gallery_events_path, target: "_blank", rel: "noopener", class: "text-blue-700 underline" %>.
           </p>
-          <div class="space-y-2">
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
             <% Event::TEMPLATES.each do |key, meta| %>
-              <label class="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 hover:bg-gray-50 has-[:checked]:border-blue-400 has-[:checked]:bg-blue-50">
-                <%= f.radio_button :template, key, class: "mt-1" %>
-                <span>
-                  <span class="font-medium text-gray-800"><%= meta[:label] %></span>
-                  <span class="block text-sm text-gray-500"><%= meta[:blurb] %></span>
-                </span>
+              <label class="flex cursor-pointer flex-col gap-2 rounded-md border border-gray-200 p-3 hover:bg-gray-50 has-[:checked]:border-blue-400 has-[:checked]:bg-blue-50 has-[:checked]:ring-1 has-[:checked]:ring-blue-400">
+                <%= render "events/template_wireframe", key: key %>
+                <div class="flex items-start gap-2">
+                  <%= f.radio_button :template, key, class: "mt-0.5" %>
+                  <span class="min-w-0">
+                    <span class="block font-medium text-gray-800"><%= meta[:label] %></span>
+                    <span class="block text-xs text-gray-500"><%= meta[:blurb] %></span>
+                  </span>
+                </div>
               </label>
             <% end %>
           </div>
