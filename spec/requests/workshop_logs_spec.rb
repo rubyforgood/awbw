@@ -69,15 +69,15 @@ RSpec.describe "/workshop_logs", type: :request do
       expect(page).to have_link(user.name, href: person_path(person))
     end
 
-    it "renders the creator as plain text when they have no person record" do
+    it "shows the facilitator author credit, not the submitting account, when the creator has no person record" do
       workshop_log = create(:workshop_log, created_by: user, organization: organization,
                             workshop: workshop, windows_type: windows_type, workshop_held_on: 1.day.ago)
 
       get workshop_log_path(workshop_log)
 
       page = Capybara.string(response.body)
-      expect(page).to have_text(user.name)
-      expect(page).not_to have_link(user.name)
+      expect(page).not_to have_text(user.name)
+      expect(page).to have_text(AuthorCreditable::FACILITATOR_AUTHOR_LABEL)
     end
 
     it "shows the external title in the heading and beside the Workshop label when there is no workshop" do
@@ -112,7 +112,7 @@ RSpec.describe "/workshop_logs", type: :request do
       let(:admin) { create(:user, :admin) }
       before { sign_in admin }
 
-      it "renders the organization and creator as links" do
+      it "renders the organization as a link and the author credit as an edit-person link" do
         person = create(:person, user: user)
         create(:affiliation, person: person, organization: organization)
         workshop_log = create(:workshop_log, created_by: user, organization: organization,
@@ -122,7 +122,7 @@ RSpec.describe "/workshop_logs", type: :request do
 
         page = Capybara.string(response.body)
         expect(page).to have_link(organization.name, href: organization_path(organization))
-        expect(page).to have_link(user.name, href: person_path(person))
+        expect(page).to have_link(user.name, href: edit_person_path(person))
       end
     end
   end

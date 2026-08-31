@@ -63,7 +63,7 @@ RSpec.describe "/monthly_reports", type: :request do
 
     it "renders sections for associated data" do
       get monthly_report_url(report)
-      expect(response.body).to include("Submitted by")
+      expect(response.body).to include("Author credit")
       expect(response.body).to include("Organization")
       expect(response.body).to include("Workshop")
       expect(response.body).to include("Uploads")
