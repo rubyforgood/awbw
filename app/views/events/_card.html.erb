@@ -42,13 +42,13 @@
     <% end %>
 
     <div class="mt-auto flex items-end justify-between gap-3">
-      <!-- Where + when -->
+      <!-- When + where -->
       <div class="min-w-0 text-sm leading-snug">
-        <% if location_text.present? %>
-          <div class="mb-1 font-medium <%= DomainTheme.text_class_for(:events, intensity: 700) %>"><%= location_text %></div>
-        <% end %>
         <div class="font-medium text-gray-900"><%= datetime[:date] %></div>
         <div class="text-gray-500"><%= datetime[:time] %></div>
+        <% if location_text.present? %>
+          <div class="mt-1 font-medium <%= DomainTheme.text_class_for(:events, intensity: 700) %>"><%= location_text %></div>
+        <% end %>
       </div>
 
       <!-- Actions -->
