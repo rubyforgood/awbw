@@ -22,16 +22,8 @@
     <div class="border-primary/10 rounded-2xl border bg-gray-50 p-4 text-sm text-gray-600">
       <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
-          <span class="font-semibold text-gray-700">Submitted by:</span>
-          <% if @workshop_log.created_by %>
-            <%= user_button(@workshop_log.created_by, data: { turbo_frame: "_top" }) %>
-          <% else %>
-            <%= @workshop_log.created_by&.name || "—" %>
-          <% end %>
-        </div>
-        <div>
           <span class="font-semibold text-gray-700">Author credit:</span>
-          <%= credited_author_link(@workshop_log) %>
+          <%= credited_author_edit_button(@workshop_log) %>
         </div>
         <div>
           <span class="font-semibold text-gray-700">Organization:</span>
@@ -69,18 +61,6 @@
           <% end %>
           <br><span class="text-gray-400"><%= @workshop_log.workshop_held_on&.strftime("%B %d, %Y") || "—" %></span>
         </div>
-        <div>
-          <span class="font-semibold text-gray-700">Created by:</span>
-          <%= @workshop_log.created_by&.name %>
-          <br><span class="text-gray-400"><%= @workshop_log.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
-        </div>
-        <% if @workshop_log.updated_at != @workshop_log.created_at %>
-          <div>
-            <span class="font-semibold text-gray-700">Updated by:</span>
-            <%= @workshop_log.updated_by&.name || "—" %>
-            <br><span class="text-gray-400"><%= @workshop_log.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
-          </div>
-        <% end %>
       </div>
     </div>
 

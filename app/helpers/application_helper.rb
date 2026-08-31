@@ -18,6 +18,22 @@ module ApplicationHelper
     end
   end
 
+  # The credited author as an admin edit-person card, for the workshop log /
+  # monthly report / variation idea show pages where an admin wants to jump
+  # straight to editing the person. Falls back to the plain byline for viewers
+  # who can't edit people, and honors the credit preference: an anonymous credit
+  # has no person, so it stays plain text.
+  def credited_author_edit_button(record)
+    person = record.author_credit_person
+    return credited_author_link(record) unless person && allowed_to?(:edit?, person)
+
+    person_edit_button(person,
+                       display_name: record.author_credit,
+                       compact: true,
+                       width_class: "inline-flex w-fit",
+                       data: { turbo_frame: "_top" })
+  end
+
   # The person an author picker should show. Only the record's own author counts —
   # falling back to the creator would present a person nobody chose as the selected
   # author, and saving the form would silently promote them over a legacy credit.
