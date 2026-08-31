@@ -25,13 +25,6 @@
                  file: event.display_image %>
     <% end %>
 
-    <!-- Format tag -->
-    <% if location_text.present? %>
-      <div class="absolute top-3 left-3 z-10">
-        <span class="inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-medium shadow-sm backdrop-blur <%= DomainTheme.text_class_for(:events, intensity: 800) %>"><%= location_text %></span>
-      </div>
-    <% end %>
-
     <!-- Bookmark -->
     <div class="absolute top-3 right-3 z-10">
       <div class="rounded-full bg-white/85 p-1 shadow-sm backdrop-blur">
@@ -49,8 +42,11 @@
     <% end %>
 
     <div class="mt-auto flex items-end justify-between gap-3">
-      <!-- Date + time -->
+      <!-- Where + when -->
       <div class="min-w-0 text-sm leading-snug">
+        <% if location_text.present? %>
+          <div class="mb-1 font-medium <%= DomainTheme.text_class_for(:events, intensity: 700) %>"><%= location_text %></div>
+        <% end %>
         <div class="font-medium text-gray-900"><%= datetime[:date] %></div>
         <div class="text-gray-500"><%= datetime[:time] %></div>
       </div>
