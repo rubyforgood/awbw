@@ -40,7 +40,7 @@ class WorkshopLogsController < ApplicationController
     set_default_values
     @workshop_log = WorkshopLog.new(workshop_log_params)
     authorize! @workshop_log
-    @workshop_log.author ||= @workshop_log.created_by&.person
+    @workshop_log.author ||= current_user&.person
 
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
@@ -198,8 +198,9 @@ class WorkshopLogsController < ApplicationController
   def workshop_log_params
     params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
-      :adults_ongoing, :adults_first_time, :created_by_id, :organization_id, :workshop_held_on,
+      :adults_ongoing, :adults_first_time, :organization_id, :workshop_held_on,
       :workshop_id, :windows_type_id, :external_workshop_title,
+      :author_id, :author_credit_preference,
       quotable_item_quotes_attributes: [
         :id, :quotable_type, :quotable_id, :_destroy,
         quote_attributes: [ :id, :body, :age, :workshop_id, :_destroy ] ],
