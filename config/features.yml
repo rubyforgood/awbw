@@ -3315,6 +3315,7 @@
   area: registration
   display_status: admin_facing
   released_on: 2026-08-31
+  pr_number: 2462
   summary: >-
     The form builder has a new "Slider (0–100)" question type — a drag-to-set
     percentage slider, for questions like "what percentage of your workshops are
