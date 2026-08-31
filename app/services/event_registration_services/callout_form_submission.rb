@@ -32,11 +32,12 @@ module EventRegistrationServices
         )
         @submission.record_callout_collection!(@callout)
         save_answers
-        if @form.survey?
-          save_clarity_answers
-          sync_profile(person)
-          stamp_completion
-        end
+        # These run for any callout form and self-gate on the form's own fields:
+        # clarity fans out only per-resource fields, and the profile write-through
+        # only fires when the form asks the identified anonymity / name questions.
+        save_clarity_answers
+        sync_profile(person)
+        stamp_scholarship_form_completion
       end
       @submission
     end
@@ -92,8 +93,10 @@ module EventRegistrationServices
       field && @form_params[field.id.to_s]
     end
 
-    def stamp_completion
-      return unless @form.role == Form::READINESS_SURVEY_ROLE && @registration.scholarship?
+    # A form delivered on the scholarship callout is a scholarship recipient's final
+    # step, so submitting it stamps their readiness for the certificate.
+    def stamp_scholarship_form_completion
+      return unless @callout.builtin_key == "scholarship" && @registration.scholarship?
       return if @registration.post_survey_completed?
       @registration.mark_post_survey_completed!
     end

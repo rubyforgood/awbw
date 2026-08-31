@@ -342,7 +342,7 @@ module Events
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
       callout_form = @callout.registration_ticket_callout_forms.find_by(form_id: params[:form_id])
       form = callout_form&.form
-      if @callout.hidden? || callout_form.nil? || callout_form.dripping? || recipient_survey_locked?(form)
+      if @callout.hidden? || callout_form.nil? || callout_form.dripping? || recipient_survey_locked?
         redirect_to callout_form_landing(@callout, callout_form)
         return
       end
@@ -352,10 +352,11 @@ module Events
         registration: @event_registration, callout: @callout, form: form,
         form_params: callout_form_params, clarity_params: callout_clarity_params
       )
-      if form.survey?
-        track_profile_changes(service.profile_changes)
-        NotificationMailer.survey_submitted_fyi(service.submission).deliver_later
-      end
+      # A profile write-through (anonymity / name questions) is Ahoy-tracked, and
+      # staff get a heads-up on the submission. The CE callout runs its own flow, so
+      # it opts out of the FYI.
+      track_profile_changes(service.profile_changes)
+      NotificationMailer.callout_form_submitted_fyi(service.submission).deliver_later unless @callout.ce_config?
 
       redirect_to callout_form_landing(@callout, callout_form),
                   notice: "Thanks! Your responses have been submitted."
@@ -388,10 +389,11 @@ module Events
                     .index_by(&:form_id)
     end
 
-    # The recipients survey can't be filled until the recipient has signed their
-    # agreement and finished their tasks — guards a direct POST past the page gate.
-    def recipient_survey_locked?(form)
-      form&.role == Form::READINESS_SURVEY_ROLE && !@event_registration.recipient_survey_available?
+    # A form on the scholarship callout can't be filled until the recipient has
+    # signed their agreement and finished their tasks — guards a direct POST past
+    # the page gate.
+    def recipient_survey_locked?
+      @callout.builtin_key == "scholarship" && !@event_registration.recipient_survey_available?
     end
 
     # Where to send the registrant after landing on / submitting a callout form. The

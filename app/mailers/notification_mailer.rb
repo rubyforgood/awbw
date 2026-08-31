@@ -17,7 +17,7 @@ class NotificationMailer < ApplicationMailer
   end
 
   # Takes the FormSubmission directly (not a Notification record, unlike the others).
-  def survey_submitted_fyi(form_submission)
+  def callout_form_submitted_fyi(form_submission)
     @form_submission = form_submission
     @person = form_submission.person
     @event = form_submission.event

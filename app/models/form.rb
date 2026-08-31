@@ -15,14 +15,6 @@ class Form < ApplicationRecord
   # submissions index scenario filter.
   AGREEMENT_ROLES = %w[registration new_job reinstatement].freeze
 
-  # Survey roles. A submission to any of these runs the survey side effects
-  # (per-resource clarity fan-out, profile write-through, staff FYI email). The
-  # day surveys are the everyone-facing evaluations (the Post-event survey
-  # callout); the recipient survey is the scholarship-only one that gates
-  # readiness (delivered on the scholarship callout).
-  SURVEY_ROLES = %w[day_1_survey day_2_survey recipient_survey].freeze
-  READINESS_SURVEY_ROLE = "recipient_survey".freeze
-
   # The questions that identify a public respondent (used to build their Person).
   IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
 
@@ -79,11 +71,6 @@ class Form < ApplicationRecord
   # accepts anonymous responses, however its identity questions are flagged.
   def requires_identity?
     role.in?(AGREEMENT_ROLES)
-  end
-
-  # A post-event survey form — its submission runs the survey side effects.
-  def survey?
-    role.in?(SURVEY_ROLES)
   end
 
   # Derived, not stored: a public form invites anonymous responses when it asks

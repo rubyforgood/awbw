@@ -248,14 +248,15 @@ class Event < ApplicationRecord
       registration_ticket_callouts.detect { |callout| callout.builtin_key == "scholarship" }
   end
 
-  # The recipient-survey form row on the (published) scholarship callout — the one
-  # whose form carries the recipient-survey role. nil when unseeded or hidden.
+  # The recipient's form row on the (published) scholarship callout — whatever form
+  # an admin links there gates readiness, no special role needed. nil when the
+  # callout carries no form or is hidden.
   def recipient_survey_form_link
     return @recipient_survey_form_link if defined?(@recipient_survey_form_link)
     callout = scholarship_callout
     @recipient_survey_form_link =
       if callout && !callout.hidden?
-        callout.registration_ticket_callout_forms.detect { |link| link.form&.role == Form::READINESS_SURVEY_ROLE }
+        callout.registration_ticket_callout_forms.min_by { |link| [ link.position || 0, link.id ] }
       end
   end
 

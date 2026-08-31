@@ -102,10 +102,17 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       )
     end
 
-    it "stamps completion for a scholarship recipient's post-event survey" do
-      submit(answers, clarity:)
+    it "stamps completion when a scholarship recipient submits a form on the scholarship callout" do
+      scholarship_callout = create(:registration_ticket_callout, event:, builtin_key: "scholarship", form:)
+      described_class.call(registration:, callout: scholarship_callout, form:, form_params: answers, clarity_params: clarity)
 
       expect(registration.reload.post_survey_completed?).to be(true)
+    end
+
+    it "does not stamp completion for a form on a non-scholarship callout" do
+      submit(answers, clarity:)
+
+      expect(registration.reload.post_survey_completed?).to be(false)
     end
 
     it "is idempotent on re-submit — updates in place without duplicating answers" do

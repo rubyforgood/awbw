@@ -19,7 +19,7 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.event_registration_confirmation_fyi(notification)
   end
 
-  def survey_submitted_fyi
+  def callout_form_submitted_fyi
     submission = FormSubmission.order(:id).last ||
       FormSubmission.create!(
         person: Person.first || raise("Need a Person"),
@@ -28,7 +28,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         role: "post_event_survey"
       )
 
-    NotificationMailer.survey_submitted_fyi(submission)
+    NotificationMailer.callout_form_submitted_fyi(submission)
   end
 
   def event_registration_cancelled_fyi
