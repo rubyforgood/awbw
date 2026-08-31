@@ -2857,6 +2857,7 @@
   display_status: public_facing
   released_on: 2026-08-30
   action_path: "/events"
+  pr_number: 2443
   summary: >-
     Event cards on the home page and the Events page now lead with a large banner
     image, with the location, date, and time laid out below and the Register button
