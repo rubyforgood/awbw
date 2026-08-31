@@ -13,7 +13,7 @@
     answers_on_file: "bg-white text-amber-600 border-amber-300"
   }
 %>
-<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> py-3 border-b border-gray-100 hover:bg-gray-50 scroll-mt-24"
+<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> scroll-mt-24 border-b border-gray-100 py-3 hover:bg-gray-50"
      <% if field.persisted? %>id="form_field_<%= field.id %>"<% end %>
      data-sortable-id="<%= field.id %>"
      <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
@@ -115,7 +115,7 @@
               </span>
             <% else %>
               <button type="button"
-                      class="<%= "hidden" unless field.selectable? %> flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 cursor-pointer"
+                      class="<%= "hidden" unless field.selectable? %> flex cursor-pointer items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-800"
                       data-answer-options-target="section"
                       data-action="answer-options#toggle">
                 <i class="fa-solid fa-chevron-right text-xs transition-transform" data-answer-options-target="icon"></i>
@@ -154,7 +154,7 @@
               line. The name wires this field to backend logic (Stripe, sectors, email
               checks, etc.); most fields need none, and the linked hint explains each one. %>
           <div class="flex shrink-0 items-center gap-2">
-            <div class="flex flex-col shrink-0">
+            <div class="flex shrink-0 flex-col">
               <%= f.text_field :field_identifier, placeholder: "Smart field",
                     class: "w-32 min-w-0 rounded border-gray-300 shadow-sm px-2 py-1 font-mono text-xs",
                     title: "Internal name that wires this field to backend logic — leave blank for an ordinary field" %>
@@ -169,7 +169,7 @@
 
         <% unless option_source %>
           <% options_locked = field.fixed_options? && params[:admin] != "true" %>
-          <div class="hidden space-y-2 pl-1 border-t border-gray-100 pt-3" data-answer-options-target="list">
+          <div class="hidden space-y-2 border-t border-gray-100 pt-3 pl-1" data-answer-options-target="list">
             <% if options_locked %>
               <%# Payment-method options drive Stripe charge logic, so they're shown
                   read-only here. Append ?admin=true to the URL to edit them. %>
@@ -194,15 +194,27 @@
 
         <%# Linking resources fans this one question out into one input per resource
             (the title appended to the prompt) — e.g. a clarity question asked once
-            per training topic. %>
+            per training topic. Each copy renders the field's own answer options, so
+            the panel rides the same answer-options target as the option list —
+            shown for choice fields, hidden live when the type changes. %>
         <% unless field.group_header? %>
-          <details class="group border-t border-gray-100 pt-3" <%= "open" if field.form_field_resources.any? %>>
-            <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
+          <details class="group <%= "hidden" unless field.selectable? %> border-t border-gray-100 pt-3"
+                   data-answer-options-target="section"
+                   <%= "open" if field.form_field_resources.any? %>>
+            <summary class="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-gray-600 select-none [&::-webkit-details-marker]:hidden">
               <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
               Fan out per resource
+              <span class="group/fanout relative inline-flex cursor-help items-center">
+                <i class="fa-solid fa-circle-info text-2xs text-gray-400"></i>
+                <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-72 rounded-lg bg-blue-100 p-3 text-xs font-normal whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/fanout:block">
+                  <p class="font-semibold">Fan out per resource</p>
+                  <p class="mt-1">Link resources here and the form asks this one question once per resource, with the resource title appended to the prompt &mdash; so &ldquo;Was it clear for&rdquo; becomes a separate question for each training topic.</p>
+                  <p class="mt-1">Each resource gets its own answer, recorded against the full sentence rather than the field, so renaming or unlinking a resource later leaves past answers readable.</p>
+                  <p class="mt-1">Works on choice questions only &mdash; radio, dropdown, or checkboxes &mdash; because every copy reuses this field&rsquo;s answer options.</p>
+                </div>
+              </span>
             </summary>
             <div class="mt-2 space-y-2 pl-1">
-              <p class="text-xs text-gray-500">Link resources to repeat this question once per resource, with the resource title appended to the prompt.</p>
               <%= f.fields_for :form_field_resources do |rf| %>
                 <%= render "forms/form_field_resource_fields", f: rf %>
               <% end %>

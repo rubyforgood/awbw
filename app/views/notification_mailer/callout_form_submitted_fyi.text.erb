@@ -8,7 +8,7 @@ From: <%= @person.full_name %>
 ------------------------------------------------------------
 
 <% @answers.each do |answer| %>
-<%= strip_tags(answer.name) %>
+<%= strip_tags(answer.question_name_when_answered.presence || answer.form_field&.name) %>
 <%= answer.submitted_answer.presence || "—" %>
 
 <% end %>

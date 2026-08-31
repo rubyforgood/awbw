@@ -19,11 +19,22 @@ RSpec.describe FormFieldResource, type: :model do
   end
 
   describe "FormField#per_resource?" do
-    it "is true only once resources are linked" do
-      field = create(:form_field)
+    it "is true only once resources are linked to a choice field" do
+      field = create(:form_field, answer_type: :single_select_radio)
       expect(field.per_resource?).to be(false)
       create(:form_field_resource, form_field: field)
       expect(field.reload.per_resource?).to be(true)
+    end
+
+    # Each copy renders the field's answer options, so a field switched away from a
+    # choice type falls back to an ordinary question rather than rendering nothing.
+    it "is false for a linked field that is no longer a choice field" do
+      field = create(:form_field, answer_type: :single_select_radio)
+      create(:form_field_resource, form_field: field)
+
+      field.update!(answer_type: :free_form_input_paragraph)
+
+      expect(field.reload.per_resource?).to be(false)
     end
 
     it "exposes the linked resources through the join" do

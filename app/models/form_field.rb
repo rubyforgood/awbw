@@ -196,8 +196,11 @@ class FormField < ApplicationRecord
     answer_type.in?(SELECTABLE_ANSWER_TYPES)
   end
 
+  # Each copy of a fanned-out question renders this field's own answer options, so
+  # only a choice field can be one. A field switched away from a choice type keeps
+  # its links but falls back to rendering as an ordinary question.
   def per_resource?
-    form_field_resources.any?
+    selectable? && form_field_resources.any?
   end
 
   # True for fields whose answer options are tied to backend logic (currently the

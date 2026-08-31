@@ -7,7 +7,7 @@
           options_from_collection_for_select(@callout_forms, :id, :name, f.object.form_id),
           { include_blank: "Select a form…" },
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
-    <%= f.date_field :display_from,
+    <%= f.datetime_local_field :display_from,
           class: "rounded border-gray-300 bg-white shadow-sm px-2 py-1 text-sm" %>
   </div>
   <%= link_to_remove_association "✖", f,

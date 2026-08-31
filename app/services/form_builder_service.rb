@@ -761,7 +761,7 @@ class FormBuilderService
     position = add_field(form, position, "Taking time to review and reflect after each workshop on how an element of the arc of healing connected to a part of the workshop structure will support me in facilitating art workshops.", :single_select_radio,
                          group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
     position = add_field(form, position, "To best prepare art workshop participants to create, I understand the importance of providing a warm-up before the creation portion of the art workshop.", :single_select_radio,
-                         group: "day_2_survey", options: CLARITY_OPTIONS)
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
 
     position = add_field(form, position, "Please tell us what aspects of day 2 of the training could be improved.", :free_form_input_paragraph,
                          group: "day_2_survey", required: false)

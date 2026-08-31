@@ -301,6 +301,23 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("First Name")
     end
 
+    it "reveals the fan-out panel and its help text on a choice field, hiding it on a free-form one" do
+      form = create(:form, :standalone)
+      choice = create(:form_field, form:, answer_type: :single_select_radio, name: "Was it clear for")
+      free_form = create(:form_field, form:, answer_type: :free_form_input_paragraph, name: "Please elaborate.")
+
+      get edit_form_path(form)
+      doc = Nokogiri::HTML(response.body)
+
+      fanout_panel = ->(field) {
+        doc.at_css("#form_field_#{field.id}").css("details").find { |node| node.text.include?("Fan out per resource") }
+      }
+
+      expect(fanout_panel[choice]["class"]).not_to include("hidden")
+      expect(fanout_panel[choice].text).to include("Works on choice questions only")
+      expect(fanout_panel[free_form]["class"]).to include("hidden")
+    end
+
     it "shows the Duplicate form button posting to the copy action" do
       form = create(:form, :standalone, name: "Test")
       get edit_form_path(form)
@@ -770,7 +787,7 @@ RSpec.describe "Forms", type: :request do
 
     it "links a resource to a field, making it a per-resource question" do
       form = create(:form, :standalone)
-      field = create(:form_field, form:, name: "Was it clear for")
+      field = create(:form_field, form:, answer_type: :single_select_radio, name: "Was it clear for")
       resource = create(:resource, title: "Touchstone Journey")
 
       expect {

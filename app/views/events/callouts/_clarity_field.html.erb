@@ -1,6 +1,10 @@
 <%# A per-resource "clarity" question fans out to one input per linked resource,
     the resource title appended to the prompt. Answers submit under
     callout_form[clarity][field_id][resource_id] and store with a nil form_field. %>
+<%# Sector/category-backed fields store no options of their own, so resolve them
+    the same way the public form field does. %>
+<% options = dynamic_form_field_options(field)&.map(&:first) ||
+     field.form_field_answer_options.includes(:answer_option).map { |ffo| ffo.answer_option.name } %>
 <% field.form_field_resources.ordered.includes(:resource).each do |link| %>
   <% resource = link.resource %>
   <% next unless resource %>
@@ -8,8 +12,7 @@
   <fieldset class="mb-7">
     <legend class="rich-label mb-1.5 text-sm font-semibold text-gray-700"><%= form_label_html(field.name) %> <strong><%= resource.title %></strong></legend>
     <div class="flex flex-wrap gap-3">
-      <% field.form_field_answer_options.includes(:answer_option).each do |ffo| %>
-        <% option = ffo.answer_option.name %>
+      <% options.each do |option| %>
         <label class="inline-flex items-center gap-1.5 text-sm text-gray-700">
           <%= radio_button_tag "callout_form[clarity][#{field.id}][#{resource.id}]", option, prefill == option %>
           <%= option %>

@@ -130,7 +130,7 @@ class BuiltinCallouts
   # never clobbers admin edits. Returns the created rows.
   def seed
     existing_keys = @event.registration_ticket_callouts.builtin.pluck(:builtin_key).to_set
-    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) || !applicable?(definition) }
+    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) }
                .filter_map { |definition| create(definition) }
   end
 
@@ -138,7 +138,7 @@ class BuiltinCallouts
   # association (built or persisted) so it's safe to call on every form render.
   def build
     existing_keys = @event.registration_ticket_callouts.reject(&:marked_for_destruction?).filter_map(&:builtin_key).to_set
-    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) || !applicable?(definition) }
+    definitions.reject { |definition| existing_keys.include?(definition[:builtin_key]) }
                .map { |definition| build_row(definition) }
   end
 
@@ -188,11 +188,6 @@ class BuiltinCallouts
     value.respond_to?(:call) ? value.call(@event) : value
   end
 
-  # `seed_if` gates cards that only apply to some events (e.g. Day 2 survey on multi-day trainings).
-  def applicable?(definition)
-    definition[:seed_if].nil? || definition[:seed_if].call(@event)
-  end
-
   # Opens 30 min before day N's end time — day N's date (start + N-1 days) at the
   # event end_date's time-of-day (the daily end time). Nil when dates are unset.
   def survey_drip(event, day)
@@ -202,8 +197,8 @@ class BuiltinCallouts
   end
 
   # Ordered built-in callout definitions. `hidden` / `display_from` are procs so
-  # each event derives its own defaults; `resources` resolves the linked records;
-  # `seed_if` gates whether the card applies. Content cards (Handouts, FAQ) render
+  # each event derives its own defaults; `resources` resolves the linked records
+  # and `forms` the delivered ones. Content cards (Handouts, FAQ) render
   # their own copy; "behavioral" cards (Certificate, Videoconference) render live
   # per-registration status through BuiltinCalloutCards#card_for — the row only
   # governs visibility, drip date, and order.
