@@ -392,6 +392,47 @@ class EventDecorator < ApplicationDecorator
     h.safe_join(parts)
   end
 
+  # Date and time split across two lines for compact event cards — the day/date
+  # on the first line and the start–end time (with zone) on the second, so a
+  # narrow card never orphans the zone onto its own wrapped line. Returns a hash
+  # of { date:, time: } strings, mirroring the formatting of #times.
+  def card_datetime
+    s = start_date.in_time_zone(Time.zone)
+    e = (end_date || start_date).in_time_zone(Time.zone)
+
+    format_time = lambda do |d|
+      t = d.strftime("%-l").dup
+      t << ":#{d.strftime('%M')}" unless d.strftime("%M") == "00"
+      t << " #{d.strftime('%P')}"
+      t
+    end
+
+    date_line =
+      if s.to_date != e.to_date
+        if s.month == e.month && s.year == e.year
+          "#{s.strftime('%a')}-#{e.strftime('%a')}, #{s.strftime('%b %-d')}-#{e.strftime('%-d')}"
+        elsif s.year == e.year
+          "#{s.strftime('%a, %b %-d')} - #{e.strftime('%a, %b %-d')}"
+        else
+          "#{s.strftime('%a, %b %-d, %Y')} - #{e.strftime('%a, %b %-d, %Y')}"
+        end
+      else
+        s.strftime("%a, %b %-d")
+      end
+
+    time_line =
+      if s.hour == e.hour && s.min == e.min
+        format_time.call(s)
+      else
+        start_time = s.strftime("%-l").dup
+        start_time << ":#{s.strftime('%M')}" unless s.strftime("%M") == "00"
+        start_time << " #{s.strftime('%P')}" unless s.strftime("%P") == e.strftime("%P")
+        "#{start_time} - #{format_time.call(e)}"
+      end
+
+    { date: date_line, time: "#{time_line} #{s.strftime('%Z')}" }
+  end
+
   def breadcrumbs
     "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
   end

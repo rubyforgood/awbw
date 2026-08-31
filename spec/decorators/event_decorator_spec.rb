@@ -529,4 +529,24 @@ RSpec.describe EventDecorator do
       expect(event.times(display_day: true, display_date: true)).to eq("Thu-Sat, Apr 30 - May 2 @ 9 am - 4:30 pm #{tz}")
     end
   end
+
+  describe "#card_datetime" do
+    it "splits a same-day event into a date line and a time line with the zone" do
+      event = build(:event, start_date: Time.zone.local(2026, 9, 9, 18, 32), end_date: Time.zone.local(2026, 9, 9, 22, 32)).decorate
+      tz = Time.zone.local(2026, 9, 9, 18, 32).strftime("%Z")
+      expect(event.card_datetime).to eq(date: "Wed, Sep 9", time: "6:32 - 10:32 pm #{tz}")
+    end
+
+    it "hides the minutes on a whole-hour time" do
+      event = build(:event, start_date: Time.zone.local(2026, 9, 9, 11), end_date: Time.zone.local(2026, 9, 9, 12)).decorate
+      tz = Time.zone.local(2026, 9, 9, 11).strftime("%Z")
+      expect(event.card_datetime).to eq(date: "Wed, Sep 9", time: "11 am - 12 pm #{tz}")
+    end
+
+    it "puts the day/date range on one line and the daily time range on the other for a multi-day event" do
+      event = build(:event, start_date: Time.zone.local(2026, 11, 5, 9), end_date: Time.zone.local(2026, 11, 6, 16, 30)).decorate
+      tz = Time.zone.local(2026, 11, 5, 9).strftime("%Z")
+      expect(event.card_datetime).to eq(date: "Thu-Fri, Nov 5-6", time: "9 am - 4:30 pm #{tz}")
+    end
+  end
 end
