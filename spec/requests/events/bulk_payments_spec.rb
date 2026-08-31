@@ -96,6 +96,16 @@ RSpec.describe "Events::BulkPayments", type: :request do
       expect(response.body).to include("Dana Doe")
     end
 
+    # Regression: the cards' links (submission, ticket, allocations, registration)
+    # live inside the results frame. Without target="_top" Turbo would load their
+    # frame-less destinations into the frame, 500, and show "Oopsie!". The frame
+    # must break those navigations out to the whole page.
+    it "renders the results frame with target=_top so card links leave the frame" do
+      get bulk_payments_event_path(event)
+
+      expect(response.body).to include("<turbo-frame id=\"bulk_payments_results\" target=\"_top\"")
+    end
+
     it "shows a grey \"Paid\" instead of an orange balance when the registration is fully covered" do
       attendee = create(:person, first_name: "Paid", last_name: "Infull", email: "paid.infull@example.com")
       registration = create(:event_registration, event: event, registrant: attendee, status: "registered")

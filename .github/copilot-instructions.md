@@ -309,6 +309,16 @@ follow this). Match the existing pattern:
   request spec that sends the `Turbo-Frame` header and includes the nil-association
   record**, asserting `:ok` and that the body contains the frame id — a plain
   full-page `get` in a spec won't reproduce a frame-only failure the same way.
+- **A link inside the results frame that navigates *away* must break out with
+  `data: { turbo_frame: "_top" }`** (or the whole frame needs `target: "_top"`).
+  Otherwise Turbo loads the destination *into* the results frame; the destination
+  has no matching frame, so it's the same `turbo:frame-missing` "Oopsie!". Row
+  links to detail/edit pages (grants, people, organizations, workshops, resources,
+  video_recordings all do this) carry `_top`; only in-frame drivers that *should*
+  stay — pagination, the filter form (which drives the frame from outside), and
+  in-card forms answering with turbo streams — omit it. When a results frame's
+  cards contain several such links, prefer `turbo_frame_tag :x_results,
+  target: "_top"` so no link can be forgotten.
 
 ## Features & tips page (`/features`)
 
