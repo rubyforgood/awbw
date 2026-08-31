@@ -43,6 +43,14 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     }.not_to change(FormSubmission, :count)
   end
 
+  it "reports edited? — false on a first submission, true on a re-submit" do
+    first = described_class.call(registration:, callout:, form:, form_params: { field.id.to_s => "Great" })
+    expect(first.edited?).to be(false)
+
+    again = described_class.call(registration:, callout:, form:, form_params: { field.id.to_s => "Even better" })
+    expect(again.edited?).to be(true)
+  end
+
   describe "a survey-role form's side effects" do
     let(:form) { create(:form, role: "recipient_survey") }
     let!(:clarity_field) do

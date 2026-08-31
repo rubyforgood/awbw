@@ -356,7 +356,7 @@ module Events
       # staff get a heads-up on the submission. The CE callout runs its own flow, so
       # it opts out of the FYI.
       track_profile_changes(service.profile_changes)
-      NotificationMailer.callout_form_submitted_fyi(service.submission).deliver_later unless @callout.ce_config?
+      NotificationMailer.callout_form_submitted_fyi(service.submission, updated: service.edited?).deliver_later unless @callout.ce_config?
 
       redirect_to callout_form_landing(@callout, callout_form),
                   notice: "Thanks! Your responses have been submitted."

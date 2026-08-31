@@ -2955,7 +2955,7 @@
     address, so staff see feedback without opening the registrant's record.
   pro_tips:
     - "The email lists the submitted answers and links the submitter and event."
-    - "It sends on each submission, including edits and re-submits."
+    - "It sends on each submission; the subject says \"New\" for a first submission and \"Updated\" when the registrant edits their answers."
 
 - name: "Post-event survey sets your content-sharing preferences"
   area: registration
