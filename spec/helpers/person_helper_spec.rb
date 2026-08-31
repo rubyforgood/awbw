@@ -88,6 +88,11 @@ RSpec.describe PersonHelper, type: :helper do
       expect(helper.person_edit_button(person, layout: :prefix)).to include("items-baseline gap-1.5")
       expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-baseline gap-1.5")
     end
+
+    it "defaults the edit link to _top so it can't Oopsie a lazy results frame" do
+      link = Nokogiri::HTML(helper.person_edit_button(person)).at_css("a")
+      expect(link["data-turbo-frame"]).to eq("_top")
+    end
   end
 
   describe "#user_button" do
@@ -107,6 +112,12 @@ RSpec.describe PersonHelper, type: :helper do
 
       expect(html).not_to include("href=")
       expect(html).to include("Cara Lang")
+    end
+
+    it "defaults the link to _top so it can't Oopsie a lazy results frame" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(true)
+      link = Nokogiri::HTML(helper.user_button(user)).at_css("a")
+      expect(link["data-turbo-frame"]).to eq("_top")
     end
   end
 end

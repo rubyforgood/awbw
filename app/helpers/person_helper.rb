@@ -89,7 +89,7 @@ module PersonHelper
     hover_title = [ "Edit", full_name, subtitle ].compact_blank.join(" — ")
 
     link_to edit_person_path(person, **path_params),
-            data: { turbo_prefetch: false }.merge(data),
+            data: { turbo_prefetch: false, turbo_frame: "_top" }.merge(data),
             title: hover_title,
             class: "group relative flex items-center gap-2
                     #{width_class} #{padding}
@@ -126,7 +126,7 @@ module PersonHelper
     name_size = compact ? "text-xs" : "text-sm"
 
     link_to user_path(user),
-            data: { turbo_prefetch: false }.merge(data),
+            data: { turbo_prefetch: false, turbo_frame: "_top" }.merge(data),
             title: name,
             class: "group inline-flex w-fit items-center gap-1.5 #{padding} rounded-lg border " \
                    "#{palette[:border]} #{palette[:bg]} #{palette[:hover_bg]} font-medium shadow-sm leading-none transition-colors duration-200" do
