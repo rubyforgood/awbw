@@ -60,6 +60,7 @@
 
                 <%= link_to "View",
                             community_news_path(news),
+                            data: { turbo_frame: "_top" },
                             target: news.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                             class: button_classes(:secondary_outline) %>
               </div>
@@ -74,6 +75,7 @@
               <div class="admin-only bg-blue-100 p-3">
                 <%= link_to "Create a community news",
                             new_community_news_path,
+                            data: { turbo_frame: "_top" },
                             class: button_classes(:primary) %>
               </div>
             <% end %>
