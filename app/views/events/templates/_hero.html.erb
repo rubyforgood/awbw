@@ -4,7 +4,7 @@
 <%= render "events/show/rainbow" %>
 
 <section class="from-brand-navy-950 via-brand-navy-900 to-brand-navy-800 w-full bg-gradient-to-br text-white">
-  <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8">
+  <div class="mx-auto grid max-w-6xl items-stretch gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8">
     <div>
       <%= render "events/show/title", event: event,
             pretitle_class: "mb-3 text-sm font-semibold uppercase tracking-widest text-brand-yellow-400",
@@ -14,8 +14,8 @@
     </div>
 
     <% if event.rhino_header.present? %>
-      <div class="rounded-2xl bg-white/95 p-2 shadow-xl">
-        <%= render "events/show/header_media", event: event %>
+      <div class="min-h-64 overflow-hidden rounded-2xl shadow-xl">
+        <%= render "events/show/header_media", event: event, fill: true %>
       </div>
     <% end %>
   </div>

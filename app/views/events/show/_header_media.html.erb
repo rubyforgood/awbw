@@ -1,9 +1,15 @@
-<%# Admin-uploaded header content (usually a banner image). Rendered as-authored,
-    but images are capped to a banner height and centered so a large or square
-    image can't swallow the whole page — applies to the live page and the gallery
-    preview alike. %>
+<%# Admin-uploaded header content (usually a banner image).
+    Default: rendered as-authored, images capped to a banner height and centered
+    so a large or square image can't swallow the page.
+    fill: true (navy hero) — the image covers its frame edge-to-edge, no mat. %>
 <% if event.rhino_header.present? %>
-  <div class="rhino-centered prose max-w-none prose-img:mx-auto prose-img:max-h-80 prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
-    <%= event.rhino_header %>
-  </div>
+  <% if local_assigns.fetch(:fill, false) %>
+    <div class="h-full [&_img]:h-full [&_img]:w-full [&_img]:object-cover">
+      <%= event.rhino_header %>
+    </div>
+  <% else %>
+    <div class="rhino-centered prose max-w-none prose-img:mx-auto prose-img:max-h-80 prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
+      <%= event.rhino_header %>
+    </div>
+  <% end %>
 <% end %>

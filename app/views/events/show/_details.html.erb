@@ -52,11 +52,18 @@
 
 <% else %>
   <% chip_class = variant == "chips_navy" ? "bg-white/10 text-white" : "border border-brand-navy-200 bg-white text-brand-navy-800" %>
-  <div class="flex flex-wrap <%= "justify-center" unless variant == "chips_navy" && local_assigns[:align] == "start" %> gap-2">
-    <% rows.each do |row| %>
-      <span class="rounded-full px-4 py-1.5 text-sm font-medium <%= chip_class %>"><%= row[:value] %></span>
-    <% end %>
-  </div>
+  <% justify = "justify-center" unless variant == "chips_navy" && local_assigns[:align] == "start" %>
+  <%# Two rows: "when" (date/time) then "where + cost", so cost sits with the
+      format/location chip on its own line instead of orphaning it. %>
+  <% when_rows = rows.select { |row| %w[Date Time].include?(row[:label]) } %>
+  <% where_rows = rows - when_rows %>
+  <% [ when_rows, where_rows ].reject(&:empty?).each_with_index do |group, i| %>
+    <div class="flex flex-wrap <%= justify %> gap-2 <%= "mt-2" if i.positive? %>">
+      <% group.each do |row| %>
+        <span class="rounded-full px-4 py-1.5 text-sm font-medium <%= chip_class %>"><%= row[:value] %></span>
+      <% end %>
+    </div>
+  <% end %>
   <% if close_text %>
     <p class="mt-3 text-sm <%= variant == "chips_navy" ? "text-brand-navy-100" : "text-gray-500" %>"><%= close_text %></p>
   <% end %>
