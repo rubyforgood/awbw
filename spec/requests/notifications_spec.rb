@@ -345,23 +345,23 @@ RSpec.describe "Notifications", type: :request do
         expect(to_row(response.body)).to have_text("Dana Sender")
       end
 
-      it "renders a profile-button link to a known contact on the To side" do
+      it "renders an edit-button link to a known contact on the To side" do
         contact = create(:person, email: "kim@example.com")
         sent = create(:notification, kind: "event_registration_reminder", recipient_email: "kim@example.com")
 
         get notification_path(sent)
 
-        expect(to_row(response.body)).to have_link(href: person_path(contact))
+        expect(to_row(response.body)).to have_link(href: edit_person_path(contact))
       end
 
-      it "renders the noticeable as a record button linking to the record" do
+      it "renders a noticeable person as an edit button linking to their edit page" do
         person = create(:person)
         about = create(:notification, noticeable: person)
 
         get notification_path(about)
 
         noticeable_row = Capybara.string(response.body).find(:xpath, "//dt[normalize-space()='Noticeable']/following-sibling::dd[1]")
-        expect(noticeable_row).to have_link(href: person_path(person))
+        expect(noticeable_row).to have_link(href: edit_person_path(person))
       end
     end
 

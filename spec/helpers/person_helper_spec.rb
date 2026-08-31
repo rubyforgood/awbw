@@ -38,4 +38,32 @@ RSpec.describe PersonHelper, type: :helper do
       end
     end
   end
+
+  describe "#person_edit_button" do
+    let(:person) { create(:person, first_name: "Aisha", last_name: "Sharma") }
+
+    it "links to the person's edit page, not the profile" do
+      html = helper.person_edit_button(person)
+
+      expect(html).to include(%(href="#{edit_person_path(person)}"))
+      expect(html).not_to include(%(href="#{person_path(person)}"))
+    end
+
+    it "reads 'Edit' before the person's name and shows no avatar" do
+      html = helper.person_edit_button(person)
+
+      expect(html).to include("Edit")
+      expect(html).to include("Aisha Sharma")
+      expect(html).not_to include("rounded-full")
+    end
+
+    it "renders the email subtitle when given" do
+      expect(helper.person_edit_button(person, subtitle: "aisha@example.com")).to include("aisha@example.com")
+    end
+
+    it "reads inline in :prefix layout and stacks in :eyebrow layout" do
+      expect(helper.person_edit_button(person, layout: :prefix)).to include("items-center gap-1.5")
+      expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-center gap-1.5")
+    end
+  end
 end

@@ -160,7 +160,7 @@
     <div data-controller="edit-toggle">
       <span class="<%= label_class %>">Organization</span>
       <div class="flex items-center gap-2">
-        <div class="min-w-0 max-w-md" data-edit-toggle-target="view">
+        <div class="max-w-md min-w-0" data-edit-toggle-target="view">
           <%= organization_profile_button(@topic_subscription.organization) %>
         </div>
         <div class="hidden flex-1" data-edit-toggle-target="edit"><%= organization_select %></div>
