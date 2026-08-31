@@ -1,0 +1,25 @@
+<%# Centered — today's centred layout, brand-polished: rainbow accent, Fraunces
+    title, chip details, gold register button, readable-measure body. White page. %>
+<% sample = local_assigns.fetch(:sample, false) %>
+<%= render "events/show/rainbow" %>
+
+<div class="mx-auto max-w-4xl px-4 pt-8 pb-16 sm:px-6 lg:px-8">
+  <% if event.rhino_header.present? %>
+    <div class="rounded-2xl bg-brand-cream p-2">
+      <%= render "events/show/header_media", event: event %>
+    </div>
+  <% end %>
+
+  <div class="mx-auto mt-10 max-w-2xl text-center">
+    <%= render "events/show/title", event: event,
+          heading_class: "font-display text-4xl font-semibold leading-tight text-brand-navy-900 sm:text-5xl" %>
+    <div class="mt-6"><%= render "events/show/details", event: event, variant: "chips" %></div>
+    <div class="mt-7 flex flex-col items-center gap-2"><%= render "events/show/actions", event: event, sample: sample %></div>
+  </div>
+
+  <hr class="mx-auto my-10 max-w-2xl border-brand-navy-100">
+
+  <div class="mx-auto max-w-2xl">
+    <%= render "events/show/description", event: event %>
+  </div>
+</div>

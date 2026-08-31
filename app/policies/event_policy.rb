@@ -218,6 +218,7 @@ class EventPolicy < ApplicationPolicy
   end
 
   alias_rule :preview?, to: :edit?
+  alias_rule :templates_gallery?, to: :new?
 
   private
 

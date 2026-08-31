@@ -27,6 +27,22 @@
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
+- name: "Pick a layout template for each event page"
+  area: events
+  display_status: user_facing
+  released_on: 2026-08-31
+  summary: >-
+    Each event can now choose a display template for its public page — from the
+    plain layout you have today to bold branded ones with a navy hero, a cream
+    editorial style, or a sticky details sidebar. Your header image, details, and
+    description stay the same; only the framing changes.
+  action_path: /events
+  pr_number: 2442
+  pro_tips:
+    - "Set it under Event show page → Layout template on the event form."
+    - "Use Preview all templates to compare them side by side before choosing."
+    - "Every template still honors your show/hide toggles for the title, date, cost, and more."
+
 - name: "Schedule site banners with start and end dates"
   area: communications
   display_status: admin_facing

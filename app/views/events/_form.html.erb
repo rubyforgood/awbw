@@ -543,6 +543,25 @@
       </button>
 
       <div id="page_content" class="hidden rounded-b-md border border-gray-300 p-4">
+        <div class="form-group mb-6">
+          <label class="control-label mb-1 block font-semibold">Layout template</label>
+          <p class="mb-3 text-sm text-gray-500">
+            How the public event page frames your header, details, and description — the same content and show/hide toggles, in a different design.
+            <%= link_to "Preview all templates", templates_gallery_events_path, target: "_blank", rel: "noopener", class: "text-blue-700 underline" %>.
+          </p>
+          <div class="space-y-2">
+            <% Event::TEMPLATES.each do |key, meta| %>
+              <label class="flex cursor-pointer items-start gap-3 rounded-md border border-gray-200 p-3 hover:bg-gray-50 has-[:checked]:border-blue-400 has-[:checked]:bg-blue-50">
+                <%= f.radio_button :template, key, class: "mt-1" %>
+                <span>
+                  <span class="font-medium text-gray-800"><%= meta[:label] %></span>
+                  <span class="block text-sm text-gray-500"><%= meta[:blurb] %></span>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+
         <%= f.input :autoshow_title, as: :boolean, label: "Show title on event show page" %>
 
         <div class="form-group <%= 'has-error' if f.object.errors[:rhino_header].present? %>">

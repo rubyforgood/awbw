@@ -1,0 +1,68 @@
+<%# Structured event metadata, each row gated on its own autoshow_* toggle so the
+    admin's show/hide choices carry across every template. One source of truth for
+    that logic; the calling template picks a visual variant.
+    variant: chips (light pills) | chips_navy (pills on navy) | line (dot-separated) | rail (stacked rows) %>
+<%
+  variant = local_assigns.fetch(:variant, "chips")
+  rows = []
+  rows << { icon: "fa-calendar-day", label: "Date", value: event_dates_label(event) } if event.autoshow_date && event_dates_label(event).present?
+  rows << { icon: "fa-clock", label: "Time", value: event_times_label(event) } if event.autoshow_time && event_times_label(event).present?
+  rows << { icon: "fa-ticket", label: "Cost", value: event_fee_label(event) } if event.autoshow_cost && event_fee_label(event).present?
+  rows << { icon: "fa-video", label: "Format", value: event.videoconference_label } if event.autoshow_videoconference_label && event.videoconference_label.present?
+  rows << { icon: "fa-location-dot", label: "Location", value: event.location.name } if event.autoshow_location && event.location&.name.present?
+
+  registered = current_user && event.actively_registered?(current_user.person)
+  show_close = event.autoshow_registration_close && event.registration_close_date && !registered
+  close_text = if show_close
+    tz = event.start_date.in_time_zone(Time.zone).strftime("%Z")
+    "Registration closes #{event.registration_close_date.in_time_zone(Time.zone).strftime("%B %-d, %Y %l:%M %P")} #{tz}"
+  end
+%>
+
+<% if event.autoshow_pre_date_text && event.pre_date_text.present? %>
+  <p class="<%= { "chips" => "mb-3 text-sm font-semibold uppercase tracking-widest text-brand-orange-600",
+                  "chips_navy" => "mb-3 text-sm font-semibold uppercase tracking-widest text-brand-yellow-400",
+                  "line" => "mb-3 text-sm font-semibold uppercase tracking-widest text-brand-orange-600",
+                  "rail" => "mb-3 text-xs font-bold uppercase tracking-wide text-brand-orange-600" }[variant] %>"><%= event.pre_date_text %></p>
+<% end %>
+
+<% if variant == "rail" %>
+  <div class="divide-y divide-brand-navy-100">
+    <% rows.each do |row| %>
+      <div class="flex items-start gap-3 py-2.5">
+        <i class="fa-solid <%= row[:icon] %> mt-1 text-brand-navy-400" aria-hidden="true"></i>
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wide text-gray-500"><%= row[:label] %></div>
+          <div class="font-semibold text-brand-navy-900"><%= row[:value] %></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <% if close_text %>
+    <p class="mt-3 text-xs text-gray-500"><%= close_text %></p>
+  <% end %>
+
+<% elsif variant == "line" %>
+  <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-brand-navy-800">
+    <% rows.each_with_index do |row, i| %>
+      <% if i.positive? %><span class="text-brand-navy-300" aria-hidden="true">&bull;</span><% end %>
+      <span class="inline-flex items-center gap-1.5"><i class="fa-solid <%= row[:icon] %> text-brand-navy-400" aria-hidden="true"></i><%= row[:value] %></span>
+    <% end %>
+  </div>
+  <% if close_text %>
+    <p class="mt-2 text-sm text-gray-500"><%= close_text %></p>
+  <% end %>
+
+<% else %>
+  <% chip_class = variant == "chips_navy" ? "bg-white/10 text-white" : "border border-brand-navy-200 bg-white text-brand-navy-800" %>
+  <div class="flex flex-wrap <%= "justify-center" unless variant == "chips_navy" && local_assigns[:align] == "start" %> gap-2">
+    <% rows.each do |row| %>
+      <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium <%= chip_class %>">
+        <i class="fa-solid <%= row[:icon] %>" aria-hidden="true"></i><%= row[:value] %>
+      </span>
+    <% end %>
+  </div>
+  <% if close_text %>
+    <p class="mt-3 text-sm <%= variant == "chips_navy" ? "text-brand-navy-100" : "text-gray-500" %>"><%= close_text %></p>
+  <% end %>
+<% end %>

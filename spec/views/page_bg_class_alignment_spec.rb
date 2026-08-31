@@ -151,6 +151,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/scholarships.html.erb"           => "admin-or-owner bg-blue-100",
     "app/views/events/program_statuses.html.erb"       => "admin-or-owner bg-blue-100",
     "app/views/events/attendees.html.erb"              => "admin-or-owner bg-blue-100",
+    "app/views/events/templates_gallery.html.erb"      => "admin-or-owner bg-blue-100",
     "app/views/events/preview_reminder.html.erb"       => "admin-or-owner bg-blue-100",
     "app/views/events/confirm_reminder.html.erb"       => "admin-or-owner bg-blue-100",
     "app/views/event_registrations/index.html.erb"     => "admin-only bg-blue-100",

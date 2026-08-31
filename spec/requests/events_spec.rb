@@ -192,6 +192,39 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("88285411273")
       end
     end
+
+    context "display templates" do
+      let(:templated_event) { create(:event, :published, :publicly_visible, title: "Templated event") }
+
+      before { sign_in admin }
+
+      it "renders every template without error" do
+        Event::TEMPLATE_KEYS.each do |key|
+          templated_event.update!(template: key)
+          get event_path(templated_event)
+          expect(response).to have_http_status(:ok), "template #{key} failed to render"
+          expect(response.body).to include("Templated event")
+        end
+      end
+    end
+  end
+
+  describe "GET /templates_gallery" do
+    let!(:sample) { create(:event, :published, title: "Gallery sample") }
+
+    it "renders the gallery of all templates for an admin" do
+      sign_in admin
+      get templates_gallery_events_path
+      expect(response).to have_http_status(:ok)
+      Event::TEMPLATES.each_value { |meta| expect(response.body).to include(meta[:label]) }
+      expect(response.body).to include("Gallery sample")
+    end
+
+    it "forbids a non-admin without events" do
+      sign_in user
+      get templates_gallery_events_path
+      expect(response).not_to have_http_status(:ok)
+    end
   end
 
   describe "GET /revenue" do

@@ -1,0 +1,26 @@
+<%# Registration + payment actions. Real events reuse the existing
+    registration_section (ended/closed/register/view-ticket + calendar links) and
+    bulk-payment button. In sample mode (the templates gallery) a static button
+    stands in, so the read-only preview never builds live routes or duplicate
+    registration_section dom_ids. %>
+<% if local_assigns.fetch(:sample, false) %>
+  <div class="flex flex-col items-center gap-2">
+    <span class="rounded-full bg-brand-yellow-400 px-8 py-3 font-semibold text-brand-navy-950 shadow-sm">Register</span>
+    <span class="text-xs text-gray-500 italic">Sample preview</span>
+  </div>
+<% else %>
+  <%= render "events/videoconference_link", event: event %>
+
+  <% if event.autoshow_registration %>
+    <%= render "events/registration_section", event: event, instance: local_assigns.fetch(:instance, 1), button_text: "Register" %>
+  <% end %>
+
+  <% if event.bulk_payment_form %>
+    <div class="mt-4 flex justify-center">
+      <%= link_to Form::BULK_PAYMENT_PUBLIC_NAME,
+                  new_event_bulk_payment_path(event),
+                  class: button_classes(:success, size: nil, extra: "px-10 py-2 text-2xl uppercase"),
+                  style: "font-family: 'Telefon Bold', sans-serif;" %>
+    </div>
+  <% end %>
+<% end %>

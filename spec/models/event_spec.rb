@@ -6,6 +6,25 @@ RSpec.describe Event, type: :model do
     it { should validate_presence_of(:start_date) }
     it { should validate_presence_of(:end_date) }
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
+    it { should validate_inclusion_of(:template).in_array(Event::TEMPLATE_KEYS) }
+
+    describe "display template" do
+      it "defaults to none" do
+        expect(build(:event).template).to eq("none")
+      end
+
+      it "rejects an unknown template" do
+        event = build(:event, template: "bogus")
+        expect(event).not_to be_valid
+        expect(event.errors[:template]).to be_present
+      end
+
+      it "accepts each known template" do
+        Event::TEMPLATE_KEYS.each do |key|
+          expect(build(:event, template: key)).to be_valid
+        end
+      end
+    end
 
     describe "end date not before start date" do
       it "is invalid when the end date is before the start date" do

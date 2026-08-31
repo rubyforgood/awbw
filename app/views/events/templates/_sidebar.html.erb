@@ -1,0 +1,26 @@
+<%# Details sidebar — description flows left; a sticky card on the right holds the
+    details and register actions. Best for long, info-dense events. %>
+<% sample = local_assigns.fetch(:sample, false) %>
+<%= render "events/show/rainbow" %>
+
+<div class="mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-6 lg:px-8">
+  <% if event.rhino_header.present? %>
+    <div class="rounded-2xl bg-brand-cream p-2">
+      <%= render "events/show/header_media", event: event %>
+    </div>
+  <% end %>
+
+  <div class="mt-10 grid gap-10 lg:grid-cols-3">
+    <div class="lg:col-span-2">
+      <%= render "events/show/title", event: event,
+            heading_class: "font-display text-3xl font-semibold leading-tight text-brand-navy-900 sm:text-4xl" %>
+      <div class="mt-6"><%= render "events/show/description", event: event %></div>
+    </div>
+
+    <aside class="h-fit rounded-2xl border-2 border-brand-navy-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
+      <div class="mb-2 text-xs font-bold uppercase tracking-wide text-brand-navy-900">Event details</div>
+      <%= render "events/show/details", event: event, variant: "rail" %>
+      <div class="mt-5"><%= render "events/show/actions", event: event, sample: sample %></div>
+    </aside>
+  </div>
+</div>

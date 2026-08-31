@@ -1,0 +1,26 @@
+<%# Navy hero — bold navy gradient band with the title, details and register beside
+    the framed header image; the description sits below on a light page. %>
+<% sample = local_assigns.fetch(:sample, false) %>
+<%= render "events/show/rainbow" %>
+
+<section class="w-full bg-gradient-to-br from-brand-navy-950 via-brand-navy-900 to-brand-navy-800 text-white">
+  <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8">
+    <div>
+      <%= render "events/show/title", event: event,
+            pretitle_class: "mb-3 text-sm font-semibold uppercase tracking-widest text-brand-yellow-400",
+            heading_class: "font-display text-4xl font-semibold leading-tight sm:text-5xl" %>
+      <div class="mt-6"><%= render "events/show/details", event: event, variant: "chips_navy", align: "start" %></div>
+      <div class="mt-7"><%= render "events/show/actions", event: event, sample: sample %></div>
+    </div>
+
+    <% if event.rhino_header.present? %>
+      <div class="rounded-2xl bg-white/95 p-2 shadow-xl">
+        <%= render "events/show/header_media", event: event %>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+  <%= render "events/show/description", event: event %>
+</div>

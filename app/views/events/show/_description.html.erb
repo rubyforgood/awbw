@@ -1,0 +1,19 @@
+<%# Admin-authored body (Rhino WYSIWYG) + gallery, under the branded prose theme
+    so whatever headings / lists / quotes / images / links the admin writes come
+    out on-brand. The calling template sets width via prose_extra. %>
+<% if event.rhino_description.present? %>
+  <div class="prose prose-slate prose-lg max-w-none <%= local_assigns.fetch(:prose_extra, "") %>
+              prose-headings:font-display prose-headings:font-semibold prose-headings:text-brand-navy-900
+              prose-h2:text-2xl prose-h3:text-xl
+              prose-a:text-brand-navy-700 prose-a:font-semibold hover:prose-a:text-brand-magenta-700
+              prose-blockquote:border-l-4 prose-blockquote:border-brand-magenta-400 prose-blockquote:bg-brand-cream
+              prose-blockquote:not-italic prose-blockquote:rounded-r-lg prose-blockquote:font-display prose-blockquote:text-brand-navy-900
+              prose-li:marker:text-brand-yellow-500
+              prose-img:w-full prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
+    <%= event.rhino_description %>
+  </div>
+<% end %>
+
+<div class="mt-10">
+  <%= render "assets/display_gallery_media", resource: event, link: true %>
+</div>

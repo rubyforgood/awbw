@@ -38,6 +38,15 @@ class EventsController < ApplicationController
     track_view(@event)
   end
 
+  # Admin-facing gallery that renders every display template with a real recent
+  # event, so admins can compare layouts before picking one on the event form.
+  # Read-only (`sample: true`) so it never builds live registration routes or
+  # duplicate registration_section dom_ids across the stacked templates.
+  def templates_gallery
+    authorize!
+    @sample_event = authorized_scope(Event.all).order(start_date: :desc).first&.decorate
+  end
+
   # Cross-event revenue report over paid events, grouped by year. Shares the
   # event-type + time-period filters with the participation report, and leads the
   # KPI strip with the year of the event navigated from (when arriving from a

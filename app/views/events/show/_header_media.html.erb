@@ -1,0 +1,7 @@
+<%# Admin-uploaded header content (usually a banner image). Rendered as-authored;
+    the template frames it. Shared by every branded template. %>
+<% if event.rhino_header.present? %>
+  <div class="rhino-centered max-w-none prose prose-img:w-full prose-img:max-w-full prose-img:rounded-xl prose-em:text-inherit prose-strong:text-inherit">
+    <%= event.rhino_header %>
+  </div>
+<% end %>
