@@ -46,8 +46,8 @@ RSpec.describe EventProgramStatusReport do
     end
 
     it "counts a same-day (start == end) facilitation dated to the training as New" do
-      # The minted affiliation with a same-day span is still the training's own,
-      # not prior history (ADR-0001 D8) — so it must not read Ongoing.
+      # A same-day span records a no-show/cancelled training — it confers no
+      # standing (ADR-0001 D8a), so with no other history the org reads New.
       one_day = create(:organization, name: "One Day")
       facilitator_since(one_day, spring.start_date, spring.start_date)
       represent(one_day, spring)
@@ -56,6 +56,19 @@ RSpec.describe EventProgramStatusReport do
 
       expect(column.statuses[one_day.id].status).to eq(:new)
       expect(column.new_count).to eq(2)
+    end
+
+    it "reads New (not Reinstated) at a later training when the only prior history is a no-show" do
+      # A same-day span at the spring training is a no-show, so the org is not a
+      # returning program at the fall training — it reads New both times.
+      returning = create(:organization, name: "No-show then real")
+      facilitator_since(returning, spring.start_date, spring.start_date)  # no-show in spring
+      represent(returning, fall)
+
+      fall_column = report.columns.find { |column| column.event == fall }
+
+      expect(fall_column.statuses[returning.id].status).to eq(:new)
+      expect(fall_column.reinstated_count).to eq(0)
     end
 
     it "reads Ongoing for an org with a prior active facilitator plus one minted at the training" do
@@ -73,8 +86,11 @@ RSpec.describe EventProgramStatusReport do
     end
 
     it "counts only organizations on active registrations" do
-      cancelled_org = create(:organization, name: "Cancelled")
-      represent(cancelled_org, spring, status: "cancelled")
+      # Cancelled / no-show / transferred-out registrations never became a
+      # facilitation, so their orgs stay out of the program-status counts entirely.
+      EventRegistration::INACTIVE_STATUSES.each do |status|
+        represent(create(:organization, name: "Inactive #{status}"), spring, status: status)
+      end
 
       expect(report.years.first.columns.first.organization_count).to eq(3)
     end

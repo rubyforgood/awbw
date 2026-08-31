@@ -35,8 +35,8 @@ RSpec.describe FacilitatorProgramStatus do
     end
 
     it "is :new for a same-day (start == end) facilitation dated to the anchor" do
-      # start == end == the event date is the affiliation this training mints (D8),
-      # so a first-time org still reads New — not Ongoing.
+      # A same-day span records a training the person never completed (no-show), so
+      # it confers no standing and is dropped — leaving no facilitator history at all.
       facilitator(start_date: anchor, end_date: anchor)
       expect(status_on.status).to eq(:new)
     end
@@ -47,9 +47,11 @@ RSpec.describe FacilitatorProgramStatus do
       expect(status_on.status).to eq(:new)
     end
 
-    it "is :reinstated for a same-day facilitation that ran before the anchor" do
+    it "is :new (not :reinstated) for a same-day facilitation that ran before the anchor" do
+      # A no-show/cancelled training minted a zero-length affiliation; it must not
+      # read as prior facilitator history that reinstates the org.
       facilitator(start_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 1, 1))
-      expect(status_on.status).to eq(:reinstated)
+      expect(status_on.status).to eq(:new)
     end
 
     it "is :reinstated when every earlier facilitator affiliation has ended" do
@@ -90,6 +92,29 @@ RSpec.describe FacilitatorProgramStatus do
       facilitator(start_date: anchor, end_date: anchor)   # minted, same-day
       facilitator(start_date: anchor + 5)                 # starts after the event
       expect(status_on.status).to eq(:new)
+    end
+  end
+
+  # A same-day span (start == end) is how a no-show / cancelled / transferred-out
+  # training shows up: the person was signed up but never became a facilitator, so
+  # it confers no standing and is left out of the verdict entirely.
+  describe "same-day (no-show) facilitations" do
+    it "does not upgrade a New org to Reinstated when it's the only prior history" do
+      facilitator(start_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 1, 1))  # no-show
+      facilitator(start_date: anchor)                                                # minted here
+      expect(status_on.status).to eq(:new)
+    end
+
+    it "still reads Ongoing when a genuine active affiliation coexists with a no-show" do
+      facilitator(start_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 1, 1))  # no-show
+      facilitator(start_date: Date.new(2019, 3, 1))                                  # genuine, active
+      expect(status_on.status).to eq(:ongoing)
+    end
+
+    it "leaves a same-day span out of the facilitator periods and active_since" do
+      facilitator(start_date: Date.new(2020, 1, 1), end_date: Date.new(2020, 1, 1))
+      expect(status_on.active_since).to be_nil
+      expect(status_on.periods_label).to be_blank
     end
   end
 

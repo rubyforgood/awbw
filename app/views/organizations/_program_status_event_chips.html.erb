@@ -1,13 +1,25 @@
-<%# Per-event program status, on both the org profile and the edit form. The chips
-    open in a new tab, where the back button is no help, so return_to names which of
-    the two the participation report should return to. %>
+<%# Per-event program status, on the org edit form. The chips open in a new tab,
+    where the back button is no help, so return_to names where the participation
+    report should return to. Trainings the org only registered for inactively
+    (no-show / cancelled / transferred out) get a red attendance-status chip
+    instead — they're left out of the New/Ongoing/Reinstated reporting. %>
+<% attendance_statuses = local_assigns.fetch(:attendance_statuses, {}) %>
 <% decorated = organization.decorate %>
 <% events.sort_by { |event| event.start_date || Date.new(1900, 1, 1) }.reverse.each do |event| %>
-  <% status = decorated.facilitator_status_as_of(event.start_date) %>
-  <%= link_to participation_events_path(event_id: event.id, return_organization_id: organization.id, return_to: return_to),
-              target: "_blank", rel: "noopener noreferrer",
-              title: "#{event.title} — #{status.explanation}",
-              class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status.status)}" do %>
-    <%= status.label %><%= " · #{event.start_date.strftime('%b %Y')}" if event.start_date %> · <%= event.decorate.compact_label.truncate(40) %>
+  <% date_suffix = " · #{event.start_date.strftime('%b %Y')}" if event.start_date %>
+  <% if (attendance_status = attendance_statuses[event.id]) %>
+    <% attendance_label = EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(attendance_status, attendance_status.humanize) %>
+    <span class="inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 bg-red-50 text-red-700 border-red-200"
+          title="<%= event.title %> — not counted in program status (<%= attendance_label.downcase %>)">
+      <%= attendance_label %><%= date_suffix %> · <%= event.decorate.compact_label.truncate(40) %>
+    </span>
+  <% else %>
+    <% status = decorated.facilitator_status_as_of(event.start_date) %>
+    <%= link_to participation_events_path(event_id: event.id, return_organization_id: organization.id, return_to: return_to),
+                target: "_blank", rel: "noopener noreferrer",
+                title: "#{event.title} — #{status.explanation}",
+                class: "inline-flex items-center rounded-full text-xs font-medium border px-2.5 py-0.5 #{OrganizationDecorator.program_status_classes(status.status)}" do %>
+      <%= status.label %><%= date_suffix %> · <%= event.decorate.compact_label.truncate(40) %>
+    <% end %>
   <% end %>
 <% end %>

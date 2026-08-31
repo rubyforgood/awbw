@@ -16,7 +16,9 @@ class FacilitatorProgramStatus
   def initialize(affiliations, as_of: nil)
     @as_of = (as_of || Date.current.beginning_of_year).to_date
     @year_anchored = as_of.nil?
-    @facilitators = affiliations.select { |affiliation| affiliation.facilitator? && affiliation.start_date }
+    @facilitators = affiliations.select do |affiliation|
+      affiliation.facilitator? && affiliation.start_date && !same_day?(affiliation)
+    end
   end
 
   # Views that show a year-anchored figure add a caveat saying so.
@@ -82,9 +84,17 @@ class FacilitatorProgramStatus
 
   def month(date) = date&.strftime("%b %Y")
 
+  # A same-day span (start == end) records a training the person was signed up for
+  # but never completed — a no-show, cancellation, or transfer out — so it confers
+  # no facilitator standing and is dropped from @facilitators before any verdict.
+  # An open-ended affiliation the training mints (end nil) is unaffected. (ADR-0001
+  # D8a, refining D8.)
+  def same_day?(affiliation)
+    affiliation.end_date.present? && affiliation.end_date == affiliation.start_date
+  end
+
   # Strictly before: an affiliation starting ON the anchor is the one this event
-  # minted (ADR-0001 D8), so a first-time org still reads New at its own training —
-  # including a same-day (start == end) affiliation dated to the event.
+  # minted (ADR-0001 D8), so a first-time org still reads New at its own training.
   def earlier
     @earlier ||= @facilitators.select { |affiliation| affiliation.start_date < as_of }
   end

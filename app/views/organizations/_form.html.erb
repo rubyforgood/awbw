@@ -327,7 +327,8 @@
             <div class="pt-1 flex flex-wrap items-center gap-2">
               <%= org_decorated.organization_status_chip(data: { affiliation_dates_target: "programStatus" }) %>
               <%= render "organizations/program_status_event_chips",
-                         organization: f.object, events: org_events, return_to: "organization_edit" %>
+                         organization: f.object, events: org_events, return_to: "organization_edit",
+                         attendance_statuses: @organization_event_attendance || {} %>
             </div>
           </div>
         <% end %>

@@ -94,8 +94,9 @@ facilitator affiliations by a single class, `FacilitatorProgramStatus`:
 
 - **New** — no facilitator affiliation started **before** the anchor (strict `<`).
   An affiliation dated **on** the anchor is the one this event mints (D8), so a
-  first-time org reads New at its own training — including a **same-day**
-  (`start == end`) affiliation dated to the event.
+  first-time org reads New at its own training. A **same-day** (`start == end`)
+  affiliation is a no-show / cancellation / transfer out and confers no standing at
+  all (D8a) — it is dropped before the verdict, wherever it falls.
 - **Ongoing** — an earlier facilitator affiliation is **still active** on the
   anchor (no end date, or it ends on/after it).
 - **Reinstated** — earlier facilitator affiliation(s) existed but **all ended**
@@ -177,6 +178,28 @@ history" for its own training. An event with no start date is the one gap — th
 affiliation then falls back to the creation date. That event has no anchor either,
 so both its dashboard and the annual report read it as year-anchored (D7) rather
 than one of them silently using "today".
+
+### D8a — A same-day (`start == end`) affiliation is a no-show, and confers nothing
+
+When a registrant is marked **no-show / cancelled / transferred out**, the training
+they signed up for never made them a facilitator. That shows up as a Facilitator
+affiliation whose span collapses to a single day (`start_date == end_date`).
+`FacilitatorProgramStatus` drops every such affiliation before it judges anything,
+so it never reads as prior history (no spurious Reinstated at a later training) and
+never as the minted row at its own (no spurious New from a training nobody
+attended). An **open-ended** affiliation the training mints (`end_date` nil) is
+untouched — this only removes zero-length spans.
+
+Two surfaces reflect the same fact from the registration side, so a no-show org
+stays out of the program-status figures entirely:
+
+- **Reporting & the event dashboard** already scope their "represented"
+  organizations to `EventRegistration.active`, so an org whose only registration at
+  a training is inactive is absent from the counts.
+- **The org edit form's per-event chips** still list those trainings, but render a
+  **red attendance-status chip** ("No show", "Cancelled", "Transferred out") in
+  place of a New/Ongoing/Reinstated one — a visible marker that the training
+  happened for the org but doesn't count.
 
 ### D9 — Annual reporting counts organizations two ways
 

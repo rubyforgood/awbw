@@ -205,6 +205,39 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).to include("Qwultz Training")
       expect(response.body).not_to include("Zibberpicnic Social")
     end
+
+    it "renders a red attendance-status chip for a training the org only no-showed" do
+      organization = Organization.create!(valid_attributes)
+      training = create(:event, title: "Noshow Training", facilitator_training: true,
+                                start_date: Date.new(2026, 8, 1))
+      registration = create(:event_registration, registrant: create(:person), event: training, status: "no_show")
+      registration.event_registration_organizations.create!(organization: organization)
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to include("Noshow Training")
+      expect(response.body).to include("No show")
+      expect(response.body).to include("bg-red-50 text-red-700 border-red-200")
+      # It is a no-show, so it never reads as a program status.
+      expect(response.body).not_to match(/No show[^<]*·[^<]*·[^<]*(New|Ongoing|Reinstated)/)
+    end
+
+    it "keeps the program-status chip when the org also has an active registration at the training" do
+      organization = Organization.create!(valid_attributes)
+      create(:affiliation, organization: organization, person: create(:person),
+                           title: "Facilitator", start_date: Date.new(2020, 1, 1))
+      training = create(:event, title: "Mixed Training", facilitator_training: true,
+                                start_date: Date.new(2026, 8, 1))
+      create(:event_registration, registrant: create(:person), event: training, status: "no_show")
+        .event_registration_organizations.create!(organization: organization)
+      create(:event_registration, registrant: create(:person), event: training, status: "registered")
+        .event_registration_organizations.create!(organization: organization)
+
+      get edit_organization_url(organization)
+
+      expect(response.body).to include("Mixed Training")
+      expect(response.body).not_to include("bg-red-50 text-red-700 border-red-200")
+    end
   end
 
   describe "POST /create" do

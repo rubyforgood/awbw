@@ -179,16 +179,25 @@ class OrganizationsController < ApplicationController
     end
 
     # Drives the edit form's per-event program-status chips. Trainings only —
-    # program status is meaningless for other events (ADR-0001 D6).
+    # program status is meaningless for other events (ADR-0001 D6). Includes
+    # trainings the org only registered for inactively (no-show / cancelled /
+    # transferred out): those get a red attendance-status chip and stay out of the
+    # program-status reporting.
     @organization_events = if @organization.persisted?
       authorized_scope(
-        Event.where(id: @organization.event_registrations.active.select(:event_id))
+        Event.where(id: @organization.event_registrations.select(:event_id))
              .where(facilitator_training: true)
              .order(start_date: :desc)
       )
     else
       Event.none
     end
+
+    # event_id => the inactive attendance status to show as a red chip, only for
+    # trainings where the org has no active registration (so it's absent from the
+    # program-status counts). Trainings with an active registration are left out and
+    # keep their New / Ongoing / Reinstated chip.
+    @organization_event_attendance = organization_event_attendance_statuses
 
     @org_categories_grouped = Category
       .includes(:category_type)
@@ -197,6 +206,22 @@ class OrganizationsController < ApplicationController
       .group_by(&:category_type)
       .select { |type, _| type&.profile_specific? }
       .sort_by { |type, _| type&.name.to_s.downcase }
+  end
+
+  # For the edit form's chips: the inactive attendance status to show per training
+  # where the org has no active registration. Active-registration trainings are
+  # excluded so they keep their program-status chip; among the inactive ones the
+  # lowest status alphabetically ("cancelled" < "no_show" < "transferred_out") wins
+  # when several people from the org were inactively registered at the same one.
+  def organization_event_attendance_statuses
+    return {} unless @organization.persisted?
+
+    active_event_ids = @organization.event_registrations.active.distinct.pluck(:event_id)
+    @organization.event_registrations.inactive
+      .where.not(event_id: active_event_ids)
+      .order(:event_id, :status)
+      .pluck(:event_id, :status)
+      .each_with_object({}) { |(event_id, status), map| map[event_id] ||= status }
   end
 
   def set_index_variables
