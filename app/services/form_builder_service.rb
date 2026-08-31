@@ -89,7 +89,7 @@ class FormBuilderService
       "Organization Country"
     ],
     person_background: [ "How would you best describe yourself?" ],
-    professional_info: [ "Primary sector", "Additional sectors", "Primary Age Group(s) Served", "Additional Age Group(s) Served" ],
+    professional_info: [ "Primary sector", "Additional sectors", "Primary age group served", "Additional age groups served" ],
     marketing: [
       "How did you hear about this AWBW training?",
       "What motivated you to sign up for AWBW's Facilitator Training?",
@@ -460,10 +460,10 @@ class FormBuilderService
     position = add_field(form, position, "Additional sectors", :multi_select_checkbox,
                          key: "additional_sectors", group: "professional", required: false,
                          subtitle: "Select all options that represent who you intend to serve through the art workshops (check all that apply)")
-    position = add_field(form, position, "Primary Age Group(s) Served", :single_select_dropdown,
+    position = add_field(form, position, "Primary age group served", :single_select_dropdown,
                          key: "primary_age_group", group: "professional", required: false,
                          subtitle: "Select the age group you primarily intend to serve through the art workshops")
-    position = add_field(form, position, "Additional Age Group(s) Served", :multi_select_checkbox,
+    position = add_field(form, position, "Additional age groups served", :multi_select_checkbox,
                          key: "additional_age_groups", group: "professional", required: false,
                          subtitle: "Select all additional age groups you may serve through the art workshops (check all that apply)")
     position
