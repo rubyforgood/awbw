@@ -1,13 +1,16 @@
 <%= turbo_frame_tag "person_events_section" do %>
   <% if event_registrations.any? %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 blur-on-submit">
+    <div class="grid grid-cols-1 gap-6 blur-on-submit sm:grid-cols-2 lg:grid-cols-3">
       <% event_registrations.each do |event_registration| %>
+        <% registration = event_registration.decorate %>
         <%= render "show_card",
                    bookmarkable: event_registration.event,
                    record_title: "#{event_registration.event.title}<br>" +
                      "<span class='text-xs text-gray-500'>TIME: " +
                      "#{event_registration.event.decorate.times}<span>",
-                   record: event_registration.decorate, title_font_size: "text-sm" %>
+                   record: registration, title_font_size: "text-sm",
+                   bg_color: (registration.active? ? "bg-white" : "bg-blue-50"),
+                   card_badge: (registration.active? ? nil : registration.attendance_status_badge) %>
       <% end %>
     </div>
     <div class="mt-6 flex justify-center">
