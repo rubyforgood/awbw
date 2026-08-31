@@ -1,5 +1,10 @@
 <div class="mx-auto max-w-2xl">
-  <%= link_to "← Payments", payments_path, class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
+  <% bulk_payment_event = @payment.form_submission&.resolved_event if params[:return_to] == "bulk_payments" %>
+  <% if bulk_payment_event %>
+    <%= link_to "← Bulk payments", bulk_payments_return_path(bulk_payment_event), class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
+  <% else %>
+    <%= link_to "← Payments", payments_path, class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
+  <% end %>
   <div class="mb-6 flex items-center justify-between">
     <h1 class="text-primary font-display text-2xl font-bold">Payment</h1>
     <div class="flex gap-2">
@@ -128,7 +133,7 @@
 
                 <td class="px-4 py-3 text-right text-sm font-medium">
                   <% unless allocation.reverted? || allocation.amount.to_i < 0 %>
-                    <%= button_to "revert", revert_allocation_path(allocation), method: :post, class: "cursor-pointer text-danger hover:text-danger-dark", data: { turbo_confirm: "are you sure you want to revert this allocation?" } %>
+                    <%= button_to "revert", revert_allocation_path(allocation, return_to: params[:return_to], expand: params[:expand]), method: :post, class: "cursor-pointer text-danger hover:text-danger-dark", data: { turbo_confirm: "are you sure you want to revert this allocation?" } %>
                   <% end %>
                 </td>
               </tr>
