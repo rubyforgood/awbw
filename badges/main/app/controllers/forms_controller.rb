@@ -197,7 +197,8 @@ class FormsController < ApplicationController
       form_fields_attributes: [
         :id, :name, :answer_type, :required, :subtitle, :hint_text,
         :field_identifier, :section, :position, :visibility, :one_time, :width, :min_words, :max_characters, :_destroy,
-        form_field_answer_options_attributes: [ :id, :option_name, :_destroy ]
+        form_field_answer_options_attributes: [ :id, :option_name, :_destroy ],
+        form_field_resources_attributes: [ :id, :resource_id, :_destroy ]
       ]
     )
   end

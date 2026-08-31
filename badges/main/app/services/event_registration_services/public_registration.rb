@@ -224,6 +224,7 @@ module EventRegistrationServices
     # capturing the change. A blank answer never clobbers existing data.
     def sync_person_profile(person)
       apply_value(person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
+      PersonServices::SyncSharingPreferences.call(person: person, form: @registration_form, form_params: @form_params)
     end
 
     def sync_organization_profile(organization)

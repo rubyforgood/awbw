@@ -272,7 +272,7 @@ class EventsController < ApplicationController
     @readiness = @event_registrations.to_h do |registration|
       [ registration.id, EventRegistrationReadiness.new(registration) ]
     end
-    if params[:readiness].in?(%w[ not_ready ready certificate_due completed ])
+    if params[:readiness].in?(%w[ not_ready ready survey_pending certificate_due completed ])
       @event_registrations.select! { |r| @readiness[r.id].status.to_s == params[:readiness] }
     end
 

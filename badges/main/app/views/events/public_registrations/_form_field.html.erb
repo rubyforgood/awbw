@@ -90,7 +90,7 @@
       <% radio_options.each do |option_label, option_value, option_description| %>
         <% placeholder = specify_placeholder(option_label) %>
         <% is_specify = placeholder.present? %>
-        <label class="flex flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
+        <label class="flex flex-col gap-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900">
           <span class="flex items-center gap-2">
             <input type="radio"
                    name="<%= field_name %>"
@@ -152,7 +152,7 @@
       <% checkbox_options.each do |option_label, option_value, option_description| %>
         <% placeholder = specify_placeholder(option_label) %>
         <% is_specify = placeholder.present? %>
-        <label class="flex flex-col gap-1 mb-2.5 break-inside-avoid rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900 has-[:checked]:font-medium">
+        <label class="flex flex-col gap-1 mb-2.5 break-inside-avoid rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-700 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900">
           <span class="flex items-center gap-2">
             <input type="checkbox"
                    name="<%= checkbox_name %>"

@@ -208,6 +208,55 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "content sharing preferences" do
+    let(:form) do
+      f = FormBuilderService.new(
+        name: "Registration with sharing preferences",
+        sections: %i[person_identifier person_contact_info content_sharing_preferences]
+      ).call
+      event.event_forms.create!(form: f, role: "registration")
+      f
+    end
+
+    def register(answers)
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(answers)
+      described_class.call(event: event, registration_form: form, form_params: params)
+      Person.find_by!(email: "ada@example.com")
+    end
+
+    it "writes both answers through to the registrant's profile" do
+      person = register(
+        field_id("anonymous_contributions") => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true],
+        field_id("display_name_preference") => Person::DISPLAY_NAME_PREFERENCE_LABELS["first_name_only"]
+      )
+
+      expect(person.anonymous_contributions).to be(true)
+      expect(person.display_name_preference).to eq("first_name_only")
+    end
+
+    it "leaves preferences on file untouched when the questions go unanswered" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin", email: "ada@example.com",
+                                 anonymous_contributions: true, display_name_preference: "first_name_only")
+
+      register(field_id("anonymous_contributions") => "")
+
+      expect(existing.reload.anonymous_contributions).to be(true)
+      expect(existing.display_name_preference).to eq("first_name_only")
+    end
+
+    # A plain Person update, so the Ahoy trail behind the "what this submission
+    # changed" page picks it up like any other profile edit (see
+    # FormSubmissionChanges for how the coded value is labelled).
+    it "records the edit on the Person so the audit trail carries it" do
+      existing = create(:person, first_name: "Ada", last_name: "Lin", email: "ada@example.com",
+                                 anonymous_contributions: false)
+
+      expect {
+        register(field_id("anonymous_contributions") => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true])
+      }.to change { existing.reload.anonymous_contributions }.from(false).to(true)
+    end
+  end
+
   describe "expected payment method" do
     it "records the chosen payment method on a new registration" do
       params = base_form_params(first_name: "Pat", last_name: "Doe", email: "pat@example.com").merge(

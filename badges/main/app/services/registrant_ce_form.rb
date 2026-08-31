@@ -10,9 +10,10 @@ class RegistrantCeForm
     @event_registration = event_registration
   end
 
-  # The form attached to the CE callout, or nil when none is set.
+  # The form attached to the CE callout, or nil when none is set. The CE callout
+  # carries a single form, so this reads the first linked form.
   def form
-    ce_callout&.form
+    ce_callout&.forms&.first
   end
 
   # Something to fill: a form with at least one non-header field.
@@ -33,7 +34,7 @@ class RegistrantCeForm
 
     form.form_submissions.find_by(person: @event_registration.registrant,
                                   event: @event_registration.event,
-                                  role: EventRegistrationServices::CalloutFormSubmission.role_for(ce_callout))
+                                  role: form.role)
   end
 
   # Every required field answered — the read-time "form complete" signal, since

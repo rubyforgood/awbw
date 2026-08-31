@@ -11,15 +11,21 @@ FactoryBot.define do
     # position is assigned by the positioning gem on save (appended within the event)
 
     # Convenience: `create(:registration_ticket_callout, resource:)` links one
-    # resource through the join, and `resources: [a, b]` links several.
+    # resource through the join, and `resources: [a, b]` links several. The same
+    # shape for the forms the callout delivers inline: `form:` links one through
+    # the join, `forms: [a, b]` links several (each an open, undripped row).
     transient do
       resource { nil }
       resources { [] }
+      form { nil }
+      forms { [] }
     end
 
     after(:create) do |callout, evaluator|
       Array(evaluator.resource).each { |r| callout.resources << r }
       evaluator.resources.each { |r| callout.resources << r }
+      Array(evaluator.form).each { |f| callout.forms << f }
+      evaluator.forms.each { |f| callout.forms << f }
     end
 
     trait :action do

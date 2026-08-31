@@ -727,6 +727,18 @@ class EventRegistration < ApplicationRecord
     live.all?(&:tasks_completed?)
   end
 
+  # The recipients survey becomes available once the recipient has signed their
+  # agreement and their scholarship tasks are complete, and once any drip date on
+  # the scholarship callout row has passed. Reads preloaded scholarships + the
+  # event's memoized survey row, so it adds no per-row roster query. It's what
+  # gates both the survey's display on the scholarship page and readiness.
+  def recipient_survey_available?(now = Time.current)
+    live = scholarships.reject(&:agreement_declined?)
+    return false if live.empty?
+    return false unless live.all?(&:agreement_signed?) && live.all?(&:tasks_completed?)
+    event.recipient_survey_drip_open?(now)
+  end
+
   def scholarship_declined?
     scholarships.any?(&:agreement_declined?)
   end
@@ -740,6 +752,20 @@ class EventRegistration < ApplicationRecord
 
   def attended?
     status == "attended"
+  end
+
+  # Set by the registrant submitting or an admin toggling. Mirrors certificate_sent_at
+  # so the roster's readiness reads a plain column with no extra query.
+  def post_survey_completed?
+    post_survey_completed_at.present?
+  end
+
+  def mark_post_survey_completed!(at: Time.current)
+    update!(post_survey_completed_at: at)
+  end
+
+  def clear_post_survey_completed!
+    update!(post_survey_completed_at: nil)
   end
 
   # The certificate of completion unlocks once the training has happened, the

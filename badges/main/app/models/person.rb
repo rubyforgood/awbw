@@ -356,6 +356,13 @@ class Person < ApplicationRecord
     sectors.pluck(:name)
   end
 
+  # anonymous_contributions boolean => survey consent answer label (true = keep anonymous).
+  # Name-format labels live in DISPLAY_NAME_PREFERENCE_LABELS above.
+  ANONYMOUS_CONTRIBUTIONS_OPTIONS = {
+    false => "Display all my content with my profile name",
+    true => "Keep all my content anonymous"
+  }.freeze
+
   # Drives the people index and the profile header. Author credits pass an explicit
   # preference (the record's own, which outranks the profile) through `name_for`.
   def name

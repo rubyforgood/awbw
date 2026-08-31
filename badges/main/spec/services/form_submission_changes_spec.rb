@@ -32,6 +32,32 @@ RSpec.describe FormSubmissionChanges do
     expect(change).to have_attributes(outcome: "Filled", value: "Prefer not to say")
   end
 
+  # The sharing preferences store a boolean / an enum key, which would otherwise
+  # read as "true" — and `false` is a real choice, not an empty column.
+  it "labels a content-sharing change with the wording the person chose" do
+    person = create(:person)
+    stamp("update.person", resource_type: "Person", resource_id: person.id,
+          properties: { "changes" => { "anonymous_contributions" => { "before" => nil, "after" => false } } })
+
+    change = described_class.new(submission).groups.first.changes.first
+    expect(change).to have_attributes(
+      outcome: "Filled", label: "Content sharing",
+      value: Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[false]
+    )
+  end
+
+  it "labels a display-name preference change with its option wording" do
+    person = create(:person)
+    stamp("update.person", resource_type: "Person", resource_id: person.id,
+          properties: { "changes" => { "display_name_preference" => { "before" => "full_name", "after" => "first_name_only" } } })
+
+    change = described_class.new(submission).groups.first.changes.first
+    expect(change).to have_attributes(
+      outcome: "Replaced", label: "Display name",
+      value: "First name only", previous_value: "First and last name"
+    )
+  end
+
   it "attributes a sector tag to its owner and resolves the sector name" do
     org = create(:organization, name: "Riverside")
     sector = create(:sector, :published, name: "Healthcare")

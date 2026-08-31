@@ -900,7 +900,7 @@ RSpec.describe "Events", type: :request do
 
       it "materializes the built-in callouts so the preview reads from real rows" do
         expect { get sample_ticket_event_path(event) }
-          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(8)
+          .to change { event.registration_ticket_callouts.builtin.count }.from(0).to(9)
       end
 
       it "logs an Ahoy page-view event" do
@@ -1162,9 +1162,11 @@ RSpec.describe "Events", type: :request do
 
         created = Event.order(created_at: :desc).first
         # The two submitted built-ins persist their edits, and the post-save seed
-        # fills the remaining six — every seeded built-in key present exactly once.
+        # fills the rest — every seeded built-in key present exactly once, including
+        # the single post-event survey callout.
         expect(created.registration_ticket_callouts.builtin.pluck(:builtin_key)).to contain_exactly(
-          "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq"
+          "payment", "certificate", "scholarship", "ce_hours", "videoconference", "staff", "handouts", "faq",
+          "feedback_surveys"
         )
         payment = created.registration_ticket_callouts.find_by(builtin_key: "payment")
         expect(payment.title).to eq("Pay your balance")
@@ -1334,9 +1336,10 @@ RSpec.describe "Events", type: :request do
         callout = create(:registration_ticket_callout, event:)
         form = create(:form)
         patch event_path(event), params: { event: {
-          registration_ticket_callouts_attributes: { "0" => { id: callout.id, form_id: form.id } }
+          registration_ticket_callouts_attributes: { "0" => { id: callout.id,
+            registration_ticket_callout_forms_attributes: { "0" => { form_id: form.id } } } }
         } }
-        expect(callout.reload.form).to eq(form)
+        expect(callout.reload.forms).to eq([ form ])
       end
 
       it "adds event staff via nested attributes" do
@@ -1505,12 +1508,12 @@ RSpec.describe "Events", type: :request do
         field = create(:form_field, form:, name: "How was it?")
         callout = create(:registration_ticket_callout, event:, form:, title: "Post-event survey")
         EventRegistrationServices::CalloutFormSubmission.call(
-          registration:, callout:, form_params: { field.id.to_s => "Great" }
+          registration:, callout:, form:, form_params: { field.id.to_s => "Great" }
         )
 
         get registrants_event_path(event)
 
-        expect(response.body).to include("Post-event survey")
+        expect(response.body).to include("Feedback")
         expect(response.body).to include("Ticket forms")
         expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
       end

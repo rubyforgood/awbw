@@ -50,7 +50,9 @@ class SmartFormFields
                "newest registration is treated as the freshest source — and a blank answer never " \
                "erases existing data. The previous value stays in the record's audit trail.",
       fields: [
-        [ "racial_ethnic_identity", "How would you best describe yourself?", "Sets the person's racial/ethnic identity." ]
+        [ "racial_ethnic_identity", "How would you best describe yourself?", "Sets the person's racial/ethnic identity." ],
+        [ "anonymous_contributions", "How may we display the content you share?", "Sets whether the person's contributed content (reflections, quotes, artwork) is credited to them or shown anonymously. Also written from a survey delivered on a registration ticket callout." ],
+        [ "display_name_preference", "Display my name as…", "Sets the name format the person's content is credited under (full name, first name and last initial, and so on). Also written from a survey delivered on a registration ticket callout." ]
       ]
     },
     {

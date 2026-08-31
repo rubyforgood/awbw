@@ -5,6 +5,23 @@ class FormBuilderService
   PAYMENT_METHOD_PAY_NOW = "Credit card (now)".freeze
   PAYMENT_METHOD_OPTIONS = [ PAYMENT_METHOD_PAY_NOW, "Credit card (later)", "Check" ].freeze
 
+  # Post-event survey option sets. Likert agreement scale for the workshop-impact
+  # questions; Yes/No/Other for the "was it clear?" questions (Other reveals a
+  # specify box); a likelihood scale for the recipient survey.
+  LIKERT_AGREEMENT_OPTIONS = [ "Strongly agree", "Agree", "Neutral", "Disagree", "Strongly disagree" ].freeze
+  CLARITY_OPTIONS = [ "Yes", "No", "Other" ].freeze
+  LIKELIHOOD_OPTIONS = [ "Very likely", "Likely", "Unsure", "Unlikely", "Very unlikely" ].freeze
+
+  # The clarity radios fan out over the day's topics: link resources to them (in the
+  # field editor) and the survey page renders one input per resource with the
+  # resource title appended to this prompt.
+  CLARITY_PROMPT = "Overall, was the information presented in a clear and concise manner for".freeze
+
+  # The per-workshop growth questions fan out the same way — the workshop title lands
+  # after the prompt. Shared with the seeder, which matches these fields by prompt.
+  GROWTH_PERSONAL_PROMPT = "This workshop supported my <em>personal</em> growth:".freeze
+  GROWTH_PROFESSIONAL_PROMPT = "This workshop supported my <em>professional</em> growth:".freeze
+
   SECTIONS = {
     person_identifier: { label: "Person identifier", method: :build_person_identifier_fields },
     person_contact_info: { label: "Person contact info", method: :build_person_contact_info_fields },
@@ -16,6 +33,10 @@ class FormBuilderService
     payment: { label: "Payment", method: :build_payment_fields },
     consent: { label: "Consent", method: :build_consent_fields },
     post_event_feedback: { label: "Post-event feedback", method: :build_post_event_feedback_fields },
+    day_1_survey: { label: "Day 1 survey", method: :build_day_1_survey_fields },
+    day_2_survey: { label: "Day 2 survey", method: :build_day_2_survey_fields },
+    recipient_survey: { label: "Scholarship recipient survey", method: :build_recipient_survey_fields },
+    content_sharing_preferences: { label: "Content sharing preferences", method: :build_content_sharing_preferences_fields },
     bulk_payment: { label: "Bulk payment", method: :build_bulk_payment_fields }
   }.freeze
 
@@ -57,6 +78,13 @@ class FormBuilderService
     payment: %w[payment_method someone_else_will_pay],
     consent: %w[communication_consent],
     post_event_feedback: %w[event_rating most_valuable improvement_suggestions],
+    # Every survey question is answer-only (stored on the form submission, not written
+    # to any other record), so none carry an identifier. The seeder finds the fan-out
+    # questions by their prompt text instead.
+    day_1_survey: %w[],
+    day_2_survey: %w[],
+    recipient_survey: %w[],
+    content_sharing_preferences: %w[anonymous_contributions display_name_preference],
     bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
@@ -72,6 +100,10 @@ class FormBuilderService
     payment: [ "Payment Information" ],
     consent: [ "Consent" ],
     post_event_feedback: [ "Post-Event Feedback" ],
+    day_1_survey: [ "Day 1 evaluation" ],
+    day_2_survey: [ "Day 2 evaluation" ],
+    recipient_survey: [ "Post-training recipient questions" ],
+    content_sharing_preferences: [ "Sharing preferences" ],
     bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
@@ -112,6 +144,47 @@ class FormBuilderService
     payment: [ "Payment method", "Will someone else be paying for your registration?" ],
     consent: [ "I agree to receive email communications from A Window Between Worlds." ],
     post_event_feedback: [ "How would you rate this event?", "What did you find most valuable?", "Any suggestions for improvement?" ],
+    day_1_survey: [
+      CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
+      "This workshop supported my <em>personal</em> growth:",
+      "This workshop supported my <em>professional</em> growth:",
+      "The breakout rooms supported me in sharing about my experience and connect with other trainees.",
+      "I was able to practice grounding and self-regulation during the training.",
+      "What I learned today better prepared me to facilitate art workshops.",
+      "What I learned today better prepared me to utilize trauma informed practices during art workshops.",
+      "Taking time to review and reflect after each workshop on how an element of the arc of healing connected to a part of the workshop structure will support me in facilitating art workshops.",
+      "Please tell us what aspects of day 1 of the training could be improved.",
+      "Please tell us what aspects of day 1 you enjoyed the most.",
+      "Imagine how you would share your experience of this training with someone who is considering attending. Please share in a couple of sentences what you would say or tell them.",
+      "Comments"
+    ],
+    day_2_survey: [
+      CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
+      "This workshop supported my <em>personal</em> growth:",
+      "This workshop supported my <em>professional</em> growth:",
+      "The breakout rooms supported me in sharing about my experience and connect with other trainees.",
+      "What I learned today better prepared me to facilitate art workshops that honor intersectionality.",
+      "Having time to dive into topics related to questions and challenges helped me feel more prepared to facilitate art workshops.",
+      "Taking time to review and reflect after each workshop on how an element of the arc of healing connected to a part of the workshop structure will support me in facilitating art workshops.",
+      "To best prepare art workshop participants to create, I understand the importance of providing a warm-up before the creation portion of the art workshop.",
+      "Please tell us what aspects of day 2 of the training could be improved.",
+      "Please tell us what aspects of day 2 of the training you enjoyed the most.",
+      "Would you like your name and email address included on a list we will share with your fellow trainees (for those who would like to stay in touch)?",
+      "How can we better support your needs and those of your art workshop participants?",
+      "Imagine how you would share your experience of this training with someone who is considering attending. Please share in a couple of sentences what you would say or tell them.",
+      "Comments"
+    ],
+    recipient_survey: [
+      "How did participating in this training impact you personally and/or professionally?",
+      "What insights, tools, or facilitation skills from the training stood out most to you?",
+      "What would have made the training more valuable for you?",
+      "How likely are you to facilitate an AWBW art workshop in the next 3 months?",
+      "Anything else you'd like us to know?"
+    ],
+    content_sharing_preferences: [
+      "Display my name as…",
+      "How may we display the content you share (reflections, quotes, artwork)?"
+    ],
     bulk_payment: [
       "Payer first name", "Payer last name", "Payer email", "Phone", "Organization",
       "Payment method", "Number of attendees", "Attendees"
@@ -138,6 +211,10 @@ class FormBuilderService
     payment: %w[payment],
     consent: %w[consent],
     post_event_feedback: %w[post_event_feedback],
+    day_1_survey: %w[day_1_survey],
+    day_2_survey: %w[day_2_survey],
+    recipient_survey: %w[recipient_survey],
+    content_sharing_preferences: %w[content_sharing],
     bulk_payment: %w[bulk_payment]
   }.freeze
 
@@ -330,7 +407,7 @@ class FormBuilderService
     position
   end
 
-  def add_field(form, position, field_name, answer_type, key:, group:, required: true, subtitle: nil, options: nil, datatype: nil, visibility: nil, width: :full)
+  def add_field(form, position, field_name, answer_type, group:, key: nil, required: true, subtitle: nil, options: nil, datatype: nil, visibility: nil, width: :full)
     position += 1
     field = form.form_fields.create!(
       name: field_name,
@@ -610,6 +687,122 @@ class FormBuilderService
                          key: "most_valuable", group: "post_event_feedback", required: false)
     position = add_field(form, position, "Any suggestions for improvement?", :free_form_input_paragraph,
                          key: "improvement_suggestions", group: "post_event_feedback", required: false)
+    position
+  end
+
+  def build_day_1_survey_fields(form, position)
+    position = add_header(form, position, "Day 1 evaluation", group: "day_1_survey")
+
+    position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
+                         group: "day_1_survey", subtitle: "Day 1 — Part One",
+                         options: CLARITY_OPTIONS)
+    position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
+                         group: "day_1_survey", required: false)
+    position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
+                         group: "day_1_survey", subtitle: "Day 1 — Part Two",
+                         options: CLARITY_OPTIONS)
+    position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
+                         group: "day_1_survey", required: false)
+
+    # Fanned per workshop (seeded resource links) — the workshop name lands after
+    # the prompt, so the text stays generic.
+    position = add_field(form, position, GROWTH_PERSONAL_PROMPT, :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, GROWTH_PROFESSIONAL_PROMPT, :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "I was able to practice grounding and self-regulation during the training.", :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "What I learned today better prepared me to facilitate art workshops.", :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "What I learned today better prepared me to utilize trauma informed practices during art workshops.", :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "Taking time to review and reflect after each workshop on how an element of the arc of healing connected to a part of the workshop structure will support me in facilitating art workshops.", :single_select_radio,
+                         group: "day_1_survey", options: LIKERT_AGREEMENT_OPTIONS)
+
+    position = add_field(form, position, "Please tell us what aspects of day 1 of the training could be improved.", :free_form_input_paragraph,
+                         group: "day_1_survey", required: false)
+    position = add_field(form, position, "Please tell us what aspects of day 1 you enjoyed the most.", :free_form_input_paragraph,
+                         group: "day_1_survey", required: false)
+    position = add_field(form, position, "Imagine how you would share your experience of this training with someone who is considering attending. Please share in a couple of sentences what you would say or tell them.", :free_form_input_paragraph,
+                         group: "day_1_survey", required: false)
+    position = add_field(form, position, "Comments", :free_form_input_paragraph,
+                         group: "day_1_survey", required: false)
+    position
+  end
+
+  def build_day_2_survey_fields(form, position)
+    position = add_header(form, position, "Day 2 evaluation", group: "day_2_survey")
+
+    position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
+                         group: "day_2_survey", subtitle: "Day 2 — Part 1",
+                         options: CLARITY_OPTIONS)
+    position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
+                         group: "day_2_survey", required: false)
+    position = add_field(form, position, CLARITY_PROMPT, :single_select_radio,
+                         group: "day_2_survey", subtitle: "Day 2 — Part 2",
+                         options: CLARITY_OPTIONS)
+    position = add_field(form, position, "Please elaborate.", :free_form_input_paragraph,
+                         group: "day_2_survey", required: false)
+
+    # Fanned per workshop (seeded resource links) — the workshop name lands after
+    # the prompt, so the text stays generic.
+    position = add_field(form, position, GROWTH_PERSONAL_PROMPT, :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, GROWTH_PROFESSIONAL_PROMPT, :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "The breakout rooms supported me in sharing about my experience and connect with other trainees.", :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "What I learned today better prepared me to facilitate art workshops that honor intersectionality.", :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "Having time to dive into topics related to questions and challenges helped me feel more prepared to facilitate art workshops.", :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "Taking time to review and reflect after each workshop on how an element of the arc of healing connected to a part of the workshop structure will support me in facilitating art workshops.", :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+    position = add_field(form, position, "To best prepare art workshop participants to create, I understand the importance of providing a warm-up before the creation portion of the art workshop.", :single_select_radio,
+                         group: "day_2_survey", options: LIKERT_AGREEMENT_OPTIONS)
+
+    position = add_field(form, position, "Please tell us what aspects of day 2 of the training could be improved.", :free_form_input_paragraph,
+                         group: "day_2_survey", required: false)
+    position = add_field(form, position, "Please tell us what aspects of day 2 of the training you enjoyed the most.", :free_form_input_paragraph,
+                         group: "day_2_survey", required: false)
+    position = add_field(form, position, "Would you like your name and email address included on a list we will share with your fellow trainees (for those who would like to stay in touch)?", :single_select_radio,
+                         group: "day_2_survey", required: false, options: %w[Yes No])
+    position = add_field(form, position, "How can we better support your needs and those of your art workshop participants?", :free_form_input_paragraph,
+                         group: "day_2_survey", required: false)
+    position = add_field(form, position, "Imagine how you would share your experience of this training with someone who is considering attending. Please share in a couple of sentences what you would say or tell them.", :free_form_input_paragraph,
+                         group: "day_2_survey", required: false)
+    position = add_field(form, position, "Comments", :free_form_input_paragraph,
+                         group: "day_2_survey", required: false)
+    position
+  end
+
+  def build_recipient_survey_fields(form, position)
+    position = add_header(form, position, "Post-training recipient questions", group: "recipient_survey")
+
+    position = add_field(form, position, "How did participating in this training impact you personally and/or professionally?", :free_form_input_paragraph,
+                         group: "recipient_survey", required: true)
+    position = add_field(form, position, "What insights, tools, or facilitation skills from the training stood out most to you?", :free_form_input_paragraph,
+                         group: "recipient_survey", required: true)
+    position = add_field(form, position, "What would have made the training more valuable for you?", :free_form_input_paragraph,
+                         group: "recipient_survey", required: false)
+    position = add_field(form, position, "How likely are you to facilitate an AWBW art workshop in the next 3 months?", :single_select_radio,
+                         group: "recipient_survey", options: LIKELIHOOD_OPTIONS)
+    position = add_field(form, position, "Anything else you'd like us to know?", :free_form_input_paragraph,
+                         group: "recipient_survey", required: false)
+    position
+  end
+
+  def build_content_sharing_preferences_fields(form, position)
+    position = add_header(form, position, "Sharing preferences", group: "content_sharing")
+
+    position = add_field(form, position, "Display my name as…", :single_select_radio,
+                         key: "display_name_preference", group: "content_sharing",
+                         options: Person::DISPLAY_NAME_PREFERENCE_LABELS.values)
+    position = add_field(form, position, "How may we display the content you share (reflections, quotes, artwork)?", :single_select_radio,
+                         key: "anonymous_contributions", group: "content_sharing",
+                         options: Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS.values)
     position
   end
 

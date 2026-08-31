@@ -231,18 +231,33 @@
         <%# RIGHT COLUMN: linked form (parallel to Type), then linked resources
             (parallel to Visibility) — each its own toggle. %>
         <div class="space-y-4">
-        <details class="group" <%= "open" if f.object.form_id.present? %>>
+        <details class="group" <%= "open" if f.object.registration_ticket_callout_forms.any? %>>
           <summary class="flex items-center gap-1.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-gray-600">
             <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
-            Linked form
+            Linked forms
           </summary>
 
-          <div class="mt-2">
-            <%= f.select :form_id,
-                  options_from_collection_for_select(@callout_forms, :id, :name, f.object.form_id),
-                  { include_blank: "No form" },
-                  class: "w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm" %>
-            <p class="text-xs text-gray-500 mt-0.5">Delivered inline on this callout's page (drips with the display date above).</p>
+          <div class="mt-1">
+            <p class="text-xs text-gray-500 mb-1">Optional. Each form is delivered inline on this callout's page. Set a <strong>display date</strong> to drip it open on that date; leave it blank to open it with the callout. This callout's own display date above always wins, so no form opens before the callout does. Completed forms collapse to a "Completed" toggle.</p>
+
+            <div class="space-y-2">
+              <div class="text-2xs mt-2 hidden items-center gap-2 font-semibold tracking-wide text-gray-400 uppercase sm:flex">
+                <div class="grid min-w-0 flex-1 grid-cols-2 gap-2">
+                  <span>Form</span>
+                  <span>Display date</span>
+                </div>
+                <span class="w-3 shrink-0" aria-hidden="true"></span>
+              </div>
+
+              <%= f.fields_for :registration_ticket_callout_forms do |ff| %>
+                <%= render "events/registration_ticket_callout_form_fields", f: ff %>
+              <% end %>
+
+              <%= link_to_add_association "➕ Add form", f, :registration_ticket_callout_forms,
+                    partial: "events/registration_ticket_callout_form_fields",
+                    data: { association_insertion_node: "this", association_insertion_method: "before" },
+                    class: "inline-block text-sm font-medium text-purple-600 hover:text-purple-800" %>
+            </div>
           </div>
         </details>
 

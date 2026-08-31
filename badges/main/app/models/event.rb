@@ -240,6 +240,35 @@ class Event < ApplicationRecord
     from.blank? || now >= from
   end
 
+  # The recipients survey lives on the scholarship callout. Memoized so readiness
+  # (which runs per registration) hits the callouts once per event, not per row.
+  def scholarship_callout
+    return @scholarship_callout if defined?(@scholarship_callout)
+    @scholarship_callout =
+      registration_ticket_callouts.detect { |callout| callout.builtin_key == "scholarship" }
+  end
+
+  # The recipient's form row on the (published) scholarship callout — whatever form
+  # an admin links there gates readiness, no special role needed. nil when the
+  # callout carries no form or is hidden.
+  def recipient_survey_form_link
+    return @recipient_survey_form_link if defined?(@recipient_survey_form_link)
+    callout = scholarship_callout
+    @recipient_survey_form_link =
+      if callout && !callout.hidden?
+        callout.registration_ticket_callout_forms.min_by { |link| [ link.position || 0, link.id ] }
+      end
+  end
+
+  # Whether the recipient survey's own drip date (if any) has passed — the
+  # event-level half of its availability. The per-recipient half (agreement signed,
+  # tasks complete) lives on EventRegistration#recipient_survey_available?.
+  def recipient_survey_drip_open?(now = Time.current)
+    link = recipient_survey_form_link
+    return false unless link
+    !link.dripping?(now)
+  end
+
   def registerable?
     !ended? && (registration_close_date.nil? || registration_close_date >= Time.current)
   end

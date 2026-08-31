@@ -13,7 +13,15 @@ class FormSubmissionChanges
   ATTRIBUTE_LABELS = {
     "website_url" => "Website", "organization_type" => "Type",
     "value" => "Phone", "racial_ethnic_identity" => "Racial / ethnic identity",
-    "zip_code" => "ZIP", "street_address" => "Street address"
+    "zip_code" => "ZIP", "street_address" => "Street address",
+    "anonymous_contributions" => "Content sharing", "display_name_preference" => "Display name"
+  }.freeze
+
+  # Columns whose stored value is a code (a boolean, an enum key), mapped to the
+  # wording the person actually chose so the page doesn't read "true".
+  VALUE_LABELS = {
+    "anonymous_contributions" => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS,
+    "display_name_preference" => Person::DISPLAY_NAME_PREFERENCE_LABELS
   }.freeze
 
   # Sub-record attributes edit a section of the owner's edit page rather than a
@@ -106,16 +114,23 @@ class FormSubmissionChanges
   def attribute_changes(changes, resource_type)
     changes.except(*IGNORED_ATTRIBUTES).filter_map do |attribute, before_after|
       before, after = before_after.values_at("before", "after")
-      next if after.blank? && before.blank?
+      coded = VALUE_LABELS[attribute]
+      next if after.blank? && before.blank? && coded.nil?
 
       Change.new(
-        outcome: before.present? ? "Replaced" : "Filled",
+        outcome: replaced?(before, coded) ? "Replaced" : "Filled",
         label: ATTRIBUTE_LABELS[attribute] || attribute.humanize,
-        value: display_value(after),
-        previous_value: display_value(before),
+        value: display_value(after, coded),
+        previous_value: display_value(before, coded),
         anchor: anchor_for(resource_type, attribute)
       )
     end
+  end
+
+  # On a coded column `false` is a choice, not an empty column, so whether
+  # something was there before is a nil check rather than a blank check.
+  def replaced?(before, coded)
+    coded ? !before.nil? : before.present?
   end
 
   # Own-record columns anchor to their form input (person_racial_ethnic_identity,
@@ -153,7 +168,8 @@ class FormSubmissionChanges
     record&.try(:full_name).presence || record&.try(:name).presence || "#{type} ##{id}"
   end
 
-  def display_value(value)
+  def display_value(value, coded = nil)
+    return coded.fetch(value, value) if coded
     value.is_a?(Array) ? value.join(", ") : value
   end
 end

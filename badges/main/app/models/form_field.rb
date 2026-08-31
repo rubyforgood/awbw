@@ -7,6 +7,10 @@ class FormField < ApplicationRecord
   has_many :form_answers, dependent: :nullify
   has_many :childs, foreign_key: "parent_id", class_name: "FormField"
 
+  # A field with any linked resources becomes a per-resource question (see FormFieldResource).
+  has_many :form_field_resources, -> { ordered }, dependent: :destroy, inverse_of: :form_field
+  has_many :resources, through: :form_field_resources
+
   # has_many through
   has_many :answer_options, through: :form_field_answer_options
 
@@ -180,6 +184,9 @@ class FormField < ApplicationRecord
   accepts_nested_attributes_for :form_field_answer_options, allow_destroy: true,
     reject_if: ->(attrs) { attrs[:option_name].blank? }
 
+  accepts_nested_attributes_for :form_field_resources, allow_destroy: true,
+    reject_if: ->(attrs) { attrs[:resource_id].blank? }
+
   scope :published, -> { where(status: "active") }
 
   # Methods
@@ -187,6 +194,21 @@ class FormField < ApplicationRecord
 
   def selectable?
     answer_type.in?(SELECTABLE_ANSWER_TYPES)
+  end
+
+  # Each copy of a fanned-out question renders this field's own answer options, so
+  # only a choice field can be one. A field switched away from a choice type keeps
+  # its links but falls back to rendering as an ordinary question.
+  def per_resource?
+    selectable? && form_field_resources.any?
+  end
+
+  # The sentence one fanned-out copy is asked, stored, and shown under. The answer
+  # keeps a nil form_field, so this string is also its key: the subtitle leads so two
+  # fan-out questions sharing a name (the clarity pair, which differ only by their
+  # "Part One" / "Part Two" subtitle) can't collide on one answer row.
+  def per_resource_question(resource)
+    [ subtitle.presence, "#{name} #{resource.title}" ].compact.join(": ")
   end
 
   # True for fields whose answer options are tied to backend logic (currently the
