@@ -5,11 +5,11 @@
 <%
   variant = local_assigns.fetch(:variant, "chips")
   rows = []
-  rows << { icon: "fa-calendar-day", label: "Date", value: event_dates_label(event) } if event.autoshow_date && event_dates_label(event).present?
-  rows << { icon: "fa-clock", label: "Time", value: event_times_label(event) } if event.autoshow_time && event_times_label(event).present?
-  rows << { icon: "fa-ticket", label: "Cost", value: event_fee_label(event) } if event.autoshow_cost && event_fee_label(event).present?
-  rows << { icon: "fa-video", label: "Format", value: event.videoconference_label } if event.autoshow_videoconference_label && event.videoconference_label.present?
-  rows << { icon: "fa-location-dot", label: "Location", value: event.location.name } if event.autoshow_location && event.location&.name.present?
+  rows << { label: "Date", value: event_dates_label(event) } if event.autoshow_date && event_dates_label(event).present?
+  rows << { label: "Time", value: event_times_label(event) } if event.autoshow_time && event_times_label(event).present?
+  rows << { label: "Cost", value: event_fee_label(event) } if event.autoshow_cost && event_fee_label(event).present?
+  rows << { label: "Format", value: event.videoconference_label } if event.autoshow_videoconference_label && event.videoconference_label.present?
+  rows << { label: "Location", value: event.location.name } if event.autoshow_location && event.location&.name.present?
 
   registered = current_user && event.actively_registered?(current_user.person)
   show_close = event.autoshow_registration_close && event.registration_close_date && !registered
@@ -43,7 +43,7 @@
   <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-brand-navy-800">
     <% rows.each_with_index do |row, i| %>
       <% if i.positive? %><span class="text-brand-navy-300" aria-hidden="true">&bull;</span><% end %>
-      <span class="inline-flex items-center gap-1.5"><i class="fa-solid <%= row[:icon] %> text-brand-navy-400" aria-hidden="true"></i><%= row[:value] %></span>
+      <span><%= row[:value] %></span>
     <% end %>
   </div>
   <% if close_text %>
@@ -54,9 +54,7 @@
   <% chip_class = variant == "chips_navy" ? "bg-white/10 text-white" : "border border-brand-navy-200 bg-white text-brand-navy-800" %>
   <div class="flex flex-wrap <%= "justify-center" unless variant == "chips_navy" && local_assigns[:align] == "start" %> gap-2">
     <% rows.each do |row| %>
-      <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium <%= chip_class %>">
-        <i class="fa-solid <%= row[:icon] %>" aria-hidden="true"></i><%= row[:value] %>
-      </span>
+      <span class="rounded-full px-4 py-1.5 text-sm font-medium <%= chip_class %>"><%= row[:value] %></span>
     <% end %>
   </div>
   <% if close_text %>
