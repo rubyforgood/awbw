@@ -234,7 +234,13 @@ class BuiltinCallouts
         callout_type: "action",
         icon_class: "fa-solid fa-award",
         color_class: "fuchsia",
-        hidden: ->(_event) { true }
+        hidden: ->(_event) { true },
+        # The scholarship-only recipients survey, shown on the scholarship page once
+        # the recipient has signed their agreement and their tasks are complete (and
+        # any drip date has passed). Seeded with no date; admins can add one.
+        forms: ->(_event) {
+          [ { form: Form.standalone.find_by(name: "Post-Training Recipients Survey"), display_from: nil } ]
+        }
       },
       {
         builtin_key: "ce_hours",
@@ -312,15 +318,15 @@ class BuiltinCallouts
         icon_class: "fa-solid fa-clipboard-list",
         color_class: "fuchsia",
         hidden: ->(_event) { true },
-        # One callout that drips several survey forms, each on its own date: the
-        # Day 1 evaluation, the Day 2 evaluation (multi-day events only), and the
-        # recipients survey (the one that gates readiness). Rows whose template
-        # isn't seeded yet resolve to nil and are skipped.
+        # The everyone-facing evaluations — one callout that drips the Day 1
+        # evaluation and (multi-day events only) the Day 2 evaluation, each on its
+        # own date. Rows whose template isn't seeded yet resolve to nil and are
+        # skipped. The scholarship-only recipients survey lives on the scholarship
+        # callout instead.
         forms: ->(event) {
           [
             { form: Form.standalone.find_by(name: "Day 1 Survey"), display_from: survey_drip(event, 1) },
-            ({ form: Form.standalone.find_by(name: "Day 2 Survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2),
-            { form: Form.standalone.find_by(name: "Post-Training Recipients Survey"), display_from: (event.end_date - 30.minutes if event.end_date) }
+            ({ form: Form.standalone.find_by(name: "Day 2 Survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2)
           ].compact
         }
       }

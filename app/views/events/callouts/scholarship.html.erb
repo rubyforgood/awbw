@@ -174,6 +174,19 @@
       </div>
     <% end %>
 
+    <%# The recipients survey, once the recipient has signed their agreement and
+        finished their tasks (and any drip date has passed). %>
+    <% if @recipient_survey_available %>
+      <div class="border-t border-gray-100 pt-5">
+        <%= render "events/callouts/callout_form",
+              callout: @recipient_survey_link.registration_ticket_callout,
+              callout_form: @recipient_survey_link,
+              submission: @recipient_survey_submission,
+              editing: @recipient_survey_editing,
+              edit_url: registration_scholarship_path(@event_registration.slug, edit: @recipient_survey_link.form_id, anchor: "form-#{@recipient_survey_link.form_id}") %>
+      </div>
+    <% end %>
+
     <%# Jump to the registrant's full submission, where their scholarship
         application answers are surfaced (inline for embedded-section forms, or
         in a dedicated "Scholarship application" card for separate forms). %>

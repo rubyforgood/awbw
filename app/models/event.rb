@@ -240,27 +240,31 @@ class Event < ApplicationRecord
     from.blank? || now >= from
   end
 
-  # Memoized so readiness (which runs per registration) hits the callouts once per
-  # event, not per row.
-  def post_event_survey_callout
-    return @post_event_survey_callout if defined?(@post_event_survey_callout)
-    @post_event_survey_callout =
-      registration_ticket_callouts.detect { |callout| callout.builtin_key == "post_event_survey" }
+  # The recipients survey lives on the scholarship callout. Memoized so readiness
+  # (which runs per registration) hits the callouts once per event, not per row.
+  def scholarship_callout
+    return @scholarship_callout if defined?(@scholarship_callout)
+    @scholarship_callout =
+      registration_ticket_callouts.detect { |callout| callout.builtin_key == "scholarship" }
   end
 
-  # The readiness-gating form row within the post-event survey callout — the one
-  # whose form carries the "post_event_survey" role (the recipients survey).
-  def readiness_survey_form_link
-    return @readiness_survey_form_link if defined?(@readiness_survey_form_link)
-    @readiness_survey_form_link =
-      post_event_survey_callout&.registration_ticket_callout_forms&.detect { |link| link.form&.role == Form::READINESS_SURVEY_ROLE }
+  # The recipient-survey form row on the (published) scholarship callout — the one
+  # whose form carries the recipient-survey role. nil when unseeded or hidden.
+  def recipient_survey_form_link
+    return @recipient_survey_form_link if defined?(@recipient_survey_form_link)
+    callout = scholarship_callout
+    @recipient_survey_form_link =
+      if callout && !callout.hidden?
+        callout.registration_ticket_callout_forms.detect { |link| link.form&.role == Form::READINESS_SURVEY_ROLE }
+      end
   end
 
-  # Published + past drip. Only then does an unsubmitted survey gate a recipient's
-  # completion.
-  def post_event_survey_open?(now = Time.current)
-    link = readiness_survey_form_link
-    return false unless link && !post_event_survey_callout.hidden?
+  # Whether the recipient survey's own drip date (if any) has passed — the
+  # event-level half of its availability. The per-recipient half (agreement signed,
+  # tasks complete) lives on EventRegistration#recipient_survey_available?.
+  def recipient_survey_drip_open?(now = Time.current)
+    link = recipient_survey_form_link
+    return false unless link
     link.display_from.blank? || link.display_from <= now
   end
 

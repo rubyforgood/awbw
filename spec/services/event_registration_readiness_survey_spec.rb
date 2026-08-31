@@ -10,18 +10,21 @@ RSpec.describe EventRegistrationReadiness, "post-event survey gating" do
   end
 
   # A scholarship covering the full cost makes the recipient paid-in-full and, with
-  # tasks complete, clears every pre-event and post-event check except the survey.
+  # the agreement accepted and tasks complete, clears every pre-event and post-event
+  # check except the survey.
   def award_scholarship(reg, amount: 1000)
-    scholarship = create(:scholarship, recipient: reg.registrant, tasks_completed: true, amount_cents: amount)
+    scholarship = create(:scholarship, recipient: reg.registrant, tasks_completed: true,
+      agreement_response_status: "accepted", amount_cents: amount)
     create(:allocation, source: scholarship, allocatable: reg, amount: amount)
   end
 
+  # The recipients survey is delivered on the scholarship callout.
   def open_recipient_survey(hidden: false, display_from: 1.day.ago)
     callout = event.registration_ticket_callouts.create!(
-      builtin_key: "post_event_survey", title: "Post-event survey",
+      builtin_key: "scholarship", title: "Scholarship",
       callout_type: "action", hidden: hidden
     )
-    form = create(:form, role: "post_event_survey")
+    form = create(:form, role: "recipient_survey")
     callout.registration_ticket_callout_forms.create!(form: form, display_from: display_from)
     callout
   end

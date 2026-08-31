@@ -3,6 +3,9 @@
     expands to the answers + Edit. Otherwise → the form, ready to fill. %>
 <% form = callout_form.form %>
 <% completed = submission.present? %>
+<%# Where "Edit responses" returns to — defaults to this callout's page; the
+    scholarship page overrides it so its survey edits stay on the scholarship page. %>
+<% edit_url = local_assigns.fetch(:edit_url, registration_callout_form_path(@event_registration.slug, callout, edit: form.id, anchor: "form-#{form.id}")) %>
 <div id="form-<%= form.id %>" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200">
   <% if callout_form.dripping? %>
     <div class="flex items-center justify-between gap-2 <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5">
@@ -37,7 +40,7 @@
           <% end %>
         </dl>
         <div class="mt-6">
-          <%= link_to "Edit responses", registration_callout_form_path(@event_registration.slug, callout, edit: form.id, anchor: "form-#{form.id}"),
+          <%= link_to "Edit responses", edit_url,
                 class: "inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" %>
         </div>
       </div>

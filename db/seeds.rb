@@ -515,7 +515,7 @@ puts "Creating post-event survey forms…"
 [
   { name: "Day 1 Survey", role: "day_1_survey", sections: %i[day_1_survey content_sharing_preferences] },
   { name: "Day 2 Survey", role: "day_2_survey", sections: %i[day_2_survey content_sharing_preferences] },
-  { name: "Post-Training Recipients Survey", role: "post_event_survey", sections: %i[recipient_survey content_sharing_preferences] }
+  { name: "Post-Training Recipients Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
 ].each do |template|
   next if Form.exists?(name: template[:name])
   FormBuilderService.new(name: template[:name], sections: template[:sections], role: template[:role]).call

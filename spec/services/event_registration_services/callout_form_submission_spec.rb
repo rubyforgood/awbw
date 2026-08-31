@@ -22,9 +22,9 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
   end
 
   it "carries the form's own role when it has one" do
-    form.update!(role: "post_event_survey")
+    form.update!(role: "registration")
 
-    expect(submit({ field.id.to_s => "Great" }).role).to eq("post_event_survey")
+    expect(submit({ field.id.to_s => "Great" }).role).to eq("registration")
   end
 
   it "records in metadata that the submission was collected via a callout" do
@@ -44,7 +44,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
   end
 
   describe "a survey-role form's side effects" do
-    let(:form) { create(:form, role: "post_event_survey") }
+    let(:form) { create(:form, role: "recipient_survey") }
     let!(:clarity_field) do
       create(:form_field, form:, answer_type: :single_select_radio,
         name: "Overall, was the information presented in a clear and concise manner for")

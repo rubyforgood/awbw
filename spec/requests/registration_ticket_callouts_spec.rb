@@ -88,7 +88,7 @@ RSpec.describe "Callout inline form", type: :request do
   end
 
   describe "submitting a survey-role form (clarity fan-out + profile write-through)" do
-    let(:survey) { create(:form, name: "Recipients survey", role: "post_event_survey") }
+    let(:survey) { create(:form, name: "Day 1 survey", role: "day_1_survey") }
     let!(:impact) { create(:form_field, form: survey, name: "Impact?", field_identifier: "impact") }
     let!(:anon) do
       create(:form_field, form: survey, answer_type: :single_select_radio, name: "Anonymity?",
@@ -114,7 +114,7 @@ RSpec.describe "Callout inline form", type: :request do
       }
 
       submission = FormSubmission.last
-      expect(submission.role).to eq("post_event_survey")
+      expect(submission.role).to eq("day_1_survey")
       expect(submission.form_answers.find_by(form_field: impact).submitted_answer).to eq("Transformative")
       clarity_answer = submission.form_answers.find_by(form_field: nil)
       expect(clarity_answer.submitted_answer).to eq("Yes")

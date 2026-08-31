@@ -54,6 +54,16 @@ module Events
 
       @scholarship = @event_registration.effective_scholarship
       @form_responses_available = @event.registration_form&.form_submissions&.exists?(person: @event_registration.registrant)
+
+      # The recipients survey, delivered here once the recipient has signed their
+      # agreement and finished their tasks (and any drip date has passed).
+      @recipient_survey_link = @event.recipient_survey_form_link
+      @recipient_survey_available = @recipient_survey_link.present? && @event_registration.recipient_survey_available?
+      if @recipient_survey_available
+        @recipient_survey_submission = FormSubmission.find_by(person: @event_registration.registrant,
+          event: @event, form: @recipient_survey_link.form)
+        @recipient_survey_editing = @recipient_survey_submission.nil? || params[:edit].to_i == @recipient_survey_link.form_id
+      end
     end
 
     # The Agree button (agreement=yes) records an "accepted" response.
@@ -318,6 +328,9 @@ module Events
       # The CE callout's form is a post-training step — it opens only once the
       # registrant's sign-outs are complete, and it lives on the CE page.
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
+      # The scholarship callout delivers the recipients survey inline on its own
+      # page (gated on agreement + tasks), not the generic callout-forms page.
+      return redirect_to registration_scholarship_path(@event_registration.slug) if @callout.builtin_key == "scholarship"
 
       @callout_forms = @callout.registration_ticket_callout_forms.includes(:form)
       @resource_cards = @callout.decorate.resource_cards(registrant_slug: @event_registration.slug, return_to: "callout_form")
@@ -328,22 +341,23 @@ module Events
     def submit_callout
       @callout = @event.registration_ticket_callouts.find(params[:callout_id])
       callout_form = @callout.registration_ticket_callout_forms.find_by(form_id: params[:form_id])
-      if @callout.hidden? || callout_form.nil? || callout_form.dripping?
-        redirect_to registration_callout_form_path(@event_registration.slug, @callout)
+      form = callout_form&.form
+      if @callout.hidden? || callout_form.nil? || callout_form.dripping? || recipient_survey_locked?(form)
+        redirect_to callout_form_landing(@callout, callout_form)
         return
       end
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
       service = EventRegistrationServices::CalloutFormSubmission.call(
-        registration: @event_registration, callout: @callout, form: callout_form.form,
+        registration: @event_registration, callout: @callout, form: form,
         form_params: callout_form_params, clarity_params: callout_clarity_params
       )
-      if callout_form.form.survey?
+      if form.survey?
         track_profile_changes(service.profile_changes)
         NotificationMailer.survey_submitted_fyi(service.submission).deliver_later
       end
 
-      redirect_to registration_callout_form_path(@event_registration.slug, @callout, anchor: "form-#{callout_form.form_id}"),
+      redirect_to callout_form_landing(@callout, callout_form),
                   notice: "Thanks! Your responses have been submitted."
     end
 
@@ -372,6 +386,20 @@ module Events
       forms = @callout.forms.to_a
       FormSubmission.where(person: @event_registration.registrant, event: @event, form: forms)
                     .index_by(&:form_id)
+    end
+
+    # The recipients survey can't be filled until the recipient has signed their
+    # agreement and finished their tasks — guards a direct POST past the page gate.
+    def recipient_survey_locked?(form)
+      form&.role == Form::READINESS_SURVEY_ROLE && !@event_registration.recipient_survey_available?
+    end
+
+    # Where to send the registrant after landing on / submitting a callout form. The
+    # scholarship callout's survey lives on the scholarship page; everything else
+    # returns to the generic callout-forms page, anchored to the form.
+    def callout_form_landing(callout, callout_form)
+      return registration_scholarship_path(@event_registration.slug) if callout.builtin_key == "scholarship"
+      registration_callout_form_path(@event_registration.slug, callout, anchor: callout_form && "form-#{callout_form.form_id}")
     end
 
     # The CE callout's form is a post-training step gated on sign-out completion —
