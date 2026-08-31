@@ -7,6 +7,11 @@ class Organization < ApplicationRecord
   belongs_to :organization_obligation, optional: true
   belongs_to :location, optional: true # TODO - remove Location if unused
   belongs_to :windows_type, optional: true
+  # Self-referential nesting: an org can sit under a parent "roof" org (mirrors
+  # FileMaker's Organization ParentID). Deleting a parent un-nests its children
+  # rather than cascading. See ADR-0004.
+  belongs_to :parent, class_name: "Organization", optional: true, inverse_of: :children
+  has_many :children, class_name: "Organization", foreign_key: :parent_id, inverse_of: :parent, dependent: :nullify
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
@@ -68,6 +73,7 @@ class Organization < ApplicationRecord
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
+  validate :parent_is_not_self_or_descendant, if: :parent_id_changed?
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
@@ -240,6 +246,34 @@ class Organization < ApplicationRecord
     "#{name} #{ " (#{windows_type.short_name})" if windows_type}"
   end
 
+  def nested?
+    parent_id.present?
+  end
+
+  # Every ancestor from the immediate parent up to the root, guarding against a
+  # malformed cycle so a bad row can't loop forever.
+  def ancestors
+    result = []
+    seen = [ id ]
+    current = parent
+    while current && seen.exclude?(current.id)
+      result << current
+      seen << current.id
+      current = current.parent
+    end
+    result
+  end
+
+  # The topmost org in this org's tree — itself when it has no parent.
+  def root
+    ancestors.last || self
+  end
+
+  # Every org nested under this one, at any depth.
+  def descendants
+    children.flat_map { |child| [ child ] + child.descendants }
+  end
+
   def organization_description
     locality = organization_locality
     locality.present? ? "#{name}, #{locality}" : name
@@ -351,6 +385,16 @@ class Organization < ApplicationRecord
     end
     if end_date_changed?
       errors.add(:end_date, "is managed automatically by affiliations")
+    end
+  end
+
+  def parent_is_not_self_or_descendant
+    return if parent_id.blank?
+
+    if parent_id == id
+      errors.add(:parent_id, "can't be the organization itself")
+    elsif persisted? && descendants.any? { |org| org.id == parent_id }
+      errors.add(:parent_id, "can't be one of this organization's nested organizations")
     end
   end
 

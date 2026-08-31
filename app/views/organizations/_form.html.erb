@@ -168,6 +168,21 @@
         <%= f.input :high_profile,
                     label: "High profile",
                     hint: "Shows a #{high_profile_gem} next to the org on dashboards and reports".html_safe %>
+        <% parent = f.object.parent %>
+        <%= f.input :parent_id,
+                    label: "Parent organization",
+                    collection: parent ? [ [ parent.remote_search_label[:label], parent.id ] ] : [],
+                    include_blank: "None",
+                    hint: "Nest this org under a parent “roof” organization",
+                    input_html: {
+                      class: "w-full rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500",
+                      data: {
+                        controller: "remote-select",
+                        remote_select_model_value: "organization",
+                        remote_select_exclude_value: ([ f.object.id ] + f.object.descendants.map(&:id)).compact.join(",")
+                      }
+                    },
+                    prompt: "Type to search organizations…" %>
       </div>
     <% end %>
 
