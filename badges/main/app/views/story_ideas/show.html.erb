@@ -31,11 +31,8 @@
       <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
           <span class="font-semibold text-gray-700">Story by:</span>
-          <% if @story_idea.created_by&.person && allowed_to?(:show?, @story_idea.created_by.person) %>
-            <%= link_to @story_idea.created_by.name,
-                        person_path(@story_idea.created_by.person),
-                        data: { turbo_frame: "_top" },
-                        class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:people, intensity: 100)} #{DomainTheme.text_class_for(:people)} #{DomainTheme.bg_class_for(:people, intensity: 100, hover: true)}" %>
+          <% if @story_idea.created_by %>
+            <%= user_button(@story_idea.created_by, data: { turbo_frame: "_top" }) %>
           <% else %>
             <%= @story_idea.created_by&.name || "—" %>
           <% end %>

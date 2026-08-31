@@ -115,7 +115,7 @@
         <dt class="w-28 text-gray-500">From</dt>
         <dd class="min-w-0 flex-1">
           <% if nd.from_button_person %>
-            <%= person_profile_button(nd.from_button_person, compact: true, width_class: "w-fit max-w-md", subtitle: nd.from_email) %>
+            <%= person_edit_button(nd.from_button_person, compact: true, width_class: "w-fit max-w-md", subtitle: nd.from_email) %>
           <% else %>
             <span class="font-medium break-all text-gray-900" title="<%= nd.from_title %>"><%= nd.from_name.presence || "—" %></span>
           <% end %>
@@ -126,7 +126,7 @@
         <dt class="w-28 text-gray-500">To</dt>
         <dd class="min-w-0 flex-1">
           <% if nd.to_button_person %>
-            <%= person_profile_button(nd.to_button_person, compact: true, width_class: "w-fit max-w-md", subtitle: nd.to_email) %>
+            <%= person_edit_button(nd.to_button_person, compact: true, width_class: "w-fit max-w-md", subtitle: nd.to_email) %>
           <% else %>
             <span class="font-medium break-all text-gray-900" title="<%= nd.to_title %>"><%= nd.to_name.presence || "—" %></span>
           <% end %>
@@ -172,7 +172,9 @@
       <div class="flex items-start gap-4">
         <dt class="w-28 text-gray-500">Noticeable</dt>
         <dd class="min-w-0 flex-1 text-gray-900">
-          <% if @notification.noticeable.present? %>
+          <% if @notification.noticeable.is_a?(Person) %>
+            <%= person_edit_button(@notification.noticeable, layout: :eyebrow, width_class: "w-fit max-w-md") %>
+          <% elsif @notification.noticeable.present? %>
             <%= record_button(@notification.noticeable) %>
           <% else %>
             —

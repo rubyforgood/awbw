@@ -118,7 +118,7 @@ class NotificationDecorator < ApplicationDecorator
     recipient_email if incoming?
   end
 
-  # People-column value for the index: the name linked to the person's profile
+  # People-column value for the index: the name linked to the person's edit page
   # when we've resolved them, a mailto link when we only have their email, plain
   # text otherwise. The AWBW Portal (and any staff name) has no address, so it
   # renders unlinked.
@@ -224,11 +224,11 @@ class NotificationDecorator < ApplicationDecorator
 
   private
 
-  # Links the value to the person's profile when we have one, to a mailto when we
-  # only have their email, otherwise a plain span. The profile link keeps the
+  # Links the value to the person's edit page when we have one, to a mailto when
+  # we only have their email, otherwise a plain span. The edit link keeps the
   # email available on hover (title).
   def people_value(name, person, email, title)
-    return h.link_to(name, h.person_path(person), title: title, data: { turbo_frame: "_top" }, class: "hover:underline") if person
+    return h.link_to(name, h.edit_person_path(person), title: title, data: { turbo_frame: "_top" }, class: "hover:underline") if person
     return h.mail_to(email, name, class: "hover:underline") if email.present?
 
     h.content_tag(:span, name, title: title)

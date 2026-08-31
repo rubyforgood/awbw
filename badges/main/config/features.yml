@@ -2881,3 +2881,17 @@
   pro_tips:
     - "Add a primary image when editing an event and it shows on the card — otherwise a default AWBW placeholder is used."
     - "The home page highlights events two-per-row with larger images, while the full Events page shows a denser three-per-row grid."
+
+- name: "Jump straight to a person's edit page"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-08-31
+  pr_number: 2453
+  summary: >-
+    Clicking a person across the admin pages now opens their edit page directly,
+    instead of landing on the read-only profile first. Person names appear as a
+    compact "Edit" card and always show the full name, even when the person's own
+    display preference is shorter.
+  pro_tips:
+    - "This covers people cards on registrants, notifications, membership invoices, professional licenses, monthly reports, users, and the affiliation and staff editors."
+    - "The full name shows here for admins even if the person set their public credit to a first name or initials — that preference still governs public-facing pages, not the admin editor."

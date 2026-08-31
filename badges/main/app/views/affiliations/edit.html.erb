@@ -43,9 +43,12 @@
   </div>
 
   <h1 class="text-primary mb-1 font-display text-2xl font-semibold tracking-tight">Edit affiliation</h1>
-  <p class="mb-6 text-sm text-gray-500">
-    <%= @affiliation.person&.full_name %> at <%= @affiliation.organization&.name %>
-  </p>
+  <div class="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+    <% if @affiliation.person %>
+      <%= person_edit_button(@affiliation.person, compact: true, width_class: "w-fit") %>
+    <% end %>
+    <span>at <%= @affiliation.organization&.name %></span>
+  </div>
 
   <%= simple_form_for @affiliation,
         url: affiliation_path(@affiliation, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),

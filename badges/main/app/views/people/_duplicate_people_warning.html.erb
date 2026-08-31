@@ -28,7 +28,7 @@
             <ul class="divide-y divide-gray-300 overflow-y-auto rounded-md border border-gray-300 text-sm">
               <% @duplicates.each do |dup| %>
                 <li class="px-3 py-2">
-                  <%= link_to dup[:name], person_path(dup[:id]), target: "_blank", class: "text-blue-600 hover:text-blue-800 underline" %>
+                  <%= link_to dup[:name], edit_person_path(dup[:id]), target: "_blank", class: "text-blue-600 hover:text-blue-800 underline" %>
 
                   <% if dup[:blocked] %>
                     <span class="text-2xs rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700">exact match</span>

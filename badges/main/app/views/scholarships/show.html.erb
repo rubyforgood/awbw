@@ -5,7 +5,7 @@
     <%= link_to "← Edit scholarship", edit_scholarship_path(@scholarship), class: "text-sm #{eyebrow_link_class} mb-2 inline-block" %>
     <h1 class="text-primary font-display text-2xl font-semibold">Scholarship</h1>
     <% if @scholarship.recipient.present? %>
-      <p class="mt-1 text-gray-600"><%= @scholarship.recipient.full_name %></p>
+      <div class="mt-1"><%= person_edit_button(@scholarship.recipient, width_class: "w-fit") %></div>
     <% end %>
   </div>
 
