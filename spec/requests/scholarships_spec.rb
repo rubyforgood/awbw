@@ -83,8 +83,8 @@ RSpec.describe "Scholarships", type: :request do
       display_zone = "Pacific Time (US & Canada)"
       expect(response.body).to include(event.start_date.in_time_zone(display_zone).strftime("%b %-d"))
 
-      # Recipient name links to their profile.
-      expect(response.body).to include(person_path(registration.registrant))
+      # Recipient name links to their edit page (header edit-card button).
+      expect(response.body).to include(edit_person_path(registration.registrant))
       expect(response.body).to include(registration.registrant.full_name)
     end
 
