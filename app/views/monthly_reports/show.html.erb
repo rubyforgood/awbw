@@ -22,10 +22,12 @@
       <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div>
           <span class="font-semibold text-gray-700">Submitted by:</span>
-          <% if @monthly_report.created_by %>
+          <% if @monthly_report.created_by&.person %>
+            <%= person_edit_button(@monthly_report.created_by.person, compact: true, width_class: "inline-flex w-fit", data: { turbo_frame: "_top" }) %>
+          <% elsif @monthly_report.created_by %>
             <%= user_button(@monthly_report.created_by, data: { turbo_frame: "_top" }) %>
           <% else %>
-            <%= @monthly_report.created_by&.name || "—" %>
+            —
           <% end %>
         </div>
         <div>

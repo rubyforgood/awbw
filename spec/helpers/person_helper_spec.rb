@@ -57,6 +57,12 @@ RSpec.describe PersonHelper, type: :helper do
       expect(html).not_to include("rounded-full")
     end
 
+    it "shows the full name even when the person's display preference is abbreviated" do
+      person.update!(display_name_preference: "first_name_only")
+
+      expect(helper.person_edit_button(person)).to include("Aisha Sharma")
+    end
+
     it "renders the email subtitle when given" do
       expect(helper.person_edit_button(person, subtitle: "aisha@example.com")).to include("aisha@example.com")
     end

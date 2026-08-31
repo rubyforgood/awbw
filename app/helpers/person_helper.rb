@@ -74,7 +74,9 @@ module PersonHelper
   # for admin-facing contexts. No avatar — an uppercase "Edit" tag reads before
   # the name (layout: :prefix, "EDIT Jane Doe" on one line) or stacked above it
   # (layout: :eyebrow). An optional subtitle (e.g. the person's email) renders on
-  # its own line below, mirroring person_profile_button.
+  # its own line below, mirroring person_profile_button. Admin-facing, so it shows
+  # the full name — the person's display-name preference (first-name-only, etc.)
+  # governs public credits, not what an admin sees here.
   def person_edit_button(person, layout: :prefix, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, tint: nil, path_params: {}, width_class: "w-full", compact: false)
     padding = compact ? "px-2 py-1" : "px-4 py-2"
     name_text_size = compact ? "text-xs" : "text-sm"
@@ -82,7 +84,7 @@ module PersonHelper
     palette = person_button_palette(tint:, inactive:)
     shadow = tint ? "shadow-none" : "shadow-sm"
 
-    full_name = display_name || person.decorate.name.to_s
+    full_name = display_name || person.try(:full_name).presence || person.decorate.name.to_s
     full_name = truncate(full_name, length: truncate_at) if truncate_at
     hover_title = [ "Edit", full_name, subtitle ].compact_blank.join(" — ")
 
