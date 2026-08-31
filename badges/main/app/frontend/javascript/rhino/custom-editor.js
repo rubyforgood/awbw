@@ -668,6 +668,7 @@ class CustomEditor extends TipTapEditor {
     const fonts = [
       { name: "Default Font", family: "" },
       { name: "Lato", family: "Lato, sans-serif" },
+      { name: "Fraunces", family: "Fraunces, serif" },
       { name: "Telefon Bold", family: "Telefon Bold" },
     ];
 
