@@ -1,5 +1,5 @@
 module FormsHelper
-  # Sibling-page subnav shared across a form's Results / Submissions / View /
+  # Sibling-page subnav shared across a form's Results / Submissions / Preview /
   # Edit / Edit sections pages so each reads like a set of tabs linking to the
   # others. `current` renders the active page as plain text instead of a link;
   # pass `:none` to keep every tab clickable.
@@ -8,7 +8,7 @@ module FormsHelper
     tabs = [
       form_subnav_tab("Results", results_form_path(form), active: current == :results),
       form_subnav_tab("Submissions", form_submissions_path(form_id: form.id, return_to: submissions_return), active: current == :submissions),
-      form_subnav_tab("View", form_path(form), active: current == :view),
+      form_subnav_tab("Preview", form_path(form), active: current == :view),
       form_subnav_tab("Edit", edit_form_path(form, event_id: event&.id), active: current == :edit),
       form_subnav_tab("Edit sections", edit_sections_form_path(form, event_id: event&.id), active: current == :edit_sections)
     ]

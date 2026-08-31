@@ -277,9 +277,9 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).not_to include("Dashboard")
     end
 
-    it "offers the preview (View) subnav tab but no live-form link when no event is known" do
+    it "offers the Preview subnav tab but no live-form link when no event is known" do
       get edit_form_path(form)
-      expect(response.body).to include(">View<")
+      expect(response.body).to include(">Preview<")
       expect(response.body).not_to include(">Live form<")
     end
 
