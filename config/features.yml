@@ -2931,3 +2931,39 @@
   pro_tips:
     - "Scholarship recipients get their recipients survey on their own scholarship page, once their agreement is signed and their tasks are complete."
     - "Reopen any completed survey to review or edit your answers."
+
+- name: "Scholarship recipient survey gates the certificate"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-30
+  summary: >-
+    Scholarship recipients get their own survey on their scholarship page, and it
+    gates their certificate. Until they submit it the recipient sits at "Survey
+    pending" on the registrants roster and can't be marked complete.
+  pro_tips:
+    - "The survey shows on the recipient's scholarship page once they've signed their agreement and their scholarship tasks are marked complete (plus any display date on the scholarship callout's linked form)."
+    - "Setup: run `bin/rails data:seed_survey_forms` to create the survey forms, then open the callout editor on the scholarship callout and Restore default so it links the recipients survey."
+    - "To record a survey received another way (e.g. on paper), use the Survey received toggle on the registration edit page — it satisfies the gate without a digital submission."
+
+- name: "Staff notified when a post-event survey is submitted"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-30
+  summary: >-
+    Every post-event survey submission — Day 1, Day 2, or the recipients survey —
+    sends a FYI email with the submitter's answers to the default notification
+    address, so staff see feedback without opening the registrant's record.
+  pro_tips:
+    - "The email lists the submitted answers and links the submitter and event."
+    - "It sends on each submission, including edits and re-submits."
+
+- name: "Post-event survey sets your content-sharing preferences"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-08-30
+  summary: >-
+    The survey's anonymity and display-name questions write straight through to
+    your profile — answering them updates how your contributed content is credited
+    (anonymous, or shown under your chosen name format).
+  pro_tips:
+    - "Change your answers any time by reopening the survey, or from your profile directly."
