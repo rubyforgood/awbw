@@ -188,6 +188,7 @@ class EventPolicy < ApplicationPolicy
                   :public_registration_enabled,
                   :signed_in_one_click_enabled,
                   :autoshow_registration_details,
+                  :template,
                   :hint_dates,
                   :hint_times,
                   :hint_registration_cost,
