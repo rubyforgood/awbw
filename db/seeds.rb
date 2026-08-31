@@ -508,15 +508,7 @@ workshop_settings_type.categories
   .each { |cat| cat.update!(published: false) }
 
 # Post-event survey templates — the standalone forms the Day 1 / Day 2 / Scholarship
-# recipients survey callouts deliver inline. Built once from the form-builder presets,
-# then left for staff to edit in the builder. Idempotent on form name.
+# recipients survey callouts deliver inline. Shared with the data:seed_survey_forms
+# task so prod can create them without the full seed. Idempotent on form name.
 puts "Creating post-event survey forms…"
-
-[
-  { name: "Day 1 Survey", role: "day_1_survey", sections: %i[day_1_survey content_sharing_preferences] },
-  { name: "Day 2 Survey", role: "day_2_survey", sections: %i[day_2_survey content_sharing_preferences] },
-  { name: "Post-Training Recipients Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
-].each do |template|
-  next if Form.exists?(name: template[:name])
-  FormBuilderService.new(name: template[:name], sections: template[:sections], role: template[:role]).call
-end
+SurveyFormSeeder.call
