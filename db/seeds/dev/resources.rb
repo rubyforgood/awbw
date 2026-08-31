@@ -29,8 +29,6 @@ puts "Creating Resources…"
     kind: kind,
     url: [ "https://example.com/resource/#{SecureRandom.hex(4)}", nil ].sample,
     inactive: false,
-    legacy: [ true, false, false ].sample,
-    legacy_id: rand(1000..9999),
     position: rand(1..50),
     windows_type_id: WindowsType.all.sample&.id,
     workshop_id: Workshop.all.sample&.id,
