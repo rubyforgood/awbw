@@ -22,6 +22,18 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#display_template" do
+    it "returns the event's own template when it is a known key" do
+      expect(build(:event, template: "editorial").decorate.display_template).to eq("editorial")
+    end
+
+    it "falls back to none for an unknown template" do
+      event = build(:event, template: "bogus").decorate
+      expect(event.display_template).to eq(Event::TEMPLATE_NONE)
+      expect(event).not_to be_branded_page
+    end
+  end
+
   describe "#videoconference_domain" do
     it "extracts domain name from URL" do
       event = build(:event, videoconference_url: "https://www.zoom.us/j/123").decorate
