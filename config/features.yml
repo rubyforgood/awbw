@@ -2907,16 +2907,27 @@
     - "This covers people cards on registrants, notifications, membership invoices, professional licenses, monthly reports, users, and the affiliation and staff editors."
     - "The full name shows here for admins even if the person set their public credit to a first name or initials — that preference still governs public-facing pages, not the admin editor."
 
-- name: "Post-event surveys on the registration ticket"
+- name: "Attach several forms to a ticket callout"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-08-30
+  summary: >-
+    A registration-ticket callout can now deliver more than one form. The callout
+    editor's single "Linked form" picker is now "Linked forms" — add as many as you
+    like, each with its own optional display date so it drips open on that date.
+  pro_tips:
+    - "Leave a form's display date blank to show it right away; set one to open the form later."
+    - "Each linked form gets its own completion column on the registrants roster, under the Ticket forms switch."
+
+- name: "Post-event surveys on your registration ticket"
   area: registration
   display_status: user_facing
   released_on: 2026-08-30
   summary: >-
-    A "Post-event survey" callout on the registration ticket now delivers your
-    survey forms inline. One callout can carry several forms — a Day 1 and Day 2
-    evaluation, a recipients survey — each opening on its own date, and each showing
-    as "Completed" once the registrant submits it.
+    Training evaluations now live right on your registration ticket. A "Post-event
+    survey" callout opens the Day 1 and (for multi-day trainings) Day 2 evaluations,
+    each on its own date; once you submit one it collapses to a "Completed" toggle
+    you can reopen to review or edit.
   pro_tips:
-    - "Link forms to any callout under \"Linked forms\" in the callout editor; set a display date to drip a form open on that date, or leave it blank to show right away."
-    - "Completion shows per form on the registrants roster under the Ticket forms columns."
-    - "The recipients survey is the one that gates a scholarship recipient's readiness for their certificate."
+    - "Scholarship recipients get their recipients survey on their own scholarship page, once their agreement is signed and their tasks are complete."
+    - "Reopen any completed survey to review or edit your answers."
