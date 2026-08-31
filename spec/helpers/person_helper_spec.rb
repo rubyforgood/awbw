@@ -66,4 +66,24 @@ RSpec.describe PersonHelper, type: :helper do
       expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-baseline gap-1.5")
     end
   end
+
+  describe "#user_button" do
+    let(:user) { create(:user, person: create(:person, first_name: "Cara", last_name: "Lang")) }
+
+    it "links to the user's show page for a viewer who may see it" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(true)
+      html = helper.user_button(user)
+
+      expect(html).to include(%(href="#{user_path(user)}"))
+      expect(html).to include("Cara Lang")
+    end
+
+    it "renders a plain name, not a link, when the viewer may not see the user" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(false)
+      html = helper.user_button(user)
+
+      expect(html).not_to include("href=")
+      expect(html).to include("Cara Lang")
+    end
+  end
 end

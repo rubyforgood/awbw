@@ -110,6 +110,28 @@ module PersonHelper
     end
   end
 
+  # A compact card button for a user account — the actor behind created_by/
+  # updated_by audit credits, which reference a User (not a domain person), so it
+  # links to the user's show page. Rendered as a people-themed pill rather than an
+  # inline underline. The user show page is admin-only, so non-admin viewers get
+  # the plain name instead of a link they couldn't follow.
+  def user_button(user, compact: true, data: {})
+    name = user.try(:full_name).presence || user.try(:name).presence || user.email
+    return content_tag(:span, name, class: "font-medium text-gray-700") unless allowed_to?(:show?, user)
+
+    palette = person_button_palette(tint: nil, inactive: false)
+    padding = compact ? "px-2 py-1" : "px-4 py-2"
+    name_size = compact ? "text-xs" : "text-sm"
+
+    link_to user_path(user),
+            data: { turbo_prefetch: false }.merge(data),
+            title: name,
+            class: "group inline-flex w-fit items-center gap-1.5 #{padding} rounded-lg border " \
+                   "#{palette[:border]} #{palette[:bg]} #{palette[:hover_bg]} font-medium shadow-sm leading-none transition-colors duration-200" do
+      content_tag(:span, name, class: "truncate font-semibold #{name_size} #{palette[:text]}")
+    end
+  end
+
   private
 
   # Shared color palette for the person profile/edit buttons, keyed off the same

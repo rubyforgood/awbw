@@ -31,7 +31,7 @@
                 <span class="text-2xs rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700">existing user</span>
               <% else %>
                 <span class="text-2xs font-semibold text-gray-400 uppercase">PERSON <%= dup[:email_field]&.upcase || "PRIMARY" %> EMAIL</span>
-                <%= link_to dup[:email], person_path(dup[:id]), target: "_blank",
+                <%= link_to dup[:email], edit_person_path(dup[:id]), target: "_blank",
                             class: "text-gray-700 hover:text-blue-600 font-medium" %>
                 <% if dup[:has_user] %>
                   <span class="text-2xs rounded bg-gray-100 px-1.5 py-0.5 font-medium text-gray-700">user email: <%= dup[:user_email] %></span>
@@ -43,13 +43,13 @@
             <% if dup[:type] == "user" && dup[:person_id].present? %>
               <div class="mt-0.5 flex items-center gap-2">
                 <span class="text-2xs w-12 font-semibold text-gray-400 uppercase">PERSON</span>
-                <%= link_to dup[:name], person_path(dup[:person_id]), target: "_blank",
+                <%= link_to dup[:name], edit_person_path(dup[:person_id]), target: "_blank",
                             class: "text-gray-500 hover:text-blue-600 text-xs" %>
               </div>
             <% elsif dup[:type] == "person" %>
               <div class="mt-0.5 flex items-center gap-2">
                 <span class="text-2xs w-12 font-semibold text-gray-400 uppercase">PERSON</span>
-                <%= link_to dup[:name], person_path(dup[:id]), target: "_blank",
+                <%= link_to dup[:name], edit_person_path(dup[:id]), target: "_blank",
                             class: "text-gray-500 hover:text-blue-600 text-xs" %>
               </div>
             <% end %>

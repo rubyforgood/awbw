@@ -16,7 +16,7 @@
     <div>
       <span class="<%= label_class %>">Registrant</span>
       <p class="font-medium text-gray-900">
-        <%= link_to professional_license.person.full_name, person_path(professional_license.person), class: "text-primary hover:text-primary-dark hover:underline", data: { turbo_frame: "_top" } %>
+        <%= person_edit_button(professional_license.person, compact: true, data: { turbo_frame: "_top" }) %>
       </p>
     </div>
   <% else %>

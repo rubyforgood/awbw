@@ -31,7 +31,7 @@
                     <%= link_to dup[:name], user_path(dup[:id]), target: "_blank", class: "text-blue-600 hover:text-blue-800 underline" %>
                     <span class="text-2xs rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700">existing user</span>
                   <% else %>
-                    <%= link_to dup[:name], person_path(dup[:id]), target: "_blank", class: "text-blue-600 hover:text-blue-800 underline" %>
+                    <%= link_to dup[:name], edit_person_path(dup[:id]), target: "_blank", class: "text-blue-600 hover:text-blue-800 underline" %>
                     <% if dup[:has_user] %>
                       <span class="text-2xs rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700">has user account</span>
                     <% end %>
