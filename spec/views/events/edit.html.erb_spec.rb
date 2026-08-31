@@ -22,6 +22,7 @@ RSpec.describe "events/edit", type: :view do
     assign(:bulk_payment_forms, [])
     assign(:callout_forms, [])
     allow(view).to receive(:current_user).and_return(build_stubbed(:user, :admin))
+    allow(view).to receive(:allowed_to?).and_return(false)
     allow(view).to receive(:allowed_to?).with(:manage?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:registrants?, event).and_return(true)
     allow(view).to receive(:allowed_to?).with(:dashboard?, event).and_return(true)
