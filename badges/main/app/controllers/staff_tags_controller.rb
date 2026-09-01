@@ -71,6 +71,6 @@ class StaffTagsController < ApplicationController
   end
 
   def staff_tag_params
-    params.require(:staff_tag).permit(:name, :description, :published)
+    params.require(:staff_tag).permit(:name, :description, :published, :mark_label)
   end
 end

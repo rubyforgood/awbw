@@ -1,0 +1,3 @@
+<%= turbo_stream.replace dom_id(@staff_tagging, :marked) do %>
+  <%= render "mark_switch", tagging: @staff_tagging %>
+<% end %>

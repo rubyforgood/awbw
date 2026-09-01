@@ -88,5 +88,13 @@ RSpec.describe StaffTagging, type: :model do
       expect(results).to include(hit)
       expect(results).not_to include(miss)
     end
+
+    it "filters by marked status" do
+      marked = create(:staff_tagging, :marked)
+      unmarked = create(:staff_tagging)
+
+      expect(described_class.search_by_params(marked: "true")).to contain_exactly(marked)
+      expect(described_class.search_by_params(marked: "false")).to contain_exactly(unmarked)
+    end
   end
 end

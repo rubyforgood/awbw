@@ -13,6 +13,10 @@
           <%= link_to "People", people_path,
                       class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
+        <% if allowed_to?(:index?, StaffTag) %>
+          <%= link_to "Staff tags", staff_tags_path,
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
         <% if allowed_to?(:index?, TopicSubscription) %>
           <%= link_to "Topic subscriptions", topic_subscriptions_path,
                       class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>

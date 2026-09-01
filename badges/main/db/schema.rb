@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_220947) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_135946) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1722,12 +1722,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_220947) do
   create_table "staff_taggings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
+    t.boolean "marked", default: false, null: false
     t.bigint "staff_tag_id", null: false
     t.bigint "staff_taggable_id", null: false
     t.string "staff_taggable_type", null: false
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
     t.index ["created_by_id"], name: "index_staff_taggings_on_created_by_id"
+    t.index ["marked"], name: "index_staff_taggings_on_marked"
     t.index ["staff_tag_id", "staff_taggable_type", "staff_taggable_id"], name: "index_staff_taggings_uniqueness", unique: true
     t.index ["staff_tag_id"], name: "index_staff_taggings_on_staff_tag_id"
     t.index ["staff_taggable_type", "staff_taggable_id"], name: "index_staff_taggings_on_staff_taggable"
@@ -1738,6 +1740,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_220947) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.text "description"
+    t.string "mark_label"
     t.string "name", null: false
     t.boolean "published", default: true, null: false
     t.datetime "updated_at", null: false
@@ -1811,6 +1814,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_220947) do
     t.text "description"
     t.boolean "event_selector", default: false, null: false
     t.string "key", null: false
+    t.string "mark_label"
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
@@ -1823,6 +1827,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_220947) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
     t.bigint "interested_event_id"
+    t.boolean "marked", default: false, null: false
     t.integer "organization_id"
     t.bigint "person_id", null: false
     t.string "source"
@@ -1833,6 +1838,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_220947) do
     t.bigint "updated_by_id"
     t.index ["created_by_id"], name: "index_topic_subscriptions_on_created_by_id"
     t.index ["interested_event_id"], name: "index_topic_subscriptions_on_interested_event_id"
+    t.index ["marked"], name: "index_topic_subscriptions_on_marked"
     t.index ["organization_id"], name: "index_topic_subscriptions_on_organization_id"
     t.index ["person_id"], name: "index_topic_subscriptions_on_person_id"
     t.index ["topic_subscription_type_id"], name: "index_topic_subscriptions_on_topic_subscription_type_id"

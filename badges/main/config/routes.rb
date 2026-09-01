@@ -71,7 +71,12 @@ Rails.application.routes.draw do
   end
   resources :category_types
   resources :staff_tags
-  resources :staff_taggings, only: [ :index, :new, :create, :edit, :update, :destroy ]
+  resources :staff_taggings, only: [ :index, :new, :create, :edit, :update, :destroy ] do
+    member do
+      patch :toggle_marked
+      patch :save_note
+    end
+  end
   resources :categories do
     collection do
       get :dedupe_index
@@ -149,6 +154,8 @@ Rails.application.routes.draw do
     member do
       patch :unsubscribe
       patch :resubscribe
+      patch :toggle_marked
+      patch :save_note
     end
     resources :comments, only: [ :create, :update ]
   end

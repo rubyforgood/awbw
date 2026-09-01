@@ -183,6 +183,14 @@
     <%= f.text_field :source, class: field_class, placeholder: "e.g. Facilitator Training registration, admin" %>
   </div>
 
+  <div class="flex items-start gap-2">
+    <%= f.check_box :marked, class: "mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+    <div>
+      <%= f.label :marked, mark_label_or_default(current_type&.mark_label), class: "block text-sm font-medium text-gray-700" %>
+      <p class="text-xs text-gray-500">Set by the topic; means whatever “<%= mark_label_or_default(current_type&.mark_label) %>” is configured to mean for this topic.</p>
+    </div>
+  </div>
+
   <%= render "shared/comments_and_communications", f: f, view_all_person: f.object.person %>
 
   <div class="flex justify-end gap-2">

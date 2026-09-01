@@ -1,14 +1,14 @@
 class StaffTaggingsController < ApplicationController
-  before_action :set_staff_tagging, only: [ :edit, :update, :destroy ]
+  before_action :set_staff_tagging, only: [ :edit, :update, :destroy, :toggle_marked, :save_note ]
 
   def index
     authorize!
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable))
+      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable, :comments))
       filtered = base_scope.search_by_params(params.to_unsafe_h)
-      @sort = %w[person staff_tag created_at].include?(params[:sort]) ? params[:sort] : "created_at"
+      @sort = %w[person staff_tag marked created_at].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = case @sort
       when "person"
@@ -16,10 +16,13 @@ class StaffTaggingsController < ApplicationController
                 .reorder(Arel.sql("people.first_name #{@sort_direction}, people.last_name #{@sort_direction}"))
       when "staff_tag"
         filtered.left_joins(:staff_tag).reorder(Arel.sql("staff_tags.name #{@sort_direction}"))
+      when "marked"
+        filtered.reorder(marked: @sort_direction, created_at: :desc)
       else
         filtered.reorder(created_at: @sort_direction)
       end
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+      @mark_column_label = mark_column_label
       @staff_taggings = filtered.paginate(page: params[:page], per_page: per_page)
 
       render :staff_taggings_results
@@ -65,6 +68,21 @@ class StaffTaggingsController < ApplicationController
     redirect_to staff_taggings_path, notice: "Staff tagging was successfully removed.", status: :see_other
   end
 
+  def toggle_marked
+    authorize! @staff_tagging, to: :update?
+    @staff_tagging.update!(marked: ActiveModel::Type::Boolean.new.cast(params[:value]))
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to staff_taggings_path }
+    end
+  end
+
+  def save_note
+    authorize! @staff_tagging, to: :update?
+    @staff_tagging.save_index_note(params[:note])
+    head :ok
+  end
+
   private
 
   def set_staff_tagging
@@ -73,12 +91,22 @@ class StaffTaggingsController < ApplicationController
 
   def create_params
     person = Person.find_by(id: params.dig(:staff_tagging, :person_id))
-    { staff_tag_id: params.dig(:staff_tagging, :staff_tag_id), staff_taggable: person }
+    { staff_tag_id: params.dig(:staff_tagging, :staff_tag_id), staff_taggable: person, marked: params.dig(:staff_tagging, :marked) == "1" }
+  end
+
+  # When the list is filtered to a single tag, the Mark column header takes that
+  # tag's configured label; otherwise it stays the generic "Mark".
+  def mark_column_label
+    ids = Array(params[:staff_tag_ids]).reject(&:blank?)
+    return "Mark" unless ids.one?
+
+    StaffTag.where(id: ids).pick(:mark_label).presence || "Mark"
   end
 
   def staff_tagging_params
     params.require(:staff_tagging).permit(
       :staff_tag_id,
+      :marked,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
     )

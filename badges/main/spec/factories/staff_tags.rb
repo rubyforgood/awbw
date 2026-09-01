@@ -11,5 +11,9 @@ FactoryBot.define do
   factory :staff_tagging do
     association :staff_tag
     association :staff_taggable, factory: :person
+
+    trait :marked do
+      marked { true }
+    end
   end
 end
