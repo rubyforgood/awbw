@@ -29,7 +29,9 @@ class ProfessionalLicensesController < ApplicationController
   end
 
   def edit
-    @professional_license = ProfessionalLicense.find(params[:id])
+    @professional_license = ProfessionalLicense
+      .includes(continuing_education_registrations: { event_registration: [ :event, :registrant ] })
+      .find(params[:id])
     authorize! @professional_license
   end
 

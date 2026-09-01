@@ -1,0 +1,56 @@
+<%# CE registrations issued against this license — the license's continuing-education
+    history. Newest first; links each entry back to its CE registration edit page. %>
+<% registrations = license.continuing_education_registrations.sort_by(&:created_at).reverse %>
+<section class="border-primary/10 mt-6 overflow-hidden rounded-2xl border bg-white shadow-sm">
+  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:continuing_education, intensity: 100) %> <%= DomainTheme.text_class_for(:continuing_education, intensity: 600) %>">
+      <i class="fa-solid fa-certificate"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">CE history</h2>
+    <span class="ml-auto text-xs text-gray-500"><%= registrations.size %> registration<%= "s" if registrations.size != 1 %></span>
+  </div>
+
+  <% if registrations.any? %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Event</th>
+            <th class="px-4 py-3 text-right text-xs font-medium tracking-wider whitespace-nowrap text-gray-500 uppercase">Hours</th>
+            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Certificate</th>
+            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Payment</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+          <% registrations.each do |ce| %>
+            <% decorated = ce.decorate %>
+            <% certificate = decorated.certificate_badge %>
+            <% payment = decorated.payment_status_badge %>
+            <% hours = ce.hours || 0 %>
+            <% hours = hours.to_i if hours == hours.to_i %>
+            <tr class="transition-colors duration-150 hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm text-gray-900">
+                <%= link_to edit_continuing_education_registration_path(ce, return_to: "professional_license", license_id: license.id),
+                      class: "font-medium #{DomainTheme.text_class_for(:continuing_education, intensity: 700)} hover:underline" do %>
+                  <%= ce.event_registration&.event&.title || "Event" %>
+                <% end %>
+                <% if (sent_on = ce.certificate_sent_at) %>
+                  <span class="mt-0.5 block text-xs text-gray-400">Issued <%= sent_on.to_date.strftime("%b %-d, %Y") %></span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-right text-sm whitespace-nowrap text-gray-700 tabular-nums"><%= hours %></td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <%= render "shared/badge", label: certificate.label, classes: certificate.classes, icon: certificate.icon %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <%= render "shared/badge", label: payment.label, classes: payment.classes, icon: payment.icon %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="px-4 py-6 text-center text-sm text-gray-500">No CE registrations yet for this license.</p>
+  <% end %>
+</section>

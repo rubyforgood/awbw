@@ -9,6 +9,7 @@ module ContinuingEducationRegistrationsHelper
   def ce_registration_return_path(registration)
     case params[:return_to]
     when "ce_index" then continuing_education_registrations_path
+    when "professional_license" then edit_professional_license_path(params[:license_id])
     when "registrants" then registrants_event_row_path(registration.event, registration.id)
     when "attendance" then attendance_event_path(registration.event, ce: "true", anchor: "totals")
     else edit_event_registration_path(registration)
@@ -20,6 +21,7 @@ module ContinuingEducationRegistrationsHelper
   def ce_registration_return_label
     case params[:return_to]
     when "ce_index" then "CE registrations"
+    when "professional_license" then "License"
     when "registrants" then "Registrants"
     when "attendance" then "CE timesheets"
     else "Registration"

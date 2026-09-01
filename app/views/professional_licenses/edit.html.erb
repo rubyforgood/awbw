@@ -20,6 +20,7 @@
   <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
     <%= render "form", professional_license: @professional_license %>
   </div>
+  <%= render "ce_history", license: @professional_license %>
   <%= render "shared/audit_info", resource: @professional_license %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <div class="mt-4 flex justify-end">

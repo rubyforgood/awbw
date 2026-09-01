@@ -38,6 +38,17 @@
     to a registration.
   pr_number: 2486
 
+- name: "CE history on the license edit page"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-09-01
+  summary: >-
+    Editing a professional license now shows that license's continuing-education
+    history at the bottom — every CE registration issued against it, with the
+    event, hours, certificate status, and payment status. Click a row to open
+    that CE registration.
+  action_path: /professional_licenses
+
 - name: "Compact training registrations on the subscriptions page"
   area: communications
   display_status: admin_facing

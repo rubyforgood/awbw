@@ -121,6 +121,28 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).to include(person.full_name)
     end
 
+    it "renders the CE history for the license" do
+      registration = create(:event_registration, registrant: person)
+      create(:continuing_education_registration,
+             professional_license: license, event_registration: registration, hours: 6)
+
+      get edit_professional_license_path(license)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("CE history")
+      expect(response.body).to include(registration.event.title)
+      expect(response.body).to include(edit_continuing_education_registration_path(
+        ContinuingEducationRegistration.last))
+      expect(response.body).to include("return_to=professional_license")
+    end
+
+    it "shows an empty CE history when the license has no registrations" do
+      get edit_professional_license_path(license)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("No CE registrations yet for this license.")
+    end
+
     it "updates the license fields" do
       patch professional_license_path(license), params: {
         professional_license: { number: "556", kind: "LCSW", issuing_state: "NY" }
