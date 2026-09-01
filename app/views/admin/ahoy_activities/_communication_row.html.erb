@@ -29,7 +29,7 @@
           <% if notification.email_body_text.present? %>
             <div>
               <span class="font-medium text-gray-700">Body:</span>
-              <span class="text-gray-600" title="<%= notification.email_body_text %>"><%= truncate(notification.email_body_text, length: 50) %></span>
+              <span class="text-gray-600" title="<%= notification.email_body_text %>"><%= truncate(notification.email_body_text, length: 150) %></span>
             </div>
           <% end %>
         </div>
