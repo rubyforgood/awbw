@@ -54,7 +54,9 @@ else
     note = ->(subject, body, at, topic: nil) do
       comment = subject.comments.create!(body: body, topic: topic, created_by: actor, updated_by: actor)
       comment.update_columns(created_at: at, updated_at: at)
-      track.("create", comment, at, { resource_title: body.truncate(60) })
+      # The note's body belongs in the Details column (like a real tracked comment),
+      # not jammed into the Resource title.
+      track.("create", comment, at, { resource_title: "Comment", "topic" => topic, "body" => body }.compact_blank)
       comment
     end
 
