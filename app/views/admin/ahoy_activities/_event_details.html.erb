@@ -8,16 +8,7 @@
         <% activity.changes_summary.each do |change| %>
           <li>
             <span class="font-medium text-gray-700"><%= change[:field] %></span>
-            <div class="mt-0.5 space-y-0.5 text-xs">
-              <div class="flex flex-wrap items-baseline gap-1">
-                <span class="text-gray-400">Before:</span>
-                <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-500 line-through"><%= change[:before] %></span>
-              </div>
-              <div class="flex flex-wrap items-baseline gap-1">
-                <span class="text-gray-400">After:</span>
-                <span class="rounded bg-green-50 px-1.5 py-0.5 text-green-700"><%= change[:after] %></span>
-              </div>
-            </div>
+            <%= render "admin/ahoy_activities/change_diff", before: change[:before], after: change[:after] %>
           </li>
         <% end %>
       </ul>
@@ -35,16 +26,7 @@
             <span class="text-gray-600"><%= row[:link][:text] %></span>
           <% end %>
         <% elsif row[:change] %>
-          <div class="mt-0.5 space-y-0.5">
-            <div class="flex flex-wrap items-baseline gap-1">
-              <span class="text-gray-400">Before:</span>
-              <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-500 line-through"><%= row[:change][:before] %></span>
-            </div>
-            <div class="flex flex-wrap items-baseline gap-1">
-              <span class="text-gray-400">After:</span>
-              <span class="rounded bg-green-50 px-1.5 py-0.5 text-green-700"><%= row[:change][:after] %></span>
-            </div>
-          </div>
+          <%= render "admin/ahoy_activities/change_diff", before: row[:change][:before], after: row[:change][:after] %>
         <% elsif row[:value] %>
           <span class="<%= row[:emphasis] ? "font-semibold text-gray-900" : "text-gray-600" %>"><%= row[:value] %></span>
         <% end %>
