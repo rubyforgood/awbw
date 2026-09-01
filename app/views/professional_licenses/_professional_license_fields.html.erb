@@ -54,7 +54,7 @@
                                          data: { cocoon_confirm: "Remove this license? This can't be undone." } %>
         <% else %>
           <%= link_to edit_professional_license_path(f.object, return_to: "person"),
-                      class: "text-sm text-amber-600 hover:text-amber-800 underline whitespace-nowrap",
+                      class: "text-sm text-amber-600 hover:text-amber-800 hover:underline whitespace-nowrap",
                       title: f.object.decorate.ce_events_summary,
                       data: { turbo_frame: "_top" } do %>
             Can't<br>remove
