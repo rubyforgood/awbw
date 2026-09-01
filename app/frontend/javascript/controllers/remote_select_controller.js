@@ -94,6 +94,13 @@ export default class extends Controller {
         margin: 0 !important;            /* Remove padding/margin from selected items */
         padding: 0 !important;
         line-height: 1.5rem !important;
+        /* Truncate a long selected label to one line instead of wrapping and
+           doubling the control's height. min-width:0 lets it shrink in the flex row. */
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       /* Opaque white field so colored card backgrounds don't show through */
       .remote-select-container .ts-wrapper,
