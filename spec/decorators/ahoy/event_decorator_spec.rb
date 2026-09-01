@@ -104,13 +104,33 @@ RSpec.describe Ahoy::EventDecorator do
       expect(active_event.resource_link[:text]).to eq("Facilitator · Harbor Shelter · Aug'25 - present")
     end
 
-    it "labels an event registration as its event and start month" do
+    it "labels an event registration with the event and abbreviated start month" do
       registration = create(:event_registration)
       registration.event.update!(title: "Spring Training", start_date: Time.zone.local(2025, 9, 1))
       event = create(:ahoy_event, name: "update.event_registration", resource_type: "EventRegistration",
                                   resource_id: registration.id, properties: { "resource_title" => "reg" }).decorate
 
-      expect(event.resource_link[:text]).to eq("Spring Training · September 2025")
+      expect(event.resource_link[:text]).to eq("Registration: Spring Training · Sep'25")
+    end
+
+    it "labels a scholarship as its amount, grant, and funder" do
+      org = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, name: "Healing Arts Fund", funder: org)
+      scholarship = create(:scholarship, amount_cents: 24_000, grant: grant)
+      event = create(:ahoy_event, name: "create.scholarship", resource_type: "Scholarship",
+                                  resource_id: scholarship.id, properties: {}).decorate
+
+      expect(event.resource_link[:text]).to eq("$240 Healing Arts Fund · Acme Foundation")
+    end
+
+    it "labels a CE registration as its hours and license" do
+      ce = create(:continuing_education_registration, hours: 13)
+      ce.professional_license.update!(kind: "LMFT", number: "2345")
+      event = create(:ahoy_event, name: "create.continuing_education_registration",
+                                  resource_type: "ContinuingEducationRegistration",
+                                  resource_id: ce.id, properties: {}).decorate
+
+      expect(event.resource_link[:text]).to eq("13 hours · LMFT 2345")
     end
 
     it "labels a payment as what it's allocated to" do

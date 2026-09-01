@@ -165,11 +165,25 @@ module Ahoy
         { text: [ record.title.presence, record.organization&.name, affiliation_dates(record) ].compact.join(" · "),
           path: edit_path_for(record) }
       when EventRegistration
-        { text: [ record.event&.title, record.event&.start_date&.strftime("%B %Y") ].compact.join(" · "),
+        span = [ record.event&.title, record.event&.start_date&.strftime("%b'%y") ].compact.join(" · ")
+        { text: span.present? ? "Registration: #{span}" : "Registration", path: edit_path_for(record) }
+      when Scholarship
+        headline = [ h.dollars_from_cents(record.amount_cents), record.grant&.name ].compact.join(" ")
+        { text: [ headline.presence, record.grant&.funder_name ].compact.join(" · "),
+          path: edit_path_for(record) }
+      when ContinuingEducationRegistration
+        { text: [ ce_hours_label(record), record.professional_license&.name ].compact.join(" · "),
           path: edit_path_for(record) }
       when Payment
         payment_allocation_link(record)
       end
+    end
+
+    # "13 hours" / "1 hour", dropping a trailing .0 on whole-number hours.
+    def ce_hours_label(ce_registration)
+      hours = ce_registration.hours
+      hours = hours.to_i if hours == hours.to_i
+      h.pluralize(hours, "hour")
     end
 
     # An affiliation's span: "Aug'25 - Feb'26", or "Aug'25 - present" while active.
