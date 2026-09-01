@@ -33,10 +33,9 @@
   released_on: 2026-09-01
   summary: >-
     The bulk-payment confirmation email now reads "Payment submission received" so
-    people paying by check aren't misled into thinking the payment already cleared.
-    It also adds a "View invoice" button next to "View payment" that links straight
-    to their itemized invoice. The payment ticket now shows "Payment received" only
-    once the payment is actually allocated to a registration, not just recorded.
+    check-payers don't think it already cleared, and adds a "View invoice" button.
+    The payment ticket shows "Payment received" only once the payment is allocated
+    to a registration.
   pr_number: 2486
 
 - name: "Compact training registrations on the subscriptions page"
