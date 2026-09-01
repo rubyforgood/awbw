@@ -121,6 +121,58 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).to include(person.full_name)
     end
 
+    it "renders the CE history for the license" do
+      registration = create(:event_registration, registrant: person)
+      create(:continuing_education_registration,
+             professional_license: license, event_registration: registration, hours: 6)
+
+      get edit_professional_license_path(license)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("CE history")
+      expect(response.body).to include(registration.event.title)
+      expect(response.body).to include(edit_continuing_education_registration_path(
+        ContinuingEducationRegistration.last))
+      expect(response.body).to include("return_to=professional_license")
+    end
+
+    it "shows an empty CE history when the license has no registrations" do
+      get edit_professional_license_path(license)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("No CE registrations yet for this license.")
+    end
+
+    it "notes that a CE-tied license can't be removed" do
+      registration = create(:event_registration, registrant: person)
+      create(:continuing_education_registration, professional_license: license, event_registration: registration)
+
+      get edit_professional_license_path(license)
+
+      expect(response.body).to include("Has CE registrations — can't remove")
+    end
+
+    it "omits the can't-remove note for a license with no CE registrations" do
+      get edit_professional_license_path(license)
+
+      expect(response.body).not_to include("Has CE registrations — can't remove")
+    end
+
+    it "returns to the person's edit page when reached from there" do
+      get edit_professional_license_path(license, return_to: "person")
+
+      expect(response.body).to include(edit_person_path(person, anchor: "professional-licenses"))
+      expect(response.body).to include(person.full_name)
+    end
+
+    it "redirects back to the person after saving when reached from the person page" do
+      patch professional_license_path(license, return_to: "person"), params: {
+        professional_license: { number: "556", kind: "LCSW" }
+      }
+
+      expect(response).to redirect_to(edit_person_path(person, anchor: "professional-licenses"))
+    end
+
     it "updates the license fields" do
       patch professional_license_path(license), params: {
         professional_license: { number: "556", kind: "LCSW", issuing_state: "NY" }

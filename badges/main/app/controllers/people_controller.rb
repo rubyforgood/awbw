@@ -243,6 +243,7 @@ class PeopleController < ApplicationController
       { avatar_attachment: :blob },
       { comments: [ :created_by, :updated_by ] },
       { sectorable_items: :sector },
+      { professional_licenses: { continuing_education_registrations: { event_registration: :event } } },
       affiliations: { organization: [ :logo_attachment, :addresses ] }
     ).find(params[:id]).decorate
     authorize! @person

@@ -16,6 +16,40 @@ RSpec.describe "People professional licenses", type: :request do
     expect(response.body).to include("LMFT 90210")
   end
 
+  it "links each saved license to its own edit page, returning to the person" do
+    person = create(:person)
+    license = create(:professional_license, person: person, number: "90210")
+
+    get edit_person_path(person)
+
+    expect(response.body).to include(edit_professional_license_path(license))
+    expect(response.body).to include("return_to=person")
+  end
+
+  it "shows a compact can't-remove note for a CE-tied license" do
+    person = create(:person)
+    license = create(:professional_license, person: person, number: "90210")
+    registration = create(:event_registration, registrant: person)
+    create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+    get edit_person_path(person)
+
+    expect(response.body).to include("Can't<br>remove")
+    expect(response.body).not_to include("Has CE registrations — can't remove")
+  end
+
+  it "links the can't-remove note to the license edit page and names its CE events" do
+    person = create(:person)
+    license = create(:professional_license, person: person, number: "90210")
+    registration = create(:event_registration, registrant: person)
+    create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+    get edit_person_path(person)
+
+    expect(response.body).to include(edit_professional_license_path(license))
+    expect(response.body).to include("CE registered at #{registration.event.title}")
+  end
+
   it "adds a license through the person form" do
     person = create(:person)
 
