@@ -70,6 +70,43 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
       expect(event.comment_note).to eq(topic: "Follow-up", body: "Called to confirm.")
     end
+
+    it "flags a flagged comment" do
+      comment = create(:comment, commentable: create(:person), flagged: true)
+      event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
+                                  resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
+      expect(event.comment_flagged?).to be(true)
+    end
+
+    it "labels an affiliation as its title and organization" do
+      org = create(:organization, name: "Harbor Shelter")
+      affiliation = create(:affiliation, title: "Facilitator", organization: org)
+      event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",
+                                  resource_id: affiliation.id, properties: { "resource_title" => "Facilitator" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Facilitator · Harbor Shelter")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_affiliation_path(affiliation))
+    end
+
+    it "labels an event registration as its event and start month" do
+      registration = create(:event_registration)
+      registration.event.update!(title: "Spring Training", start_date: Time.zone.local(2025, 9, 1))
+      event = create(:ahoy_event, name: "update.event_registration", resource_type: "EventRegistration",
+                                  resource_id: registration.id, properties: { "resource_title" => "reg" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Spring Training · September 2025")
+    end
+
+    it "labels a payment as what it's allocated to" do
+      registration = create(:event_registration)
+      payment = create(:payment)
+      create(:allocation, source: payment, allocatable: registration)
+      event = create(:ahoy_event, name: "create.payment", resource_type: "Payment",
+                                  resource_id: payment.id, properties: { "resource_title" => "Membership dues" }).decorate
+
+      expect(event.resource_link[:text]).to include("Event registration for")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+    end
   end
 
   describe "#extra_properties" do

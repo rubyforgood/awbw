@@ -54,18 +54,27 @@ module Ahoy
     def resource_link
       return commentable_link if comment&.commentable
 
+      record = find_referenced_record(object.resource_type, object.resource_id)
+      custom = custom_resource_link(record)
+      return custom if custom
+
       title = properties_hash["resource_title"]
       return nil if title.blank?
 
-      record = find_referenced_record(object.resource_type, object.resource_id)
       { text: title, path: edit_path_for(record) }
     end
 
-    # The record a comment was left on, labeled and linked the same way the
-    # comment feeds do (CommentsHelper), so the two never drift.
+    # The record a comment was left on, labeled and linked. Reuses the same
+    # record-specific labels as direct events, falling back to the shared comment
+    # feed helper (CommentsHelper) so the two never drift.
     def commentable_link
       commentable = comment.commentable
-      { text: h.commentable_label(commentable), path: h.record_edit_path(commentable) }
+      custom_resource_link(commentable) ||
+        { text: h.commentable_label(commentable), path: h.record_edit_path(commentable) }
+    end
+
+    def comment_flagged?
+      comment&.flagged? || false
     end
 
     # A comment's topic + body, read from the record so it shows in Details
@@ -134,6 +143,35 @@ module Ahoy
       return nil unless object.resource_type == "Comment"
 
       @comment ||= find_referenced_record("Comment", object.resource_id)
+    end
+
+    # Record types that read better as a composed label than as their raw
+    # resource_title. Returns a { text:, path: } link, or nil to use the default
+    # (resource_title for events, commentable_label for comments). A payment
+    # points at what it's allocated to, not the payment row.
+    def custom_resource_link(record)
+      case record
+      when Affiliation
+        { text: [ record.title.presence, record.organization&.name ].compact.join(" · "),
+          path: edit_path_for(record) }
+      when EventRegistration
+        { text: [ record.event&.title, record.event&.start_date&.strftime("%B %Y") ].compact.join(" · "),
+          path: edit_path_for(record) }
+      when Payment
+        payment_allocation_link(record)
+      end
+    end
+
+    # A payment reads as what it paid for — its allocations' targets (an event
+    # registration, a scholarship). nil (default label) when nothing's allocated.
+    def payment_allocation_link(payment)
+      allocatables = payment.allocations.map(&:allocatable).compact
+      return nil if allocatables.empty?
+
+      descriptor = h.allocatable_descriptor(allocatables.first)
+      text = descriptor[:title]
+      text = "#{text} +#{allocatables.size - 1} more" if allocatables.size > 1
+      { text: text, path: descriptor[:path] }
     end
 
     # Prefer the record's edit page (the point of the link), falling back to its

@@ -5,21 +5,14 @@
   </td>
 
   <% chip = activity.activity_chip %>
+  <% resource = activity.resource_link %>
   <td data-label="Activity" class="px-4 py-3">
-    <div class="flex items-center gap-2" title="<%= event.name %>">
-      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase <%= chip[:classes] %>">
-        <%= chip[:label] %>
-      </span>
-      <span class="font-medium text-gray-900"><%= activity.activity_resource_label %></span>
-    </div>
-    <% if (resource = activity.resource_link) %>
-      <% if resource[:path] %>
-        <%= link_to resource[:text], resource[:path],
-                    class: "mt-0.5 block text-xs text-indigo-600 hover:underline",
-                    data: { turbo_frame: "_top" } %>
-      <% else %>
-        <div class="mt-0.5 text-xs text-gray-500"><%= resource[:text] %></div>
+    <% if resource && resource[:path] %>
+      <%= link_to resource[:path], class: "group block", data: { turbo_frame: "_top" } do %>
+        <%= render "admin/ahoy_activities/activity_cell", activity: activity, event: event, chip: chip, resource: resource %>
       <% end %>
+    <% else %>
+      <%= render "admin/ahoy_activities/activity_cell", activity: activity, event: event, chip: chip, resource: resource %>
     <% end %>
   </td>
 
