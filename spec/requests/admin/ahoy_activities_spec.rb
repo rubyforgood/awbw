@@ -160,6 +160,44 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("create.bookmark")
       end
 
+      it "hide_account excludes auth and user-record events but keeps other changelogs" do
+        create(:ahoy_event, name: "update.user", user: user, visit: visit_for_user,
+                            resource_type: "User", resource_id: user.id, time: 2.days.ago,
+                            properties: { "resource_title" => "user_record_marker" })
+
+        get index_path, params: { hide_account: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("auth.login")
+        expect(response.body).not_to include("user_record_marker")
+        expect(response.body).to include("create.bookmark")
+      end
+
+      it "hide_interactions excludes view/print/download/search noise but keeps changelogs" do
+        create(:ahoy_event, name: "view.workshop", user: user, visit: visit_for_user,
+                            time: 2.days.ago, properties: { "resource_title" => "interaction_noise_marker" })
+
+        get index_path, params: { hide_interactions: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("interaction_noise_marker")
+        expect(response.body).to include("create.bookmark")
+      end
+
+      it "hide_communications drops a person's communications from the timeline" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Hidden comm marker")
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "kept_change_marker" })
+
+        get index_path, params: { person_id: person.id, hide_communications: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Hidden comm marker")
+        expect(response.body).to include("kept_change_marker")
+      end
+
       it "filters by from/to dates" do
         get index_path,
             params: {

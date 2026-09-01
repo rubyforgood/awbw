@@ -29,6 +29,13 @@ module Admin
                             *prefixes.map { |p| "#{p}.%" })
       end
 
+      # Hide toggles: exclude whole categories (account, interactions) in bulk so
+      # the timeline can be pared down to changelogs and communications.
+      hidden = hidden_name_patterns
+      if hidden.present?
+        scope = scope.where.not(hidden.map { "ahoy_events.name LIKE ?" }.join(" OR "), *hidden)
+      end
+
       # Filter by event name. Split on any non-alphanumeric run so hyphens (and
       # commas, dots, spaces) are interchangeable separators and each token must
       # match — e.g. "account-auth" finds "auth.account_deactivated".
@@ -218,7 +225,7 @@ module Admin
     # A visit_id filter excludes communications — they have no visit to belong to.
     def person_communications
       email = @person.communications_email
-      return Notification.none if email.blank? || params[:visit_id].present?
+      return Notification.none if email.blank? || params[:visit_id].present? || hide_communications?
 
       scope = Notification.email(email).includes(:noticeable, sender: :person).order(created_at: :desc)
       scope = scope.where(created_at: time_range) if time_range.present?
@@ -727,6 +734,21 @@ module Admin
 
     def selected_audiences
       @selected_audiences ||= Array(params[:audience]).reject(&:blank?).presence || %w[visitors users]
+    end
+
+    def hidden_name_patterns
+      patterns = []
+      patterns.concat(Ahoy::Event::ACCOUNT_NAME_PATTERNS) if param_true?(params[:hide_account])
+      patterns.concat(Ahoy::Event::INTERACTION_NAME_PATTERNS) if param_true?(params[:hide_interactions])
+      patterns
+    end
+
+    def hide_communications?
+      param_true?(params[:hide_communications])
+    end
+
+    def param_true?(value)
+      ActiveModel::Type::Boolean.new.cast(value)
     end
 
     def scoped_visits

@@ -34,7 +34,9 @@
         so the column flow lands it in the otherwise-empty bottom-right cell. %>
     <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
       <li class="mb-2 break-inside-avoid">
-        <%= link_to admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff]),
+        <%# Default the timeline to changelogs and communications — account and
+            interaction noise start hidden (toggle back on from the filters). %>
+        <%= link_to admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
                     data: { turbo_prefetch: false },
                     class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg admin-only bg-blue-50 hover:bg-blue-100 border border-gray-200 transition-colors duration-200 shadow-sm" do %>
           <span class="w-5 text-center text-gray-500"><i class="fa-solid fa-clock-rotate-left"></i></span>

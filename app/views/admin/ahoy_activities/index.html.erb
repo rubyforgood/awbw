@@ -125,9 +125,13 @@
 
           </div>
 
+          <div class="mt-6">
+            <%= render "filter_toggles" %>
+          </div>
+
           <div class="flex items-center gap-3 mt-6 text-sm">
             <span class="text-gray-500">Quick:</span>
-            <% safe_params = params.slice(:event_name, :visit_id, :props, :resource_name, :person_id, :user_search, :from, :to).to_unsafe_h %>
+            <% safe_params = params.slice(:event_name, :visit_id, :props, :resource_name, :person_id, :user_search, :from, :to, :hide_account, :hide_interactions, :hide_communications).to_unsafe_h %>
             <%= link_to "24h",
                         url_for(safe_params.merge(from: 1.day.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>

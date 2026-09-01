@@ -3062,3 +3062,16 @@
     - "Set the word on the topic (Manage topics) or the staff tag (Manage staff tags); it defaults to \"Marked\" until you name it."
     - "Flip the mark slider or filter to Yes/No to work through the list."
     - "The notes box saves when you click away, and shows up in that row's comment log."
+
+- name: "Hide toggles on the activities timeline"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-01
+  summary: >-
+    The admin Activities page has three switches to hide whole categories of
+    noise — account/login churn, read-and-browse interactions, and
+    communications — so you can pare a timeline down to record changelogs.
+  pro_tips:
+    - "A person's History link opens with account and interaction events already hidden, so you land on their changelogs and communications; flip the switches back on to see everything."
+    - "\"Account\" covers logins, password resets, email changes, admin grants, and User-record edits; \"Interactions\" covers views, prints, downloads, and searches."
+  action_path: "/admin/activities/events"
