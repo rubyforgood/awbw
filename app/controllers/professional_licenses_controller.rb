@@ -29,7 +29,9 @@ class ProfessionalLicensesController < ApplicationController
   end
 
   def edit
-    @professional_license = ProfessionalLicense.find(params[:id])
+    @professional_license = ProfessionalLicense
+      .includes(continuing_education_registrations: { event_registration: [ :event, :registrant ] })
+      .find(params[:id])
     authorize! @professional_license
   end
 
@@ -38,7 +40,7 @@ class ProfessionalLicensesController < ApplicationController
     authorize! @professional_license
 
     if @professional_license.update(license_edit_params)
-      redirect_to professional_licenses_path, notice: "License updated for #{@professional_license.person.full_name}."
+      redirect_to helpers.professional_license_return_path(@professional_license), notice: "License updated for #{@professional_license.person.full_name}."
     else
       render :edit, status: :unprocessable_entity
     end

@@ -23,6 +23,23 @@ RSpec.describe ProfessionalLicenseDecorator do
     end
   end
 
+  describe "#ce_events_summary" do
+    let(:person) { create(:person) }
+    let(:license) { create(:professional_license, person: person) }
+
+    it "names the distinct events its CE registrations are tied to" do
+      event = create(:event, title: "Spring CE Retreat")
+      registration = create(:event_registration, registrant: person, event: event)
+      create(:continuing_education_registration, professional_license: license, event_registration: registration)
+
+      expect(license.decorate.ce_events_summary).to eq("CE registered at Spring CE Retreat")
+    end
+
+    it "falls back to a plain note when there are no CE registrations" do
+      expect(license.decorate.ce_events_summary).to eq("Has CE registrations")
+    end
+  end
+
   describe "CE hours issued" do
     let(:person) { create(:person) }
     let(:license) { create(:professional_license, person: person) }

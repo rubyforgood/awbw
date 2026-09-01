@@ -2,8 +2,8 @@
 
 <div class="mx-auto max-w-2xl <%= DomainTheme.bg_class_for(:continuing_education) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mb-6">
-    <%= link_to professional_licenses_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Licenses
+    <%= link_to professional_license_return_path(@professional_license), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= professional_license_return_label(@professional_license) %>
     <% end %>
   </div>
 
@@ -20,6 +20,7 @@
   <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
     <%= render "form", professional_license: @professional_license %>
   </div>
+  <%= render "ce_history", license: @professional_license %>
   <%= render "shared/audit_info", resource: @professional_license %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <div class="mt-4 flex justify-end">
