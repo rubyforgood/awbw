@@ -151,6 +151,11 @@ RSpec.describe FormField do
         expect(field.slider_range_error("lots")).to eq("must be a whole number between 0 and 100")
       end
 
+      it "flags a hand-crafted literal the range input can't produce" do
+        expect(field.slider_range_error("0x40")).to eq("must be a whole number between 0 and 100")
+        expect(field.slider_range_error("1_0")).to eq("must be a whole number between 0 and 100")
+      end
+
       it "does not apply to non-slider fields" do
         text = build(:form_field, form: form, answer_type: :free_form_input_one_line)
         expect(text.slider_range_error("101")).to be_nil

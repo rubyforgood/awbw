@@ -132,7 +132,7 @@ RSpec.describe "PublicForms", type: :request do
       params
     end
 
-    it "renders a range and number input for a slider question" do
+    it "renders a range input for a slider question" do
       get public_form_path(form.slug)
 
       expect(response).to have_http_status(:ok)

@@ -151,6 +151,9 @@ class FormField < ApplicationRecord
   SLIDER_MIN = 0
   SLIDER_MAX = 100
   SLIDER_STEP = 1
+  # Plain digits only, so a hand-crafted "0x40" or "1_0" (both of which Integer()
+  # would happily parse) can't slip past as a value the range input never produces.
+  SLIDER_VALUE_FORMAT = /\A-?\d+\z/
 
   enum :input_type, [
     :text_alphanumeric,
@@ -361,8 +364,7 @@ class FormField < ApplicationRecord
     return unless slider?
     return if value.blank?
 
-    number = Integer(value.to_s, exception: false)
-    return if number && number.between?(SLIDER_MIN, SLIDER_MAX)
+    return if value.to_s.match?(SLIDER_VALUE_FORMAT) && value.to_i.between?(SLIDER_MIN, SLIDER_MAX)
 
     "must be a whole number between #{SLIDER_MIN} and #{SLIDER_MAX}"
   end

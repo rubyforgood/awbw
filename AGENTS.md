@@ -410,7 +410,7 @@ end
 - `searchable_checkbox` — TomSelect checkbox-style multi-select
 - `searchable_select` — Tom Select autocomplete
 - `share_url` — URL sharing/copying
-- `slider` — Keeps a slider form field's range handle and number box in step (and fills the track); backs the `:slider` answer type
+- `slider` — Syncs a slider form field's range handle to its hidden input, shows the picked number in a bubble above the handle, and fills the track; backs the `:slider` answer type
 - `sortable` — Drag-drop sorting (SortableJS); persists order via a per-row PUT (used by categories index and the registration ticket callouts editor)
 - `submit_once` — Disables a form's submit button after submit to block duplicate submissions; re-enables on Back/bfcache/Turbo restore
 - `tabs` — Tab panel navigation
