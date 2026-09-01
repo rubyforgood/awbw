@@ -6,6 +6,26 @@ RSpec.describe "Payments", type: :request do
 
   before { sign_in admin }
 
+  describe "GET /payments index frame" do
+    it "renders the lazy results frame without erroring" do
+      create(:payment, person: person, amount_cents: 5000, amount_cents_remaining: 5000)
+
+      get payments_path, headers: { "Turbo-Frame" => "payments_results" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("payments_results")
+      expect(response.body).to include(person.name)
+    end
+
+    it "breaks the row's View link out of the results frame" do
+      payment = create(:payment, person: person, amount_cents: 5000, amount_cents_remaining: 5000)
+
+      get payments_path, headers: { "Turbo-Frame" => "payments_results" }
+
+      expect_frame_breakout(response.body, payment_path(payment))
+    end
+  end
+
   describe "GET /payments/:id eyebrow" do
     let(:event) { create(:event, cost_cents: 5000) }
     let(:submission) { create(:form_submission, event: event, role: "bulk_payment") }

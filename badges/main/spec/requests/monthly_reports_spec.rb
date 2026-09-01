@@ -23,6 +23,16 @@ RSpec.describe "/monthly_reports", type: :request do
       expect(response.body).to include("Mar 2026")
     end
 
+    it "breaks the credited-author byline out of the results frame" do
+      author = create(:person, first_name: "Lena", last_name: "Byline", profile_is_searchable: true)
+      create(:monthly_report, organization: organization, author: author,
+                              author_credit_preference: "full_name", date: Date.new(2026, 4, 1))
+
+      get monthly_reports_url, headers: turbo_headers
+
+      expect_frame_breakout(response.body, person_path(author))
+    end
+
     it "filters by organization_id when provided" do
       create(:monthly_report, organization: organization, date: Date.new(2026, 4, 1))
       create(:monthly_report, organization: other_organization, date: Date.new(2026, 3, 1))

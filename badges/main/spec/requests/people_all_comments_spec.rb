@@ -36,6 +36,14 @@ RSpec.describe "Person aggregated comments", type: :request do
       expect(response.body).to include("Profile note", "Registration note", "Scholarship note", "CE note", "Account note")
     end
 
+    it "breaks the source chip out of the results frame so it doesn't Oopsie" do
+      create(:comment, commentable: person, body: "Profile note")
+
+      get all_comments_person_path(person), headers: frame_headers
+
+      expect_frame_breakout(response.body, "/people/#{person.id}/edit")
+    end
+
     it "filters to a single source" do
       create(:comment, commentable: person, body: "Profile note")
       registration = create(:event_registration, registrant: person)

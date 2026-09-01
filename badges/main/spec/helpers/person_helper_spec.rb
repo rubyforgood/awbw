@@ -37,6 +37,18 @@ RSpec.describe PersonHelper, type: :helper do
         expect(helper.person_profile_button(person)).not_to include("fa-triangle-exclamation")
       end
     end
+
+    context "frame breakout" do
+      let(:unconfirmed) { nil }
+      let(:authorized) { true }
+
+      it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
+        link = Nokogiri::HTML(
+          helper.person_profile_button(person, data: { turbo_frame: "_top" })
+        ).at_css("a")
+        expect(link["data-turbo-frame"]).to eq("_top")
+      end
+    end
   end
 
   describe "#person_edit_button" do
@@ -71,6 +83,11 @@ RSpec.describe PersonHelper, type: :helper do
       expect(helper.person_edit_button(person, layout: :prefix)).to include("items-baseline gap-1.5")
       expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-baseline gap-1.5")
     end
+
+    it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
+      link = Nokogiri::HTML(helper.person_edit_button(person, data: { turbo_frame: "_top" })).at_css("a")
+      expect(link["data-turbo-frame"]).to eq("_top")
+    end
   end
 
   describe "#user_button" do
@@ -90,6 +107,12 @@ RSpec.describe PersonHelper, type: :helper do
 
       expect(html).not_to include("href=")
       expect(html).to include("Cara Lang")
+    end
+
+    it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(true)
+      link = Nokogiri::HTML(helper.user_button(user, data: { turbo_frame: "_top" })).at_css("a")
+      expect(link["data-turbo-frame"]).to eq("_top")
     end
   end
 end

@@ -24,6 +24,16 @@ RSpec.describe "Comments index", type: :request do
       expect(response.body).to include("One", "Two")
     end
 
+    it "breaks the source chip out of the results frame so it doesn't Oopsie" do
+      sign_in admin
+      commentable = create(:person)
+      create(:comment, commentable: commentable, body: "Note")
+
+      get comments_path, headers: frame_headers
+
+      expect_frame_breakout(response.body, "/people/#{commentable.id}/edit")
+    end
+
     it "filters to comments connected to a person" do
       sign_in admin
       target = create(:person)

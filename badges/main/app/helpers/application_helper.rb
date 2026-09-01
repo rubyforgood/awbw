@@ -30,8 +30,7 @@ module ApplicationHelper
     person_edit_button(person,
                        display_name: record.author_credit,
                        compact: true,
-                       width_class: "inline-flex w-fit",
-                       data: { turbo_frame: "_top" })
+                       width_class: "inline-flex w-fit")
   end
 
   # The person an author picker should show. Only the record's own author counts —

@@ -44,6 +44,15 @@ RSpec.describe "/video_recordings", type: :request do
       get video_recordings_url
       expect(response).to be_successful
     end
+
+    it "renders the lazy results frame without erroring" do
+      VideoRecording.create! valid_attributes
+
+      get video_recordings_url, headers: { "Turbo-Frame" => "video_recordings_results" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("video_recordings_results")
+    end
   end
 
   describe "GET /show" do
