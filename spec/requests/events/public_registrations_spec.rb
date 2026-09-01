@@ -250,6 +250,24 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Minimum of 5 words.")
     end
 
+    # A double-click used to fire two POSTs and create duplicate people and
+    # registrations — worst on paid events, which opt out of Turbo (turbo: false)
+    # and so lose even Turbo's own submitter disabling.
+    it "guards the form against double-submit on a free event" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include('data-controller="submit-once"')
+    end
+
+    it "guards the form against double-submit on a paid event that opts out of Turbo" do
+      event.update!(cost_cents: 5_000)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include('data-controller="submit-once"')
+      expect(response.body).to include('data-turbo="false"')
+    end
+
     it "surfaces the CE deadlines on the continuing education section" do
       ce = FormBuilderService.new(name: "CE", sections: %i[continuing_education], role: "continuing_education").call
       event.event_forms.create!(form: ce, role: "continuing_education")
@@ -733,6 +751,21 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
         expect(response).to have_http_status(:success)
       end
+    end
+
+    # A returning registrant appends a new submission each time, so the default
+    # view (no form_submission_id) must land on their freshest answers.
+    it "defaults to the most recently created submission when the registrant re-registered" do
+      older = FormSubmission.find_by(person: person, form: form)
+      older.form_answers.create!(form_field: essay_field, submitted_answer: "my older reasons")
+      newer = create(:form_submission, person: person, form: form, event: event)
+      newer.form_answers.create!(form_field: essay_field, submitted_answer: "my newer reasons")
+
+      get event_public_registration_path(event, person_id: person.id)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("my newer reasons")
+      expect(response.body).not_to include("my older reasons")
     end
 
     it "renders header and field-label HTML unescaped on the response page" do

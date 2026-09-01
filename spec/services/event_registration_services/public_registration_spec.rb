@@ -610,6 +610,29 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
+  describe "re-submitting the registration form with the same name and email" do
+    let(:params) { base_form_params(first_name: "Rae", last_name: "Fox", email: "rae@example.com") }
+
+    it "reuses the same person rather than creating a duplicate" do
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(Person.where(email: "rae@example.com").count).to eq(1)
+    end
+
+    it "keeps a single event registration but appends a second form submission" do
+      described_class.call(event: event, registration_form: form, form_params: params)
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      person = Person.find_by!(email: "rae@example.com")
+      expect(event.event_registrations.where(registrant: person).count).to eq(1)
+      expect(person.form_submissions.where(form: form, role: "registration", event: event).count).to eq(2)
+    end
+  end
+
   describe "an answer longer than its database column" do
     # `city` (like the other mapped person/address columns) is a varchar(255).
     # A longer answer must surface as a form error, not an ActiveRecord::ValueTooLong
@@ -1135,48 +1158,55 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(Person.find_by(email: "badid@example.com")).to be_nil
     end
 
-    # submitted_answer is only a cache of the attachment's name. Pinned across
-    # every transition so a second writer that skips FormAnswer#sync_uploaded_filename!
-    # fails here rather than silently desyncing the two.
-    it "keeps submitted_answer equal to the attached filename through upload, replace, and blank re-submit" do
+    # submitted_answer is only a cache of the attachment's name. Each re-submission
+    # is its own FormSubmission, so its answer's submitted_answer must equal its own
+    # attachment — a writer that skips FormAnswer#sync_uploaded_filename! fails here
+    # rather than silently desyncing the two.
+    it "keeps each submission's submitted_answer equal to its own attached filename" do
       params = base_form_params(first_name: "Sync", last_name: "Check", email: "sync@example.com")
       in_sync = lambda do |result|
         answer = result.form_submission.form_answers.find_by(form_field: upload_field)
         expect(answer.submitted_answer).to eq(answer.uploaded_file&.filename.to_s)
-        answer
+        result.form_submission
       end
 
-      uploaded = in_sync.call(described_class.call(
+      png = in_sync.call(described_class.call(
         event: event, registration_form: form,
         form_params: params.merge(upload_field.id.to_s => signed_id_for("sample.png", "image/png"))
       ))
-      expect(uploaded.submitted_answer).to eq("sample.png")
-
-      replaced = in_sync.call(described_class.call(
+      pdf = in_sync.call(described_class.call(
         event: event, registration_form: form,
         form_params: params.merge(upload_field.id.to_s => signed_id_for("sample.pdf", "application/pdf"))
       ))
-      expect(replaced.submitted_answer).to eq("sample.pdf")
-
-      blanked = in_sync.call(described_class.call(
+      blank = in_sync.call(described_class.call(
         event: event, registration_form: form, form_params: params.merge(upload_field.id.to_s => "")
       ))
-      expect(blanked.submitted_answer).to eq("sample.pdf")
+
+      expect([ png, pdf, blank ].map(&:id).uniq.size).to eq(3)
+      expect(png.form_answers.find_by(form_field: upload_field).submitted_answer).to eq("sample.png")
+      expect(pdf.form_answers.find_by(form_field: upload_field).submitted_answer).to eq("sample.pdf")
+      expect(blank.form_answers.find_by(form_field: upload_field).submitted_answer).to eq("")
     end
 
-    it "keeps the file already on the answer when a re-submission leaves the field blank" do
+    it "leaves the earlier submission's file intact when a blank re-submission adds a fileless one" do
       params = base_form_params(first_name: "Re", last_name: "Sub", email: "resub@example.com").merge(
         upload_field.id.to_s => signed_id_for("sample.png", "image/png")
       )
-      described_class.call(event: event, registration_form: form, form_params: params)
+      first = described_class.call(event: event, registration_form: form, form_params: params)
 
       result = described_class.call(event: event, registration_form: form,
                                     form_params: params.merge(upload_field.id.to_s => ""))
 
       expect(result.success?).to be true
-      answer = result.form_submission.form_answers.find_by(form_field: upload_field)
-      expect(answer.uploaded_file).to be_attached
-      expect(answer.submitted_answer).to eq("sample.png")
+      expect(result.form_submission).not_to eq(first.form_submission)
+
+      original_answer = first.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(original_answer.uploaded_file).to be_attached
+      expect(original_answer.submitted_answer).to eq("sample.png")
+
+      blank_answer = result.form_submission.form_answers.find_by(form_field: upload_field)
+      expect(blank_answer.uploaded_file).to be_nil
+      expect(blank_answer.submitted_answer).to eq("")
     end
   end
 end
