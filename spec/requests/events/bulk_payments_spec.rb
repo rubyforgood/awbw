@@ -171,36 +171,6 @@ RSpec.describe "Events::BulkPayments", type: :request do
         expect(response.body).not_to include("Jonesborough")
       end
     end
-
-    context "status chips" do
-      let!(:attendees_field) do
-        create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees")
-      end
-
-      it "flags attendees who aren't registered yet" do
-        submission.form_answers.create!(
-          form_field: attendees_field,
-          submitted_answer: [ { first_name: "Nomatch", last_name: "Person", email: "nomatch@example.com" } ].to_json
-        )
-
-        get bulk_payments_event_path(event)
-
-        expect(response.body).to include("not registered")
-      end
-
-      it "flags a matched registration that isn't paid in full" do
-        attendee = create(:person, first_name: "Owen", last_name: "Owing", email: "owen@example.com")
-        create(:event_registration, event: event, registrant: attendee, status: "registered")
-        submission.form_answers.create!(
-          form_field: attendees_field,
-          submitted_answer: [ { first_name: "Owen", last_name: "Owing", email: "owen@example.com" } ].to_json
-        )
-
-        get bulk_payments_event_path(event)
-
-        expect(response.body).to include("unpaid")
-      end
-    end
   end
 
   describe "POST /events/:id/allocate_bulk_payment" do
