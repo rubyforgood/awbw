@@ -799,6 +799,30 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.reload.fee_note).to eq("Canonical registration")
       end
 
+      it "moves the deleted registration's scholarship onto the keeper and re-credits it to the kept registrant" do
+        scholarship = create(:scholarship, recipient: delete_rec.registrant, amount_cents: 1_000)
+        create(:allocation, source: scholarship, allocatable: delete_rec, amount: 1_000)
+
+        post dedupe_perform_event_registrations_path, params: {
+          event_registration_to_delete_id: delete_rec.id,
+          event_registration_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.scholarships).to include(scholarship)
+        expect(scholarship.reload.recipient).to eq(keep.registrant)
+      end
+
+      it "moves the deleted registration's CE registration onto the keeper" do
+        ce = create(:continuing_education_registration, event_registration: delete_rec)
+
+        post dedupe_perform_event_registrations_path, params: {
+          event_registration_to_delete_id: delete_rec.id,
+          event_registration_to_keep_id: keep.id
+        }
+
+        expect(ce.reload.event_registration_id).to eq(keep.id)
+      end
+
       it "denies access to a regular user and does not merge" do
         sign_in regular_user
 

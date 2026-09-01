@@ -536,6 +536,16 @@ class EventRegistrationsController < ApplicationController
 
         [ "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person." ]
       },
+      # A scholarship (and CE registration) moves onto the kept registration with the
+      # merge, but a scholarship still credits the deleted registrant. Re-credit any
+      # scholarship now on the keeper to the keeper's registrant so its recipient
+      # matches its allocation. CE delegates its registrant to the registration, so
+      # it follows automatically and needs no fixup here.
+      after_merge: ->(keep) {
+        keep.scholarships.where.not(recipient_id: keep.registrant_id).find_each do |scholarship|
+          scholarship.update!(recipient: keep.registrant)
+        end
+      },
       record_extras: ->(registration) {
         [ registration.registrant&.preferred_email.presence, registration.status&.humanize ].compact.join(" · ").presence
       }

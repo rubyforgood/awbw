@@ -115,6 +115,10 @@ module Dedupable
     # being deleted as a conflict. Atomic: a failed save rolls the merge back.
     ActiveRecord::Base.transaction do
       deduper.merge(record_to_keep, record_to_delete)
+      # After the duplicate's records have moved onto the keeper, reconcile any that
+      # need it (e.g. re-crediting a moved scholarship to the keeper's registrant).
+      # Runs inside the transaction so a failure rolls the whole merge back.
+      config[:after_merge]&.call(record_to_keep)
       record_to_keep.save! if record_to_keep.changed?
     end
 
@@ -151,6 +155,9 @@ module Dedupable
   #                       opened from an event's registrants page, not the model index) (optional)
   #   back_label:         Label for that eyebrow link, without the "← " prefix (optional)
   #   subtitle:           Extra line under the index header, e.g. naming the scope being deduped (optional)
+  #   after_merge:        Lambda(keep) run inside the merge transaction AFTER the duplicate's records
+  #                       have moved onto the keeper — to reconcile anything the move leaves inconsistent
+  #                       (e.g. re-credit a moved scholarship to the keeper's registrant). Raise to roll back (optional)
   def dedupe_config
     raise NotImplementedError, "#{self.class} must implement #dedupe_config"
   end
