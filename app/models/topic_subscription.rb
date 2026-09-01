@@ -45,17 +45,26 @@ class TopicSubscription < ApplicationRecord
     else all
     end
   }
+  scope :marked_status, ->(value) {
+    case value
+    when "true" then where(marked: true)
+    when "false" then where(marked: false)
+    else all
+    end
+  }
 
-  # Drives the subscriptions index filters: person, organization, topic type, and
-  # status ("active"/"unsubscribed" — the two the segmented toggle emits). The
-  # person filter is an exact id (picked through the remote-select search), while
-  # organization is a free-text name match against the linked org.
+  # Drives the subscriptions index filters: person, organization, topic type,
+  # marked status, and status ("active"/"unsubscribed" — the two the segmented
+  # toggle emits). The person filter is an exact id (picked through the
+  # remote-select search), while organization is a free-text name match against
+  # the linked org.
   def self.search_by_params(params)
     scope = all
     scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
     scope = scope.by_organization_name(params[:organization_name]) if params[:organization_name].present?
     scope = scope.for_topic_type(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
+    scope = scope.marked_status(params[:marked]) if params[:marked].present?
 
     case params[:status]
     when "active" then scope = scope.active

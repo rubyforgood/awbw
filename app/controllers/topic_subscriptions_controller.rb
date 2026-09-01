@@ -15,7 +15,14 @@ class TopicSubscriptionsController < ApplicationController
     @status_filter = params[:status].presence == "unsubscribed" ? "unsubscribed" : "active"
 
     scope = @status_filter == "unsubscribed" ? base.unsubscribed : base.active
-    @topic_subscriptions = scope.newest_first.paginate(page: params[:page], per_page: 25)
+
+    # Only the marked column is click-to-sort; every other view defaults to
+    # newest-first. A marked sort keeps newest-first as its tiebreak.
+    @sort = params[:sort] == "marked" ? "marked" : "subscribed_at"
+    @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+    ordered = @sort == "marked" ? scope.reorder(marked: @sort_direction, subscribed_at: :desc) : scope.newest_first
+
+    @topic_subscriptions = ordered.paginate(page: params[:page], per_page: 25)
     render :topic_subscriptions_results if turbo_frame_request?
   end
 
@@ -119,7 +126,7 @@ class TopicSubscriptionsController < ApplicationController
   end
 
   def topic_subscription_params
-    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :organization_id, :source,
+    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :organization_id, :source, :marked,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
       person_attributes: [ :first_name, :last_name, :email ])

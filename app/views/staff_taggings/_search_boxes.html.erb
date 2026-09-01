@@ -39,6 +39,15 @@
       </p>
     </div>
 
+    <!-- Marked -->
+    <div class="w-full md:w-40">
+      <%= label_tag :marked, "Marked", class: search_label_class %>
+      <%= select_tag :marked,
+            options_for_select(MarkHelper::MARK_FILTER_OPTIONS, params[:marked]),
+            class: "#{search_field_class} search-select-placeholder",
+            onchange: "this.form.requestSubmit()" %>
+    </div>
+
     <!-- Clear filters -->
     <div class="w-full md:ml-auto md:w-auto">
       <span class="<%= search_label_class(extra: "invisible") %>" aria-hidden="true">Clear</span>

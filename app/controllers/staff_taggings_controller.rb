@@ -8,7 +8,7 @@ class StaffTaggingsController < ApplicationController
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable))
       filtered = base_scope.search_by_params(params.to_unsafe_h)
-      @sort = %w[person staff_tag created_at].include?(params[:sort]) ? params[:sort] : "created_at"
+      @sort = %w[person staff_tag marked created_at].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = case @sort
       when "person"
@@ -16,6 +16,8 @@ class StaffTaggingsController < ApplicationController
                 .reorder(Arel.sql("people.first_name #{@sort_direction}, people.last_name #{@sort_direction}"))
       when "staff_tag"
         filtered.left_joins(:staff_tag).reorder(Arel.sql("staff_tags.name #{@sort_direction}"))
+      when "marked"
+        filtered.reorder(marked: @sort_direction, created_at: :desc)
       else
         filtered.reorder(created_at: @sort_direction)
       end
@@ -79,6 +81,7 @@ class StaffTaggingsController < ApplicationController
   def staff_tagging_params
     params.require(:staff_tagging).permit(
       :staff_tag_id,
+      :marked,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
     )

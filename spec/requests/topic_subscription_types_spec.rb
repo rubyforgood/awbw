@@ -73,6 +73,13 @@ RSpec.describe "TopicSubscriptionTypes", type: :request do
       }
       expect(TopicSubscriptionType.last.event_selector?).to be(true)
     end
+
+    it "sets the mark label" do
+      post topic_subscription_types_path, params: {
+        topic_subscription_type: { name: "Regional trainings", mark_label: "Completed" }
+      }
+      expect(TopicSubscriptionType.last.mark_label).to eq("Completed")
+    end
   end
 
   describe "PATCH archive / unarchive" do

@@ -3048,3 +3048,16 @@
     count question like "individuals served" reads as a running total.
   pro_tips:
     - "This covers any question set to a number input type. Text and choice questions are unaffected."
+
+- name: "Mark subscriptions and staff taggings"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-01
+  summary: >-
+    Each topic and each staff tag can name its own checkbox — "Confirmed",
+    "Completed", "Tracked", whatever fits — and every subscription or tagging can
+    then be ticked. The taggings and subscriptions indexes gain a sortable mark
+    column and an All / Yes / No filter.
+  pro_tips:
+    - "Set the word on the topic (Manage topics) or the staff tag (Manage staff tags); it defaults to \"Marked\" until you name it."
+    - "Sort by the mark column or filter to Yes/No to work through the list."

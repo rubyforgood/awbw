@@ -171,5 +171,23 @@ RSpec.describe TopicSubscription, type: :model do
       expect(described_class.unsubscribed).to contain_exactly(gone)
       expect(described_class.for_topic_type(news_type)).to contain_exactly(news)
     end
+
+    it "filters by marked status" do
+      marked = create(:topic_subscription, :marked, topic_subscription_type: trainings)
+      unmarked = create(:topic_subscription, person: create(:person), topic_subscription_type: trainings)
+
+      expect(described_class.marked_status("true")).to contain_exactly(marked)
+      expect(described_class.marked_status("false")).to contain_exactly(unmarked)
+      expect(described_class.marked_status("")).to include(marked, unmarked)
+    end
+  end
+
+  describe ".search_by_params" do
+    it "narrows to marked subscriptions when marked=true" do
+      marked = create(:topic_subscription, :marked, topic_subscription_type: trainings)
+      create(:topic_subscription, person: create(:person), topic_subscription_type: trainings)
+
+      expect(described_class.search_by_params(marked: "true")).to contain_exactly(marked)
+    end
   end
 end

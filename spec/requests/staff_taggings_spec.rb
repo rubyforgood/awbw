@@ -32,6 +32,16 @@ RSpec.describe "/staff_taggings", type: :request do
         expect(response.body).not_to include("Drop Me")
       end
 
+      it "filters by marked status" do
+        create(:staff_tagging, :marked, staff_taggable: create(:person, first_name: "Marked", last_name: "One"))
+        create(:staff_tagging, staff_taggable: create(:person, first_name: "Plain", last_name: "One"))
+
+        get staff_taggings_path, params: { marked: "true" }, headers: turbo_headers
+
+        expect(response.body).to include("Marked One")
+        expect(response.body).not_to include("Plain One")
+      end
+
       it "searches by person name" do
         create(:staff_tagging, staff_taggable: create(:person, first_name: "Alice", last_name: "Xylophone"))
         create(:staff_tagging, staff_taggable: create(:person, first_name: "Bob", last_name: "Quartz"))
@@ -205,6 +215,14 @@ RSpec.describe "/staff_taggings", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(tagging.reload.staff_tag).to eq(tag_a)
+    end
+
+    it "marks the tagging" do
+      patch staff_tagging_path(staff_tagging), params: {
+        return_to: "staff_taggings", staff_tagging: { staff_tag_id: staff_tag.id, marked: "1" }
+      }
+
+      expect(staff_tagging.reload).to be_marked
     end
   end
 

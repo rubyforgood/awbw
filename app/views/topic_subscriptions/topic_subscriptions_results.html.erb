@@ -1,3 +1,5 @@
+<% sort_base = params.permit(:person_id, :organization_name, :topic_subscription_type_id, :comment_status, :marked, :status).to_h.symbolize_keys %>
+<% sort_link = sort_header_link(frame: "topic_subscriptions_results", path: ->(p) { topic_subscriptions_path(p) }, base: sort_base) %>
 <%= turbo_frame_tag :topic_subscriptions_results do %>
   <div class="overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm blur-on-submit">
     <%# Outside the empty check: with nothing to list, the toggle is the only way
@@ -30,6 +32,7 @@
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Person</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Topic</th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Training registrations</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("marked", "Mark") %></th>
               <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Subscribed</th>
             </tr>
           </thead>
@@ -113,6 +116,10 @@
                   <% else %>
                     <span class="text-gray-400">—</span>
                   <% end %>
+                </td>
+
+                <td class="px-4 py-2 text-sm">
+                  <%= marked_indicator(subscription.marked, subscription.topic_subscription_type&.mark_label) %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500">

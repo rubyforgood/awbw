@@ -41,6 +41,12 @@
               options_for_select([ [ "All", "" ], [ "Has comments", "present" ], [ "Flagged", "flagged" ], [ "None", "none" ] ], params[:comment_status]),
               {}, class: "#{field_class} search-select-placeholder", onchange: "this.form.requestSubmit()" %>
       </div>
+      <div class="min-w-[120px]">
+        <%= f.label :marked, "Marked", class: label_class %>
+        <%= f.select :marked,
+              options_for_select(MarkHelper::MARK_FILTER_OPTIONS, params[:marked]),
+              {}, class: "#{field_class} search-select-placeholder", onchange: "this.form.requestSubmit()" %>
+      </div>
       <%# Active/unsubscribed lives in the segmented toggle above the results;
           carry the current selection so filtering here doesn't reset it. %>
       <%= hidden_field_tag :status, params[:status], id: nil if params[:status].present? %>
