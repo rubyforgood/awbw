@@ -16,6 +16,15 @@ class ProfessionalLicenseDecorator < ApplicationDecorator
     end
   end
 
+  # Tooltip text naming the event(s) whose CE registrations lock this license from
+  # removal. Falls back to a plain note when no event is resolvable.
+  def ce_events_summary
+    titles = continuing_education_registrations.filter_map { |registration| registration.event_registration&.event&.title }.uniq
+    return "Has CE registrations" if titles.empty?
+
+    "CE registered at #{titles.to_sentence}"
+  end
+
   # CE hours issued against this license this calendar year — only registrations
   # whose certificate has been sent (in the current year) count.
   def ce_hours_issued_this_year

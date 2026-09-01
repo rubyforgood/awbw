@@ -53,7 +53,12 @@
                                          class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap",
                                          data: { cocoon_confirm: "Remove this license? This can't be undone." } %>
         <% else %>
-          <span class="text-sm whitespace-nowrap text-amber-600">Can't<br>remove</span>
+          <%= link_to edit_professional_license_path(f.object, return_to: "person"),
+                      class: "text-sm text-amber-600 hover:text-amber-800 underline whitespace-nowrap",
+                      title: f.object.decorate.ce_events_summary,
+                      data: { turbo_frame: "_top" } do %>
+            Can't<br>remove
+          <% end %>
         <% end %>
       </div>
     </div>
