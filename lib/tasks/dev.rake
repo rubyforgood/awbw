@@ -27,6 +27,7 @@ namespace :db do
       bulk_payments
       public_forms
       form_results_showcase
+      annual_evaluation
     ]
 
     desc "Generate representative sample data for development"
@@ -145,6 +146,11 @@ namespace :db do
     desc "Seed a form covering every field type + varied answers for the results page (dev only)"
     task form_results_showcase: :environment do
       load Rails.root.join("db/seeds/dev/form_results_showcase.rb")
+    end
+
+    desc "Seed the Annual Evaluation form with sample submissions (dev only)"
+    task annual_evaluation: :environment do
+      load Rails.root.join("db/seeds/dev/annual_evaluation.rb")
     end
   end
 end
