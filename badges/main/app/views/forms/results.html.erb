@@ -75,6 +75,8 @@
                        chart: report.chart, palette: palette, map_color: "#475569",
                        empty_message: "No responses yet.",
                        footer: report.answered_count.positive? ? render("forms/view_all_responses", form: @form, count: report.answered_count) : nil %>
+          <% when :number %>
+            <%= render "forms/numeric_card", report: report %>
           <% when :text %>
             <%= render "forms/text_responses_card", report: report, form: @form %>
           <% when :file %>

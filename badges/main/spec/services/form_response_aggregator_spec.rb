@@ -151,6 +151,64 @@ RSpec.describe FormResponseAggregator do
     end
   end
 
+  describe "numeric questions" do
+    def number_field(name)
+      create(:form_field, form: form, name: name,
+             answer_type: :free_form_input_one_line, input_type: :number_integer)
+    end
+
+    it "averages and totals a whole-number field as an open count" do
+      field = number_field("Adults served")
+      answer(create(:form_submission, form: form), field, "10")
+      answer(create(:form_submission, form: form), field, "25")
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.kind).to eq(:number)
+      expect(report.answered_count).to eq(2)
+      expect(report.total).to eq(35)
+      expect(report.average).to eq(17.5)
+      expect(report.minimum).to eq(10)
+      expect(report.maximum).to eq(25)
+      expect(report.integer_valued).to be(true)
+    end
+
+    it "drops blank and non-numeric answers from the figures" do
+      field = number_field("Teens served")
+      answer(create(:form_submission, form: form), field, "50")
+      answer(create(:form_submission, form: form), field, "")
+      answer(create(:form_submission, form: form), field, "n/a")
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.answered_count).to eq(1)
+      expect(report.total).to eq(50)
+    end
+
+    it "reports zero answered with a nil average before anyone responds" do
+      number_field("Elders served")
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.kind).to eq(:number)
+      expect(report.answered_count).to eq(0)
+      expect(report.average).to be_nil
+    end
+
+    it "keeps decimals for a number_decimal field" do
+      field = create(:form_field, form: form, name: "Average rating",
+                     answer_type: :free_form_input_one_line, input_type: :number_decimal)
+      answer(create(:form_submission, form: form), field, "4.5")
+      answer(create(:form_submission, form: form), field, "3.0")
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.total).to eq(7.5)
+      expect(report.average).to eq(3.75)
+      expect(report.integer_valued).to be(false)
+    end
+  end
+
   it "reports questions in form order" do
     create(:form_field, form: form, name: "Second", answer_type: :single_select_radio, position: 2)
     create(:form_field, form: form, name: "First", answer_type: :free_form_input_one_line, position: 1)

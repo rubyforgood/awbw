@@ -3036,3 +3036,15 @@
     - "Set the parent from the “Parent organization” picker on the org edit page."
     - "The profile shows a “Part of …” link up to the parent and a “Nested organizations” list down to the children."
     - "Deleting a parent org un-nests its children rather than deleting them."
+
+- name: "Averages and totals on form results"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-01
+  pr_number: 2477
+  summary: >-
+    The form results page now summarizes number questions with their average,
+    total, and number of responses, instead of listing every raw figure — so a
+    count question like "individuals served" reads as a running total.
+  pro_tips:
+    - "This covers any question set to a number input type. Text and choice questions are unaffected."
