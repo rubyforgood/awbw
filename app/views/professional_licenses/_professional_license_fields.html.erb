@@ -50,8 +50,7 @@
         <% if f.object.new_record? || f.object.removable? %>
           <%= link_to_remove_association "Remove",
                                          f,
-                                         class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap",
-                                         data: { cocoon_confirm: "Remove this license? This can't be undone." } %>
+                                         class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
         <% else %>
           <%= link_to edit_professional_license_path(f.object, return_to: "person"),
                       class: "text-sm text-amber-600 hover:text-amber-800 hover:underline whitespace-nowrap",

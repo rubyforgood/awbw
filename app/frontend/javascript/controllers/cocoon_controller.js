@@ -118,9 +118,6 @@ function handleAdd(link, originalEvent) {
 }
 
 function handleRemove(link, originalEvent) {
-  const confirmMessage = link.dataset.cocoonConfirm;
-  if (confirmMessage && !window.confirm(confirmMessage)) return;
-
   const wrapperClass = link.dataset.wrapperClass || "nested-fields";
   const wrapper = link.closest("." + wrapperClass);
   if (!wrapper) return;
