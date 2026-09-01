@@ -400,9 +400,21 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("activity_row_marker")
         # The communication row reads as a human Sent/Received chip, not the raw name.
         expect(response.body).to include("Communication")
+        expect(response.body).to include("Sent")
         expect(response.body).not_to include("communication.sent")
         # Newer communication sorts above the older activity event.
         expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
+      end
+
+      it "labels an incoming communication as Received" do
+        person = create(:person)
+        create(:notification, :incoming, recipient_email: person.communications_email, email_subject: "Inbound note")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Received")
       end
 
       it "activity name search matches the communication's synthetic name (direction-aware)" do
