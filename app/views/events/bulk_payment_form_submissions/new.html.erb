@@ -59,7 +59,7 @@
             <% end %>
           </p>
           <% if @event.registerable? %>
-            <p><strong>Haven't registered yet?</strong>
+            <p><strong>Attending and haven't registered yet?</strong>
               <%= link_to "Register for #{@event.title}", new_event_public_registration_path(@event), class: "font-semibold underline" %>
               first — this form is only for covering other people's costs.</p>
           <% end %>

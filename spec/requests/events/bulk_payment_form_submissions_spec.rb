@@ -92,7 +92,7 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
       get new_event_bulk_payment_path(event)
 
       expect(response.body).to include(new_event_public_registration_path(event))
-      expect(response.body).to include("Haven't registered yet?")
+      expect(response.body).to include("Attending and haven't registered yet?")
     end
 
     it "hides the registration link once registration has closed" do
@@ -100,7 +100,7 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
       get new_event_bulk_payment_path(event)
 
-      expect(response.body).not_to include("Haven't registered yet?")
+      expect(response.body).not_to include("Attending and haven't registered yet?")
     end
 
     context "when the signed-in user has their own registration for the event" do
