@@ -49,9 +49,11 @@ class BuiltinCallouts
     { q: "Can multiple staff members from one organization participate?",
       a: [ "Yes. Multiple staff members from the same organization are welcome and encouraged to participate in the training.",
            "Many organizations choose to train teams of staff members in order to integrate trauma-informed healing arts practices more broadly across their programs, services, and communities." ] },
+    # Amount is sourced from Membership::ANNUAL_COST_CENTS so this default copy
+    # tracks the real per-person figure instead of drifting from a hard-coded number.
     { q: "Are there any fees, other than the training fee, associated with becoming a facilitator?",
-      a: [ "AWBW has an annual membership fee of $100 per program to support the sustainability of the organization and continued facilitator resources and support.",
-           "The membership fee covers all facilitators connected to the same program or organization for the calendar year, regardless of the number of facilitators participating. Only one membership fee payment is required per program annually." ] }
+      a: [ "AWBW facilitators pay an annual membership fee of #{MoneyFormatter.dollars_from_cents(::Membership::ANNUAL_COST_CENTS)} to support the sustainability of the organization and continued facilitator resources and support.",
+           "The membership fee is billed per facilitator and renews automatically each year. You can manage or cancel your membership at any time." ] }
   ].freeze
 
   # Hidden Resource (by title) backing the handout links, in display order.
