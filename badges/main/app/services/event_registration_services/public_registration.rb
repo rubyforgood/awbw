@@ -107,7 +107,7 @@ module EventRegistrationServices
             send_notifications(existing)
           end
           organization_link = connect_organization(existing, organization)
-          submission = update_form_submission(person)
+          submission = create_form_submission(person)
           organization_link&.record_form_submission(submission)
           save_scholarship_submission(person)
           save_continuing_education_submission(person)
@@ -488,16 +488,6 @@ module EventRegistrationServices
 
     def create_form_submission(person)
       submission = FormSubmission.create!(person: person, form: @registration_form, event: @event, role: "registration")
-      save_form_answers(submission)
-      OtherResponses::CaptureFromSubmission.call(submission)
-      Quotes::CaptureFromSubmission.call(submission)
-      submission
-    end
-
-    def update_form_submission(person)
-      submission = FormSubmission.find_or_create_by!(person: person, form: @registration_form, role: "registration", event: @event) do |record|
-        record.event = @event
-      end
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
