@@ -14,8 +14,10 @@
                 aria: { label: "Open #{subject}" },
                 target: "_blank", rel: "noopener", data: { turbo_frame: "_top" } %>
     <div class="flex items-start gap-2">
-      <span class="mt-0.5 inline-flex shrink-0 items-center rounded-full <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 700) %> px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
-        <i class="fa-solid fa-bell mr-1"></i><%= notification.incoming? ? "Received" : "Sent" %>
+      <span class="mt-0.5 flex w-24 shrink-0 justify-end">
+        <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 700) %> px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+          <i class="fa-solid fa-bell mr-1"></i><%= notification.incoming? ? "Received" : "Sent" %>
+        </span>
       </span>
       <div class="min-w-0 space-y-0.5">
         <div class="font-medium text-indigo-600 group-hover:underline">Communication</div>
