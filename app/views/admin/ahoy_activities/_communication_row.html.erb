@@ -9,12 +9,15 @@
   </td>
 
   <td data-label="Activity" class="px-4 py-3 align-top">
-    <div class="flex items-center gap-2">
-      <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 700) %> px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
-        <i class="fa-solid fa-bell mr-1"></i><%= notification.incoming? ? "Received" : "Sent" %>
-      </span>
-      <span class="font-medium text-gray-900">Communication</span>
-    </div>
+    <%= link_to notification_path(notification), class: "group block",
+                target: "_blank", rel: "noopener", data: { turbo_frame: "_top" } do %>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 700) %> px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+          <i class="fa-solid fa-bell mr-1"></i><%= notification.incoming? ? "Received" : "Sent" %>
+        </span>
+        <span class="font-medium text-indigo-600 group-hover:underline">Communication</span>
+      </div>
+    <% end %>
   </td>
 
   <td data-label="Details" class="min-w-[16rem] px-4 py-3 align-top text-gray-500">
