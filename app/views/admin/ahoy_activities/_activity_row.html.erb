@@ -1,32 +1,23 @@
 <% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
+<% chip = activity.activity_chip %>
+<% resource = activity.resource_link %>
+<% linked = resource && resource[:path] %>
 <tr class="transition hover:bg-gray-50">
-  <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
+  <td data-label="Time" class="px-4 py-3 align-top whitespace-nowrap text-gray-500">
     <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
   </td>
 
-  <% chip = activity.activity_chip %>
-  <% resource = activity.resource_link %>
-  <td data-label="Activity" class="px-4 py-3">
-    <% if resource && resource[:path] %>
-      <%= link_to resource[:path], class: "group block", data: { turbo_frame: "_top" } do %>
-        <%= render "admin/ahoy_activities/activity_cell", activity: activity, event: event, chip: chip, resource: resource %>
-      <% end %>
-    <% else %>
-      <%= render "admin/ahoy_activities/activity_cell", activity: activity, event: event, chip: chip, resource: resource %>
-    <% end %>
-  </td>
-
-  <td data-label="Details" class="relative min-w-[16rem] px-4 py-3 align-top text-gray-500">
-    <%# Whole cell links to the resource (no text styling); inner links stay
-        clickable via z-10 in the partial. %>
-    <% if resource && resource[:path] %>
+  <%# Merged Activity + Details cell: a link overlay makes the whole cell navigate
+      to the resource without restyling the text; inner detail links keep z-10. %>
+  <td data-label="Activity" class="<%= "group " if linked %>relative px-4 py-3 align-top">
+    <% if linked %>
       <%= link_to "", resource[:path], class: "absolute inset-0",
                   aria: { label: "Open #{resource[:text]}" }, data: { turbo_frame: "_top" } %>
     <% end %>
-    <%= render "admin/ahoy_activities/event_details", activity: activity %>
+    <%= render "admin/ahoy_activities/activity_cell", activity: activity, event: event, chip: chip, resource: resource %>
   </td>
 
-  <td data-label="User" class="w-32 px-4 py-3 text-gray-600">
+  <td data-label="User" class="w-32 px-4 py-3 align-top text-gray-600">
     <% if event.user %>
       <%= link_to event.user.full_name,
                   user_path(event.user),
@@ -38,7 +29,7 @@
     <% end %>
   </td>
 
-  <td data-label="Visit ID" class="w-16 px-4 py-3 text-gray-500">
+  <td data-label="Visit ID" class="w-16 px-4 py-3 align-top text-gray-500">
     <%= event.visit_id %>
   </td>
 </tr>

@@ -96,6 +96,12 @@ module Ahoy
       extra_properties.present?
     end
 
+    # Whether the Details block has anything to show (so the merged Activity cell
+    # can skip the empty-dash placeholder).
+    def details?
+      comment_note.present? || extra_details?
+    end
+
     def changes?
       change_diffs.is_a?(Hash) && change_diffs.present?
     end

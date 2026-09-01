@@ -1,15 +1,25 @@
-<%# Inner content of the Activity cell: the action chip + purple resource name
-    (with an optional flag), then the grey specific-record line. The caller wraps
-    this in a link to the resource, so group-hover:underline lights up on hover. %>
-<div class="flex items-center gap-2" title="<%= event.name %>">
-  <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase <%= chip[:classes] %>">
+<%# Merged Activity cell: the action chip on the left, then the name, the grey
+    resource sublabel, and the event's Details stacked in one column indented
+    under the name. The caller marks the cell `group` and overlays a link to the
+    resource, so the name underlines on hover and the whole cell navigates. %>
+<div class="flex items-start gap-2" title="<%= event.name %>">
+  <span class="mt-0.5 inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase <%= chip[:classes] %>">
     <%= chip[:label] %>
   </span>
-  <span class="font-medium text-indigo-600 group-hover:underline"><%= activity.activity_resource_label %></span>
-  <% if activity.comment_flagged? %>
-    <i class="fa-solid fa-flag text-orange-500" title="Flagged"></i>
-  <% end %>
+  <div class="min-w-0 space-y-0.5">
+    <div class="flex items-center gap-2">
+      <span class="font-medium text-indigo-600 group-hover:underline"><%= activity.activity_resource_label %></span>
+      <% if activity.comment_flagged? %>
+        <i class="fa-solid fa-flag text-orange-500" title="Flagged"></i>
+      <% end %>
+    </div>
+    <% if resource %>
+      <div class="text-xs text-gray-500"><%= resource[:text] %></div>
+    <% end %>
+    <% if activity.details? %>
+      <div class="pt-1 text-gray-500">
+        <%= render "admin/ahoy_activities/event_details", activity: activity %>
+      </div>
+    <% end %>
+  </div>
 </div>
-<% if resource %>
-  <div class="mt-0.5 text-xs text-gray-500 group-hover:underline"><%= resource[:text] %></div>
-<% end %>
