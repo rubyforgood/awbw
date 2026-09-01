@@ -695,4 +695,144 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
   end
+
+  # ============================================================
+  # EVENT REGISTRATIONS — one person registered for the same event
+  # under two different Person records. Merging combines the
+  # registrations only; the people stay separate.
+  # ============================================================
+
+  describe "Event registrations" do
+    before { sign_in admin }
+
+    let(:event) { create(:event) }
+
+    def registration_for(person_attrs)
+      create(:event_registration, event: event, registrant: create(:person, { user: nil }.merge(person_attrs)))
+    end
+
+    describe "GET dedupe_index" do
+      it "surfaces same-event candidate groups from the duplicate finder" do
+        registration_for(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
+        registration_for(first_name: "Jane", last_name: "Doe", email: "jane@work.com")
+
+        get dedupe_index_event_registrations_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Same registrant name")
+      end
+
+      it "denies access to a regular user" do
+        sign_in regular_user
+        get dedupe_index_event_registrations_path
+        expect(response).not_to have_http_status(:ok)
+      end
+
+      it "scopes suggestions to one event and returns the eyebrow there when opened from it" do
+        registration_for(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
+        registration_for(first_name: "Jane", last_name: "Doe", email: "jane@work.com")
+        other_event = create(:event)
+        create(:event_registration, event: other_event, registrant: create(:person, first_name: "Zed", last_name: "Zed", email: "z1@example.com", user: nil))
+        create(:event_registration, event: other_event, registrant: create(:person, first_name: "Zed", last_name: "Zed", email: "z2@example.com", user: nil))
+
+        get dedupe_index_event_registrations_path(event_id: event.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Jane Doe")
+        expect(response.body).not_to include("Zed Zed")
+        expect(response.body).to include(registrants_event_path(event))
+        expect(response.body).to include("Showing possible duplicate registrations for")
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      let!(:keep) { registration_for(first_name: "Keep", last_name: "Person", email: "keep@example.com") }
+      let!(:delete_rec) { registration_for(first_name: "Kepe", last_name: "Persson", email: "keep@example.com") }
+      before { create(:event_attendance_time_entry, event_registration: delete_rec) }
+
+      it "renders the preview with a reassignment summary" do
+        get dedupe_preview_event_registrations_path(
+          event_registration_to_keep_id: keep.id,
+          event_registration_to_delete_id: delete_rec.id
+        )
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Records that will move")
+      end
+
+      it "notes that a merge across different registrants keeps the people separate" do
+        get dedupe_preview_event_registrations_path(
+          event_registration_to_keep_id: keep.id,
+          event_registration_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("different registrants")
+        expect(response.body).not_to include("Merge blocked")
+      end
+    end
+
+    describe "POST dedupe_perform" do
+      let!(:keep) { registration_for(first_name: "Keeper", last_name: "Person", email: "dupe@example.com") }
+      let!(:delete_rec) { registration_for(first_name: "Keepr", last_name: "Persn", email: "dupe@example.com") }
+      let!(:time_entry) { create(:event_attendance_time_entry, event_registration: delete_rec) }
+
+      it "merges, reassigns child records, and deletes the duplicate" do
+        expect {
+          post dedupe_perform_event_registrations_path, params: {
+            event_registration_to_delete_id: delete_rec.id,
+            event_registration_to_keep_id: keep.id
+          }
+        }.to change(EventRegistration, :count).by(-1)
+
+        expect(response).to redirect_to(event_registrations_path)
+        expect(EventRegistration.exists?(delete_rec.id)).to be false
+        expect(time_entry.reload.event_registration_id).to eq(keep.id)
+      end
+
+      it "applies keep-field edits before merging" do
+        post dedupe_perform_event_registrations_path, params: {
+          event_registration_to_delete_id: delete_rec.id,
+          event_registration_to_keep_id: keep.id,
+          event_registration_to_keep: { fee_note: "Canonical registration" }
+        }
+
+        expect(keep.reload.fee_note).to eq("Canonical registration")
+      end
+
+      it "moves the deleted registration's scholarship onto the keeper and re-credits it to the kept registrant" do
+        scholarship = create(:scholarship, recipient: delete_rec.registrant, amount_cents: 1_000)
+        create(:allocation, source: scholarship, allocatable: delete_rec, amount: 1_000)
+
+        post dedupe_perform_event_registrations_path, params: {
+          event_registration_to_delete_id: delete_rec.id,
+          event_registration_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.scholarships).to include(scholarship)
+        expect(scholarship.reload.recipient).to eq(keep.registrant)
+      end
+
+      it "moves the deleted registration's CE registration onto the keeper" do
+        ce = create(:continuing_education_registration, event_registration: delete_rec)
+
+        post dedupe_perform_event_registrations_path, params: {
+          event_registration_to_delete_id: delete_rec.id,
+          event_registration_to_keep_id: keep.id
+        }
+
+        expect(ce.reload.event_registration_id).to eq(keep.id)
+      end
+
+      it "denies access to a regular user and does not merge" do
+        sign_in regular_user
+
+        expect {
+          post dedupe_perform_event_registrations_path, params: {
+            event_registration_to_delete_id: delete_rec.id,
+            event_registration_to_keep_id: keep.id
+          }
+        }.not_to change(EventRegistration, :count)
+      end
+    end
+  end
 end

@@ -167,6 +167,21 @@ RSpec.describe ModelDeduper do
       expect(bookmark.reload.bookmarkable).to eq(keep)
     end
 
+    it "scopes a polymorphic reassignment by type, never stealing another type's same-id row" do
+      mine = create(:bookmark, bookmarkable: dupe)
+      # A bookmark of a different type whose bookmarkable_id collides with dupe.id.
+      foreign = build(:bookmark, bookmarkable: create(:workshop))
+      foreign.bookmarkable_type = "Workshop"
+      foreign.bookmarkable_id = dupe.id
+      foreign.save!(validate: false)
+
+      service.merge(keep, dupe)
+
+      expect(mine.reload.bookmarkable_id).to eq(keep.id)
+      expect(foreign.reload.bookmarkable_id).to eq(dupe.id)
+      expect(foreign.bookmarkable_type).to eq("Workshop")
+    end
+
     # Payment/Story reference organizations by FK but Organization declares no
     # inverse has_many, so they are only reachable via the belongs_to scan. Their
     # DB foreign keys would otherwise block the destroy.

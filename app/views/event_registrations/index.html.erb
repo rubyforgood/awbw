@@ -18,6 +18,10 @@
                             event_registrations_path(request.query_parameters.merge(format: :csv)),
                             class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
               <% end %>
+              <% if allowed_to?(:manage?, EventRegistration) %>
+                <%= link_to "Dedupe", dedupe_index_event_registrations_path,
+                            class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+              <% end %>
               <% if allowed_to?(:new?, EventRegistration) %>
                 <%= link_to "New #{EventRegistration.model_name.human.downcase}",
                             new_event_registration_path(return_to: "index"),

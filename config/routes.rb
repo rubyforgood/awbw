@@ -119,6 +119,12 @@ Rails.application.routes.draw do
     post :confirm
   end
   resources :event_registrations do
+    collection do
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_perform
+      patch :dedupe_update_keep
+    end
     member do
       get :confirm
       post :process_confirm
