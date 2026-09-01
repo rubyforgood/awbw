@@ -49,6 +49,16 @@
     that CE registration.
   action_path: /professional_licenses
 
+- name: "Edit a professional license straight from a person's page"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-01
+  summary: >-
+    Each saved license on a person's edit page now has an Edit link (next to
+    Remove) that opens the full license editor and returns you to the person when
+    you're done. Removing a license now asks for confirmation first.
+  action_path: /people
+
 - name: "Compact training registrations on the subscriptions page"
   area: communications
   display_status: admin_facing
