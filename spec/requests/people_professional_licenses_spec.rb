@@ -35,6 +35,18 @@ RSpec.describe "People professional licenses", type: :request do
     expect(response.body).to include("data-cocoon-confirm")
   end
 
+  it "shows a compact can't-remove note for a CE-tied license" do
+    person = create(:person)
+    license = create(:professional_license, person: person, number: "90210")
+    registration = create(:event_registration, registrant: person)
+    create(:continuing_education_registration, event_registration: registration, professional_license: license)
+
+    get edit_person_path(person)
+
+    expect(response.body).to include("Can't<br>remove")
+    expect(response.body).not_to include("Has CE registrations — can't remove")
+  end
+
   it "adds a license through the person form" do
     person = create(:person)
 

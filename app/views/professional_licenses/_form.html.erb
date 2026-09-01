@@ -55,8 +55,15 @@
     </div>
   </div>
 
-  <div class="flex justify-end gap-2 pt-2">
-    <%= link_to "Cancel", professional_license_return_path(professional_license), class: button_classes(:secondary) %>
-    <%= f.button :submit, professional_license.persisted? ? "Save license" : "Add license", class: button_classes(:primary) %>
+  <div class="flex items-center justify-between gap-2 pt-2">
+    <div>
+      <% if professional_license.persisted? && professional_license.used_for_ce? %>
+        <span class="text-sm text-amber-600">Has CE registrations — can't remove</span>
+      <% end %>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to "Cancel", professional_license_return_path(professional_license), class: button_classes(:secondary) %>
+      <%= f.button :submit, professional_license.persisted? ? "Save license" : "Add license", class: button_classes(:primary) %>
+    </div>
   </div>
 <% end %>

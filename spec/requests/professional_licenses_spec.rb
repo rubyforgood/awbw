@@ -143,6 +143,21 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).to include("No CE registrations yet for this license.")
     end
 
+    it "notes that a CE-tied license can't be removed" do
+      registration = create(:event_registration, registrant: person)
+      create(:continuing_education_registration, professional_license: license, event_registration: registration)
+
+      get edit_professional_license_path(license)
+
+      expect(response.body).to include("Has CE registrations — can't remove")
+    end
+
+    it "omits the can't-remove note for a license with no CE registrations" do
+      get edit_professional_license_path(license)
+
+      expect(response.body).not_to include("Has CE registrations — can't remove")
+    end
+
     it "returns to the person's edit page when reached from there" do
       get edit_professional_license_path(license, return_to: "person")
 
