@@ -3,6 +3,11 @@ module Ahoy
     # Already surfaced in their own table columns, so redundant inside the details cell.
     REDUNDANT_KEYS = %w[resource_type resource_id resource_title].freeze
 
+    # An auth event names the acting user twice (record_* duplicates resource_*) and
+    # carries an updated_by that's always that same actor — all noise beside the
+    # headline, so leave them out of a login's details.
+    AUTH_REDUNDANT_KEYS = %w[record_id record_type updated_by_id].freeze
+
     # Fields that title the record they belong to, in the order they should lead.
     HEADING_KEYS = %w[topic title name subject].freeze
 
@@ -93,7 +98,12 @@ module Ahoy
 
     # Everything the dedicated columns don't already show.
     def extra_properties
-      properties_hash.except(*REDUNDANT_KEYS)
+      keys = auth? ? REDUNDANT_KEYS + AUTH_REDUNDANT_KEYS : REDUNDANT_KEYS
+      properties_hash.except(*keys)
+    end
+
+    def auth?
+      object.name.to_s.start_with?("auth.")
     end
 
     def extra_details?

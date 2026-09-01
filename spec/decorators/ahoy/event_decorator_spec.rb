@@ -32,6 +32,18 @@ RSpec.describe Ahoy::EventDecorator do
     end
   end
 
+  describe "auth event details" do
+    it "drops the redundant record and updated_by rows, keeping the rest" do
+      event = create(:ahoy_event, name: "auth.login", properties: {
+        "record_id" => 1, "record_type" => "User", "updated_by_id" => nil,
+        "resource_type" => "User", "resource_id" => 1,
+        "resource_title" => "Umberto (u@example.com)", "sign_in_count" => 2
+      }).reload.decorate
+
+      expect(event.extra_properties.keys).to eq(%w[sign_in_count])
+    end
+  end
+
   describe "#activity_resource_label" do
     it "humanizes the resource half of the name" do
       expect(decorate_named("update.workshop_variation").activity_resource_label).to eq("Workshop variation")
