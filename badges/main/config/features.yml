@@ -25,19 +25,6 @@
 #                   expand this in the WYSIWYG with screenshots.
 #   external_url:   Optional link to a full process doc (e.g. a Google/Word doc).
 
-# ── 2026-09 ─────────────────────────────────────────────────────────────────
-
-- name: "Compact training registrations on the subscriptions page"
-  area: communications
-  display_status: admin_facing
-  released_on: 2026-09-01
-  summary: >-
-    On the topic subscriptions page, a person's facilitator trainings now show as
-    compact attendance-status pills on one line instead of a stacked list. Hover a
-    pill to see the training's name and date.
-  action_path: /topic_subscriptions
-  pr_number: 2482
-
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
 - name: "No-show trainings no longer count toward program status"
