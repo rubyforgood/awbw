@@ -162,7 +162,7 @@ module Ahoy
     def custom_resource_link(record)
       case record
       when Affiliation
-        { text: [ record.title.presence, record.organization&.name ].compact.join(" · "),
+        { text: [ record.title.presence, record.organization&.name, affiliation_dates(record) ].compact.join(" · "),
           path: edit_path_for(record) }
       when EventRegistration
         { text: [ record.event&.title, record.event&.start_date&.strftime("%B %Y") ].compact.join(" · "),
@@ -170,6 +170,15 @@ module Ahoy
       when Payment
         payment_allocation_link(record)
       end
+    end
+
+    # An affiliation's span: "Aug'25 - Feb'26", or "Aug'25 - present" while active.
+    # nil when it has no start date to anchor the range.
+    def affiliation_dates(affiliation)
+      return nil unless affiliation.start_date
+
+      finish = affiliation.end_date&.strftime("%b'%y") || "present"
+      "#{affiliation.start_date.strftime("%b'%y")} - #{finish}"
     end
 
     # A payment reads as what it paid for — its allocations' targets (an event

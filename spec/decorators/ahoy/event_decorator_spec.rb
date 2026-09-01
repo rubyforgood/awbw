@@ -88,6 +88,22 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_affiliation_path(affiliation))
     end
 
+    it "appends an affiliation's date span, or 'present' while active" do
+      org = create(:organization, name: "Harbor Shelter")
+      ended = create(:affiliation, title: "Facilitator", organization: org,
+                                   start_date: Date.new(2025, 8, 1), end_date: Date.new(2026, 2, 1))
+      active = create(:affiliation, title: "Facilitator", organization: org,
+                                    start_date: Date.new(2025, 8, 1), end_date: nil)
+
+      ended_event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",
+                                        resource_id: ended.id, properties: {}).decorate
+      active_event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",
+                                         resource_id: active.id, properties: {}).decorate
+
+      expect(ended_event.resource_link[:text]).to eq("Facilitator · Harbor Shelter · Aug'25 - Feb'26")
+      expect(active_event.resource_link[:text]).to eq("Facilitator · Harbor Shelter · Aug'25 - present")
+    end
+
     it "labels an event registration as its event and start month" do
       registration = create(:event_registration)
       registration.event.update!(title: "Spring Training", start_date: Time.zone.local(2025, 9, 1))
