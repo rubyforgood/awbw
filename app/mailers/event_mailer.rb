@@ -34,13 +34,16 @@ class EventMailer < ApplicationMailer
     # carries the event details + a "View submission" link). Bulk payments always
     # have an event; guard anyway so an event-less submission just omits the link.
     @ticket_url = bulk_payment_ticket_url(@submission.slug) if @submission.event.present? && @submission.slug.present?
+    # Itemized invoice for this payment — public to the payer (no account) for
+    # bulk-payment submissions, same as their ticket. Returns to the ticket page.
+    @invoice_url = event_invoice_url(@submission.event, submission_id: @submission.id, return_to: "bulk_payment_ticket") if @submission.event.present?
     @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
 
     mail(
       to: @person.preferred_email,
       from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      subject: "AWBW Portal: Payment received for #{@event&.title}"
+      subject: "AWBW Portal: Payment submission received for #{@event&.title}"
     )
   end
 

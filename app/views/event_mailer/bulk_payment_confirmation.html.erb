@@ -1,4 +1,4 @@
-<h1>Payment received</h1>
+<h1>Payment submission received</h1>
 
 <div style="margin-top: 36px; text-align: left;">
   <p>
@@ -87,8 +87,13 @@
   <% end %>
 </div>
 
-<% if @ticket_url %>
+<% if @ticket_url || @invoice_url %>
   <p>
-    <a href="<%= @ticket_url %>" class="button">View payment</a>
+    <% if @ticket_url %>
+      <a href="<%= @ticket_url %>" class="button">View payment</a>
+    <% end %>
+    <% if @invoice_url %>
+      <a href="<%= @invoice_url %>" class="button-secondary">View invoice</a>
+    <% end %>
   </p>
 <% end %>

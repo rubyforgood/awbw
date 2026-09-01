@@ -27,6 +27,16 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Clearer bulk payment confirmation email"
+  area: payments
+  display_status: user_facing
+  released_on: 2026-09-01
+  summary: >-
+    The bulk-payment confirmation email now reads "Payment submission received" so
+    people paying by check aren't misled into thinking the payment already cleared.
+    It also adds a "View invoice" button next to "View payment" that links straight
+    to their itemized invoice.
+
 - name: "Compact training registrations on the subscriptions page"
   area: communications
   display_status: admin_facing

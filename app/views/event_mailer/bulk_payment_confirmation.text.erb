@@ -1,4 +1,4 @@
-Payment received
+Payment submission received
 
 Hello <%= @person.full_name %>,
 
@@ -20,6 +20,8 @@ We've received your payment submission<%= " for the following event" if @event %
 <% end %><% end %>
 <% if @ticket_url %>View payment:
 <%= @ticket_url %>
+<% end %><% if @invoice_url %>View invoice:
+<%= @invoice_url %>
 <% end %>
 --
 This is an automated confirmation from <%= @organization_name %>.

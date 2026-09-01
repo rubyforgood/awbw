@@ -151,6 +151,17 @@ RSpec.describe EventMailer, type: :mailer do
       # Event cost (1099¢) × 4 attendees = $43.96
       expect(mail.body.encoded).to include("$43.96")
     end
+
+    it "frames it as a submission received (not a processed payment) in the subject" do
+      expect(mail.subject).to include("Payment submission received")
+    end
+
+    it "links to the payer's invoice" do
+      body = mail.body.encoded
+      expect(body).to include("View invoice")
+      expect(body).to include("/events/#{event.id}/invoice")
+      expect(body).to include("submission_id=#{submission.id}")
+    end
   end
 
   describe "#event_registration_reminder" do
