@@ -160,6 +160,72 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("create.bookmark")
       end
 
+      it "hide_account excludes auth and user-record events but keeps other changelogs" do
+        create(:ahoy_event, name: "update.user", user: user, visit: visit_for_user,
+                            resource_type: "User", resource_id: user.id, time: 2.days.ago,
+                            properties: { "resource_title" => "user_record_marker" })
+
+        get index_path, params: { hide_account: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("auth.login")
+        expect(response.body).not_to include("user_record_marker")
+        expect(response.body).to include("create.bookmark")
+      end
+
+      it "hide_interactions excludes view/print/download/search noise but keeps changelogs" do
+        create(:ahoy_event, name: "view.workshop", user: user, visit: visit_for_user,
+                            time: 2.days.ago, properties: { "resource_title" => "interaction_noise_marker" })
+
+        get index_path, params: { hide_interactions: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("interaction_noise_marker")
+        expect(response.body).to include("create.bookmark")
+      end
+
+      it "keeps person_id as a hidden field so the filter form stays person-scoped" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to match(/<input[^>]*type="hidden"[^>]*name="person_id"[^>]*value="#{person.id}"/)
+      end
+
+      it "stays person-scoped (no org autochange leak) when a toggle re-submits with person_id" do
+        person = create(:person)
+        org = create(:organization)
+        create(:ahoy_event, name: "autochange.organization", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            resource_type: "Organization", resource_id: org.id, time: 1.hour.ago,
+                            properties: { "resource_title" => "org_autochange_marker" })
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 2.hours.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_change_marker" })
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff],
+                                  hide_account: "1", hide_interactions: "1" }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("person_change_marker")
+        expect(response.body).not_to include("org_autochange_marker")
+      end
+
+      it "hide_communications drops a person's communications from the timeline" do
+        person = create(:person)
+        create(:notification, recipient_email: person.communications_email, email_subject: "Hidden comm marker")
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 1.day.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "kept_change_marker" })
+
+        get index_path, params: { person_id: person.id, hide_communications: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("Hidden comm marker")
+        expect(response.body).to include("kept_change_marker")
+      end
+
       it "filters by from/to dates" do
         get index_path,
             params: {
@@ -189,6 +255,18 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("auth.login")
       end
 
+      it "matches a plain-language chip word to its raw action (new finds create)" do
+        create(:ahoy_event, name: "update.workshop", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: {})
+
+        get index_path, params: { event_name: "new", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("create.bookmark")
+        expect(response.body).not_to include("update.workshop")
+      end
+
       it "filters by hyphen-separated tokens in any order (account-auth)" do
         create(:ahoy_event, name: "auth.account_deactivated", user: nil,
                             visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
@@ -201,7 +279,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("create.bookmark")
       end
 
-      it "filters events by resource title from their properties" do
+      it "filters events by resource title from their properties via the activity search" do
         create(:ahoy_event, name: "view.workshop_match", user: nil,
                             visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
                             time: 1.day.ago, properties: { "resource_title" => "Feelings Collage" })
@@ -209,17 +287,17 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
                             visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
                             time: 1.day.ago, properties: { "resource_title" => "Anger Masks" })
 
-        get index_path, params: { resource_name: "feelings", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+        get index_path, params: { event_name: "feelings", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("view.workshop_match")
         expect(response.body).not_to include("view.workshop_miss")
       end
 
-      it "surfaces a resource title chip in the applied filters" do
-        get index_path, params: { resource_name: "Feelings Collage" }
+      it "surfaces an activity search chip in the applied filters" do
+        get index_path, params: { event_name: "Feelings Collage" }
 
-        expect(response.body).to include("Resource title: Feelings Collage")
+        expect(response.body).to include("Activity: Feelings Collage")
       end
 
       it "sorts events by activity name" do
@@ -320,10 +398,23 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         # Both streams render in the same activities table (no separate panel).
         expect(response.body).to include("Comms row marker xyz")
         expect(response.body).to include("activity_row_marker")
-        # The communication row carries its synthetic activity name.
-        expect(response.body).to include("communication.sent")
+        # The communication row reads as a human Sent/Received chip, not the raw name.
+        expect(response.body).to include("Communication")
+        expect(response.body).to include("Sent")
+        expect(response.body).not_to include("communication.sent")
         # Newer communication sorts above the older activity event.
         expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
+      end
+
+      it "labels an incoming communication as Received" do
+        person = create(:person)
+        create(:notification, :incoming, recipient_email: person.communications_email, email_subject: "Inbound note")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time",
+                                  audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Received")
       end
 
       it "activity name search matches the communication's synthetic name (direction-aware)" do

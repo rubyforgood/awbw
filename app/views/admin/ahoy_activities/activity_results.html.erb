@@ -3,7 +3,7 @@
 <%= turbo_frame_tag :activity_results do %>
   <%= turbo_stream.replace "activities_count", partial: "count" %>
   <%
-    sort_base = params.permit(:event_name, :props, :resource_name, :user_search, :visit_id, :time_period, :from, :to, :per_page, audience: []).to_h.symbolize_keys
+    sort_base = params.permit(:event_name, :props, :user_search, :visit_id, :time_period, :from, :to, :per_page, :hide_account, :hide_interactions, :hide_communications, :person_id, :user_id, :resource_type, :resource_id, audience: []).to_h.symbolize_keys
     sort_icon = ->(column) {
       next "fa-sort" unless @sort == column
       @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"
@@ -72,11 +72,9 @@
       <thead class="bg-gray-50 text-xs tracking-wider text-gray-600 uppercase">
       <tr>
         <th class="rounded-tl-xl px-4 py-3 text-left"><%= @person ? "Time" : sort_link.call("time", "Time") %></th>
-        <th class="px-4 py-3 text-left"><%= @person ? "Activity" : sort_link.call("name", "Activity") %></th>
-        <th class="px-4 py-3 text-left">Resource</th>
-        <th class="min-w-[16rem] px-4 py-3 text-left">Details</th>
-        <th class="px-4 py-3 text-left"><%= @person ? "User" : sort_link.call("user", "User") %></th>
-        <th class="rounded-tr-xl px-4 py-3 text-left">Visit ID</th>
+        <th class="min-w-[24rem] px-4 py-3 text-left"><%= @person ? "Activity" : sort_link.call("name", "Activity") %></th>
+        <th class="w-32 px-4 py-3 text-left"><%= @person ? "User" : sort_link.call("user", "User") %></th>
+        <th class="w-16 rounded-tr-xl px-4 py-3 text-left">Visit ID</th>
       </tr>
       </thead>
 

@@ -1,0 +1,22 @@
+<%# Bulk hide toggles: pare the timeline down to changelogs and communications by
+    switching off whole event categories. Each sr-only checkbox is the peer; its
+    sibling span is the track and the knob is the track's ::after. Checked = "1"
+    means hide, so the collection controller auto-submits the exclusion. %>
+<%
+  cast = ActiveModel::Type::Boolean.new
+  toggles = [
+    ["hide_account", "Hide account", cast.cast(params[:hide_account])],
+    ["hide_interactions", "Hide interactions", cast.cast(params[:hide_interactions])],
+    ["hide_communications", "Hide communications", cast.cast(params[:hide_communications])]
+  ]
+%>
+<div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+  <span class="text-sm font-medium text-gray-600">Hide:</span>
+  <% toggles.each do |name, label, checked| %>
+    <label class="flex items-center gap-2 cursor-pointer select-none">
+      <%= check_box_tag name, "1", checked, class: "peer sr-only" %>
+      <span class="relative inline-block w-9 h-5 rounded-full bg-gray-300 transition-colors peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"></span>
+      <span class="text-sm text-gray-700"><%= label %></span>
+    </label>
+  <% end %>
+</div>

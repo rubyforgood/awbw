@@ -1,14 +1,45 @@
-<%# The Time column carries the timestamp, so the reused notification row drops
-    its own leading date (show_date: false). %>
+<%# A communication folded into the person timeline, laid out like an activity
+    row: a Sent/Received chip and Communication name, with Subject/Body stacked
+    under the name and the From name in the User column. A link overlay makes the
+    whole cell open the notification. Communications have no visit. %>
+<% decorated = notification.decorate %>
+<% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
 <tr class="<%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> transition">
   <td data-label="Time" class="px-4 py-3 align-top whitespace-nowrap text-gray-500">
     <%= notification.created_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
   </td>
-  <td data-label="Activity" class="px-4 py-3 align-top font-medium whitespace-nowrap text-gray-900">
-    <i class="fa-solid fa-bell mr-1 <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>"></i>
-    <%= notification.timeline_activity_name %>
+
+  <td data-label="Activity" class="group relative px-4 py-3 align-top">
+    <%= link_to "", notification_path(notification), class: "absolute inset-0",
+                aria: { label: "Open #{subject}" },
+                target: "_blank", rel: "noopener", data: { turbo_frame: "_top" } %>
+    <div class="flex items-start gap-2">
+      <span class="mt-0.5 flex w-24 shrink-0 justify-end">
+        <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 700) %> px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+          <i class="fa-solid fa-bell mr-1"></i><%= notification.incoming? ? "Received" : "Sent" %>
+        </span>
+      </span>
+      <div class="min-w-0 space-y-0.5">
+        <div class="font-medium text-indigo-600 group-hover:underline">Communication</div>
+        <div class="space-y-1.5 pt-1 text-gray-500">
+          <div>
+            <span class="font-medium text-gray-700">Subject:</span>
+            <span class="text-gray-600"><%= subject %></span>
+          </div>
+          <% if notification.email_body_text.present? %>
+            <div>
+              <span class="font-medium text-gray-700">Body:</span>
+              <span class="text-gray-600" title="<%= notification.email_body_text %>"><%= truncate(notification.email_body_text, length: 150) %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
   </td>
-  <td data-label="Communication" colspan="4" class="px-4 py-3">
-    <%= render "notifications/notification_row", notification: notification, admin: true, show_date: false %>
+
+  <td data-label="User" class="w-32 px-4 py-3 align-top text-gray-600">
+    <div class="max-w-[8rem] truncate"><%= decorated.from_value %></div>
   </td>
+
+  <td data-label="Visit ID" class="w-16 px-4 py-3 align-top text-gray-400">—</td>
 </tr>

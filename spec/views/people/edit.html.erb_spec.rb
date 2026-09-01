@@ -39,7 +39,7 @@ RSpec.describe "people/edit", type: :view do
   it "shows a History card linking to the person's full Ahoy activity" do
     expect(rendered).to have_link(
       "History",
-      href: admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff])
+      href: admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
     )
   end
 

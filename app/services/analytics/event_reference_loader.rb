@@ -35,7 +35,7 @@ module Analytics
     private
 
     def load_records
-      pairs = @events.flat_map { |event| references_in(event.properties || {}) }.uniq
+      pairs = @events.flat_map { |event| primary_pairs(event) + references_in(event.properties || {}) }.uniq
       pairs.group_by(&:first).each_with_object({}) do |(type, type_pairs), map|
         klass = type.safe_constantize
         next unless klass.respond_to?(:where) && klass < ApplicationRecord
@@ -45,6 +45,14 @@ module Analytics
       end
     rescue StandardError
       {}
+    end
+
+    # The event's own resource (its resource_type/resource_id columns), so the
+    # timeline can link the resource title to the record without a per-row query.
+    def primary_pairs(event)
+      return [] if event.resource_type.blank? || event.resource_id.blank?
+
+      [ [ event.resource_type.to_s, event.resource_id ] ]
     end
 
     def references_in(value)
