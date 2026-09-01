@@ -3075,3 +3075,18 @@
     - "A person's History link opens with account and interaction events already hidden, so you land on their changelogs and communications; flip the switches back on to see everything."
     - "\"Account\" covers logins, password resets, email changes, admin grants, and User-record edits; \"Interactions\" covers views, prints, downloads, and searches."
   action_path: "/admin/activities/events"
+
+- name: "Activities timeline reads like a feed"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-01
+  summary: >-
+    The admin Activities page is redesigned to read at a glance: each event leads
+    with the record it touched, a plain-language action chip (New, Edit, Auto…),
+    and its details — field changes, a comment's text, or a communication's
+    subject and body — stacked in one column.
+  pro_tips:
+    - "Click anywhere in a row's Activity cell to open the record it's about; a comment opens what it was left on (the affiliation, scholarship, or profile), and a communication opens the message."
+    - "Click a Visit ID to see everything that happened in that visit."
+    - "Long comment and email bodies are trimmed — hover to read the full text."
+  action_path: "/admin/activities/events"
