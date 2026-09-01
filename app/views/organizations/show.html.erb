@@ -69,6 +69,14 @@
             <span class="text-primary font-semibold"><%= program_since %></span>
           </p>
         <% end %>
+        <% if @organization.parent.present? %>
+          <p class="mt-1 text-sm text-gray-600">
+            <i class="fa-solid fa-sitemap text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i>
+            Part of
+            <%= link_to @organization.parent.name, organization_path(@organization.parent),
+                        class: "text-primary font-semibold hover:underline" %>
+          </p>
+        <% end %>
         <!-- Contact info -->
         <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
           <% if @organization.profile_show_email? && @organization.email.present? %>
@@ -185,6 +193,19 @@
         </div>
       <% end %>
     </div>
+    <!-- Nested organizations -->
+    <% children = @organization.children.order(:name) %>
+    <% if children.any? %>
+      <div class="<%= DomainTheme.bg_class_for(:organizations, intensity: 50) %>
+          border-2 <%= DomainTheme.border_class_for(:organizations) %> rounded-2xl p-5 sm:p-6">
+        <h2 class="mb-3 font-display text-2xl text-gray-900">Nested organizations</h2>
+        <div class="flex flex-wrap gap-2">
+          <% children.each do |child| %>
+            <%= link_to child.name, organization_path(child), class: button_classes(:secondary_outline) %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
     <!-- Description -->
     <% if @organization.profile_show_description? && @organization.description.present? %>
       <div class="<%= DomainTheme.bg_class_for(:organizations, intensity: 50) %>
