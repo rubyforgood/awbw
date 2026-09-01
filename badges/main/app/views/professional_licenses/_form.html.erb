@@ -15,9 +15,9 @@
   <% if professional_license.persisted? %>
     <div>
       <span class="<%= label_class %>">Person</span>
-      <p class="font-medium text-gray-900">
+      <div>
         <%= person_edit_button(professional_license.person, compact: true, width_class: "w-fit", data: { turbo_frame: "_top" }) %>
-      </p>
+      </div>
     </div>
   <% else %>
     <div>
