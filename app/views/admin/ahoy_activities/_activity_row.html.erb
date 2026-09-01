@@ -27,18 +27,19 @@
     <%= render "admin/ahoy_activities/event_details", activity: activity %>
   </td>
 
-  <td data-label="User" class="px-4 py-3 text-gray-600">
+  <td data-label="User" class="w-32 px-4 py-3 text-gray-600">
     <% if event.user %>
       <%= link_to event.user.full_name,
                   user_path(event.user),
-                  class: "text-indigo-600 hover:underline",
+                  title: event.user.full_name,
+                  class: "block max-w-[8rem] truncate text-indigo-600 hover:underline",
                   data: { turbo_frame: "_top" } %>
     <% else %>
       <span class="text-gray-400 italic">Guest</span>
     <% end %>
   </td>
 
-  <td data-label="Visit ID" class="px-4 py-3 text-gray-500">
+  <td data-label="Visit ID" class="w-16 px-4 py-3 text-gray-500">
     <%= event.visit_id %>
   </td>
 </tr>
