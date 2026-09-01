@@ -5,6 +5,50 @@ RSpec.describe Ahoy::EventDecorator do
     create(:ahoy_event, properties: properties).reload.decorate
   end
 
+  def decorate_named(name)
+    create(:ahoy_event, name: name).decorate
+  end
+
+  describe "#activity_chip" do
+    it "reads create as a New chip and update as an Edit chip" do
+      expect(decorate_named("create.comment").activity_chip[:label]).to eq("New")
+      expect(decorate_named("update.workshop").activity_chip[:label]).to eq("Edit")
+    end
+
+    it "humanizes an unmapped action" do
+      expect(decorate_named("something.workshop").activity_chip[:label]).to eq("Something")
+    end
+  end
+
+  describe "#activity_resource_label" do
+    it "humanizes the resource half of the name" do
+      expect(decorate_named("update.workshop_variation").activity_resource_label).to eq("Workshop variation")
+      expect(decorate_named("auth.account_deactivated").activity_resource_label).to eq("Account deactivated")
+    end
+  end
+
+  describe "#resource_link" do
+    it "links the resource title to the record's edit page" do
+      workshop = create(:workshop)
+      event = create(:ahoy_event, name: "create.workshop", resource_type: "Workshop",
+                                  resource_id: workshop.id, properties: { "resource_title" => "Feelings Collage" }).decorate
+
+      link = event.resource_link
+      expect(link[:text]).to eq("Feelings Collage")
+      expect(link[:path]).to eq(Rails.application.routes.url_helpers.edit_workshop_path(workshop))
+    end
+
+    it "is nil when there is no resource title" do
+      expect(decorate("source" => "import").resource_link).to be_nil
+    end
+
+    it "leaves the path nil when the record no longer exists" do
+      event = create(:ahoy_event, name: "create.workshop", resource_type: "Workshop",
+                                  resource_id: 0, properties: { "resource_title" => "Ghost" }).decorate
+      expect(event.resource_link[:path]).to be_nil
+    end
+  end
+
   describe "#extra_properties" do
     it "drops the keys already shown in their own columns" do
       event = decorate(

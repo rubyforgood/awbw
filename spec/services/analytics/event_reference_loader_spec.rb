@@ -33,6 +33,15 @@ RSpec.describe Analytics::EventReferenceLoader do
       expect(map[[ "Sector", sector.id ]]).to eq(sector)
     end
 
+    it "loads each event's own resource from its resource_type/resource_id columns" do
+      workshop = create(:workshop)
+      events = [ build(:ahoy_event, resource_type: "Workshop", resource_id: workshop.id, properties: {}) ]
+
+      map = described_class.new(events).records
+
+      expect(map[[ "Workshop", workshop.id ]]).to eq(workshop)
+    end
+
     it "omits records that no longer exist" do
       events = [ event("associated_records" => [ { "record_type" => "Workshop", "record_id" => 0 } ]) ]
       expect(described_class.new(events).records).to eq({})

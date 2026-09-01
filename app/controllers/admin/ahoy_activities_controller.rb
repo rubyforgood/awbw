@@ -36,12 +36,18 @@ module Admin
         scope = scope.where.not(hidden.map { "ahoy_events.name LIKE ?" }.join(" OR "), *hidden)
       end
 
-      # Filter by event name. Split on any non-alphanumeric run so hyphens (and
-      # commas, dots, spaces) are interchangeable separators and each token must
-      # match — e.g. "account-auth" finds "auth.account_deactivated".
+      # One search box spans the activity name and the resource title. Split on any
+      # non-alphanumeric run so hyphens (and commas, dots, spaces) are interchangeable
+      # separators, and each token must match one or the other — e.g. "account-auth"
+      # finds "auth.account_deactivated" by name, "feelings" finds a "Feelings Collage"
+      # resource by title.
       if params[:event_name].present?
         params[:event_name].split(/[^a-z0-9]+/i).reject(&:blank?).each do |token|
-          scope = scope.where("ahoy_events.name LIKE ?", "%#{Ahoy::Event.sanitize_sql_like(token)}%")
+          like = "%#{Ahoy::Event.sanitize_sql_like(token)}%"
+          scope = scope.where(
+            "ahoy_events.name LIKE ? OR LOWER(ahoy_events.properties->>'$.resource_title') LIKE LOWER(?)",
+            like, like
+          )
         end
       end
 
@@ -68,15 +74,6 @@ module Admin
       # Filter by visit
       if params[:visit_id].present?
         scope = scope.where(visit_id: params[:visit_id])
-      end
-
-      # Filter by resource title (the human name captured in the event's properties)
-      if params[:resource_name].present?
-        term = Ahoy::Event.sanitize_sql_like(params[:resource_name])
-        scope = scope.where(
-          "LOWER(ahoy_events.properties->>'$.resource_title') LIKE LOWER(?)",
-          "%#{term}%"
-        )
       end
 
       # Filter by props (full-text search across properties JSON)

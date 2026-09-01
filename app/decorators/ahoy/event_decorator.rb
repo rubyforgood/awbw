@@ -6,6 +6,50 @@ module Ahoy
     # Fields that title the record they belong to, in the order they should lead.
     HEADING_KEYS = %w[topic title name subject].freeze
 
+    # Plain-language chips for the raw "action.resource" event name, so a
+    # non-technical reader sees "New" / "Edit" instead of "create." / "update.".
+    # Colored ones flag record changes; everything else reads gray. Class literals
+    # live here (decorators are Tailwind-scanned) so the chip generates.
+    ACTION_CHIPS = {
+      "create"      => { label: "New",      classes: "bg-blue-100 text-blue-800" },
+      "update"      => { label: "Edit",     classes: "bg-green-100 text-green-800" },
+      "destroy"     => { label: "Delete",   classes: "bg-red-100 text-red-800" },
+      "autochange"  => { label: "Auto",     classes: "bg-gray-100 text-gray-600" },
+      "view"        => { label: "View",     classes: "bg-gray-100 text-gray-600" },
+      "print"       => { label: "Print",    classes: "bg-gray-100 text-gray-600" },
+      "download"    => { label: "Download", classes: "bg-gray-100 text-gray-600" },
+      "search"      => { label: "Search",   classes: "bg-gray-100 text-gray-600" },
+      "search_zero" => { label: "Search",   classes: "bg-gray-100 text-gray-600" },
+      "filter"      => { label: "Filter",   classes: "bg-gray-100 text-gray-600" },
+      "auth"        => { label: "Account",  classes: "bg-gray-100 text-gray-600" },
+      "dedupe"      => { label: "Merge",    classes: "bg-gray-100 text-gray-600" }
+    }.freeze
+    DEFAULT_CHIP_CLASSES = "bg-gray-100 text-gray-600".freeze
+
+    # { label:, classes: } for the leading action chip.
+    def activity_chip
+      ACTION_CHIPS[action_key] || { label: action_key.humanize, classes: DEFAULT_CHIP_CLASSES }
+    end
+
+    # The resource half of the event name, humanized: "workshop_variation" reads
+    # "Workshop variation", "account_deactivated" reads "Account deactivated".
+    def activity_resource_label
+      object.name.to_s.split(".", 2)[1].to_s.humanize
+    end
+
+    # The event's own resource, linked to its edit page so an admin can jump
+    # straight there from the timeline. Title comes from properties; the record
+    # resolves through the page cache (Analytics::EventReferenceLoader). Returns
+    # nil when there's no title; :path is nil when the record is gone or has no
+    # editable route (rendered as plain text).
+    def resource_link
+      title = properties_hash["resource_title"]
+      return nil if title.blank?
+
+      record = find_referenced_record(object.resource_type, object.resource_id)
+      { text: title, path: edit_path_for(record) }
+    end
+
     # Everything the dedicated columns don't already show.
     def extra_properties
       properties_hash.except(*REDUNDANT_KEYS)
@@ -51,6 +95,20 @@ module Ahoy
     end
 
     private
+
+    def action_key
+      object.name.to_s.split(".", 2).first.to_s
+    end
+
+    # Prefer the record's edit page (the point of the link), falling back to its
+    # show page, then to nothing when neither route exists.
+    def edit_path_for(record)
+      return nil unless record
+
+      h.edit_polymorphic_path(record)
+    rescue StandardError
+      show_path_for(record)
+    end
 
     def properties_hash
       object.properties || {}

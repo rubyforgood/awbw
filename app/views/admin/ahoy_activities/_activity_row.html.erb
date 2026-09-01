@@ -1,17 +1,28 @@
+<% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
 <tr class="transition hover:bg-gray-50">
   <td data-label="Time" class="px-4 py-3 whitespace-nowrap text-gray-500">
     <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
   </td>
 
-  <td data-label="Activity" class="px-4 py-3 font-medium text-gray-900">
-    <%= event.name %>
+  <% chip = activity.activity_chip %>
+  <td data-label="Activity" class="px-4 py-3">
+    <div class="flex items-center gap-2" title="<%= event.name %>">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase <%= chip[:classes] %>">
+        <%= chip[:label] %>
+      </span>
+      <span class="font-medium text-gray-900"><%= activity.activity_resource_label %></span>
+    </div>
+    <% if (resource = activity.resource_link) %>
+      <% if resource[:path] %>
+        <%= link_to resource[:text], resource[:path],
+                    class: "mt-0.5 block text-xs text-indigo-600 hover:underline",
+                    data: { turbo_frame: "_top" } %>
+      <% else %>
+        <div class="mt-0.5 text-xs text-gray-500"><%= resource[:text] %></div>
+      <% end %>
+    <% end %>
   </td>
 
-  <td data-label="Resource" class="px-4 py-3 text-gray-500">
-    <%= event.properties["resource_title"].presence || "—" %>
-  </td>
-
-  <% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
   <td data-label="Details" class="min-w-[16rem] px-4 py-3 align-top text-gray-500">
     <%= render "admin/ahoy_activities/event_details", activity: activity %>
   </td>
