@@ -1,6 +1,6 @@
 class TopicSubscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_topic_subscription, only: [ :edit, :update, :destroy, :unsubscribe, :resubscribe ]
+  before_action :set_topic_subscription, only: [ :edit, :update, :destroy, :unsubscribe, :resubscribe, :toggle_marked, :save_note ]
 
   def index
     authorize! TopicSubscription
@@ -8,14 +8,22 @@ class TopicSubscriptionsController < ApplicationController
     # active), so exclude status from the shared filter and apply it here.
     base = TopicSubscription
       .search_by_params(params.except(:status))
-      .includes(:topic_subscription_type, :interested_event, :organization, person: [ :user, { event_registrations: :event } ])
+      .includes(:topic_subscription_type, :interested_event, :organization, :comments, person: [ :user, { event_registrations: :event } ])
 
     @active_count = base.active.count
     @unsubscribed_count = base.unsubscribed.count
     @status_filter = params[:status].presence == "unsubscribed" ? "unsubscribed" : "active"
 
     scope = @status_filter == "unsubscribed" ? base.unsubscribed : base.active
-    @topic_subscriptions = scope.newest_first.paginate(page: params[:page], per_page: 25)
+
+    # Only the marked column is click-to-sort; every other view defaults to
+    # newest-first. A marked sort keeps newest-first as its tiebreak.
+    @sort = params[:sort] == "marked" ? "marked" : "subscribed_at"
+    @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
+    ordered = @sort == "marked" ? scope.reorder(marked: @sort_direction, subscribed_at: :desc) : scope.newest_first
+
+    @topic_subscriptions = ordered.paginate(page: params[:page], per_page: 25)
+    @mark_column_label = mark_column_label
     render :topic_subscriptions_results if turbo_frame_request?
   end
 
@@ -103,6 +111,21 @@ class TopicSubscriptionsController < ApplicationController
     redirect_to save_return_path, notice: "Subscription removed."
   end
 
+  def toggle_marked
+    authorize! @topic_subscription, to: :update?
+    @topic_subscription.update!(marked: ActiveModel::Type::Boolean.new.cast(params[:value]))
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to topic_subscriptions_path }
+    end
+  end
+
+  def save_note
+    authorize! @topic_subscription, to: :update?
+    @topic_subscription.save_index_note(params[:note])
+    head :ok
+  end
+
   private
 
   # The distinct addresses reachable from these subscriptions under the two
@@ -118,8 +141,16 @@ class TopicSubscriptionsController < ApplicationController
     @topic_subscription = TopicSubscription.find(params[:id])
   end
 
+  # When the list is filtered to a single topic, the Mark column header takes that
+  # topic's configured label; otherwise it stays the generic "Mark".
+  def mark_column_label
+    return "Mark" if params[:topic_subscription_type_id].blank?
+
+    TopicSubscriptionType.where(id: params[:topic_subscription_type_id]).pick(:mark_label).presence || "Mark"
+  end
+
   def topic_subscription_params
-    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :organization_id, :source,
+    permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :organization_id, :source, :marked,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
       person_attributes: [ :first_name, :last_name, :email ])

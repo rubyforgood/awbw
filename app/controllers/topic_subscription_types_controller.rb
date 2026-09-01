@@ -71,6 +71,6 @@ class TopicSubscriptionTypesController < ApplicationController
   end
 
   def topic_subscription_type_params
-    params.require(:topic_subscription_type).permit(:name, :description, :event_selector)
+    params.require(:topic_subscription_type).permit(:name, :description, :event_selector, :mark_label)
   end
 end

@@ -63,6 +63,13 @@ RSpec.describe "/staff_tags", type: :request do
       expect(tag.reload).to be_published
     end
 
+    it "sets the mark label via the edit form" do
+      tag = create(:staff_tag)
+
+      patch staff_tag_path(tag), params: { staff_tag: { mark_label: "Confirmed" } }
+      expect(tag.reload.mark_label).to eq("Confirmed")
+    end
+
     it "won't delete a tag that is still applied" do
       tag = create(:staff_tag)
       create(:staff_tagging, staff_tag: tag)

@@ -32,6 +32,25 @@ RSpec.describe "/staff_taggings", type: :request do
         expect(response.body).not_to include("Drop Me")
       end
 
+      it "filters by marked status" do
+        create(:staff_tagging, :marked, staff_taggable: create(:person, first_name: "Marked", last_name: "One"))
+        create(:staff_tagging, staff_taggable: create(:person, first_name: "Plain", last_name: "One"))
+
+        get staff_taggings_path, params: { marked: "true" }, headers: turbo_headers
+
+        expect(response.body).to include("Marked One")
+        expect(response.body).not_to include("Plain One")
+      end
+
+      it "labels the mark column with the tag's mark label when filtered to one tag" do
+        tag = create(:staff_tag, name: "Cohort", mark_label: "Confirmed")
+        create(:staff_tagging, staff_tag: tag)
+
+        get staff_taggings_path, params: { staff_tag_ids: [ tag.id ] }, headers: turbo_headers
+
+        expect(response.body).to include("Confirmed")
+      end
+
       it "searches by person name" do
         create(:staff_tagging, staff_taggable: create(:person, first_name: "Alice", last_name: "Xylophone"))
         create(:staff_tagging, staff_taggable: create(:person, first_name: "Bob", last_name: "Quartz"))
@@ -116,6 +135,15 @@ RSpec.describe "/staff_taggings", type: :request do
         post staff_taggings_path, params: { staff_tagging: { person_id: "", staff_tag_id: tag.id } }
       }.not_to change(StaffTagging, :count)
       expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "creates the tagging already marked when the slider is on" do
+      person = create(:person)
+      tag = create(:staff_tag)
+
+      post staff_taggings_path, params: { staff_tagging: { person_id: person.id, staff_tag_id: tag.id, marked: "1" } }
+
+      expect(StaffTagging.last).to be_marked
     end
   end
 
@@ -205,6 +233,60 @@ RSpec.describe "/staff_taggings", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(tagging.reload.staff_tag).to eq(tag_a)
+    end
+
+    it "marks the tagging" do
+      patch staff_tagging_path(staff_tagging), params: {
+        return_to: "staff_taggings", staff_tagging: { staff_tag_id: staff_tag.id, marked: "1" }
+      }
+
+      expect(staff_tagging.reload).to be_marked
+    end
+  end
+
+  describe "PATCH /staff_taggings/:id/toggle_marked" do
+    before { sign_in admin }
+
+    it "checks the tagging off from the index and answers a turbo stream" do
+      tagging = create(:staff_tagging)
+
+      patch toggle_marked_staff_tagging_path(tagging), params: { value: "1" }, as: :turbo_stream
+
+      expect(tagging.reload).to be_marked
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+    end
+
+    it "unchecks it when value is 0" do
+      tagging = create(:staff_tagging, :marked)
+
+      patch toggle_marked_staff_tagging_path(tagging), params: { value: "0" }, as: :turbo_stream
+
+      expect(tagging.reload).not_to be_marked
+    end
+  end
+
+  describe "PATCH /staff_taggings/:id/save_note" do
+    before { sign_in admin }
+
+    it "creates a comment from the inline note" do
+      tagging = create(:staff_tagging)
+
+      expect {
+        patch save_note_staff_tagging_path(tagging), params: { note: "Called them" }
+      }.to change { tagging.comments.count }.by(1)
+
+      expect(tagging.comments.first.body).to eq("Called them")
+    end
+
+    it "edits the latest comment instead of piling up new ones" do
+      tagging = create(:staff_tagging)
+      create(:comment, commentable: tagging, body: "first")
+
+      expect {
+        patch save_note_staff_tagging_path(tagging), params: { note: "edited" }
+      }.not_to change { tagging.comments.count }
+
+      expect(tagging.comments.first.body).to eq("edited")
     end
   end
 

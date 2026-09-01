@@ -73,6 +73,16 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).not_to include("Tara Trainings")
     end
 
+    it "filters by marked status via the frame request" do
+      create(:topic_subscription, person: create(:person, first_name: "Mona", last_name: "Marked"), topic_subscription_type: trainings, marked: true)
+      create(:topic_subscription, person: create(:person, first_name: "Percy", last_name: "Plain"), topic_subscription_type: trainings, marked: false)
+
+      get topic_subscriptions_path(marked: "true"), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Mona Marked")
+      expect(response.body).not_to include("Percy Plain")
+    end
+
     it "filters by organization name via the frame request" do
       acme = create(:organization, name: "Acme Shelter")
       create(:topic_subscription, person: create(:person, first_name: "Orla", last_name: "Acme"), topic_subscription_type: trainings, organization: acme)
@@ -149,8 +159,11 @@ RSpec.describe "TopicSubscriptions", type: :request do
       get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
 
       # A frame-scoped toggle would leave the out-of-frame filter form holding a
-      # stale status, so the next filter change would silently reset it.
-      expect(response.body).not_to include('data-turbo-frame="topic_subscriptions_results"')
+      # stale status, so the next filter change would silently reset it. (Sort
+      # links inside the frame legitimately target the frame; only the toggle must
+      # break out, so assert on the toggle anchor specifically.)
+      toggle_anchor = response.body[/<a\b[^>]*status=active[^>]*>\s*Active/m]
+      expect(toggle_anchor).to include('data-turbo-frame="_top"')
     end
 
     it "carries the selected status through the filter form" do
@@ -489,6 +502,12 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(subscription.comments.last.body).to eq("Reached out via email")
     end
 
+    it "marks the subscription" do
+      patch topic_subscription_path(subscription), params: { topic_subscription: { marked: "1" } }
+
+      expect(subscription.reload).to be_marked
+    end
+
     it "filters the index to subscriptions that have comments" do
       commented = create(:topic_subscription, topic_subscription_type: trainings, person: create(:person, first_name: "Comm", last_name: "Ented"))
       create(:comment, commentable: commented)
@@ -498,6 +517,25 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       expect(response.body).to include("Comm Ented")
       expect(response.body).not_to include("No Comments")
+    end
+
+    it "saves the inline note as a comment" do
+      expect {
+        patch save_note_topic_subscription_path(subscription), params: { note: "Left a voicemail" }
+      }.to change { subscription.comments.count }.by(1)
+
+      expect(subscription.comments.first.body).to eq("Left a voicemail")
+    end
+  end
+
+  describe "PATCH /topic_subscriptions/:id/toggle_marked" do
+    let(:subscription) { create(:topic_subscription, topic_subscription_type: trainings) }
+
+    it "checks the subscription off from the index and answers a turbo stream" do
+      patch toggle_marked_topic_subscription_path(subscription), params: { value: "1" }, as: :turbo_stream
+
+      expect(subscription.reload).to be_marked
+      expect(response.media_type).to eq(Mime[:turbo_stream])
     end
   end
 

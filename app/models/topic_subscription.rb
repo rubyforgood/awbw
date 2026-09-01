@@ -16,6 +16,16 @@ class TopicSubscription < ApplicationRecord
     person&.preferred_email
   end
 
+  # The index's inline note edits this subscription's latest comment (or starts
+  # one), so a quick jot on the list lands in the same comment log the edit page
+  # shows.
+  def save_index_note(body)
+    note = comments.newest_first.first
+    return note.update!(body: body.to_s) if note
+
+    comments.create!(body: body) if body.present?
+  end
+
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   # Lets the new-subscription form create a brand-new person inline instead of
   # only picking an existing one. The person is saved (and validated) in the same
@@ -45,17 +55,26 @@ class TopicSubscription < ApplicationRecord
     else all
     end
   }
+  scope :marked_status, ->(value) {
+    case value
+    when "true" then where(marked: true)
+    when "false" then where(marked: false)
+    else all
+    end
+  }
 
-  # Drives the subscriptions index filters: person, organization, topic type, and
-  # status ("active"/"unsubscribed" — the two the segmented toggle emits). The
-  # person filter is an exact id (picked through the remote-select search), while
-  # organization is a free-text name match against the linked org.
+  # Drives the subscriptions index filters: person, organization, topic type,
+  # marked status, and status ("active"/"unsubscribed" — the two the segmented
+  # toggle emits). The person filter is an exact id (picked through the
+  # remote-select search), while organization is a free-text name match against
+  # the linked org.
   def self.search_by_params(params)
     scope = all
     scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
     scope = scope.by_organization_name(params[:organization_name]) if params[:organization_name].present?
     scope = scope.for_topic_type(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     scope = scope.comment_status(params[:comment_status]) if params[:comment_status].present?
+    scope = scope.marked_status(params[:marked]) if params[:marked].present?
 
     case params[:status]
     when "active" then scope = scope.active

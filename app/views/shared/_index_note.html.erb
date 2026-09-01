@@ -1,0 +1,9 @@
+<%# Inline autosaving note for an index row — reuses the generic `autosave`
+    Stimulus controller (no new JS). Saves on blur to the row's `save_note` action,
+    which upserts the record's latest comment. Locals: record, url, body. %>
+<%= text_area_tag "note", body,
+      rows: 2,
+      placeholder: "Add a comment…",
+      "aria-label": "Comment",
+      class: "w-full min-w-[180px] rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+      data: { controller: "autosave", autosave_url_value: url, autosave_id_value: record.id, action: "change->autosave#save" } %>

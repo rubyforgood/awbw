@@ -1,0 +1,5 @@
+<%= render "shared/mark_switch",
+      record: subscription,
+      url: toggle_marked_topic_subscription_path(subscription),
+      label: mark_label_or_default(subscription.topic_subscription_type&.mark_label),
+      checked: subscription.marked %>

@@ -25,6 +25,12 @@
     <%= f.text_area :description, rows: 3, class: field_class %>
   </div>
 
+  <div>
+    <%= f.label :mark_label, "Mark label (optional)", class: label_class %>
+    <%= f.text_field :mark_label, class: field_class %>
+    <p class="mt-1 text-xs text-gray-500">Word for the checkbox on each subscription (e.g. “Confirmed”, “Completed”). Defaults to “Marked”.</p>
+  </div>
+
   <div class="flex items-start gap-2">
     <%= f.check_box :event_selector, class: "mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
     <div>

@@ -18,10 +18,26 @@ class StaffTagging < ApplicationRecord
     staff_taggable.try(:preferred_email)
   end
 
+  # The index's inline note edits this tagging's latest comment (or starts one),
+  # so a quick jot on the list lands in the same comment log the edit page shows.
+  def save_index_note(body)
+    note = comments.newest_first.first
+    return note.update!(body: body.to_s) if note
+
+    comments.create!(body: body) if body.present?
+  end
+
   scope :for_staff_tag, ->(ids) {
     tag_ids = Array(ids).reject(&:blank?)
     return all if tag_ids.empty?
     where(staff_tag_id: tag_ids) }
+
+  scope :marked_status, ->(value) {
+    case value
+    when "true" then where(marked: true)
+    when "false" then where(marked: false)
+    else all
+    end }
 
   # Free-text match on the tagged person: their own searchable fields (name,
   # email, phone, address — Person's SearchCop) plus their affiliated
@@ -55,6 +71,7 @@ class StaffTagging < ApplicationRecord
     results = results.for_staff_tag(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
     results = results.matching_text(params[:query]) if params[:query].present?
     results = results.matching_content(params[:content]) if params[:content].present?
+    results = results.marked_status(params[:marked]) if params[:marked].present?
     results
   end
 end

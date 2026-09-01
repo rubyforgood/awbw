@@ -14,5 +14,9 @@ FactoryBot.define do
     trait :unsubscribed do
       unsubscribed_at { Time.current }
     end
+
+    trait :marked do
+      marked { true }
+    end
   end
 end
