@@ -40,11 +40,13 @@ form ||= Form.create!(name: "Annual Evaluation 2026", slug: "annual-evaluation-2
 # no longer defined here are pruned at the end (see below).
 def ae_field!(form, name, answer_type, options: [], field_identifier: nil, input_type: nil, required: false, subtitle: nil, hint_text: nil, visibility: :always_ask, width: :full)
   @position += 1
-  attrs = { answer_type: answer_type, position: @position, status: :active, required: required,
+  attrs = { name: name, answer_type: answer_type, position: @position, status: :active, required: required,
             field_identifier: field_identifier, input_type: input_type, subtitle: subtitle,
             hint_text: hint_text, visibility: visibility, width: width }
-  field = form.form_fields.find_by(name: name)
-  field ? field.update!(**attrs) : field = form.form_fields.create!(name: name, **attrs)
+  # Match on field_identifier first (stable across a rename), else on name.
+  field = (form.form_fields.find_by(field_identifier: field_identifier) if field_identifier.present?)
+  field ||= form.form_fields.find_by(name: name)
+  field ? field.update!(**attrs) : field = form.form_fields.create!(**attrs)
   @seeded_field_ids << field.id
   options.each_with_index do |option_name, index|
     answer_option = AnswerOption.find_or_create_by!(name: option_name) { |ao| ao.position = index + 1 }
@@ -95,14 +97,14 @@ ae_field!(form, "Organization Website", :free_form_input_one_line, required: tru
 ae_header!(form, "Academic credentials (if applicable)",
   subtitle: "If you hold a professional license, share it here.")
 license_kind_field = ae_field!(form, "License type", :free_form_input_one_line, width: :quarter,
-  field_identifier: "ce_license_kind", hint_text: "e.g. LMFT, LCSW, LPCC, LEP, MA Ed.")
+  field_identifier: "ce_license_kind", hint_text: "e.g. LMFT, LCSW, LPCC, MA Ed.")
 ae_field!(form, "License number", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_number")
-ae_field!(form, "State where your license was issued", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_issuing_state")
+ae_field!(form, "State license was issued", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_issuing_state")
 ae_field!(form, "License expiration date", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_expires_on", input_type: :date)
 
 # ── Your work ────────────────────────────────────────────────────────────────
 ae_header!(form, "Your work")
-outside_us = ae_field!(form, "Do you offer art workshops outside of the United States?", :single_select_radio, required: true, width: :half, options: YES_NO)
+outside_us = ae_field!(form, "Do you offer art workshops outside the United States?", :single_select_radio, required: true, width: :half, options: YES_NO)
 ae_field!(form, "If you offer workshops outside the US, please share which countries", :free_form_input_one_line, width: :half)
 other_language = ae_field!(form, "Do you facilitate art workshops in languages other than English?", :single_select_radio, required: true, width: :half, options: YES_NO)
 ae_field!(form, "If you facilitate in other languages, please share which languages", :free_form_input_one_line, width: :half)
