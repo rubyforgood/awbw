@@ -1,14 +1,42 @@
-<%# The Time column carries the timestamp, so the reused notification row drops
-    its own leading date (show_date: false). %>
+<%# A communication folded into the person timeline, laid out like an activity
+    row: a Sent/Received chip, Subject/Body in Details, and the From name in the
+    User column. Time carries the timestamp; communications have no visit. %>
+<% decorated = notification.decorate %>
+<% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
 <tr class="<%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> transition">
   <td data-label="Time" class="px-4 py-3 align-top whitespace-nowrap text-gray-500">
     <%= notification.created_at.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
   </td>
-  <td data-label="Activity" class="px-4 py-3 align-top font-medium whitespace-nowrap text-gray-900">
-    <i class="fa-solid fa-bell mr-1 <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>"></i>
-    <%= notification.timeline_activity_name %>
+
+  <td data-label="Activity" class="px-4 py-3 align-top">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center rounded-full <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 700) %> px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+        <i class="fa-solid fa-bell mr-1"></i><%= notification.incoming? ? "Received" : "Sent" %>
+      </span>
+      <span class="font-medium text-gray-900">Communication</span>
+    </div>
   </td>
-  <td data-label="Communication" colspan="3" class="px-4 py-3">
-    <%= render "notifications/notification_row", notification: notification, admin: true, show_date: false %>
+
+  <td data-label="Details" class="min-w-[16rem] px-4 py-3 align-top text-gray-500">
+    <div class="space-y-1.5 text-xs">
+      <div>
+        <span class="font-medium text-gray-700">Subject:</span>
+        <%= link_to subject, notification_path(notification),
+                    class: "text-indigo-600 hover:underline",
+                    target: "_blank", rel: "noopener", data: { turbo_frame: "_top" } %>
+      </div>
+      <% if notification.email_body_text.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Body:</span>
+          <div class="line-clamp-3 text-gray-600"><%= notification.email_body_text %></div>
+        </div>
+      <% end %>
+    </div>
   </td>
+
+  <td data-label="User" class="w-32 px-4 py-3 text-gray-600">
+    <div class="max-w-[8rem] truncate"><%= decorated.from_value %></div>
+  </td>
+
+  <td data-label="Visit ID" class="w-16 px-4 py-3 text-gray-400">—</td>
 </tr>

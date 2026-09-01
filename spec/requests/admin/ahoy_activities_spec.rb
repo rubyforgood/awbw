@@ -398,8 +398,9 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         # Both streams render in the same activities table (no separate panel).
         expect(response.body).to include("Comms row marker xyz")
         expect(response.body).to include("activity_row_marker")
-        # The communication row carries its synthetic activity name.
-        expect(response.body).to include("communication.sent")
+        # The communication row reads as a human Sent/Received chip, not the raw name.
+        expect(response.body).to include("Communication")
+        expect(response.body).not_to include("communication.sent")
         # Newer communication sorts above the older activity event.
         expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
       end

@@ -45,16 +45,37 @@ module Ahoy
     end
 
     # The event's own resource, linked to its edit page so an admin can jump
-    # straight there from the timeline. Title comes from properties; the record
-    # resolves through the page cache (Analytics::EventReferenceLoader). Returns
-    # nil when there's no title; :path is nil when the record is gone or has no
-    # editable route (rendered as plain text).
+    # straight there from the timeline. A comment instead points at the record it
+    # was left on (the affiliation, scholarship, profile) — that's what an admin
+    # reads it by, not the comment's own id. Title comes from properties; the
+    # record resolves through the page cache (Analytics::EventReferenceLoader).
+    # Returns nil when there's no title; :path is nil when the record is gone or
+    # has no editable route (rendered as plain text).
     def resource_link
+      return commentable_link if comment&.commentable
+
       title = properties_hash["resource_title"]
       return nil if title.blank?
 
       record = find_referenced_record(object.resource_type, object.resource_id)
       { text: title, path: edit_path_for(record) }
+    end
+
+    # The record a comment was left on, labeled and linked the same way the
+    # comment feeds do (CommentsHelper), so the two never drift.
+    def commentable_link
+      commentable = comment.commentable
+      { text: h.commentable_label(commentable), path: h.record_edit_path(commentable) }
+    end
+
+    # A comment's topic + body, read from the record so it shows in Details
+    # regardless of how the body was captured in properties. nil for non-comments
+    # and for a comment with nothing to show (e.g. a since-deleted record).
+    def comment_note
+      return nil unless comment
+
+      note = { topic: comment.topic.presence, body: comment.body.presence }
+      note.values.any? ? note : nil
     end
 
     # Everything the dedicated columns don't already show.
@@ -105,6 +126,14 @@ module Ahoy
 
     def action_key
       object.name.to_s.split(".", 2).first.to_s
+    end
+
+    # The Comment this event is about, from the page cache (no extra query); nil
+    # for non-comment events.
+    def comment
+      return nil unless object.resource_type == "Comment"
+
+      @comment ||= find_referenced_record("Comment", object.resource_id)
     end
 
     # Prefer the record's edit page (the point of the link), falling back to its

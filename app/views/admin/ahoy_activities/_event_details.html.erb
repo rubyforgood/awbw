@@ -1,7 +1,16 @@
 <%# Inline before/after + property rows for one Ahoy event. Shared by the admin
     activities table's Details column and any record's inline change log, so both
     read the same way. %>
-<% if activity.extra_details? %>
+<% if activity.comment_note %>
+  <div class="space-y-1.5 text-xs">
+    <% if activity.comment_note[:topic] %>
+      <div><span class="font-medium text-gray-700">Topic:</span> <span class="text-gray-600"><%= activity.comment_note[:topic] %></span></div>
+    <% end %>
+    <% if activity.comment_note[:body] %>
+      <div><span class="font-medium text-gray-700">Body:</span> <span class="text-gray-600"><%= activity.comment_note[:body] %></span></div>
+    <% end %>
+  </div>
+<% elsif activity.extra_details? %>
   <div class="space-y-1.5">
     <% if activity.changes? %>
       <ul class="space-y-1.5">

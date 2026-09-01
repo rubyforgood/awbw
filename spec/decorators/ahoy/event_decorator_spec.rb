@@ -59,6 +59,17 @@ RSpec.describe Ahoy::EventDecorator do
                                   resource_id: 0, properties: { "resource_title" => "Ghost" }).decorate
       expect(event.resource_link[:path]).to be_nil
     end
+
+    it "points a comment at the record it was left on, and surfaces its topic/body" do
+      person = create(:person)
+      comment = create(:comment, commentable: person, topic: "Follow-up", body: "Called to confirm.")
+      event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
+                                  resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Profile")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
+      expect(event.comment_note).to eq(topic: "Follow-up", body: "Called to confirm.")
+    end
   end
 
   describe "#extra_properties" do
