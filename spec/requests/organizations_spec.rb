@@ -181,6 +181,14 @@ RSpec.describe "/organizations", type: :request do
       expect(response.body).not_to include("Monthly reports")
     end
 
+    it "links the parent-organization label to the parent's profile when one is set" do
+      parent = Organization.create!(valid_attributes.merge(name: "Roof Org"))
+      organization = Organization.create!(valid_attributes.merge(parent: parent))
+      get edit_organization_url(organization)
+      expect(response.body).to include(organization_path(parent))
+      expect(response.body).to include("fa-arrow-up-right-from-square")
+    end
+
     it "shows the Monthly reports row when monthly reports exist" do
       organization = Organization.create!(valid_attributes)
       create(:monthly_report, organization: organization)

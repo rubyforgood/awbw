@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
 export default class extends Controller {
-  static values = { model: String, exclude: String, truncate: Boolean };
+  static values = { model: String, exclude: String, truncateChars: Number };
 
   connect() {
     // TomSelect stamps itself on the element; bail if it's already initialized so
@@ -16,6 +16,10 @@ export default class extends Controller {
       searchField: "label",
       score: () => () => 1,
       create: false,
+      // Native title tooltip so a truncated selected label still shows in full on hover.
+      render: {
+        item: (data, escape) => `<div title="${escape(data.label)}">${escape(data.label)}</div>`
+      },
       load: (query, callback) => {
         if (!query.length) return callback();
 
@@ -95,12 +99,13 @@ export default class extends Controller {
         padding: 0 !important;
         line-height: 1.5rem !important;
       }
-      /* Opt-in (truncate value): ellipsize a long selected label to one line
-         instead of wrapping and doubling the control's height. min-width:0 lets
-         it shrink in the flex row. */
+      /* Opt-in (truncate-chars value): cap a long selected label at a fixed width
+         (--remote-select-truncate, in ch) and ellipsize it to one line instead of
+         wrapping and doubling the control's height. min-width:0 lets it shrink in
+         the flex row; it never exceeds the control's own width. */
       .remote-select-truncate .ts-control .item {
         min-width: 0;
-        max-width: 100%;
+        max-width: min(var(--remote-select-truncate, 100%), 100%);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -119,7 +124,10 @@ export default class extends Controller {
     if (!wrapper || wrapper.parentElement?.classList.contains("remote-select-container")) return;
     const container = document.createElement("div");
     container.className = "remote-select-container";
-    container.classList.toggle("remote-select-truncate", this.truncateValue);
+    if (this.truncateCharsValue > 0) {
+      container.classList.add("remote-select-truncate");
+      container.style.setProperty("--remote-select-truncate", `${this.truncateCharsValue}ch`);
+    }
     wrapper.parentNode.insertBefore(container, wrapper);
     container.appendChild(wrapper);
     const icon = document.createElement("i");

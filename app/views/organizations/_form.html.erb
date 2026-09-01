@@ -27,8 +27,17 @@
         </div>
         <% if allowed_to?(:manage?, Organization) %>
           <% parent = f.object.parent %>
+          <% parent_label = if parent
+               link_to organization_path(parent), target: "_blank", rel: "noopener",
+                       title: "View #{parent.name}",
+                       class: "inline-flex items-center gap-1 hover:underline #{DomainTheme.text_class_for(:organizations, intensity: 700)}" do
+                 safe_join([ "Parent organization", tag.i(class: "fa-solid fa-arrow-up-right-from-square text-xs") ])
+               end
+             else
+               "Parent organization"
+             end %>
           <%= f.input :parent_id,
-                      label: "Parent organization",
+                      label: parent_label,
                       collection: parent ? [ [ parent.remote_search_label[:label], parent.id ] ] : [],
                       include_blank: "None",
                       hint: "Nest under a parent “roof” org",
@@ -38,7 +47,7 @@
                           controller: "remote-select",
                           remote_select_model_value: "organization",
                           remote_select_exclude_value: ([ f.object.id ] + f.object.descendants.map(&:id)).compact.join(","),
-                          remote_select_truncate_value: true
+                          remote_select_truncate_chars_value: 22
                         }
                       },
                       prompt: "Type to search organizations…" %>
