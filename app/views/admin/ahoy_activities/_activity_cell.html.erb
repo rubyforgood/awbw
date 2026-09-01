@@ -10,10 +10,12 @@
   </span>
   <div class="min-w-0">
     <div class="flex flex-wrap items-baseline gap-x-1.5">
-      <span class="font-medium text-indigo-600 group-hover:underline"><%= activity.activity_resource_label %></span>
       <% if resource %>
+        <span class="font-medium text-indigo-600 group-hover:underline"><%= resource[:text] %></span>
         <span class="text-gray-300">&middot;</span>
-        <span class="text-xs text-gray-500"><%= resource[:text] %></span>
+        <span class="text-xs text-gray-500"><%= activity.activity_resource_label %></span>
+      <% else %>
+        <span class="font-medium text-indigo-600 group-hover:underline"><%= activity.activity_resource_label %></span>
       <% end %>
       <% if activity.comment_flagged? %>
         <i class="fa-solid fa-flag text-orange-500" title="Flagged"></i>
