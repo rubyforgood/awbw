@@ -29,17 +29,17 @@ EFFECTIVENESS = [ "Extremely effective", "Very effective", "Somewhat effective",
 WORK_PERSONAL = [ "Work", "Personal" ].freeze
 YES_NO = [ "Yes", "No" ].freeze
 
-form = Form.standalone.find_by(slug: "annual-evaluation-2025")
-form ||= Form.create!(name: "Annual Evaluation 2025", slug: "annual-evaluation-2025", published: true, header: INTRO)
+form = Form.standalone.find_by(slug: "annual-evaluation-2026")
+form ||= Form.create!(name: "Annual Evaluation 2026", slug: "annual-evaluation-2026", published: true, header: INTRO)
 
 @position = 0
 
-def ae_field!(form, name, answer_type, options: [], field_identifier: nil, input_type: nil, required: false, subtitle: nil, hint_text: nil)
+def ae_field!(form, name, answer_type, options: [], field_identifier: nil, input_type: nil, required: false, subtitle: nil, hint_text: nil, visibility: :always_ask, width: :full)
   @position += 1
   field = form.form_fields.find_by(name: name)
   field ||= form.form_fields.create!(name: name, answer_type: answer_type, position: @position, status: :active,
                                      required: required, field_identifier: field_identifier, input_type: input_type,
-                                     subtitle: subtitle, hint_text: hint_text)
+                                     subtitle: subtitle, hint_text: hint_text, visibility: visibility, width: width)
   options.each_with_index do |option_name, index|
     answer_option = AnswerOption.find_or_create_by!(name: option_name) { |ao| ao.position = index + 1 }
     FormFieldAnswerOption.find_or_create_by!(form_field: field, answer_option: answer_option)
@@ -56,26 +56,45 @@ def ae_number!(form, name, **opts)
 end
 
 # ── About you ────────────────────────────────────────────────────────────────
+# First/last name and primary email are the person-identity fields: they save to
+# the Person (by field_identifier) and are logged_out_only, so once prefill lands
+# a signed-in facilitator won't be re-asked for what we already have.
 ae_header!(form, "About you")
-full_name = ae_field!(form, "First and Last Name", :free_form_input_one_line, required: true)
-ae_field!(form, "Pronouns", :multi_select_checkbox,
-  subtitle: "This helps us understand the correct way to address you. Select all that apply.",
-  options: [ "She/Her", "He/Him", "They/Them", "I prefer not to say", "Other" ])
-agency = ae_field!(form, "Agency Name (where you facilitate art workshops)", :free_form_input_one_line,
-  required: true, field_identifier: "organization_name",
-  subtitle: "If you're not associated with an agency, please provide the name of your art program.")
-ae_field!(form, "Agency website URL", :free_form_input_one_line, required: true, field_identifier: "organization_website")
-position_title = ae_field!(form, "Your Position / Title", :free_form_input_one_line, required: true)
-primary_email = ae_field!(form, "Primary Email Address", :free_form_input_one_line, required: true, field_identifier: "primary_email")
-primary_email_type = ae_field!(form, "Primary Email Address Type", :single_select_radio, required: true, options: WORK_PERSONAL)
+first_name_field = ae_field!(form, "First name", :free_form_input_one_line, required: true,
+  field_identifier: "first_name", visibility: :logged_out_only, width: :half)
+last_name_field = ae_field!(form, "Last name", :free_form_input_one_line, required: true,
+  field_identifier: "last_name", visibility: :logged_out_only, width: :half)
+pronouns_field = ae_field!(form, "Pronouns", :free_form_input_one_line, field_identifier: "pronouns",
+  subtitle: "This helps us understand the correct way to address you.")
+primary_email = ae_field!(form, "Primary Email Address", :free_form_input_one_line, required: true,
+  field_identifier: "primary_email", visibility: :logged_out_only, width: :half)
+primary_email_type = ae_field!(form, "Primary Email Address Type", :single_select_radio, required: true, width: :half, options: WORK_PERSONAL)
 ae_field!(form, "I'd like to add a secondary email address", :single_select_radio, required: true,
   subtitle: "So we can keep in touch should you move on from your organization.", options: YES_NO)
-ae_field!(form, "Secondary Email Address", :free_form_input_one_line, field_identifier: "secondary_email")
-ae_field!(form, "Secondary Email Address Type", :single_select_radio, options: WORK_PERSONAL)
-ae_header!(form, "Academic credentials (if applicable)", subtitle: "e.g., LCSW, MFT, MA Ed., etc.")
-ae_field!(form, "Credential 1", :free_form_input_one_line)
-ae_field!(form, "Credential 2", :free_form_input_one_line)
-ae_field!(form, "Credential 3", :free_form_input_one_line)
+ae_field!(form, "Secondary Email Address", :free_form_input_one_line, field_identifier: "secondary_email", width: :half)
+ae_field!(form, "Secondary Email Address Type", :single_select_radio, width: :half, options: WORK_PERSONAL)
+
+# ── Organization information ─────────────────────────────────────────────────
+# Named and identified like the registration form's Organization Information
+# section, so these answers resolve to the facilitator's Organization.
+ae_header!(form, "Organization information")
+organization_field = ae_field!(form, "Organization Name", :free_form_input_one_line, required: true, width: :half,
+  field_identifier: "organization_name",
+  subtitle: "If you're not associated with an organization, please provide the name of your art program.")
+position_title = ae_field!(form, "Position / Title", :free_form_input_one_line, required: true, width: :half,
+  field_identifier: "organization_position")
+ae_field!(form, "Organization Website", :free_form_input_one_line, required: true, field_identifier: "organization_website")
+
+# ── Academic credentials ─────────────────────────────────────────────────────
+# The CE-callout license fields, identified so they save to the facilitator's
+# ProfessionalLicense once standalone submissions persist participant data.
+ae_header!(form, "Academic credentials (if applicable)",
+  subtitle: "If you hold a professional license, share it here.")
+license_kind_field = ae_field!(form, "License type", :free_form_input_one_line, width: :half,
+  field_identifier: "ce_license_kind", subtitle: "e.g. LMFT, LCSW, LPCC, LEP, MA Ed.")
+ae_field!(form, "License number", :free_form_input_one_line, width: :half, field_identifier: "ce_license_number")
+ae_field!(form, "State where your license was issued", :free_form_input_one_line, width: :half, field_identifier: "ce_license_issuing_state")
+ae_field!(form, "License expiration date", :free_form_input_one_line, width: :half, field_identifier: "ce_license_expires_on", input_type: :date)
 
 # ── Your work ────────────────────────────────────────────────────────────────
 ae_header!(form, "Your work")
@@ -99,15 +118,17 @@ ae_field!(form, "How else do you use art beyond direct client work?", :multi_sel
 # ── Your individual yearly reach ─────────────────────────────────────────────
 ae_header!(form, "Your individual yearly reach",
   subtitle: "Please provide the estimated total number of unduplicated individuals you personally served through AWBW workshops this year. Count each participant only once. Please include fellow staff, family, and friends you facilitated with.")
-reach_children = ae_number!(form, "Children (ages 0-12)", required: true)
-reach_teens = ae_number!(form, "Teens (ages 13-17)", required: true)
-reach_adults = ae_number!(form, "Adults (age 18-64)", required: true)
-reach_elders = ae_number!(form, "Elders (age 65+)", required: true)
+reach_children = ae_number!(form, "Children (ages 0-12)", required: true, width: :quarter)
+reach_teens = ae_number!(form, "Teens (ages 13-17)", required: true, width: :quarter)
+reach_adults = ae_number!(form, "Adults (age 18-64)", required: true, width: :quarter)
+reach_elders = ae_number!(form, "Elders (age 65+)", required: true, width: :quarter)
 pct_families = ae_number!(form, "What percentage of participants consists of families of two or more individuals?", required: true,
   subtitle: "Family relationships can include parents, children, siblings, grandparents, aunts, uncles, and more.")
-primary_age = ae_field!(form, "What is the primary age group you serve through art workshops?", :single_select_radio, required: true,
-  subtitle: "Select one.",
-  options: [ "Elders (65+)", "Adults (18-64)", "Teens (13-17)", "Children (0-12)", "Children & Teens (0-17)", "Families" ])
+# Dynamic field: options come from the AgeRange categories and the answer resolves
+# to the facilitator's primary age group, exactly like the registration form.
+primary_age = ae_field!(form, "What is the primary age group you serve through art workshops?", :single_select_dropdown, required: true,
+  field_identifier: "primary_age_group",
+  subtitle: "Select the age group you primarily serve.")
 
 # ── Measuring impact: how does art help? ─────────────────────────────────────
 ae_header!(form, "Measuring impact: how does art help?",
@@ -145,7 +166,7 @@ ae_number!(form, "What percentage of your participants identify as transgender?"
 ae_number!(form, "What percentage of your participants have a gender identity not listed above?", hint_text: "0–100%")
 ae_field!(form, "For participants whose gender identities are not listed above, please specify how they identify", :free_form_input_paragraph)
 pct_poverty = ae_number!(form, "What percentage of your participants are at or below the Federal Poverty Line?",
-  hint_text: "See the 2024 Federal Poverty Level Guidelines. 0–100%")
+  hint_text: "See the current Federal Poverty Level Guidelines. 0–100%")
 
 # ── Program impact on you ────────────────────────────────────────────────────
 ae_header!(form, "Program impact on you")
@@ -187,8 +208,12 @@ one_word = ae_field!(form, "Please share one word that sums up your experience w
 ae_field!(form, "Anything else you'd like to share with us?", :free_form_input_paragraph)
 
 # ── Sample submissions ───────────────────────────────────────────────────────
+# The primary-age-group field stores an AgeRange category id (like a real dynamic
+# submission), so answers reference the seeded categories rather than a label.
+age_categories = CategoryType.find_by(name: "AgeRange")&.categories&.published&.order(:position)&.to_a || []
 positions = [ "Facilitator", "Program Director", "Art Therapist", "Volunteer", "Clinician" ]
-age_groups = [ "Adults (18-64)", "Teens (13-17)", "Children (0-12)", "Families", "Elders (65+)", "Children & Teens (0-17)" ]
+pronoun_options = [ "She/Her", "He/Him", "They/Them" ]
+license_kinds = [ "LCSW", "LMFT", "MA Ed.", "", "" ]
 stress_levels = [ "High", "Medium", "Low", "Little to none" ]
 recommend_levels = [ "Highly likely", "Highly likely", "Likely", "Neutral" ]
 example_notes = [
@@ -211,9 +236,12 @@ respondent_count.times do |i|
   submission.update_columns(created_at: (respondent_count - i).days.ago, updated_at: (respondent_count - i).days.ago)
 
   answers = {
-    full_name => person.name,
-    agency => "Sample Agency #{i + 1}",
+    first_name_field => person.first_name,
+    last_name_field => person.last_name,
+    pronouns_field => pronoun_options[i % pronoun_options.size],
+    organization_field => "Sample Organization #{i + 1}",
     position_title => positions[i % positions.size],
+    license_kind_field => license_kinds[i % license_kinds.size],
     primary_email => person.email,
     primary_email_type => WORK_PERSONAL[i % 2],
     outside_us => (i % 8).zero? ? "Yes" : "No",
@@ -225,7 +253,7 @@ respondent_count.times do |i|
     reach_adults => [ 60, 80, 120, 35, 20 ][i % 5].to_s,
     reach_elders => [ 10, 0, 25, 5, 40 ][i % 5].to_s,
     pct_families => [ 20, 35, 40, 25, 30 ][i % 5].to_s,
-    primary_age => age_groups[i % age_groups.size],
+    primary_age => (age_categories.any? ? age_categories[i % age_categories.size].id.to_s : nil),
     impact_future => IMPACT_SCALE[i % 3],
     impact_resilience => IMPACT_SCALE[i % 3],
     without_awbw => YES_NO[i % 2],
