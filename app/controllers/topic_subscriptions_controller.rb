@@ -1,6 +1,6 @@
 class TopicSubscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_topic_subscription, only: [ :edit, :update, :destroy, :unsubscribe, :resubscribe ]
+  before_action :set_topic_subscription, only: [ :edit, :update, :destroy, :unsubscribe, :resubscribe, :toggle_marked, :save_note ]
 
   def index
     authorize! TopicSubscription
@@ -8,7 +8,7 @@ class TopicSubscriptionsController < ApplicationController
     # active), so exclude status from the shared filter and apply it here.
     base = TopicSubscription
       .search_by_params(params.except(:status))
-      .includes(:topic_subscription_type, :interested_event, :organization, person: [ :user, { event_registrations: :event } ])
+      .includes(:topic_subscription_type, :interested_event, :organization, :comments, person: [ :user, { event_registrations: :event } ])
 
     @active_count = base.active.count
     @unsubscribed_count = base.unsubscribed.count
@@ -109,6 +109,21 @@ class TopicSubscriptionsController < ApplicationController
     authorize! @topic_subscription
     @topic_subscription.destroy
     redirect_to save_return_path, notice: "Subscription removed."
+  end
+
+  def toggle_marked
+    authorize! @topic_subscription, to: :update?
+    @topic_subscription.update!(marked: ActiveModel::Type::Boolean.new.cast(params[:value]))
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to topic_subscriptions_path }
+    end
+  end
+
+  def save_note
+    authorize! @topic_subscription, to: :update?
+    @topic_subscription.save_index_note(params[:note])
+    head :ok
   end
 
   private

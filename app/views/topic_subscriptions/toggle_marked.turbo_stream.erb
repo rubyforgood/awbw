@@ -1,0 +1,3 @@
+<%= turbo_stream.replace dom_id(@topic_subscription, :marked) do %>
+  <%= render "mark_switch", subscription: @topic_subscription %>
+<% end %>

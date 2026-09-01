@@ -18,6 +18,15 @@ class StaffTagging < ApplicationRecord
     staff_taggable.try(:preferred_email)
   end
 
+  # The index's inline note edits this tagging's latest comment (or starts one),
+  # so a quick jot on the list lands in the same comment log the edit page shows.
+  def save_index_note(body)
+    note = comments.newest_first.first
+    return note.update!(body: body.to_s) if note
+
+    comments.create!(body: body) if body.present?
+  end
+
   scope :for_staff_tag, ->(ids) {
     tag_ids = Array(ids).reject(&:blank?)
     return all if tag_ids.empty?

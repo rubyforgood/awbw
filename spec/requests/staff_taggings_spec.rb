@@ -244,6 +244,52 @@ RSpec.describe "/staff_taggings", type: :request do
     end
   end
 
+  describe "PATCH /staff_taggings/:id/toggle_marked" do
+    before { sign_in admin }
+
+    it "checks the tagging off from the index and answers a turbo stream" do
+      tagging = create(:staff_tagging)
+
+      patch toggle_marked_staff_tagging_path(tagging), params: { value: "1" }, as: :turbo_stream
+
+      expect(tagging.reload).to be_marked
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+    end
+
+    it "unchecks it when value is 0" do
+      tagging = create(:staff_tagging, :marked)
+
+      patch toggle_marked_staff_tagging_path(tagging), params: { value: "0" }, as: :turbo_stream
+
+      expect(tagging.reload).not_to be_marked
+    end
+  end
+
+  describe "PATCH /staff_taggings/:id/save_note" do
+    before { sign_in admin }
+
+    it "creates a comment from the inline note" do
+      tagging = create(:staff_tagging)
+
+      expect {
+        patch save_note_staff_tagging_path(tagging), params: { note: "Called them" }
+      }.to change { tagging.comments.count }.by(1)
+
+      expect(tagging.comments.first.body).to eq("Called them")
+    end
+
+    it "edits the latest comment instead of piling up new ones" do
+      tagging = create(:staff_tagging)
+      create(:comment, commentable: tagging, body: "first")
+
+      expect {
+        patch save_note_staff_tagging_path(tagging), params: { note: "edited" }
+      }.not_to change { tagging.comments.count }
+
+      expect(tagging.comments.first.body).to eq("edited")
+    end
+  end
+
   describe "DELETE /staff_taggings/:id" do
     before { sign_in admin }
 

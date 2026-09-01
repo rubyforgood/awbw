@@ -9,10 +9,11 @@
         <table class="w-full border-collapse border border-gray-200">
           <thead class="bg-gray-100">
             <tr>
-              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("person", "Person") %></th>
-              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("staff_tag", "Staff tag") %></th>
-              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("marked", @mark_column_label) %></th>
-              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("created_at", "Tagged") %></th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("person", "Person") %></th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("staff_tag", "Staff tag") %></th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("marked", @mark_column_label) %></th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Notes</th>
+              <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("created_at", "Tagged") %></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
@@ -43,7 +44,10 @@
                               class: "font-medium text-gray-900 hover:underline" %>
                 </td>
                 <td class="px-4 py-2 text-sm">
-                  <%= marked_indicator(tagging.marked, tagging.staff_tag&.mark_label) %>
+                  <%= render "mark_switch", tagging: tagging %>
+                </td>
+                <td class="px-4 py-2 text-sm">
+                  <%= render "shared/index_note", record: tagging, url: save_note_staff_tagging_path(tagging), body: tagging.comments.first&.body %>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-600">
                   <% if tagging.created_by&.person %>by <%= tagging.created_by.full_name %><br><% end %>

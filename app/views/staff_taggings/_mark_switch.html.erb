@@ -1,0 +1,5 @@
+<%= render "shared/mark_switch",
+      record: tagging,
+      url: toggle_marked_staff_tagging_path(tagging),
+      label: mark_label_or_default(tagging.staff_tag&.mark_label),
+      checked: tagging.marked %>

@@ -518,6 +518,25 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("Comm Ented")
       expect(response.body).not_to include("No Comments")
     end
+
+    it "saves the inline note as a comment" do
+      expect {
+        patch save_note_topic_subscription_path(subscription), params: { note: "Left a voicemail" }
+      }.to change { subscription.comments.count }.by(1)
+
+      expect(subscription.comments.first.body).to eq("Left a voicemail")
+    end
+  end
+
+  describe "PATCH /topic_subscriptions/:id/toggle_marked" do
+    let(:subscription) { create(:topic_subscription, topic_subscription_type: trainings) }
+
+    it "checks the subscription off from the index and answers a turbo stream" do
+      patch toggle_marked_topic_subscription_path(subscription), params: { value: "1" }, as: :turbo_stream
+
+      expect(subscription.reload).to be_marked
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+    end
   end
 
   describe "returning to the filtered index" do

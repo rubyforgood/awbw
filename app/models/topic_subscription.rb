@@ -16,6 +16,16 @@ class TopicSubscription < ApplicationRecord
     person&.preferred_email
   end
 
+  # The index's inline note edits this subscription's latest comment (or starts
+  # one), so a quick jot on the list lands in the same comment log the edit page
+  # shows.
+  def save_index_note(body)
+    note = comments.newest_first.first
+    return note.update!(body: body.to_s) if note
+
+    comments.create!(body: body) if body.present?
+  end
+
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   # Lets the new-subscription form create a brand-new person inline instead of
   # only picking an existing one. The person is saved (and validated) in the same

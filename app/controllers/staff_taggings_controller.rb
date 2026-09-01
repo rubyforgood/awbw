@@ -1,12 +1,12 @@
 class StaffTaggingsController < ApplicationController
-  before_action :set_staff_tagging, only: [ :edit, :update, :destroy ]
+  before_action :set_staff_tagging, only: [ :edit, :update, :destroy, :toggle_marked, :save_note ]
 
   def index
     authorize!
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable))
+      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable, :comments))
       filtered = base_scope.search_by_params(params.to_unsafe_h)
       @sort = %w[person staff_tag marked created_at].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
@@ -66,6 +66,21 @@ class StaffTaggingsController < ApplicationController
     authorize! @staff_tagging
     @staff_tagging.destroy
     redirect_to staff_taggings_path, notice: "Staff tagging was successfully removed.", status: :see_other
+  end
+
+  def toggle_marked
+    authorize! @staff_tagging, to: :update?
+    @staff_tagging.update!(marked: ActiveModel::Type::Boolean.new.cast(params[:value]))
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to staff_taggings_path }
+    end
+  end
+
+  def save_note
+    authorize! @staff_tagging, to: :update?
+    @staff_tagging.save_index_note(params[:note])
+    head :ok
   end
 
   private

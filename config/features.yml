@@ -3054,10 +3054,12 @@
   display_status: admin_facing
   released_on: 2026-09-01
   summary: >-
-    Each topic and each staff tag can name its own checkbox — "Confirmed",
-    "Completed", "Tracked", whatever fits — and every subscription or tagging can
-    then be ticked. The taggings and subscriptions indexes gain a sortable mark
-    column and an All / Yes / No filter.
+    Tag people, then check them off the list. Each topic and staff tag names its
+    own mark — "Confirmed", "Completed", "Tracked", whatever fits — and you can
+    tick each row right on the taggings or subscriptions index, no need to open it.
+    Both indexes gain a sortable mark column, an All / Yes / No filter, and a per-
+    row notes box that autosaves.
   pro_tips:
     - "Set the word on the topic (Manage topics) or the staff tag (Manage staff tags); it defaults to \"Marked\" until you name it."
-    - "Sort by the mark column or filter to Yes/No to work through the list."
+    - "Flip the mark slider or filter to Yes/No to work through the list."
+    - "The notes box saves when you click away, and shows up in that row's comment log."
