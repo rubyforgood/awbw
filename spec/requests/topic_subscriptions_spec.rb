@@ -23,9 +23,9 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
     it "lists subscriptions and shows the person's facilitator-training registrations" do
       person = create(:person, first_name: "Dana", last_name: "Rivers")
-      training = create(:event, title: "TAC263 Spring Training", facilitator_training: true)
+      training = create(:event, title: "TAC263 Spring Training", start_date: Time.zone.local(2024, 5, 3, 9), facilitator_training: true)
       other_event = create(:event, title: "Community Open House", facilitator_training: false)
-      create(:event_registration, registrant: person, event: training)
+      create(:event_registration, registrant: person, event: training, status: "attended")
       create(:event_registration, registrant: person, event: other_event)
       create(:topic_subscription, person: person, topic_subscription_type: trainings, interested_event: nil)
 
@@ -33,8 +33,11 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Dana Rivers")
-      # The registrations column surfaces only facilitator-training events.
-      expect(response.body).to include("TAC263 Spring Training")
+      # The registrations column collapses to a compact attendance-status pill.
+      expect(response.body).to include("Attended")
+      # The training's name and date ride along in the pill's hover tooltip.
+      expect(response.body).to include("TAC263 Spring Training · May 3, 2024")
+      # Only facilitator-training events appear.
       expect(response.body).not_to include("Community Open House")
       # Row action is a plain link (no JS) to the subscription's edit page.
       expect(response.body).to include(edit_topic_subscription_path(TopicSubscription.last, return_to: "index"))
