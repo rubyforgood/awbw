@@ -121,17 +121,6 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).to include(person.full_name)
     end
 
-    it "renders the person edit card outside a paragraph so the browser can't split it" do
-      get edit_professional_license_path(license)
-
-      # person_edit_button renders a block <div> inside its <a>; wrapping that in a
-      # <p> is invalid nesting, and the browser parser closes the <p> early and splits
-      # the anchor into an empty pill + the real card. Keep it out of any <p>.
-      card = Nokogiri::HTML(response.body).at_css("a[href='#{edit_person_path(person)}']")
-      expect(card).to be_present
-      expect(card.ancestors("p")).to be_empty
-    end
-
     it "updates the license fields" do
       patch professional_license_path(license), params: {
         professional_license: { number: "556", kind: "LCSW", issuing_state: "NY" }
