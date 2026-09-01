@@ -60,6 +60,19 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
     end
 
+    it "shows the parent link and nested children on the profile" do
+      parent = Organization.create!(valid_attributes.merge(name: "Roof Org"))
+      organization = Organization.create!(valid_attributes.merge(name: "Adult Windows"))
+      organization.update!(parent: parent)
+      child = Organization.create!(valid_attributes.merge(name: "Childrens Windows", parent: organization))
+
+      get organization_url(organization)
+      expect(response.body).to include("Part of")
+      expect(response.body).to include("Roof Org")
+      expect(response.body).to include("Nested organizations")
+      expect(response.body).to include(child.name)
+    end
+
     it "shows age groups on the profile, gated by profile_show_age_ranges" do
       organization = Organization.create!(valid_attributes)
       age_type = create(:category_type, name: "AgeRange", published: true)
@@ -166,6 +179,14 @@ RSpec.describe "/organizations", type: :request do
       organization = Organization.create!(valid_attributes)
       get edit_organization_url(organization)
       expect(response.body).not_to include("Monthly reports")
+    end
+
+    it "links the parent-organization label to the parent's profile when one is set" do
+      parent = Organization.create!(valid_attributes.merge(name: "Roof Org"))
+      organization = Organization.create!(valid_attributes.merge(parent: parent))
+      get edit_organization_url(organization)
+      expect(response.body).to include(organization_path(parent))
+      expect(response.body).to include("fa-arrow-up-right-from-square")
     end
 
     it "shows the Monthly reports row when monthly reports exist" do
@@ -294,6 +315,13 @@ RSpec.describe "/organizations", type: :request do
         organization = Organization.create!(valid_attributes)
         patch organization_url(organization), params: { organization: { high_profile: "1" } }
         expect(organization.reload.high_profile).to be(true)
+      end
+
+      it "nests the organization under a parent" do
+        parent = Organization.create!(valid_attributes.merge(name: "Roof Org"))
+        organization = Organization.create!(valid_attributes)
+        patch organization_url(organization), params: { organization: { parent_id: parent.id } }
+        expect(organization.reload.parent).to eq(parent)
       end
     end
 

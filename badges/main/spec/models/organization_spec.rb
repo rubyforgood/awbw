@@ -7,6 +7,8 @@ RSpec.describe Organization do
     it { should belong_to(:location).optional }
     it { should belong_to(:windows_type).optional }
     it { should belong_to(:organization_status) }
+    it { should belong_to(:parent).class_name("Organization").optional }
+    it { should have_many(:children).class_name("Organization").with_foreign_key(:parent_id).dependent(:nullify) }
     it { should have_many(:affiliations) }
     it { should have_many(:users).through(:people) }
     it { should have_many(:reports) }
@@ -28,6 +30,48 @@ RSpec.describe Organization do
       org.valid?
       expect(org.errors[:website_url]).to be_empty
       expect(org.website_url).to eq("awbw.org")
+    end
+  end
+
+  describe "nesting" do
+    let(:parent) { create(:organization) }
+    let(:child) { create(:organization, parent: parent) }
+    let(:grandchild) { create(:organization, parent: child) }
+
+    it "exposes children and reports nested?" do
+      expect(parent.children).to include(child)
+      expect(child.nested?).to be(true)
+      expect(parent.nested?).to be(false)
+    end
+
+    it "walks ancestors up to the root" do
+      expect(grandchild.ancestors).to eq([ child, parent ])
+      expect(grandchild.root).to eq(parent)
+      expect(parent.root).to eq(parent)
+    end
+
+    it "collects descendants at any depth" do
+      grandchild
+      expect(parent.descendants).to match_array([ child, grandchild ])
+    end
+
+    it "un-nests children when the parent is destroyed" do
+      child
+      parent.destroy
+      expect(child.reload.parent_id).to be_nil
+    end
+
+    it "rejects making an org its own parent" do
+      parent.parent = parent
+      expect(parent).not_to be_valid
+      expect(parent.errors[:parent_id]).to be_present
+    end
+
+    it "rejects nesting an org under one of its own descendants" do
+      grandchild
+      parent.parent = grandchild
+      expect(parent).not_to be_valid
+      expect(parent.errors[:parent_id]).to be_present
     end
   end
 

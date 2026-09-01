@@ -11,9 +11,9 @@
   <div class="mb-8 grid grid-cols-1 items-start gap-6 md:grid-cols-[3fr_1fr]">
     <!-- LEFT SIDE (3/4) -->
     <div>
-      <!-- Organization Name + Hidden -->
-      <div class="mb-8">
-        <div class="md:col-span-2">
+      <!-- Organization Name + Parent -->
+      <div class="mb-8 grid grid-cols-1 items-start gap-4 <%= "md:grid-cols-[3fr_1fr]" if allowed_to?(:manage?, Organization) %>">
+        <div>
           <%= f.input :name,
                       label: "Organization Name",
                       as: :text,
@@ -25,6 +25,32 @@
                           focus:border-blue-500 focus:ring focus:ring-blue-200"
                       } %>
         </div>
+        <% if allowed_to?(:manage?, Organization) %>
+          <% parent = f.object.parent %>
+          <% parent_label = if parent
+               link_to organization_path(parent), target: "_blank", rel: "noopener",
+                       title: "View #{parent.name}",
+                       class: "inline-flex items-center gap-1 hover:underline #{DomainTheme.text_class_for(:organizations, intensity: 700)}" do
+                 safe_join([ "Parent organization", tag.i(class: "fa-solid fa-arrow-up-right-from-square text-xs") ])
+               end
+             else
+               "Parent organization"
+             end %>
+          <%= f.input :parent_id,
+                      label: parent_label,
+                      collection: parent ? [ [ parent.remote_search_label[:label], parent.id ] ] : [],
+                      include_blank: "None",
+                      hint: "Nest under a parent “roof” org",
+                      input_html: {
+                        class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500",
+                        data: {
+                          controller: "remote-select",
+                          remote_select_model_value: "organization",
+                          remote_select_exclude_value: ([ f.object.id ] + f.object.descendants.map(&:id)).compact.join(",")
+                        }
+                      },
+                      prompt: "Type to search organizations…" %>
+        <% end %>
       </div>
 
       <!-- Sectors & Windows audience -->
