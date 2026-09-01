@@ -1,4 +1,4 @@
-Payment received
+Payment submission received
 
 Hello <%= @person.full_name %>,
 
@@ -18,8 +18,10 @@ We've received your payment submission<%= " for the following event" if @event %
 <% if @attendees.any? %>Attendees:
 <% @attendees.each do |attendee| %>- <%= [ attendee["first_name"], attendee["last_name"] ].compact_blank.join(" ") %><%= " <#{attendee['email']}>" if attendee["email"].present? %>
 <% end %><% end %>
-<% if @ticket_url %>View payment:
+<% if @ticket_url %>View ticket:
 <%= @ticket_url %>
+<% end %><% if @invoice_url %>View invoice:
+<%= @invoice_url %>
 <% end %>
 --
 This is an automated confirmation from <%= @organization_name %>.

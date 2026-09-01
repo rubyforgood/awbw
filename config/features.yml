@@ -27,6 +27,17 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Clearer bulk payment confirmation email"
+  area: payments
+  display_status: user_facing
+  released_on: 2026-09-01
+  summary: >-
+    The bulk-payment confirmation email now reads "Payment submission received" so
+    check-payers don't think it already cleared, and adds a "View invoice" button.
+    The payment ticket shows "Payment received" only once the payment is allocated
+    to a registration.
+  pr_number: 2486
+
 - name: "Compact training registrations on the subscriptions page"
   area: communications
   display_status: admin_facing

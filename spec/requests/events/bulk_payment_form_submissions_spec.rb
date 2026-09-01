@@ -340,6 +340,25 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
       expect(response.body).not_to include("Cancel registration")
     end
 
+    it "shows payment pending when a payment exists but nothing is allocated yet" do
+      create(:payment, form_submission: submission, person: payer,
+                       amount_cents: 1000, amount_cents_remaining: 1000)
+
+      get_ticket
+
+      expect(response.body).to include("Payment pending")
+      expect(response.body).not_to include("Payment received")
+    end
+
+    it "shows payment received once the payment is allocated to a registration" do
+      create(:payment, form_submission: submission, person: payer,
+                       amount_cents: 1000, amount_cents_remaining: 0)
+
+      get_ticket
+
+      expect(response.body).to include("Payment received")
+    end
+
     it "links the invoice back to the ticket" do
       get_ticket
 
