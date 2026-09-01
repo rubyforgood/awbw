@@ -46,8 +46,7 @@
                         data: {
                           controller: "remote-select",
                           remote_select_model_value: "organization",
-                          remote_select_exclude_value: ([ f.object.id ] + f.object.descendants.map(&:id)).compact.join(","),
-                          remote_select_truncate_chars_value: 22
+                          remote_select_exclude_value: ([ f.object.id ] + f.object.descendants.map(&:id)).compact.join(",")
                         }
                       },
                       prompt: "Type to search organizations…" %>
