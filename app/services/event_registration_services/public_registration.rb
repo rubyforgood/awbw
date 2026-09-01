@@ -2,10 +2,6 @@ module EventRegistrationServices
   class PublicRegistration
     Result = Struct.new(:success?, :event_registration, :form_submission, :errors, keyword_init: true)
 
-    # How long a concurrent submission waits for the in-flight one to finish before
-    # giving up on the identity lock and proceeding anyway (see #acquire_identity_lock).
-    LOCK_TIMEOUT_SECONDS = 10
-
     # Well-known field_identifier of the "magic" CE question seeded onto the
     # registration form. Answering it "Yes" creates a ContinuingEducationRegistration
     # (hours come from the event). Kept here so the seed, service, and specs agree.
@@ -70,7 +66,6 @@ module EventRegistrationServices
     end
 
     def call
-      lock_name = acquire_identity_lock
       ActiveRecord::Base.transaction do
         person = find_or_create_person
         sync_person_profile(person)
@@ -143,52 +138,9 @@ module EventRegistrationServices
       else
         Result.new(success?: false, event_registration: nil, errors: [ e.message ])
       end
-    ensure
-      release_identity_lock(lock_name)
     end
 
     private
-
-    # Serialize concurrent submissions for the same identity so a double-submit (two
-    # POSTs racing before either commits) can't slip past find_or_create_person and
-    # mint duplicate people and registrations. A MySQL named lock — no schema change,
-    # released the moment this submission commits — makes the second request wait,
-    # then match the first's now-committed person. The lock name is namespaced by
-    # database so parallel test suites (separate databases, one shared server) don't
-    # contend. Best-effort: a blank identity has nothing to dedupe, and a lock we
-    # couldn't get within the timeout falls through rather than failing a real
-    # registration.
-    def acquire_identity_lock
-      key = identity_lock_key
-      return if key.blank?
-
-      connection = ActiveRecord::Base.connection
-      namespaced = "#{connection.current_database}|#{key}"
-      lock_name = "awbw-reg-#{Digest::SHA256.hexdigest(namespaced)[0, 40]}"
-      connection.select_value("SELECT GET_LOCK(#{connection.quote(lock_name)}, #{LOCK_TIMEOUT_SECONDS})")
-      lock_name
-    end
-
-    def release_identity_lock(lock_name)
-      return if lock_name.blank?
-
-      connection = ActiveRecord::Base.connection
-      connection.select_value("SELECT RELEASE_LOCK(#{connection.quote(lock_name)})")
-    end
-
-    # The identity two concurrent submissions would collide on: a signed-in person is
-    # already resolved (no matching needed), so lock on them; an incognito submission
-    # locks on the strong, stable identifiers find_matching_person keys on — email and
-    # last name — for this event. Blank when we can't dedupe (missing email/last name).
-    def identity_lock_key
-      return "#{@event.id}|person|#{@person.id}" if @person
-
-      last_name = field_value("last_name")&.strip&.downcase
-      email = field_value("primary_email")&.strip&.downcase
-      return if email.blank? || last_name.blank?
-
-      "#{@event.id}|#{email}|#{last_name}"
-    end
 
     # Turn a database "Data too long for column 'city'" failure into a friendly,
     # form-level message. We can't always map the column back to a single form

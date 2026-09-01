@@ -631,26 +631,6 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(event.event_registrations.where(registrant: person).count).to eq(1)
       expect(person.form_submissions.where(form: form, role: "registration", event: event).count).to eq(2)
     end
-
-    # Two POSTs racing before either commits used to each mint a person + registration.
-    # A MySQL named lock serializes them so the second waits and matches the first's
-    # person. A true concurrent race is not unit-testable without flaky threads, so we
-    # assert the guard is wired: the lock is taken and released around the flow.
-    it "serializes concurrent submissions behind a released identity lock" do
-      statements = []
-      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
-        statements << ActiveSupport::Notifications::Event.new(*args).payload[:sql]
-      end
-
-      begin
-        described_class.call(event: event, registration_form: form, form_params: params)
-      ensure
-        ActiveSupport::Notifications.unsubscribe(subscriber)
-      end
-
-      expect(statements).to include(a_string_matching(/GET_LOCK\('awbw-reg-/))
-      expect(statements).to include(a_string_matching(/RELEASE_LOCK\('awbw-reg-/))
-    end
   end
 
   describe "an answer longer than its database column" do
