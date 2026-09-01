@@ -37,7 +37,7 @@
         </div>
         <div>
           <h2 class="text-xl leading-tight font-semibold tracking-wide"><%= Form::BULK_PAYMENT_PUBLIC_NAME %> Form</h2>
-          <p class="text-sm text-blue-200">Use this form to pay for one or more other attendees.</p>
+          <p class="text-sm text-blue-200">Cover the cost for one or more other people attending <%= @event.title %>.</p>
         </div>
       </div>
     </div>
@@ -49,9 +49,20 @@
           <p><strong>Use this form to pay for other people who are attending.</strong> That includes
             paying for one or more other attendees — and you can add yourself too, if you're attending
             and want to cover yourself and others in a single payment.</p>
-          <p><strong>Only paying for your own spot?</strong> You don't need this form. When you
-            registered, we emailed you a confirmation with a link to your digital ticket — open that
-            ticket and use the payment link on it.</p>
+          <p><strong>Only paying for your own spot?</strong> You don't need this form.
+            <% if @registration %>
+              Open <%= link_to "your digital ticket", registration_ticket_path(@registration.slug), class: "font-semibold underline" %>
+              and use the payment link on it.
+            <% else %>
+              When you registered, we emailed you a confirmation with a link to your digital ticket —
+              open that ticket and use the payment link on it.
+            <% end %>
+          </p>
+          <% if @event.registerable? %>
+            <p><strong>Haven't registered yet?</strong>
+              <%= link_to "Register for #{@event.title}", new_event_public_registration_path(@event), class: "font-semibold underline" %>
+              first — this form is only for covering other people's costs.</p>
+          <% end %>
         </div>
       </div>
       <% if flash[:alert] %>
