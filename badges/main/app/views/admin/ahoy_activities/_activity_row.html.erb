@@ -11,11 +11,17 @@
     <%= event.properties["resource_title"].presence || "—" %>
   </td>
 
+  <% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
+  <td data-label="Details" class="min-w-[16rem] px-4 py-3 align-top text-gray-500">
+    <%= render "admin/ahoy_activities/event_details", activity: activity %>
+  </td>
+
   <td data-label="User" class="px-4 py-3 text-gray-600">
     <% if event.user %>
       <%= link_to event.user.full_name,
                   user_path(event.user),
-                  class: "text-indigo-600 hover:underline" %>
+                  class: "text-indigo-600 hover:underline",
+                  data: { turbo_frame: "_top" } %>
     <% else %>
       <span class="text-gray-400 italic">Guest</span>
     <% end %>
@@ -23,10 +29,5 @@
 
   <td data-label="Visit ID" class="px-4 py-3 text-gray-500">
     <%= event.visit_id %>
-  </td>
-
-  <% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
-  <td data-label="Details" class="px-4 py-3 align-top text-gray-500">
-    <%= render "admin/ahoy_activities/event_details", activity: activity %>
   </td>
 </tr>
