@@ -5,20 +5,20 @@
     primary vs additional age groups served. The primary toggle sits outside the
     membership label so the two checkboxes never toggle each other. %>
 <% id = "#{param_key}_category_ids_#{category.id}" %>
-<div class="flex items-center gap-2 p-3 w-auto min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-  <label for="<%= id %>" class="flex items-center gap-2 cursor-pointer">
+<div class="flex w-auto min-w-[180px] items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:bg-gray-100">
+  <label for="<%= id %>" class="flex cursor-pointer items-center gap-2">
     <%= hidden_field_tag "#{param_key}[category_ids][]", "" %>
     <%= check_box_tag "#{param_key}[category_ids][]",
                       category.id,
                       checked,
                       id: id,
                       class: "h-4 w-4 text-blue-600 rounded" %>
-    <span class="text-sm text-gray-700 whitespace-nowrap"><%= is_age ? category.decorate.age_group_label : category.name %></span>
+    <span class="text-sm whitespace-nowrap text-gray-700"><%= is_age ? category.decorate.age_group_label : category.name %></span>
   </label>
   <% if is_age %>
     <% primary_id = "#{param_key}_primary_age_#{category.id}" %>
     <label for="<%= primary_id %>"
-           class="ml-auto flex items-center gap-1 text-xs text-gray-500 cursor-pointer"
+           class="ml-auto flex cursor-pointer items-center gap-1 text-xs text-gray-500"
            title="Mark as a primary age group served">
       <%= check_box_tag "#{param_key}[primary_age_category_ids][]",
                         category.id,

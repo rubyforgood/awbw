@@ -1,6 +1,6 @@
 <%= turbo_frame_tag :features_results do %>
   <div data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
-    <div class="flex items-center justify-between gap-3 mb-3">
+    <div class="mb-3 flex items-center justify-between gap-3">
       <p class="text-sm text-gray-500">
         Showing <%= @features.size %> of <%= @total %> <%= "feature".pluralize(@total) %>
       </p>
@@ -19,9 +19,9 @@
     </div>
 
     <% if @features.empty? %>
-      <div class="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
+      <div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
         <i class="fa-solid fa-magnifying-glass text-3xl text-gray-300"></i>
-        <p class="text-gray-500 mt-3">
+        <p class="mt-3 text-gray-500">
           <%= @total.zero? ? "No features yet." : "No features match your filters." %>
         </p>
       </div>

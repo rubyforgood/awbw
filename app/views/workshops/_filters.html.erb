@@ -1,12 +1,12 @@
 <!-- Filters Header -->
 
 <div>
-  <h3 class="text-sm font-semibold uppercase text-gray-500 tracking-wide">Keyword search filters</h3>
+  <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Keyword search filters</h3>
 </div>
 
 <!-- Search Fields -->
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 py-0 mb-0">
+<div class="mb-0 grid grid-cols-1 gap-4 px-4 py-0 md:grid-cols-3">
   <% [[:title, "Title contains"], [:author_name, "Author name contains"], [:query, "Full-text contains"]].each do |field, placeholder| %>
     <div class="relative">
       <%= text_field_tag field,
@@ -20,7 +20,7 @@
 
 <!-- Checkboxes -->
 
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 overflow-visible p-4">
+<div class="grid grid-cols-1 gap-4 overflow-visible p-4 sm:grid-cols-2 xl:grid-cols-4">
 
   <%= render "dropdown_filter",
              dom_id_prefix: "windows-types",

@@ -1,13 +1,13 @@
 <% if resource.errors.any? %>
   <div class="errors">
     <% classes = status_classes(:danger) %>
-    <div class="rounded-lg border <%= classes[:border] %> <%= classes[:surface] %> p-4 mb-6">
-      <h2 class="<%= classes[:text] %> font-semibold mb-2">
+    <div class="rounded-lg border <%= classes[:border] %> <%= classes[:surface] %> mb-6 p-4">
+      <h2 class="<%= classes[:text] %> mb-2 font-semibold">
         <%= pluralize(resource.errors.count, "error") %> prevented this <%= resource.model_name.human.downcase %> from being saved
       </h2>
 
       <% if resource.errors.any? %>
-        <ul class="list-disc pl-5 space-y-1 text-sm <%= classes[:text] %> mb-5">
+        <ul class="list-disc space-y-1 pl-5 text-sm <%= classes[:text] %> mb-5">
           <% resource.errors.full_messages.each do |msg| %>
             <li><%= msg %></li>
           <% end %>

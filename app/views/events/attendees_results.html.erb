@@ -28,11 +28,11 @@
       <%= render "events/section_heading", title: "Attendees", icon: "fa-user-pen",
             theme: :event_registrations, intensity: 700, toggle: false, actions: toggle_bar %>
       <div data-panel-toggle-target="panel" data-panel-toggle-name="attendees">
-        <div class="rounded-xl bg-white overflow-hidden animate-fade blur-on-submit">
+        <div class="animate-fade overflow-hidden rounded-xl bg-white blur-on-submit">
           <%# Page-level toggle: expand every row's Training cell to all events, or
               collapse back to the most recent one. Broadcasts to each row's
               expandable-card via @window (see _registrant_roster). %>
-          <div class="flex items-center justify-end px-4 py-3 border-b border-gray-100">
+          <div class="flex items-center justify-end border-b border-gray-100 px-4 py-3">
             <button type="button"
                     data-controller="expandable-cards"
                     data-expandable-cards-expanded-value="false"
@@ -68,8 +68,8 @@
       </div>
     </div>
   <% else %>
-    <div class="rounded-xl bg-white overflow-hidden animate-fade blur-on-submit">
-      <p class="text-gray-500 text-center px-6 py-8">No attendees found.</p>
+    <div class="animate-fade overflow-hidden rounded-xl bg-white blur-on-submit">
+      <p class="px-6 py-8 text-center text-gray-500">No attendees found.</p>
     </div>
   <% end %>
 <% end %>

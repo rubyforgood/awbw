@@ -4,11 +4,11 @@
   <div class='row'>
     <div class='col-xs-4 fixed-width'>
       <div
-        class='portrait-img content-img-popular popular-img'
+        class='portrait-img popular-img content-img-popular'
         style="background-image: url(<%= thumbnail_image %>)"
       ></div>
     </div>
-    <div class='col-xs-8 col-xs-6-custom content-heading span'>
+    <div class='col-xs-8 col-xs-6-custom span content-heading'>
       <h3><%= link_to workshop.title, link_route, data: { turbo_prefetch: false } %></h3>
       <small><%= "#{workshop.windows_type.short_name unless workshop.windows_type.nil?} - #{workshop.date}" %></small><br/>
       <small>Author:

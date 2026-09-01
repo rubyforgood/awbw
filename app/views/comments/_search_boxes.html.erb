@@ -10,10 +10,10 @@
               html: { autocomplete: "off" }, class: "bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3" do |f| %>
   <div class="flex items-center gap-2 text-gray-600">
     <i class="fa-solid fa-filter text-xs"></i>
-    <span class="text-xs font-semibold uppercase tracking-wide">Filter</span>
+    <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
   </div>
   <div class="flex flex-wrap items-end gap-3">
-    <div class="grow min-w-[150px]">
+    <div class="min-w-[150px] grow">
       <label for="query" class="<%= search_label_class %>">Keyword</label>
       <div class="relative">
         <%= f.text_field :query, value: params[:query],
@@ -24,7 +24,7 @@
       </div>
     </div>
 
-    <div class="grow min-w-[150px]">
+    <div class="min-w-[150px] grow">
       <label for="author_id" class="<%= search_label_class %>">Author</label>
       <%= select_tag :author_id,
                      options_for_select(User.where(id: params[:author_id]).map { |user| [ user.full_name_with_email, user.id ] }, params[:author_id]),
@@ -55,7 +55,7 @@
     </div>
 
     <div class="pb-1">
-      <label class="inline-flex items-center cursor-pointer select-none" title="Flagged for follow-up">
+      <label class="inline-flex cursor-pointer items-center select-none" title="Flagged for follow-up">
         <%= check_box_tag :flagged, "1", params[:flagged] == "1", class: "peer sr-only", onchange: "this.form.requestSubmit()" %>
         <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
         <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flagged</span>

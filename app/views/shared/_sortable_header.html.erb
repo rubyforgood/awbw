@@ -10,7 +10,7 @@
 <% key = local_assigns.fetch(:key, nil) %>
 <% button_class = local_assigns.fetch(:class, "hover:text-gray-900") %>
 <button type="button"
-        class="inline-flex items-center gap-1.5 cursor-pointer select-none <%= button_class %>"
+        class="inline-flex cursor-pointer items-center gap-1.5 select-none <%= button_class %>"
         data-table-sort-target="header"
         data-sort-index="<%= index %>"
         <%= "data-sort-key=#{key}".html_safe if key %>

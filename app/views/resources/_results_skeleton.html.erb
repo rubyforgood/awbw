@@ -1,29 +1,29 @@
 <div class="min-h-screen">
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+  <div class="grid animate-pulse grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
     <% 9.times do %>
       <div class="relative">
-        <div class="flex flex-row flex-wrap bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="flex flex-row flex-wrap overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <!-- LEFT SIDE -->
-          <div class="flex-shrink-0 w-40 flex flex-col items-center justify-center py-4 px-3 border-b md:border-b-0 md:border-r border-gray-200">
+          <div class="flex w-40 flex-shrink-0 flex-col items-center justify-center border-b border-gray-200 px-3 py-4 md:border-r md:border-b-0">
             <!-- Asset placeholder -->
-            <div class="w-32 h-32 bg-gray-200 rounded-lg"></div>
+            <div class="h-32 w-32 rounded-lg bg-gray-200"></div>
 
             <!-- Type -->
-            <div class="mt-3 h-3 w-16 bg-gray-200 rounded"></div>
+            <div class="mt-3 h-3 w-16 rounded bg-gray-200"></div>
           </div>
 
           <!-- RIGHT SIDE -->
-          <div class="flex-1 min-w-0 pl-4 pr-6 pb-12 mt-2 relative">
+          <div class="relative mt-2 min-w-0 flex-1 pr-6 pb-12 pl-4">
             <!-- Title lines -->
             <div class="mt-3 space-y-2">
-              <div class="h-5 w-3/4 bg-gray-200 rounded"></div>
-              <div class="h-5 w-1/2 bg-gray-200 rounded"></div>
+              <div class="h-5 w-3/4 rounded bg-gray-200"></div>
+              <div class="h-5 w-1/2 rounded bg-gray-200"></div>
             </div>
 
             <!-- Action buttons -->
-            <div class="absolute bottom-3 right-3 flex space-x-2">
-              <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
-              <div class="h-8 w-8 bg-gray-200 rounded-md"></div>
+            <div class="absolute right-3 bottom-3 flex space-x-2">
+              <div class="h-8 w-8 rounded-md bg-gray-200"></div>
+              <div class="h-8 w-8 rounded-md bg-gray-200"></div>
             </div>
           </div>
         </div>
@@ -32,11 +32,11 @@
   </div>
 
   <!-- Pagination skeleton -->
-  <div class="flex justify-center mt-8 space-x-2 animate-pulse">
-    <div class="h-8 w-10 bg-gray-200 rounded"></div>
+  <div class="mt-8 flex animate-pulse justify-center space-x-2">
+    <div class="h-8 w-10 rounded bg-gray-200"></div>
 
-    <div class="h-8 w-10 bg-gray-200 rounded"></div>
+    <div class="h-8 w-10 rounded bg-gray-200"></div>
 
-    <div class="h-8 w-10 bg-gray-200 rounded"></div>
+    <div class="h-8 w-10 rounded bg-gray-200"></div>
   </div>
 </div>

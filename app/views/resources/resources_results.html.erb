@@ -3,14 +3,14 @@
   <%= turbo_stream.replace("copy_url", partial: "shared/copy_url") %>
 
   <% if @resources.any? %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade blur-on-submit">
+    <div class="grid animate-fade grid-cols-1 gap-6 blur-on-submit sm:grid-cols-2 lg:grid-cols-3">
       <% @resources.each do |resource| %>
         <%= render "resource_card", resource: resource.decorate %>
       <% end %>
     </div>
   <% else %>
-    <p class="text-gray-500 text-center py-6">There are no resources that match your search. Please try again.</p>
+    <p class="py-6 text-center text-gray-500">There are no resources that match your search. Please try again.</p>
   <% end %>
 
-  <div class="pagination flex justify-center mt-6 w-full"><%= tailwind_paginate @resources %></div>
+  <div class="pagination mt-6 flex w-full justify-center"><%= tailwind_paginate @resources %></div>
 <% end %>

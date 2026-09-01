@@ -7,12 +7,12 @@
   .group_by(&:theme_name) %>
 
 <div class="workshop-series-children single-workshop-detail mb-4">
-  <h3 class="text-lg font-semibold mb-1">Series workshops</h3>
-  <hr class="border-gray-300 mb-2">
+  <h3 class="mb-1 text-lg font-semibold">Series workshops</h3>
+  <hr class="mb-2 border-gray-300">
   <div class="prose text-sm after:clear-both after:block after:content-['']">
     <% grouped_series_memberships.each do |theme_name, series_memberships| %>
       <% if theme_name.present? %>
-        <h3 class="font-semibold mt-4 mb-2"><%= theme_name %></h3>
+        <h3 class="mt-4 mb-2 font-semibold"><%= theme_name %></h3>
       <% end %>
       <% series_memberships.each do |series_membership| %>
         <% child_workshop = series_membership.workshop_child %>

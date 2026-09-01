@@ -5,7 +5,7 @@
     these reports drill into, so a value means the same thing on both. `all_label`
     overrides the blank option (revenue lists paid events only). %>
 <div class="w-full sm:w-52">
-  <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" for="event_type">Event type</label>
+  <label class="mb-1 block text-xs font-semibold tracking-wide text-gray-500 uppercase" for="event_type">Event type</label>
   <%= select_tag :event_type,
         options_for_select(EventRegistration::EVENT_TYPE_FILTER_OPTIONS, @event_type),
         include_blank: local_assigns.fetch(:all_label, "All events"),

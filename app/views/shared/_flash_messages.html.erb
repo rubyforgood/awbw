@@ -1,4 +1,4 @@
-<div id="flash_now" class="fixed top-4 right-0 left-0 flex justify-center z-50 print:hidden">
+<div id="flash_now" class="fixed top-4 right-0 left-0 z-50 flex justify-center print:hidden">
   <%# === Collect manual messages from params === %>
   <% manual_messages = [] %>
   <% { notice: params[:notice], alert: params[:alert], info: params[:info], warning: params[:warning], error: params[:error] }.each do |type, msg| %>
@@ -26,11 +26,11 @@
     <% disable_outside_click = ["alert", "error"].include?(type.to_s) %>
 
     <div
-      class="max-w-3xl my-2"
+      class="my-2 max-w-3xl"
       data-controller="dismiss"
       data-dismiss-timeout-value="<%= timeout %>"
       data-dismiss-disable-outside-click-value="<%= disable_outside_click %>">
-      <div class="flex items-center justify-between px-4 py-3 rounded shadow-md <%= classes[:surface] %> <%= classes[:text] %>">
+      <div class="flex items-center justify-between rounded px-4 py-3 shadow-md <%= classes[:surface] %> <%= classes[:text] %>">
         <div class="flex-1 text-center font-medium">
           <p class="<%= type %>">
             <%= msg.html_safe %>

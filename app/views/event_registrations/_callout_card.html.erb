@@ -21,12 +21,12 @@
 <% linked = local_assigns.fetch(:linked, true) && links_to_page %>
 <% card_class = "flex items-center gap-3 rounded-xl border-2 #{theme[:border]} #{theme[:bg]} px-4 py-3 #{theme[:hover]} transition-colors" %>
 <% card_body = capture do %>
-  <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> text-xl shrink-0"></i>
+  <i class="<%= callout.display_icon_class %> <%= theme[:icon] %> shrink-0 text-xl"></i>
 
-  <div class="flex-1 min-w-0 text-left">
+  <div class="min-w-0 flex-1 text-left">
     <p class="font-semibold <%= theme[:title] %>"><%= callout.title %></p>
     <% if badge.present? || callout.subtitle.present? %>
-      <p class="text-sm <%= theme[:subtitle] %> flex items-center gap-1.5 flex-wrap">
+      <p class="text-sm <%= theme[:subtitle] %> flex flex-wrap items-center gap-1.5">
         <% if badge.present? %>
           <%= render "shared/badge", label: badge, classes: badge_classes %>
         <% end %>

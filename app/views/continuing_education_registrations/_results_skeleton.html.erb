@@ -1,6 +1,6 @@
-<div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+<div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
   <table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-50 animate-pulse">
+    <thead class="animate-pulse bg-gray-50">
       <tr>
         <% [ "w-24", "w-28", "w-20", "w-12", "w-16", "w-16", "w-20", "w-12" ].each_with_index do |w, i| %>
           <th class="px-4 py-3 <%= i >= 3 && i <= 4 ? "text-right" : (i == 7 ? "text-right" : "text-left") %>">
@@ -10,7 +10,7 @@
       </tr>
     </thead>
 
-    <tbody class="divide-y divide-gray-100 animate-pulse">
+    <tbody class="animate-pulse divide-y divide-gray-100">
       <% 10.times do %>
         <tr>
           <% [ "w-28", "w-32", "w-20", "w-8", "w-16", "w-16", "w-20", "w-10" ].each_with_index do |w, i| %>

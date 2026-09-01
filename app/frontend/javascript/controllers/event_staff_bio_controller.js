@@ -50,7 +50,7 @@ export default class extends Controller {
     const link = editPath
       ? `<a href="${editPath}" class="text-xs font-medium text-blue-600 hover:text-blue-800">Edit on profile</a>`
       : ""
-    return `<div class="flex items-center justify-between mb-1"><span class="text-sm font-medium text-gray-700">Profile bio</span>${link}</div>`
+    return `<div class="mb-1 flex items-center justify-between"><span class="text-sm font-medium text-gray-700">Profile bio</span>${link}</div>`
   }
 
   muted(text) {

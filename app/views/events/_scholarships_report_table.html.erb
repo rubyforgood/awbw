@@ -8,8 +8,8 @@
 <% years = report.years %>
 <% multi_year = years.size > 1 %>
 <% col_span = combined ? 5 : 8 %>
-<section class="rounded-xl border border-fuchsia-300 bg-white overflow-hidden">
-  <div class="flex items-center justify-between gap-3 px-4 py-3 bg-fuchsia-50 border-b border-fuchsia-300">
+<section class="overflow-hidden rounded-xl border border-fuchsia-300 bg-white">
+  <div class="flex items-center justify-between gap-3 border-b border-fuchsia-300 bg-fuchsia-50 px-4 py-3">
     <h3 class="flex items-center gap-2 text-base font-semibold text-fuchsia-900">
       <i class="fa-solid fa-graduation-cap text-fuchsia-500"></i>
       <%= all_time ? "All facilitator trainings" : "#{years.first.year || "Undated"} facilitator trainings" %>
@@ -21,35 +21,35 @@
   </div>
 
   <div class="overflow-x-auto">
-    <table class="w-full text-sm border-collapse">
+    <table class="w-full border-collapse text-sm">
       <thead>
         <tr class="bg-fuchsia-50 text-fuchsia-900">
-          <th rowspan="2" class="text-left font-semibold px-3 py-2 border border-gray-200 align-bottom">Training</th>
-          <th rowspan="2" class="text-right font-semibold px-3 py-2 border border-gray-200 align-bottom">
-            <i class="fa-solid fa-user-check text-fuchsia-500 mr-1"></i>Registrants attended
+          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-left align-bottom font-semibold">Training</th>
+          <th rowspan="2" class="border border-gray-200 px-3 py-2 text-right align-bottom font-semibold">
+            <i class="fa-solid fa-user-check mr-1 text-fuchsia-500"></i>Registrants attended
           </th>
           <% if combined %>
-            <th colspan="3" class="text-center font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap border-l-2 border-l-fuchsia-300">
-              <i class="fa-solid fa-graduation-cap text-fuchsia-500 mr-1"></i>Scholarships
+            <th colspan="3" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
+              <i class="fa-solid fa-graduation-cap mr-1 text-fuchsia-500"></i>Scholarships
               <span class="font-normal text-gray-500">(#&nbsp;/&nbsp;$)</span>
             </th>
           <% else %>
-            <th colspan="3" class="text-center font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap border-l-2 border-l-fuchsia-300">
-              <i class="fa-solid fa-graduation-cap text-fuchsia-500 mr-1"></i># of scholarships
+            <th colspan="3" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
+              <i class="fa-solid fa-graduation-cap mr-1 text-fuchsia-500"></i># of scholarships
             </th>
-            <th colspan="3" class="text-center font-semibold px-3 py-2 border border-gray-200 whitespace-nowrap border-l-2 border-l-fuchsia-300">
-              <i class="fa-solid fa-hand-holding-dollar text-fuchsia-500 mr-1"></i>$ of scholarships
+            <th colspan="3" class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-2 text-center font-semibold whitespace-nowrap">
+              <i class="fa-solid fa-hand-holding-dollar mr-1 text-fuchsia-500"></i>$ of scholarships
             </th>
           <% end %>
         </tr>
-        <tr class="bg-fuchsia-50 text-fuchsia-900 text-xs">
-          <th class="text-right font-medium px-3 py-1.5 border border-gray-200 border-l-2 border-l-fuchsia-300">Funded</th>
-          <th class="text-right font-medium px-3 py-1.5 border border-gray-200">Unfunded</th>
-          <th class="text-right font-semibold px-3 py-1.5 border border-gray-200">Total</th>
+        <tr class="bg-fuchsia-50 text-xs text-fuchsia-900">
+          <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-1.5 text-right font-medium">Funded</th>
+          <th class="border border-gray-200 px-3 py-1.5 text-right font-medium">Unfunded</th>
+          <th class="border border-gray-200 px-3 py-1.5 text-right font-semibold">Total</th>
           <% unless combined %>
-            <th class="text-right font-medium px-3 py-1.5 border border-gray-200 border-l-2 border-l-fuchsia-300">Funded</th>
-            <th class="text-right font-medium px-3 py-1.5 border border-gray-200">Unfunded</th>
-            <th class="text-right font-semibold px-3 py-1.5 border border-gray-200">Total</th>
+            <th class="border border-l-2 border-gray-200 border-l-fuchsia-300 px-3 py-1.5 text-right font-medium">Funded</th>
+            <th class="border border-gray-200 px-3 py-1.5 text-right font-medium">Unfunded</th>
+            <th class="border border-gray-200 px-3 py-1.5 text-right font-semibold">Total</th>
           <% end %>
         </tr>
       </thead>
@@ -57,7 +57,7 @@
         <% years.each do |group| %>
           <% if multi_year %>
             <tr class="bg-fuchsia-100 text-fuchsia-900">
-              <th colspan="<%= col_span %>" class="text-left font-semibold px-3 py-1.5 border border-gray-200">
+              <th colspan="<%= col_span %>" class="border border-gray-200 px-3 py-1.5 text-left font-semibold">
                 <%= group.year || "Undated" %>
               </th>
             </tr>
@@ -71,19 +71,19 @@
           <% end %>
           <% if multi_year %>
             <tr class="bg-gray-50 font-semibold text-gray-900">
-              <td class="px-3 py-2 border border-gray-200"><%= group.year || "Undated" %> total</td>
+              <td class="border border-gray-200 px-3 py-2"><%= group.year || "Undated" %> total</td>
               <%= render "scholarships_report_figures", source: group, combined: combined, event: nil %>
             </tr>
           <% end %>
         <% end %>
         <tr class="bg-gray-100 font-bold text-gray-900">
-          <td class="px-3 py-2 border border-gray-200"><%= all_time ? "All-time total" : "Total" %></td>
+          <td class="border border-gray-200 px-3 py-2"><%= all_time ? "All-time total" : "Total" %></td>
           <%= render "scholarships_report_figures", source: report.all_trainings_group, combined: combined, event: nil %>
         </tr>
       </tbody>
     </table>
   </div>
-  <div class="px-4 py-2 text-xs text-gray-500 border-t border-fuchsia-200 bg-fuchsia-50">
+  <div class="border-t border-fuchsia-200 bg-fuchsia-50 px-4 py-2 text-xs text-gray-500">
     Attended breakdown:
     <span class="font-medium text-gray-700"><%= report.live_attended_count %></span> live
     · <span class="font-medium text-gray-700"><%= report.on_demand_attended_count %></span> on-demand

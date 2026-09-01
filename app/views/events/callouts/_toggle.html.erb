@@ -5,13 +5,13 @@
     Native <details> so it works without JavaScript. %>
 <% open = local_assigns.fetch(:open, false) %>
 <details class="group/card rounded-lg border border-gray-200 bg-white" <%= "open" if open %>>
-  <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden px-4 py-3 hover:bg-gray-50 rounded-lg">
+  <summary class="cursor-pointer list-none rounded-lg px-4 py-3 select-none hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
     <div class="flex items-center justify-between gap-3">
       <span class="font-medium text-gray-900"><%= summary %></span>
-      <i class="fa-solid fa-chevron-down text-gray-400 text-xs shrink-0 transition-transform group-open/card:rotate-180"></i>
+      <i class="fa-solid fa-chevron-down shrink-0 text-xs text-gray-400 transition-transform group-open/card:rotate-180"></i>
     </div>
   </summary>
-  <div class="px-4 pb-4 pt-1 space-y-3 text-sm text-gray-600 leading-relaxed">
+  <div class="space-y-3 px-4 pt-1 pb-4 text-sm leading-relaxed text-gray-600">
     <%= yield %>
   </div>
 </details>
