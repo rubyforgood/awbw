@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
 export default class extends Controller {
-  static values = { model: String, exclude: String };
+  static values = { model: String, exclude: String, truncate: Boolean };
 
   connect() {
     // TomSelect stamps itself on the element; bail if it's already initialized so
@@ -94,8 +94,11 @@ export default class extends Controller {
         margin: 0 !important;            /* Remove padding/margin from selected items */
         padding: 0 !important;
         line-height: 1.5rem !important;
-        /* Truncate a long selected label to one line instead of wrapping and
-           doubling the control's height. min-width:0 lets it shrink in the flex row. */
+      }
+      /* Opt-in (truncate value): ellipsize a long selected label to one line
+         instead of wrapping and doubling the control's height. min-width:0 lets
+         it shrink in the flex row. */
+      .remote-select-truncate .ts-control .item {
         min-width: 0;
         max-width: 100%;
         overflow: hidden;
@@ -116,6 +119,7 @@ export default class extends Controller {
     if (!wrapper || wrapper.parentElement?.classList.contains("remote-select-container")) return;
     const container = document.createElement("div");
     container.className = "remote-select-container";
+    container.classList.toggle("remote-select-truncate", this.truncateValue);
     wrapper.parentNode.insertBefore(container, wrapper);
     container.appendChild(wrapper);
     const icon = document.createElement("i");
