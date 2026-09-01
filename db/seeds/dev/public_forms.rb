@@ -18,14 +18,15 @@ public_forms = [
     header: "Interested in volunteering with A Window Between Worlds? Tell us a little about yourself.",
     questions: [
       { name: "Why do you want to volunteer with us?", answer_type: :free_form_input_paragraph },
-      { name: "What days are you generally available?", answer_type: :free_form_input_one_line }
+      { name: "What days are you generally available?", answer_type: :free_form_input_one_line },
+      { name: "How familiar are you with AWBW's workshop approach?", answer_type: :slider }
     ],
     submissions: [
       { first_name: "Dana", last_name: "Volunteer", email: "dana.volunteer@example.com",
         answers: [ "I run art workshops for teens and want to bring AWBW's approach to my community.",
-                   "Weekday evenings and Saturdays" ] },
+                   "Weekday evenings and Saturdays", "85" ] },
       { first_name: "Emil", last_name: "Helper", email: "emil.helper@example.com",
-        answers: [ "I'm a retired social worker looking to give back.", "Weekday mornings" ] }
+        answers: [ "I'm a retired social worker looking to give back.", "Weekday mornings", "40" ] }
     ]
   },
   {
