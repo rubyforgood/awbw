@@ -301,6 +301,20 @@ RSpec.describe Payment, type: :model do
     end
   end
 
+  describe "#allocated?" do
+    it "is false when nothing has been applied yet" do
+      expect(build(:payment, amount_cents: 1000, amount_cents_remaining: 1000)).not_to be_allocated
+    end
+
+    it "is true once part of the payment is applied" do
+      expect(build(:payment, amount_cents: 1000, amount_cents_remaining: 400)).to be_allocated
+    end
+
+    it "is true when fully applied" do
+      expect(build(:payment, amount_cents: 1000, amount_cents_remaining: 0)).to be_allocated
+    end
+  end
+
   describe "#payer" do
     it "returns the person when payer_type is Person" do
       person = create(:person)

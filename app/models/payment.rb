@@ -121,6 +121,13 @@ class Payment < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
+  # True once any of the payment has been applied to what it's paying for (e.g. a
+  # bulk payment allocated to its event registrations). A recorded-but-unapplied
+  # payment — a check keyed in before it's allocated — is not yet "allocated".
+  def allocated?
+    amount_cents_remaining.to_i < amount_cents.to_i
+  end
+
   def allocated_dollars
     (amount_cents - (amount_cents_remaining || 0)).to_d / 100
   end
