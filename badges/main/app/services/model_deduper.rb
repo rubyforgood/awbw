@@ -42,7 +42,7 @@ class ModelDeduper
   # sees exactly what moves (affiliations, event registrations, reports, …).
   def reassignment_counts(record)
     reassignable_joins.each_with_object({}) do |join, counts|
-      count = join[:join_class].where(join[:foreign_key] => record.id).count
+      count = join_references(join, record.id).count
       next if count.zero?
 
       counts[join_label(join[:join_class])] = count
@@ -57,7 +57,7 @@ class ModelDeduper
 
   def reassignment_preview(record)
     reassignable_joins.filter_map do |join|
-      scope = join[:join_class].where(join[:foreign_key] => record.id)
+      scope = join_references(join, record.id)
       count = scope.count
       next if count.zero?
 
@@ -228,7 +228,13 @@ class ModelDeduper
       fk = assoc.foreign_key.to_s
       next unless join_klass.column_names.include?(fk)
 
-      join_for(join_klass, fk)
+      # A polymorphic `has_many … as:` (allocations, comments) is scoped by its
+      # `*_type` column too, so a merge only moves this model's own rows and can't
+      # steal another type's rows that happen to share the deleted record's id.
+      type_column = assoc.type.to_s if assoc.options[:as]
+      type_column = nil unless type_column && join_klass.column_names.include?(type_column)
+
+      join_for(join_klass, fk, type_column: type_column)
     end
   end
 
@@ -269,12 +275,22 @@ class ModelDeduper
     klass
   end
 
-  def join_for(join_klass, fk)
+  def join_for(join_klass, fk, type_column: nil)
     {
       join_class: join_klass,
       foreign_key: fk.to_sym,
+      type_column: type_column,
       natural_key: natural_key_columns(join_klass, fk)
     }
+  end
+
+  # Rows of `join` that reference `id` — narrowed to this model's polymorphic type
+  # when the join is a polymorphic `as:` association, so it never touches another
+  # type's rows sharing the same id.
+  def join_references(join, id)
+    scope = join[:join_class].where(join[:foreign_key] => id)
+    scope = scope.where(join[:type_column] => model_class.polymorphic_name) if join[:type_column]
+    scope
   end
 
   # Columns (other than the FK) of a unique index that includes the FK.
@@ -384,14 +400,14 @@ class ModelDeduper
     natural_key = join[:natural_key]
 
     if natural_key.empty?
-      moved = jc.where(fk => dupe.id).update_all(fk => primary.id)
+      moved = join_references(join, dupe.id).update_all(fk => primary.id)
       logger.info "  moved #{moved} #{jc.name} to primary" if moved > 0
       return
     end
 
-    existing = jc.where(fk => primary.id).pluck(*natural_key).map { |values| Array(values) }.to_set
+    existing = join_references(join, primary.id).pluck(*natural_key).map { |values| Array(values) }.to_set
 
-    jc.where(fk => dupe.id).find_each do |item|
+    join_references(join, dupe.id).find_each do |item|
       key = natural_key.map { |col| item.public_send(col) }
       if existing.include?(key)
         item.destroy!
@@ -403,7 +419,7 @@ class ModelDeduper
       end
     end
 
-    remaining = jc.where(fk => dupe.id).count
+    remaining = join_references(join, dupe.id).count
     raise "ABORT: #{remaining} #{jc.name} items still reference #{model_label} #{dupe.id}" if remaining > 0
   end
 end

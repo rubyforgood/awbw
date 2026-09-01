@@ -1,4 +1,6 @@
 class EventRegistrationsController < ApplicationController
+  include Dedupable
+
   require "csv"
 
   # show redirects to slug URL; kept for backwards compatibility
@@ -506,6 +508,49 @@ class EventRegistrationsController < ApplicationController
   end
 
   private
+
+  def dedupe_config
+    # Opened from an event's registrants page (bulk actions) → scope the suggested
+    # duplicates to that event and return the eyebrow there; opened from the global
+    # registrations index → all registrations, default eyebrow.
+    dedupe_event = Event.find_by(id: params[:event_id])
+    finder_scope = dedupe_event ? EventRegistration.where(event: dedupe_event) : EventRegistration.all
+
+    {
+      model_class: EventRegistration,
+      domain: :event_registrations,
+      candidate_finder: -> { EventRegistrationServices::DuplicateFinder.new(finder_scope).groups },
+      back_path: dedupe_event ? registrants_event_path(dedupe_event) : nil,
+      back_label: dedupe_event ? "Registrants" : nil,
+      subtitle: dedupe_event ? "Showing possible duplicate registrations for #{dedupe_event.title}." : nil,
+      editable_columns: %w[
+        status expected_payment_method fee_note shoutout intends_to_pay
+        someone_else_will_pay invoice_requested scholarship_requested w9_requested
+        payment_unresolved
+      ],
+      # The (registrant_id, event_id) index means two registrations only ever
+      # collide when their registrants are different Person records. Merging keeps
+      # them separate — say so, so the admin also merges the people if they match.
+      merge_notes: ->(keep, delete) {
+        next [] if keep.registrant_id == delete.registrant_id
+
+        [ "These registrations have different registrants (#{keep.registrant&.full_name} vs #{delete.registrant&.full_name}). Merging combines the registrations only — the two people stay separate. Merge them in the people deduper too if they're the same person." ]
+      },
+      # A scholarship (and CE registration) moves onto the kept registration with the
+      # merge, but a scholarship still credits the deleted registrant. Re-credit any
+      # scholarship now on the keeper to the keeper's registrant so its recipient
+      # matches its allocation. CE delegates its registrant to the registration, so
+      # it follows automatically and needs no fixup here.
+      after_merge: ->(keep) {
+        keep.scholarships.where.not(recipient_id: keep.registrant_id).find_each do |scholarship|
+          scholarship.update!(recipient: keep.registrant)
+        end
+      },
+      record_extras: ->(registration) {
+        [ registration.registrant&.preferred_email.presence, registration.status&.humanize ].compact.join(" · ").presence
+      }
+    }
+  end
 
   def redirect_after_failed_create(alert)
     case params[:return_to]
