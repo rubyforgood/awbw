@@ -41,11 +41,17 @@
                     input_html: { class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" } %>
       </div>
 
-      <div class="text-end text-right">
+      <div class="flex items-center justify-end gap-3 text-right">
+        <% if f.object.persisted? %>
+          <%= link_to "Edit", edit_professional_license_path(f.object, return_to: "person"),
+                      class: "text-sm text-blue-600 hover:text-blue-800 underline whitespace-nowrap",
+                      data: { turbo_frame: "_top" } %>
+        <% end %>
         <% if f.object.new_record? || f.object.removable? %>
           <%= link_to_remove_association "Remove",
                                          f,
-                                         class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap" %>
+                                         class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap",
+                                         data: { cocoon_confirm: "Remove this license? This can't be undone." } %>
         <% else %>
           <span class="text-xs text-amber-600">Has CE registrations — can't remove</span>
         <% end %>

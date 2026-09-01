@@ -143,6 +143,21 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).to include("No CE registrations yet for this license.")
     end
 
+    it "returns to the person's edit page when reached from there" do
+      get edit_professional_license_path(license, return_to: "person")
+
+      expect(response.body).to include(edit_person_path(person, anchor: "professional-licenses"))
+      expect(response.body).to include(person.full_name)
+    end
+
+    it "redirects back to the person after saving when reached from the person page" do
+      patch professional_license_path(license, return_to: "person"), params: {
+        professional_license: { number: "556", kind: "LCSW" }
+      }
+
+      expect(response).to redirect_to(edit_person_path(person, anchor: "professional-licenses"))
+    end
+
     it "updates the license fields" do
       patch professional_license_path(license), params: {
         professional_license: { number: "556", kind: "LCSW", issuing_state: "NY" }

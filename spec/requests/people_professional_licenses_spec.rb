@@ -16,6 +16,25 @@ RSpec.describe "People professional licenses", type: :request do
     expect(response.body).to include("LMFT 90210")
   end
 
+  it "links each saved license to its own edit page, returning to the person" do
+    person = create(:person)
+    license = create(:professional_license, person: person, number: "90210")
+
+    get edit_person_path(person)
+
+    expect(response.body).to include(edit_professional_license_path(license))
+    expect(response.body).to include("return_to=person")
+  end
+
+  it "confirms before removing a license" do
+    person = create(:person)
+    create(:professional_license, person: person, number: "90210")
+
+    get edit_person_path(person)
+
+    expect(response.body).to include("data-cocoon-confirm")
+  end
+
   it "adds a license through the person form" do
     person = create(:person)
 
