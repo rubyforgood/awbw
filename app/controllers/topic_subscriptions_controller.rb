@@ -23,6 +23,7 @@ class TopicSubscriptionsController < ApplicationController
     ordered = @sort == "marked" ? scope.reorder(marked: @sort_direction, subscribed_at: :desc) : scope.newest_first
 
     @topic_subscriptions = ordered.paginate(page: params[:page], per_page: 25)
+    @mark_column_label = mark_column_label
     render :topic_subscriptions_results if turbo_frame_request?
   end
 
@@ -123,6 +124,14 @@ class TopicSubscriptionsController < ApplicationController
 
   def set_topic_subscription
     @topic_subscription = TopicSubscription.find(params[:id])
+  end
+
+  # When the list is filtered to a single topic, the Mark column header takes that
+  # topic's configured label; otherwise it stays the generic "Mark".
+  def mark_column_label
+    return "Mark" if params[:topic_subscription_type_id].blank?
+
+    TopicSubscriptionType.where(id: params[:topic_subscription_type_id]).pick(:mark_label).presence || "Mark"
   end
 
   def topic_subscription_params

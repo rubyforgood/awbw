@@ -22,6 +22,7 @@ class StaffTaggingsController < ApplicationController
         filtered.reorder(created_at: @sort_direction)
       end
       @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+      @mark_column_label = mark_column_label
       @staff_taggings = filtered.paginate(page: params[:page], per_page: per_page)
 
       render :staff_taggings_results
@@ -75,7 +76,16 @@ class StaffTaggingsController < ApplicationController
 
   def create_params
     person = Person.find_by(id: params.dig(:staff_tagging, :person_id))
-    { staff_tag_id: params.dig(:staff_tagging, :staff_tag_id), staff_taggable: person }
+    { staff_tag_id: params.dig(:staff_tagging, :staff_tag_id), staff_taggable: person, marked: params.dig(:staff_tagging, :marked) == "1" }
+  end
+
+  # When the list is filtered to a single tag, the Mark column header takes that
+  # tag's configured label; otherwise it stays the generic "Mark".
+  def mark_column_label
+    ids = Array(params[:staff_tag_ids]).reject(&:blank?)
+    return "Mark" unless ids.one?
+
+    StaffTag.where(id: ids).pick(:mark_label).presence || "Mark"
   end
 
   def staff_tagging_params

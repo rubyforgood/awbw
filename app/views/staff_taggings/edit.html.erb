@@ -36,20 +36,18 @@
               <span class="font-semibold text-gray-800"><%= taggable&.name %></span>
             <% end %>
           </div>
-          <div class="md:w-72">
-            <%= f.input :staff_tag_id,
-                        label: "Staff tag",
-                        label_html: { class: search_label_class },
-                        collection: tag_options.map { |t| [ t.name, t.id ] },
-                        include_blank: false,
-                        input_html: { class: "form-control" } %>
-          </div>
-          <div class="md:w-72">
-            <span class="<%= search_label_class %>">Mark</span>
-            <label class="mt-1 flex items-start gap-2">
-              <%= f.check_box :marked, class: "mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
-              <span class="text-sm text-gray-700"><%= mark_label_or_default(@staff_tagging.staff_tag&.mark_label) %></span>
-            </label>
+          <div class="flex flex-col gap-4 md:flex-row md:items-start" data-controller="mark-toggle">
+            <div class="md:w-72">
+              <%= f.label :staff_tag_id, "Staff tag", class: search_label_class %>
+              <%= f.select :staff_tag_id,
+                    options_for_select(
+                      tag_options.map { |t| [ t.name, t.id, { "data-mark-label": t.mark_label } ] },
+                      @staff_tagging.staff_tag_id),
+                    { include_blank: false },
+                    class: "form-control",
+                    data: { mark_toggle_target: "select", action: "mark-toggle#update" } %>
+            </div>
+            <%= render "mark_toggle", f: f %>
           </div>
         </div>
       </div>

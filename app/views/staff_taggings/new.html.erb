@@ -21,12 +21,19 @@
                   data: { controller: "remote-select", remote_select_model_value: "person" } %>
           </div>
 
-          <%= f.input :staff_tag_id,
-                      label: "Staff tag",
-                      label_html: { class: search_label_class },
-                      collection: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
-                      include_blank: "Select a tag",
-                      input_html: { class: "form-control" } %>
+          <div class="space-y-6" data-controller="mark-toggle">
+            <div>
+              <%= f.label :staff_tag_id, "Staff tag", class: search_label_class %>
+              <%= f.select :staff_tag_id,
+                    options_for_select(
+                      StaffTag.published.ordered.map { |t| [ t.name, t.id, { "data-mark-label": t.mark_label } ] },
+                      @staff_tagging.staff_tag_id),
+                    { include_blank: "Select a tag" },
+                    class: "form-control",
+                    data: { mark_toggle_target: "select", action: "mark-toggle#update" } %>
+            </div>
+            <%= render "mark_toggle", f: f %>
+          </div>
         </div>
 
         <div class="action-buttons mt-8 flex flex-wrap justify-center gap-3">

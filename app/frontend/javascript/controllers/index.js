@@ -219,6 +219,9 @@ application.register("mixed-chart", MixedChartController)
 import UsMapChartController from "./us_map_chart_controller"
 application.register("us-map-chart", UsMapChartController)
 
+import MarkToggleController from "./mark_toggle_controller"
+application.register("mark-toggle", MarkToggleController)
+
 import WorldMapChartController from "./world_map_chart_controller"
 application.register("world-map-chart", WorldMapChartController)
 

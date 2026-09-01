@@ -11,7 +11,7 @@
             <tr>
               <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("person", "Person") %></th>
               <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("staff_tag", "Staff tag") %></th>
-              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("marked", "Mark") %></th>
+              <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("marked", @mark_column_label) %></th>
               <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("created_at", "Tagged") %></th>
             </tr>
           </thead>

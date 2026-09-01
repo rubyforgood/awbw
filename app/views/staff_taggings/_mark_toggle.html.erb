@@ -1,0 +1,14 @@
+<%# The mark slider, captioned with the selected tag's mark label. Hidden until a
+    tag is chosen; the mark-toggle controller reveals it and updates the caption
+    as the tag select changes. %>
+<div class="<%= "hidden" if f.object.staff_tag_id.blank? %>" data-mark-toggle-target="field">
+  <span class="<%= search_label_class %>">Mark</span>
+  <label class="flex w-fit cursor-pointer items-center gap-3">
+    <span class="relative inline-flex h-6 w-11 flex-shrink-0 items-center">
+      <%= f.check_box :marked, class: "peer sr-only" %>
+      <span class="absolute inset-0 rounded-full bg-gray-300 transition-colors peer-checked:bg-blue-600"></span>
+      <span class="absolute left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
+    </span>
+    <span class="text-sm font-medium text-gray-700" data-mark-toggle-target="label"><%= mark_label_or_default(f.object.staff_tag&.mark_label) %></span>
+  </label>
+</div>
