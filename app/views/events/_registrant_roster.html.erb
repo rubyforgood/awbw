@@ -90,7 +90,7 @@
             <td class="block px-4 pt-3 pb-1 text-sm sm:table-cell sm:py-1.5 sm:whitespace-nowrap"
                 data-sort-first="<%= person.first_name.to_s.downcase %>"
                 data-sort-last="<%= person.last_name.to_s.downcase %>">
-              <%= link_to person.name, person_link, class: "font-bold text-gray-900 hover:underline text-base sm:text-sm" %>
+              <%= link_to person.name, person_link, class: "font-bold text-gray-900 hover:underline text-base sm:text-sm", data: { turbo_frame: "_top" } %>
             </td>
             <%# Primary sector + age group — one column, each independently
                 sortable (data-sort-sector / data-sort-age), mirroring the
@@ -116,7 +116,7 @@
               <%= mobile_label.("Organization") %>
               <div class="min-w-0 flex-1 break-words">
                 <% if person_orgs.any? %>
-                  <% person_orgs.each_with_index do |org, i| %><%= ", " if i.positive? %><%= org.decorate.high_profile_icon %><%= link_to org.name, organization_path(org), class: "hover:underline", onclick: "event.stopPropagation()" %><% end %>
+                  <% person_orgs.each_with_index do |org, i| %><%= ", " if i.positive? %><%= org.decorate.high_profile_icon %><%= link_to org.name, organization_path(org), class: "hover:underline", onclick: "event.stopPropagation()", data: { turbo_frame: "_top" } %><% end %>
                 <% else %>
                   <span class="text-gray-300">—</span>
                 <% end %>
@@ -174,7 +174,8 @@
                 <%= link_to recipients_event_path(target_event, anchor: ("participant-#{participant_slug}" if participant_slug)),
                             class: "inline-flex items-center gap-1 #{declined ? "text-gray-400 hover:text-gray-600" : "#{DomainTheme.text_class_for(:scholarships, intensity: 600)} hover:#{DomainTheme.text_class_for(:scholarships)}"}",
                             title: declined ? "Scholarship declined — view application" : (show_event_column ? "Scholarship from #{target_event.decorate.compact_label} — view application" : "Scholarship recipient — view application"),
-                            onclick: "event.stopPropagation()" do %>
+                            onclick: "event.stopPropagation()",
+                            data: { turbo_frame: "_top" } do %>
                   <i class="fa-solid fa-graduation-cap"></i>
                   <% if show_event_column %><span class="text-xs font-medium text-gray-400"><%= target_event.decorate.compact_label %></span><% end %>
                   <%= scholarship.decorate.agreement_status_badge %>
@@ -192,7 +193,8 @@
                 <%= link_to edit_continuing_education_registration_path(ce_registration),
                             class: "inline-flex items-center gap-1 #{DomainTheme.text_class_for(:continuing_education, intensity: 600)} hover:#{DomainTheme.text_class_for(:continuing_education)}",
                             title: ce_event ? "Continuing education from #{ce_event.decorate.compact_label} — edit" : "Edit continuing education",
-                            onclick: "event.stopPropagation()" do %>
+                            onclick: "event.stopPropagation()",
+                            data: { turbo_frame: "_top" } do %>
                   <i class="fa-solid fa-certificate"></i>
                   <% if ce_event %><span class="text-xs font-medium text-gray-400"><%= ce_event.decorate.compact_label %></span><% end %>
                 <% end %>
@@ -212,7 +214,8 @@
                     <%= link_to edit_event_registration_path(registration, return_to: row_return_to),
                           class: "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium hover:underline #{attendance.attendance_status_classes}",
                           title: "Edit registration",
-                          onclick: "event.stopPropagation()" do %>
+                          onclick: "event.stopPropagation()",
+                          data: { turbo_frame: "_top" } do %>
                       <i class="fa-solid <%= attendance.attendance_status_icon %>"></i>
                       <span><%= registration.attendance_status_label %></span>
                     <% end %>
@@ -238,7 +241,7 @@
                 <div class="min-w-0 flex-1">
                   <% if first_registration %>
                     <div class="flex items-center gap-1.5">
-                      <%= link_to edit_event_registration_path(first_registration, return_to: "attendees"), class: event_link_class do %>
+                      <%= link_to edit_event_registration_path(first_registration, return_to: "attendees"), class: event_link_class, data: { turbo_frame: "_top" } do %>
                         <%= first_registration.event.decorate.compact_label %>
                         <span class="font-normal text-gray-400"><%= first_registration.event.start_date&.strftime("%b %Y") %></span>
                       <% end %>
@@ -251,7 +254,7 @@
                     <% if registrations.size > 1 %>
                       <div class="mt-1 flex hidden flex-col gap-1" data-expandable-card-target="body">
                         <% registrations.drop(1).each do |registration| %>
-                          <%= link_to edit_event_registration_path(registration, return_to: "attendees"), class: "text-xs #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" do %>
+                          <%= link_to edit_event_registration_path(registration, return_to: "attendees"), class: "text-xs #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline", data: { turbo_frame: "_top" } do %>
                             <%= registration.event.decorate.compact_label %>
                             <span class="text-gray-400"><%= registration.event.start_date&.strftime("%b %Y") %></span>
                           <% end %>

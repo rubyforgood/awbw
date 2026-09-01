@@ -51,6 +51,17 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(result).to eq("AWBW Staff")
       expect(result).not_to include("<a")
     end
+
+    it "forwards a caller's data attrs (e.g. turbo_frame) onto the link so call sites can break out of a frame" do
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      workshop = create(:workshop, author_credit_preference: "full_name")
+      allow(workshop).to receive(:author).and_return(person)
+
+      link = Nokogiri::HTML.fragment(
+        helper.credited_author_link(workshop, data: { turbo_frame: "_top" })
+      ).at_css("a")
+      expect(link["data-turbo-frame"]).to eq("_top")
+    end
   end
 
   describe "#credited_author_edit_button" do

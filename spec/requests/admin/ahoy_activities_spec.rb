@@ -139,6 +139,12 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "breaks the row's user link out of the results frame" do
+        get index_path, params: { visit_id: visit_for_user.id }, headers: frame_headers
+
+        expect_frame_breakout(response.body, user_path(user))
+      end
+
       it "filters by prefixes=auth" do
         get index_path, params: { prefixes: "auth" }, headers: frame_headers
 
@@ -417,6 +423,13 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(user.full_name)
+      end
+
+      it "breaks the visit's user and activities-count links out of the results frame" do
+        get visits_path, params: { user_id: user.id }, headers: visits_frame_headers
+
+        expect_frame_breakout(response.body, user_path(user))
+        expect_frame_breakout(response.body, "visit_id=#{visit_for_user.id}")
       end
 
       it "filters visits by visit_id" do

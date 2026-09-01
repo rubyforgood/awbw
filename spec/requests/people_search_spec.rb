@@ -15,6 +15,11 @@ RSpec.describe "People search", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "breaks the person profile button out of the results frame" do
+      get people_path, headers: turbo_headers
+      expect_frame_breakout(response.body, person_path(person_alice))
+    end
+
     it "returns all people when no filters are applied" do
       get people_path, headers: turbo_headers
       expect(response).to have_http_status(:ok)

@@ -23,6 +23,13 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       expect(response.body).to include("555")
     end
 
+    it "breaks the person edit button out of the results frame" do
+      get professional_licenses_path,
+        headers: { "Turbo-Frame" => "professional_licenses_results" }
+
+      expect_frame_breakout(response.body, edit_person_path(person))
+    end
+
     it "filters by type" do
       other = create(:professional_license, kind: "LCSW", number: "999")
 
