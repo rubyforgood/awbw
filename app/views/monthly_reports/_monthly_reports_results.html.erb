@@ -29,7 +29,7 @@
                           class: "font-bold text-gray-800 hover:text-indigo-800 hover:underline" %>
             </td>
 
-            <td class="px-6 py-4 text-sm text-gray-800"><%= credited_author_link(report, class: eyebrow_link_class) %></td>
+            <td class="px-6 py-4 text-sm text-gray-800"><%= credited_author_link(report, class: eyebrow_link_class, data: { turbo_frame: "_top" }) %></td>
 
             <td class="px-6 py-4 text-sm text-gray-600"><%= report.organization&.name || "—" %></td>
 

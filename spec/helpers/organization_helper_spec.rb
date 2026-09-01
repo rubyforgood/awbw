@@ -4,16 +4,11 @@ RSpec.describe OrganizationHelper, type: :helper do
   describe "#organization_profile_button" do
     let(:organization) { create(:organization) }
 
-    it "defaults the profile link to _top so it can't Oopsie a lazy results frame" do
-      link = Nokogiri::HTML(helper.organization_profile_button(organization)).at_css("a")
-      expect(link["data-turbo-frame"]).to eq("_top")
-    end
-
-    it "lets a caller override the frame target" do
+    it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
       link = Nokogiri::HTML(
-        helper.organization_profile_button(organization, data: { turbo_frame: "organizations_results" })
+        helper.organization_profile_button(organization, data: { turbo_frame: "_top" })
       ).at_css("a")
-      expect(link["data-turbo-frame"]).to eq("organizations_results")
+      expect(link["data-turbo-frame"]).to eq("_top")
     end
   end
 end

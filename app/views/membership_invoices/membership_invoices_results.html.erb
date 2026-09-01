@@ -16,7 +16,7 @@
             <% invoice = membership_invoice.decorate %>
             <tr>
               <td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-                <%= person_edit_button(invoice.person, compact: true, width_class: "w-fit") %>
+                <%= person_edit_button(invoice.person, compact: true, width_class: "w-fit", data: { turbo_frame: "_top" }) %>
                 <% if invoice.membership.cancelled? %>
                   <span class="mt-1 block text-xs text-gray-500">Membership cancelled</span>
                 <% end %>

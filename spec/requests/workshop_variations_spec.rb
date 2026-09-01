@@ -221,6 +221,16 @@ RSpec.describe "/workshop_variations", type: :request do
         expect(response.body).to include(authored.name)
         expect(response.body).not_to include(other.name)
       end
+
+      it "breaks the credited-author byline out of the results frame" do
+        author = create(:person, first_name: "Lena", last_name: "Byline", profile_is_searchable: true)
+        create(:workshop_variation, valid_attributes.merge(name: "Bylined variation", author: author))
+
+        get workshop_variations_path,
+            headers: { "Turbo-Frame" => "workshop_variations_results" }
+
+        expect_frame_breakout(response.body, person_path(author))
+      end
     end
 
     describe "GET /new" do

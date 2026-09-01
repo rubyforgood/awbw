@@ -32,7 +32,7 @@
         <div>
           <span class="font-semibold text-gray-700">Story by:</span>
           <% if @story_idea.created_by %>
-            <%= user_button(@story_idea.created_by) %>
+            <%= user_button(@story_idea.created_by, data: { turbo_frame: "_top" }) %>
           <% else %>
             <%= @story_idea.created_by&.name || "—" %>
           <% end %>

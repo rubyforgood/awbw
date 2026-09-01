@@ -28,7 +28,7 @@
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                 <div class="flex items-center gap-2">
                   <% if scholarship.recipient %>
-                    <%= person_edit_button(scholarship.recipient, compact: true, width_class: "w-fit") %>
+                    <%= person_edit_button(scholarship.recipient, compact: true, width_class: "w-fit", data: { turbo_frame: "_top" }) %>
                   <% else %>
                     <span class="text-gray-500">Unknown recipient</span>
                   <% end %>

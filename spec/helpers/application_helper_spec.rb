@@ -52,24 +52,15 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(result).not_to include("<a")
     end
 
-    it "breaks the author link out to _top so it can't Oopsie a lazy results frame" do
-      allow(person).to receive(:profile_is_searchable).and_return(true)
-      workshop = create(:workshop, author_credit_preference: "full_name")
-      allow(workshop).to receive(:author).and_return(person)
-
-      link = Nokogiri::HTML.fragment(helper.credited_author_link(workshop)).at_css("a")
-      expect(link["data-turbo-frame"]).to eq("_top")
-    end
-
-    it "lets a caller override the frame target" do
+    it "forwards a caller's data attrs (e.g. turbo_frame) onto the link so call sites can break out of a frame" do
       allow(person).to receive(:profile_is_searchable).and_return(true)
       workshop = create(:workshop, author_credit_preference: "full_name")
       allow(workshop).to receive(:author).and_return(person)
 
       link = Nokogiri::HTML.fragment(
-        helper.credited_author_link(workshop, data: { turbo: false })
+        helper.credited_author_link(workshop, data: { turbo_frame: "_top" })
       ).at_css("a")
-      expect(link["data-turbo"]).to eq("false")
+      expect(link["data-turbo-frame"]).to eq("_top")
     end
   end
 

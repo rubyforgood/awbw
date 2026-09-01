@@ -115,7 +115,7 @@
             <% reg_paid_in_full = allocated_cents >= event_cost_cents %>
 
             <div class="grid grid-cols-2 gap-x-4 items-center py-2">
-              <div class="min-w-0"><%= person_edit_button(reg.registrant, subtitle: reg.registrant.preferred_email, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
+              <div class="min-w-0"><%= person_edit_button(reg.registrant, subtitle: reg.registrant.preferred_email, data: { turbo_frame: "_top" }, path_params: { return_to: "bulk_payments", event_id: @event.id, expand: submission.id }) %></div>
 
               <div class="flex flex-wrap items-center gap-4">
                 <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
@@ -176,7 +176,7 @@
               <div class="flex flex-wrap gap-2 items-center">
                 <div class="grow">
                   <% if best %>
-                    <%= person_edit_button(best.registrant, subtitle: best.registrant.preferred_email, compact: true, width_class: "w-auto") %>
+                    <%= person_edit_button(best.registrant, subtitle: best.registrant.preferred_email, compact: true, width_class: "w-auto", data: { turbo_frame: "_top" }) %>
                   <% else %>
                     <span class="text-gray-400 text-xs">No match</span>
                   <% end %>

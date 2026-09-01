@@ -42,16 +42,11 @@ RSpec.describe PersonHelper, type: :helper do
       let(:unconfirmed) { nil }
       let(:authorized) { true }
 
-      it "defaults the profile link to _top so it can't Oopsie a lazy results frame" do
-        link = Nokogiri::HTML(helper.person_profile_button(person)).at_css("a")
-        expect(link["data-turbo-frame"]).to eq("_top")
-      end
-
-      it "lets a caller override the frame target" do
+      it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
         link = Nokogiri::HTML(
-          helper.person_profile_button(person, data: { turbo_frame: "people_results" })
+          helper.person_profile_button(person, data: { turbo_frame: "_top" })
         ).at_css("a")
-        expect(link["data-turbo-frame"]).to eq("people_results")
+        expect(link["data-turbo-frame"]).to eq("_top")
       end
     end
   end
@@ -89,8 +84,8 @@ RSpec.describe PersonHelper, type: :helper do
       expect(helper.person_edit_button(person, layout: :eyebrow)).not_to include("items-baseline gap-1.5")
     end
 
-    it "defaults the edit link to _top so it can't Oopsie a lazy results frame" do
-      link = Nokogiri::HTML(helper.person_edit_button(person)).at_css("a")
+    it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
+      link = Nokogiri::HTML(helper.person_edit_button(person, data: { turbo_frame: "_top" })).at_css("a")
       expect(link["data-turbo-frame"]).to eq("_top")
     end
   end
@@ -114,9 +109,9 @@ RSpec.describe PersonHelper, type: :helper do
       expect(html).to include("Cara Lang")
     end
 
-    it "defaults the link to _top so it can't Oopsie a lazy results frame" do
+    it "forwards a caller's data-turbo-frame onto the link so call sites can break out of a frame" do
       allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(true)
-      link = Nokogiri::HTML(helper.user_button(user)).at_css("a")
+      link = Nokogiri::HTML(helper.user_button(user, data: { turbo_frame: "_top" })).at_css("a")
       expect(link["data-turbo-frame"]).to eq("_top")
     end
   end
