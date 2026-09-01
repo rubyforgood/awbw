@@ -28,7 +28,7 @@ export default class extends Controller {
     const icon = paid ? "fa-thumbs-up" : "fa-circle-exclamation"
     const label = paid ? "Paid up" : this.formatDollars(owed)
     this.owedTarget.className = `rounded-lg border px-4 py-3 ${box}`
-    this.owedTarget.innerHTML = `<dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Still owed</dt><dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums ${text}"><i class="fa-solid ${icon}"></i>${label}</dd>`
+    this.owedTarget.innerHTML = `<dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Still owed</dt><dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums ${text}"><i class="fa-solid ${icon}"></i>${label}</dd>`
   }
 
   renderAllocation(allocatedCents) {

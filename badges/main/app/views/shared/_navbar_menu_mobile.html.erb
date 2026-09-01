@@ -4,7 +4,7 @@
     <!-- CURRICULUM -->
     <div data-controller="dropdown">
       <button
-        class="mobile-section flex justify-between w-full"
+        class="mobile-section flex w-full justify-between"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"mobile-curriculum":"hidden"}]'>
         Curriculum
@@ -12,7 +12,7 @@
       </button>
 
       <div id="mobile-curriculum"
-           class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
+           class="mt-1 mb-3 flex hidden flex-col space-y-2 pl-4"
            data-dropdown-target="content">
         <%= link_to workshops_path, class: "flex items-center px-4 py-2 text-sm text-white
                     hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
@@ -35,7 +35,7 @@
     <!-- Community -->
     <div data-controller="dropdown">
       <button
-        class="mobile-section flex justify-between w-full"
+        class="mobile-section flex w-full justify-between"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"mobile-community":"hidden"}]'
       >
@@ -44,7 +44,7 @@
       </button>
 
       <div id="mobile-community"
-           class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
+           class="mt-1 mb-3 flex hidden flex-col space-y-2 pl-4"
            data-dropdown-target="content">
         <%= link_to community_news_index_path, class: "flex items-center px-4 py-2 text-sm text-white
                     hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>
@@ -88,7 +88,7 @@
     <!-- Help -->
     <div data-controller="dropdown">
       <button
-        class="mobile-section flex justify-between w-full"
+        class="mobile-section flex w-full justify-between"
         data-action="dropdown#toggle"
         data-dropdown-payload-param='[{"mobile-help":"hidden"}]'>
         Help
@@ -96,7 +96,7 @@
       </button>
 
       <div id="mobile-help"
-           class="hidden flex flex-col pl-4 mt-1 mb-3 space-y-2"
+           class="mt-1 mb-3 flex hidden flex-col space-y-2 pl-4"
            data-dropdown-target="content">
         <%= link_to faqs_path, class: "flex items-center px-4 py-2 text-sm text-white
                     hover:text-gray-700 hover:bg-gray-100 w-full space-x-2" do %>

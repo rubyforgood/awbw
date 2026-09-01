@@ -1,4 +1,4 @@
-<div class="bg-white border border-gray-200 rounded-xl shadow p-6 print:border-none print:shadow-none">
+<div class="rounded-xl border border-gray-200 bg-white p-6 shadow print:border-none print:shadow-none">
   <div id="workshop-top" class="mt-6"></div>
 
   <!-- Tabs / Accordion -->
@@ -6,16 +6,10 @@
   <div data-controller="tabs" class="my-4">
     <!-- Tabs -->
     <ul class="flex border-b border-gray-300 pb-4 print:hidden">
-      <li class="-mb-px mr-1">
+      <li class="mr-1 -mb-px">
         <a
           href="#"
-          class="
-            tab-link px-4 py-2 font-medium text-gray-700
-            border-b-2 border-transparent
-            hover:text-gray-900 hover:border-gray-300
-            transition-colors duration-200
-            data-[active=true]:border-primary data-[active=true]:text-primary
-          "
+          class="tab-link data-[active=true]:border-primary data-[active=true]:text-primary border-b-2 border-transparent px-4 py-2 font-medium text-gray-700 transition-colors duration-200 hover:border-gray-300 hover:text-gray-900"
           data-action="click->tabs#switch"
           data-tabs-target="tabLink"
           data-tab-content-id="english-content"
@@ -25,16 +19,10 @@
       </li>
 
       <% if workshop.has_spanish_fields? %>
-        <li class="-mb-px mr-1">
+        <li class="mr-1 -mb-px">
           <a
             href="#"
-            class="
-              tab-link px-4 py-2 font-medium text-gray-700
-              border-b-2 border-transparent
-              hover:text-gray-900 hover:border-gray-300
-              transition-colors duration-200
-              data-[active=true]:border-primary data-[active=true]:text-primary
-            "
+            class="tab-link data-[active=true]:border-primary data-[active=true]:text-primary border-b-2 border-transparent px-4 py-2 font-medium text-gray-700 transition-colors duration-200 hover:border-gray-300 hover:text-gray-900"
             data-action="click->tabs#switch"
             data-tabs-target="tabLink"
             data-tab-content-id="spanish-content"
@@ -44,27 +32,21 @@
         </li>
       <% end %>
 
-      <li class="-mb-px mr-1 ml-auto">
+      <li class="mr-1 -mb-px ml-auto">
         <a
           href="#workshopVariations"
           data-turbo="false"
-          class="
-            px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-            hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
-          "
+          class="rounded bg-gray-200 px-3 py-1 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-300 hover:text-gray-700"
         >
           Workshop variations
         </a>
       </li>
 
       <% if @quotes.any? %>
-        <li class="-mb-px mr-1">
+        <li class="mr-1 -mb-px">
           <a
             href="#workshopQuotes"
-            class="
-              px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
-            "
+            class="rounded bg-gray-200 px-3 py-1 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-300 hover:text-gray-700"
           >
             Related quotes
           </a>
@@ -72,13 +54,10 @@
       <% end %>
 
       <% if @leader_spotlights.any? %>
-        <li class="-mb-px mr-1">
+        <li class="mr-1 -mb-px">
           <a
             href="#workshopLeaderSpotlights"
-            class="
-              px-3 py-1 rounded bg-gray-200 text-gray-500 text-sm
-              hover:bg-gray-300 hover:text-gray-700 transition-colors duration-200
-            "
+            class="rounded bg-gray-200 px-3 py-1 text-sm text-gray-500 transition-colors duration-200 hover:bg-gray-300 hover:text-gray-700"
           >
             Related stories
           </a>
@@ -87,11 +66,11 @@
     </ul>
 
     <!-- Tab contents -->
-    <div class="mt-4 ml-2 default-link">
+    <div class="default-link mt-4 ml-2">
       <!-- English / Details -->
       <div id="english-content" data-tabs-target="tabContent">
         <% if content_has_value?(workshop.rhino_extra_field) %>
-          <div class="text-sm mb-4"><%= workshop.rhino_extra_field %></div>
+          <div class="mb-4 text-sm"><%= workshop.rhino_extra_field %></div>
         <% end %>
 
         <% workshop_sections = { "Objective" => workshop.rhino_objective,
@@ -115,13 +94,13 @@
           <% next unless content_has_value?(content, title: title) %>
 
           <div class="workshop-<%= title %> single-workshop-detail mb-4">
-            <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
+            <h3 class="mb-1 text-lg font-semibold"><%= title %></h3>
 
             <% if title == "Suggested time frame" %>
               <%= render "show_time_frame", workshop: workshop,
                            title: title, content: content, language: "english" %>
             <% else %>
-              <hr class="border-gray-300 mb-2">
+              <hr class="mb-2 border-gray-300">
               <div class="text-sm after:clear-both after:block after:content-['']"><%= content %></div>
             <% end %>
           </div>
@@ -129,8 +108,8 @@
 
         <% if workshop.gallery_assets.any? { |img| img.persisted? && img.file.attached? } %>
           <div class="workshop-gallery single-workshop-detail mb-4">
-            <h3 class="text-lg font-semibold mb-1">Gallery</h3>
-            <hr class="border-gray-300 mb-2">
+            <h3 class="mb-1 text-lg font-semibold">Gallery</h3>
+            <hr class="mb-2 border-gray-300">
 
             <div class="flex flex-wrap gap-4">
                 <% workshop.gallery_assets.each_with_index do |gallery_assets, idx| %>
@@ -172,13 +151,13 @@
               (title == "Tiempo sugerido" && content == "00:00") %>
 
             <div class="workshop-<%= title %> single-workshop-detail mb-4">
-              <h3 class="text-lg font-semibold mb-1"><%= title %></h3>
+              <h3 class="mb-1 text-lg font-semibold"><%= title %></h3>
 
               <% if title == "Tiempo sugerido" && content != "00:00" %>
                 <%= render "show_time_frame", workshop: workshop,
                            title: title, content: content, language: "spanish" %>
               <% else %>
-                <hr class="border-gray-300 mb-2">
+                <hr class="mb-2 border-gray-300">
                 <div class="text-sm after:clear-both after:block after:content-['']"><%= content %></div>
               <% end %>
             </div>

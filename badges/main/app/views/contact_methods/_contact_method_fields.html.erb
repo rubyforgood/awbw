@@ -1,6 +1,6 @@
-<div class="nested-fields rounded-lg bg-white border border-gray-200 p-6 mb-4">
+<div class="nested-fields mb-4 rounded-lg border border-gray-200 bg-white p-6">
   <%= f.hidden_field :kind, value: :phone %>
-  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
     <!-- Contact Type -->
     <div>
       <%= f.input :contact_type,
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Primary -->
-    <div class="flex items-center h-[42px]">
+    <div class="flex h-[42px] items-center">
       <%= f.input :primary,
                   as: :boolean,
                   wrapper: false,
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Inactive -->
-    <div class="flex items-center h-[42px]">
+    <div class="flex h-[42px] items-center">
       <%= f.input :inactive,
                   as: :boolean,
                   wrapper: false,
@@ -39,7 +39,7 @@
                   input_html: { class: "mr-2 text-blue-600 focus:ring-blue-500" } %>
     </div>
 
-    <div class="text-right text-end">
+    <div class="text-end text-right">
       <!-- Remove button -->
       <%= link_to_remove_association "Remove",
                                      f,

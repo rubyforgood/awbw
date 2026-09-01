@@ -4,20 +4,20 @@
 <% flags = local_assigns.fetch(:flags) %>
 <% heading = local_assigns.fetch(:heading, "Visibility") %>
 <% definitions = flags.filter_map { |flag| VisibilityFlagsHelper::FLAG_DEFINITIONS[flag] } %>
-<div class="flex items-center gap-2 mb-2">
+<div class="mb-2 flex items-center gap-2">
   <span class="text-sm font-medium text-gray-700"><%= heading %></span>
   <% if definitions.any? %>
     <div class="group relative inline-flex">
       <button type="button"
               aria-label="What these checkboxes mean"
-              class="text-gray-400 group-hover:text-blue-600 focus:text-blue-600 focus:outline-none cursor-help">
+              class="cursor-help text-gray-400 group-hover:text-blue-600 focus:text-blue-600 focus:outline-none">
         <i class="fa-solid fa-circle-info"></i>
       </button>
 
       <%# pt-2 (not margin) keeps the hover area continuous across the visual gap %>
-      <div class="hidden group-hover:block group-focus-within:block absolute left-0 top-full z-40 pt-2">
+      <div class="absolute top-full left-0 z-40 hidden pt-2 group-focus-within:block group-hover:block">
         <div class="w-72 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-lg">
-          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">What these mean</p>
+          <p class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">What these mean</p>
           <dl class="space-y-2">
             <% definitions.each do |definition| %>
               <div>

@@ -9,8 +9,7 @@
         data-dropdown-payload-param='[{"<%= category_type.name %>-dropdown":"hidden"},
                                      {"<%= category_type.name %>-arrow":"rotate-180"},
                                      {"<%= category_type.name %>-button":"rounded-md rounded-t-md"}]'
-        class="relative z-10 w-full bg-white text-gray-800 py-2 px-4 shadow-sm rounded-md
-               border border-gray-300 cursor-pointer flex justify-between items-center"
+        class="relative z-10 flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-800 shadow-sm"
       >
         <label class="mb-0 font-medium text-gray-700">
           <%= category_type.title %>
@@ -18,19 +17,18 @@
 
         <i
           id="<%= category_type.name %>-arrow"
-          class="fa-solid fa-chevron-down w-4 h-4 transition-transform duration-300"
+          class="fa-solid fa-chevron-down h-4 w-4 transition-transform duration-300"
         ></i>
       </button>
 
       <div
         id="<%= category_type.name %>-dropdown"
-        class="absolute left-0 top-full w-full shadow-sm bg-white border border-t-0
-               border-gray-300 rounded-b-md hidden z-40"
+        class="absolute top-full left-0 z-40 hidden w-full rounded-b-md border border-t-0 border-gray-300 bg-white shadow-sm"
       >
 
         <%# Class "category-checkbox" is used to submit on change %>
         <% category_type.categories.ordered_by_position_and_name.each do |category| %>
-          <div class="flex items-center gap-2 mb-1 px-4">
+          <div class="mb-1 flex items-center gap-2 px-4">
             <%= check_box_tag "categories[#{category.id}]",
                               category.id,
                               params.dig(:categories, category.id.to_s).to_s == category.id.to_s,

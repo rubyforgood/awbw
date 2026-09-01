@@ -6,7 +6,7 @@
     cell answers with a turbo_stream that repaints the tick and the status chip. %>
 <div class="flex shrink-0 items-center gap-2">
   <% EventRegistration::DAY_FIELDS.first(event.day_count).each_with_index do |field, index| %>
-    <label class="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap text-xs text-gray-500"
+    <label class="inline-flex cursor-pointer items-center gap-1 text-xs whitespace-nowrap text-gray-500"
            title="Mark day <%= index + 1 %> attended">
       <%= render "events/onboarding/cell", registration: registration, field: field %>
       Day <%= index + 1 %>

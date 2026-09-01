@@ -2,7 +2,7 @@
     forms. Scopes the report(s) to the chosen event. `all_label` overrides the
     blank option (revenue lists paid events only). %>
 <div class="w-full sm:w-96">
-  <label class="block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1" for="event_id">Event</label>
+  <label class="mb-1 block text-xs font-semibold tracking-wide text-gray-500 uppercase" for="event_id">Event</label>
   <%= select_tag :event_id,
         options_from_collection_for_select(@filter_events, :id, :date_title, params[:event_id].to_i),
         include_blank: local_assigns.fetch(:all_label, "All events"),

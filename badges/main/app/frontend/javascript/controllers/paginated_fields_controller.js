@@ -84,7 +84,7 @@ export default class extends Controller {
 
     this.navTarget.classList.remove("hidden");
     this.navTarget.innerHTML = `
-      <div class="flex items-center justify-center gap-3 mt-4">
+      <div class="mt-4 flex items-center justify-center gap-3">
         <button type="button" data-action="paginated-fields#previous"
                 class="px-3 py-1 border border-gray-200 rounded-md bg-white text-gray-500 hover:bg-gray-100 ${this.currentPage <= 1 ? 'opacity-30 cursor-default' : ''}"
                 ${this.currentPage <= 1 ? 'disabled' : ''}>

@@ -5,9 +5,8 @@
     There is no leader/crown flag for age ranges. %>
 <% collection ||= @age_ranges_collection || Category.age_ranges.published.order(:position, :name).map { |c| [ c.decorate.age_group_label, c.id ] } %>
 <% is_primary = f.object&.is_primary? %>
-<div class="nested-fields inline-flex items-center gap-2
-            rounded-md border border-lime-300 <%= is_primary ? "bg-lime-100" : "bg-lime-50" %>
-            text-gray-700 px-3 py-1 text-sm font-medium transition"
+<div class="nested-fields inline-flex items-center gap-2 rounded-md border border-lime-300 <%= is_primary ? "bg-lime-100" : "bg-lime-50" %>
+            px-3 py-1 text-sm font-medium text-gray-700 transition"
      data-primary-tag-target="chip">
   <% if f.object&.category_id.present? %>
     <%= f.hidden_field :category_id %>
@@ -28,7 +27,7 @@
     <%= f.check_box :is_primary,
                     class: "peer sr-only",
                     data: { primary_tag_target: "primary", action: "primary-tag#selectPrimary" } %>
-    <i class="fa-solid fa-star text-base text-gray-300 peer-checked:text-amber-400 transition-colors" aria-hidden="true"></i>
+    <i class="fa-solid fa-star text-base text-gray-300 transition-colors peer-checked:text-amber-400" aria-hidden="true"></i>
     <span class="sr-only">Primary</span>
   </label>
   <%= link_to_remove_association "✖",

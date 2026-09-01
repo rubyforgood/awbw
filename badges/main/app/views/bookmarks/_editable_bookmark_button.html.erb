@@ -14,8 +14,8 @@
                     turbo_confirm: "Remove bookmark?",
                     action: "click->optimistic-bookmark#toggle"
                   } do %>
-        <i data-optimistic-bookmark-target="icon" class="fas fa-bookmark text-base flex-shrink-0"></i>
-        <span data-optimistic-bookmark-target="text" class="leading-none text-sm py-[2.75px]">Bookmarked</span>
+        <i data-optimistic-bookmark-target="icon" class="fas fa-bookmark flex-shrink-0 text-base"></i>
+        <span data-optimistic-bookmark-target="text" class="py-[2.75px] text-sm leading-none">Bookmarked</span>
       <% end %>
     <% else %>
       <%= button_to bookmarks_path(bookmark: { bookmarkable_id: resource.id, bookmarkable_type: resource.class.name }),
@@ -24,8 +24,8 @@
        hover:bg-primary hover:text-white transition-colors duration-200
        font-medium shadow-sm leading-none",
                   data: { action: "click->optimistic-bookmark#toggle" } do %>
-        <i data-optimistic-bookmark-target="icon" class="far fa-bookmark text-base flex-shrink-0"></i>
-        <span data-optimistic-bookmark-target="text" class="leading-none text-sm py-[2.75px]">Bookmark</span>
+        <i data-optimistic-bookmark-target="icon" class="far fa-bookmark flex-shrink-0 text-base"></i>
+        <span data-optimistic-bookmark-target="text" class="py-[2.75px] text-sm leading-none">Bookmark</span>
       <% end %>
     <% end %>
   <% end %>

@@ -1,4 +1,4 @@
-<div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+<div class="overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md">
   <% if video_recording.youtube_url.present? %>
     <div class="relative w-full overflow-hidden" style="padding-top: 56.25%;">
       <iframe
@@ -12,13 +12,13 @@
     </div>
   <% end %>
 
-  <div class="p-4 flex gap-2">
+  <div class="flex gap-2 p-4">
     <div class="flex-1">
       <%= link_to title_with_badges(video_recording), video_recording_path(video_recording),
                   class: "hover:text-primary",
                   data: { turbo_frame: "_top" } %>
     </div>
-    <div class="flex flex-col gap-2 flex-shrink-0">
+    <div class="flex flex-shrink-0 flex-col gap-2">
       <div class="flex gap-2">
         <%= link_to "View", video_recording_path(video_recording),
                     data: { turbo_frame: "_top" },

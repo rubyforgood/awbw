@@ -2,7 +2,7 @@
   data: { controller: "collection", turbo_frame: "users_results" },
   autocomplete: "off",
   class: "w-full") do %>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-end">
+  <div class="mb-6 grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <!-- Search -->
     <div>
       <%= label_tag :search, "Search", class: search_label_class %>
@@ -37,7 +37,7 @@
     </div>
 
     <!-- Clear filters -->
-    <div class="flex sm:justify-end items-end">
+    <div class="flex items-end sm:justify-end">
       <%= render "shared/search_clear", url: users_path %>
     </div>
   </div>

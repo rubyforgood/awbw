@@ -1,5 +1,5 @@
 <div class="flex items-center gap-1">
-  <label class="flex items-center gap-1 cursor-pointer">
+  <label class="flex cursor-pointer items-center gap-1">
     <%= radio_button_tag :sort, "created",
                          @sort == "created" %>
     <span class="text-sm">Newest</span>
@@ -7,7 +7,7 @@
 </div>
 
 <div class="flex items-center gap-1">
-  <label class="flex items-center gap-1 cursor-pointer">
+  <label class="flex cursor-pointer items-center gap-1">
     <%= radio_button_tag :sort, "title",
                          @sort == "title" %>
     <span class="text-sm">Title</span>
@@ -15,7 +15,7 @@
 </div>
 
 <div class="flex items-center gap-1">
-  <label class="flex items-center gap-1 cursor-pointer">
+  <label class="flex cursor-pointer items-center gap-1">
     <%= radio_button_tag :sort, "popularity",
                          @sort == "popularity" %>
     <span class="text-sm">Most bookmarked</span>
@@ -23,7 +23,7 @@
 </div>
 
 <div class="flex items-center gap-1">
-  <label class="flex items-center gap-1 cursor-pointer">
+  <label class="flex cursor-pointer items-center gap-1">
     <%= radio_button_tag :sort, "author",
                          @sort == "author" %>
     <span class="text-sm">Author</span>

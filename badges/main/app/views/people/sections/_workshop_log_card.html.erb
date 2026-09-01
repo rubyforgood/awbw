@@ -13,20 +13,20 @@
                       hover:shadow-md transition-all overflow-hidden cursor-pointer" do %>
     <div class="px-4 pt-4 pb-3">
       <!-- TITLE -->
-      <div class="text-sm font-semibold text-gray-900 leading-tight pr-6 mb-1">
+      <div class="mb-1 pr-6 text-sm leading-tight font-semibold text-gray-900">
         <%= workshop_log.workshop_title.presence || "Workshop Log ##{workshop_log.id}" %>
         <%= render "workshop_logs/content_icons", workshop_log: workshop_log %>
       </div>
 
       <!-- WINDOWS TYPE -->
       <% if workshop_log.windows_type_name.present? %>
-        <div class="text-xs text-gray-500 mb-3"><%= workshop_log.windows_type_name %></div>
+        <div class="mb-3 text-xs text-gray-500"><%= workshop_log.windows_type_name %></div>
       <% end %>
 
       <!-- PARTICIPANT COUNTS + DATE -->
       <% display_date = workshop_log.workshop_held_on || workshop_log.created_at %>
       <div class="grid grid-cols-5 gap-2">
-        <div class="rounded-lg py-2 px-2.5 text-center">
+        <div class="rounded-lg px-2.5 py-2 text-center">
           <div class="text-sm font-bold text-gray-800"><%= display_date.strftime("%b %-d") %></div>
           <div class="text-xs text-gray-500"><%= display_date.strftime("%Y") %></div>
         </div>
@@ -34,7 +34,7 @@
              "Adults" => workshop_log.adults_first_time + workshop_log.adults_ongoing,
              "Teens" => workshop_log.teens_first_time + workshop_log.teens_ongoing,
              "Children" => workshop_log.children_first_time + workshop_log.children_ongoing }.each do |label, count| %>
-          <div class="<%= label == "Total" ? "bg-purple-100" : "bg-purple-50" %> rounded-lg py-2 px-2.5 text-center">
+          <div class="<%= label == "Total" ? "bg-purple-100" : "bg-purple-50" %> rounded-lg px-2.5 py-2 text-center">
             <div class="text-xs text-gray-500"><%= label %></div>
             <div class="text-sm font-bold text-gray-800"><%= count %></div>
           </div>

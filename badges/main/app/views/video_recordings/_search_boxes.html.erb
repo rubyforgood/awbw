@@ -1,13 +1,13 @@
 <!-- Filters -->
-<div class="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+<div class="mb-6 rounded-lg border border-gray-200 bg-white p-4">
   <%= form_with url: video_recordings_path,
                 method: :get,
                 data: { turbo_frame: "video_recordings_results", controller: "collection searchable-checkbox" },
                 autocomplete: "off",
                 local: false,
                 class: "space-y-4" do |f| %>
-    <div class="flex flex-wrap gap-4 items-end">
-      <div class="flex-1 min-w-[200px]">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="min-w-[200px] flex-1">
         <%= f.label :search, "Title or body contains",
                     class: search_label_class %>
 
@@ -18,7 +18,7 @@
       </div>
 
       <% if @video_type != "instructional" %>
-        <div class="flex-0 min-w-[180px]">
+        <div class="min-w-[180px] flex-0">
           <label for="video_type" class="<%= search_label_class %>">
             Video type
           </label>
@@ -44,7 +44,7 @@
                   action: "searchable-checkbox#clear collection#clearAndSubmit" %></div>
     </div>
 
-    <div class="flex flex-col sm:flex-row gap-4">
+    <div class="flex flex-col gap-4 sm:flex-row">
       <%# Categories dropdown %>
       <div class="w-full">
         <label class="<%= search_label_class %>" for="categories">Categories</label>

@@ -11,7 +11,7 @@
 %>
 <div class="<%= 'animate-fade blur-on-submit' if @bookmarks.any? %>">
   <!-- Sort bar -->
-  <div class="flex flex-wrap items-center gap-4 mb-6">
+  <div class="mb-6 flex flex-wrap items-center gap-4">
     <span class="font-semibold">Sort by:</span>
     <% [ [ "created_at", "Newest" ], [ "title", "Title" ], [ "popularity", "Most Bookmarked" ] ].each do |col, label| %>
       <%= link_to personal_bookmarks_path(sort_base.merge(sort: col, direction: (@sort == col && @sort_direction == "desc") ? "asc" : "desc", page: nil)),
@@ -23,7 +23,7 @@
     <% end %>
   </div>
 
-  <div class="border-b border-gray-300 my-6"></div>
+  <div class="my-6 border-b border-gray-300"></div>
 
   <% if @bookmarks.any? %>
     <div id="bookmarks-list" class="space-y-4">

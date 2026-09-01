@@ -3,7 +3,7 @@
     (toggled by grant_details_controller) when an optional grant is picked. %>
 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
   <div>
-    <h3 class="text-xs font-medium uppercase tracking-wide text-gray-400">Eligibility criteria</h3>
+    <h3 class="text-xs font-medium tracking-wide text-gray-400 uppercase">Eligibility criteria</h3>
     <% if grant.eligibility_criteria_list.any? %>
       <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-800">
         <% grant.eligibility_criteria_list.each do |criterion| %>
@@ -15,7 +15,7 @@
     <% end %>
   </div>
   <div>
-    <h3 class="text-xs font-medium uppercase tracking-wide text-gray-400">Tasks to complete</h3>
+    <h3 class="text-xs font-medium tracking-wide text-gray-400 uppercase">Tasks to complete</h3>
     <% if grant.task_list.any? %>
       <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-800">
         <% grant.task_list.each do |task| %>

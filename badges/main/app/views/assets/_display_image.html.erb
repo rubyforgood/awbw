@@ -31,12 +31,12 @@
                     class: result.image_classes,
                     alt: result.alt_text %>
     <% when :pdf_document %>
-      <div class="flex items-center gap-3 p-4 border rounded-lg bg-gray-50">
-        <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
+      <div class="flex items-center gap-3 rounded-lg border bg-gray-50 p-4">
+        <i class="fas fa-file-pdf text-2xl text-red-600"></i>
         <span class="font-medium underline hover:no-underline"><%= result.filename %></span>
       </div>
     <% when :icon %>
-      <div class="<%= result.image_classes %> hover:opacity-95 transition-opacity">
+      <div class="<%= result.image_classes %> transition-opacity hover:opacity-95">
         <%= render "assets/display_icon",
                    resource: resource,
                    width: 18,

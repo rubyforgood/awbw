@@ -5,41 +5,41 @@
     or submitted. Keep the cards alphabetical by label within each cluster. %>
 
 <div class="mb-5">
-  <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Administrative</h3>
-  <ul class="columns-1 sm:columns-2 md:columns-3 gap-x-6">
-    <li class="break-inside-avoid mb-2"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button ContinuingEducationRegistration.for_registrant(person.id), params: { person_id: person.id }, label: "CE registrations" %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.grants, params: { funder_id: person.id, funder_type: "Person" }, label: "Grants (as funder)" %></li>
+  <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Administrative</h3>
+  <ul class="columns-1 gap-x-6 sm:columns-2 md:columns-3">
+    <li class="mb-2 break-inside-avoid"><%= index_button notifications, params: { email: email }, label: "#{t("communications.title")} (universal)" %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.event_registrations, params: { registrant_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button ContinuingEducationRegistration.for_registrant(person.id), params: { person_id: person.id }, label: "CE registrations" %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.form_submissions, params: { person_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.grants, params: { funder_id: person.id, funder_type: "Person" }, label: "Grants (as funder)" %></li>
     <% if Membership.enabled? %>
-      <li class="break-inside-avoid mb-2"><%= index_button person.memberships, path: person_memberships_path(person) %></li>
+      <li class="mb-2 break-inside-avoid"><%= index_button person.memberships, path: person_memberships_path(person) %></li>
     <% end %>
-    <li class="break-inside-avoid mb-2"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Topic subscriptions" %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button Payment.where(person_id: person.id), params: { person_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.scholarships, params: { recipient_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.topic_subscriptions, params: { person_id: person.id }, label: "Topic subscriptions" %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button(person.user&.workshop_logs || WorkshopLog.none, path: workshop_logs_person_path(person)) %></li>
     <% if person.user %>
-      <li class="break-inside-avoid mb-2">
+      <li class="mb-2 break-inside-avoid">
         <%= link_to user_path(person.user),
                     data: { turbo_prefetch: false },
                     class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg admin-only bg-blue-50 hover:bg-blue-100 border border-gray-200 transition-colors duration-200 shadow-sm" do %>
-          <span class="text-gray-500 w-5 text-center"><i class="fa-solid fa-user"></i></span>
-          <span class="font-medium text-gray-700 truncate">User</span>
-          <span class="ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white text-gray-700 border border-gray-200"><%= number_with_delimiter(User.where(person_id: person.id).count) %></span>
+          <span class="w-5 text-center text-gray-500"><i class="fa-solid fa-user"></i></span>
+          <span class="truncate font-medium text-gray-700">User</span>
+          <span class="ml-auto inline-flex min-w-[2.25rem] items-center justify-center rounded-full border border-gray-200 bg-white px-2 py-0.5 text-sm font-semibold text-gray-700"><%= number_with_delimiter(User.where(person_id: person.id).count) %></span>
         <% end %>
       </li>
     <% end %>
     <%# Aggregate Ahoy history (person + user + all associated data). Placed last
         so the column flow lands it in the otherwise-empty bottom-right cell. %>
     <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-      <li class="break-inside-avoid mb-2">
+      <li class="mb-2 break-inside-avoid">
         <%= link_to admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff]),
                     data: { turbo_prefetch: false },
                     class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg admin-only bg-blue-50 hover:bg-blue-100 border border-gray-200 transition-colors duration-200 shadow-sm" do %>
-          <span class="text-gray-500 w-5 text-center"><i class="fa-solid fa-clock-rotate-left"></i></span>
-          <span class="font-medium text-gray-700 truncate">History</span>
-          <span class="ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white text-gray-700 border border-gray-200"><i class="fa-solid fa-magnifying-glass text-xs"></i></span>
+          <span class="w-5 text-center text-gray-500"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <span class="truncate font-medium text-gray-700">History</span>
+          <span class="ml-auto inline-flex min-w-[2.25rem] items-center justify-center rounded-full border border-gray-200 bg-white px-2 py-0.5 text-sm font-semibold text-gray-700"><i class="fa-solid fa-magnifying-glass text-xs"></i></span>
         <% end %>
       </li>
     <% end %>
@@ -47,23 +47,23 @@
 </div>
 
 <div>
-  <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Contributed content</h3>
+  <h3 class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Contributed content</h3>
   <%# Column-flow (top-to-bottom) pairs each record type with its related idea:
       community news / resources · stories / story ideas · workshops / workshop
       ideas · workshop variations / workshop variation ideas. %>
-  <ul class="columns-1 sm:columns-2 md:columns-4 gap-x-6">
+  <ul class="columns-1 gap-x-6 sm:columns-2 md:columns-4">
     <%# Ideas carry no author_id of their own — the credited person is the
         creating user's person, so they match through `created_by_person`. Keyed
         on the person rather than person.user&.id: a person with no user account
         authored nothing, and a nil user id would drop out of the path helper and
         land the card on everyone's ideas. %>
-    <li class="break-inside-avoid mb-2"><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.resources_as_author, params: { author_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.stories_as_author, params: { author_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button StoryIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.workshops_as_author, params: { author_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button WorkshopIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button person.workshop_variations_as_author, params: { author_id: person.id } %></li>
-    <li class="break-inside-avoid mb-2"><%= index_button WorkshopVariationIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.community_news_as_author, params: { author_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.resources_as_author, params: { author_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.stories_as_author, params: { author_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button StoryIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.workshops_as_author, params: { author_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button WorkshopIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button person.workshop_variations_as_author, params: { author_id: person.id } %></li>
+    <li class="mb-2 break-inside-avoid"><%= index_button WorkshopVariationIdea.created_by_person(person.id), params: { created_by_person_id: person.id } %></li>
   </ul>
 </div>

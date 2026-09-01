@@ -29,7 +29,7 @@
 <% anchor_attrs = tag.attributes(id: anchor_id, data: { controller: "reveal-section", reveal_section_anchor_value: anchor_id }) if anchor_id %>
 <% text_class = intensity ? DomainTheme.text_class_for(theme, intensity: intensity) : DomainTheme.text_class_for(theme) %>
 <div <%= anchor_attrs %> class="flex flex-wrap items-center gap-3 <%= "scroll-mt-24" if anchor_id %> <%= local_assigns.fetch(:margin, "mb-4") %> <%= local_assigns[:spacing] %>">
-  <h2 class="text-xl font-bold flex items-center gap-2 <%= text_class %>">
+  <h2 class="flex items-center gap-2 text-xl font-bold <%= text_class %>">
     <i class="fa-solid <%= icon %>"></i>
     <%= title %>
   </h2>
