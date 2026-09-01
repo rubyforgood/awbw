@@ -3277,3 +3277,16 @@
     menu — with a back link (to Admin home, or to Forms) at the top of each.
   action_path: "/forms"
   pr_number: 2506
+
+- name: "Age-range editor on the organization form"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-01
+  action_path: "/organizations"
+  pr_number: 2039
+  summary: >-
+    Pick an organization's primary and additional age ranges with the same chip
+    editor the person form uses, replacing the old single-choice Windows audience
+    dropdown.
+  pro_tips:
+    - "Star one chip to mark it the primary age range served; the rest stay additional."

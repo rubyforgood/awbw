@@ -20,13 +20,13 @@ RSpec.describe "Organization age ranges", type: :request do
 
   # Age ranges save as age_range_categorizable_items nested attributes (the cocoon
   # chip picker), not category_ids — mirroring the person form.
-  def update_org(age_items:, category_ids: [ "" ])
+  def update_org(age_items:, category_ids: [ "" ], managed_type_ids: [ workshop_type.id ])
     patch organization_path(organization), params: {
       organization: {
         name: organization.name,
         organization_status_id: organization_status.id,
         category_ids: category_ids,
-        managed_category_type_ids: [ workshop_type.id ],
+        managed_category_type_ids: managed_type_ids,
         age_range_categorizable_items_attributes: age_items
       }
     }
@@ -90,6 +90,57 @@ RSpec.describe "Organization age ranges", type: :request do
       organization.reload
       expect(organization.categories).to include(in_person)
       expect(organization.primary_age_groups).to contain_exactly(children)
+    end
+
+    # An admin can flag the AgeRange type profile_specific in /category_types. The
+    # form renders no age checkboxes either way, so the type has to stay out of
+    # managed_category_type_ids — otherwise assign_associations sees an empty
+    # selection for a managed type and deletes what the chip picker just saved.
+    it "keeps the age ranges when an admin has marked the AgeRange type profile_specific" do
+      age_type.update!(profile_specific: true)
+      organization.age_range_categorizable_items.create!(category: children, is_primary: false)
+
+      get edit_organization_path(organization)
+      managed_type_ids = Nokogiri::HTML(response.body)
+        .css("input[name='organization[managed_category_type_ids][]']")
+        .filter_map { |input| input["value"].presence }
+      expect(managed_type_ids).not_to include(age_type.id.to_s)
+
+      update_org(age_items: [
+        { id: organization.age_range_categorizable_items.first.id, category_id: children.id, is_primary: "0" },
+        { category_id: teens.id, is_primary: "1" }
+      ], managed_type_ids: managed_type_ids)
+
+      organization.reload
+      expect(organization.primary_age_groups).to contain_exactly(teens)
+      expect(organization.additional_age_groups).to contain_exactly(children)
+    end
+  end
+
+  # The form posts every existing chip back as a nested row alongside category_ids.
+  # If category_ids were mass-assigned it would replace the whole categories
+  # collection mid-assign, deleting those rows before their nested attributes are
+  # applied — the resubmitted ids then point at nothing and the save 404s.
+  describe "re-saving the form with existing age ranges" do
+    it "round-trips the already-tagged age ranges" do
+      organization.age_range_categorizable_items.create!(category: children, is_primary: true)
+      item = organization.age_range_categorizable_items.first
+      organization.categories << in_person
+
+      patch organization_path(organization), params: {
+        organization: {
+          name: organization.name,
+          organization_status_id: organization_status.id,
+          age_range_categorizable_items_attributes: { "0" => { id: item.id, category_id: children.id, is_primary: "1" } },
+          category_ids: [ "", in_person.id.to_s ],
+          managed_category_type_ids: [ "", workshop_type.id.to_s ]
+        }
+      }
+
+      expect(response).to have_http_status(:see_other)
+      organization.reload
+      expect(organization.primary_age_groups).to contain_exactly(children)
+      expect(organization.categories).to include(in_person)
     end
   end
 end

@@ -235,9 +235,7 @@
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
               <%= render "shared/category_checkbox", param_key: "person", category: category,
-                         checked: @person.category_ids.include?(category.id),
-                         is_age: false,
-                         primary_checked: false %>
+                         checked: @person.category_ids.include?(category.id) %>
             <% end %>
           </div>
         </div>

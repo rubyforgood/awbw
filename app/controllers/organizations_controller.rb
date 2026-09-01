@@ -212,9 +212,13 @@ class OrganizationsController < ApplicationController
 
     # The category types this form edits via category_ids — the profile-specific
     # types shown below (workshop settings). assign_associations preserves taggings
-    # of any other type (age ranges included, handled by nested attributes), so
-    # saving the form can't drop an organization's other category connections.
-    @managed_category_type_ids = @org_categories_grouped.map { |type, _| type.id }
+    # of any other type, so saving the form can't drop an organization's other
+    # category connections. AgeRange is excluded even when an admin has marked it
+    # profile_specific: the form never renders age checkboxes, so claiming it here
+    # would delete the taggings the chip picker saves as nested attributes.
+    @managed_category_type_ids = @org_categories_grouped
+      .reject { |type, _| type.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }
+      .map { |type, _| type.id }
   end
 
   def set_index_variables
@@ -260,7 +264,10 @@ class OrganizationsController < ApplicationController
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
-      category_ids: [],
+      # category_ids is deliberately NOT permitted (people_controller does the same):
+      # assign_associations reads it raw after the save. Mass-assigning it here would
+      # replace the whole categories collection mid-assign, deleting the age-range
+      # taggings the nested attributes below are editing.
       sectorable_items_attributes: [
         :id,
         :sector_id,
