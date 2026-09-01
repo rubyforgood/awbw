@@ -119,8 +119,8 @@ if MonthlyReport.none?
   }
 
   if aisha_user
-    # 30 monthly reports for Aisha (30 months of history)
-    30.times do |i|
+    # A handful of monthly reports for Aisha (recent months of history)
+    8.times do |i|
       create_monthly_report.call(
         organization: aisha_org,
         created_by: aisha_user,
@@ -128,8 +128,8 @@ if MonthlyReport.none?
       )
     end
 
-    # Additional batches under varying older dates to mimic prod's long tail
-    report_counts = [ 15, 12, 9, 7, 5, 4, 3, 2, 1, 1 ]
+    # A few older batches to mimic prod's long tail
+    report_counts = [ 4, 3, 2, 1 ]
     report_counts.each_with_index do |count, batch|
       count.times do |i|
         create_monthly_report.call(
@@ -144,7 +144,7 @@ if MonthlyReport.none?
   # A few monthly reports for the admin user as well
   admin_user = User.first
   if admin_user && admin_user != aisha_user
-    5.times do
+    3.times do
       create_monthly_report.call(
         organization: Organization.all.sample || aisha_org,
         created_by: admin_user,

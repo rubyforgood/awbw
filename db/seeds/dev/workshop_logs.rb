@@ -8,9 +8,9 @@ aisha_org = aisha_user&.person&.affiliations&.first&.organization || Organizatio
 all_workshops = Workshop.all.to_a.shuffle
 
 if aisha_user && all_workshops.any? && WorkshopLog.where(created_by_id: aisha_user.id).none?
-  # 30 logs for Aisha's primary workshop
+  # A handful of logs for Aisha's primary workshop
   primary_workshop = all_workshops.shift
-  30.times do |i|
+  8.times do |i|
     WorkshopLog.create!(
       workshop_id: primary_workshop.id,
       organization_id: aisha_org.id,
@@ -28,9 +28,9 @@ if aisha_user && all_workshops.any? && WorkshopLog.where(created_by_id: aisha_us
     )
   end
 
-  # Up to 10 other workshops with varying log counts (1–15)
-  other_workshops = all_workshops.first(10)
-  log_counts = [ 15, 12, 9, 7, 5, 4, 3, 2, 1, 1 ]
+  # A few other workshops with varying log counts
+  other_workshops = all_workshops.first(4)
+  log_counts = [ 4, 3, 2, 1 ]
   other_workshops.each_with_index do |workshop, idx|
     count = log_counts[idx] || 1
     count.times do |i|
@@ -51,12 +51,12 @@ if aisha_user && all_workshops.any? && WorkshopLog.where(created_by_id: aisha_us
       )
     end
   end
-  puts "  Created 89 logs for Aisha on 11 workshops"
+  puts "  Created #{WorkshopLog.where(created_by_id: aisha_user.id).count} logs for Aisha on #{other_workshops.count + 1} workshops"
 end
 
 # A few logs for the admin user as well
 if WorkshopLog.where(created_by_id: User.first&.id).none?
-  5.times do
+  3.times do
     workshop = Workshop.all.sample
     next unless workshop
 
