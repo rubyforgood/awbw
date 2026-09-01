@@ -1,14 +1,13 @@
-<%# The mark slider, captioned with the selected tag's mark label. Hidden until a
-    tag is chosen; the mark-toggle controller reveals it and updates the caption
-    as the tag select changes. %>
-<div class="<%= "hidden" if f.object.staff_tag_id.blank? %>" data-mark-toggle-target="field">
+<%# Mark slider — the shared peer-checked switch style (see the certificate-issued
+    toggle). Captioned with the tag's configured mark label; on the new form no tag
+    is chosen yet, so it reads the generic default until the tagging is saved. The
+    track is a direct sibling of the checkbox so peer-checked reaches it; the knob
+    is the track's ::after. %>
+<div>
   <span class="<%= search_label_class %>">Mark</span>
-  <label class="flex w-fit cursor-pointer items-center gap-3">
-    <span class="relative inline-flex h-6 w-11 flex-shrink-0 items-center">
-      <%= f.check_box :marked, class: "peer sr-only" %>
-      <span class="absolute inset-0 rounded-full bg-gray-300 transition-colors peer-checked:bg-blue-600"></span>
-      <span class="absolute left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
-    </span>
-    <span class="text-sm font-medium text-gray-700" data-mark-toggle-target="label"><%= mark_label_or_default(f.object.staff_tag&.mark_label) %></span>
+  <label class="relative mt-1 flex w-fit cursor-pointer items-center gap-3 select-none">
+    <%= f.check_box :marked, class: "peer sr-only" %>
+    <span class="relative inline-block h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-blue-600 after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:after:translate-x-4"></span>
+    <span class="text-sm font-medium text-gray-700"><%= mark_label_or_default(f.object.staff_tag&.mark_label) %></span>
   </label>
 </div>
