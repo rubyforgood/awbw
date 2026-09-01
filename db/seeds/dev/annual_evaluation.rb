@@ -33,13 +33,19 @@ form = Form.standalone.find_by(slug: "annual-evaluation-2026")
 form ||= Form.create!(name: "Annual Evaluation 2026", slug: "annual-evaluation-2026", published: true, header: INTRO)
 
 @position = 0
+@seeded_field_ids = []
 
+# Idempotent AND convergent: an existing field (matched by name) is updated to the
+# current definition, so re-running the seed picks up layout/type tweaks. Fields
+# no longer defined here are pruned at the end (see below).
 def ae_field!(form, name, answer_type, options: [], field_identifier: nil, input_type: nil, required: false, subtitle: nil, hint_text: nil, visibility: :always_ask, width: :full)
   @position += 1
+  attrs = { answer_type: answer_type, position: @position, status: :active, required: required,
+            field_identifier: field_identifier, input_type: input_type, subtitle: subtitle,
+            hint_text: hint_text, visibility: visibility, width: width }
   field = form.form_fields.find_by(name: name)
-  field ||= form.form_fields.create!(name: name, answer_type: answer_type, position: @position, status: :active,
-                                     required: required, field_identifier: field_identifier, input_type: input_type,
-                                     subtitle: subtitle, hint_text: hint_text, visibility: visibility, width: width)
+  field ? field.update!(**attrs) : field = form.form_fields.create!(name: name, **attrs)
+  @seeded_field_ids << field.id
   options.each_with_index do |option_name, index|
     answer_option = AnswerOption.find_or_create_by!(name: option_name) { |ao| ao.position = index + 1 }
     FormFieldAnswerOption.find_or_create_by!(form_field: field, answer_option: answer_option)
@@ -61,16 +67,14 @@ end
 # a signed-in facilitator won't be re-asked for what we already have.
 ae_header!(form, "About you")
 first_name_field = ae_field!(form, "First name", :free_form_input_one_line, required: true,
-  field_identifier: "first_name", visibility: :logged_out_only, width: :half)
+  field_identifier: "first_name", visibility: :logged_out_only, width: :third)
 last_name_field = ae_field!(form, "Last name", :free_form_input_one_line, required: true,
-  field_identifier: "last_name", visibility: :logged_out_only, width: :half)
+  field_identifier: "last_name", visibility: :logged_out_only, width: :third)
 pronouns_field = ae_field!(form, "Pronouns", :free_form_input_one_line, field_identifier: "pronouns",
-  subtitle: "This helps us understand the correct way to address you.")
+  hint_text: "This helps us understand the correct way to address you.", width: :third)
 primary_email = ae_field!(form, "Primary Email Address", :free_form_input_one_line, required: true,
   field_identifier: "primary_email", visibility: :logged_out_only, width: :half)
 primary_email_type = ae_field!(form, "Primary Email Address Type", :single_select_radio, required: true, width: :half, options: WORK_PERSONAL)
-ae_field!(form, "I'd like to add a secondary email address", :single_select_radio, required: true,
-  subtitle: "So we can keep in touch should you move on from your organization.", options: YES_NO)
 ae_field!(form, "Secondary Email Address", :free_form_input_one_line, field_identifier: "secondary_email", width: :half)
 ae_field!(form, "Secondary Email Address Type", :single_select_radio, width: :half, options: WORK_PERSONAL)
 
@@ -80,7 +84,7 @@ ae_field!(form, "Secondary Email Address Type", :single_select_radio, width: :ha
 ae_header!(form, "Organization information")
 organization_field = ae_field!(form, "Organization Name", :free_form_input_one_line, required: true, width: :half,
   field_identifier: "organization_name",
-  subtitle: "If you're not associated with an organization, please provide the name of your art program.")
+  hint_text: "If you're not associated with an organization, please provide the name of your art program.")
 position_title = ae_field!(form, "Position / Title", :free_form_input_one_line, required: true, width: :half,
   field_identifier: "organization_position")
 ae_field!(form, "Organization Website", :free_form_input_one_line, required: true, field_identifier: "organization_website")
@@ -90,20 +94,20 @@ ae_field!(form, "Organization Website", :free_form_input_one_line, required: tru
 # ProfessionalLicense once standalone submissions persist participant data.
 ae_header!(form, "Academic credentials (if applicable)",
   subtitle: "If you hold a professional license, share it here.")
-license_kind_field = ae_field!(form, "License type", :free_form_input_one_line, width: :half,
-  field_identifier: "ce_license_kind", subtitle: "e.g. LMFT, LCSW, LPCC, LEP, MA Ed.")
-ae_field!(form, "License number", :free_form_input_one_line, width: :half, field_identifier: "ce_license_number")
-ae_field!(form, "State where your license was issued", :free_form_input_one_line, width: :half, field_identifier: "ce_license_issuing_state")
-ae_field!(form, "License expiration date", :free_form_input_one_line, width: :half, field_identifier: "ce_license_expires_on", input_type: :date)
+license_kind_field = ae_field!(form, "License type", :free_form_input_one_line, width: :quarter,
+  field_identifier: "ce_license_kind", hint_text: "e.g. LMFT, LCSW, LPCC, LEP, MA Ed.")
+ae_field!(form, "License number", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_number")
+ae_field!(form, "State where your license was issued", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_issuing_state")
+ae_field!(form, "License expiration date", :free_form_input_one_line, width: :quarter, field_identifier: "ce_license_expires_on", input_type: :date)
 
 # ── Your work ────────────────────────────────────────────────────────────────
 ae_header!(form, "Your work")
-outside_us = ae_field!(form, "Do you offer art workshops outside of the United States?", :single_select_radio, required: true, options: YES_NO)
-ae_field!(form, "If you offer workshops outside the US, please share which countries", :free_form_input_paragraph)
-other_language = ae_field!(form, "Do you facilitate art workshops in languages other than English?", :single_select_radio, required: true, options: YES_NO)
-ae_field!(form, "If you facilitate in other languages, please share which languages", :free_form_input_paragraph)
-pct_one_on_one = ae_number!(form, "What percentage of your art workshops are one-on-one?", hint_text: "0–100%")
-pct_groups = ae_number!(form, "What percentage of your art workshops are with groups?", hint_text: "0–100%")
+outside_us = ae_field!(form, "Do you offer art workshops outside of the United States?", :single_select_radio, required: true, width: :half, options: YES_NO)
+ae_field!(form, "If you offer workshops outside the US, please share which countries", :free_form_input_one_line, width: :half)
+other_language = ae_field!(form, "Do you facilitate art workshops in languages other than English?", :single_select_radio, required: true, width: :half, options: YES_NO)
+ae_field!(form, "If you facilitate in other languages, please share which languages", :free_form_input_one_line, width: :half)
+pct_one_on_one = ae_number!(form, "What percentage of your art workshops are one-on-one?", hint_text: "0–100%", width: :half)
+pct_groups = ae_number!(form, "What percentage of your art workshops are with groups?", hint_text: "0–100%", width: :half)
 ae_field!(form, "How else do you use art beyond direct client work?", :multi_select_checkbox,
   subtitle: "Select all that apply.",
   options: [
@@ -144,29 +148,29 @@ without_awbw = ae_field!(form, "Would you or your organization have an art progr
 # ── Your art workshop participants (ethnicity) ───────────────────────────────
 ae_header!(form, "Your art workshop participants",
   subtitle: "What percentage of your participants are from the following ethnic backgrounds? Your total allocation across all ethnic backgrounds should add up to 100%. Please use your best estimations.")
-pct_alaskan = ae_number!(form, "What percentage of your participants are Alaskan Native?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants are American Indian or Native American?", hint_text: "0–100%")
-pct_asian = ae_number!(form, "What percentage of your participants are Asian?", hint_text: "0–100%")
-pct_black = ae_number!(form, "What percentage of your participants are Black or African American?", hint_text: "0–100%")
-pct_latinx = ae_number!(form, "What percentage of your participants are Latinx?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants are Middle Eastern?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants are multi-racial?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants are Native Hawaiian or other Pacific Islander?", hint_text: "0–100%")
-pct_white = ae_number!(form, "What percentage of your participants are White?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants are of an ethnicity not listed above?", hint_text: "0–100%")
+pct_alaskan = ae_number!(form, "What percentage of your participants are Alaskan Native?", hint_text: "0–100%", width: :third)
+ae_number!(form, "What percentage of your participants are American Indian or Native American?", hint_text: "0–100%", width: :third)
+pct_asian = ae_number!(form, "What percentage of your participants are Asian?", hint_text: "0–100%", width: :third)
+pct_black = ae_number!(form, "What percentage of your participants are Black or African American?", hint_text: "0–100%", width: :third)
+pct_latinx = ae_number!(form, "What percentage of your participants are Latinx?", hint_text: "0–100%", width: :third)
+ae_number!(form, "What percentage of your participants are Middle Eastern?", hint_text: "0–100%", width: :third)
+ae_number!(form, "What percentage of your participants are multi-racial?", hint_text: "0–100%", width: :third)
+ae_number!(form, "What percentage of your participants are Native Hawaiian or other Pacific Islander?", hint_text: "0–100%", width: :third)
+pct_white = ae_number!(form, "What percentage of your participants are White?", hint_text: "0–100%", width: :third)
+ae_number!(form, "What percentage of your participants are of an ethnicity not listed above?", hint_text: "0–100%", width: :third)
 ae_field!(form, "For participants whose ethnic identities are not listed above, please specify their ethnicities", :free_form_input_paragraph)
+pct_poverty = ae_number!(form, "What percentage of your participants are at or below the Federal Poverty Line?",
+  hint_text: "See the current Federal Poverty Level Guidelines. 0–100%")
 
 # ── Participant gender identity ──────────────────────────────────────────────
 ae_header!(form, "Participant gender identity",
   subtitle: "What percentage of your participants identify as the following? Please use your best estimations.")
-pct_female = ae_number!(form, "What percentage of your participants identify as female?", hint_text: "0–100%")
-pct_male = ae_number!(form, "What percentage of your participants identify as male?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants identify as non-binary?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants identify as transgender?", hint_text: "0–100%")
-ae_number!(form, "What percentage of your participants have a gender identity not listed above?", hint_text: "0–100%")
+pct_female = ae_number!(form, "What percentage of your participants identify as female?", hint_text: "0–100%", width: :quarter)
+pct_male = ae_number!(form, "What percentage of your participants identify as male?", hint_text: "0–100%", width: :quarter)
+ae_number!(form, "What percentage of your participants identify as non-binary?", hint_text: "0–100%", width: :quarter)
+ae_number!(form, "What percentage of your participants identify as transgender?", hint_text: "0–100%", width: :quarter)
+ae_number!(form, "What percentage of your participants have a gender identity not listed above?", hint_text: "0–100%", width: :quarter)
 ae_field!(form, "For participants whose gender identities are not listed above, please specify how they identify", :free_form_input_paragraph)
-pct_poverty = ae_number!(form, "What percentage of your participants are at or below the Federal Poverty Line?",
-  hint_text: "See the current Federal Poverty Level Guidelines. 0–100%")
 
 # ── Program impact on you ────────────────────────────────────────────────────
 ae_header!(form, "Program impact on you")
@@ -206,6 +210,10 @@ ae_field!(form, "Do you know of any individuals or organizations that might be i
   subtitle: "If so, please provide their names, email addresses, and any relevant website information.")
 one_word = ae_field!(form, "Please share one word that sums up your experience with art facilitation this year.", :free_form_input_one_line)
 ae_field!(form, "Anything else you'd like to share with us?", :free_form_input_paragraph)
+
+# Prune any fields a previous seeding created that are no longer defined above,
+# so re-running converges the form to exactly this definition.
+form.form_fields.where.not(id: @seeded_field_ids).destroy_all
 
 # ── Sample submissions ───────────────────────────────────────────────────────
 # The primary-age-group field stores an AgeRange category id (like a real dynamic
