@@ -1,7 +1,7 @@
 <% sort_base = params.permit(:person_id, :organization_name, :topic_subscription_type_id, :comment_status, :marked, :status).to_h.symbolize_keys %>
 <% sort_link = sort_header_link(frame: "topic_subscriptions_results", path: ->(p) { topic_subscriptions_path(p) }, base: sort_base) %>
 <%= turbo_frame_tag :topic_subscriptions_results do %>
-  <div class="overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-sm blur-on-submit">
+  <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm blur-on-submit">
     <%# Outside the empty check: with nothing to list, the toggle is the only way
         back to the other status. It navigates the whole page rather than this
         frame so the filter form — which lives outside the frame and carries the
@@ -106,14 +106,22 @@
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <% registrations = subscription.person_facilitator_training_registrations %>
                   <% if registrations.any? %>
-                    <ul class="space-y-1">
+                    <%# One compact attendance-status pill per training, so a person's
+                        trainings stay on one line; hover reveals the training and its date. %>
+                    <div class="flex flex-wrap gap-1.5">
                       <% registrations.each do |registration| %>
-                        <li class="flex flex-wrap items-center gap-2">
-                          <%= link_to registration.event.title, edit_event_registration_path(registration), class: "text-blue-600 hover:text-blue-800 hover:underline", data: { turbo_frame: "_top" } %>
-                          <span class="text-xs text-gray-500">(<%= registration.attendance_status_label %>)</span>
-                        </li>
+                        <% deco = registration.decorate %>
+                        <% event = registration.event %>
+                        <% event_date = event.start_date&.strftime("%b %-d, %Y") %>
+                        <%= link_to edit_event_registration_path(registration),
+                                    title: [ event.title, event_date ].compact.join(" · "),
+                                    class: "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition hover:opacity-80 hover:shadow-sm #{deco.attendance_status_classes}",
+                                    data: { turbo_frame: "_top" } do %>
+                          <i class="fas <%= deco.attendance_status_icon %> text-2xs"></i>
+                          <%= registration.attendance_status_label %>
+                        <% end %>
                       <% end %>
-                    </ul>
+                    </div>
                   <% else %>
                     <span class="text-gray-400">—</span>
                   <% end %>

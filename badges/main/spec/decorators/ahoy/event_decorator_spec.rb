@@ -5,6 +5,158 @@ RSpec.describe Ahoy::EventDecorator do
     create(:ahoy_event, properties: properties).reload.decorate
   end
 
+  def decorate_named(name)
+    create(:ahoy_event, name: name).decorate
+  end
+
+  describe "#activity_chip" do
+    it "reads create as a New chip and update as an Edit chip" do
+      expect(decorate_named("create.comment").activity_chip[:label]).to eq("New")
+      expect(decorate_named("update.workshop").activity_chip[:label]).to eq("Edit")
+    end
+
+    it "humanizes an unmapped action" do
+      expect(decorate_named("something.workshop").activity_chip[:label]).to eq("Something")
+    end
+  end
+
+  describe ".action_keys_for_label" do
+    it "maps a chip word back to its raw action prefixes, case-insensitively" do
+      expect(described_class.action_keys_for_label("new")).to eq(%w[create])
+      expect(described_class.action_keys_for_label("Edit")).to eq(%w[update])
+      expect(described_class.action_keys_for_label("search")).to eq(%w[search search_zero])
+    end
+
+    it "is empty for a word that isn't a chip label" do
+      expect(described_class.action_keys_for_label("workshop")).to eq([])
+    end
+  end
+
+  describe "auth event details" do
+    it "drops the redundant record and updated_by rows, keeping the rest" do
+      event = create(:ahoy_event, name: "auth.login", properties: {
+        "record_id" => 1, "record_type" => "User", "updated_by_id" => nil,
+        "resource_type" => "User", "resource_id" => 1,
+        "resource_title" => "Umberto (u@example.com)", "sign_in_count" => 2
+      }).reload.decorate
+
+      expect(event.extra_properties.keys).to eq(%w[sign_in_count])
+    end
+  end
+
+  describe "#activity_resource_label" do
+    it "humanizes the resource half of the name" do
+      expect(decorate_named("update.workshop_variation").activity_resource_label).to eq("Workshop variation")
+      expect(decorate_named("auth.account_deactivated").activity_resource_label).to eq("Account deactivated")
+    end
+  end
+
+  describe "#resource_link" do
+    it "links the resource title to the record's edit page" do
+      workshop = create(:workshop)
+      event = create(:ahoy_event, name: "create.workshop", resource_type: "Workshop",
+                                  resource_id: workshop.id, properties: { "resource_title" => "Feelings Collage" }).decorate
+
+      link = event.resource_link
+      expect(link[:text]).to eq("Feelings Collage")
+      expect(link[:path]).to eq(Rails.application.routes.url_helpers.edit_workshop_path(workshop))
+    end
+
+    it "is nil when there is no resource title" do
+      expect(decorate("source" => "import").resource_link).to be_nil
+    end
+
+    it "leaves the path nil when the record no longer exists" do
+      event = create(:ahoy_event, name: "create.workshop", resource_type: "Workshop",
+                                  resource_id: 0, properties: { "resource_title" => "Ghost" }).decorate
+      expect(event.resource_link[:path]).to be_nil
+    end
+
+    it "points a comment at the record it was left on, and surfaces its topic/body" do
+      person = create(:person)
+      comment = create(:comment, commentable: person, topic: "Follow-up", body: "Called to confirm.")
+      event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
+                                  resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Profile")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
+      expect(event.comment_note).to eq(topic: "Follow-up", body: "Called to confirm.")
+    end
+
+    it "flags a flagged comment" do
+      comment = create(:comment, commentable: create(:person), flagged: true)
+      event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
+                                  resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
+      expect(event.comment_flagged?).to be(true)
+    end
+
+    it "labels an affiliation as its title and organization" do
+      org = create(:organization, name: "Harbor Shelter")
+      affiliation = create(:affiliation, title: "Facilitator", organization: org)
+      event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",
+                                  resource_id: affiliation.id, properties: { "resource_title" => "Facilitator" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Facilitator · Harbor Shelter")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_affiliation_path(affiliation))
+    end
+
+    it "appends an affiliation's date span, or 'present' while active" do
+      org = create(:organization, name: "Harbor Shelter")
+      ended = create(:affiliation, title: "Facilitator", organization: org,
+                                   start_date: Date.new(2025, 8, 1), end_date: Date.new(2026, 2, 1))
+      active = create(:affiliation, title: "Facilitator", organization: org,
+                                    start_date: Date.new(2025, 8, 1), end_date: nil)
+
+      ended_event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",
+                                        resource_id: ended.id, properties: {}).decorate
+      active_event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation",
+                                         resource_id: active.id, properties: {}).decorate
+
+      expect(ended_event.resource_link[:text]).to eq("Facilitator · Harbor Shelter · Aug'25 - Feb'26")
+      expect(active_event.resource_link[:text]).to eq("Facilitator · Harbor Shelter · Aug'25 - present")
+    end
+
+    it "labels an event registration with the event and abbreviated start month" do
+      registration = create(:event_registration)
+      registration.event.update!(title: "Spring Training", start_date: Time.zone.local(2025, 9, 1))
+      event = create(:ahoy_event, name: "update.event_registration", resource_type: "EventRegistration",
+                                  resource_id: registration.id, properties: { "resource_title" => "reg" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Registration: Spring Training · Sep'25")
+    end
+
+    it "labels a scholarship as its amount, grant, and funder" do
+      org = create(:organization, name: "Acme Foundation")
+      grant = create(:grant, name: "Healing Arts Fund", funder: org)
+      scholarship = create(:scholarship, amount_cents: 24_000, grant: grant)
+      event = create(:ahoy_event, name: "create.scholarship", resource_type: "Scholarship",
+                                  resource_id: scholarship.id, properties: {}).decorate
+
+      expect(event.resource_link[:text]).to eq("$240 Healing Arts Fund · Acme Foundation")
+    end
+
+    it "labels a CE registration as its hours and license" do
+      ce = create(:continuing_education_registration, hours: 13)
+      ce.professional_license.update!(kind: "LMFT", number: "2345")
+      event = create(:ahoy_event, name: "create.continuing_education_registration",
+                                  resource_type: "ContinuingEducationRegistration",
+                                  resource_id: ce.id, properties: {}).decorate
+
+      expect(event.resource_link[:text]).to eq("13 hours · LMFT 2345")
+    end
+
+    it "labels a payment as what it's allocated to" do
+      registration = create(:event_registration)
+      payment = create(:payment)
+      create(:allocation, source: payment, allocatable: registration)
+      event = create(:ahoy_event, name: "create.payment", resource_type: "Payment",
+                                  resource_id: payment.id, properties: { "resource_title" => "Membership dues" }).decorate
+
+      expect(event.resource_link[:text]).to include("Event registration for")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+    end
+  end
+
   describe "#extra_properties" do
     it "drops the keys already shown in their own columns" do
       event = decorate(

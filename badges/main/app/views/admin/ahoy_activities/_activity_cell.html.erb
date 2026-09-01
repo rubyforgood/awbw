@@ -1,0 +1,30 @@
+<%# Merged Activity cell: the action chip on the left, then the name, the grey
+    resource sublabel, and the event's Details stacked in one column indented
+    under the name. The caller marks the cell `group` and overlays a link to the
+    resource, so the name underlines on hover and the whole cell navigates. %>
+<div class="flex items-start gap-2" title="<%= event.name %>">
+  <span class="mt-0.5 flex w-24 shrink-0 justify-end">
+    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase <%= chip[:classes] %>">
+      <%= chip[:label] %>
+    </span>
+  </span>
+  <div class="min-w-0">
+    <div class="flex flex-wrap items-baseline gap-x-1.5">
+      <% if resource %>
+        <span class="font-medium text-indigo-600 group-hover:underline"><%= resource[:text] %></span>
+        <span class="text-gray-300">&middot;</span>
+        <span class="text-xs text-gray-500"><%= activity.activity_resource_label %></span>
+      <% else %>
+        <span class="font-medium text-indigo-600 group-hover:underline"><%= activity.activity_resource_label %></span>
+      <% end %>
+      <% if activity.comment_flagged? %>
+        <i class="fa-solid fa-flag text-orange-500" title="Flagged"></i>
+      <% end %>
+    </div>
+    <% if activity.details? %>
+      <div class="pt-1 text-gray-500">
+        <%= render "admin/ahoy_activities/event_details", activity: activity %>
+      </div>
+    <% end %>
+  </div>
+</div>
