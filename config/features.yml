@@ -36,6 +36,7 @@
     people paying by check aren't misled into thinking the payment already cleared.
     It also adds a "View invoice" button next to "View payment" that links straight
     to their itemized invoice.
+  pr_number: 2486
 
 - name: "Compact training registrations on the subscriptions page"
   area: communications
