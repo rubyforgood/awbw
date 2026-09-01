@@ -109,7 +109,7 @@
 
         <!-- Payment status -->
         <div>
-          <% if @payment %>
+          <% if @payment&.allocated? %>
             <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
               <i class="fa-solid fa-circle-check text-green-500"></i> Payment received<% if total_cents.to_i > 0 %> — <%= dollars_from_cents(total_cents) %><% end %>
             </span>

@@ -27,6 +27,17 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Clearer bulk payment confirmation email"
+  area: payments
+  display_status: user_facing
+  released_on: 2026-09-01
+  summary: >-
+    The bulk-payment confirmation email now reads "Payment submission received" so
+    check-payers don't think it already cleared, and adds a "View invoice" button.
+    The payment ticket shows "Payment received" only once the payment is allocated
+    to a registration.
+  pr_number: 2486
+
 - name: "Compact training registrations on the subscriptions page"
   area: communications
   display_status: admin_facing
@@ -37,6 +48,16 @@
     pill to see the training's name and date.
   action_path: /topic_subscriptions
   pr_number: 2482
+
+- name: "Clearer Pay for Other(s) form with register and ticket links"
+  area: payments
+  display_status: public_facing
+  released_on: 2026-09-01
+  summary: >-
+    The public "Pay for Other(s)" form now names the event in its header and links
+    out to the right place: a "Haven't registered yet?" link to the event's
+    registration form, and — for a signed-in attendee who already registered — a
+    direct link to their own digital ticket to pay for just their own spot.
 
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
