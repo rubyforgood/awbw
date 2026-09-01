@@ -12,7 +12,7 @@ class EventMailer < ApplicationMailer
 
     mail(
       to: @person.preferred_email,
-      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      from: self.class.sender(ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org")),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} received for #{@event.title}"
     )
@@ -41,7 +41,7 @@ class EventMailer < ApplicationMailer
 
     mail(
       to: @person.preferred_email,
-      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      from: self.class.sender(ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org")),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW Portal: Payment submission received for #{@event&.title}"
     )
@@ -75,7 +75,7 @@ class EventMailer < ApplicationMailer
     # page's pre-fill so the preview and the delivered email can't drift apart.
     mail(
       to: @person.preferred_email,
-      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      from: self.class.sender(ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org")),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: @custom_subject || @event.default_reminder_subject(time_zone: @time_zone)
     )
@@ -101,7 +101,7 @@ class EventMailer < ApplicationMailer
     count = @recipient_labels.size
     mail(
       to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
-      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      from: self.class.sender(ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org")),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW Portal: [FYI] Reminder sent to #{count} registrant#{'s' if count != 1} for #{@event.title}"
     )
@@ -120,7 +120,7 @@ class EventMailer < ApplicationMailer
 
     mail(
       to: @person.preferred_email,
-      from: ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org"),
+      from: self.class.sender(ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org")),
       reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} cancelled for #{@event.title}"
     )

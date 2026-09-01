@@ -90,12 +90,12 @@ RSpec.describe NotificationMailerJob, type: :job do
           sender: admin)
       end
 
-      it "sends an attributed reminder from the generic address with no display name" do
+      it "sends an attributed reminder from the generic mailbox as AWBW Programs" do
         described_class.new.perform(notification.id)
 
         mail = ActionMailer::Base.deliveries.last
         expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org") ])
-        expect(mail[:from].display_names.compact).to be_empty
+        expect(mail[:from].display_names.compact).to eq([ ApplicationMailer::FROM_NAME ])
         expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
       end
 
