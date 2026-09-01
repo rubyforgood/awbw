@@ -7,10 +7,7 @@ module Events
     def new
       authorize! :form_submission
 
-      @form_fields = visible_form_fields
-      @event = @event.decorate
-
-      @attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+      prepare_new_form
     end
 
     def create
@@ -25,9 +22,7 @@ module Events
 
       @field_errors = validate_required_fields
       if @field_errors.any?
-        @form_fields = visible_form_fields
-        @event = @event.decorate
-        @attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+        prepare_new_form
         render :new, status: :unprocessable_content
         return
       end
@@ -48,9 +43,7 @@ module Events
                       notice: "Your payment information has been submitted."
         end
       else
-        @form_fields = visible_form_fields
-        @event = @event.decorate
-        @attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+        prepare_new_form
         flash.now[:alert] = result.errors.join(", ")
         render :new, status: :unprocessable_content
       end
@@ -100,6 +93,20 @@ module Events
     end
 
     private
+
+    def prepare_new_form
+      @form_fields = visible_form_fields
+      @event = @event.decorate
+      @attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
+      @registration = current_registration
+    end
+
+    def current_registration
+      person = current_user&.person
+      return unless person
+
+      @event.event_registrations.find_by(registrant_id: person.id)
+    end
 
     def visible_form_fields
       scope = @form.form_fields.reorder(position: :asc)

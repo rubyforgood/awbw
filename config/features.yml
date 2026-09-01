@@ -38,6 +38,16 @@
   action_path: /topic_subscriptions
   pr_number: 2482
 
+- name: "Clearer Pay for Other(s) form with register and ticket links"
+  area: payments
+  display_status: public_facing
+  released_on: 2026-09-01
+  summary: >-
+    The public "Pay for Other(s)" form now names the event in its header and links
+    out to the right place: a "Haven't registered yet?" link to the event's
+    registration form, and — for a signed-in attendee who already registered — a
+    direct link to their own digital ticket to pay for just their own spot.
+
 # ── 2026-08 ─────────────────────────────────────────────────────────────────
 
 - name: "No-show trainings no longer count toward program status"

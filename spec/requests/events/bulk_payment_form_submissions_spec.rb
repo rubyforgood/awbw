@@ -87,6 +87,39 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
       expect(response.body).to include("md:col-span-6")
     end
+
+    it "links to the event's registration form" do
+      get new_event_bulk_payment_path(event)
+
+      expect(response.body).to include(new_event_public_registration_path(event))
+      expect(response.body).to include("Attending and haven't registered yet?")
+    end
+
+    it "hides the registration link once registration has closed" do
+      event.update!(registration_close_date: 1.day.ago)
+
+      get new_event_bulk_payment_path(event)
+
+      expect(response.body).not_to include("Attending and haven't registered yet?")
+    end
+
+    context "when the signed-in user has their own registration for the event" do
+      let(:admin) { create(:user, :admin, :with_person) }
+      let!(:registration) { create(:event_registration, event: event, registrant: admin.person) }
+
+      it "links straight to their own digital ticket" do
+        get new_event_bulk_payment_path(event)
+
+        expect(response.body).to include(registration_ticket_path(registration.slug))
+        expect(response.body).to include("your digital ticket")
+      end
+    end
+
+    it "falls back to the emailed-ticket note when the viewer has no registration" do
+      get new_event_bulk_payment_path(event)
+
+      expect(response.body).to include("we emailed you a confirmation")
+    end
   end
 
   describe "POST create with credit card payment" do
