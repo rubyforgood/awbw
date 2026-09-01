@@ -1,17 +1,20 @@
 # Rolls up every submission to one form into a per-question report the results
 # page renders: selectable questions become chartable [ label, count ] tallies
 # (with dynamic sector/age-group ids resolved to names and "specify" free text
-# split out), free-text questions become lists of the actual answers, and file
-# questions a simple answered count. Questions are reported in form order, so the
-# page mirrors the form itself.
+# split out), number questions become an average/total/range summary, free-text
+# questions become lists of the actual answers, and file questions a simple
+# answered count. Questions are reported in form order, so the page mirrors the
+# form itself.
 class FormResponseAggregator
   # One question's rollup. `kind` picks which fields are populated:
   #   :select — rows, chart, multi, specify_rows
+  #   :number — average, total, minimum, maximum, integer_valued
   #   :text   — responses
   #   :file   — answered_count only
   FieldReport = Struct.new(
     :field, :label, :kind, :answered_count,
     :rows, :chart, :multi, :specify_rows, :responses,
+    :average, :total, :minimum, :maximum, :integer_valued,
     keyword_init: true
   )
 
@@ -88,8 +91,42 @@ class FormResponseAggregator
     return build_map_report(field, answers, :world_map) if COUNTRY_IDENTIFIERS.include?(field.field_identifier)
     return build_select_report(field, answers) if field.selectable?
     return build_file_report(field, answers) if field.file_upload?
+    return build_numeric_report(field, answers) if numeric_field?(field)
 
     build_text_report(field, answers)
+  end
+
+  # Number-typed free-form fields hold a figure worth averaging and summing
+  # (counts served, percentages), not free text.
+  def numeric_field?(field)
+    field.number_integer? || field.number_decimal?
+  end
+
+  # An average / total / range summary of a number question. Non-numeric stray
+  # values are dropped rather than skewing the figures.
+  def build_numeric_report(field, answers)
+    values = answers.filter_map { |answer| numeric_value(field, answer.submitted_answer) }
+    count = values.size
+    total = values.sum
+
+    FieldReport.new(
+      field: field, label: field.name, kind: :number, answered_count: count,
+      total: total,
+      average: count.zero? ? nil : total.to_f / count,
+      minimum: values.min, maximum: values.max,
+      integer_valued: !field.number_decimal?
+    )
+  end
+
+  # Parses one submitted answer into a number, or nil when it isn't one. Integer
+  # fields take a plain whole number (no hex/underscore literals); decimal fields
+  # accept a float.
+  def numeric_value(field, raw)
+    text = raw.to_s.strip
+    return if text.blank?
+    return Float(text, exception: false) if field.number_decimal?
+
+    text.to_i if text.match?(/\A-?\d+\z/)
   end
 
   # A choropleth tally of a geographic field: counts per submitted place value,

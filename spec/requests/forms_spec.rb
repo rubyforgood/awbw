@@ -912,6 +912,24 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("Loved it")
       end
 
+      it "summarizes a number question with average, total, and responses" do
+        form = create(:form, :standalone, name: "Survey")
+        served = create(:form_field, form: form, name: "Adults served",
+                        answer_type: :free_form_input_one_line, input_type: :number_integer)
+        [ "20", "40", "60" ].each do |value|
+          submission = create(:form_submission, form: form)
+          create(:form_answer, form_submission: submission, form_field: served, submitted_answer: value)
+        end
+
+        get results_form_path(form)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Adults served")
+        expect(response.body).to include("Average")
+        expect(response.body).to include("Total")
+        expect(response.body).to include("120")
+      end
+
       it "shows an empty state when the form has no submissions" do
         form = create(:form, :standalone, name: "Untouched")
         get results_form_path(form)

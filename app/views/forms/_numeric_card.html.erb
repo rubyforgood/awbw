@@ -1,0 +1,30 @@
+<%# locals: (report:) %>
+<%# A number question's rollup: average, total, and how many answered. Mirrors
+    the "Average / Total / Responses" figures on the funder summary. %>
+<% decimals = report.integer_valued ? 0 : 1 %>
+<div class="border-primary/10 rounded-2xl border bg-white p-5 shadow-sm">
+  <h3 class="font-semibold text-gray-900"><%= report.label %></h3>
+
+  <% if report.answered_count.zero? %>
+    <p class="mt-3 text-sm text-gray-400">No responses yet.</p>
+  <% else %>
+    <div class="mt-4 grid grid-cols-3 gap-3 text-center">
+      <div>
+        <div class="text-2xl font-bold text-gray-900 tabular-nums"><%= number_with_delimiter(report.average.round(decimals)) %></div>
+        <div class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Average</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-gray-900 tabular-nums"><%= number_with_delimiter(report.total.round(decimals)) %></div>
+        <div class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-gray-900 tabular-nums"><%= number_with_delimiter(report.answered_count) %></div>
+        <div class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Responses</div>
+      </div>
+    </div>
+
+    <p class="mt-3 text-center text-xs text-gray-400">
+      Range <%= number_with_delimiter(report.minimum.round(decimals)) %>–<%= number_with_delimiter(report.maximum.round(decimals)) %>
+    </p>
+  <% end %>
+</div>
