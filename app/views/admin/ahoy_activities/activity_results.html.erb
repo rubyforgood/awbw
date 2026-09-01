@@ -3,7 +3,7 @@
 <%= turbo_frame_tag :activity_results do %>
   <%= turbo_stream.replace "activities_count", partial: "count" %>
   <%
-    sort_base = params.permit(:event_name, :props, :resource_name, :user_search, :visit_id, :time_period, :from, :to, :per_page, audience: []).to_h.symbolize_keys
+    sort_base = params.permit(:event_name, :props, :resource_name, :user_search, :visit_id, :time_period, :from, :to, :per_page, :hide_account, :hide_interactions, :hide_communications, :person_id, :user_id, :resource_type, :resource_id, audience: []).to_h.symbolize_keys
     sort_icon = ->(column) {
       next "fa-sort" unless @sort == column
       @sort_direction == "asc" ? "fa-arrow-up" : "fa-arrow-down"

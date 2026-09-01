@@ -184,6 +184,34 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("create.bookmark")
       end
 
+      it "keeps person_id as a hidden field so the filter form stays person-scoped" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to match(/<input[^>]*type="hidden"[^>]*name="person_id"[^>]*value="#{person.id}"/)
+      end
+
+      it "stays person-scoped (no org autochange leak) when a toggle re-submits with person_id" do
+        person = create(:person)
+        org = create(:organization)
+        create(:ahoy_event, name: "autochange.organization", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            resource_type: "Organization", resource_id: org.id, time: 1.hour.ago,
+                            properties: { "resource_title" => "org_autochange_marker" })
+        create(:ahoy_event, name: "update.person", visit: visit_for_admin,
+                            resource_type: "Person", resource_id: person.id, time: 2.hours.ago,
+                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_change_marker" })
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff],
+                                  hide_account: "1", hide_interactions: "1" }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("person_change_marker")
+        expect(response.body).not_to include("org_autochange_marker")
+      end
+
       it "hide_communications drops a person's communications from the timeline" do
         person = create(:person)
         create(:notification, recipient_email: person.communications_email, email_subject: "Hidden comm marker")

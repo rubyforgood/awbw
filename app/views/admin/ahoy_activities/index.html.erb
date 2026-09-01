@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border border-primary/10 rounded-2xl shadow-sm p-6">
+<div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
 
-      <div class="flex flex-wrap items-center gap-y-2 mb-2">
+      <div class="mb-2 flex flex-wrap items-center gap-y-2">
         <%# Scoped to a person (from their edit page's History card, or the filter) —
             return to that person, not the generic Admin default. %>
         <% if @person %>
@@ -37,9 +37,19 @@
               data: { controller: "collection", turbo_frame: "activity_results" },
               autocomplete: "off" do %>
 
-          <div class="flex flex-wrap lg:flex-nowrap gap-4">
+          <%# These scope the timeline (person History, per-user history, a record's
+              audit trail) but have no visible control, so carry them as hidden
+              fields — otherwise submitting the form drops them and reverts to the
+              global feed. %>
+          <% %i[person_id user_id resource_type resource_id].each do |scoping_param| %>
+            <% if params[scoping_param].present? %>
+              <%= hidden_field_tag scoping_param, params[scoping_param] %>
+            <% end %>
+          <% end %>
 
-            <div class="flex-[2] min-w-0">
+          <div class="flex flex-wrap gap-4 lg:flex-nowrap">
+
+            <div class="min-w-0 flex-[2]">
               <label class="<%= search_label_class %>">
                 Activity name
               </label>
@@ -49,7 +59,7 @@
                                  class: search_field_class %>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <label class="<%= search_label_class %>">
                 Resource title
               </label>
@@ -59,7 +69,7 @@
                                  class: search_field_class %>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <label class="<%= search_label_class %>">
                 Details
               </label>
@@ -69,7 +79,7 @@
                                  class: search_field_class %>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <label class="<%= search_label_class %>">
                 User
               </label>
@@ -79,11 +89,11 @@
                                  class: search_field_class %>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true %>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <label class="<%= search_label_class %>">
                 Time Period
               </label>
@@ -95,7 +105,7 @@
                              class: search_field_class %>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <label class="<%= search_label_class %>">
                 From
               </label>
@@ -104,7 +114,7 @@
                                  class: date_filter_class(search_field_class, params[:from]) %>
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <label class="<%= search_label_class %>">
                 To
               </label>
@@ -113,7 +123,7 @@
                                  class: date_filter_class(search_field_class, params[:to]) %>
             </div>
 
-            <div class="flex-none w-24">
+            <div class="w-24 flex-none">
               <label class="<%= search_label_class %>">
                 Visit ID
               </label>
@@ -129,7 +139,7 @@
             <%= render "filter_toggles" %>
           </div>
 
-          <div class="flex items-center gap-3 mt-6 text-sm">
+          <div class="mt-6 flex items-center gap-3 text-sm">
             <span class="text-gray-500">Quick:</span>
             <% safe_params = params.slice(:event_name, :visit_id, :props, :resource_name, :person_id, :user_search, :from, :to, :hide_account, :hide_interactions, :hide_communications).to_unsafe_h %>
             <%= link_to "24h",
