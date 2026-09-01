@@ -26,6 +26,13 @@ module Ahoy
     }.freeze
     DEFAULT_CHIP_CLASSES = "bg-gray-100 text-gray-600".freeze
 
+    # The raw action prefixes a plain-language chip word maps to, so the activity
+    # search can match what the reader sees: "new" finds create events, "search"
+    # finds both search and search_zero. Empty for a word that isn't a chip label.
+    def self.action_keys_for_label(term)
+      ACTION_CHIPS.select { |_action, chip| chip[:label].casecmp?(term) }.keys
+    end
+
     # { label:, classes: } for the leading action chip.
     def activity_chip
       ACTION_CHIPS[action_key] || { label: action_key.humanize, classes: DEFAULT_CHIP_CLASSES }

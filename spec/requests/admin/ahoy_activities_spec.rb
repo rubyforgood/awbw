@@ -255,6 +255,18 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include("auth.login")
       end
 
+      it "matches a plain-language chip word to its raw action (new finds create)" do
+        create(:ahoy_event, name: "update.workshop", user: nil,
+                            visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
+                            time: 1.day.ago, properties: {})
+
+        get index_path, params: { event_name: "new", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("create.bookmark")
+        expect(response.body).not_to include("update.workshop")
+      end
+
       it "filters by hyphen-separated tokens in any order (account-auth)" do
         create(:ahoy_event, name: "auth.account_deactivated", user: nil,
                             visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),

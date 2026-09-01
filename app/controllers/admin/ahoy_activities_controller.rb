@@ -38,16 +38,20 @@ module Admin
 
       # One search box spans the activity name and the resource title. Split on any
       # non-alphanumeric run so hyphens (and commas, dots, spaces) are interchangeable
-      # separators, and each token must match one or the other — e.g. "account-auth"
-      # finds "auth.account_deactivated" by name, "feelings" finds a "Feelings Collage"
-      # resource by title.
+      # separators, and each token must match one of them — e.g. "account-auth" finds
+      # "auth.account_deactivated" by name, "feelings" finds a "Feelings Collage"
+      # resource by title. A plain-language chip word ("new", "edit") also matches its
+      # raw action prefix, so search matches what the reader sees in the row.
       if params[:event_name].present?
         params[:event_name].split(/[^a-z0-9]+/i).reject(&:blank?).each do |token|
           like = "%#{Ahoy::Event.sanitize_sql_like(token)}%"
-          scope = scope.where(
-            "ahoy_events.name LIKE ? OR LOWER(ahoy_events.properties->>'$.resource_title') LIKE LOWER(?)",
-            like, like
-          )
+          clauses = [ "ahoy_events.name LIKE ?", "LOWER(ahoy_events.properties->>'$.resource_title') LIKE LOWER(?)" ]
+          binds = [ like, like ]
+          Ahoy::EventDecorator.action_keys_for_label(token).each do |action|
+            clauses << "ahoy_events.name LIKE ?"
+            binds << "#{Ahoy::Event.sanitize_sql_like(action)}.%"
+          end
+          scope = scope.where(clauses.join(" OR "), *binds)
         end
       end
 

@@ -20,6 +20,18 @@ RSpec.describe Ahoy::EventDecorator do
     end
   end
 
+  describe ".action_keys_for_label" do
+    it "maps a chip word back to its raw action prefixes, case-insensitively" do
+      expect(described_class.action_keys_for_label("new")).to eq(%w[create])
+      expect(described_class.action_keys_for_label("Edit")).to eq(%w[update])
+      expect(described_class.action_keys_for_label("search")).to eq(%w[search search_zero])
+    end
+
+    it "is empty for a word that isn't a chip label" do
+      expect(described_class.action_keys_for_label("workshop")).to eq([])
+    end
+  end
+
   describe "#activity_resource_label" do
     it "humanizes the resource half of the name" do
       expect(decorate_named("update.workshop_variation").activity_resource_label).to eq("Workshop variation")
