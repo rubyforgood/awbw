@@ -16,7 +16,13 @@
     <% end %>
   </td>
 
-  <td data-label="Details" class="min-w-[16rem] px-4 py-3 align-top text-gray-500">
+  <td data-label="Details" class="relative min-w-[16rem] px-4 py-3 align-top text-gray-500">
+    <%# Whole cell links to the resource (no text styling); inner links stay
+        clickable via z-10 in the partial. %>
+    <% if resource && resource[:path] %>
+      <%= link_to "", resource[:path], class: "absolute inset-0",
+                  aria: { label: "Open #{resource[:text]}" }, data: { turbo_frame: "_top" } %>
+    <% end %>
     <%= render "admin/ahoy_activities/event_details", activity: activity %>
   </td>
 

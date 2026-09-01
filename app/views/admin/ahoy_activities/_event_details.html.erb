@@ -30,7 +30,7 @@
         <% if row[:action] %><span class="text-gray-400"><%= row[:action] %></span><% end %>
         <% if row[:link] %>
           <% if row[:link][:path] %>
-            <%= link_to row[:link][:text], row[:link][:path], class: "text-indigo-600 hover:underline", data: { turbo_frame: "_top" } %>
+            <%= link_to row[:link][:text], row[:link][:path], class: "relative z-10 text-indigo-600 hover:underline", data: { turbo_frame: "_top" } %>
           <% else %>
             <span class="text-gray-600"><%= row[:link][:text] %></span>
           <% end %>
