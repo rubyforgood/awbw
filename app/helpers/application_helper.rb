@@ -11,9 +11,11 @@ module ApplicationHelper
   # anonymous and legacy free-text credits never link to a profile.
   def credited_author_link(record, **link_options)
     person = record.author_credit_person
-    return record.author_credit unless person&.profile_is_searchable
-
-    link_to record.author_credit, person_path(person), **link_options
+    if person&.profile_is_searchable
+      link_to record.author_credit, person_path(person), **link_options
+    else
+      record.author_credit
+    end
   end
 
   # The credited author as an admin edit-person card, for the workshop log /
