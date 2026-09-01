@@ -33,6 +33,10 @@ module Ahoy
       ACTION_CHIPS.select { |_action, chip| chip[:label].casecmp?(term) }.keys
     end
 
+    def comment?
+      object.resource_type == "Comment"
+    end
+
     # { label:, classes: } for the leading action chip.
     def activity_chip
       ACTION_CHIPS[action_key] || { label: action_key.humanize, classes: DEFAULT_CHIP_CLASSES }
