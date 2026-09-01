@@ -26,9 +26,9 @@
                     target: "_blank", rel: "noopener", data: { turbo_frame: "_top" } %>
       </div>
       <% if notification.email_body_text.present? %>
-        <div class="line-clamp-3">
+        <div>
           <span class="font-medium text-gray-700">Body:</span>
-          <span class="text-gray-600"><%= notification.email_body_text %></span>
+          <span class="text-gray-600" title="<%= notification.email_body_text %>"><%= truncate(notification.email_body_text, length: 50) %></span>
         </div>
       <% end %>
     </div>

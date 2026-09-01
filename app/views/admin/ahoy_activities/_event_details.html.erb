@@ -7,7 +7,7 @@
       <div><span class="font-medium text-gray-700">Topic:</span> <span class="text-gray-600"><%= activity.comment_note[:topic] %></span></div>
     <% end %>
     <% if activity.comment_note[:body] %>
-      <div><span class="font-medium text-gray-700">Body:</span> <span class="text-gray-600"><%= activity.comment_note[:body] %></span></div>
+      <div><span class="font-medium text-gray-700">Body:</span> <span class="text-gray-600" title="<%= activity.comment_note[:body] %>"><%= truncate(activity.comment_note[:body], length: 50) %></span></div>
     <% end %>
   </div>
 <% elsif activity.extra_details? %>
