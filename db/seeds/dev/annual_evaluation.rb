@@ -160,7 +160,7 @@ ae_number!(form, "What percentage of your participants are multi-racial?", hint_
 ae_number!(form, "What percentage of your participants are Native Hawaiian or other Pacific Islander?", hint_text: "0–100%", width: :third)
 pct_white = ae_number!(form, "What percentage of your participants are White?", hint_text: "0–100%", width: :third)
 ae_number!(form, "What percentage of your participants are of an ethnicity not listed above?", hint_text: "0–100%", width: :half)
-ae_field!(form, "For participants whose ethnic identities are not listed above, please specify their ethnicities", :free_form_input_paragraph, width: :half)
+ae_field!(form, "For participants whose ethnic identities are not listed above, please specify their ethnicities", :free_form_input_one_line, width: :half)
 pct_poverty = ae_number!(form, "What percentage of your participants are at or below the Federal Poverty Line?",
   hint_text: "See the current Federal Poverty Level Guidelines. 0–100%")
 
@@ -172,7 +172,7 @@ pct_male = ae_number!(form, "What percentage of your participants identify as ma
 ae_number!(form, "What percentage of your participants identify as non-binary?", hint_text: "0–100%", width: :quarter)
 ae_number!(form, "What percentage of your participants identify as transgender?", hint_text: "0–100%", width: :quarter)
 ae_number!(form, "What percentage of your participants have a gender identity not listed above?", hint_text: "0–100%", width: :half)
-ae_field!(form, "For participants whose gender identities are not listed above, please specify how they identify", :free_form_input_paragraph, width: :half)
+ae_field!(form, "For participants whose gender identities are not listed above, please specify how they identify", :free_form_input_one_line, width: :half)
 
 # ── Program impact on you ────────────────────────────────────────────────────
 ae_header!(form, "Program impact on you")
