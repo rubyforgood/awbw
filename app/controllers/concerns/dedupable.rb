@@ -147,6 +147,10 @@ module Dedupable
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
+  #   back_path:          Override the index eyebrow's return path (e.g. when the deduper was
+  #                       opened from an event's registrants page, not the model index) (optional)
+  #   back_label:         Label for that eyebrow link, without the "← " prefix (optional)
+  #   subtitle:           Extra line under the index header, e.g. naming the scope being deduped (optional)
   def dedupe_config
     raise NotImplementedError, "#{self.class} must implement #dedupe_config"
   end
@@ -186,7 +190,10 @@ module Dedupable
       field_notes: config[:field_notes] || {},
       deprecated_columns: Array(config[:deprecated_columns]).map(&:to_s),
       preview_images: config[:preview_images],
-      record_extras: config[:record_extras]
+      record_extras: config[:record_extras],
+      back_path: config[:back_path],
+      back_label: config[:back_label],
+      subtitle: config[:subtitle]
     }
   end
 end

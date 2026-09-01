@@ -4,7 +4,8 @@
 
     <!-- Eyebrow + header -->
     <div>
-      <%= link_to "← #{@dedupe[:model_label_plural]}", url_for(action: :index),
+      <%= link_to "← #{@dedupe[:back_label] || @dedupe[:model_label_plural]}",
+                  @dedupe[:back_path] || url_for(action: :index),
                   class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
       <h1 class="text-primary mt-2 font-display text-2xl font-semibold">
         Dedupe <%= @dedupe[:model_label_plural].downcase %>
@@ -13,6 +14,9 @@
         Pick which <%= @dedupe[:model_label].downcase %> to delete and which to keep — its
         records move to the one you keep before it's removed.
       </p>
+      <% if @dedupe[:subtitle].present? %>
+        <p class="mt-1 text-sm text-gray-500"><%= @dedupe[:subtitle] %></p>
+      <% end %>
     </div>
 
     <!-- Selection form -->

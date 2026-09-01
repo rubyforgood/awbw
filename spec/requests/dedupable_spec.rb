@@ -727,6 +727,22 @@ RSpec.describe "Dedupable concern", type: :request do
         get dedupe_index_event_registrations_path
         expect(response).not_to have_http_status(:ok)
       end
+
+      it "scopes suggestions to one event and returns the eyebrow there when opened from it" do
+        registration_for(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
+        registration_for(first_name: "Jane", last_name: "Doe", email: "jane@work.com")
+        other_event = create(:event)
+        create(:event_registration, event: other_event, registrant: create(:person, first_name: "Zed", last_name: "Zed", email: "z1@example.com", user: nil))
+        create(:event_registration, event: other_event, registrant: create(:person, first_name: "Zed", last_name: "Zed", email: "z2@example.com", user: nil))
+
+        get dedupe_index_event_registrations_path(event_id: event.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Jane Doe")
+        expect(response.body).not_to include("Zed Zed")
+        expect(response.body).to include(registrants_event_path(event))
+        expect(response.body).to include("Showing possible duplicate registrations for")
+      end
     end
 
     describe "GET dedupe_preview" do

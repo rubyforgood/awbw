@@ -25,6 +25,9 @@
       <%= link_to "Timesheets", attendance_event_path(@event, return_to: "registrants"), class: item_class %>
     <% end %>
     <%= link_to "Reconcile affiliations", reconcile_affiliations_event_path(@event), class: item_class %>
+    <% if allowed_to?(:manage?, EventRegistration) %>
+      <%= link_to "Dedupe registrations", dedupe_index_event_registrations_path(event_id: @event.id), class: item_class %>
+    <% end %>
     <% if allowed_to?(:import?, EventRegistration) %>
       <%= link_to new_event_registration_import_path(event_id: @event.id), class: item_class do %>
         Import registrants <i class="fa-solid fa-upload text-gray-400 ml-1"></i>

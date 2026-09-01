@@ -510,10 +510,19 @@ class EventRegistrationsController < ApplicationController
   private
 
   def dedupe_config
+    # Opened from an event's registrants page (bulk actions) → scope the suggested
+    # duplicates to that event and return the eyebrow there; opened from the global
+    # registrations index → all registrations, default eyebrow.
+    dedupe_event = Event.find_by(id: params[:event_id])
+    finder_scope = dedupe_event ? EventRegistration.where(event: dedupe_event) : EventRegistration.all
+
     {
       model_class: EventRegistration,
       domain: :event_registrations,
-      candidate_finder: -> { EventRegistrationServices::DuplicateFinder.new.groups },
+      candidate_finder: -> { EventRegistrationServices::DuplicateFinder.new(finder_scope).groups },
+      back_path: dedupe_event ? registrants_event_path(dedupe_event) : nil,
+      back_label: dedupe_event ? "Registrants" : nil,
+      subtitle: dedupe_event ? "Showing possible duplicate registrations for #{dedupe_event.title}." : nil,
       editable_columns: %w[
         status expected_payment_method fee_note shoutout intends_to_pay
         someone_else_will_pay invoice_requested scholarship_requested w9_requested
