@@ -36,13 +36,16 @@ class ContactUsController < ApplicationController
 
     user = current_user if user_signed_in?
     noticeable = user&.person || user
+    contact_us = contact_us_params
 
-    # Send emails
-    confirmation_mail = ContactUsMailer.confirmation(params[:contact_us], user).deliver_now
-    admin_mail = ContactUsMailer.hello(params[:contact_us], user).deliver_now
+    # Deliver in the background so a slow/hung SMTP server can't time out the request.
+    confirmation_mail = ContactUsMailer.confirmation(contact_us, user)
+    admin_mail = ContactUsMailer.hello(contact_us, user)
+    confirmation_mail.deliver_later
+    admin_mail.deliver_later
 
     # Create notification for the submitter
-    submitter_email = user&.email || params[:contact_us][:from]
+    submitter_email = user&.email || contact_us[:from]
     submitter_notification = NotificationServices::CreateNotification.call(
       noticeable: noticeable,
       recipient_role: :person,
@@ -51,7 +54,7 @@ class ContactUsController < ApplicationController
       notification_type: "contact_us_confirmation",
       deliver: false
     )
-    NotificationServices::PersistDeliveredEmail.call(notification: submitter_notification, mail: confirmation_mail)
+    NotificationServices::PersistDeliveredEmail.call(notification: submitter_notification, mail: confirmation_mail.message)
 
     # Create notification for admins
     admin_notification = NotificationServices::CreateNotification.call(
@@ -62,11 +65,19 @@ class ContactUsController < ApplicationController
       notification_type: "contact_us_notification",
       deliver: false
     )
-    NotificationServices::PersistDeliveredEmail.call(notification: admin_notification, mail: admin_mail)
+    NotificationServices::PersistDeliveredEmail.call(notification: admin_notification, mail: admin_mail.message)
 
     flash[:form_submitted] = true
     redirect_to contact_us_path(anchor: "thank-you", from: from, return_to: return_to)
   end
 
   private
+
+  # A plain symbol-keyed hash so the mailer args serialize for the background job.
+  def contact_us_params
+    params.require(:contact_us)
+          .permit(:first_name, :last_name, :from, :organization, :subject, :message, :q)
+          .to_h
+          .symbolize_keys
+  end
 end
