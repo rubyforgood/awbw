@@ -101,7 +101,7 @@
                                           render_options: {
                                             locals: { collection: (@age_ranges_collection || [])
                                               .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
-                                          class: "btn btn-secondary-outline" %>
+                                          class: button_classes(:secondary_outline) %>
             </div>
           </div>
         <% end %>
@@ -135,9 +135,7 @@
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
               <%= render "shared/category_checkbox", param_key: "organization", category: category,
-                         checked: @organization.category_ids.include?(category.id),
-                         is_age: false,
-                         primary_checked: false %>
+                         checked: @organization.category_ids.include?(category.id) %>
             <% end %>
           </div>
         </div>

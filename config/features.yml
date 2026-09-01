@@ -3966,3 +3966,16 @@
   pro_tips:
     - "Click the tag to jump straight to that event registration."
     - "It covers registration and reminder emails, hand-logged calls and notes attached to a registration, and comments on registrations, CE registrations, and scholarships."
+
+- name: "Age-range editor on the organization form"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-01
+  action_path: "/organizations"
+  pr_number: 2039
+  summary: >-
+    Pick an organization's primary and additional age ranges with the same chip
+    editor the person form uses, replacing the old single-choice Windows audience
+    dropdown.
+  pro_tips:
+    - "Star one chip to mark it the primary age range served; the rest stay additional."

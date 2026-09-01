@@ -501,9 +501,13 @@ class PeopleController < ApplicationController
 
     # The category types this form edits via category_ids — the profile-specific
     # types shown below (workshop settings). assign_associations preserves taggings
-    # of any other type (age ranges included, handled by nested attributes), so
-    # saving the form can't drop a person's other category connections.
-    @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
+    # of any other type, so saving the form can't drop a person's other category
+    # connections. AgeRange is excluded even when an admin has marked it
+    # profile_specific: the form never renders age checkboxes, so claiming it here
+    # would delete the taggings the chip picker saves as nested attributes.
+    @managed_category_type_ids = @person_categories_grouped
+      .reject { |type, _| type.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }
+      .map { |type, _| type.id }
 
     # category_ids is applied via assign_associations only on a successful save, so
     # on a validation-error re-render reflect the just-submitted selections rather
