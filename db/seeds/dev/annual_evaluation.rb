@@ -105,9 +105,9 @@ ae_field!(form, "License expiration date", :free_form_input_one_line, width: :qu
 # ── Your work ────────────────────────────────────────────────────────────────
 ae_header!(form, "Your work")
 outside_us = ae_field!(form, "Do you offer art workshops outside the United States?", :single_select_radio, required: true, width: :half, options: YES_NO)
-ae_field!(form, "If you offer workshops outside the US, please share which countries", :free_form_input_one_line, width: :half)
+ae_field!(form, "If you offer outside the US, please share which countries", :free_form_input_one_line, width: :half)
 other_language = ae_field!(form, "Do you facilitate art workshops in languages other than English?", :single_select_radio, required: true, width: :half, options: YES_NO)
-ae_field!(form, "If you facilitate in other languages, please share which languages", :free_form_input_one_line, width: :half)
+ae_field!(form, "If you offer in other languages, please share which ones", :free_form_input_one_line, width: :half)
 pct_one_on_one = ae_number!(form, "What percentage of your art workshops are one-on-one?", hint_text: "0–100%", width: :half)
 pct_groups = ae_number!(form, "What percentage of your art workshops are with groups?", hint_text: "0–100%", width: :half)
 ae_field!(form, "How else do you use art beyond direct client work?", :multi_select_checkbox,
