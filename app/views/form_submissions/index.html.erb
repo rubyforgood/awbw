@@ -1,46 +1,36 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-
-<div class="form-submissions-index mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> rounded-2xl border border-primary/10 p-6 shadow-sm">
-  <div class="w-full">
-    <% if @form || @person %>
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <% if params[:return_to] == "form_results" && @form %>
-            <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
-              <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
-            <% end %>
-          <% elsif params[:return_to] == "forms" && @form %>
-            <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-              <i class="fa-solid fa-arrow-left text-xs"></i> Forms
-            <% end %>
-          <% elsif @person %>
-            <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-              <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
-            <% end %>
-          <% end %>
-        </div>
-        <% if @form %>
-          <%= form_page_subnav(@form, current: :submissions) %>
+<% if @form || @person %>
+  <div class="mx-auto mb-4 flex w-full max-w-7xl flex-wrap items-center justify-between gap-2">
+    <div>
+      <% if params[:return_to] == "form_results" && @form %>
+        <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
         <% end %>
-      </div>
-    <% end %>
-
-    <div class="mb-6 flex items-start gap-4">
-      <span class="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl sm:flex <%= DomainTheme.bg_class_for(:forms) %> <%= DomainTheme.text_class_for(:forms, intensity: 700) %> border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> shadow-sm">
-        <i class="fa-solid fa-file-signature text-xl" aria-hidden="true"></i>
-      </span>
-      <div>
-        <h2 class="text-2xl font-semibold text-gray-900">Form submissions</h2>
-        <p class="mt-1 text-gray-600">
-          <% if @person %>
-            Forms submitted by <span class="font-medium text-gray-900"><%= @person.name %></span>.
-          <% else %>
-            Forms submitted across the site — registrations, scholarships, and public forms.
-          <% end %>
-        </p>
-      </div>
+      <% elsif params[:return_to] == "forms" && @form %>
+        <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Forms
+        <% end %>
+      <% elsif @person %>
+        <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+          <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
+        <% end %>
+      <% end %>
     </div>
-
+    <% if @form %>
+      <%= form_page_subnav(@form, current: :submissions) %>
+    <% end %>
+  </div>
+<% end %>
+<% subtitle = capture do %>
+  <% if @person %>
+    Forms submitted by <span class="font-medium text-gray-900"><%= @person.name %></span>.
+  <% else %>
+    Forms submitted across the site — registrations, scholarships, and public forms.
+  <% end %>
+<% end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :forms, eyebrow: "Forms", title: "Submissions",
+                     subtitle: subtitle } do %>
     <%# Filters. Auto-submit into the results frame on change. %>
     <%= form_with url: form_submissions_path, method: :get, autocomplete: "off",
           data: { controller: "collection searchable-checkbox", turbo_frame: "form_submissions_results" },
@@ -165,5 +155,4 @@
         <p class="mt-2 text-sm">Loading submissions…</p>
       </div>
     <% end %>
-  </div>
-</div>
+<% end %>

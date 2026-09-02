@@ -15,7 +15,7 @@ RSpec.describe "FormSubmissions", type: :request do
         get form_submissions_path
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Form submissions")
+        expect(response.body).to include("Submissions")
       end
 
       it "offers a Clear filters link to the unfiltered index when a filter is active" do

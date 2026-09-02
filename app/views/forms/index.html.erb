@@ -1,21 +1,17 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:forms) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
-  <div class="mb-6 flex items-start justify-between">
-    <div class="pr-6">
-      <h1 class="text-primary mb-2 font-display text-2xl font-semibold">Forms</h1>
-      <p class="max-w-2xl text-gray-600">Reusable forms for event registrations and other submissions</p>
+<% actions = capture do %>
+  <% if allowed_to?(:new?, Form) %>
+    <div class="admin-only bg-blue-100">
+      <%= link_to "New form",
+                  new_form_path,
+                  class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
     </div>
-    <div class="text-end text-right">
-      <% if allowed_to?(:new?, Form) %>
-        <div class="admin-only bg-blue-100">
-          <%= link_to "New form",
-                      new_form_path,
-                      class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-
+  <% end %>
+<% end %>
+<%= render layout: "shared/index_page",
+           locals: { domain: :forms, eyebrow: "Forms", title: "All forms",
+                     subtitle: "Reusable forms for event registrations and other submissions",
+                     actions: actions } do %>
   <% result_src = forms_path + "?" + request.query_string %>
 
   <%= turbo_frame_tag :forms_results, src: result_src, data: { turbo: "temporary" } do %>
@@ -25,4 +21,4 @@
   <% if @owned_forms.any? %>
     <%= render "owned_forms", forms: @owned_forms %>
   <% end %>
-</div>
+<% end %>
