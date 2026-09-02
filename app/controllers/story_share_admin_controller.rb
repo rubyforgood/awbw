@@ -21,10 +21,15 @@ class StoryShareAdminController < ApplicationController
     moved = featured.find { |record| record.id == params[:id].to_i }
     return head :not_found unless moved
 
+    previous_position = moved.story_share_position
     featured.delete(moved)
     featured.insert([ params[:position].to_i - 1, 0 ].max, moved)
     renumber(featured)
-    track_menu_change("update.story_share_menu", moved, position: moved.story_share_position)
+
+    if moved.story_share_position != previous_position
+      track_menu_change("update.story_share_menu", moved,
+                        changes: { position: { before: previous_position, after: moved.story_share_position } })
+    end
     head :ok
   end
 

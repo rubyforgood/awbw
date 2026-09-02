@@ -107,13 +107,21 @@ RSpec.describe "StoryShareAdmin", type: :request do
       post story_share_admin_add_path(type: "category"), params: { id: category.id }
     end
 
-    it "records an event when a menu item is reordered" do
+    it "records a before/after position change when a menu item is reordered" do
       a = create(:sector, :published, story_share_position: 1)
       b = create(:sector, :published, story_share_position: 2)
       expect(Analytics::AhoyTracker).to receive(:track_event)
         .with(anything, "update.story_share_menu",
-              hash_including(resource_type: "Sector", resource_id: b.id, position: 1))
+              hash_including(resource_type: "Sector", resource_id: b.id,
+                             changes: { position: { before: 2, after: 1 } }))
       put story_share_admin_reorder_path(type: "sector", id: b.id), params: { position: 1 }
+    end
+
+    it "does not record an event when the position is unchanged" do
+      a = create(:sector, :published, story_share_position: 1)
+      create(:sector, :published, story_share_position: 2)
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      put story_share_admin_reorder_path(type: "sector", id: a.id), params: { position: 1 }
     end
 
     it "records an event when a menu item is removed" do
