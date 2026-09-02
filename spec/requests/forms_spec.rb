@@ -1001,6 +1001,18 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("Blue")
         expect(response.body).not_to include("Red")
       end
+
+      it "narrows the visible question cards to those matching the question filter" do
+        form = create(:form, :standalone)
+        create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_field, form: form, name: "Favorite food", answer_type: :single_select_radio)
+        create(:form_submission, form: form)
+
+        get results_form_path(form, question: "color")
+
+        expect(response.body).to include("Favorite color")
+        expect(response.body).not_to include("Favorite food")
+      end
     end
 
     context "as a regular user" do

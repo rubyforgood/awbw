@@ -35,9 +35,10 @@ class FormResponseAggregator
   US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state organization_state].to_set
   COUNTRY_IDENTIFIERS = %w[mailing_country organization_country].to_set
 
-  def initialize(form, event_id: nil)
+  def initialize(form, event_id: nil, question_query: nil)
     @form = form
     @event_id = event_id.presence
+    @question_query = question_query.to_s.strip.downcase.presence
   end
 
   def submission_count
@@ -65,7 +66,7 @@ class FormResponseAggregator
   end
 
   def field_reports
-    @field_reports ||= input_fields.map { |field| build_report(field) }
+    @field_reports ||= reportable_fields.map { |field| build_report(field) }
   end
 
   private
@@ -88,6 +89,14 @@ class FormResponseAggregator
 
   def input_fields
     @input_fields ||= @form.form_fields.select(&:collects_input?).sort_by { |field| field.position.to_i }
+  end
+
+  # The questions to render as cards — every input field, or just those whose
+  # name matches the search. The Questions stat still counts the full set.
+  def reportable_fields
+    return input_fields unless @question_query
+
+    input_fields.select { |field| field.name.to_s.downcase.include?(@question_query) }
   end
 
   def answers_by_field_id

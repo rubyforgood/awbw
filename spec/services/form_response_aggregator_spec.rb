@@ -240,4 +240,27 @@ RSpec.describe FormResponseAggregator do
       expect(described_class.new(form, event_id: nil).submission_count).to eq(2)
     end
   end
+
+  describe "question name filtering" do
+    before do
+      create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio, position: 1)
+      create(:form_field, form: form, name: "Favorite food", answer_type: :single_select_radio, position: 2)
+      create(:form_submission, form: form)
+    end
+
+    it "reports only the questions whose name matches, case-insensitively" do
+      labels = described_class.new(form, question_query: "COLOR").field_reports.map(&:label)
+      expect(labels).to eq([ "Favorite color" ])
+    end
+
+    it "still counts every question in the Questions total" do
+      aggregator = described_class.new(form, question_query: "color")
+      expect(aggregator.field_reports.size).to eq(1)
+      expect(aggregator.question_count).to eq(2)
+    end
+
+    it "reports every question when the query is blank" do
+      expect(described_class.new(form, question_query: "  ").field_reports.size).to eq(2)
+    end
+  end
 end
