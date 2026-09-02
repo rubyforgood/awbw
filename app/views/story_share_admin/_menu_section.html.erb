@@ -34,6 +34,7 @@
   <%= form_with url: story_share_admin_add_path(type: type), method: :post, class: "flex items-center gap-2 mt-4" do %>
     <%= select_tag "id", options_for_select([]),
                    include_blank: "Search #{type.pluralize}…",
+                   required: true,
                    data: { controller: "remote-select",
                            remote_select_model_value: type,
                            remote_select_exclude_value: records.map(&:id).join(",") },

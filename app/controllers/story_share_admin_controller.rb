@@ -37,6 +37,8 @@ class StoryShareAdminController < ApplicationController
   # the sortable list.
   def add
     authorize! :story_share_admin, to: :add?
+    return redirect_to story_share_admin_path, alert: "Select a #{@klass.model_name.human.downcase} to add." if params[:id].blank?
+
     record = @klass.find(params[:id])
     max = @klass.story_share_featured.maximum(:story_share_position) || 0
     record.update_columns(story_share_position: max + 1)

@@ -45,6 +45,18 @@ RSpec.describe "StoryShareAdmin", type: :request do
       post story_share_admin_add_path(type: "category"), params: { id: category.id }
       expect(category.reload.story_share_position).to eq(1)
     end
+
+    it "redirects back without error when nothing is selected" do
+      expect {
+        post story_share_admin_add_path(type: "sector"), params: { id: "" }
+      }.not_to raise_error
+      expect(response).to redirect_to(story_share_admin_path)
+    end
+
+    it "does not track an event when nothing is selected" do
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      post story_share_admin_add_path(type: "sector"), params: { id: "" }
+    end
   end
 
   describe "reorder URL template" do
