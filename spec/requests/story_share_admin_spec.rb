@@ -77,6 +77,42 @@ RSpec.describe "StoryShareAdmin", type: :request do
     end
   end
 
+  describe "Ahoy tracking" do
+    before { sign_in admin }
+
+    it "records an event when a sector is added to the menu" do
+      sector = create(:sector, :published, name: "Homelessness")
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "create.story_share_menu",
+              hash_including(resource_type: "Sector", resource_id: sector.id, resource_title: "Homelessness"))
+      post story_share_admin_add_path(type: "sector"), params: { id: sector.id }
+    end
+
+    it "records an event when a category is added to the menu" do
+      category = create(:category, :published)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "create.story_share_menu", hash_including(resource_type: "Category", resource_id: category.id))
+      post story_share_admin_add_path(type: "category"), params: { id: category.id }
+    end
+
+    it "records an event when a menu item is reordered" do
+      a = create(:sector, :published, story_share_position: 1)
+      b = create(:sector, :published, story_share_position: 2)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "update.story_share_menu",
+              hash_including(resource_type: "Sector", resource_id: b.id, position: 1))
+      put story_share_admin_reorder_path(type: "sector", id: b.id), params: { position: 1 }
+    end
+
+    it "records an event when a menu item is removed" do
+      sector = create(:sector, :published, story_share_position: 1)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "destroy.story_share_menu",
+              hash_including(resource_type: "Sector", resource_id: sector.id))
+      delete story_share_admin_remove_path(type: "sector", id: sector.id)
+    end
+  end
+
   describe "GET /search/:model for the pickers" do
     it "returns sectors for an admin" do
       sign_in admin
