@@ -3173,9 +3173,8 @@
   display_status: admin_facing
   released_on: 2026-09-02
   summary: >-
-    The Tagging counts table now ends with a Staff tags section — every published
+    The Tagging counts table now ends with a Staff tags section — each published
     staff tag with the number of people carrying it, lined up under the People
     column so you can glance straight down. Admin home also groups the tagging
-    tools: Staff tags sits with the other base data, and Staff taggings sits next
-    to Tagging counts.
+    tools together.
   action_path: "/taggings/matrix"
