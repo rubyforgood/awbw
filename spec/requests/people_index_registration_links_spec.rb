@@ -6,7 +6,7 @@ RSpec.describe "People index registration quick-links", type: :request do
 
   before { sign_in admin }
 
-  it "links the latest training registration" do
+  it "falls back to the latest training when none is in the recent/upcoming window" do
     person = create(:person, first_name: "Trainee")
     training = create(:event, title: "TAC261", facilitator_training: true, start_date: 6.months.ago)
     registration = create(:event_registration, registrant: person, event: training)
@@ -16,6 +16,21 @@ RSpec.describe "People index registration quick-links", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("TAC261")
     expect(response.body).to include(event_registration_path(registration))
+  end
+
+  it "drops the old-training fallback when a training already falls in the window" do
+    person = create(:person, first_name: "Trainee")
+    old_training = create(:event, title: "OldTAC", facilitator_training: true,
+                                   start_date: 8.months.ago, end_date: 8.months.ago + 1.day)
+    upcoming_training = create(:event, title: "NewTAC", facilitator_training: true,
+                                       start_date: 3.weeks.from_now, end_date: 3.weeks.from_now + 1.day)
+    create(:event_registration, registrant: person, event: old_training)
+    create(:event_registration, registrant: person, event: upcoming_training)
+
+    get people_path, headers: turbo_headers
+
+    expect(response.body).to include("NewTAC")
+    expect(response.body).not_to include("OldTAC")
   end
 
   it "links registrations for events from a month ago into the future" do
@@ -33,7 +48,7 @@ RSpec.describe "People index registration quick-links", type: :request do
     expect(response.body).to include(event_registration_path(reg_recent))
   end
 
-  it "omits registrations for events older than a month that aren't the latest training" do
+  it "omits non-training registrations for events older than a month" do
     person = create(:person, first_name: "Old")
     old_event = create(:event, title: "Ancient Fest", start_date: 3.months.ago)
     create(:event_registration, registrant: person, event: old_event)

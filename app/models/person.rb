@@ -466,14 +466,16 @@ class Person < ApplicationRecord
       .uniq
   end
 
-  # Registrations surfaced as quick-links on the people index: the person's most
-  # recent facilitator-training registration, plus any registration whose event
-  # runs from a month ago onward (recently held or upcoming). Filtered in memory
-  # to reuse a preloaded event_registrations → event chain; newest event first.
+  # Registrations surfaced as quick-links on the people index: any registration
+  # whose event runs from a month ago onward (recently held or upcoming), plus
+  # the person's most recent facilitator-training registration as a fallback when
+  # no training already falls in that window. Filtered in memory to reuse a
+  # preloaded event_registrations → event chain; newest event first.
   def index_quick_registrations
     with_event = event_registrations.select { |r| r.event.present? }
-    latest_training = with_event.select { |r| r.event.facilitator_training? }.max_by(&:created_at)
     recent_or_upcoming = with_event.select { |r| r.event.start_date.present? && r.event.start_date >= 1.month.ago.to_date }
+    latest_training = with_event.select { |r| r.event.facilitator_training? }.max_by(&:created_at) unless
+      recent_or_upcoming.any? { |r| r.event.facilitator_training? }
     ([ latest_training ] + recent_or_upcoming)
       .compact
       .uniq
