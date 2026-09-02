@@ -45,7 +45,7 @@
     When a form is used by more than one event, its Results page now has an event
     filter at the top so you can read the rolled-up answers one event at a time,
     instead of every event's submissions mixed together.
-  pr_number: 2507
+  pr_number: 2508
 
 - name: "Jump from the activity timeline to the page each row logged"
   area: reporting
