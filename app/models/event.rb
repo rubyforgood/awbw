@@ -78,7 +78,8 @@ class Event < ApplicationRecord
   validates :template, inclusion: { in: TEMPLATE_KEYS }
   validates_numericality_of :cost_cents, greater_than_or_equal_to: 0, allow_nil: true
   validates :title, length: { maximum: 255 }
-  validates :abbreviation, length: { maximum: 255 }
+  validates :abbreviation, length: { maximum: 255 },
+    uniqueness: { case_sensitive: false }, allow_blank: true
   validates :pre_title, length: { maximum: 255 }
   validates :pre_date_text, length: { maximum: 255 }
   validates :videoconference_url, length: { maximum: 255 }
