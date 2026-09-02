@@ -2,6 +2,8 @@ class EmailDeliveryErrorHandler
   ERRORS = [
     OpenSSL::SSL::SSLError,
     Net::SMTPError,
+    Net::OpenTimeout,
+    Net::ReadTimeout,
     Errno::ECONNRESET
   ].freeze
 

@@ -162,10 +162,25 @@ RSpec.describe "ContactUs", type: :request do
         expect {
           post contact_us_path, params: valid_params
         }.to change(Notification, :count).by(2)
-        # .and have_enqueued_job.on_queue("mailers")
 
         expect(response).to redirect_to(contact_us_path(anchor: "thank-you"))
         expect(flash[:form_submitted]).to eq(true)
+      end
+
+      it "delivers both emails in the background so a slow SMTP server can't fail the request" do
+        expect {
+          post contact_us_path, params: valid_params
+        }.to have_enqueued_mail(ContactUsMailer, :confirmation)
+          .and have_enqueued_mail(ContactUsMailer, :hello)
+
+        expect(ActionMailer::Base.deliveries).to be_empty
+      end
+
+      it "still records the rendered email bodies on the notifications" do
+        post contact_us_path, params: valid_params
+
+        expect(Notification.find_by(kind: "contact_us").email_body_html).to be_present
+        expect(Notification.find_by(kind: "contact_us_fyi").email_body_html).to be_present
       end
 
       it "creates a contact_us notification for the submitter" do
