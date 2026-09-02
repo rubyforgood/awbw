@@ -115,6 +115,16 @@
   action_path: /forms
   pr_number: 2516
 
+- name: "Scholarship FYI emails name the funder"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    When a recipient accepts, declines, or asks for more support, the heads-up
+    email to the programs team now lists the funding grant and its funder, so
+    you can see at a glance which grant is paying — shown only when the award is
+    tied to a grant.
+
 - name: "Jump from the activity timeline to the page each row logged"
   area: reporting
   display_status: admin_facing

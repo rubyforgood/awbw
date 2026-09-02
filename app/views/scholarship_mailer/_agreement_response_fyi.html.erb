@@ -32,6 +32,12 @@
     <td style="padding: 4px 0; color:#6b7280;">Award amount</td>
     <td style="padding: 4px 0;"><strong><%= dollars_from_cents(@scholarship.amount_cents) %></strong></td>
   </tr>
+  <% if @scholarship.grant.present? %>
+    <tr>
+      <td style="padding: 4px 0; color:#6b7280;">Funder</td>
+      <td style="padding: 4px 0;"><strong><%= @scholarship.grant.name_with_funder %></strong></td>
+    </tr>
+  <% end %>
   <% if @response&.contribution_cents.present? %>
     <tr>
       <td style="padding: 4px 0; color:#6b7280;">They/their employer can contribute</td>
