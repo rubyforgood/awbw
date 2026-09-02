@@ -42,7 +42,7 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(mail.subject).to include("Link to complete Collaboration agreement (job change)")
       expect(mail.body.encoded).to include("the Collaboration agreement (job change) to complete")
       expect(mail.body.encoded).to include("http://example.com/f/collab-job-change")
-      expect(mail.body.encoded).to include("Fay Facilitator")
+      expect(mail.body.encoded).to include("Hello Fay,")
     end
   end
 
@@ -315,7 +315,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     it "names the story and greets the submitter" do
       body = described_class.story_promoted(notification).body.encoded
       expect(body).to include("A Healing Story")
-      expect(body).to include(submitter.full_name)
+      expect(body).to include(submitter.first_name_or_email)
     end
   end
 

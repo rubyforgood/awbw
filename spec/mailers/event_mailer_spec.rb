@@ -39,7 +39,7 @@ RSpec.describe EventMailer, type: :mailer do
     end
 
     it "includes the registrant name in the body" do
-      expect(mail.body.encoded).to include(event_registration.registrant.full_name)
+      expect(mail.body.encoded).to include(event_registration.registrant.first_name)
     end
 
     it "links to the registrant's ticket" do
@@ -185,7 +185,7 @@ RSpec.describe EventMailer, type: :mailer do
     end
 
     it "includes the registrant name in the body" do
-      expect(mail.body.encoded).to include(event_registration.registrant.full_name)
+      expect(mail.body.encoded).to include(event_registration.registrant.first_name)
     end
 
     context "when the event is CE-eligible and has deadlines" do

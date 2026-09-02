@@ -1,4 +1,4 @@
-Event reminder Hello<%= @person.full_name %>,
+Event reminder Hello <%= @person.first_name %>,
 <% if @custom_message.present? %>
   <%= strip_tags(@custom_message).strip %>
 <% end %>
