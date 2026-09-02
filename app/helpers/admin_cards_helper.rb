@@ -28,7 +28,6 @@ module AdminCardsHelper
   def user_content_cards
     [
       custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
-      custom_card("Data health", admin_data_health_path, icon: "🩺", color: :sky, intensity: 100),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       model_card(:notifications, icon: "🔔", title: t("communications.title")),
       custom_card("Event reports", reports_events_path, icon: "📊", color: :blue),
@@ -63,15 +62,23 @@ module AdminCardsHelper
   end
 
   # -----------------------------
-  # DEPRECATED DATA CARDS
+  # DEDUPER CARDS
   # -----------------------------
-  def deprecated_data_cards
+  def deduper_cards
     [
-      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100),
       custom_card("Dedupe people", dedupe_index_people_path, icon: "🧹", color: DomainTheme.color_for(:people), intensity: 100),
       custom_card("Dedupe organizations", dedupe_index_organizations_path, icon: "🧹", color: DomainTheme.color_for(:organizations), intensity: 100),
       custom_card("Dedupe categories", dedupe_index_categories_path, icon: "🧹", color: DomainTheme.color_for(:categories), intensity: 100),
       custom_card("Dedupe sectors", dedupe_index_sectors_path, icon: "🧹", color: DomainTheme.color_for(:sectors), intensity: 100)
+    ]
+  end
+
+  # -----------------------------
+  # DEPRECATED DATA CARDS
+  # -----------------------------
+  def deprecated_data_cards
+    [
+      custom_card("Organization statuses", organization_statuses_path, icon: "🧮", color: :emerald, intensity: 100)
     ]
   end
 
@@ -81,7 +88,6 @@ module AdminCardsHelper
   def additional_data_cards
     [
       custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
-      custom_card("Author credit divergences", author_credit_divergences_path, icon: "✍️", color: :sky, intensity: 100),
       custom_card("Bulk payments", bulk_payments_path, icon: "💳", color: :sky, intensity: 100),
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
