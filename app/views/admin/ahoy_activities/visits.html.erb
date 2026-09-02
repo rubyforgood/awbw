@@ -25,9 +25,10 @@
       <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-6 shadow-sm">
         <%# Selects submit on change and the text boxes debounce-submit as you type,
             all into the visit_results frame — the filter form stays put (and
-            focused) while just the rows swap. %>
+            focused) while just the rows swap. turbo_action: "advance" mirrors the
+            filter state into the address bar so a hard refresh restores it. %>
         <%= form_with url: request.path, method: :get,
-              data: { controller: "collection", turbo_frame: "visit_results" },
+              data: { controller: "collection", turbo_frame: "visit_results", turbo_action: "advance" },
               autocomplete: "off" do %>
 
           <div class="flex flex-wrap gap-4 lg:flex-nowrap">

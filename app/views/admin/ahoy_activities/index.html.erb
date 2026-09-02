@@ -32,9 +32,10 @@
       <div class="bg-white border border-primary/10 rounded-2xl shadow-sm p-6 mb-6">
         <%# Selects submit on change and the text boxes debounce-submit as you type,
             all into the activity_results frame — the filter form stays put (and
-            focused) while just the rows swap. %>
+            focused) while just the rows swap. turbo_action: "advance" mirrors the
+            filter state into the address bar so a hard refresh restores it. %>
         <%= form_with url: request.path, method: :get,
-              data: { controller: "collection", turbo_frame: "activity_results" },
+              data: { controller: "collection", turbo_frame: "activity_results", turbo_action: "advance" },
               autocomplete: "off" do %>
 
           <%# These scope the timeline (person History, per-user history, a record's
