@@ -9,7 +9,7 @@
   <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
     <!-- Contact info -->
     <div class="w-full md:flex-1">
-      <%= label_tag :contact_info, "Name, email, or phone", class: search_label_class %>
+      <%= label_tag :contact_info, "Name, email, or phone (if shared)", class: search_label_class %>
       <div class="relative">
         <%= text_field_tag :contact_info, params[:contact_info],
                            class: search_field_class(extra: "pr-10"),
@@ -53,7 +53,7 @@
   </div>
 
   <% if allowed_to?(:manage?, Person) %>
-    <div class="rounded-xl border border-blue-200 bg-blue-100 p-4">
+    <div class="mb-6 rounded-xl border border-blue-200 bg-blue-100 p-4">
       <p class="mb-3 text-xs font-semibold tracking-wide text-blue-800 uppercase">Admin-only filters</p>
       <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <!-- Role -->

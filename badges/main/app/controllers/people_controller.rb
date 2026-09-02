@@ -16,6 +16,7 @@ class PeopleController < ApplicationController
         :user,
         sectorable_items: :sector,
         affiliations: :organization,
+        event_registrations: :event,
         categorizable_items: { category: :category_type }
       ).references(:user))
       filtered = base_scope.search_by_params(params.to_unsafe_h)

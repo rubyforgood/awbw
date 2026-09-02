@@ -14,11 +14,11 @@
               <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliation(s)</th>
               <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Socials</th>
               <% if allowed_to?(:manage?, Person) %>
-                <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+                <th class="admin-only w-[80px] bg-blue-100 px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
               <% end %>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
+          <tbody class="divide-y divide-gray-300">
             <% @people.each do |person| %>
               <% cache [ person, current_user.super_user?, current_user.person_id == person.id ] do %>
               <tr class="transition-colors duration-150 <%= person.published? ? "hover:bg-gray-100" : "admin-only bg-blue-100 hover:bg-blue-200" %>">
@@ -73,7 +73,10 @@
                 </td>
                 <!-- Affiliations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% affiliations = person.affiliations.select { |a| a.organization.present? && (a.active? || a.upcoming?) } %>
+                  <% affiliations = person.affiliations
+                                          .select { |a| a.organization.present? && (a.active? || a.upcoming?) }
+                                          .group_by(&:organization_id)
+                                          .map { |_, affs| affs.find { |a| !a.facilitator? && a.title.present? } || affs.first } %>
                   <% if affiliations.any? %>
                     <%# Org names are long and multi-word, so a stacked list of
                         truncated links reads better than chips, which squeeze the
@@ -117,13 +120,21 @@
                 </td>
                 <!-- Actions -->
                 <% if allowed_to?(:manage?, Person) %>
-                  <td class="justify-center gap-2 px-4 py-2">
-                    <%= link_to "User", user_path(person.user),
-                            data: { turbo_frame: "_top" },
-                            class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") if person.user %>
-                    <%= link_to "Edit", edit_person_path(person),
-                            data: { turbo_frame: "_top" },
-                            class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") %>
+                  <td class="admin-only border-b border-gray-300 bg-blue-100 px-4 py-2">
+                    <div class="flex flex-wrap justify-center gap-2">
+                      <%= link_to "Edit", edit_person_path(person),
+                              data: { turbo_frame: "_top" },
+                              class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") %>
+                      <%= link_to "User", user_path(person.user),
+                              data: { turbo_frame: "_top" },
+                              class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") if person.user %>
+                      <% person.index_quick_registrations.each do |registration| %>
+                        <%= link_to registration.event.decorate.compact_label, event_registration_path(registration),
+                                data: { turbo_frame: "_top" },
+                                title: "#{registration.event.title} registration",
+                                class: "#{button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs")} max-w-[160px] truncate" %>
+                      <% end %>
+                    </div>
                   </td>
                 <% end %>
               </tr>
