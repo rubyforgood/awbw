@@ -73,3 +73,14 @@ en:
     submit:
       create: "Submit"
       update: "Save changes"
+  honeybadger:
+    feedback:
+      heading: "Care to help us fix this?"
+      explanation:
+        "Any information you can provide will help us fix the problem."
+      submit: "Send"
+      thanks: "Thanks for the feedback!"
+      labels:
+        name: "Your name (required)"
+        email: "Your email address (required)"
+        comment: "Comment (required)"
