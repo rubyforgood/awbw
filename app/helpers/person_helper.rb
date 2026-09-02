@@ -145,6 +145,23 @@ module PersonHelper
             class: "font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
   end
 
+  # Profile pieces the person has opted to hide (a `profile_show_*` flag turned
+  # off) are still revealed to admins, with a blue admin-only wash + eye-slash
+  # badge, so admins always see the full record. `flag` is a `profile_show_*`
+  # attribute name (symbol).
+  def profile_piece_shown?(person, flag)
+    person.public_send(:"#{flag}?") || profile_piece_hidden_for_admin?(person, flag)
+  end
+
+  def profile_piece_hidden_for_admin?(person, flag)
+    !person.public_send(:"#{flag}?") && allowed_to?(:manage?, Person)
+  end
+
+  # Wash for a block-level profile piece the person hid but the admin still sees.
+  def profile_hidden_section_class
+    "admin-only rounded-xl border border-blue-200 bg-blue-100 p-4"
+  end
+
   private
 
   # Shared color palette for the person profile/edit buttons, keyed off the same
