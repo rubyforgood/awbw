@@ -1013,6 +1013,34 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("Favorite color")
         expect(response.body).not_to include("Favorite food")
       end
+
+      it "links a text question's responses to the form answers index filtered to that question" do
+        form = create(:form, :standalone, name: "Survey")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts"))
+      end
+
+      it "carries the selected event into the form answers links" do
+        form = create(:form)
+        event = create(:event)
+        create(:event_form, form: form, event: event, role: "registration")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: event),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, event_id: event.id)
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", event_id: event.id))
+      end
     end
 
     context "as a regular user" do

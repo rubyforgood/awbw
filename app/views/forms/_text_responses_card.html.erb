@@ -7,7 +7,13 @@
 <div class="scroll-mt-24 break-inside-avoid rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
   <div class="mb-3 flex items-center justify-between">
     <h2 class="text-sm font-semibold text-gray-700"><%= report.label %></h2>
-    <span class="text-xs text-gray-500"><%= report.answered_count %></span>
+    <% if report.answered_count.positive? %>
+      <%= link_to report.answered_count,
+                  form_answers_path(form_id: form.id, question: report.label, event_id: @selected_event_id),
+                  class: "text-xs #{link_class}" %>
+    <% else %>
+      <span class="text-xs text-gray-500"><%= report.answered_count %></span>
+    <% end %>
   </div>
 
   <% if report.responses.empty? %>
@@ -31,6 +37,6 @@
       <% end %>
     </ul>
 
-    <%= render "forms/view_all_responses", form: form, count: report.responses.size %>
+    <%= render "forms/view_all_responses", form: form, count: report.responses.size, question: report.label %>
   <% end %>
 </div>

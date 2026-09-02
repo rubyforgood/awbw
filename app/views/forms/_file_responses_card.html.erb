@@ -10,6 +10,6 @@
     <span class="ml-1 text-sm text-gray-500"><%= "file".pluralize(report.answered_count) %> uploaded</span>
   </p>
   <% if report.answered_count.positive? %>
-    <%= render "forms/view_all_responses", form: form, count: report.answered_count %>
+    <%= render "forms/view_all_responses", form: form, count: report.answered_count, question: report.label %>
   <% end %>
 </div>
