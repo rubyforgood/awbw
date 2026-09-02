@@ -35,8 +35,9 @@ class FormResponseAggregator
   US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state organization_state].to_set
   COUNTRY_IDENTIFIERS = %w[mailing_country organization_country].to_set
 
-  def initialize(form)
+  def initialize(form, event_id: nil)
     @form = form
+    @event_id = event_id.presence
   end
 
   def submission_count
@@ -70,7 +71,15 @@ class FormResponseAggregator
   private
 
   def submissions
-    @submissions ||= @form.form_submissions.includes(:person).to_a
+    @submissions ||= scoped_submissions.includes(:person).to_a
+  end
+
+  # Optionally narrowed to one connected event, so a shared form's rollup can be
+  # read one event at a time.
+  def scoped_submissions
+    return @form.form_submissions unless @event_id
+
+    @form.form_submissions.where(event_id: @event_id)
   end
 
   def submission_by_id

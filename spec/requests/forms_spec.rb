@@ -965,6 +965,42 @@ RSpec.describe "Forms", type: :request do
         get results_form_path(form)
         expect(response.body).not_to include("Duplicate form")
       end
+
+      it "shows an event filter for an event-connected form" do
+        form = create(:form)
+        event = create(:event, title: "Spring Cohort")
+        create(:event_form, form: form, event: event, role: "registration")
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        select = doc.at_css("select#event_id")
+        expect(select).to be_present
+        expect(select.text).to include("Spring Cohort")
+      end
+
+      it "omits the event filter for a form with no connected events" do
+        form = create(:form, :standalone)
+        get results_form_path(form)
+        expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
+      end
+
+      it "narrows the rollup to the selected event's submissions" do
+        form = create(:form)
+        event = create(:event)
+        other_event = create(:event)
+        create(:event_form, form: form, event: event, role: "registration")
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: event),
+                             form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: other_event),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form, event_id: event.id)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
     end
 
     context "as a regular user" do

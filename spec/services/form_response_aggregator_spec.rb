@@ -217,4 +217,27 @@ RSpec.describe FormResponseAggregator do
 
     expect(labels).to eq([ "First", "Second" ])
   end
+
+  describe "event scoping" do
+    it "narrows the rollup to one event's submissions when given an event_id" do
+      event = create(:event)
+      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+      answer(create(:form_submission, form: form, event: event), field, "Blue")
+      answer(create(:form_submission, form: form, event: create(:event)), field, "Red")
+
+      aggregator = described_class.new(form, event_id: event.id)
+
+      expect(aggregator.submission_count).to eq(1)
+      expect(aggregator.field_reports.first.rows).to eq([ [ "Blue", 1 ] ])
+    end
+
+    it "rolls up every submission when no event_id is given" do
+      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+      answer(create(:form_submission, form: form, event: create(:event)), field, "Blue")
+      answer(create(:form_submission, form: form, event: create(:event)), field, "Red")
+
+      expect(described_class.new(form).submission_count).to eq(2)
+      expect(described_class.new(form, event_id: nil).submission_count).to eq(2)
+    end
+  end
 end
