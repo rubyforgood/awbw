@@ -104,42 +104,29 @@
               </tr>
             <% end %>
 
-            </tbody>
-          </table>
-        </div>
-      </div>
+            <!-- STAFF TAGS HEADER -->
+            <tr class="border-t border-gray-200 bg-gray-100">
+              <td colspan="<%= Tag::TAGGABLE_META.size + 1 %>"
+                  class="px-4 py-2 font-semibold text-gray-700">
+                <div class="flex items-center justify-between gap-4">
+                  <span>Staff tags (people carrying each internal tag)</span>
+                  <%= link_to "View staff taggings", staff_taggings_path,
+                              class: "text-sm font-medium text-indigo-900 hover:underline" %>
+                </div>
+              </td>
+            </tr>
 
-      <!-- STAFF TAGGINGS -->
-      <section class="mt-12 border-t border-gray-200 pt-8">
-        <div class="mb-4 flex items-start justify-between gap-6">
-          <div>
-            <h2 class="text-primary mb-1 font-display text-2xl font-semibold">
-              Staff taggings
-            </h2>
-            <p class="max-w-2xl text-gray-600">
-              Internal, admin-only labels — people carrying each staff tag
-            </p>
-          </div>
-          <%= link_to "View staff taggings", staff_taggings_path,
-                      class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
-        </div>
+            <% if @staff_tags.any? %>
+              <% @staff_tags.each do |staff_tag| %>
+                <tr class="<%= cycle('bg-white', 'bg-gray-50') %> border-t border-gray-200">
+                  <td class="px-4 py-2 font-medium text-gray-900">
+                    <%= staff_tag.name %>
+                  </td>
 
-        <div class="border-primary/10 rounded-2xl border bg-white shadow-sm">
-          <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-              <thead class="border-b border-gray-200 bg-gray-50">
-                <tr>
-                  <th class="px-4 py-3 text-left font-semibold text-gray-700">Staff tag</th>
-                  <th class="px-4 py-3 text-center font-semibold text-gray-700">People</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if @staff_tags.any? %>
-                  <% @staff_tags.each do |staff_tag| %>
-                    <% count = @staff_tagging_counts.fetch(staff_tag.id, 0) %>
-                    <tr class="<%= cycle("bg-white", "bg-gray-50") %> border-t border-gray-200">
-                      <td class="px-4 py-2 font-medium text-gray-900"><%= staff_tag.name %></td>
-                      <td class="px-4 py-2 text-center">
+                  <% Tag::TAGGABLE_META.each_key do |key| %>
+                    <td class="px-4 py-2 text-center">
+                      <% if key == :people %>
+                        <% count = @staff_tagging_counts.fetch(staff_tag.id, 0) %>
                         <% if count.positive? %>
                           <%= link_to count,
                                       staff_taggings_path(staff_tag_ids: staff_tag.id),
@@ -147,20 +134,23 @@
                         <% else %>
                           <span class="text-gray-400">0</span>
                         <% end %>
-                      </td>
-                    </tr>
-                  <% end %>
-                <% else %>
-                  <tr>
-                    <td colspan="2" class="px-4 py-4 text-center text-gray-500">
-                      No staff tags yet.
+                      <% end %>
                     </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
+                  <% end %>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr class="border-t border-gray-200">
+                <td colspan="<%= Tag::TAGGABLE_META.size + 1 %>"
+                    class="px-4 py-4 text-center text-gray-500">
+                  No staff tags yet.
+                </td>
+              </tr>
+            <% end %>
+
+            </tbody>
+          </table>
         </div>
-      </section>
+      </div>
     </div>
 </div>

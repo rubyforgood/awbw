@@ -74,10 +74,10 @@ RSpec.describe "Taggings matrix", type: :request do
     let!(:staff_tag) { create(:staff_tag, name: "Board member") }
     let!(:staff_tagging) { create(:staff_tagging, staff_tag: staff_tag) }
 
-    it "renders a staff taggings section with per-tag counts" do
+    it "renders a staff tags section with per-tag people counts" do
       get taggings_matrix_path
 
-      expect(response.body).to include("Staff taggings")
+      expect(response.body).to include("Staff tags (people carrying each internal tag)")
       expect(response.body).to include("Board member")
       expect(response.body).to include(staff_taggings_path(staff_tag_ids: staff_tag.id))
     end
