@@ -73,7 +73,10 @@
                 </td>
                 <!-- Affiliations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% affiliations = person.affiliations.select { |a| a.organization.present? && (a.active? || a.upcoming?) } %>
+                  <% affiliations = person.affiliations
+                                          .select { |a| a.organization.present? && (a.active? || a.upcoming?) }
+                                          .group_by(&:organization_id)
+                                          .map { |_, affs| affs.find { |a| !a.facilitator? && a.title.present? } || affs.first } %>
                   <% if affiliations.any? %>
                     <%# Org names are long and multi-word, so a stacked list of
                         truncated links reads better than chips, which squeeze the
