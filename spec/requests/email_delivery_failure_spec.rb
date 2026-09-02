@@ -51,7 +51,8 @@ RSpec.describe "Email delivery failures", type: :request do
           organization: "Test Agency",
           subject: "Test Subject",
           message: "Test message",
-          q: "general"
+          q: "general",
+          Honeypot::FIELD_NAME => ""
         }
       }
 

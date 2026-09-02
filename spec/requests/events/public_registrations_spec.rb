@@ -14,7 +14,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
   def post_registration(answer)
     post event_public_registration_path(event),
-         params: { public_registration: { form_fields: { essay_field.id.to_s => answer } } }
+         params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: { essay_field.id.to_s => answer } } }
   end
 
   describe "POST create with a minimum word count" do
@@ -52,7 +52,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
     it "re-renders the form with an error instead of raising" do
       expect {
         post event_public_registration_path(event),
-             params: { public_registration: { form_fields: {
+             params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
                essay_field.id.to_s => "this answer has plenty of words",
                fid("first_name") => "Pat",
                fid("last_name") => "Lee",
@@ -85,7 +85,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       email = create(:form_field, form: form, field_identifier: "primary_email", name: "Email", required: false)
 
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: {
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
              essay_field.id.to_s => "this answer has plenty of words",
              first.id.to_s => "Pat",
              last.id.to_s => "Lee",
@@ -105,7 +105,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     def post_bio(answer)
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: {
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
              essay_field.id.to_s => "this answer has plenty of words",
              bio_field.id.to_s => answer
            } } }
@@ -140,7 +140,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       post event_public_registration_path(event),
            params: {
              scholarship_requested: "true",
-             public_registration: { form_fields: {
+             public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
                essay_field.id.to_s => "this answer has plenty of words",
                scholarship_essay.id.to_s => scholarship_answer
              } }
@@ -209,7 +209,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "redirects to Stripe Checkout when paying by credit card" do
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: {
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
              essay_field.id.to_s => "this answer has enough words for validation",
              payment_method_field.id.to_s => "Credit card (now)"
            } } }
@@ -220,7 +220,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "does not redirect when payment method is not credit card" do
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: {
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
              essay_field.id.to_s => "this answer has enough words for validation",
              payment_method_field.id.to_s => "Check"
            } } }
@@ -234,7 +234,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       event.update!(cost_cents: 0)
 
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: {
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
              essay_field.id.to_s => "this answer has enough words for validation"
            } } }
 
@@ -576,7 +576,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
              name: "Name", required: true)
 
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: {
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
              field.id.to_s => "Other: chartreuse",
              required.id.to_s => ""
            } } }
@@ -649,7 +649,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       signed_id = signed_id_for("sample.png", "image/png")
 
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: identity_answers.merge(
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: identity_answers.merge(
              essay_field.id.to_s => "too few",
              upload_field.id.to_s => signed_id
            ) } }
@@ -667,6 +667,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
       post event_public_registration_path(event),
            params: { public_registration: {
+             Honeypot::FIELD_NAME => "",
              form_fields: identity_answers.merge(
                essay_field.id.to_s => "this answer has plenty of words",
                upload_field.id.to_s => ""
@@ -682,7 +683,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
 
     it "re-renders with an error instead of raising on an unusable signed id" do
       post event_public_registration_path(event),
-           params: { public_registration: { form_fields: identity_answers.merge(
+           params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: identity_answers.merge(
              essay_field.id.to_s => "this answer has plenty of words",
              upload_field.id.to_s => "not-a-signed-id"
            ) } }
@@ -936,7 +937,7 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
         tracked << [ name, props ]
       end
 
-      post event_public_registration_path(event), params: { public_registration: { form_fields: {
+      post event_public_registration_path(event), params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
         essay_field.id.to_s => "this answer has more than five words",
         first_field.id.to_s => "Dana",
         last_field.id.to_s => "Ruiz",

@@ -10,6 +10,7 @@ RSpec.describe "PublicForms", type: :request do
   def submission_params(first: "Sam", last: "Rivera", email: "sam@example.com")
     {
       public_registration: {
+        Honeypot::FIELD_NAME => "",
         form_fields: {
           first_name_field.id.to_s => first,
           last_name_field.id.to_s => last,

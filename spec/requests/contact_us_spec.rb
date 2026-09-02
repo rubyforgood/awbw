@@ -11,7 +11,8 @@ RSpec.describe "ContactUs", type: :request do
         organization: "Test Agency",
         subject: "Test Subject",
         message: "Test message",
-        q: "general"
+        q: "general",
+        Honeypot::FIELD_NAME => ""
       }
     }
   end
@@ -114,7 +115,8 @@ RSpec.describe "ContactUs", type: :request do
             organization: "",
             subject: "Test",
             message: "Test",
-            q: "general"
+            q: "general",
+            Honeypot::FIELD_NAME => ""
           }
         }
         follow_redirect!
@@ -200,6 +202,20 @@ RSpec.describe "ContactUs", type: :request do
         expect(notification.recipient_role).to eq("admin")
         expect(notification.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
       end
+
+      it "silently drops a bot that posts a scraped form without our decoy field" do
+        spam = { contact_us: { first_name: "QaOUAKZ", last_name: "AzwiRUY",
+                               from: "spam@example.com", agency: "uDcbmOD",
+                               website_url: "https://yqupiafl.com",
+                               subject: "xlMfQz", message: "mNaceRX" } }
+
+        expect {
+          post contact_us_path, params: spam
+        }.not_to change(Notification, :count)
+
+        expect(response).to redirect_to(contact_us_path)
+        expect(ActionMailer::Base.deliveries).to be_empty
+      end
     end
 
     context "when logged in" do
@@ -214,7 +230,8 @@ RSpec.describe "ContactUs", type: :request do
             organization: "",
             subject: "Test Subject from logged in user",
             message: "Test message from logged in user",
-            q: "general"
+            q: "general",
+            Honeypot::FIELD_NAME => ""
           }
         }
       end
