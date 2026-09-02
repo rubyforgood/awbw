@@ -31,6 +31,34 @@ module Ahoy
     }.freeze
     DEFAULT_CHIP_CLASSES = "bg-gray-100 text-gray-600".freeze
 
+    # Record-less "view.<page>" events (view.tags, view.comments, view.admin.data_health)
+    # aren't tied to a record, so resource_link can't resolve them — but they still went
+    # somewhere. Map the resource half of the name to the page it logged so the whole row
+    # links there (see activity_path). A value is a lambda taking the view helper and the
+    # event's properties hash.
+    PAGE_LINKS = {
+      "tags"                               => ->(h, _p) { h.tags_path },
+      "taggings"                           => ->(h, _p) { h.taggings_path },
+      "comments"                           => ->(h, _p) { h.comments_path },
+      "notifications"                      => ->(h, _p) { h.notifications_path },
+      "bulk_payments"                      => ->(h, _p) { h.bulk_payments_path },
+      "admin.data_health"                  => ->(h, _p) { h.admin_data_health_path },
+      "person_all_comments"                => ->(h, p) { h.all_comments_person_path(p["person_id"]) },
+      "person_comments_and_communications" => ->(h, p) { h.comments_and_communications_person_path(p["person_id"]) }
+    }.freeze
+    private_constant :PAGE_LINKS
+
+    # Event report/detail pages logged as "events.<action>" (view.events.reports,
+    # view.events.roster, …). Only these GET pages get linked — action events like
+    # events.send_reminder are POST-only and have no page to open. Collection reports
+    # carry no event_id; per-event pages do.
+    EVENT_PAGE_ACTIONS = %w[
+      dashboard attendance registrants roster onboarding staff recipients
+      bulk_payments reconcile_affiliations revenue participation reports
+      scholarships program_statuses attendees signins templates_gallery
+    ].freeze
+    private_constant :EVENT_PAGE_ACTIONS
+
     # The raw action prefixes a plain-language chip word maps to, so the activity
     # search can match what the reader sees: "new" finds create events, "search"
     # finds both search and search_zero. Empty for a word that isn't a chip label.
@@ -50,7 +78,7 @@ module Ahoy
     # The resource half of the event name, humanized: "workshop_variation" reads
     # "Workshop variation", "account_deactivated" reads "Account deactivated".
     def activity_resource_label
-      object.name.to_s.split(".", 2)[1].to_s.humanize
+      name_resource_part.to_s.humanize
     end
 
     # The event's own resource, linked to its edit page so an admin can jump
@@ -61,16 +89,14 @@ module Ahoy
     # Returns nil when there's no title; :path is nil when the record is gone or
     # has no editable route (rendered as plain text).
     def resource_link
-      return commentable_link if comment&.commentable
+      @resource_link = compute_resource_link unless defined?(@resource_link)
+      @resource_link
+    end
 
-      record = find_referenced_record(object.resource_type, object.resource_id)
-      custom = custom_resource_link(record)
-      return custom if custom
-
-      title = properties_hash["resource_title"]
-      return nil if title.blank?
-
-      { text: title, path: edit_path_for(record) }
+    # The URL the whole Activity cell links to: the record's edit/show page for a
+    # record-backed event, or the index/report page for a record-less view event.
+    def activity_path
+      resource_link&.dig(:path) || page_path
     end
 
     # The record a comment was left on, labeled and linked. Reuses the same
@@ -152,6 +178,52 @@ module Ahoy
     end
 
     private
+
+    def compute_resource_link
+      return commentable_link if comment&.commentable
+
+      record = find_referenced_record(object.resource_type, object.resource_id)
+      custom = custom_resource_link(record)
+      return custom if custom
+
+      title = properties_hash["resource_title"]
+      return nil if title.blank?
+
+      { text: title, path: edit_path_for(record) }
+    end
+
+    # The page a record-less view event went to (index/report pages), or nil.
+    # Guarded so a renamed route degrades to a plain-text row rather than 500-ing
+    # the activity frame.
+    def page_path
+      builder = PAGE_LINKS[name_resource_part]
+      return builder.call(h, properties_hash) if builder
+
+      events_page_path
+    rescue StandardError
+      nil
+    end
+
+    # events.<action> → the matching event report/page path. Per-event pages take
+    # the event_id from properties; a collection report scoped to one event keeps
+    # it as a filter query param so the link reopens the same view.
+    def events_page_path
+      prefix, action = name_resource_part.to_s.split(".", 2)
+      return nil unless prefix == "events" && EVENT_PAGE_ACTIONS.include?(action)
+
+      event_id = properties_hash["event_id"].presence
+      member = "#{action}_event_path"
+      return h.public_send(member, event_id) if event_id && h.respond_to?(member)
+
+      collection = "#{action}_events_path"
+      return nil unless h.respond_to?(collection)
+
+      event_id ? h.public_send(collection, event_id: event_id) : h.public_send(collection)
+    end
+
+    def name_resource_part
+      object.name.to_s.split(".", 2)[1]
+    end
 
     def action_key
       object.name.to_s.split(".", 2).first.to_s

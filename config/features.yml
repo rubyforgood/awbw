@@ -27,6 +27,17 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Jump from the activity timeline to the page each row logged"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    Rows in the admin activity timeline for index and report page views (Tags,
+    Comments, Events reports, Data health, and more) are now clickable and open
+    that page, instead of showing as plain text.
+  action_path: /admin/activities/events
+  pr_number: 2499
+
 - name: "Clearer bulk payment confirmation email"
   area: payments
   display_status: user_facing

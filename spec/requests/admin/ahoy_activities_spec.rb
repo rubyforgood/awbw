@@ -151,6 +151,20 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect_frame_breakout(response.body, user_path(user))
       end
 
+      it "links a record-less index/page view to its page, breaking out of the frame" do
+        create(:ahoy_event, name: "view.tags", user: user, visit: visit_for_user,
+                            time: 1.hour.ago, properties: { "page" => "index" })
+        create(:ahoy_event, name: "view.events.reports", user: user, visit: visit_for_user,
+                            time: 2.hours.ago)
+
+        get index_path, params: { time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("activity_results")
+        expect_frame_breakout(response.body, tags_path)
+        expect_frame_breakout(response.body, reports_events_path)
+      end
+
       it "filters by prefixes=auth" do
         get index_path, params: { prefixes: "auth" }, headers: frame_headers
 
