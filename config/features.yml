@@ -2642,12 +2642,13 @@
   action_path: "/event_registrations/import"
   summary: >-
     Bulk-add attended registrants to an event from a CSV roster. Every row becomes an
-    attended registration, exactly as if the person had registered — matched to an
-    existing person by email and name (no duplicates), with the organization linked
-    when we recognize it.
+    attended registration — matched to an existing person by email and name (no
+    duplicates), with the organization linked when we recognize it. An amount-paid
+    column marks the registration paid too.
   pro_tips:
     - "Expected columns: FirstName, LastName, Organization, EMail. Export your spreadsheet as a .csv first."
-    - "You get a full preview — new vs. matched people, new vs. promoted registrations, and which orgs will link vs. need reconciling — before anything is saved."
+    - "To record payment, add an AmountPaid column (plus PaymentType — cash, check, or card — and a CheckNumber for checks). The amount is applied to the registration so it shows as paid; free events ignore it."
+    - "You get a full preview — new vs. matched people, new vs. promoted registrations, which orgs will link vs. need reconciling, and the payments to record — before anything is saved."
     - "Organizations we don't recognize aren't created; they're queued on each registrant's \"link organization\" page so you can reconcile them the same way as a normal registration."
     - "On facilitator trainings, a linked organization also adds the person's facilitator affiliation."
     - "No emails are sent, so it's safe for historical rosters. Reach it from the \"Import registrants\" button on the registrants page."
