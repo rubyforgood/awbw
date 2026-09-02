@@ -30,7 +30,7 @@
     </div>
   <% end %>
   <% if @person.user %>
-    <%= link_to "User account", edit_user_path(@person.user), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "User account", user_path(@person.user), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
   <% end %>
   <% if params[:admin] == "true" && @person.filemaker_code.present? && FmRolodex.exists?(fm_id: @person.filemaker_code) %>
     <%= link_to "Rolodex", fm_archive_path(@person.filemaker_code, table: "rolodexes"), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
