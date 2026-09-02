@@ -139,6 +139,12 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "advances the URL on filter submit so a refresh restores the filters" do
+        get index_path
+
+        expect(response.body).to include('data-turbo-action="advance"')
+      end
+
       it "breaks the row's user link out of the results frame" do
         get index_path, params: { visit_id: visit_for_user.id }, headers: frame_headers
 
@@ -504,6 +510,12 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
     end
 
     describe "GET /admin/activities/visits" do
+      it "advances the URL on filter submit so a refresh restores the filters" do
+        get visits_path
+
+        expect(response.body).to include('data-turbo-action="advance"')
+      end
+
       it "renders the shell ok on a full-page load" do
         get visits_path
         expect(response).to have_http_status(:ok)
