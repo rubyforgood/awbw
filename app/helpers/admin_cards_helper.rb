@@ -12,6 +12,7 @@ module AdminCardsHelper
       model_card(:resources, icon: "📚"),
       model_card(:stories, icon: "🗣️"),
       custom_card("Story share admin", story_share_admin_path, icon: "⚙️", color: :sky, intensity: 100),
+      custom_card("Staff taggings", staff_taggings_path, icon: "🏷️", color: :sky, intensity: 100),
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime),
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
@@ -57,6 +58,7 @@ module AdminCardsHelper
                  title: "Sectors",
                  params: { published: true }),
       model_card(:topic_subscription_types, icon: "✉️", intensity: 100, title: "Subscription topics"),
+      custom_card("Staff tags", staff_tags_path, icon: "🏷️", color: :lime, intensity: 100),
       custom_card("Windows audiences", windows_types_path, icon: "🪟")
     ]
   end
@@ -100,7 +102,6 @@ module AdminCardsHelper
       custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
       custom_card("CE registrations", continuing_education_registrations_path, icon: "📜", color: :sky, intensity: 100),
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),
-      custom_card("Staff taggings", staff_taggings_path, icon: "🏷️", color: :sky, intensity: 100),
       disabled_card("Affiliations", icon: "🤝"),
       disabled_card("Reports", icon: "📄"),
       disabled_card("Discounts", icon: "💲"),
