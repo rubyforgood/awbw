@@ -14,12 +14,12 @@ RSpec.describe Honeypot do
       expect(described_class.tripped?(params_with(described_class::FIELD_NAME => ""), :contact_us)).to be(false)
     end
 
-    it "is false when the decoy field is absent entirely" do
-      expect(described_class.tripped?(params_with(message: "hello"), :contact_us)).to be(false)
+    it "is true when the decoy field is absent, since our form always renders it" do
+      expect(described_class.tripped?(params_with(message: "hello"), :contact_us)).to be(true)
     end
 
-    it "is false when the whole scope is missing" do
-      expect(described_class.tripped?(ActionController::Parameters.new, :contact_us)).to be(false)
+    it "is true when the whole scope is missing, as a real submission never omits it" do
+      expect(described_class.tripped?(ActionController::Parameters.new, :contact_us)).to be(true)
     end
   end
 

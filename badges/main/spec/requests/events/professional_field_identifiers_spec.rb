@@ -71,7 +71,7 @@ RSpec.describe "Events::PublicRegistrations professional fields", type: :request
         let(:submission) { form.form_submissions.find_by!(person: registrant) }
 
         before do
-          post event_public_registration_path(event), params: { public_registration: { form_fields: {
+          post event_public_registration_path(event), params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {
             fid("first_name") => "Robin",
             fid("last_name") => "Avery",
             fid("primary_email") => "robin.avery@example.com",

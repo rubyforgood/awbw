@@ -43,7 +43,7 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
   def post_bulk_payment(answer)
     post event_bulk_payment_path(event),
-         params: { bulk_payment: { form_fields: { org_field.id.to_s => answer } } }
+         params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: { org_field.id.to_s => answer } } }
   end
 
   describe "POST create with the honeypot tripped" do
@@ -143,7 +143,7 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
     it "redirects to Stripe Checkout when paying by credit card" do
       post event_bulk_payment_path(event),
-           params: { bulk_payment: { form_fields: payer_params.merge(
+           params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: payer_params.merge(
              org_field.id.to_s => "this answer has enough words for validation",
              payment_method_field.id.to_s => "Credit card (now)"
            ) } }
@@ -154,7 +154,7 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
     it "does not redirect when payment method is not credit card" do
       post event_bulk_payment_path(event),
-           params: { bulk_payment: { form_fields: payer_params.merge(
+           params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: payer_params.merge(
              org_field.id.to_s => "this answer has enough words for validation",
              payment_method_field.id.to_s => "Check"
            ) } }
@@ -168,7 +168,7 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
       event.update!(cost_cents: 0)
 
       post event_bulk_payment_path(event),
-           params: { bulk_payment: { form_fields: payer_params.merge(
+           params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: payer_params.merge(
              org_field.id.to_s => "this answer has enough words for validation"
            ) } }
 
