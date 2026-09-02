@@ -8,6 +8,27 @@ RSpec.describe Event, type: :model do
     it { should validate_numericality_of(:cost_cents).is_greater_than_or_equal_to(0).allow_nil }
     it { should validate_inclusion_of(:template).in_array(Event::TEMPLATE_KEYS) }
 
+    describe "abbreviation uniqueness" do
+      it "rejects a duplicate abbreviation" do
+        create(:event, abbreviation: "TOS205")
+        event = build(:event, abbreviation: "TOS205")
+        expect(event).not_to be_valid
+        expect(event.errors[:abbreviation]).to be_present
+      end
+
+      it "rejects a duplicate abbreviation regardless of case" do
+        create(:event, abbreviation: "TOS205")
+        event = build(:event, abbreviation: "tos205")
+        expect(event).not_to be_valid
+        expect(event.errors[:abbreviation]).to be_present
+      end
+
+      it "allows multiple events with a blank abbreviation" do
+        create(:event, abbreviation: "")
+        expect(build(:event, abbreviation: "")).to be_valid
+      end
+    end
+
     describe "display template" do
       it "defaults to none" do
         expect(build(:event).template).to eq("none")
