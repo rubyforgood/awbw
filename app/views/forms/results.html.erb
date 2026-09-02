@@ -35,7 +35,7 @@
       <div class="max-w-sm">
         <%= label_tag :event_id, "Event", class: search_label_class %>
         <%= select_tag :event_id,
-              options_from_collection_for_select(@form.events.distinct.order(:title), :id, :name, @selected_event_id),
+              options_for_select(@form.events.distinct.order(:start_date).map { |event| [ event.decorate.title_with_month_year, event.id ] }, @selected_event_id),
               include_blank: "All events",
               class: search_field_class(extra: "search-select-placeholder") %>
       </div>
