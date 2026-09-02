@@ -9,6 +9,10 @@ RSpec.describe Ahoy::EventDecorator do
     create(:ahoy_event, name: name).decorate
   end
 
+  def decorate_page(name, properties)
+    create(:ahoy_event, name: name, properties: properties).reload.decorate
+  end
+
   describe "#activity_chip" do
     it "reads create as a New chip and update as an Edit chip" do
       expect(decorate_named("create.comment").activity_chip[:label]).to eq("New")
@@ -154,6 +158,55 @@ RSpec.describe Ahoy::EventDecorator do
 
       expect(event.resource_link[:text]).to include("Event registration for")
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+    end
+  end
+
+  describe "#activity_path" do
+    let(:routes) { Rails.application.routes.url_helpers }
+
+    it "uses the record's edit page for a record-backed event" do
+      workshop = create(:workshop)
+      event = create(:ahoy_event, name: "view.workshop", resource_type: "Workshop",
+                                  resource_id: workshop.id, properties: { "resource_title" => "Feelings Collage" }).decorate
+
+      expect(event.activity_path).to eq(routes.edit_workshop_path(workshop))
+    end
+
+    it "links a record-less index view to its index page" do
+      expect(decorate_named("view.tags").activity_path).to eq(routes.tags_path)
+      expect(decorate_named("view.comments").activity_path).to eq(routes.comments_path)
+      expect(decorate_named("view.taggings").activity_path).to eq(routes.taggings_path)
+      expect(decorate_named("view.notifications").activity_path).to eq(routes.notifications_path)
+      expect(decorate_named("view.bulk_payments").activity_path).to eq(routes.bulk_payments_path)
+      expect(decorate_named("view.admin.data_health").activity_path).to eq(routes.admin_data_health_path)
+    end
+
+    it "links a person-scoped page view using its person_id property" do
+      event = decorate_page("view.person_all_comments", "person_id" => 42)
+      expect(event.activity_path).to eq(routes.all_comments_person_path(42))
+    end
+
+    it "links a collection report to its collection path" do
+      expect(decorate_named("view.events.reports").activity_path).to eq(routes.reports_events_path)
+    end
+
+    it "keeps the event_id filter on a collection report scoped to one event" do
+      event = decorate_page("view.events.reports", "event_id" => 7)
+      expect(event.activity_path).to eq(routes.reports_events_path(event_id: 7))
+    end
+
+    it "links a per-event page view to that event's member page" do
+      event = decorate_page("view.events.roster", "event_id" => 9)
+      expect(event.activity_path).to eq(routes.roster_event_path(9))
+    end
+
+    it "does not link a POST-only action event that has no page" do
+      event = decorate_page("view.events.send_reminder", "event_id" => 3)
+      expect(event.activity_path).to be_nil
+    end
+
+    it "is nil for a record-less view with no known page" do
+      expect(decorate_named("view.mystery").activity_path).to be_nil
     end
   end
 

@@ -1,7 +1,7 @@
 <% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
 <% chip = activity.activity_chip %>
 <% resource = activity.resource_link %>
-<% linked = resource && resource[:path] %>
+<% path = activity.activity_path %>
 <tr class="<%= activity.comment? ? "#{DomainTheme.bg_class_for(:comments, intensity: 50)} transition" : "transition hover:bg-gray-50" %>">
   <td data-label="Time" class="px-4 py-3 align-top whitespace-nowrap text-gray-500">
     <%= event.time.in_time_zone.strftime("%Y-%m-%d %H:%M %Z") %>
@@ -9,10 +9,10 @@
 
   <%# Merged Activity + Details cell: a link overlay makes the whole cell navigate
       to the resource without restyling the text; inner detail links keep z-10. %>
-  <td data-label="Activity" class="<%= "group " if linked %>relative px-4 py-3 align-top">
-    <% if linked %>
-      <%= link_to "", resource[:path], class: "absolute inset-0",
-                  aria: { label: "Open #{resource[:text]}" }, data: { turbo_frame: "_top" } %>
+  <td data-label="Activity" class="<%= "group " if path %>relative px-4 py-3 align-top">
+    <% if path %>
+      <%= link_to "", path, class: "absolute inset-0",
+                  aria: { label: "Open #{resource ? resource[:text] : activity.activity_resource_label}" }, data: { turbo_frame: "_top" } %>
     <% end %>
     <%= render "admin/ahoy_activities/activity_cell", activity: activity, event: event, chip: chip, resource: resource %>
   </td>
