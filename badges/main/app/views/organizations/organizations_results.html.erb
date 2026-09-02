@@ -24,7 +24,7 @@
                 affiliated people's tags — neither touches the organizations row. %>
             <% cache [organization, organization.rollup_cache_version, @program_since_display[organization.id], organization.decorate.organization_status_bucket, organization.organization_status_id, @active_people_counts[organization.id], current_user.super_user?] do %>
             <% published = organization.published? %>
-            <tr class="hover:bg-gray-50 transition <%= "admin-only bg-blue-100" unless published %>">
+            <tr class="transition <%= published ? "hover:bg-gray-100" : "admin-only bg-blue-100 hover:bg-blue-200" %>">
               <td class="px-4 py-2">
                 <%# The affiliation-derived bucket, never the drifted legacy column (ADR-0003 D4). %>
                 <% status_label = published ? nil : organization.decorate.organization_status_label %>
