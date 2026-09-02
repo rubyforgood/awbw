@@ -14,7 +14,7 @@
               <th class="w-1/4 px-4 py-2 text-left text-sm font-semibold text-gray-700">Affiliation(s)</th>
               <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Socials</th>
               <% if allowed_to?(:manage?, Person) %>
-                <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
+                <th class="admin-only w-[80px] bg-blue-100 px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
               <% end %>
             </tr>
           </thead>
@@ -117,7 +117,7 @@
                 </td>
                 <!-- Actions -->
                 <% if allowed_to?(:manage?, Person) %>
-                  <td class="px-4 py-2">
+                  <td class="admin-only bg-blue-100 px-4 py-2">
                     <div class="flex flex-wrap justify-start gap-2">
                       <%= link_to "User", user_path(person.user),
                               data: { turbo_frame: "_top" },
