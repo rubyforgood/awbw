@@ -66,6 +66,15 @@ RSpec.describe Ahoy::EventDecorator do
       expect(link[:path]).to eq(Rails.application.routes.url_helpers.edit_workshop_path(workshop))
     end
 
+    it "points a story share menu event at the story share admin page, keeping the record name as the label" do
+      sector = create(:sector, :published, name: "Families")
+      event = create(:ahoy_event, name: "update.story_share_menu", resource_type: "Sector",
+                                  resource_id: sector.id, properties: { "resource_title" => "Families" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Families")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.story_share_admin_path)
+    end
+
     it "is nil when there is no resource title" do
       expect(decorate("source" => "import").resource_link).to be_nil
     end
