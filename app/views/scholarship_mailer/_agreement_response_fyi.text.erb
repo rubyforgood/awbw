@@ -18,7 +18,7 @@ Training: <%= @event.title %>
 <% end %>
 Award amount: <%= dollars_from_cents(@scholarship.amount_cents) %>
 <% if @scholarship.grant.present? %>
-Funder: <%= @scholarship.grant.name_with_funder %>
+Grant: <%= @scholarship.grant.name_with_funder %>
 <% end %>
 <% if @response&.contribution_cents.present? %>
 They/their employer can contribute: <%= dollars_from_cents(@response.contribution_cents) %>
