@@ -104,6 +104,50 @@
               </tr>
             <% end %>
 
+            <!-- STAFF TAGS HEADER -->
+            <tr class="border-t border-gray-200 bg-gray-100">
+              <td colspan="<%= Tag::TAGGABLE_META.size + 1 %>"
+                  class="px-4 py-2 font-semibold text-gray-700">
+                <div class="flex items-center justify-between gap-4">
+                  <span>Staff tags (people carrying each internal tag)</span>
+                  <%= link_to "View staff taggings", staff_taggings_path,
+                              class: "text-sm font-medium text-indigo-900 hover:underline" %>
+                </div>
+              </td>
+            </tr>
+
+            <% if @staff_tags.any? %>
+              <% @staff_tags.each do |staff_tag| %>
+                <tr class="<%= cycle('bg-white', 'bg-gray-50') %> border-t border-gray-200">
+                  <td class="px-4 py-2 font-medium text-gray-900">
+                    <%= staff_tag.name %>
+                  </td>
+
+                  <% Tag::TAGGABLE_META.each_key do |key| %>
+                    <td class="px-4 py-2 text-center">
+                      <% if key == :people %>
+                        <% count = @staff_tagging_counts.fetch(staff_tag.id, 0) %>
+                        <% if count.positive? %>
+                          <%= link_to count,
+                                      staff_taggings_path(staff_tag_ids: staff_tag.id),
+                                      class: "font-medium text-indigo-900 hover:underline" %>
+                        <% else %>
+                          <span class="text-gray-400">0</span>
+                        <% end %>
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr class="border-t border-gray-200">
+                <td colspan="<%= Tag::TAGGABLE_META.size + 1 %>"
+                    class="px-4 py-4 text-center text-gray-500">
+                  No staff tags yet.
+                </td>
+              </tr>
+            <% end %>
+
             </tbody>
           </table>
         </div>

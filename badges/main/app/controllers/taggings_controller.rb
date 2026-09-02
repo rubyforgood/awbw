@@ -107,6 +107,12 @@ class TaggingsController < ApplicationController
         }
       end
     end
+
+    @staff_tags = authorized_scope(StaffTag.all).published.ordered
+    @staff_tagging_counts = StaffTagging
+      .where(staff_tag_id: @staff_tags.map(&:id), staff_taggable_type: "Person")
+      .group(:staff_tag_id)
+      .count
   end
 
   private
