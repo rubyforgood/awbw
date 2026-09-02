@@ -129,7 +129,7 @@
                               data: { turbo_frame: "_top" },
                               class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") %>
                       <% person.index_quick_registrations.each do |registration| %>
-                        <%= link_to "#{registration.event.decorate.compact_label} reg", event_registration_path(registration),
+                        <%= link_to registration.event.decorate.compact_label, event_registration_path(registration),
                                 data: { turbo_frame: "_top" },
                                 title: "#{registration.event.title} registration",
                                 class: "#{button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs")} max-w-[160px] truncate" %>

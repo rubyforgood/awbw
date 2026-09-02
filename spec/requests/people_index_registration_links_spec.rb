@@ -14,7 +14,7 @@ RSpec.describe "People index registration quick-links", type: :request do
     get people_path, headers: turbo_headers
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("TAC261 reg")
+    expect(response.body).to include("TAC261")
     expect(response.body).to include(event_registration_path(registration))
   end
 
@@ -27,8 +27,8 @@ RSpec.describe "People index registration quick-links", type: :request do
 
     get people_path, headers: turbo_headers
 
-    expect(response.body).to include("Upcoming Fest reg")
-    expect(response.body).to include("Recent Fest reg")
+    expect(response.body).to include("Upcoming Fest")
+    expect(response.body).to include("Recent Fest")
     expect(response.body).to include(event_registration_path(reg_upcoming))
     expect(response.body).to include(event_registration_path(reg_recent))
   end
@@ -40,7 +40,7 @@ RSpec.describe "People index registration quick-links", type: :request do
 
     get people_path, headers: turbo_headers
 
-    expect(response.body).not_to include("Ancient Fest reg")
+    expect(response.body).not_to include("Ancient Fest")
   end
 
   it "breaks registration links out of the results frame" do
