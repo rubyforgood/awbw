@@ -118,7 +118,7 @@
                 <!-- Actions -->
                 <% if allowed_to?(:manage?, Person) %>
                   <td class="px-4 py-2">
-                    <div class="flex flex-wrap justify-center gap-2">
+                    <div class="flex flex-wrap justify-start gap-2">
                       <%= link_to "User", user_path(person.user),
                               data: { turbo_frame: "_top" },
                               class: button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs") if person.user %>
@@ -129,7 +129,7 @@
                         <%= link_to "#{registration.event.decorate.compact_label} reg", event_registration_path(registration),
                                 data: { turbo_frame: "_top" },
                                 title: "#{registration.event.title} registration",
-                                class: "#{button_classes(:secondary_outline, size: nil, extra: "px-2.5 py-1 text-xs #{DomainTheme.text_class_for(:events, intensity: 700)} #{DomainTheme.border_class_for(:events, intensity: 300)}")} max-w-[160px] truncate" %>
+                                class: "#{button_classes(:secondary_outline, size: nil, extra: "admin-only bg-blue-100 px-2.5 py-1 text-xs")} max-w-[160px] truncate" %>
                       <% end %>
                     </div>
                   </td>
