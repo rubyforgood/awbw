@@ -47,6 +47,18 @@ RSpec.describe "StoryShareAdmin", type: :request do
     end
   end
 
+  describe "reorder URL template" do
+    # sortable_controller.js does urlValue.replace(":id", id), so the rendered
+    # template must carry a literal ":id". A query-string id encodes the colon to
+    # %3Aid, the replace misses, and every reorder hits id=:id (not_found) — so
+    # keep :id in the path segment.
+    it "keeps :id as a literal placeholder the sortable JS can substitute" do
+      url = story_share_admin_reorder_path(type: "sector", id: ":id")
+      expect(url).to include(":id")
+      expect(url).not_to include("%3A")
+    end
+  end
+
   describe "PUT /story_share/admin/reorder" do
     before { sign_in admin }
 
