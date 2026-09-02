@@ -382,7 +382,7 @@ Rails.application.routes.draw do
   end
   resources :stories
   get "story_share/admin", to: "story_share_admin#show", as: :story_share_admin
-  match "story_share/admin/reorder", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
+  match "story_share/admin/reorder/:id", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
   post "story_share/admin/add", to: "story_share_admin#add", as: :story_share_admin_add
   delete "story_share/admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
   resources :story_shares, path: "story_share", only: [ :index, :show, :new ]

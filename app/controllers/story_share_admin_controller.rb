@@ -1,4 +1,6 @@
 class StoryShareAdminController < ApplicationController
+  include AhoyTracking
+
   # Admin page for curating the Story Share portal's nav menus by setting
   # story_share_position on sectors (top row) and audience categories (second
   # row). story_share_position is a plain integer (NOT the positioned gem), so
@@ -19,9 +21,15 @@ class StoryShareAdminController < ApplicationController
     moved = featured.find { |record| record.id == params[:id].to_i }
     return head :not_found unless moved
 
+    previous_position = moved.story_share_position
     featured.delete(moved)
     featured.insert([ params[:position].to_i - 1, 0 ].max, moved)
     renumber(featured)
+
+    if moved.story_share_position != previous_position
+      track_menu_change("update.story_share_menu", moved,
+                        changes: { position: { before: previous_position, after: moved.story_share_position } })
+    end
     head :ok
   end
 
@@ -29,10 +37,13 @@ class StoryShareAdminController < ApplicationController
   # the sortable list.
   def add
     authorize! :story_share_admin, to: :add?
+    return redirect_to story_share_admin_path, alert: "Select a #{@klass.model_name.human.downcase} to add." if params[:id].blank?
+
     record = @klass.find(params[:id])
     max = @klass.story_share_featured.maximum(:story_share_position) || 0
     record.update_columns(story_share_position: max + 1)
     expire_menu_caches
+    track_menu_change("create.story_share_menu", record, position: record.story_share_position)
     redirect_to story_share_admin_path, notice: "Added to the Story Share menu."
   end
 
@@ -41,6 +52,7 @@ class StoryShareAdminController < ApplicationController
     record = @klass.find(params[:id])
     record.update_columns(story_share_position: nil)
     renumber(@klass.story_share_featured.to_a)
+    track_menu_change("destroy.story_share_menu", record)
     redirect_to story_share_admin_path, notice: "Removed from the Story Share menu."
   end
 
@@ -48,6 +60,18 @@ class StoryShareAdminController < ApplicationController
 
   def set_klass
     @klass = params[:type] == "category" ? Category : Sector
+  end
+
+  # These curate the menu via update_columns, which skips the AhoyTrackable
+  # callbacks, so record the change explicitly. resource_type/resource_id/
+  # resource_title get promoted to columns (config/initializers/ahoy.rb) so the
+  # activity feed links back to the sector/category that was featured.
+  def track_menu_change(name, record, extra = {})
+    track_event(name, {
+      resource_type: record.class.name,
+      resource_id: record.id,
+      resource_title: record.name
+    }.merge(extra))
   end
 
   # Rewrite story_share_position to a gapless 1..n sequence in list order.

@@ -181,6 +181,7 @@ module Ahoy
 
     def compute_resource_link
       return commentable_link if comment&.commentable
+      return story_share_menu_link if story_share_menu?
 
       record = find_referenced_record(object.resource_type, object.resource_id)
       custom = custom_resource_link(record)
@@ -227,6 +228,18 @@ module Ahoy
 
     def action_key
       object.name.to_s.split(".", 2).first.to_s
+    end
+
+    # Story Share menu events curate the portal nav, not the underlying
+    # sector/category, so they link to the curation page rather than the
+    # record's edit form. The name stays the featured record's title.
+    def story_share_menu?
+      object.name.to_s.end_with?(".story_share_menu")
+    end
+
+    def story_share_menu_link
+      { text: properties_hash["resource_title"].presence || "Story share menu",
+        path: h.story_share_admin_path }
     end
 
     # The Comment this event is about, from the page cache (no extra query); nil

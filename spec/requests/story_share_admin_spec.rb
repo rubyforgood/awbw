@@ -45,6 +45,30 @@ RSpec.describe "StoryShareAdmin", type: :request do
       post story_share_admin_add_path(type: "category"), params: { id: category.id }
       expect(category.reload.story_share_position).to eq(1)
     end
+
+    it "redirects back without error when nothing is selected" do
+      expect {
+        post story_share_admin_add_path(type: "sector"), params: { id: "" }
+      }.not_to raise_error
+      expect(response).to redirect_to(story_share_admin_path)
+    end
+
+    it "does not track an event when nothing is selected" do
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      post story_share_admin_add_path(type: "sector"), params: { id: "" }
+    end
+  end
+
+  describe "reorder URL template" do
+    # sortable_controller.js does urlValue.replace(":id", id), so the rendered
+    # template must carry a literal ":id". A query-string id encodes the colon to
+    # %3Aid, the replace misses, and every reorder hits id=:id (not_found) — so
+    # keep :id in the path segment.
+    it "keeps :id as a literal placeholder the sortable JS can substitute" do
+      url = story_share_admin_reorder_path(type: "sector", id: ":id")
+      expect(url).to include(":id")
+      expect(url).not_to include("%3A")
+    end
   end
 
   describe "PUT /story_share/admin/reorder" do
@@ -74,6 +98,50 @@ RSpec.describe "StoryShareAdmin", type: :request do
 
       expect(a.reload.story_share_position).to be_nil
       expect(b.reload.story_share_position).to eq(1)
+    end
+  end
+
+  describe "Ahoy tracking" do
+    before { sign_in admin }
+
+    it "records an event when a sector is added to the menu" do
+      sector = create(:sector, :published, name: "Homelessness")
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "create.story_share_menu",
+              hash_including(resource_type: "Sector", resource_id: sector.id, resource_title: "Homelessness"))
+      post story_share_admin_add_path(type: "sector"), params: { id: sector.id }
+    end
+
+    it "records an event when a category is added to the menu" do
+      category = create(:category, :published)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "create.story_share_menu", hash_including(resource_type: "Category", resource_id: category.id))
+      post story_share_admin_add_path(type: "category"), params: { id: category.id }
+    end
+
+    it "records a before/after position change when a menu item is reordered" do
+      a = create(:sector, :published, story_share_position: 1)
+      b = create(:sector, :published, story_share_position: 2)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "update.story_share_menu",
+              hash_including(resource_type: "Sector", resource_id: b.id,
+                             changes: { position: { before: 2, after: 1 } }))
+      put story_share_admin_reorder_path(type: "sector", id: b.id), params: { position: 1 }
+    end
+
+    it "does not record an event when the position is unchanged" do
+      a = create(:sector, :published, story_share_position: 1)
+      create(:sector, :published, story_share_position: 2)
+      expect(Analytics::AhoyTracker).not_to receive(:track_event)
+      put story_share_admin_reorder_path(type: "sector", id: a.id), params: { position: 1 }
+    end
+
+    it "records an event when a menu item is removed" do
+      sector = create(:sector, :published, story_share_position: 1)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "destroy.story_share_menu",
+              hash_including(resource_type: "Sector", resource_id: sector.id))
+      delete story_share_admin_remove_path(type: "sector", id: sector.id)
     end
   end
 
