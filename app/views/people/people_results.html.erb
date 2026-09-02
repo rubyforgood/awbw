@@ -117,7 +117,7 @@
                 </td>
                 <!-- Actions -->
                 <% if allowed_to?(:manage?, Person) %>
-                  <td class="admin-only bg-blue-100 px-4 py-2">
+                  <td class="admin-only border-b border-gray-200 bg-blue-100 px-4 py-2">
                     <div class="flex flex-wrap justify-start gap-2">
                       <%= link_to "User", user_path(person.user),
                               data: { turbo_frame: "_top" },
