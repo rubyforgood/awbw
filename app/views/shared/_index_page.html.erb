@@ -1,8 +1,7 @@
 <%# Shared shell for an index page: the brand card (accent rule, rounded corners,
     soft domain border) over the domain's own tint, then the serif title with an
     optional eyebrow, subtitle and right-hand actions, and the page body as a block.
-    The accent rule is the public rainbow strip, or the quieter brand-navy admin
-    strip on admin-only pages (see accent_strip_partial).
+    The accent rule adapts to the page's access level (see accent_strip_partial).
     locals: domain (a DomainTheme key), title; optional eyebrow, subtitle,
     actions (captured markup), surface (defaults to the domain's 50 tint),
     topbar (captured back-eyebrow / sub-nav row, justify-between at the card top),
