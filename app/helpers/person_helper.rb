@@ -162,6 +162,12 @@ module PersonHelper
     "admin-only rounded-xl border border-blue-200 bg-blue-100 p-4"
   end
 
+  # Blue admin-only pill for record data that lives only on the edit form and has
+  # no public profile home (contact/identity extras, internal fields).
+  def admin_only_chip_class
+    "admin-only inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-blue-900"
+  end
+
   private
 
   # Shared color palette for the person profile/edit buttons, keyed off the same

@@ -88,6 +88,24 @@
             </p>
           <% end %>
         <% end %>
+        <%# Admin-only identity extras managed on the edit form. %>
+        <% if allowed_to?(:manage?, Person) &&
+              (@person.legal_first_name.present? || @person.pronunciation.present? || @person.date_of_birth.present? || @person.user&.time_zone.present?) %>
+          <div class="admin-only mt-2 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+            <% if @person.legal_first_name.present? && @person.legal_first_name != @person.first_name %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Legal first name (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Legal: <%= @person.legal_first_name %></span>
+            <% end %>
+            <% if @person.pronunciation.present? %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Name pronunciation (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Say: <%= @person.pronunciation %></span>
+            <% end %>
+            <% if @person.date_of_birth.present? %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Birthday (admin only)"><i class="fa-solid fa-cake-candles text-2xs text-blue-700"></i> <%= @person.date_of_birth.strftime("%b %-d") %></span>
+            <% end %>
+            <% if @person.user&.time_zone.present? %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Time zone (admin only)"><i class="fa-solid fa-clock text-2xs text-blue-700"></i> <%= @person.user.time_zone %></span>
+            <% end %>
+          </div>
+        <% end %>
         <!-- Contact info + social -->
         <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
           <% email = @person.user&.email || @person.email %>
@@ -135,6 +153,26 @@
               </span>
             <% else %>
               <%= render "people/social_media_buttons", person: @person %>
+            <% end %>
+          <% end %>
+          <%# Admin-only contact extras that have no public profile home. %>
+          <% if allowed_to?(:manage?, Person) %>
+            <% if @person.email_2.present? %>
+              <span class="<%= admin_only_chip_class %>" title="Secondary email (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.email_2, @person.email_2, class: "hover:text-primary" %><!--email_on--><% if @person.email_2_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= @person.email_2_type %>)</span><% end %>
+              </span>
+            <% end %>
+            <% shown_phone = @person.phone_number %>
+            <% @person.contact_methods.reject(&:inactive?).each do |cm| %>
+              <% next if cm.phone? && cm.value == shown_phone %>
+              <span class="<%= admin_only_chip_class %>" title="<%= cm.kind.humanize %> (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= cm.value %> <span class="text-2xs text-blue-700 uppercase">(<%= [ cm.kind, cm.contact_type ].compact_blank.join(" · ") %>)</span>
+              </span>
+            <% end %>
+            <% if @person.best_time_to_call.present? %>
+              <span class="<%= admin_only_chip_class %>" title="Best time to call (admin only)">
+                <i class="fa-solid fa-clock text-xs text-blue-700"></i> Best time: <%= @person.best_time_to_call %>
+              </span>
             <% end %>
           <% end %>
         </div>
@@ -220,6 +258,36 @@
         <% end %>
       </div>
     </div>
+    <%# Program settings (profile-specific categories) — admin-only, no public home. %>
+    <% if allowed_to?(:manage?, Person) %>
+      <% program_categories = @person.categorizable_items.filter_map(&:category).select { |c| c.category_type&.profile_specific? && c.category_type.name != "AgeRange" }.group_by(&:category_type) %>
+      <% other_settings = @person.other_workshop_setting_responses %>
+      <% if program_categories.any? || other_settings.any? %>
+        <div class="admin-only rounded-xl border border-blue-200 bg-blue-100 p-4">
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <h2 class="font-display text-2xl text-gray-900">Program settings</h2>
+            <%= render "people/admin_only_badge" %>
+          </div>
+          <% program_categories.sort_by { |type, _| type.name.to_s.downcase }.each do |type, cats| %>
+            <div class="mb-2">
+              <h3 class="text-sm font-semibold text-gray-700"><%= type.display_label %></h3>
+              <div class="mt-1 flex flex-wrap gap-1.5">
+                <% cats.sort_by { |c| c.name.to_s.downcase }.each do |category| %>
+                  <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900"><%= category.name %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <% if other_settings.any? %>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <% other_settings.each do |response| %>
+                <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900 italic"><%= response %></span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
     <!-- Bio -->
     <% if @person.bio.present? && profile_piece_shown?(@person, :profile_show_bio) %>
       <% bio_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_bio) %>
@@ -332,6 +400,10 @@
         edit page (Membership section there), not on the public-facing profile. %>
     <% if allowed_to?(:own_membership?, @person) %>
       <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay %>
+    <% end %>
+    <!-- ADMIN DETAILS (record data with no public profile home) -->
+    <% if allowed_to?(:manage?, Person) %>
+      <%= render "people/admin_details", person: @person %>
     <% end %>
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:own_record?, @person) %>
