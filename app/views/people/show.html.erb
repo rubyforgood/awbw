@@ -376,23 +376,6 @@
     <% if allowed_to?(:own_membership?, @person) %>
       <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay %>
     <% end %>
-    <!-- COMMENTS & COMMUNICATIONS (admin-only; lazy-loads the shared feed) -->
-    <% if allowed_to?(:manage?, Comment) %>
-      <div class="admin-only overflow-hidden rounded-2xl border-2 border-blue-200 bg-blue-50 shadow-sm">
-        <div class="flex items-center gap-3 border-b border-blue-200 bg-blue-100 px-5 py-4 sm:px-6">
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-200 text-blue-800">
-            <i class="fa-solid fa-comments"></i>
-          </span>
-          <h2 class="font-display text-2xl text-gray-900">Comments &amp; communications</h2>
-          <span class="ml-auto"><%= render "people/admin_only_badge" %></span>
-        </div>
-        <div class="px-4 py-5 sm:px-6 sm:py-6">
-          <%= turbo_frame_tag "comments_and_communications_results", src: comments_and_communications_person_path(@person), loading: :lazy do %>
-            <p class="text-gray-500 italic">Loading comments &amp; communications...</p>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:own_record?, @person) %>
       <div class="user-only border-2 bg-white <%= DomainTheme.border_class_for(:user_only) %> overflow-hidden rounded-2xl shadow-sm"

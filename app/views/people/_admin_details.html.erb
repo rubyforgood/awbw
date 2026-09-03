@@ -128,5 +128,39 @@
         </dl>
       </div>
     </div>
+    <%# Most recent 3 of the merged comments + communications feed. Same row
+        partials as the full feed; "View all" opens it. %>
+    <% if allowed_to?(:manage?, Comment) %>
+      <% comment_entries = person.comments.to_a %>
+      <% communication_entries = person.communications_scope.order(created_at: :desc).to_a %>
+      <% activity_total = comment_entries.size + communication_entries.size %>
+      <% recent_activity = (comment_entries + communication_entries).sort_by(&:created_at).reverse.first(3) %>
+      <% if recent_activity.any? %>
+        <div>
+          <div class="mb-2 flex flex-wrap items-center gap-2">
+            <h3 class="text-sm font-semibold tracking-wide text-gray-700 uppercase">Comments &amp; communications</h3>
+            <% if activity_total > recent_activity.size %>
+              <%= link_to "View all #{activity_total}", comments_and_communications_person_path(person), class: "text-xs text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
+            <% end %>
+          </div>
+          <div class="space-y-2">
+            <% recent_activity.each do |entry| %>
+              <% if entry.is_a?(Comment) %>
+                <div class="rounded-md border <%= comment_card_class(warning: entry.body&.include?("[AGE_RANGE_DATA]")) %> px-3 py-2">
+                  <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
+                    <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none" title="<%= entry.flagged? ? "Flagged for follow-up" : "Not flagged" %>">
+                      <i class="fa-flag <%= entry.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-400" %>"></i>
+                    </span>
+                    <%= render "comments/comment_line", comment: entry %>
+                  </div>
+                </div>
+              <% else %>
+                <%= render "notifications/communication_line", notification: entry, admin: true %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
   </div>
 </div>

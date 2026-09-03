@@ -23,6 +23,7 @@ RSpec.describe "Person profile admin-only details", type: :request do
     create(:address, addressable: person, street_address: "123 Admin St")
     tag = create(:staff_tag, name: "Pipeline VIP")
     create(:staff_tagging, staff_tag: tag, staff_taggable: person)
+    create(:comment, commentable: person, body: "Internal note here", created_by: admin)
   end
 
   # Every edit-only piece surfaced on the profile, and the marker text a non-admin
@@ -42,7 +43,8 @@ RSpec.describe "Person profile admin-only details", type: :request do
     "FMK-12345",
     "Demographic detail here",
     "First name only",
-    "Comments &amp; communications"
+    "Comments &amp; communications",
+    "Internal note here"
   ]
 
   context "when an admin views the profile" do
