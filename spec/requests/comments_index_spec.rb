@@ -34,6 +34,17 @@ RSpec.describe "Comments index", type: :request do
       expect_frame_breakout(response.body, "/people/#{commentable.id}/edit")
     end
 
+    it "renders comments on records without a nested comments route without Oopsie-ing" do
+      sign_in admin
+      affiliation = create(:affiliation)
+      create(:comment, commentable: affiliation, body: "Affiliation note")
+
+      get comments_path, headers: frame_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comments_results", "Affiliation note")
+    end
+
     it "filters to comments connected to a person" do
       sign_in admin
       target = create(:person)
