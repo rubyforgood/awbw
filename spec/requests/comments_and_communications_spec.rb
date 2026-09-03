@@ -191,6 +191,56 @@ RSpec.describe "Comments and communications", type: :request do
     end
   end
 
+  describe "inline edit from the feed" do
+    before { sign_in admin }
+
+    it "shows an Edit control for a comment on an editable commentable and saves changes in place" do
+      comment = create(:comment, commentable: person, body: "Original note", created_by: admin)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)} button")&.text).to include("Edit")
+
+      patch person_comment_path(person, comment), params: { combined: 1, comment: { body: "Updated note" } },
+                                                    headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include("Updated note")
+      expect(comment.reload.body).to eq("Updated note")
+    end
+
+    it "hides the Edit control for a comment whose commentable has no standalone comments route" do
+      affiliation = create(:affiliation, person: person)
+      comment = create(:comment, commentable: affiliation, body: "On the affiliation", created_by: admin)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)}")
+      expect(row.text).to include("On the affiliation")
+      expect(row.at_css("button")).to be_nil
+    end
+
+    it "shows an Edit control for a communication and saves changes in place" do
+      notification = create(:notification, noticeable: person, recipient_email: "primary@example.com",
+                                           email_subject: "Original subject", kind: "manual_log",
+                                           channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)} button")&.text).to include("Edit")
+
+      patch notification_path(notification), params: { combined: 1, notification: { email_subject: "Updated subject" } },
+                                              headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include("Updated subject")
+      expect(notification.reload.email_subject).to eq("Updated subject")
+    end
+  end
+
   describe "the combined section's link to the feed" do
     before { sign_in admin }
 
