@@ -5,8 +5,9 @@
 # (/forms/:id/results) has something rich to look at: pie + bar charts for the
 # select/checkbox questions (including the dynamic sector/age-group fields that
 # store ids), "Other / please specify" write-in lists, free-text answer lists,
-# and a file-upload count. Group-header and informational fields are included so
-# the input-less types are represented too (they're skipped in the rollup).
+# an average/total/range summary for the number questions, and a file-upload
+# count. Group-header and informational fields are included so the input-less
+# types are represented too (they're skipped in the rollup).
 #
 # Idempotent: the form is looked up by slug, fields by name, submissions by
 # (form, person), and each answer is skipped when already present. Distributions
@@ -25,10 +26,12 @@ end
 age_categories = CategoryType.find_by(name: "AgeRange")&.categories&.published&.order(:position)&.to_a || []
 sectors = Sector.published.order(:name).first(6)
 
-def upsert_field!(form, name, answer_type, position, options: [], field_identifier: nil, required: false)
+def upsert_field!(form, name, answer_type, position, options: [], field_identifier: nil, required: false,
+                  input_type: :text_alphanumeric)
   field = form.form_fields.find_by(name: name)
   field ||= form.form_fields.create!(name: name, answer_type: answer_type, position: position,
-                                     status: :active, required: required, field_identifier: field_identifier)
+                                     status: :active, required: required, field_identifier: field_identifier,
+                                     input_type: input_type)
   options.each_with_index do |option_name, index|
     answer_option = AnswerOption.find_or_create_by!(name: option_name) { |ao| ao.position = index + 1 }
     FormFieldAnswerOption.find_or_create_by!(form_field: field, answer_option: answer_option)
@@ -55,6 +58,12 @@ state_field = upsert_field!(form, "Which state are you in?", :free_form_input_on
 country_field = upsert_field!(form, "Which country are you in?", :free_form_input_one_line, 11, field_identifier: "mailing_country")
 info = upsert_field!(form, "Thanks for sharing — the rest is optional.", :no_user_input, 12)
 upload = upsert_field!(form, "Upload a sample of your work", :file_upload, 13)
+# Number questions are one-line inputs with a numeric input_type — that's what
+# makes them roll up as average / total / range instead of a text answer list.
+served = upsert_field!(form, "People served in a typical month", :free_form_input_one_line, 14,
+                       input_type: :number_integer)
+hours = upsert_field!(form, "Hours of programming you run each week", :free_form_input_one_line, 15,
+                      input_type: :number_decimal)
 
 states = [ "California", "Texas", "New York", "Florida", "Washington", "Illinois", "Massachusetts", "Oregon", "Georgia", "Ohio" ]
 countries = [ "United States", "United States", "United States", "Canada", "United Kingdom", "Australia", "Mexico" ]
@@ -78,6 +87,11 @@ heard_answers = [
 mediums = [ "Painting", "Collage", "Clay", "Drawing", "Journaling" ]
 regions = [ "Pacific", "Mountain", "Midwest", "Southwest", "Southeast", "Northeast", "Mid-Atlantic", "International" ]
 all_topics = [ "Self-care", "Grief", "Empathy", "Communication", "Safety and security" ]
+# Wide spread so the average, total, and range each read differently. The blank
+# and the "varies" leave a partial answer rate, and show that a non-numeric stray
+# is dropped from the figures rather than skewing them.
+served_counts = [ "12", "45", "8", "120", "30", "", "64", "6", "250", "18", "varies" ]
+weekly_hours = [ "2.5", "6", "1.5", "12", "3.75", "8", "", "4", "20.5", "0.5" ]
 
 respondent_count = 30
 
@@ -103,7 +117,9 @@ respondent_count.times do |i|
     # A rotating 1–3 topic subset, so the multi-select bar chart varies.
     topics => all_topics.each_with_index.select { |_, j| (i + j) % 3 == 0 }.map(&:first).join(", "),
     # Every third respondent skips the file upload, for a realistic count.
-    upload => (i % 3 == 2 ? "" : "sample_#{i + 1}.jpg")
+    upload => (i % 3 == 2 ? "" : "sample_#{i + 1}.jpg"),
+    served => served_counts[i % served_counts.size],
+    hours => weekly_hours[i % weekly_hours.size]
   }
   answers[age_group] = age_categories[i % age_categories.size].id.to_s if age_categories.any?
   # 1–3 sectors as their ids, joined like a real multi-select submission.

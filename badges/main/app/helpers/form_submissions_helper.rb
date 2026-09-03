@@ -6,6 +6,7 @@ module FormSubmissionsHelper
   def form_submission_carryover_params(params)
     {
       event_id: params[:event_id].presence,
+      form_field_id: params[:form_field_id].presence,
       organization_id: params[:organization_id].presence,
       role: params[:role].presence,
       search: params[:search].presence,
@@ -26,8 +27,8 @@ module FormSubmissionsHelper
 
   # True when any index filter is active — drives whether "Clear filters" shows.
   def form_submission_filters_active?(params)
-    params.values_at(:person_id, :form_id, :event_id, :organization_id, :role,
-                     :search, :org_status, :account_status, :scenario,
+    params.values_at(:person_id, :form_id, :form_field_id, :event_id, :organization_id,
+                     :role, :search, :org_status, :account_status, :scenario,
                      :start_date, :end_date).any?(&:present?)
   end
 end

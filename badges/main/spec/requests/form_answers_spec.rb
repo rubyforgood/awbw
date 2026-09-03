@@ -68,7 +68,20 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("at-other-event")
       end
 
-      it "filters by person name" do
+      it "filters by organization" do
+        org = create(:organization)
+        linked = create(:form_submission)
+        linked.link_organization!(org.id)
+        create(:form_answer, submitted_answer: "for-this-org", form_submission: linked)
+        create(:form_answer, submitted_answer: "for-other-org", form_submission: create(:form_submission))
+
+        get form_answers_path(organization_id: org.id), headers: frame_headers
+
+        expect(response.body).to include("for-this-org")
+        expect(response.body).not_to include("for-other-org")
+      end
+
+      it "filters by person" do
         priya = create(:person, first_name: "Priya", last_name: "Patel")
         other = create(:person, first_name: "Sam", last_name: "Jones")
         create(:form_answer, submitted_answer: "priya-answer",
@@ -76,7 +89,7 @@ RSpec.describe "FormAnswers", type: :request do
         create(:form_answer, submitted_answer: "sam-answer",
                form_submission: create(:form_submission, person: other))
 
-        get form_answers_path(person: "Priya"), headers: frame_headers
+        get form_answers_path(person_id: priya.id), headers: frame_headers
 
         expect(response.body).to include("priya-answer")
         expect(response.body).not_to include("sam-answer")
@@ -105,6 +118,121 @@ RSpec.describe "FormAnswers", type: :request do
 
         expect(response.body).to include("long-answer")
         expect(response.body).not_to include("short-answer")
+      end
+
+      # By the submission's date, not the answer row's, so this list and a form's
+      # results page answer the same date range the same way.
+      it "filters by when the submission was made" do
+        create(:form_answer, submitted_answer: "winter-answer",
+               form_submission: create(:form_submission, created_at: Date.new(2026, 1, 5)))
+        create(:form_answer, submitted_answer: "summer-answer",
+               form_submission: create(:form_submission, created_at: Date.new(2026, 6, 5)))
+
+        get form_answers_path(start_date: "2026-05-01", end_date: "2026-07-01"), headers: frame_headers
+
+        expect(response.body).to include("summer-answer")
+        expect(response.body).not_to include("winter-answer")
+      end
+
+      it "hides the blank answer rows an unfilled optional question leaves behind" do
+        form = create(:form)
+        create(:form_answer, submitted_answer: "answered-it",
+               form_field: create(:form_field, form: form, name: "Answered question"))
+        create(:form_answer, submitted_answer: "",
+               form_field: create(:form_field, form: form, name: "Skipped question"))
+
+        get form_answers_path, headers: frame_headers
+
+        expect(response.body).to include("Answered question")
+        expect(response.body).not_to include("Skipped question")
+      end
+
+      it "includes the blank rows when the empty filter asks for them" do
+        form = create(:form)
+        create(:form_answer, submitted_answer: "",
+               form_field: create(:form_field, form: form, name: "Skipped question"))
+
+        get form_answers_path(empty: "include"), headers: frame_headers
+
+        expect(response.body).to include("Skipped question")
+      end
+
+      # The Question box is a free-text search, so on its own it would also match a
+      # sibling question whose name contains this one's. A results drill-down sends
+      # the field id alongside so its list matches the count on the card.
+      it "pins a results drill-down to the exact question it names" do
+        form = create(:form)
+        email = create(:form_field, form: form, name: "Email")
+        create(:form_field, form: form, name: "Email 2")
+        create(:form_answer, form_field: email, submitted_answer: "pinned-answer",
+               form_submission: create(:form_submission, form: form))
+        create(:form_answer, form_field: form.form_fields.find_by(name: "Email 2"),
+               submitted_answer: "sibling-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "Email", form_field_id: email.id), headers: frame_headers
+
+        expect(response.body).to include("pinned-answer")
+        expect(response.body).not_to include("sibling-answer")
+      end
+
+      it "searches by name again once the question box no longer names the pinned question" do
+        form = create(:form)
+        email = create(:form_field, form: form, name: "Email")
+        create(:form_answer, form_field: email, submitted_answer: "pinned-answer",
+               form_submission: create(:form_submission, form: form))
+        create(:form_answer, form_field: create(:form_field, form: form, name: "Phone"),
+               submitted_answer: "phone-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "Phone", form_field_id: email.id), headers: frame_headers
+
+        expect(response.body).to include("phone-answer")
+        expect(response.body).not_to include("pinned-answer")
+      end
+
+      it "links back to the form's results page when it linked here" do
+        form = create(:form, name: "Volunteer interest")
+        create(:form_answer, form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, return_to: "form_results")
+
+        expect(response.body).to include(CGI.escapeHTML(results_form_path(form)))
+        expect(response.body).to include("Volunteer interest results")
+      end
+
+      it "anchors the way back to the results card the drill-down opened" do
+        form = create(:form, name: "Volunteer interest")
+        field = create(:form_field, form: form, name: "Any thoughts")
+        create(:form_answer, form_field: field, form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, return_to: "form_results",
+                              question: "Any thoughts", form_field_id: field.id)
+
+        expect(response.body).to include(CGI.escapeHTML(
+          results_form_path(form, anchor: "form-question-#{field.id}")
+        ))
+      end
+
+      it "restores the results page's own question search on the way back" do
+        form = create(:form, name: "Volunteer interest")
+        create(:form_answer, form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, return_to: "form_results",
+                              question: "Any thoughts", results_question: "thoughts")
+
+        expect(response.body).to include(CGI.escapeHTML(results_form_path(form, question: "thoughts")))
+      end
+
+      it "keeps every filter on the round trip through a submission" do
+        org = create(:organization)
+        submission = create(:form_submission)
+        submission.link_organization!(org.id)
+        create(:form_answer, form_submission: submission)
+
+        get form_answers_path(organization_id: org.id), headers: frame_headers
+
+        expect(response.body).to include(CGI.escapeHTML(
+          form_submission_path(submission, return_to: "form_answers", organization_id: org.id)
+        ))
       end
 
       it "breaks the View link out of the results frame" do

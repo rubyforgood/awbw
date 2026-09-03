@@ -48,6 +48,72 @@ module FormsHelper
       class: "text-sm #{eyebrow_link_class} px-2 py-1"
   end
 
+  # Which submissions the rollup covers. The empty state reads these to tell a
+  # filtered-to-nothing view apart from a form nobody has filled in.
+  def form_results_filter_params
+    {
+      event_id: @selected_event_id,
+      organization_id: @selected_organization_id,
+      start_date: @selected_start_date,
+      end_date: @selected_end_date
+    }.compact
+  end
+
+  # Everything a link out of a results card must carry to land back on the same
+  # view: those filters plus the question search, renamed because the answers
+  # list spends `question` on the one card that was drilled into.
+  def form_results_link_params
+    form_results_filter_params.merge(results_question: @selected_question).compact
+  end
+
+  # Stable anchor for a question's card on the results page, so a page reached
+  # from that card can scroll back to exactly the card it opened. Mirrors
+  # FormSubmissionsHelper#form_submission_row_id.
+  def form_results_card_id(field_id)
+    "form-question-#{field_id}"
+  end
+
+  # The same state read back off a page the results linked to, for its eyebrow —
+  # including which card was opened, so the return lands on it rather than at the
+  # top of the rollup.
+  def form_results_return_params(params)
+    {
+      event_id: params[:event_id].presence,
+      organization_id: params[:organization_id].presence,
+      start_date: params[:start_date].presence,
+      end_date: params[:end_date].presence,
+      question: params[:results_question].presence,
+      anchor: params[:form_field_id].presence && form_results_card_id(params[:form_field_id])
+    }.compact
+  end
+
+  # A results card's footer link to the Form submissions list: the submissions
+  # that answered this question, narrowed like the rollup. form_field_id both
+  # filters that list and names the card for its eyebrow to return to.
+  def form_results_submissions_params(form, report)
+    {
+      form_id: form.id,
+      form_field_id: report.field.id,
+      return_to: "form_results",
+      **form_results_link_params
+    }.compact
+  end
+
+  # A results card's drill-down into the Form answers list: this question, on
+  # this form, narrowed exactly like the rollup the admin is looking at, plus the
+  # origin that gives that list an eyebrow back here. `form_field_id` pins the
+  # exact question — the name alone is a LIKE search there, which would also
+  # match a sibling question whose name contains this one's.
+  def form_results_drilldown_params(form, report)
+    {
+      form_id: form.id,
+      question: report.label,
+      form_field_id: report.field&.id,
+      return_to: "form_results",
+      **form_results_link_params
+    }.compact
+  end
+
   # Human-readable role for a form: "Registration", "Bulk Payment", etc.,
   # falling back to "General" when no role is set.
   def form_role_label(form)

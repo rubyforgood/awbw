@@ -965,6 +965,372 @@ RSpec.describe "Forms", type: :request do
         get results_form_path(form)
         expect(response.body).not_to include("Duplicate form")
       end
+
+      it "shows an event filter for a form shared across more than one event" do
+        form = create(:form)
+        create(:event_form, form: form, event: create(:event, title: "Spring Cohort"), role: "registration")
+        create(:event_form, form: form, event: create(:event, title: "Fall Cohort"), role: "registration")
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        select = doc.at_css("select#event_id")
+        expect(select).to be_present
+        expect(select.text).to include("Spring Cohort")
+        expect(select.text).to include("Fall Cohort")
+      end
+
+      it "omits the event filter for a form with no connected events" do
+        form = create(:form, :standalone)
+        get results_form_path(form)
+        expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
+      end
+
+      it "omits the event filter for a form connected to a single event" do
+        form = create(:form)
+        create(:event_form, form: form, event: create(:event), role: "registration")
+        get results_form_path(form)
+        expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
+      end
+
+      it "filters by organization, not by person" do
+        form = create(:form, :standalone)
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.at_css("select#organization_id")).to be_present
+        expect(doc.at_css("select#person_id")).to be_nil
+      end
+
+      it "renders the results filters as question, event, organization, submitted from, submitted to" do
+        form = create(:form)
+        create(:event_form, form: form, event: create(:event), role: "registration")
+        create(:event_form, form: form, event: create(:event), role: "continuing_education")
+        create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        ids = doc.css("form label").map { |l| l["for"] }.compact
+        ids &= %w[question event_id organization_id start_date end_date]
+        expect(ids).to eq(%w[question event_id organization_id start_date end_date])
+      end
+
+      it "offers a clear-filters control that drops back to the unfiltered rollup" do
+        form = create(:form, :standalone)
+        create(:form_submission, form: form)
+
+        get results_form_path(form, organization_id: create(:organization).id)
+
+        doc = Nokogiri::HTML(response.body)
+        clear = doc.css("a").find { |a| a.text.strip == "Clear filters" }
+        expect(clear).to be_present
+        expect(clear["href"]).to eq(results_form_path(form))
+      end
+
+      it "narrows the rollup to submissions in the selected date range" do
+        form = create(:form, :standalone)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form, created_at: Date.new(2026, 1, 10)),
+                             form_field: color, submitted_answer: "Old")
+        create(:form_answer, form_submission: create(:form_submission, form: form, created_at: Date.new(2026, 6, 10)),
+                             form_field: color, submitted_answer: "New")
+
+        get results_form_path(form, start_date: "2026-05-01", end_date: "2026-07-01")
+
+        expect(response.body).to include("New")
+        expect(response.body).not_to include("Old")
+      end
+
+      it "narrows the rollup to the selected organization's submissions" do
+        form = create(:form)
+        event = create(:event)
+        org = create(:organization)
+        create(:event_form, form: form, event: event, role: "registration")
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        linked = create(:form_submission, form: form, event: event)
+        linked.link_organization!(org.id)
+        create(:form_answer, form_submission: linked, form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: event),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form, organization_id: org.id)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
+
+      it "narrows the rollup to the selected event's submissions" do
+        form = create(:form)
+        event = create(:event)
+        other_event = create(:event)
+        create(:event_form, form: form, event: event, role: "registration")
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: event),
+                             form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: other_event),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form, event_id: event.id)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
+
+      it "narrows the visible question cards to those matching the question filter" do
+        form = create(:form, :standalone)
+        create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_field, form: form, name: "Favorite food", answer_type: :single_select_radio)
+        create(:form_submission, form: form)
+
+        get results_form_path(form, question: "color")
+
+        expect(response.body).to include("Favorite color")
+        expect(response.body).not_to include("Favorite food")
+      end
+
+      it "says nothing about a question search on a form that asks no questions" do
+        form = create(:form, :standalone)
+        create(:form_field, form: form, answer_type: :group_header)
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        expect(response.body).not_to include("No questions match")
+      end
+
+      it "links a text question's responses to the form answers index filtered to that question" do
+        form = create(:form, :standalone, name: "Survey")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts",
+                                                   form_field_id: thoughts.id, return_to: "form_results"))
+      end
+
+      it "carries the selected event into the form answers links" do
+        form = create(:form)
+        event = create(:event)
+        create(:event_form, form: form, event: event, role: "registration")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: event),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, event_id: event.id)
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", form_field_id: thoughts.id,
+                                                   event_id: event.id, return_to: "form_results"))
+      end
+
+      it "carries the submitted date range into the form answers links" do
+        form = create(:form, :standalone)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form, created_at: Date.new(2026, 6, 5)),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, start_date: "2026-05-01", end_date: "2026-07-01")
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts",
+                                                   form_field_id: thoughts.id,
+                                                   start_date: "2026-05-01", end_date: "2026-07-01",
+                                                   return_to: "form_results"))
+      end
+
+      it "carries the selected organization into the form answers links" do
+        form = create(:form)
+        org = create(:organization)
+        create(:event_form, form: form, event: create(:event), role: "registration")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        linked = create(:form_submission, form: form)
+        linked.link_organization!(org.id)
+        create(:form_answer, form_submission: linked, form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, organization_id: org.id)
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", form_field_id: thoughts.id,
+                                                   organization_id: org.id, return_to: "form_results"))
+      end
+
+      it "carries the results filters and the card into a response's View submission link" do
+        form = create(:form, :standalone)
+        org = create(:organization)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        submission = create(:form_submission, form: form)
+        submission.link_organization!(org.id)
+        create(:form_answer, form_submission: submission, form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, organization_id: org.id)
+
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_submission_path(submission, return_to: "form_results", form_id: form.id,
+                                                      form_field_id: thoughts.id, organization_id: org.id))
+      end
+
+      # The footer counts who answered this question, not who submitted the form.
+      it "footers each card with the submissions that answered that question" do
+        form = create(:form, :standalone, name: "Survey")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        expect(response.body).to include("View 1 submission")
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: thoughts.id,
+                                                       return_to: "form_results"))
+      end
+
+      # No list can be narrowed to "only the write-ins", so the sub-card borrows its
+      # question's counts and destinations rather than showing a number it can't open.
+      it "gives the written-in sub-card its question's answer and submission links" do
+        form = create(:form, :standalone)
+        heard = create(:form_field, form: form, name: "How did you hear about us?",
+                       answer_type: :single_select_radio)
+        # The write-in card only appears for an option the field marks as "specify".
+        heard.answer_options << AnswerOption.create!(name: "Other", position: 1)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: heard, submitted_answer: "Other: Facebook group")
+
+        get results_form_path(form)
+
+        expect(response.body).to include("How did you hear about us?: written-in answers")
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: heard.name,
+                                                   form_field_id: heard.id, return_to: "form_results"))
+        expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: heard.id,
+                                                       return_to: "form_results"))
+      end
+
+      it "links a file question's upload count to those answers" do
+        form = create(:form, :standalone)
+        upload = create(:form_field, form: form, name: "Sample of your work", answer_type: :file_upload)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: upload, submitted_answer: "sample.jpg")
+
+        get results_form_path(form)
+
+        count = Nokogiri::HTML(response.body).css("a").find { |a| a.text.include?("file uploaded") }
+        expect(count).to be_present
+        expect(count["href"]).to eq(form_answers_path(form_id: form.id, question: "Sample of your work",
+                                                      form_field_id: upload.id, return_to: "form_results"))
+      end
+
+      # answered_count on a number question counts only the answers that parse as
+      # numbers, so a link would undercount the list it opened.
+      it "leaves a number question's card unlinked" do
+        form = create(:form, :standalone)
+        served = create(:form_field, form: form, name: "People served",
+                        answer_type: :free_form_input_one_line, input_type: :number_integer)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: served, submitted_answer: "12")
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: served, submitted_answer: "varies")
+
+        get results_form_path(form)
+
+        expect(response.body).to include("People served")
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).not_to include(form_answers_path(form_id: form.id, question: "People served",
+                                                       form_field_id: served.id, return_to: "form_results"))
+      end
+
+      it "counts a charted question's answers in its header too, linking to them" do
+        form = create(:form, :standalone)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form)
+
+        count = Nokogiri::HTML(response.body).css("a").find { |a| a.text.strip == "2 answers" }
+        expect(count).to be_present
+        expect(count["href"]).to eq(form_answers_path(form_id: form.id, question: "Favorite color",
+                                                      form_field_id: color.id, return_to: "form_results"))
+      end
+
+      it "counts a text question's own answers in its header, linking to them" do
+        form = create(:form, :standalone)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        expect(response.body).to include("1 answer")
+        expect(response.body).not_to include("View all 1 response")
+      end
+
+      it "hangs a response's submission link on its byline rather than a View label" do
+        form = create(:form, :standalone)
+        person = create(:person, first_name: "Priya", last_name: "Patel")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        submission = create(:form_submission, form: form, person: person)
+        create(:form_answer, form_submission: submission, form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form)
+
+        byline = Nokogiri::HTML(response.body).css("a").find do |a|
+          a["href"] == form_submission_path(submission, return_to: "form_results",
+                                            form_id: form.id, form_field_id: thoughts.id)
+        end
+        expect(byline).to be_present
+        expect(byline.text).to include("Priya Patel")
+        expect(byline.text.strip).not_to eq("View")
+      end
+
+      it "anchors each question card so a return link can scroll back to it" do
+        form = create(:form, :standalone)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: color, submitted_answer: "Blue")
+
+        get results_form_path(form)
+
+        expect(Nokogiri::HTML(response.body).at_css("#form-question-#{color.id}")).to be_present
+      end
+
+      it "carries the question search out as results_question, so `question` stays the drilled-into card" do
+        form = create(:form, :standalone)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, question: "thoughts")
+
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts",
+                                                   form_field_id: thoughts.id, results_question: "thoughts",
+                                                   return_to: "form_results"))
+      end
+
+      it "says a filter emptied the rollup rather than that the form has no submissions" do
+        form = create(:form, :standalone)
+        create(:form_submission, form: form)
+
+        get results_form_path(form, organization_id: create(:organization).id)
+
+        expect(response.body).to include("No submissions match the selected filters yet.")
+        expect(response.body).not_to include("No submissions to this form yet.")
+      end
     end
 
     context "as a regular user" do
