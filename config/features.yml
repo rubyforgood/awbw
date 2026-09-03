@@ -27,6 +27,16 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "See a person's full record on their profile"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-03
+  summary: >-
+    Admins now see a person's full record on their profile: pieces they hid
+    (email, phone, bio, and more) still show to you, marked "Hidden from
+    profile", and data that used to live only on the edit form now sits in an
+    "Admin details" panel.
+  pr_number: 2502
 - name: "Tell comments from emails at a glance on the activity feed"
   area: communications
   display_status: admin_facing
