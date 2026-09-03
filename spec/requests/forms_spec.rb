@@ -16,6 +16,12 @@ RSpec.describe "Forms", type: :request do
         expect(response).to have_http_status(:success)
       end
 
+      it "tops the admin-only card with the brand-navy admin strip, not the rainbow rule" do
+        get forms_path
+        expect(response.body).to include("var(--color-brand-navy-950),var(--color-brand-navy-800),var(--color-brand-navy-600)")
+        expect(response.body).not_to include("var(--color-brand-green-700),var(--color-brand-orange-600)")
+      end
+
       it "lists standalone forms in the results frame" do
         create(:form, :standalone, name: "My Form")
         get forms_path, headers: frame_headers

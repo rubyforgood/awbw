@@ -271,6 +271,20 @@ module ApplicationHelper
     base.change(hour: 9, min: 0)
   end
 
+  # True when the current page declared itself admin-only via its page_bg_class
+  # marker. The shared index/show shells use this to swap the public rainbow rule
+  # for the quieter brand-navy admin strip. Views set content_for(:page_bg_class)
+  # at their top, so it is captured before the shell renders.
+  def admin_only_page?
+    content_for(:page_bg_class).to_s.start_with?("admin-only")
+  end
+
+  # The accent strip partial for the current page: the brand-navy admin rule on
+  # admin-only pages, the public rainbow rule otherwise.
+  def accent_strip_partial
+    admin_only_page? ? "shared/admin_accent_strip" : "shared/brand_accent_strip"
+  end
+
   # Rainbow gradient accent bar shown beside form section headers.
   def form_section_bar_class
     "h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"

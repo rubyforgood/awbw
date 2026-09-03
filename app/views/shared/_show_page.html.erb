@@ -1,9 +1,11 @@
-<%# Shared shell for a public show page: the brand card (rainbow rule, rounded
-    corners, soft domain border) over the domain's own tint, with the page body
-    supplied as a block. Mirrors `shared/_index_page` for the listing pages.
+<%# Shared shell for a show page: the brand card (accent rule, rounded corners,
+    soft domain border) over the domain's own tint, with the page body supplied
+    as a block. The accent rule is the public rainbow strip, or the quieter
+    brand-navy admin strip on admin-only pages (see accent_strip_partial).
+    Mirrors `shared/_index_page` for the listing pages.
     locals: domain (a DomainTheme key); optional surface, extra_class. %>
 <% surface = local_assigns[:surface].presence || DomainTheme.bg_class_for(domain, intensity: 50) %>
 <div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> <%= local_assigns[:extra_class] %> mx-auto w-full max-w-7xl rounded-2xl border shadow-sm">
-  <%= render "shared/brand_accent_strip", rounded: true %>
+  <%= render accent_strip_partial, rounded: true %>
   <div class="p-6"><%= yield %></div>
 </div>
