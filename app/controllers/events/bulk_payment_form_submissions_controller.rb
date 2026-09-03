@@ -1,6 +1,8 @@
 module Events
   class BulkPaymentFormSubmissionsController < ApplicationController
+    include SearchEngineHideable
     skip_before_action :authenticate_user!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
+    before_action :noindex!, only: [ :new, :create, :show, :ticket, :resend_confirmation ]
     before_action :set_event, only: [ :new, :create, :show ]
     before_action :set_form, only: [ :new, :create ]
 

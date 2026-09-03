@@ -1,5 +1,5 @@
 class ResourcesController < ApplicationController
-  include ExternallyRedirectable, AhoyTracking, TagAssignable, MentionableScopable
+  include ExternallyRedirectable, AhoyTracking, TagAssignable, MentionableScopable, SearchEngineHideable
 
   skip_before_action :authenticate_user!, only: [ :index, :show, :download ]
 
@@ -69,6 +69,7 @@ class ResourcesController < ApplicationController
       gallery_assets: :file_attachment,
     ).find(resource_id_param).decorate
     authorize! @resource
+    noindex! if @resource.hidden_from_search
     track_view(@resource)
     @mentioners = authorized_scope_mentions(@resource.mentioner_records_grouped)
     @mentionees = authorized_scope_mentions(@resource.mentionee_records_grouped)

@@ -1,5 +1,7 @@
 class RegistrationTicketCalloutsController < ApplicationController
+  include SearchEngineHideable
   skip_before_action :authenticate_user!, only: [ :show ]
+  before_action :noindex!, only: [ :show ]
   before_action :set_event
 
   # Public detail page for a single registration ticket callout, linked from the
