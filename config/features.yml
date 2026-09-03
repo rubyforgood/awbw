@@ -3727,6 +3727,16 @@
   action_path: /events
   pr_number: 2504
 
+- name: "Unique certificate design for on-demand trainings"
+  area: events
+  display_status: user_facing
+  released_on: 2026-10-07
+  summary: >-
+    On-demand facilitator training completions now download their own painted
+    certificate frame, distinct from the scheduled-training design. The
+    recipient's name, course title, and dates still print live over it.
+  action_path: /events
+  pr_number: 2606
 - name: "Slider questions on forms"
   area: registration
   display_status: admin_facing
