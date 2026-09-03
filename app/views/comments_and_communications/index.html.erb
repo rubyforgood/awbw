@@ -31,7 +31,13 @@
   <div class="space-y-6 p-4 sm:p-8">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
       <div class="flex flex-wrap items-baseline gap-3">
-        <h1 class="text-primary font-display text-2xl font-semibold"><%= @person ? @person.full_name : "Everyone" %></h1>
+        <h1 class="text-primary font-display text-2xl font-semibold">
+          <% if @person %>
+            <%= link_to @person.full_name, person_path(@person), class: "hover:underline" %>
+          <% else %>
+            Everyone
+          <% end %>
+        </h1>
         <div class="flex items-center gap-2">
           <%# Jump straight to one person's own combined feed — a full page swap
               (title, eyebrow, ready composers), not a same-page filter. %>
