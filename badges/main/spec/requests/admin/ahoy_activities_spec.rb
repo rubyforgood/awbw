@@ -157,7 +157,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         create(:ahoy_event, name: "view.events.reports", user: user, visit: visit_for_user,
                             time: 2.hours.ago)
 
-        get index_path, params: { time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+        get index_path, params: { time_period: "all_time", audience: %w[visitors users staff], hide_interactions: "0" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("activity_results")
@@ -202,6 +202,19 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include("interaction_noise_marker")
         expect(response.body).to include("create.bookmark")
+      end
+
+      it "defaults to including admin actors and hiding interactions" do
+        create(:ahoy_event, name: "create.workshop", user: admin, visit: visit_for_admin,
+                            time: 1.hour.ago, properties: { "resource_title" => "admin_actor_marker" })
+        create(:ahoy_event, name: "view.workshop", user: user, visit: visit_for_user,
+                            time: 1.hour.ago, properties: { "resource_title" => "interaction_default_marker" })
+
+        get index_path, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("admin_actor_marker")
+        expect(response.body).not_to include("interaction_default_marker")
       end
 
       it "keeps person_id as a hidden field so the filter form stays person-scoped" do
@@ -307,7 +320,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
                             visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
                             time: 1.day.ago, properties: { "resource_title" => "Anger Masks" })
 
-        get index_path, params: { event_name: "feelings", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+        get index_path, params: { event_name: "feelings", time_period: "all_time", audience: %w[visitors users staff], hide_interactions: "0" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("view.workshop_match")
@@ -344,7 +357,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
                time: 1.day.ago, properties: { "resource_title" => "other_activity_marker" })
 
         %w[Hernandez Rudolfo rudy.alt@example.com rudy-login@example.com].each do |term|
-          get index_path, params: { user_search: term, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
+          get index_path, params: { user_search: term, time_period: "all_time", audience: %w[visitors users staff], hide_interactions: "0" }, headers: frame_headers
 
           expect(response.body).to include("rudy_activity_marker"), "expected #{term.inspect} to match Rudy"
           expect(response.body).not_to include("other_activity_marker")

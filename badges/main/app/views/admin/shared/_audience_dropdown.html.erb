@@ -1,5 +1,5 @@
 <%
-  default_audiences = %w[visitors users]
+  default_audiences = local_assigns.fetch(:default_audiences, %w[visitors users])
   selected = Array(params[:audience]).reject(&:blank?).presence || default_audiences
   auto_submit = local_assigns.fetch(:auto_submit, true)
   stacked = local_assigns.fetch(:stacked, false)
