@@ -63,6 +63,15 @@ class AttendeesBreakdowns
     @all_age_group_counts ||= distinct_person_counts(age_rows) { |row| row[1] }
   end
 
+  # --- Referral source -------------------------------------------------------
+
+  # Referral-source answers as [ label, count ] rows, counting distinct people per
+  # answer across the scoped events (like the age/sector cards).
+  def referral_source_counts
+    @referral_source_counts ||= distinct_person_counts(referral_rows) { |row| row[1] }
+      .sort_by { |label, count| [ -count, label ] }
+  end
+
   # --- Locations -------------------------------------------------------------
 
   def state_counts
@@ -259,6 +268,22 @@ class AttendeesBreakdowns
       .joins(category: :category_type)
       .where(categorizable_type: "Person", categorizable_id: person_ids, category_types: { name: "AgeRange" })
       .pluck(:categorizable_id, :category_id, :is_primary)
+  end
+
+  # [ [ person_id, label ], ... ] for referral answers, folding a "specify" answer
+  # ("Other: Facebook") to its option label.
+  def referral_rows
+    @referral_rows ||= FormAnswer
+      .joins(:form_field, :form_submission)
+      .where(form_fields: { field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER })
+      .where(form_submissions: { event_id: @events.select(:id), person_id: person_ids })
+      .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
+      .flat_map do |person_id, submitted_answer|
+        submitted_answer.to_s.split(", ").map(&:strip).reject(&:blank?).map do |raw|
+          base = raw.split(": ", 2).first
+          [ person_id, FormField.specify_option?(base) ? base : raw ]
+        end
+      end
   end
 
   def category_counts(category_type_name)

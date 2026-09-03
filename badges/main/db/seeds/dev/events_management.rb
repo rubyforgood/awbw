@@ -1221,6 +1221,20 @@ record_professional_answers = ->(submission, i) do
                                     question_name_when_answered: additional_field.name)
   end
 
+  # "How did you hear about this AWBW training?" — a single-select radio storing the
+  # chosen option label verbatim (a "specify" option folds in free text as
+  # "<label>: <text>"). Rotate through the field's own options so the roster's
+  # referral-source chart shows a spread.
+  referral_field = form.form_fields.find_by(field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER)
+  referral_options = referral_field ? referral_field.answer_options.order(:position).pluck(:name) : []
+  if referral_field && referral_options.any? && submission.form_answers.where(form_field: referral_field).none?
+    referral = referral_options[i % referral_options.size]
+    referral = "#{referral}: A friend told me" if FormField.other_option?(referral)
+    submission.form_answers.create!(form_field: referral_field,
+                                    submitted_answer: referral,
+                                    question_name_when_answered: referral_field.name)
+  end
+
   # Tag the person with the same primary/additional split assign_tags applies, so
   # the All-sectors chart has data and the recipients page + profile crown a single
   # primary that matches the form. Idempotent (a person enriched once per event).

@@ -836,6 +836,22 @@ class EventDashboard
       .transform_values { |rows| rows.map(&:first).uniq }
   end
 
+  def referral_source_field
+    registration_form_field(FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER)
+  end
+
+  # Distinct registrant count per referral-source answer, as [ label, count ] rows
+  # scoped to submissions made for THIS event (a registration form can be shared
+  # across events). A "specify" answer ("Other: Facebook") collapses to its option
+  # label, matching how the form results page (FormResponseAggregator) charts the
+  # same question.
+  def referral_source_counts
+    @referral_source_counts ||= referral_source_rows
+      .group_by(&:last)
+      .map { |label, rows| [ label, rows.map(&:first).uniq.size ] }
+      .sort_by { |label, count| [ -count, label ] }
+  end
+
   # US states only — international registrants' regions (e.g. provinces) are
   # excluded so the States breakdown reflects domestic residents.
   def states
@@ -1519,6 +1535,29 @@ class EventDashboard
         submitted_answer.to_s.split(",").map(&:strip)
           .select { |token| token.match?(/\A\d+\z/) }
           .map { |token| [ person_id, token.to_i ] }
+      end
+      .uniq
+  end
+
+  # [ person_id, label ] pairs from registrants' referral-source answers on this
+  # event's submissions, with a "specify" answer folded to its option label.
+  # Deduped per [ registrant, label ], so a registrant who submitted the form
+  # twice counts once.
+  def referral_source_rows
+    field = referral_source_field
+    return [] unless field
+
+    specify_labels = field.specify_option_labels.to_set
+    FormAnswer
+      .where(form_field_id: field.id)
+      .joins(:form_submission)
+      .where(form_submissions: { event_id: event.id, person_id: registrant_ids })
+      .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
+      .flat_map do |person_id, submitted_answer|
+        submitted_answer.to_s.split(", ").map(&:strip).reject(&:blank?).map do |raw|
+          base = raw.split(": ", 2).first
+          [ person_id, specify_labels.include?(base) ? base : raw ]
+        end
       end
       .uniq
   end

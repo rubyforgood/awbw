@@ -81,8 +81,21 @@
             These come with the question library and are stored on the submission like any ordinary question.
             They carry a smart field only so reports and exports can find them by name — no record is updated.
           </p>
+          <% noted, plain = @answer_only_identifiers.partition { |identifier| SmartFormFields.answer_only_note(identifier) } %>
+          <% if noted.any? %>
+            <dl class="divide-y divide-gray-100 mb-4">
+              <% noted.each do |identifier| %>
+                <div class="py-3 sm:flex sm:gap-6">
+                  <dt class="sm:w-72 sm:shrink-0">
+                    <code class="inline-block rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 break-all"><%= identifier %></code>
+                  </dt>
+                  <dd class="mt-1 sm:mt-0 text-sm text-gray-700"><%= SmartFormFields.answer_only_note(identifier) %></dd>
+                </div>
+              <% end %>
+            </dl>
+          <% end %>
           <div class="flex flex-wrap gap-2">
-            <% @answer_only_identifiers.each do |identifier| %>
+            <% plain.each do |identifier| %>
               <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-700"><%= identifier %></code>
             <% end %>
           </div>
