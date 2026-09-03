@@ -421,6 +421,55 @@ RSpec.describe EventDashboard do
       end
     end
 
+    describe "referral source (how did you hear about this AWBW training?)" do
+      let(:referral_field) do
+        field = create(:form_field, form: registration_form, field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER,
+                                    name: "How did you hear about this AWBW training?", answer_type: :single_select_radio)
+        create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Online Search"))
+        create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Other"))
+        field
+      end
+
+      before do
+        # person1 → Online Search; person2 → Other (with specify text, which
+        # collapses to "Other"); cancelled → Word of Mouth (ignored). All on
+        # submissions made for THIS event.
+        create(:form_answer, form_field: referral_field, submitted_answer: "Online Search",
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
+        create(:form_answer, form_field: referral_field, submitted_answer: "Other: Facebook",
+                             form_submission: create(:form_submission, person: person2, form: registration_form, event: event))
+        create(:form_answer, form_field: referral_field, submitted_answer: "Word of Mouth",
+                             form_submission: create(:form_submission, person: cancelled_person, form: registration_form, event: event))
+      end
+
+      it "exposes the registration form's referral-source field" do
+        expect(dashboard.referral_source_field).to eq(referral_field)
+      end
+
+      it "tallies active registrants' answers, collapsing a specify answer to its option label" do
+        expect(dashboard.referral_source_counts).to eq([ [ "Online Search", 1 ], [ "Other", 1 ] ])
+      end
+
+      it "ignores cancelled registrants' answers" do
+        expect(dashboard.referral_source_counts.map(&:first)).not_to include("Word of Mouth")
+      end
+
+      it "counts a registrant who submitted the form twice for this event once" do
+        create(:form_answer, form_field: referral_field, submitted_answer: "Online Search",
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
+
+        expect(dashboard.referral_source_counts).to eq([ [ "Online Search", 1 ], [ "Other", 1 ] ])
+      end
+
+      it "ignores the same registrant's answer on the shared form for a different event" do
+        other_event = create(:event)
+        create(:form_answer, form_field: referral_field, submitted_answer: "Presentation",
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: other_event))
+
+        expect(dashboard.referral_source_counts.map(&:first)).not_to include("Presentation")
+      end
+    end
+
     describe "states" do
       it "returns unique states from active registrants' active addresses" do
         expect(dashboard.states).to eq(%w[CA NY])

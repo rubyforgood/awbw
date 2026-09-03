@@ -188,6 +188,14 @@ class SmartFormFields
     event_rating most_valuable improvement_suggestions
   ].freeze
 
+  # Per-identifier note rendered under an answer-only chip, for values surfaced in
+  # a chart or report worth pointing an admin to.
+  ANSWER_ONLY_NOTES = {
+    "referral_source" => "Its value is charted as a \"How did you hear about us?\" breakdown in the " \
+                         "event breakdowns and the reports breakdowns, and listed on the form answers " \
+                         "and form results pages."
+  }.freeze
+
   def self.groups
     GROUPS.map do |group|
       Group.new(
@@ -206,5 +214,9 @@ class SmartFormFields
 
   def self.role_note(key)
     ROLE_NOTES[key]
+  end
+
+  def self.answer_only_note(identifier)
+    ANSWER_ONLY_NOTES[identifier]
   end
 end

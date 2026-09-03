@@ -86,6 +86,44 @@ RSpec.describe AttendeesBreakdowns do
   # The breakdown rows drill in by person id on the roster and recipients pages,
   # so each dimension exposes the people behind it. These regroup rows already
   # loaded for the counts — asking for both must not cost a second query.
+  describe "referral source (how did you hear about this AWBW training?)" do
+    let(:registration_form) { create(:form, name: "Registration") }
+    let!(:referral_field) do
+      field = create(:form_field, form: registration_form, field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER,
+                                  name: "How did you hear about this AWBW training?", answer_type: :single_select_radio)
+      create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Online Search"))
+      create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Other"))
+      field
+    end
+    let!(:other_training) { create(:event, facilitator_training: true, start_date: Date.new(2025, 6, 1)) }
+
+    def answer(who, event, value)
+      submission = create(:form_submission, person: who, form: registration_form, event: event)
+      create(:form_answer, form_field: referral_field, submitted_answer: value, form_submission: submission)
+    end
+
+    it "counts distinct people per answer across the scoped events, collapsing specify answers" do
+      p2 = create(:person)
+      create(:event_registration, event: training, registrant: p2, status: "attended")
+
+      answer(person, training, "Online Search")
+      answer(person, other_training, "Online Search") # same person + answer, other event → counted once
+      answer(p2, training, "Online Search")
+      answer(p2, other_training, "Other: Facebook")   # collapses to "Other"
+
+      bd = described_class.new(Person.where(id: [ person.id, p2.id ]))
+      expect(bd.referral_source_counts).to eq([ [ "Online Search", 2 ], [ "Other", 1 ] ])
+    end
+
+    it "ignores answers on events outside the scoped set" do
+      answer(person, training, "Online Search")
+      answer(person, other_training, "Social Media")
+
+      bd = described_class.new(Person.where(id: person.id), events: Event.where(id: training.id))
+      expect(bd.referral_source_counts).to eq([ [ "Online Search", 1 ] ])
+    end
+  end
+
   describe "person ids per row" do
     it "returns the people behind each dimension" do
       sector = create(:sector, name: "Healthcare")

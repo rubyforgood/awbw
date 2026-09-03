@@ -60,6 +60,9 @@ class FormField < ApplicationRecord
   # admin override is present.
   PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
 
+  # The "How did you hear about this AWBW training?" registration field.
+  REFERRAL_SOURCE_FIELD_IDENTIFIER = "referral_source"
+
   # Quote smart fields. When a submission carries these, its answers are captured
   # as a Quote (see Quotes::CaptureFromSubmission): "quote_body" or the simpler
   # "quote" is the quote text (either is accepted; "quote_body" wins when both are

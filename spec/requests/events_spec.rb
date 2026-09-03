@@ -3267,6 +3267,22 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Teens")
         end
 
+        it "shows a referral-source breakdown from the \"how did you hear\" registration answers" do
+          registration_form = create(:form, name: "Registration")
+          create(:event_form, event: owned_event, form: registration_form, role: "registration")
+          field = create(:form_field, form: registration_form,
+                                      field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER,
+                                      name: "How did you hear about this AWBW training?",
+                                      answer_type: :single_select_radio)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Online Search")
+
+          get roster_event_path(owned_event), headers: charts_headers
+
+          expect(response.body).to include("How did you hear about this AWBW training?")
+          expect(response.body).to include("Online Search")
+        end
+
         it "shows a life experiences breakdown from registrants' StoryPopulation tags" do
           story_population = create(:category_type, name: "StoryPopulation")
           experience = create(:category, name: "Veterans", category_type: story_population)
