@@ -118,7 +118,7 @@ RSpec.describe "Comments and communications", type: :request do
   describe "GET /comments_and_communications (unified, everyone)" do
     before { sign_in admin }
 
-    it "spans comments and communications across every person, with no composers" do
+    it "spans comments and communications across every person" do
       other = create(:person, email: "other@example.com")
       create(:comment, commentable: person, body: "Note about primary", created_by: admin)
       create(:comment, commentable: other, body: "Note about other", created_by: admin)
@@ -128,10 +128,12 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path
 
       expect(response).to have_http_status(:ok)
-      # No person to file against, so the add-a-note / log-a-communication composers
-      # are absent on the unified feed.
+      # The composers load per-person into a frame, so the index itself carries a
+      # person picker and the empty frame, not the composers inline.
       doc = Nokogiri::HTML(response.body)
       expect(doc.at_css("[data-controller='panel-toggle']")).to be_nil
+      expect(doc.at_css("turbo-frame#cc_composers")).to be_present
+      expect(doc.at_css("select#person_id")).to be_present
 
       get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
@@ -139,6 +141,29 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Note about primary")
       expect(response.body).to include("Note about other")
       expect(response.body).to include("Hello other")
+    end
+
+    it "loads a picked person's composers into the frame with their filing targets" do
+      registration = create(:event_registration, registrant: person)
+
+      get composers_comments_and_communications_path(person_id: person.id),
+          headers: { "Turbo-Frame" => "cc_composers" }
+
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("turbo-frame#cc_composers")).to be_present
+      expect(doc.at_css("select#commentable_sgid")).to be_present
+      expect(doc.at_css("select#noticeable_sgid")).to be_present
+      labels = doc.css("select#noticeable_sgid option").map(&:text)
+      expect(labels).to include("Profile")
+      expect(labels.any? { |label| label.start_with?("Registration ·") }).to be(true)
+      expect(registration).to be_persisted
+    end
+
+    it "prompts to pick a person when the composers frame loads with none" do
+      get composers_comments_and_communications_path, headers: { "Turbo-Frame" => "cc_composers" }
+
+      expect(response.body).to include("Pick a person")
+      expect(Nokogiri::HTML(response.body).at_css("select#commentable_sgid")).to be_nil
     end
 
     it "denies a non-admin" do

@@ -293,7 +293,11 @@ Rails.application.routes.draw do
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ]
   end
-  resources :comments_and_communications, only: [ :index ]
+  resources :comments_and_communications, only: [ :index ] do
+    collection do
+      get :composers
+    end
+  end
   resources :faqs
   get "transfer_guide", to: "transfer_guide#show", as: :transfer_guide
   resources :features do

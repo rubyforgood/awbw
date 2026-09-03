@@ -3340,7 +3340,9 @@
   released_on: 2026-09-03
   summary: >-
     The combined comments-and-communications feed now opens without picking a
-    person first — one newest-first list of every note and logged communication
-    across all people, filterable by keyword, author, date, and follow-up. Add
-    a note or log a communication right from it by picking a person.
+    person first — one newest-first list of every internal note and logged
+    communication across all people, filterable by keyword, author, date, and
+    follow-up. Add a note or log a communication right from it by picking a
+    person and one of their records. Reach it from the "All comments &
+    communications" card on Admin home, or jump to one person's feed from there.
   action_path: "/comments_and_communications"

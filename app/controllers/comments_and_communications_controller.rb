@@ -31,4 +31,17 @@ class CommentsAndCommunicationsController < ApplicationController
       track_view("person_comments_and_communications", { person_id: @person&.id })
     end
   end
+
+  # The composers for the everyone feed, loaded into a Turbo frame once a person
+  # is picked — the same add-a-note / log-a-communication controls the person feed
+  # renders inline, now scoped to the chosen person and their filing targets.
+  def composers
+    authorize! Comment, to: :manage?
+    authorize! Notification, to: :index?
+
+    @person = Person.find(params[:person_id]).decorate if params[:person_id].present?
+    @new_comment = Comment.new
+    @new_notification = Notification.new
+    @record_targets = @person ? helpers.person_record_targets(@person) : []
+  end
 end

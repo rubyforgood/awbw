@@ -37,34 +37,25 @@
     </div>
 
     <%# Add-a-note / log-a-communication, each revealing a composer with a picker
-        for which of the person's records to file it against. Only offered on a
-        person's own feed, where there's a record to file against. %>
+        for which of the person's records to file it against. On a person's own
+        feed the composers are ready; on the everyone feed you pick the person
+        first and the composers (with that person's records) load into the frame. %>
     <% if @person %>
-      <div data-controller="panel-toggle">
-        <div class="flex flex-wrap justify-end gap-2">
-          <% [ [ "comment", t("communications.add_comment"), "fa-comment" ],
-               [ "communication", t("communications.add"), "fa-envelope" ] ].each do |name, label, icon| %>
-            <button type="button"
-                    class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
-                    data-panel-toggle-name="<%= name %>"
-                    data-panel-toggle-hidden-label="<%= label %>"
-                    data-panel-toggle-shown-label="Cancel"
-                    data-panel-toggle-target="button"
-                    data-action="panel-toggle#toggle"
-                    aria-expanded="false">
-              <i class="fa-solid <%= icon %> text-2xs"></i>
-              <span data-panel-toggle-target="label"><%= label %></span>
-            </button>
-          <% end %>
-        </div>
-
-        <div class="mt-3 hidden" data-panel-toggle-name="comment" data-panel-toggle-target="panel">
-          <%= render "comments/composer", person: @person, comment: @new_comment,
-                     comment_targets: @record_targets, stream: false %>
-        </div>
-        <div class="mt-3 hidden" data-panel-toggle-name="communication" data-panel-toggle-target="panel">
-          <%= render "notifications/composer", person: @person, notification: @new_notification, record_targets: @record_targets %>
-        </div>
+      <%= render "comments_and_communications/add_area", person: @person,
+                 new_comment: @new_comment, new_notification: @new_notification,
+                 record_targets: @record_targets %>
+    <% else %>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <%= form_with url: composers_comments_and_communications_path, method: :get,
+                      data: { controller: "collection", turbo_frame: "cc_composers" },
+                      class: "flex items-center gap-2" do %>
+          <label for="person_id" class="text-xs font-semibold tracking-wide whitespace-nowrap text-gray-500 uppercase">Add for a person</label>
+          <%= select_tag :person_id, options_for_select([]),
+                         include_blank: true, prompt: "Search people…",
+                         class: "min-w-[240px] rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500",
+                         data: { controller: "remote-select", remote_select_model_value: "person" } %>
+        <% end %>
+        <%= turbo_frame_tag "cc_composers", class: "mt-3 block" %>
       </div>
     <% end %>
 
