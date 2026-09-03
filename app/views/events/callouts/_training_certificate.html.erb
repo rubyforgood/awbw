@@ -1,0 +1,48 @@
+<%# The facilitator-training certificate — the branded painted-border design.
+    The border/title are static brand assets (app/assets/images/certificates); the
+    signature strip is an admin-managed upload (Resource.training_certificate_signatures_file,
+    passed in as signature_file) so real signatures never live in this public repo.
+    The recipient name, dates, and CE clause are rendered live over the card.
+    Sizes use container-query units (cqw) so the whole certificate scales as one. %>
+<article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
+  <%= image_tag "certificates/certificate-training-border.png", alt: "",
+        class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+
+  <div class="absolute inset-x-[12.6%] top-[11.4%] bottom-[8.5%] flex flex-col items-center justify-between px-[3%] pt-[2%] pb-[1%] text-center">
+    <div class="flex flex-col items-center gap-[1.5cqw]">
+      <%= image_tag "logo-with-tagline.png",
+            alt: "A Window Between Worlds — art transforming trauma",
+            class: "w-[20cqw]" %>
+      <%= image_tag "certificates/certificate-training-title.png",
+            alt: "Certificate of Training", class: "w-[58cqw]" %>
+      <p class="text-[2.2cqw] text-gray-500">presented to</p>
+      <p class="text-[4.6cqw] leading-tight font-bold tracking-tight text-gray-900"><%= recipient %></p>
+    </div>
+
+    <div class="flex flex-col items-center gap-[0.6cqw]">
+      <p class="text-[3cqw] leading-tight font-bold text-gray-900">AWBW Facilitator Certification Training</p>
+      <p class="text-[2.4cqw] font-semibold text-gray-700"><%= event.date_range %></p>
+      <% if show_ce_clause %>
+        <p class="mt-[1cqw] max-w-[80%] text-[1.7cqw] leading-relaxed text-gray-600">
+          A Window Between Worlds has issued <span class="font-semibold text-gray-800"><%= ce_hours_label %> hours</span>
+          of continuing education (CE) credit for this training, in accordance with our approval by
+          <%= link_to "CAMFT", ContinuingEducationRegistration::ACCREDITATION_URL,
+                target: "_blank", rel: "noopener",
+                class: "font-medium text-purple-800 underline decoration-amber-400 underline-offset-2 hover:text-purple-950" %>
+          (provider #<%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %>).
+        </p>
+      <% end %>
+    </div>
+
+    <%# Served same-origin via the proxy (never the raw storage URL), and only
+        embedded here — so the signature image is reachable only from an issued
+        certificate, not by browsing the repo or the resources index. %>
+    <% if signature_file %>
+      <%= image_tag rails_storage_proxy_path(signature_file),
+            alt: "Signed by Christy Turek Rials, Training & Outreach Director; Rudy Hernandez, Program Director; and Tiombe Wallace, Consultant",
+            class: "w-[66cqw]" %>
+    <% else %>
+      <span></span>
+    <% end %>
+  </div>
+</article>

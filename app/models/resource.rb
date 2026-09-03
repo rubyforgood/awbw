@@ -14,6 +14,24 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
+  # The facilitator-training certificate pulls its signature strip from this
+  # admin-managed record instead of a committed asset, so real handwritten
+  # signatures never live in this public repo. Create the record hidden from
+  # search (admin-only) and attach the signature image; the certificate embeds
+  # it via a signed, same-origin URL. Matched by title — keep this in sync.
+  TRAINING_CERTIFICATE_SIGNATURES_TITLE = "Training certificate signatures".freeze
+
+  # The attached signature image for the training certificate, or nil when the
+  # record/upload isn't present (e.g. dev/OSS), so the certificate simply omits
+  # the signatures rather than erroring.
+  def self.training_certificate_signatures_file
+    resource = find_by(title: TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+    return unless resource
+
+    [ resource.primary_asset, resource.downloadable_asset ].compact
+      .map(&:file).find(&:attached?)
+  end
+
   has_rich_text :rhino_body
 
   belongs_to :created_by, class_name: "User"

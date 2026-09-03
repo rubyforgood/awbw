@@ -932,6 +932,60 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
     end
+
+    context "for a facilitator training event" do
+      let(:event) { create(:event, :ended, facilitator_training: true) }
+
+      it "renders the branded training certificate instead of the completion one" do
+        get registration_certificate_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("Certificate of Training")
+        expect(response.body).to include("AWBW Facilitator Certification Training")
+        expect(response.body).to include("presented to")
+        expect(response.body).to include(registration.registrant.full_name)
+        expect(response.body).to include("certificate-training-border")
+        # The default completion certificate's copy must not appear.
+        expect(response.body).not_to include("This certifies that")
+      end
+
+      it "omits the signatures (no error) when the admin-managed record isn't present" do
+        get registration_certificate_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).not_to include("Signed by Christy Turek Rials")
+        expect(response.body).not_to include("/rails/active_storage")
+      end
+
+      it "renders the uploaded signature strip, served same-origin, when the record exists" do
+        resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE,
+                                     hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: resource)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response.body).to include("Signed by Christy Turek Rials")
+        expect(response.body).to include("/rails/active_storage/blobs/proxy")
+      end
+
+      it "still adds the shared CE accreditation clause when CE credit is earned" do
+        event.update!(ce_hours_offered: 6)
+        license = create(:professional_license, person: registration.registrant, number: "LIC-T")
+        registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response.body).to include("continuing education (CE) credit")
+        expect(response.body).to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+      end
+    end
+
+    it "uses the default completion certificate for non-training events" do
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).not_to include("AWBW Facilitator Certification Training")
+    end
   end
 
   describe "POST /registration/:slug/ce/license" do

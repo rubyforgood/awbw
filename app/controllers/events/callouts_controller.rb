@@ -39,6 +39,9 @@ module Events
     def certificate
       # The page shows the certificate once unlocked, or the pending unlock
       # conditions until then, so there's nothing to gate here.
+      # Facilitator trainings render the branded certificate, whose signatures
+      # come from an admin-managed record (never committed to this public repo).
+      @signature_file = Resource.training_certificate_signatures_file if @event.facilitator_training?
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a
