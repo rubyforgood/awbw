@@ -93,7 +93,7 @@
               (@person.legal_first_name.present? || @person.pronunciation.present? || @person.date_of_birth.present? || @person.user&.time_zone.present?) %>
           <div class="admin-only mt-2 flex flex-wrap items-center justify-center gap-2 md:justify-start">
             <% if @person.legal_first_name.present? && @person.legal_first_name != @person.first_name %>
-              <span class="<%= admin_only_chip_class %> text-sm" title="Legal first name (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Legal: <%= @person.legal_first_name %></span>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Legal first name (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Legal first name: <%= @person.legal_first_name %></span>
             <% end %>
             <% if @person.pronunciation.present? %>
               <span class="<%= admin_only_chip_class %> text-sm" title="Name pronunciation (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Say: <%= @person.pronunciation %></span>
