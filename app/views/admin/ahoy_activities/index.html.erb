@@ -26,7 +26,9 @@
       </div>
 
       <div class="mb-6 text-sm min-h-10">
-        <%= render "admin/shared/active_filters_subheader" %>
+        <%= render "admin/shared/active_filters_subheader",
+              default_audiences: Admin::AhoyActivitiesController::EVENTS_DEFAULT_AUDIENCES,
+              hide_interactions: hide_interactions? %>
       </div>
 
       <div class="bg-white border border-primary/10 rounded-2xl shadow-sm p-6 mb-6">
@@ -81,7 +83,8 @@
             </div>
 
             <div class="min-w-0 flex-1">
-              <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true %>
+              <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true,
+                    default_audiences: Admin::AhoyActivitiesController::EVENTS_DEFAULT_AUDIENCES %>
             </div>
 
             <div class="min-w-0 flex-1">
