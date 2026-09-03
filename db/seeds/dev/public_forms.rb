@@ -4,7 +4,8 @@
 # (/f/:slug), each with a few submissions + answers — so the public endpoint,
 # the form editor's "Public form" card, and the form submissions index (where
 # these appear as role: "public", event-less) all have real data to eyeball.
-# Includes the three collaboration agreement scenario forms (Form::AGREEMENT_ROLES).
+# Includes the three collaboration agreement scenario forms plus the
+# close-program form (all Form::AGREEMENT_ROLES).
 #
 # Idempotent throughout: forms are looked up by slug, submissions by (form,
 # person), answers skipped when already present.
@@ -89,9 +90,10 @@ public_forms.each do |spec|
   end
 end
 
-# The three collaboration agreement scenario forms (Form::AGREEMENT_ROLES —
-# on-demand is a standalone registration-role form; new_job and reinstatement
-# are their own roles), each publicly fillable with one submission — so the
+# The three collaboration agreement scenario forms (on-demand is a standalone
+# registration-role form; new_job and reinstatement are their own roles; the
+# close-program form is seeded separately below), each publicly fillable with
+# one submission — so the
 # per-scenario counting, the person-page "send link" buttons, and the
 # submission processing panel (affiliation actions, portal invite) all have
 # data to eyeball. The new-job and reinstatement submitters carry pre-existing
