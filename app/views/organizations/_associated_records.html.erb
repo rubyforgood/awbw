@@ -5,13 +5,13 @@
     are two lines tall (wrap: true) so long labels wrap and every button lines up
     to the same height. Alphabetical by label, which keeps Stories and Story ideas
     adjacent. %>
-<ul class="flex flex-col md:flex-row gap-x-6 gap-y-2">
-  <li class="md:flex-1 md:min-w-0"><%= index_button CommunityNews.where(org_filter), params: org_filter, wrap: true %></li>
-  <li class="md:flex-1 md:min-w-0"><%= index_button organization.event_registrations, params: org_filter, wrap: true %></li>
+<ul class="flex flex-col gap-x-6 gap-y-2 md:flex-row">
+  <li class="md:min-w-0 md:flex-1"><%= index_button CommunityNews.where(org_filter), params: org_filter, wrap: true %></li>
+  <li class="md:min-w-0 md:flex-1"><%= index_button organization.event_registrations, params: org_filter, wrap: true %></li>
   <% if monthly_reports.exists? %>
-    <li class="md:flex-1 md:min-w-0"><%= index_button monthly_reports, params: org_filter, wrap: true %></li>
+    <li class="md:min-w-0 md:flex-1"><%= index_button monthly_reports, params: org_filter, wrap: true %></li>
   <% end %>
-  <li class="md:flex-1 md:min-w-0"><%= index_button Story.where(org_filter), params: org_filter, wrap: true %></li>
-  <li class="md:flex-1 md:min-w-0"><%= index_button StoryIdea.where(org_filter), params: org_filter, wrap: true, label: safe_join([ "Story", tag.br, "ideas" ]) %></li>
-  <li class="md:flex-1 md:min-w-0"><%= index_button organization.workshop_logs, params: org_filter, wrap: true %></li>
+  <li class="md:min-w-0 md:flex-1"><%= index_button Story.where(org_filter), params: org_filter, wrap: true %></li>
+  <li class="md:min-w-0 md:flex-1"><%= index_button StoryIdea.where(org_filter), params: org_filter, wrap: true, label: safe_join([ "Story", tag.br, "ideas" ]) %></li>
+  <li class="md:min-w-0 md:flex-1"><%= index_button organization.workshop_logs, params: org_filter, wrap: true %></li>
 </ul>
