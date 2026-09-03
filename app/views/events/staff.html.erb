@@ -5,7 +5,7 @@
 <% content_for(:full_width, true) %>
 <div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
 <div class="<%= DomainTheme.bg_class_for(:events) %> <%= DomainTheme.border_class_for(:events, intensity: 200) %> overflow-hidden rounded-2xl border shadow-sm">
-  <%= render "shared/brand_accent_strip" %>
+  <%= render accent_strip_partial %>
   <div class="p-4 sm:p-6">
   <%# Top bar: back link on the left; sub-nav (admins only) on the right %>
   <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-6 print:hidden">
