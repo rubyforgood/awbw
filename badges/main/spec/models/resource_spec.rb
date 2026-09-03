@@ -114,4 +114,25 @@ RSpec.describe Resource do
       end
     end
   end
+
+  describe ".training_certificate_signatures_file" do
+    it "returns nil when no matching record exists" do
+      expect(Resource.training_certificate_signatures_file).to be_nil
+    end
+
+    it "returns nil when the record exists but has no attached image" do
+      create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+
+      expect(Resource.training_certificate_signatures_file).to be_nil
+    end
+
+    it "returns the attached file when the record has one" do
+      resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      create(:primary_asset, :with_file, owner: resource)
+
+      file = Resource.training_certificate_signatures_file
+
+      expect(file).to be_attached
+    end
+  end
 end

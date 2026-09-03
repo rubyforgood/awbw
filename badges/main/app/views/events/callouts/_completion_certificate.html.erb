@@ -1,0 +1,55 @@
+<%# The default certificate of completion — a CSS-drawn purple/gold frame.
+    Used for every event except facilitator trainings (see _training_certificate). %>
+<article class="certificate relative mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white text-center text-gray-800 shadow-xl ring-1 ring-black/5 print:max-w-none print:rounded-none print:shadow-none print:ring-0">
+  <%# Decorative double frame: deep AWBW purple outer, thin gold inner. %>
+  <span class="pointer-events-none absolute inset-0 rounded-2xl border-[3px] border-purple-950 print:rounded-none"></span>
+  <span class="pointer-events-none absolute inset-[10px] rounded-xl border border-amber-400 print:rounded-none"></span>
+  <%# Purple-to-gold corner flourishes echoing the brand's header accent. %>
+  <span class="pointer-events-none absolute -left-16 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-purple-700 to-purple-950 opacity-10"></span>
+  <span class="pointer-events-none absolute -bottom-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-tr from-amber-400 to-purple-700 opacity-10"></span>
+
+  <div class="relative flex flex-col items-center gap-6 px-10 py-14 sm:px-16 print:min-h-[6.6in] print:justify-center">
+    <%= image_tag "logo-with-tagline.png",
+          alt: "A Window Between Worlds — art transforming trauma",
+          class: "h-16 w-auto" %>
+
+    <div class="h-1 w-44 rounded bg-gradient-to-r from-accent via-amber-400 to-accent"></div>
+
+    <p class="text-sm font-semibold uppercase tracking-[0.35em] text-purple-800">Certificate of completion</p>
+
+    <div class="space-y-2">
+      <p class="text-sm text-gray-500">This certifies that</p>
+      <p class="text-4xl font-bold tracking-tight text-gray-900"><%= recipient %></p>
+    </div>
+
+    <div class="h-px w-56 bg-gray-200"></div>
+
+    <div class="space-y-1">
+      <p class="text-sm text-gray-500">has successfully completed</p>
+      <p class="text-2xl font-semibold text-purple-900"><%= event.title %></p>
+      <p class="text-base text-gray-600"><%= event.date_range %></p>
+    </div>
+
+    <% if show_ce_clause %>
+      <p class="mt-1 max-w-2xl text-sm leading-relaxed text-gray-600">
+        A Window Between Worlds has issued <span class="font-semibold text-gray-800"><%= ce_hours_label %> hours</span>
+        of continuing education (CE) credit for this training, in accordance with our approval by
+        <%= link_to "CAMFT", ContinuingEducationRegistration::ACCREDITATION_URL,
+              target: "_blank", rel: "noopener",
+              class: "font-medium text-purple-800 underline decoration-amber-400 underline-offset-2 hover:text-purple-950" %>
+        (provider #<%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %>).
+      </p>
+    <% end %>
+
+    <div class="mt-6 flex w-full max-w-md items-end justify-between gap-8 text-left">
+      <div class="flex-1">
+        <p class="border-t border-gray-300 pt-2 text-xs uppercase tracking-wide text-gray-500">Date completed</p>
+        <p class="text-sm font-medium text-gray-800"><%= event.date_range %></p>
+      </div>
+      <div class="flex-1">
+        <p class="border-t border-gray-300 pt-2 text-xs uppercase tracking-wide text-gray-500">Issued by</p>
+        <p class="text-sm font-medium text-gray-800">A Window Between Worlds</p>
+      </div>
+    </div>
+  </div>
+</article>

@@ -3287,3 +3287,15 @@
     menu — with a back link (to Admin home, or to Forms) at the top of each.
   action_path: "/forms"
   pr_number: 2506
+
+- name: "Branded certificate for facilitator trainings"
+  area: events
+  display_status: user_facing
+  released_on: 2026-09-02
+  summary: >-
+    Facilitator training completions now download a branded "Certificate of
+    Training" — the painted AWBW design with the training's dates and the
+    signatures of the Training & Outreach Director, Program Director, and
+    Consultant. Every other event keeps the standard certificate of completion.
+  action_path: /events
+  pr_number: 2504
