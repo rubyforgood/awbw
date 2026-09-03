@@ -12,7 +12,7 @@
 <% width = local_assigns[:width].presence || "max-w-5xl" %>
 <% tint = DomainTheme.bg_class_for(domain, intensity: 50) %>
 <div class="<%= tint %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> <%= width %> mx-auto w-full rounded-2xl border shadow-sm">
-  <%= render accent_strip_partial, rounded: true %>
+  <%= render "shared/brand_accent_strip", rounded: true %>
   <div class="p-6 sm:p-8">
     <%= local_assigns[:notice] %>
     <div class="<%= "sticky top-0 z-10 #{tint} pb-3" if local_assigns[:sticky_header] %>">

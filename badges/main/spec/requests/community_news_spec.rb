@@ -56,12 +56,6 @@ RSpec.describe "/community_news", type: :request do
       expect(response).to be_successful
     end
 
-    it "keeps the public rainbow rule on this public index, not the admin strip" do
-      get community_news_index_url
-      expect(response.body).to include("var(--color-brand-green-700),var(--color-brand-orange-600)")
-      expect(response.body).not_to include("var(--color-brand-navy-950),var(--color-brand-navy-800),var(--color-brand-navy-600)")
-    end
-
     it "sorts by the credited author, not by whoever entered the record" do
       aaron = create(:person, first_name: "Aaron", last_name: "Adams")
       zeke = create(:person, first_name: "Zeke", last_name: "Zimmer")

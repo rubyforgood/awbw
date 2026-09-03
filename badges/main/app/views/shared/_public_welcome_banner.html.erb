@@ -3,7 +3,7 @@
       edge there. Everywhere else it sits above rounded cards, so it becomes one. %>
   <% full_bleed = content_for?(:full_width) %>
   <div class="bg-brand-cream overflow-hidden <%= "border-primary/10 mb-6 rounded-2xl border shadow-sm" unless full_bleed %>">
-    <%= render accent_strip_partial %>
+    <%= render "shared/brand_accent_strip" %>
     <div class="mx-auto flex max-w-6xl items-center justify-center gap-5 px-4 py-8">
       <div class="h-20 w-20 shrink-0 overflow-hidden rounded-full">
         <%= image_tag "logo-circle.png", class: "h-full w-full object-cover", alt: "AWBW logo" %>

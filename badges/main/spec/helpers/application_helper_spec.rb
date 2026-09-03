@@ -1,37 +1,6 @@
 require "rails_helper"
 
 RSpec.describe ApplicationHelper, type: :helper do
-  describe "#accent_strip_partial" do
-    def strip_for(marker)
-      helper.content_for(:page_bg_class, marker) if marker
-      helper.accent_strip_partial
-    end
-
-    it "uses the brand-navy admin strip on admin-only pages" do
-      expect(strip_for("admin-only bg-blue-100")).to eq("shared/admin_accent_strip")
-    end
-
-    it "uses the half navy/rainbow strip on admin-or-owner pages" do
-      expect(strip_for("admin-or-owner")).to eq("shared/owner_accent_strip")
-    end
-
-    it "uses the teal rainbow strip on admin-or-auth pages" do
-      expect(strip_for("admin-or-auth")).to eq("shared/brand_accent_strip_alt")
-    end
-
-    it "keeps the public rainbow strip on public pages" do
-      expect(strip_for("public")).to eq("shared/brand_accent_strip")
-    end
-
-    it "treats an owner page that is also public as public, not half-and-half" do
-      expect(strip_for("admin-or-owner-or-public-or-authpublished")).to eq("shared/brand_accent_strip")
-    end
-
-    it "defaults to the public rainbow strip when no marker is set" do
-      expect(strip_for(nil)).to eq("shared/brand_accent_strip")
-    end
-  end
-
   describe "#credited_author_link" do
     let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
 
