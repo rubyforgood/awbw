@@ -96,7 +96,7 @@
               <span class="<%= admin_only_chip_class %> text-sm" title="Legal first name (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Legal first name: <%= @person.legal_first_name %></span>
             <% end %>
             <% if @person.pronunciation.present? %>
-              <span class="<%= admin_only_chip_class %> text-sm" title="Name pronunciation (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Say: <%= @person.pronunciation %></span>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Name pronunciation (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Pronunciation: <%= @person.pronunciation %></span>
             <% end %>
             <% if @person.date_of_birth.present? %>
               <span class="<%= admin_only_chip_class %> text-sm" title="Birthday (admin only)"><i class="fa-solid fa-cake-candles text-2xs text-blue-700"></i> <%= @person.date_of_birth.strftime("%b %-d") %></span>
