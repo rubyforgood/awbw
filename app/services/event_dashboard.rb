@@ -840,9 +840,10 @@ class EventDashboard
     registration_form_field(FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER)
   end
 
-  # Referral-source answers as [ label, count ] rows. A "specify" answer
-  # ("Other: Facebook") collapses to its option label, matching how the form
-  # results page (FormResponseAggregator) charts the same question.
+  # Referral-source answers as [ label, count ] rows, scoped to submissions made
+  # for THIS event (a registration form can be shared across events). A "specify"
+  # answer ("Other: Facebook") collapses to its option label, matching how the
+  # form results page (FormResponseAggregator) charts the same question.
   def referral_source_counts
     @referral_source_counts ||= begin
       field = referral_source_field
@@ -854,7 +855,7 @@ class EventDashboard
         FormAnswer
           .where(form_field_id: field.id)
           .joins(:form_submission)
-          .where(form_submissions: { person_id: registrant_ids })
+          .where(form_submissions: { event_id: event.id, person_id: registrant_ids })
           .pluck(:submitted_answer)
           .each do |submitted_answer|
             submitted_answer.to_s.split(", ").map(&:strip).reject(&:blank?).each do |raw|

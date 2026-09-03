@@ -3274,7 +3274,7 @@ RSpec.describe "Events", type: :request do
                                       field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER,
                                       name: "How did you hear about this AWBW training?",
                                       answer_type: :single_select_radio)
-          submission = create(:form_submission, person: person, form: registration_form)
+          submission = create(:form_submission, person: person, form: registration_form, event: owned_event)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Online Search")
 
           get roster_event_path(owned_event), headers: charts_headers

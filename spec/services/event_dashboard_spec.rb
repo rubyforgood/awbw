@@ -432,13 +432,14 @@ RSpec.describe EventDashboard do
 
       before do
         # person1 → Online Search; person2 → Other (with specify text, which
-        # collapses to "Other"); cancelled → Word of Mouth (ignored).
+        # collapses to "Other"); cancelled → Word of Mouth (ignored). All on
+        # submissions made for THIS event.
         create(:form_answer, form_field: referral_field, submitted_answer: "Online Search",
-                             form_submission: create(:form_submission, person: person1, form: registration_form))
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
         create(:form_answer, form_field: referral_field, submitted_answer: "Other: Facebook",
-                             form_submission: create(:form_submission, person: person2, form: registration_form))
+                             form_submission: create(:form_submission, person: person2, form: registration_form, event: event))
         create(:form_answer, form_field: referral_field, submitted_answer: "Word of Mouth",
-                             form_submission: create(:form_submission, person: cancelled_person, form: registration_form))
+                             form_submission: create(:form_submission, person: cancelled_person, form: registration_form, event: event))
       end
 
       it "exposes the registration form's referral-source field" do
@@ -451,6 +452,14 @@ RSpec.describe EventDashboard do
 
       it "ignores cancelled registrants' answers" do
         expect(dashboard.referral_source_counts.map(&:first)).not_to include("Word of Mouth")
+      end
+
+      it "ignores the same registrant's answer on the shared form for a different event" do
+        other_event = create(:event)
+        create(:form_answer, form_field: referral_field, submitted_answer: "Presentation",
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: other_event))
+
+        expect(dashboard.referral_source_counts.map(&:first)).not_to include("Presentation")
       end
     end
 
