@@ -39,10 +39,11 @@ RSpec.describe "Person profile flag visibility", type: :request do
           expect(response.body).not_to include(marker)
         end
 
-        it "hides content when admin views profile" do
+        it "reveals content with admin-only styling when admin views profile" do
           sign_in admin
           get person_path(person)
-          expect(response.body).not_to include(marker)
+          expect(response.body).to include(marker)
+          expect(response.body).to include("Hidden from profile")
         end
       end
 
@@ -75,6 +76,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
         get person_path(person)
         expect(response.body).not_to include("LCSW")
       end
+
+      it "reveals the license credentials with admin-only styling when admin views profile" do
+        sign_in admin
+        get person_path(person)
+        expect(response.body).to include("LCSW")
+        expect(response.body).to include("Hidden from profile")
+      end
     end
 
     context "when true" do
@@ -102,6 +110,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
         sign_in owner_user
         get person_path(person)
         expect(response.body).not_to include("fa-linkedin-in")
+      end
+
+      it "reveals social media with admin-only styling when admin views profile" do
+        sign_in admin
+        get person_path(person)
+        expect(response.body).to include("fa-linkedin-in")
+        expect(response.body).to include("Hidden from profile")
       end
     end
 
@@ -138,7 +153,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
         sign_in admin
         get person_path(person)
         expect(response.body).to include(email)
-        expect(response.body).to include("admin-only bg-blue-100")
+        expect(response.body).to include("Hidden from profile")
       end
     end
 
