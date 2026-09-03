@@ -177,6 +177,9 @@ application.register("share-url", ShareUrlController)
 import ScrollToTopController from "./scroll_to_top_controller"
 application.register("scroll-to-top", ScrollToTopController)
 
+import SliderController from "./slider_controller"
+application.register("slider", SliderController)
+
 import SortableController from "./sortable_controller"
 application.register("sortable", SortableController)
 
