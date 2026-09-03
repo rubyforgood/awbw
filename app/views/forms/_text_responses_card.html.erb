@@ -3,19 +3,10 @@
       report: a FormResponseAggregator::FieldReport with kind: :text
       form:   the Form (for the header / per-response links) %>
 <% cap = 25 %>
-<% link_class = "#{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
 <div class="scroll-mt-24 break-inside-avoid rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
   <div class="mb-3 flex items-center justify-between">
     <h2 class="text-sm font-semibold text-gray-700"><%= report.label %></h2>
-    <%# Reads as a plain count until you reach for it, then shows it's this
-        question's answers. %>
-    <% if report.answered_count.positive? %>
-      <%= link_to pluralize(report.answered_count, "answer"),
-                  form_answers_path(**form_results_drilldown_params(form, report)),
-                  class: "text-xs text-gray-500 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline" %>
-    <% else %>
-      <span class="text-xs text-gray-500"><%= pluralize(report.answered_count, "answer") %></span>
-    <% end %>
+    <%= render "forms/answer_count", form: form, report: report %>
   </div>
 
   <% if report.responses.empty? %>

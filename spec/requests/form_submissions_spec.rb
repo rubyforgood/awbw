@@ -122,6 +122,22 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(other))
       end
 
+      # The results-card footer sends form_field_id, so its "View N submissions"
+      # count matches the list it opens.
+      it "filters to the submissions that answered one question" do
+        form = create(:form)
+        field = create(:form_field, form: form, name: "Phone")
+        answered = create(:form_submission, form: form)
+        skipped = create(:form_submission, form: form)
+        create(:form_answer, form_submission: answered, form_field: field, submitted_answer: "(555) 111-2222")
+        create(:form_answer, form_submission: skipped, form_field: field, submitted_answer: "")
+
+        get form_submissions_path(form_id: form.id, form_field_id: field.id), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(answered))
+        expect(response.body).not_to include(form_submission_path(skipped))
+      end
+
       it "carries the new filters back through each View link" do
         event = create(:event)
         submission = create(:form_submission, event: event, role: "registration")

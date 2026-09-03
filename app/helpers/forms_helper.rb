@@ -87,9 +87,9 @@ module FormsHelper
     }.compact
   end
 
-  # A results card's footer link to the Form submissions list: this form, narrowed
-  # like the rollup. form_field_id names the card for the eyebrow to return to —
-  # the submissions list doesn't filter on it.
+  # A results card's footer link to the Form submissions list: the submissions
+  # that answered this question, narrowed like the rollup. form_field_id both
+  # filters that list and names the card for its eyebrow to return to.
   def form_results_submissions_params(form, report)
     {
       form_id: form.id,

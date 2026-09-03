@@ -132,18 +132,21 @@
             <%= render "events/breakdown_card", title: report.label, data: report.rows,
                        chart: report.chart, palette: palette, empty_message: "No responses yet.",
                        note: report.multi ? "Multiple answers allowed, so counts can exceed the submission total." : nil,
+                       count: render("forms/answer_count", form: @form, report: report),
                        footer: report.answered_count.positive? ? render("forms/view_all_responses", form: @form, report: report) : nil %>
             <% if report.specify_rows.any? %>
               <div class="mt-6">
+                <%# No footer: this is a subset of the question above, whose own footer
+                    already links to the submissions that answered it. %>
                 <%= render "events/breakdown_card", title: "#{report.label}: written-in answers",
-                           data: report.specify_rows, chart: nil, palette: palette,
-                           footer: render("forms/view_all_responses", form: @form, report: report) %>
+                           data: report.specify_rows, chart: nil, palette: palette %>
               </div>
             <% end %>
           <% when :map %>
             <%= render "events/breakdown_card", title: report.label, data: report.rows,
                        chart: report.chart, palette: palette, map_color: "#475569",
                        empty_message: "No responses yet.",
+                       count: render("forms/answer_count", form: @form, report: report),
                        footer: report.answered_count.positive? ? render("forms/view_all_responses", form: @form, report: report) : nil %>
           <% when :number %>
             <%= render "forms/numeric_card", report: report %>

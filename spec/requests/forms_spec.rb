@@ -1180,7 +1180,8 @@ RSpec.describe "Forms", type: :request do
                                                       form_field_id: thoughts.id, organization_id: org.id))
       end
 
-      it "footers each card with a link to the submissions behind the rollup" do
+      # The footer counts who answered this question, not who submitted the form.
+      it "footers each card with the submissions that answered that question" do
         form = create(:form, :standalone, name: "Survey")
         thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
         create(:form_answer, form_submission: create(:form_submission, form: form),
@@ -1189,10 +1190,26 @@ RSpec.describe "Forms", type: :request do
 
         get results_form_path(form)
 
-        expect(response.body).to include("View 2 submissions")
+        expect(response.body).to include("View 1 submission")
         hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
         expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: thoughts.id,
                                                        return_to: "form_results"))
+      end
+
+      it "counts a charted question's answers in its header too, linking to them" do
+        form = create(:form, :standalone)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form)
+
+        count = Nokogiri::HTML(response.body).css("a").find { |a| a.text.strip == "2 answers" }
+        expect(count).to be_present
+        expect(count["href"]).to eq(form_answers_path(form_id: form.id, question: "Favorite color",
+                                                      form_field_id: color.id, return_to: "form_results"))
       end
 
       it "counts a text question's own answers in its header, linking to them" do
