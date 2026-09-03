@@ -7,5 +7,5 @@
 <div class="mt-3 border-t border-gray-100 pt-3 text-center">
   <%= link_to "View #{count} #{"submission".pluralize(count)}",
               form_submissions_path(**form_results_submissions_params(form, report)),
-              class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
+              class: "text-sm text-gray-500 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline" %>
 </div>

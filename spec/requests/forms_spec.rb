@@ -1196,6 +1196,27 @@ RSpec.describe "Forms", type: :request do
                                                        return_to: "form_results"))
       end
 
+      # No list can be narrowed to "only the write-ins", so the sub-card borrows its
+      # question's counts and destinations rather than showing a number it can't open.
+      it "gives the written-in sub-card its question's answer and submission links" do
+        form = create(:form, :standalone)
+        heard = create(:form_field, form: form, name: "How did you hear about us?",
+                       answer_type: :single_select_radio)
+        # The write-in card only appears for an option the field marks as "specify".
+        heard.answer_options << AnswerOption.create!(name: "Other", position: 1)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: heard, submitted_answer: "Other: Facebook group")
+
+        get results_form_path(form)
+
+        expect(response.body).to include("How did you hear about us?: written-in answers")
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: heard.name,
+                                                   form_field_id: heard.id, return_to: "form_results"))
+        expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: heard.id,
+                                                       return_to: "form_results"))
+      end
+
       it "links a file question's upload count to those answers" do
         form = create(:form, :standalone)
         upload = create(:form_field, form: form, name: "Sample of your work", answer_type: :file_upload)

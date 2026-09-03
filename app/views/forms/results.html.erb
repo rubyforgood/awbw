@@ -136,10 +136,13 @@
                        footer: report.answered_count.positive? ? render("forms/view_all_responses", form: @form, report: report) : nil %>
             <% if report.specify_rows.any? %>
               <div class="mt-6">
-                <%# No footer: this is a subset of the question above, whose own footer
-                    already links to the submissions that answered it. %>
+                <%# The write-ins are a subset of the question above, and there's no way
+                    to filter a list down to just them — so the count and the footer
+                    here are that question's, same as on its own card. %>
                 <%= render "events/breakdown_card", title: "#{report.label}: written-in answers",
-                           data: report.specify_rows, chart: nil, palette: palette %>
+                           data: report.specify_rows, chart: nil, palette: palette,
+                           count: render("forms/answer_count", form: @form, report: report),
+                           footer: render("forms/view_all_responses", form: @form, report: report) %>
               </div>
             <% end %>
           <% when :map %>
