@@ -1,0 +1,9 @@
+<%= turbo_frame_tag "cc_composers" do %>
+  <% if @person %>
+    <%= render "comments_and_communications/add_area", person: @person,
+               new_comment: @new_comment, new_notification: @new_notification,
+               record_targets: @record_targets %>
+  <% else %>
+    <p class="text-sm text-gray-500">Pick a person to add a note or log a communication.</p>
+  <% end %>
+<% end %>

@@ -75,7 +75,7 @@ RSpec.describe "Person profile admin-only details", type: :request do
 
   it "renders the comments & communications frame without error for an admin" do
     sign_in admin
-    get comments_and_communications_person_path(person),
+    get comments_and_communications_path(person_id: person.id),
         headers: { "Turbo-Frame" => "comments_and_communications_results" }
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("comments_and_communications_results")

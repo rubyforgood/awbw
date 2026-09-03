@@ -1,0 +1,30 @@
+<%= turbo_frame_tag "comments_and_communications_results" do %>
+  <div class="mb-3 border-t border-gray-100 pt-4">
+    <h2 class="text-sm font-semibold text-gray-700">
+      <%= t("communications.section_title") %>
+      <span class="font-normal text-gray-400">· <%= @count_display %> shown</span>
+    </h2>
+  </div>
+
+  <div class="space-y-2">
+    <% if @entries.any? %>
+      <% @entries.each do |entry| %>
+        <% if entry.is_a?(Comment) %>
+          <%= render "comments_and_communications/comment_row", entry: entry %>
+        <% elsif entry.manual_log? %>
+          <%= render "comments_and_communications/communication_row", entry: entry %>
+        <% else %>
+          <%= render "comments_and_communications/communication_row_readonly", entry: entry %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
+    <% end %>
+  </div>
+
+  <% if @entries.total_pages > 1 %>
+    <div class="mt-4 flex justify-center">
+      <%= tailwind_paginate @entries, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :from, :to, :email_topic).permit! %>
+    </div>
+  <% end %>
+<% end %>

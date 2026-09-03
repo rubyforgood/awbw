@@ -1,0 +1,31 @@
+<%# Add-a-note / log-a-communication toggle for a person's feed. Two buttons each
+    reveal a composer with a picker for which of the person's records to file
+    against. Rendered directly on a person's feed, and inside the composers frame
+    once a person is picked on the everyone feed. Locals: person, new_comment,
+    new_notification, record_targets. %>
+<div data-controller="panel-toggle">
+  <div class="flex flex-wrap justify-end gap-2">
+    <% [ [ "comment", t("communications.add_comment"), "fa-comment" ],
+         [ "communication", t("communications.add"), "fa-envelope" ] ].each do |name, label, icon| %>
+      <button type="button"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              data-panel-toggle-name="<%= name %>"
+              data-panel-toggle-hidden-label="<%= label %>"
+              data-panel-toggle-shown-label="Cancel"
+              data-panel-toggle-target="button"
+              data-action="panel-toggle#toggle"
+              aria-expanded="false">
+        <i class="fa-solid <%= icon %> text-2xs"></i>
+        <span data-panel-toggle-target="label"><%= label %></span>
+      </button>
+    <% end %>
+  </div>
+
+  <div class="mt-3 hidden" data-panel-toggle-name="comment" data-panel-toggle-target="panel">
+    <%= render "comments/composer", person: person, comment: new_comment,
+               comment_targets: record_targets, stream: false %>
+  </div>
+  <div class="mt-3 hidden" data-panel-toggle-name="communication" data-panel-toggle-target="panel">
+    <%= render "notifications/composer", person: person, notification: new_notification, record_targets: record_targets %>
+  </div>
+</div>

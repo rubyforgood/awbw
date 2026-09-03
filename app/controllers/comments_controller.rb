@@ -31,7 +31,7 @@ class CommentsController < ApplicationController
       setup_aggregated_context if aggregated?
       respond_to do |format|
         format.turbo_stream
-        format.html { redirect_back fallback_location: root_path, notice: "Comment created successfully." }
+        format.html { redirect_to after_create_html_path, notice: "Comment created successfully." }
       end
     else
       redirect_back fallback_location: root_path, alert: "Failed to create comment."
@@ -58,6 +58,17 @@ class CommentsController < ApplicationController
   # still resolves the real commentable from the route rather than the person.
   def aggregated?
     params[:aggregated].present?
+  end
+
+  # The combined feed's composer posts a plain (non-stream) comment and names the
+  # person via for_person_id, so land back on that person's combined feed. Any
+  # other non-stream post falls back to where it came from.
+  def after_create_html_path
+    if params[:for_person_id].present?
+      comments_and_communications_path(person_id: params[:for_person_id])
+    else
+      request.referer || root_path
+    end
   end
 
   def setup_aggregated_context

@@ -44,7 +44,7 @@ module Ahoy
       "bulk_payments"                      => ->(h, _p) { h.bulk_payments_path },
       "admin.data_health"                  => ->(h, _p) { h.admin_data_health_path },
       "person_all_comments"                => ->(h, p) { h.all_comments_person_path(p["person_id"]) },
-      "person_comments_and_communications" => ->(h, p) { h.comments_and_communications_person_path(p["person_id"]) }
+      "person_comments_and_communications" => ->(h, p) { h.comments_and_communications_path(person_id: p["person_id"]) }
     }.freeze
     private_constant :PAGE_LINKS
 
