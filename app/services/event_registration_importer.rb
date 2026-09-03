@@ -24,10 +24,12 @@ require "bigdecimal"
 #   * Payment — only when the row carries an AmountPaid. Finds (its own prior
 #     import payment for this person + amount + type on this event, keyed by
 #     metadata) or creates one, then finds-or-creates an Allocation applying it to
-#     the registration, capped at the registration's remaining cost. This is what
-#     makes an imported registration read as "Paid". PaymentType picks the payment
-#     kind (cash / check / card, defaulting to cash); a free event ignores the
-#     amount, since there's nothing to allocate against.
+#     the registration, capped at the registration's remaining cost. PaymentType
+#     picks the payment kind (cash / check / card, defaulting to cash); a free
+#     event ignores the amount, since there's nothing to allocate against.
+#   * Discount — the gap between the event cost and what was actually paid is
+#     comped with a Discount allocation, so a partial AmountPaid (e.g. $50 on a
+#     $750 event) still reads as "Paid". A full payment leaves no discount.
 #
 # No emails are sent, no mailing-list subscription, tags, addresses, or CE are
 # created — the sheet carries none of that, and this is a historical backfill.
@@ -125,6 +127,7 @@ class EventRegistrationImporter
     :registrations_created, :registrations_promoted, :registrations_already_attended,
     :organizations_linked, :organizations_to_reconcile,
     :payments_recorded, :payments_amount_cents,
+    :discounts_recorded, :discounts_amount_cents,
     :skipped, :rows,
     keyword_init: true
   ) do
@@ -140,6 +143,7 @@ class EventRegistrationImporter
           "already attended: #{registrations_already_attended}",
         "organizations linked: #{organizations_linked}, to reconcile: #{organizations_to_reconcile}",
         "payments recorded: #{payments_recorded} (#{MoneyFormatter.dollars_from_cents(payments_amount_cents)})",
+        "discounts recorded: #{discounts_recorded} (#{MoneyFormatter.dollars_from_cents(discounts_amount_cents)})",
         "skipped: #{skipped.size}"
       ].join("\n")
     end
@@ -150,7 +154,7 @@ class EventRegistrationImporter
     :number, :first_name, :last_name, :email, :organization_name,
     :person_status, :person_label,
     :registration_status, :organization_status,
-    :payment_status, :payment_label, :payment_amount_cents,
+    :payment_status, :payment_label, :payment_amount_cents, :discount_cents,
     :skipped_reason,
     keyword_init: true
   )
@@ -171,6 +175,7 @@ class EventRegistrationImporter
       registrations_created: 0, registrations_promoted: 0, registrations_already_attended: 0,
       organizations_linked: 0, organizations_to_reconcile: 0,
       payments_recorded: 0, payments_amount_cents: 0,
+      discounts_recorded: 0, discounts_amount_cents: 0,
       skipped: [], rows: []
     )
     @organization_cache = {}
@@ -329,8 +334,16 @@ class EventRegistrationImporter
 
     preview.payment_status = :will_record
     preview.payment_label = PAYMENT_TYPE_LABELS[payment_class.name]
+    applied = [ cents, @event.cost_cents.to_i ].min
     @result.payments_recorded += 1
-    @result.payments_amount_cents += [ cents, @event.cost_cents.to_i ].min
+    @result.payments_amount_cents += applied
+
+    discount = @event.cost_cents.to_i - applied
+    return unless discount.positive?
+
+    preview.discount_cents = discount
+    @result.discounts_recorded += 1
+    @result.discounts_amount_cents += discount
   end
 
   def persist_registration(person, registration, values)
@@ -370,12 +383,29 @@ class EventRegistrationImporter
     return if payment_class == CheckPayment && values[:check_number].blank?
 
     to_allocate = [ cents, registration.remaining_cost ].min
-    return if to_allocate <= 0
-
-    payment = resolve_payment(person, cents, payment_class, values[:check_number])
-    registration.allocations.find_or_create_by!(source: payment) do |allocation|
-      allocation.amount = to_allocate
+    if to_allocate.positive?
+      payment = resolve_payment(person, cents, payment_class, values[:check_number])
+      registration.allocations.find_or_create_by!(source: payment) do |allocation|
+        allocation.amount = to_allocate
+      end
     end
+
+    cover_remainder_with_discount(registration)
+  end
+
+  # Comps whatever the payment didn't cover — the gap between the event cost and
+  # what was actually paid — so a partial amount still reads as "Paid". A re-run
+  # sees nothing left to cover and adds no second discount.
+  def cover_remainder_with_discount(registration)
+    registration.allocations.reset
+    remaining = registration.remaining_cost
+    return unless remaining.positive?
+
+    discount = Discount.new(amount_cents: remaining)
+    discount.created_by = @import_user if discount.respond_to?(:created_by=)
+    discount.updated_by = @import_user if discount.respond_to?(:updated_by=)
+    discount.save!
+    registration.allocations.create!(source: discount, amount: remaining)
   end
 
   # Reuses our own prior import payment for this person + amount + type on this

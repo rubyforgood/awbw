@@ -2647,7 +2647,7 @@
     column marks the registration paid too.
   pro_tips:
     - "Expected columns: FirstName, LastName, Organization, EMail. Export your spreadsheet as a .csv first."
-    - "To record payment, add an AmountPaid column (plus PaymentType — cash, check, or card — and a CheckNumber for checks). The amount is applied to the registration so it shows as paid; free events ignore it."
+    - "To record payment, add an AmountPaid column (plus PaymentType — cash, check, or card — and a CheckNumber for checks). The amount is applied to the registration so it shows as paid; a partial amount is topped up with a discount for the difference. Free events ignore it."
     - "You get a full preview — new vs. matched people, new vs. promoted registrations, which orgs will link vs. need reconciling, and the payments to record — before anything is saved."
     - "Organizations we don't recognize aren't created; they're queued on each registrant's \"link organization\" page so you can reconcile them the same way as a normal registration."
     - "On facilitator trainings, a linked organization also adds the person's facilitator affiliation."

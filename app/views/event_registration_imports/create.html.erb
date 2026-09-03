@@ -23,6 +23,8 @@
       [ "Orgs to reconcile", @result.organizations_to_reconcile ],
       [ "Payments", @result.payments_recorded ],
       [ "Amount", dollars_from_cents(@result.payments_amount_cents) ],
+      [ "Discounts", @result.discounts_recorded ],
+      [ "Comped", dollars_from_cents(@result.discounts_amount_cents) ],
       [ "Rows", @result.rows_processed ],
       [ "Skipped", @result.skipped.size ]
     ].each do |label, count| %>
@@ -104,6 +106,11 @@
                     <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="<%= row.payment_label %> — applied to the registration">
                       <%= row.payment_label %> <%= dollars_from_cents(row.payment_amount_cents) %>
                     </span>
+                    <% if row.discount_cents.present? %>
+                      <span class="ml-1 inline-flex items-center rounded-md bg-purple-100 px-2 py-1 text-xs text-purple-800" title="Remainder comped so the registration reads as paid">
+                        + <%= dollars_from_cents(row.discount_cents) %> discount
+                      </span>
+                    <% end %>
                   <% when :free %>
                     <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600" title="Free event — nothing to apply the amount against">
                       Free event — not applied
