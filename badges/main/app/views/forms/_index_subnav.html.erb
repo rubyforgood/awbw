@@ -1,0 +1,16 @@
+<%# Cross-nav across the Forms/Submissions/Answers index pages, styled like
+    events/_subnav. Pass `current:` — one of :forms, :submissions, :answers. %>
+<nav class="flex flex-wrap items-center gap-1" aria-label="Forms views">
+  <% tabs = [
+       { key: :forms, label: "Forms", path: forms_path },
+       { key: :submissions, label: "Submissions", path: form_submissions_path },
+       { key: :answers, label: "Answers", path: form_answers_path }
+     ] %>
+  <% tabs.each do |tab| %>
+    <% if tab[:key] == current %>
+      <span aria-current="page" class="border-b-2 border-indigo-600 px-2 py-1 text-sm font-semibold text-gray-900"><%= tab[:label] %></span>
+    <% else %>
+      <%= link_to tab[:label], tab[:path], class: "text-sm #{eyebrow_link_class} border-b-2 border-transparent hover:border-gray-300 px-2 py-1" %>
+    <% end %>
+  <% end %>
+</nav>

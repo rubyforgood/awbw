@@ -1,4 +1,10 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% topbar = capture do %>
+  <%= link_to admin_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> Admin home
+  <% end %>
+  <%= render "forms/index_subnav", current: :forms %>
+<% end %>
 <% actions = capture do %>
   <% if allowed_to?(:new?, Form) %>
     <div class="admin-only bg-blue-100">
@@ -9,9 +15,9 @@
   <% end %>
 <% end %>
 <%= render layout: "shared/index_page",
-           locals: { domain: :forms, eyebrow: "Forms", title: "All forms",
-                     subtitle: "Reusable forms for event registrations and other submissions",
-                     actions: actions } do %>
+           locals: { domain: :forms, title: "Forms",
+                     subtitle: "Reusable forms for any need, including event registrations and collaboration agreements",
+                     subtitle_width: "max-w-none", topbar: topbar, actions: actions } do %>
   <% result_src = forms_path + "?" + request.query_string %>
 
   <%= turbo_frame_tag :forms_results, src: result_src, data: { turbo: "temporary" } do %>

@@ -1,36 +1,40 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<% if @form || @person %>
-  <div class="mx-auto mb-4 flex w-full max-w-7xl flex-wrap items-center justify-between gap-2">
-    <div>
-      <% if params[:return_to] == "form_results" && @form %>
-        <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
-          <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
-        <% end %>
-      <% elsif params[:return_to] == "forms" && @form %>
-        <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-          <i class="fa-solid fa-arrow-left text-xs"></i> Forms
-        <% end %>
-      <% elsif @person %>
-        <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-          <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
-        <% end %>
+<% topbar = capture do %>
+  <div>
+    <% if params[:return_to] == "form_results" && @form %>
+      <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
       <% end %>
-    </div>
-    <% if @form %>
-      <%= form_page_subnav(@form, current: :submissions) %>
+    <% elsif params[:return_to] == "forms" && @form %>
+      <%= link_to forms_path(anchor: "form_#{@form.id}"), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Forms
+      <% end %>
+    <% elsif @person %>
+      <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
+      <% end %>
+    <% elsif !@form %>
+      <%= link_to forms_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Forms
+      <% end %>
     <% end %>
   </div>
+  <% if @form %>
+    <%= form_page_subnav(@form, current: :submissions) %>
+  <% elsif !@person %>
+    <%= render "forms/index_subnav", current: :submissions %>
+  <% end %>
 <% end %>
 <% subtitle = capture do %>
   <% if @person %>
     Forms submitted by <span class="font-medium text-gray-900"><%= @person.name %></span>.
   <% else %>
-    Forms submitted across the site — registrations, scholarships, and public forms.
+    Forms submitted across the site — including registrations, scholarships, and public forms.
   <% end %>
 <% end %>
 <%= render layout: "shared/index_page",
            locals: { domain: :forms, eyebrow: "Forms", title: "Submissions",
-                     subtitle: subtitle } do %>
+                     subtitle: subtitle, subtitle_width: "max-w-none", topbar: topbar } do %>
     <%# Filters. Auto-submit into the results frame on change. %>
     <%= form_with url: form_submissions_path, method: :get, autocomplete: "off",
           data: { controller: "collection searchable-checkbox", turbo_frame: "form_submissions_results" },

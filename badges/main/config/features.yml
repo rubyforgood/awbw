@@ -27,6 +27,17 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Tell comments from emails at a glance on the activity feed"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    On a record's comments and communications feed, each comment now shows a
+    "Com't" chip that matches the "Email" chip on sent messages, so you can tell
+    internal notes from communications at a glance. Rows line up in even columns
+    and show up to two lines of text.
+  pr_number: 2515
+
 - name: "Jump from the activity timeline to the page each row logged"
   area: reporting
   display_status: admin_facing
@@ -3200,3 +3211,14 @@
     — the same referral-source breakdown shown on a form's results page, scoped to
     the training(s) in view.
   pr_number: 2513
+
+- name: "Jump between Forms, Submissions, and Answers"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    The Forms, Submissions, and Answers admin pages now share a sub-navigation
+    bar, so you can move straight between them instead of going back through the
+    menu — with a back link (to Admin home, or to Forms) at the top of each.
+  action_path: "/forms"
+  pr_number: 2506

@@ -10,17 +10,17 @@
 <div class="nested-fields" data-paginated-fields-target="item">
   <%= f.hidden_field :id if f.object.persisted? %>
   <div class="flex items-start gap-x-1 rounded-md border <%= comment_card_class(warning: is_age_range_data) %> px-3 py-2">
-    <label class="mt-1 inline-flex w-4 shrink-0 cursor-pointer justify-center leading-none" title="Flag for follow-up">
+    <label class="mt-0.5 inline-flex w-4 shrink-0 cursor-pointer justify-center leading-none" title="Flag for follow-up">
       <%= f.check_box :flagged, class: "peer sr-only" %>
       <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]! hover:text-orange-400"></i>
     </label>
     <div class="grow">
     <% if f.object.persisted? %>
-      <div class="flex items-center gap-x-1" data-edit-toggle-target="view">
+      <div class="flex items-start gap-x-1" data-edit-toggle-target="view">
         <%= render "comments/comment_line", comment: f.object, body_target: true %>
       </div>
       <div class="flex hidden items-start gap-x-1" data-edit-toggle-target="edit">
-        <span class="mt-2 shrink-0 text-xs whitespace-nowrap text-gray-400">
+        <span class="mt-2 w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
           <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
         </span>
         <span class="mt-2 inline-flex w-20 shrink-0 items-center gap-x-1">
@@ -54,7 +54,7 @@
     <% else %>
       <% current_first_name = current_user&.person&.first_name || current_user&.name.to_s.split.first %>
       <div class="flex items-start gap-x-1">
-        <span class="mt-2 shrink-0 text-xs whitespace-nowrap text-gray-400">
+        <span class="mt-2 w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
           <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
         </span>
         <span class="mt-2 inline-flex w-20 shrink-0 items-center">
