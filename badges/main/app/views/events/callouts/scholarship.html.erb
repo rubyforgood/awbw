@@ -72,7 +72,7 @@
           <% if latest_response&.contribution_cents.present? %>
             <p class="mt-2 text-sm text-gray-600">You told us you or your employer can contribute <strong><%= dollars_from_cents(latest_response.contribution_cents) %></strong> toward the training fee.</p>
           <% end %>
-          <p class="mt-2 text-sm text-gray-600">Your award hasn't been declined — the team will review available funds and follow up with you.</p>
+          <p class="mt-2 text-sm text-gray-600">Our team will review available funds and follow up with you.</p>
         <% else %>
           <p class="text-sm text-gray-600">Agree to complete your scholarship tasks to accept this award.</p>
           <%# Request support and Decline are toggle buttons whose forms open full-width
