@@ -188,8 +188,8 @@ class SmartFormFields
     event_rating most_valuable improvement_suggestions
   ].freeze
 
-  # Answer-only identifiers whose stored value is surfaced somewhere worth pointing
-  # an admin to (a chart or report), keyed to that note. Rendered under the chip.
+  # Per-identifier note rendered under an answer-only chip, for values surfaced in
+  # a chart or report worth pointing an admin to.
   ANSWER_ONLY_NOTES = {
     "referral_source" => "Its value is charted as a \"How did you hear about us?\" breakdown in the " \
                          "event breakdowns and the reports breakdowns, and listed on the form answers " \

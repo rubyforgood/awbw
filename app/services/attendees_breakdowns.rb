@@ -65,11 +65,8 @@ class AttendeesBreakdowns
 
   # --- Referral source -------------------------------------------------------
 
-  # "How did you hear about this AWBW training?" answers across the scoped events'
-  # submissions, as [ label, count ] rows counting DISTINCT people per answer (so
-  # someone who gave the same answer at two trainings counts once; one who gave
-  # two different answers counts under each). A "specify" answer ("Other: Facebook")
-  # collapses to its option label, matching the single-event roster and results page.
+  # Referral-source answers as [ label, count ] rows, counting distinct people per
+  # answer across the scoped events (like the age/sector cards).
   def referral_source_counts
     @referral_source_counts ||= distinct_person_counts(referral_rows) { |row| row[1] }
       .sort_by { |label, count| [ -count, label ] }
@@ -273,9 +270,8 @@ class AttendeesBreakdowns
       .pluck(:categorizable_id, :category_id, :is_primary)
   end
 
-  # [ [ person_id, label ], ... ] for referral-source answers on the scoped
-  # events' submissions by the scoped people. Each answer text is split (defensive
-  # for multi-value) and a "specify" answer folded to its option label.
+  # [ [ person_id, label ], ... ] for referral answers, folding a "specify" answer
+  # ("Other: Facebook") to its option label.
   def referral_rows
     @referral_rows ||= FormAnswer
       .joins(:form_field, :form_submission)
