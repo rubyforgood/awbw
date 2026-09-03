@@ -1,4 +1,10 @@
 class FormAnswersController < ApplicationController
+  # Blank answer rows are noise here (an optional question nobody filled in), so
+  # they're hidden unless the Empty answers filter asks for them. Hiding them by
+  # default also makes this list agree with the response counts on form results,
+  # which have always counted only answered questions.
+  INCLUDE_EMPTY_ANSWERS = "include".freeze
+
   def index
     authorize! FormAnswer
 
@@ -10,6 +16,8 @@ class FormAnswersController < ApplicationController
       render :form_answers_results
     else
       @forms = Form.order(:name)
+      # Names the "back to results" eyebrow when a form's results page linked here.
+      @form = Form.find_by(id: params[:form_id])
       render :index
     end
   end
@@ -18,6 +26,7 @@ class FormAnswersController < ApplicationController
 
   # Each filter is a no-op when its param is blank, so combinations stack.
   def filter_answers(scope)
+    scope = scope.answered unless params[:empty] == INCLUDE_EMPTY_ANSWERS
     if params[:q].present?
       scope = scope.where("form_answers.submitted_answer LIKE ?", "%#{FormAnswer.sanitize_sql_like(params[:q])}%")
     end

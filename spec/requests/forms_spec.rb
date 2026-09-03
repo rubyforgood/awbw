@@ -1093,6 +1093,16 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).not_to include("Favorite food")
       end
 
+      it "says nothing about a question search on a form that asks no questions" do
+        form = create(:form, :standalone)
+        create(:form_field, form: form, answer_type: :group_header)
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        expect(response.body).not_to include("No questions match")
+      end
+
       it "links a text question's responses to the form answers index filtered to that question" do
         form = create(:form, :standalone, name: "Survey")
         thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
@@ -1103,7 +1113,7 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts"))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", return_to: "form_results"))
       end
 
       it "carries the selected event into the form answers links" do
@@ -1118,7 +1128,7 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", event_id: event.id))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", event_id: event.id, return_to: "form_results"))
       end
 
       it "carries the selected person into the form answers links" do
@@ -1132,7 +1142,7 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", person_id: person.id))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", person_id: person.id, return_to: "form_results"))
       end
 
       it "carries the selected organization into the form answers links" do
@@ -1148,7 +1158,7 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", organization_id: org.id))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", organization_id: org.id, return_to: "form_results"))
       end
     end
 

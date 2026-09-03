@@ -48,6 +48,17 @@
     straight to the Form answers list, pre-filtered to that question.
   pr_number: 2508
 
+- name: "Form answers list hides blank answers"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    The Form answers list now leaves out the blank rows an optional question
+    nobody filled in leaves behind, so its counts match the response counts on a
+    form's Results page. Switch "Empty answers" to Included to see them again.
+  action_path: /form_answers
+  pr_number: 2508
+
 - name: "Jump from the activity timeline to the page each row logged"
   area: reporting
   display_status: admin_facing

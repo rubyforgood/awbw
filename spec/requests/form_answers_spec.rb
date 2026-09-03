@@ -120,6 +120,52 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("short-answer")
       end
 
+      it "hides the blank answer rows an unfilled optional question leaves behind" do
+        form = create(:form)
+        create(:form_answer, submitted_answer: "answered-it",
+               form_field: create(:form_field, form: form, name: "Answered question"))
+        create(:form_answer, submitted_answer: "",
+               form_field: create(:form_field, form: form, name: "Skipped question"))
+
+        get form_answers_path, headers: frame_headers
+
+        expect(response.body).to include("Answered question")
+        expect(response.body).not_to include("Skipped question")
+      end
+
+      it "includes the blank rows when the empty filter asks for them" do
+        form = create(:form)
+        create(:form_answer, submitted_answer: "",
+               form_field: create(:form_field, form: form, name: "Skipped question"))
+
+        get form_answers_path(empty: "include"), headers: frame_headers
+
+        expect(response.body).to include("Skipped question")
+      end
+
+      it "links back to the form's results page when it linked here" do
+        form = create(:form, name: "Volunteer interest")
+        create(:form_answer, form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, return_to: "form_results")
+
+        expect(response.body).to include(CGI.escapeHTML(results_form_path(form)))
+        expect(response.body).to include("Volunteer interest results")
+      end
+
+      it "keeps every filter on the round trip through a submission" do
+        org = create(:organization)
+        submission = create(:form_submission)
+        submission.link_organization!(org.id)
+        create(:form_answer, form_submission: submission)
+
+        get form_answers_path(organization_id: org.id), headers: frame_headers
+
+        expect(response.body).to include(CGI.escapeHTML(
+          form_submission_path(submission, return_to: "form_answers", organization_id: org.id)
+        ))
+      end
+
       it "breaks the View link out of the results frame" do
         create(:form_answer)
         get form_answers_path, headers: frame_headers
