@@ -300,14 +300,14 @@ RSpec.describe "Comments and communications", type: :request do
   describe "the combined section's link to the feed" do
     before { sign_in admin }
 
-    it "offers one 'All comments & communications' link carrying the origin record" do
+    it "offers one 'Comments & communications' link carrying the origin record" do
       get edit_person_path(person)
 
-      expect(response.body).to include("All comments &amp; communications")
+      expect(response.body).to include("Comments &amp; communications")
       expect(response.body).to include(CGI.escapeHTML(
         comments_and_communications_path(person_id: person.id, return_to_type: "Person", return_to_id: person.id)
       ))
-      expect(response.body).not_to include(">All comments\n")
+      expect(response.body).not_to include(">Comments\n")
     end
 
     it "links to the registrant's feed from an event registration" do

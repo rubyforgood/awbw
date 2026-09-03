@@ -1,7 +1,7 @@
 # Merges the two feeds — every comment connected to a person (via
 # PersonCommentAggregator) and every communication addressed to any of their
 # email addresses (Person#communications_scope) — into one newest-first list for
-# the "All comments & communications" page. With no person, the feed spans
+# the "Comments & communications" page. With no person, the feed spans
 # everyone: every comment and every communication, filterable the same way.
 #
 # Both sides keep their own filters (Comment.search_by_params /

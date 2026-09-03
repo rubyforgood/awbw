@@ -48,8 +48,6 @@ en:
     add_comment: "Add comment"
     section_none: "No comments or communications yet."
     section_none_comms_only: "No communications yet."
-    view_all: "All comments & communications"
-    all_section_title: "All comments & communications"
     all_section_none: "No comments or communications match these filters."
   activerecord:
     attributes:
