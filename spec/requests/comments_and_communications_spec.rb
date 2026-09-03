@@ -88,6 +88,22 @@ RSpec.describe "Comments and communications", type: :request do
       expect(registration).to be_persisted
     end
 
+    it "files a note against the picked record and returns to the person's feed" do
+      registration = create(:event_registration, registrant: person)
+
+      expect {
+        post person_comments_path(person), params: {
+          for_person_id: person.id,
+          commentable_sgid: registration.to_sgid.to_s,
+          comment: { body: "Called the family" }
+        }
+      }.to change(Comment, :count).by(1)
+
+      logged = Comment.order(:created_at).last
+      expect(logged.commentable).to eq(registration)
+      expect(response).to redirect_to(comments_and_communications_path(person_id: person.id))
+    end
+
     it "logs a communication against the picked record and returns to the feed" do
       registration = create(:event_registration, registrant: person)
 

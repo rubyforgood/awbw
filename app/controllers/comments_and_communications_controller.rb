@@ -14,10 +14,10 @@ class CommentsAndCommunicationsController < ApplicationController
 
     if turbo_frame_request?
       feed = PersonCommentAndCommunicationAggregator.new(@person, params)
-      entries = feed.entries
+      @entries = feed.paginate(params[:page], 20)
       @total_count = feed.total_count
-      @count_display = entries.size == @total_count ? @total_count : "#{entries.size}/#{@total_count}"
-      @entries = entries.paginate(page: params[:page], per_page: 20)
+      shown = @entries.total_entries
+      @count_display = shown == @total_count ? @total_count : "#{shown}/#{@total_count}"
       render :comments_and_communications_results
     else
       feed = PersonCommentAndCommunicationAggregator.new(@person)
