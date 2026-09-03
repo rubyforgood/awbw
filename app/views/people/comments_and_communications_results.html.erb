@@ -6,35 +6,35 @@
     </h2>
   </div>
 
-  <%# Each card leads with a headline row — flag, date, from, subject/topic, and a
-      chip for the record it hangs off — then drops the body onto its own line.
-      The chip links to that record's edit page for both kinds. %>
-  <% chip_class = "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-xs font-medium" %>
-  <% record_chip_for = ->(record) do
+  <%# Each card leads with a headline row — flag, date, from, then a single neutral
+      chip naming the record it hangs off (with the entry's type icon inside it) and
+      the subject/topic. The chip is left-aligned and links to that record's edit
+      page for both kinds. %>
+  <% chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900" %>
+  <% source_chip_for = ->(record, icon_html) do
        next if record.blank?
 
-       theme = record_theme(record)
-       classes = "ml-auto #{chip_class} #{DomainTheme.border_class_for(theme)} #{DomainTheme.bg_class_for(theme, intensity: 100)} #{DomainTheme.text_class_for(theme, intensity: 800)}"
-       label = commentable_label(record)
+       inner = safe_join([ icon_html, commentable_label(record) ], " ")
        path = record_edit_path(record)
-       path ? link_to(label, path, target: "_blank", rel: "noopener", class: "#{classes} hover:underline") : content_tag(:span, label, class: classes)
+       path ? link_to(inner, path, target: "_blank", rel: "noopener", class: "#{chip_class} hover:underline") : content_tag(:span, inner, class: chip_class)
      end %>
+  <% comment_icon = content_tag(:i, "", class: "fa-solid fa-comment text-gray-500", "aria-hidden": "true", title: "Comment") %>
   <div class="space-y-2">
     <% if @entries.any? %>
       <% @entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
-          <% record_chip = record_chip_for.call(entry.commentable) %>
+          <% source_chip = source_chip_for.call(entry.commentable, comment_icon) %>
           <div class="rounded-md border <%= comment_card_class(warning: entry.body&.include?("[AGE_RANGE_DATA]")) %> px-3 py-2">
             <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
               <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none" title="<%= entry.flagged? ? "Flagged for follow-up" : "Not flagged" %>">
                 <i class="fa-flag <%= entry.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-400" %>"></i>
               </span>
-              <%= render "comments/comment_line", comment: entry, truncate: false, trailing: record_chip %>
+              <%= render "comments/comment_line", comment: entry, truncate: false, leading: source_chip %>
             </div>
           </div>
         <% else %>
-          <% record_chip = record_chip_for.call(entry.noticeable) %>
-          <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, trailing: record_chip %>
+          <% source_chip = source_chip_for.call(entry.noticeable, entry.decorate.channel_icon) %>
+          <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, leading: source_chip %>
         <% end %>
       <% end %>
     <% else %>
