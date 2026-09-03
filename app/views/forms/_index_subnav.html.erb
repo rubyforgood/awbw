@@ -1,7 +1,5 @@
-<%# Shared sub-navigation across the top-level Forms admin index pages.
-    Pass `current:` — one of :forms, :submissions, :answers. Styled to match
-    events/_subnav: underlined active tab, muted links. All three pages are
-    admin-only, so every tab shows to the same audience. %>
+<%# Cross-nav across the Forms/Submissions/Answers index pages, styled like
+    events/_subnav. Pass `current:` — one of :forms, :submissions, :answers. %>
 <nav class="flex flex-wrap items-center gap-1" aria-label="Forms views">
   <% tabs = [
        { key: :forms, label: "Forms", path: forms_path },
