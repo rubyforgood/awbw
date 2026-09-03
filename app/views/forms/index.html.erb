@@ -17,7 +17,7 @@
 <%= render layout: "shared/index_page",
            locals: { domain: :forms, title: "Forms",
                      subtitle: "Reusable forms for any need, including event registrations and collaboration agreements",
-                     topbar: topbar, actions: actions } do %>
+                     subtitle_width: "max-w-none", topbar: topbar, actions: actions } do %>
   <% result_src = forms_path + "?" + request.query_string %>
 
   <%= turbo_frame_tag :forms_results, src: result_src, data: { turbo: "temporary" } do %>

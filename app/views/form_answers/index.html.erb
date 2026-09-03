@@ -8,7 +8,7 @@
 <%= render layout: "shared/index_page",
            locals: { domain: :forms, eyebrow: "Forms", title: "Answers",
                      subtitle: "Every answer submitted on any of the site's forms — search the answer text or filter by form, person, submission, or question type",
-                     topbar: topbar } do %>
+                     subtitle_width: "max-w-none", topbar: topbar } do %>
     <%# GET filter form outside the frame. The collection controller debounce-submits
         the text boxes and submits the selects on change, into the results frame. %>
     <%= form_with url: form_answers_path, method: :get,
