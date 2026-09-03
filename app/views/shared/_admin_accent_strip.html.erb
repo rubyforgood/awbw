@@ -1,0 +1,7 @@
+<%# The admin counterpart to shared/_brand_accent_strip. Where the rainbow rule
+    marks a public, AWBW-branded page, this quieter brand-navy strip marks the
+    internal admin tool — a tonal navy sweep (dark edges, a lit middle) rather
+    than the bright multi-colour rule, so admin surfaces read as back-office, not
+    marketing. Picked automatically on admin-only pages by accent_strip_partial.
+    Pass rounded: true when the card is not clipping its own overflow. %>
+<div class="h-1.5 w-full <%= "rounded-t-2xl" if local_assigns[:rounded] %> bg-[linear-gradient(to_right,var(--color-brand-navy-950),var(--color-brand-navy-800),var(--color-brand-navy-600),var(--color-brand-navy-800),var(--color-brand-navy-950))]"></div>
