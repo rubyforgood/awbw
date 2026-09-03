@@ -210,15 +210,16 @@ RSpec.describe DeviseMailer, type: :mailer do
     end
 
     # The sender is an internal audit field only — an admin-sent invite must still
-    # reach the recipient from the generic mailbox with no personal name attached.
-    it "sends an attributed invite from the generic address with no display name" do
+    # reach the recipient from the generic mailbox as "AWBW Programs", never under
+    # the admin's own personal name.
+    it "sends an attributed invite from the generic mailbox as AWBW Programs, not the admin" do
       invitee = create(:user, :unconfirmed)
 
       invitee.send_confirmation_instructions(sender: admin)
 
       mail = ActionMailer::Base.deliveries.last
       expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
-      expect(mail[:from].display_names.compact).to be_empty
+      expect(mail[:from].display_names.compact).to eq([ ApplicationMailer::FROM_NAME ])
       expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
       expect(mail.header.fields.map(&:to_s).join("\n")).not_to include("Dana Sender")
     end
