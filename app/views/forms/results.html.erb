@@ -43,17 +43,19 @@
           class: "mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" do %>
       <div class="mb-3 flex items-center gap-2 text-gray-600">
         <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
-        <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
+        <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>
       </div>
-      <div class="grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <%# One row, on the bulk-payments filter bar's width scale: fixed pickers and
+          dates, the question search absorbing whatever's left. %>
+      <div class="flex flex-wrap items-end gap-3">
         <% if show_question_filter %>
-          <div>
+          <div class="min-w-44 flex-1">
             <%= label_tag :question, "Question", class: search_label_class %>
             <%= text_field_tag :question, @selected_question, placeholder: "Search questions", class: search_field_class %>
           </div>
         <% end %>
         <% if show_event_filter %>
-          <div>
+          <div class="w-full sm:w-44">
             <%= label_tag :event_id, "Event", class: search_label_class %>
             <%= select_tag :event_id,
                   options_for_select(connected_events.map { |event| [ event.decorate.title_with_month_year, event.id ] }, @selected_event_id),
@@ -62,7 +64,7 @@
           </div>
         <% end %>
         <% if show_person_filter %>
-          <div>
+          <div class="w-full sm:w-44">
             <%= label_tag :person_id, "Person", class: search_label_class %>
             <%= select_tag :person_id,
                   options_for_select(Person.where(id: @selected_person_id).map { |person| [ person.full_name, person.id ] }, @selected_person_id),
@@ -73,7 +75,7 @@
           </div>
         <% end %>
         <% if show_org_filter %>
-          <div>
+          <div class="w-full sm:w-44">
             <%= label_tag :organization_id, "Organization", class: search_label_class %>
             <%= select_tag :organization_id,
                   options_for_select(Organization.where(id: @selected_organization_id).map { |org| [ org.name, org.id ] }, @selected_organization_id),
@@ -84,15 +86,14 @@
           </div>
         <% end %>
         <% if show_date_filter %>
-          <div>
-            <%= label_tag :start_date, "Submitted from", class: search_label_class %>
-            <%= date_field_tag :start_date, params[:start_date], class: date_filter_class(search_field_class, params[:start_date]) %>
-          </div>
-          <div>
-            <%= label_tag :end_date, "Submitted to", class: search_label_class %>
-            <%= date_field_tag :end_date, params[:end_date], class: date_filter_class(search_field_class, params[:end_date]) %>
-          </div>
+          <%= render "events/filter_date", param: :start_date, label: "Submitted from",
+                field_class: search_field_class, wrapper_class: "w-full sm:w-36" %>
+          <%= render "events/filter_date", param: :end_date, label: "Submitted to",
+                field_class: search_field_class, wrapper_class: "w-full sm:w-36" %>
         <% end %>
+        <div class="flex items-end">
+          <%= render "shared/search_clear", url: results_form_path(@form) %>
+        </div>
       </div>
     <% end %>
   <% end %>

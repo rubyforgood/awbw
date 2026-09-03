@@ -1017,6 +1017,18 @@ RSpec.describe "Forms", type: :request do
         expect(ids).to eq(%w[question event_id person_id organization_id start_date end_date])
       end
 
+      it "offers a clear-filters control that drops back to the unfiltered rollup" do
+        form = create(:form, :standalone)
+        create(:form_submission, form: form)
+
+        get results_form_path(form, person_id: create(:person).id)
+
+        doc = Nokogiri::HTML(response.body)
+        clear = doc.css("a").find { |a| a.text.strip == "Clear filters" }
+        expect(clear).to be_present
+        expect(clear["href"]).to eq(results_form_path(form))
+      end
+
       it "narrows the rollup to the selected person's submissions" do
         form = create(:form, :standalone)
         person = create(:person)
