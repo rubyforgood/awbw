@@ -38,14 +38,15 @@
     and show up to two lines of text.
   pr_number: 2515
 
-- name: "Admin-only pages now carry a navy accent, not the public rainbow rule"
+- name: "The page accent rule now reflects who can see the page"
   area: reporting
   display_status: admin_facing
   released_on: 2026-09-02
   summary: >-
-    Admin-only pages are topped with a quiet brand-navy strip instead of the
-    public rainbow rule, so at a glance you can tell an internal admin page from
-    a public, brand-facing one.
+    The colored rule atop each page card now signals its access level: a quiet
+    navy strip on admin-only pages, a half navy/rainbow strip on admin-or-owner
+    pages, and a teal rainbow for any signed-in user — so you can tell an
+    internal page from a public, brand-facing one at a glance.
   action_path: /forms
   pr_number: 2516
 
