@@ -5,11 +5,18 @@
 # Ahoy lifecycle events are written directly rather than letting AhoyTrackable fire
 # them, because the whole point is timestamps spread over past years.
 
+# The uniquely-titled training this seed mints — also its idempotency sentinel:
+# its presence means the seed already ran, so a re-run skips cleanly. (The old
+# guard checked Ahoy events on the pre-existing first affiliation, but the seed
+# only writes those onto the records it creates, so it never tripped and re-runs
+# collided on the duplicate facilitator affiliation.)
+first_training_title = "Facilitator Training: Foundations"
+
 affiliation = Affiliation.order(:id).first
 
 if affiliation.nil?
   puts "Skipping affiliation history seed: no affiliations. Run db:seed:dev first."
-elsif Ahoy::Event.where(resource_type: "Affiliation", resource_id: affiliation.id).where("time < ?", 1.year.ago).exists?
+elsif Event.exists?(title: first_training_title)
   puts "Skipping affiliation history seed (already seeded)"
 else
   person = affiliation.person
@@ -94,7 +101,7 @@ else
     year = ->(n) { Date.current - n.years }
 
     # ── 7 years ago: first training, becomes a facilitator ───────────────────
-    first_registration = training.("Facilitator Training: Foundations", year.(7), "attended", second_org)
+    first_registration = training.(first_training_title, year.(7), "attended", second_org)
     note.(first_registration, "Travelled in from out of state; covered by a partial scholarship.",
           year.(7) + 1.day, topic: "Registration")
     email.("Welcome to the AWBW facilitator community",
