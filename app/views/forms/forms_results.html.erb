@@ -1,18 +1,18 @@
 <%= turbo_frame_tag :forms_results do %>
   <% sort_link = sort_header_link(frame: "forms_results", path: ->(p) { forms_path(p) }) %>
-  <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm">
-    <table class="w-full border-collapse">
-      <thead class="bg-gray-100">
+  <div class="border-primary/10 rounded-2xl border bg-white shadow-sm">
+    <table class="w-full border-separate border-spacing-0 [&_tbody_td]:border-t [&_tbody_td]:border-gray-200">
+      <thead>
         <tr>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("name", "Name") %></th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("role", "Role") %></th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Availability</th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("fields", "Fields") %></th>
-          <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700"><%= sort_link.call("submissions", "Submissions") %></th>
-          <th class="px-4 py-2"></th>
+          <th class="bg-gray-100 px-4 py-2 text-left text-sm font-semibold text-gray-700 first:rounded-tl-2xl last:rounded-tr-2xl"><%= sort_link.call("name", "Name") %></th>
+          <th class="bg-gray-100 px-4 py-2 text-left text-sm font-semibold text-gray-700 first:rounded-tl-2xl last:rounded-tr-2xl"><%= sort_link.call("role", "Role") %></th>
+          <th class="bg-gray-100 px-4 py-2 text-left text-sm font-semibold text-gray-700 first:rounded-tl-2xl last:rounded-tr-2xl">Availability</th>
+          <th class="bg-gray-100 px-4 py-2 text-left text-sm font-semibold text-gray-700 first:rounded-tl-2xl last:rounded-tr-2xl"><%= sort_link.call("fields", "Fields") %></th>
+          <th class="bg-gray-100 px-4 py-2 text-left text-sm font-semibold text-gray-700 first:rounded-tl-2xl last:rounded-tr-2xl"><%= sort_link.call("submissions", "Submissions") %></th>
+          <th class="bg-gray-100 px-4 py-2 first:rounded-tl-2xl last:rounded-tr-2xl"></th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-200">
+      <tbody>
         <% @forms.each do |form| %>
           <tr id="form_<%= form.id %>" class="scroll-mt-24 hover:bg-gray-50">
             <td class="px-4 py-2 text-sm">
