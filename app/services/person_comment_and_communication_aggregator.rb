@@ -1,7 +1,8 @@
-# Merges the two person-wide feeds — every comment connected to a person (via
+# Merges the two feeds — every comment connected to a person (via
 # PersonCommentAggregator) and every communication addressed to any of their
 # email addresses (Person#communications_scope) — into one newest-first list for
-# the "All comments & communications" page.
+# the "All comments & communications" page. With no person, the feed spans
+# everyone: every comment and every communication, filterable the same way.
 #
 # Both sides keep their own filters (Comment.search_by_params /
 # Notification.search_by_params). Most filter params are deliberately shared —
@@ -20,7 +21,10 @@ class PersonCommentAndCommunicationAggregator
 
   def initialize(person, params = {})
     @person = person
-    @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h.symbolize_keys : params.to_h.symbolize_keys
+    normalized = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h.symbolize_keys : params.to_h.symbolize_keys
+    # person_id selects the scope (a person's feed vs. everyone), not a filter —
+    # keep it away from Comment.search_by_params, which would re-scope by it.
+    @params = normalized.except(:person_id)
   end
 
   # Newest first, comments and communications interleaved.
@@ -48,11 +52,19 @@ class PersonCommentAndCommunicationAggregator
   private
 
   def comment_base
-    @comment_base ||= PersonCommentAggregator.new(@person).comments
+    @comment_base ||= if @person
+      PersonCommentAggregator.new(@person).comments
+    else
+      Comment.includes(:commentable, :created_by, :updated_by).newest_first
+    end
   end
 
   def communication_base
-    @communication_base ||= @person.communications_scope.includes(:noticeable, sender: :person)
+    @communication_base ||= communications_relation.includes(:noticeable, sender: :person)
+  end
+
+  def communications_relation
+    @person ? @person.communications_scope : Notification.all
   end
 
   def include_comments?

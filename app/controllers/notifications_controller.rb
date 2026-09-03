@@ -122,7 +122,7 @@ class NotificationsController < ApplicationController
   end
 
   def after_create_path
-    combined_feed_person ? comments_and_communications_person_path(combined_feed_person) : notifications_path
+    combined_feed_person ? comments_and_communications_path(person_id: combined_feed_person.id) : notifications_path
   end
 
   def track_responded_change(previous)

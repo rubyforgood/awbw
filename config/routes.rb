@@ -288,12 +288,12 @@ Rails.application.routes.draw do
       get :checkout
       get :bio
       get :all_comments
-      get :comments_and_communications
       post :send_form_link
     end
     resources :comments, only: [ :create, :update ]
     resources :memberships, only: [ :index, :new, :create ]
   end
+  resources :comments_and_communications, only: [ :index ]
   resources :faqs
   get "transfer_guide", to: "transfer_guide#show", as: :transfer_guide
   resources :features do

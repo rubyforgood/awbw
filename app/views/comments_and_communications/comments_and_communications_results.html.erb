@@ -44,7 +44,7 @@
 
   <% if @entries.total_pages > 1 %>
     <div class="mt-4 flex justify-center">
-      <%= tailwind_paginate @entries, params: params.slice(:query, :subject, :author_id, :kind, :source, :follow_up, :from, :to, :email_topic).permit! %>
+      <%= tailwind_paginate @entries, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :from, :to, :email_topic).permit! %>
     </div>
   <% end %>
 <% end %>

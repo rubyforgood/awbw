@@ -36,7 +36,7 @@
       <%# Both must be saved: a form can build an unsaved person inline (the new
           subscription form), and the eyebrow needs a real record to return to. %>
       <% if view_all_person&.persisted? && record.persisted? && can_manage_comments && admin %>
-        <%= link_to comments_and_communications_person_path(view_all_person, return_to_type: record_type, return_to_id: record.id),
+        <%= link_to comments_and_communications_path(person_id: view_all_person.id, return_to_type: record_type, return_to_id: record.id),
                     class: "inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline",
                     target: "_blank", rel: "noopener" do %>
           <%= t("communications.view_all") %>

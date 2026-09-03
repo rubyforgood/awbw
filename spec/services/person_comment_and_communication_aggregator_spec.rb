@@ -34,6 +34,26 @@ RSpec.describe PersonCommentAndCommunicationAggregator do
     end
   end
 
+  describe "with no person (everyone)" do
+    it "spans every comment and communication, newest first" do
+      other = create(:person, email: "other@example.com")
+      mine = comment_on(person, body: "My note", created_at: 3.days.ago)
+      theirs = comment_on(other, body: "Their note", created_at: 2.days.ago)
+      comm = communication("other@example.com", email_subject: "To anyone", created_at: 1.day.ago)
+
+      expect(described_class.new(nil).entries).to eq([ comm, theirs, mine ])
+    end
+
+    it "still honors the shared filters" do
+      comment_on(person, body: "Discussed the scholarship deadline", topic: nil)
+      comment_on(create(:person, email: "x@example.com"), body: "Unrelated", topic: nil)
+
+      entries = described_class.new(nil, { query: "scholarship" }).entries
+
+      expect(entries.map(&:body)).to eq([ "Discussed the scholarship deadline" ])
+    end
+  end
+
   describe "shared filters" do
     it "matches the keyword against comment bodies and communication subjects" do
       match_comment = comment_on(person, body: "Discussed the scholarship deadline", topic: nil)

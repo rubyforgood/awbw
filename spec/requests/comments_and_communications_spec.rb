@@ -1,14 +1,14 @@
 require "rails_helper"
 
-RSpec.describe "Person comments and communications", type: :request do
+RSpec.describe "Comments and communications", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person, email: "primary@example.com") }
 
-  describe "GET /people/:id/comments_and_communications" do
+  describe "GET /comments_and_communications?person_id=" do
     before { sign_in admin }
 
     it "renders the page shell with the filter bar" do
-      get comments_and_communications_person_path(person)
+      get comments_and_communications_path(person_id: person.id)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("All comments &amp; communications")
@@ -24,7 +24,7 @@ RSpec.describe "Person comments and communications", type: :request do
       create(:notification, recipient_email: "primary@example.com", email_subject: "Welcome aboard",
                             kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
 
-      get comments_and_communications_person_path(person), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
       expect(response.body).to include("Internal staff note")
       expect(response.body).to include("Welcome aboard")
@@ -33,7 +33,7 @@ RSpec.describe "Person comments and communications", type: :request do
     it "starts the comment body flush under its topic instead of truncating it" do
       create(:comment, commentable: person, topic: "Topic line", body: "A note", created_by: admin)
 
-      get comments_and_communications_person_path(person), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
       body = Nokogiri::HTML(response.body).css("div").find { |div| div.text.strip == "A note" }
       expect(body["class"]).not_to include("truncate")
@@ -46,7 +46,7 @@ RSpec.describe "Person comments and communications", type: :request do
       registration = create(:event_registration, registrant: person)
       create(:comment, commentable: registration, body: "On the registration", created_by: admin)
 
-      get comments_and_communications_person_path(person), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
       doc = Nokogiri::HTML(response.body)
       chip = doc.at_css("a[href='#{edit_event_registration_path(registration)}']")
@@ -62,7 +62,7 @@ RSpec.describe "Person comments and communications", type: :request do
                                            email_subject: "About the registration", kind: "manual_log",
                                            channel: "email", recipient_role: "person", notification_type: 0)
 
-      get comments_and_communications_person_path(person), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
       doc = Nokogiri::HTML(response.body)
       chip = doc.at_css("a[href='#{edit_event_registration_path(registration)}']")
@@ -76,7 +76,7 @@ RSpec.describe "Person comments and communications", type: :request do
     it "offers composers that file a note or a communication against a chosen record" do
       registration = create(:event_registration, registrant: person)
 
-      get comments_and_communications_person_path(person)
+      get comments_and_communications_path(person_id: person.id)
 
       doc = Nokogiri::HTML(response.body)
       # Both composers list the person's records; each submits a signed GlobalID.
@@ -103,13 +103,48 @@ RSpec.describe "Person comments and communications", type: :request do
       logged = Notification.order(:created_at).last
       expect(logged.noticeable).to eq(registration)
       expect(logged.recipient_email).to eq(person.communications_email)
-      expect(response).to redirect_to(comments_and_communications_person_path(person))
+      expect(response).to redirect_to(comments_and_communications_path(person_id: person.id))
     end
 
     it "denies a non-admin" do
       sign_in create(:user)
 
-      get comments_and_communications_person_path(person)
+      get comments_and_communications_path(person_id: person.id)
+
+      expect(response).not_to have_http_status(:ok)
+    end
+  end
+
+  describe "GET /comments_and_communications (unified, everyone)" do
+    before { sign_in admin }
+
+    it "spans comments and communications across every person, with no composers" do
+      other = create(:person, email: "other@example.com")
+      create(:comment, commentable: person, body: "Note about primary", created_by: admin)
+      create(:comment, commentable: other, body: "Note about other", created_by: admin)
+      create(:notification, recipient_email: "other@example.com", email_subject: "Hello other",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path
+
+      expect(response).to have_http_status(:ok)
+      # No person to file against, so the add-a-note / log-a-communication composers
+      # are absent on the unified feed.
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("[data-controller='panel-toggle']")).to be_nil
+
+      get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      expect(response.body).to include("comments_and_communications_results")
+      expect(response.body).to include("Note about primary")
+      expect(response.body).to include("Note about other")
+      expect(response.body).to include("Hello other")
+    end
+
+    it "denies a non-admin" do
+      sign_in create(:user)
+
+      get comments_and_communications_path
 
       expect(response).not_to have_http_status(:ok)
     end
@@ -123,7 +158,7 @@ RSpec.describe "Person comments and communications", type: :request do
 
       expect(response.body).to include("All comments &amp; communications")
       expect(response.body).to include(CGI.escapeHTML(
-        comments_and_communications_person_path(person, return_to_type: "Person", return_to_id: person.id)
+        comments_and_communications_path(person_id: person.id, return_to_type: "Person", return_to_id: person.id)
       ))
       expect(response.body).not_to include(">All comments\n")
     end
@@ -134,7 +169,7 @@ RSpec.describe "Person comments and communications", type: :request do
       get edit_event_registration_path(registration)
 
       expect(response.body).to include(CGI.escapeHTML(
-        comments_and_communications_person_path(person, return_to_type: "EventRegistration", return_to_id: registration.id)
+        comments_and_communications_path(person_id: person.id, return_to_type: "EventRegistration", return_to_id: registration.id)
       ))
     end
   end
