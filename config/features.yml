@@ -3347,6 +3347,18 @@
     Consultant. Every other event keeps the standard certificate of completion.
   action_path: /events
   pr_number: 2504
+
+- name: "Own certificate design for on-demand trainings"
+  area: events
+  display_status: user_facing
+  released_on: 2026-09-03
+  summary: >-
+    On-demand facilitator training completions now download their own painted
+    certificate frame, distinct from the scheduled-training design. The
+    recipient's name, course title, dates, CE credit, and signatures still
+    print live over it.
+  action_path: /events
+  pr_number: 2526
 - name: "Slider questions on forms"
   area: registration
   display_status: admin_facing
