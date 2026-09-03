@@ -37,6 +37,9 @@
 <% other_response_data = data.other_sector_response_rows.map { |text, count, _ids| [ text, count ] } %>
 <% age_group_data = data.age_groups.map { |c| [ c.name, data.age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 <% all_age_group_data = data.all_age_groups.map { |c| [ c.name, data.all_age_group_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
+<%# Referral source is a per-training registration answer, so only EventDashboard supplies it. %>
+<% referral_source_data = data.respond_to?(:referral_source_counts) ? data.referral_source_counts : [] %>
+<% referral_source_field = data.respond_to?(:referral_source_field) ? data.referral_source_field : nil %>
 <% state_data = data.state_counts.sort_by { |_, count| -count } %>
 <% country_data = data.country_counts.sort_by { |_, count| -count } %>
 <% school_district_data = data.school_district_counts.sort_by { |_, count| -count } %>
@@ -151,10 +154,14 @@
     <% end %>
     <%= render "breakdown_card", title: "Primary age group", data: age_group_data, chart: :pie, palette: palette,
                                  empty_message: "No age group responses yet.", row_paths: age_group_paths %>
-    <% if all_age_group_data.any? || school_district_data.any? %>
+    <% if all_age_group_data.any? || referral_source_data.any? || school_district_data.any? %>
       <div class="flex flex-col gap-6">
         <% if all_age_group_data.any? %>
           <%= render "breakdown_card", title: "All age groups", data: all_age_group_data, chart: :pie, palette: palette, row_paths: all_age_group_paths %>
+        <% end %>
+        <% if referral_source_data.any? %>
+          <%= render "breakdown_card", title: referral_source_field&.name.presence || "How did you hear about this AWBW training?",
+                                       data: referral_source_data, chart: :bar, palette: palette %>
         <% end %>
         <% if school_district_data.any? %>
           <%= render "breakdown_card", title: "School districts (via Address data)", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>

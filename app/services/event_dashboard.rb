@@ -836,6 +836,37 @@ class EventDashboard
       .transform_values { |rows| rows.map(&:first).uniq }
   end
 
+  def referral_source_field
+    registration_form_field(FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER)
+  end
+
+  # Referral-source answers as [ label, count ] rows. A "specify" answer
+  # ("Other: Facebook") collapses to its option label, matching how the form
+  # results page (FormResponseAggregator) charts the same question.
+  def referral_source_counts
+    @referral_source_counts ||= begin
+      field = referral_source_field
+      if field.nil?
+        []
+      else
+        specify_labels = field.specify_option_labels.to_set
+        tally = Hash.new(0)
+        FormAnswer
+          .where(form_field_id: field.id)
+          .joins(:form_submission)
+          .where(form_submissions: { person_id: registrant_ids })
+          .pluck(:submitted_answer)
+          .each do |submitted_answer|
+            submitted_answer.to_s.split(", ").map(&:strip).reject(&:blank?).each do |raw|
+              base = raw.split(": ", 2).first
+              tally[specify_labels.include?(base) ? base : raw] += 1
+            end
+          end
+        tally.sort_by { |label, count| [ -count, label ] }
+      end
+    end
+  end
+
   # US states only — international registrants' regions (e.g. provinces) are
   # excluded so the States breakdown reflects domestic residents.
   def states
