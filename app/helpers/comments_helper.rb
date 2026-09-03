@@ -38,17 +38,6 @@ module CommentsHelper
     end
   end
 
-  # Commentable types with their own nested /comments route (config/routes.rb),
-  # which CommentsController#update needs to save an inline edit. Affiliation,
-  # Story, and StoryIdea comments are only editable through their parent
-  # record's own form (a nested-attributes save, not a standalone PATCH), so the
-  # combined feed's inline edit button is hidden for those.
-  EDITABLE_COMMENTABLE_TYPES = %w[ Person User Organization EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription Workshop ].freeze
-
-  def comment_editable_inline?(record)
-    EDITABLE_COMMENTABLE_TYPES.include?(record.class.name)
-  end
-
   # DomainTheme key driving a chip's colour, so each attached-record type reads
   # distinctly in the feed.
   def record_theme(record)

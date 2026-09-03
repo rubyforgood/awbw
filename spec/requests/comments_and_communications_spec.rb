@@ -194,15 +194,15 @@ RSpec.describe "Comments and communications", type: :request do
   describe "inline edit from the feed" do
     before { sign_in admin }
 
-    it "shows an Edit control for a comment on an editable commentable and saves changes in place" do
+    it "shows an Edit control for a comment and saves changes in place" do
       comment = create(:comment, commentable: person, body: "Original note", created_by: admin)
 
       get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
       doc = Nokogiri::HTML(response.body)
       expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)} button")&.text).to include("Edit")
 
-      patch person_comment_path(person, comment), params: { combined: 1, comment: { body: "Updated note" } },
-                                                    headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      patch comment_path(comment), params: { combined: 1, comment: { body: "Updated note" } },
+                                    headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
@@ -210,16 +210,19 @@ RSpec.describe "Comments and communications", type: :request do
       expect(comment.reload.body).to eq("Updated note")
     end
 
-    it "hides the Edit control for a comment whose commentable has no standalone comments route" do
+    it "shows an Edit control for a comment whose commentable has no nested comments route (e.g. an affiliation)" do
       affiliation = create(:affiliation, person: person)
       comment = create(:comment, commentable: affiliation, body: "On the affiliation", created_by: admin)
 
       get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
-
       doc = Nokogiri::HTML(response.body)
-      row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)}")
-      expect(row.text).to include("On the affiliation")
-      expect(row.at_css("button")).to be_nil
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)} button")&.text).to include("Edit")
+
+      patch comment_path(comment), params: { combined: 1, comment: { body: "Updated affiliation note" } },
+                                    headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response).to have_http_status(:ok)
+      expect(comment.reload.body).to eq("Updated affiliation note")
     end
 
     it "shows an Edit control for a communication and saves changes in place" do
