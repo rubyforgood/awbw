@@ -1,4 +1,8 @@
-<% if params[:aggregated] %>
+<% if params[:combined] %>
+  <%= turbo_stream.replace dom_id(@comment) do %>
+    <%= render "comments_and_communications/comment_row", entry: @comment %>
+  <% end %>
+<% elsif params[:aggregated] %>
   <%= turbo_stream.replace dom_id(@comment) do %>
     <%= render "comments/aggregated_comment", comment: @comment.decorate, person: @aggregator_person %>
   <% end %>

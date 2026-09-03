@@ -34,6 +34,26 @@ RSpec.describe PersonCommentAndCommunicationAggregator do
     end
   end
 
+  describe "with no person (everyone)" do
+    it "spans every comment and communication, newest first" do
+      other = create(:person, email: "other@example.com")
+      mine = comment_on(person, body: "My note", created_at: 3.days.ago)
+      theirs = comment_on(other, body: "Their note", created_at: 2.days.ago)
+      comm = communication("other@example.com", email_subject: "To anyone", created_at: 1.day.ago)
+
+      expect(described_class.new(nil).entries).to eq([ comm, theirs, mine ])
+    end
+
+    it "still honors the shared filters" do
+      comment_on(person, body: "Discussed the scholarship deadline", topic: nil)
+      comment_on(create(:person, email: "x@example.com"), body: "Unrelated", topic: nil)
+
+      entries = described_class.new(nil, { query: "scholarship" }).entries
+
+      expect(entries.map(&:body)).to eq([ "Discussed the scholarship deadline" ])
+    end
+  end
+
   describe "shared filters" do
     it "matches the keyword against comment bodies and communication subjects" do
       match_comment = comment_on(person, body: "Discussed the scholarship deadline", topic: nil)
@@ -151,6 +171,41 @@ RSpec.describe PersonCommentAndCommunicationAggregator do
 
       expect(feed.total_count).to eq(3)
       expect(feed.flagged_count).to eq(1)
+    end
+  end
+
+  describe "#paginate" do
+    it "returns one interleaved page without loading the whole set" do
+      # Six entries across both kinds, newest last so the first page is the newest three.
+      6.times do |i|
+        if i.even?
+          comment_on(person, body: "Note #{i}", created_at: i.days.ago)
+        else
+          communication("primary@example.com", email_subject: "Msg #{i}", created_at: i.days.ago)
+        end
+      end
+      feed = described_class.new(person)
+
+      page1 = feed.paginate(1, 2)
+      expect(page1.total_entries).to eq(6)
+      expect(page1.total_pages).to eq(3)
+      # Newest two overall (created 0 and 1 days ago), interleaved by date.
+      expect(page1.map { |e| e.try(:body) || e.email_subject }).to eq([ "Note 0", "Msg 1" ])
+
+      page2 = feed.paginate(2, 2)
+      expect(page2.map { |e| e.try(:body) || e.email_subject }).to eq([ "Note 2", "Msg 3" ])
+    end
+
+    it "bounds each side to page * per_page rows" do
+      3.times { |i| comment_on(person, body: "C#{i}", created_at: i.days.ago) }
+      3.times { |i| communication("primary@example.com", email_subject: "N#{i}", created_at: (i + 10).days.ago) }
+      feed = described_class.new(person)
+
+      # Page 1, per_page 2 => at most 2 rows read per side.
+      expect(feed.send(:comment_scope)).to receive(:limit).with(2).and_call_original
+      expect(feed.send(:communication_scope)).to receive(:limit).with(2).and_call_original
+
+      feed.paginate(1, 2)
     end
   end
 end

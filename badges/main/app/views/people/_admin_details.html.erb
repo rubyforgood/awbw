@@ -140,7 +140,7 @@
           <div class="mb-2 flex flex-wrap items-center gap-2">
             <h3 class="text-sm font-semibold tracking-wide text-gray-700 uppercase">Comments &amp; communications</h3>
             <% if activity_total > recent_activity.size %>
-              <%= link_to "View all #{activity_total}", comments_and_communications_person_path(person), class: "text-xs text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
+              <%= link_to "View all #{activity_total}", comments_and_communications_path(person_id: person.id), class: "text-xs text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
             <% end %>
           </div>
           <div class="space-y-2">

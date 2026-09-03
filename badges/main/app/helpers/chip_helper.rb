@@ -1,5 +1,5 @@
 # Shared styling for the comment + communication rows — the combined section on
-# a record's edit page and the standalone All comments & communications page use
+# a record's edit page and the standalone Comments & communications page use
 # the same chips and card tints, so both live here rather than in one view.
 module ChipHelper
   # Stable color per author id, shared by the comment and communication chips.

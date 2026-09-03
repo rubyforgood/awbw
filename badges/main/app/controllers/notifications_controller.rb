@@ -67,7 +67,14 @@ class NotificationsController < ApplicationController
     @notification.update!(notification_params)
     track_responded_change(responded_was)
     track_incoming_body_change(body_was)
-    head :ok
+
+    if params[:combined].present?
+      render turbo_stream: turbo_stream.replace(
+        helpers.dom_id(@notification), partial: "comments_and_communications/communication_row", locals: { entry: @notification }
+      )
+    else
+      head :ok
+    end
   end
 
   def resend
@@ -122,7 +129,7 @@ class NotificationsController < ApplicationController
   end
 
   def after_create_path
-    combined_feed_person ? comments_and_communications_person_path(combined_feed_person) : notifications_path
+    combined_feed_person ? comments_and_communications_path(person_id: combined_feed_person.id) : notifications_path
   end
 
   def track_responded_change(previous)

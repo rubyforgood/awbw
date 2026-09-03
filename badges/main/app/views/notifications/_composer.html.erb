@@ -5,7 +5,9 @@
     `for_person_id` sends the save back to this feed.
     Locals: person, notification, record_targets. %>
 <div class="rounded-lg border <%= DomainTheme.border_class_for(:notifications) %> <%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> p-4 shadow-sm">
-  <%= simple_form_for notification, url: notifications_path do |f| %>
+  <%# _top so the save's redirect drives a full-page visit even when this composer
+      is loaded inside the everyone feed's Turbo frame. %>
+  <%= simple_form_for notification, url: notifications_path, data: { turbo_frame: "_top" } do |f| %>
     <%= hidden_field_tag :person_id, person.id %>
     <%= hidden_field_tag :for_person_id, person.id %>
     <%= f.hidden_field :sender_id, value: current_user.id %>
