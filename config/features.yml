@@ -3200,3 +3200,14 @@
     — the same referral-source breakdown shown on a form's results page, scoped to
     the training(s) in view.
   pr_number: 2513
+
+- name: "Jump between Forms, Submissions, and Answers"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    The Forms, Submissions, and Answers admin pages now share a sub-navigation
+    bar, so you can move straight between them instead of going back through the
+    menu — with a back link (to Admin home, or to Forms) at the top of each.
+  action_path: "/forms"
+  pr_number: 2506
