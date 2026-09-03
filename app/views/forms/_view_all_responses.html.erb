@@ -1,8 +1,11 @@
-<%# Footer link from a results card to the Form answers list, filtered to this
-    question's answers on this form (and whatever the results page is narrowed to).
-    return_to gives that list an eyebrow back here. Locals: form, count, report. %>
+<%# Footer link from a results card to the Form submissions list, narrowed the
+    same way the rollup is — the submissions behind these numbers, whichever
+    question's card you are reading. The card's own answers live behind the count
+    in its header. return_to (plus the card id) gives that list an eyebrow back to
+    this card. Locals: form, report. %>
+<% count = @aggregator.submission_count %>
 <div class="mt-3 border-t border-gray-100 pt-3 text-center">
-  <%= link_to "View all #{count} #{"response".pluralize(count)}",
-              form_answers_path(**form_results_drilldown_params(form, report)),
+  <%= link_to "View #{count} #{"submission".pluralize(count)}",
+              form_submissions_path(**form_results_submissions_params(form, report)),
               class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
 </div>

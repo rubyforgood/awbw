@@ -1180,6 +1180,52 @@ RSpec.describe "Forms", type: :request do
                                                       form_field_id: thoughts.id, organization_id: org.id))
       end
 
+      it "footers each card with a link to the submissions behind the rollup" do
+        form = create(:form, :standalone, name: "Survey")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        expect(response.body).to include("View 2 submissions")
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: thoughts.id,
+                                                       return_to: "form_results"))
+      end
+
+      it "counts a text question's own answers in its header, linking to them" do
+        form = create(:form, :standalone)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        expect(response.body).to include("1 answer")
+        expect(response.body).not_to include("View all 1 response")
+      end
+
+      it "hangs a response's submission link on its byline rather than a View label" do
+        form = create(:form, :standalone)
+        person = create(:person, first_name: "Priya", last_name: "Patel")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        submission = create(:form_submission, form: form, person: person)
+        create(:form_answer, form_submission: submission, form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form)
+
+        byline = Nokogiri::HTML(response.body).css("a").find do |a|
+          a["href"] == form_submission_path(submission, return_to: "form_results",
+                                            form_id: form.id, form_field_id: thoughts.id)
+        end
+        expect(byline).to be_present
+        expect(byline.text).to include("Priya Patel")
+        expect(byline.text.strip).not_to eq("View")
+      end
+
       it "anchors each question card so a return link can scroll back to it" do
         form = create(:form, :standalone)
         color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
