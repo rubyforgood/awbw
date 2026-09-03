@@ -10,7 +10,8 @@
 <% guidance = {
      "on_demand" => "New facilitator from the on-demand training — link their organization below, then invite them to the portal.",
      "reinstatement" => "Returning facilitator — link their organization below: linking adds a fresh Facilitator affiliation dated to this submission unless an active one already exists. Then invite or re-invite them to the portal.",
-     "new_job" => "Facilitator starting at a new organization — link it below: linking ends their affiliations at other organizations automatically (or end one by hand here first) and starts the new ones on the submission date. Check that their login email still reaches them."
+     "new_job" => "Facilitator starting at a new organization — link it below: linking ends their affiliations at other organizations automatically (or end one by hand here first) and starts the new ones on the submission date. Check that their login email still reaches them.",
+     "close_program" => "Closing their program — link the organization below to end their Facilitator affiliation there as of the date they gave (and their job affiliation too, if they said they're leaving), with a comment recording why. An exact name match is processed automatically on submission; link here when it wasn't."
    }[scenario] %>
 
 <div class="mt-6 rounded-2xl border <%= DomainTheme.border_class_for(:forms, intensity: 200) %> <%= DomainTheme.bg_class_for(:forms) %> p-6 shadow-sm">

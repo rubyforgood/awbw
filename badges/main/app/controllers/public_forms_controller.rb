@@ -2,7 +2,9 @@
 # (/f/:slug). Reuses the public-registration field partials, so answers arrive
 # under the shared `public_registration[form_fields]` param namespace.
 class PublicFormsController < ApplicationController
+  include SearchEngineHideable
   skip_before_action :authenticate_user!, only: %i[show create thank_you]
+  before_action :noindex!, only: %i[show create thank_you]
   before_action :set_form
 
   def show

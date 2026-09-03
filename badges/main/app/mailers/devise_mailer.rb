@@ -10,7 +10,7 @@ class DeviseMailer < Devise::Mailer
   after_action :create_notification_record, unless: :preview?
   after_action :track_devise_email_event, unless: :preview?
 
-  default from: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+  default from: ApplicationMailer.sender
   default reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
 
   def reset_password_instructions(record, token, opts = {})

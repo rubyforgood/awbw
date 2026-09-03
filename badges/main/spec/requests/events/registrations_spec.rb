@@ -84,6 +84,11 @@ RSpec.describe "Events::Registrations", type: :request do
         get registration_ticket_path(registration.slug)
         expect(response).to have_http_status(:success)
       end
+
+      it "tells search engines not to index the public ticket" do
+        get registration_ticket_path(registration.slug)
+        expect(response.headers["X-Robots-Tag"]).to include("noindex")
+      end
     end
 
     context "built-in callouts" do

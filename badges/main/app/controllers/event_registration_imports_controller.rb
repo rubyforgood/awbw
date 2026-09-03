@@ -92,6 +92,8 @@ class EventRegistrationImportsController < ApplicationController
       "(#{result.people_created} new people, #{result.people_matched} matched)" \
       "#{", #{result.registrations_promoted} promoted to attended" if result.registrations_promoted.positive?}" \
       "#{", #{result.organizations_to_reconcile} orgs to reconcile" if result.organizations_to_reconcile.positive?}" \
+      "#{", #{result.payments_recorded} payments (#{helpers.dollars_from_cents(result.payments_amount_cents)})" if result.payments_recorded.positive?}" \
+      "#{", #{result.discounts_recorded} discounts (#{helpers.dollars_from_cents(result.discounts_amount_cents)})" if result.discounts_recorded.positive?}" \
       "#{", #{result.skipped.size} rows skipped" if result.skipped.any?}."
   end
 end

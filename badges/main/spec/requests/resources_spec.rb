@@ -81,6 +81,24 @@ RSpec.describe "/resources", type: :request do
         expect(response.headers["Content-Security-Policy-Report-Only"]).to include("object-src 'self'")
       end
     end
+
+    context "search-engine indexing" do
+      it "does not send noindex for a normal resource" do
+        resource = Resource.create!(valid_attributes)
+
+        get resource_url(resource)
+
+        expect(response.headers["X-Robots-Tag"]).to be_nil
+      end
+
+      it "sends noindex for a resource hidden from search" do
+        resource = Resource.create!(valid_attributes.merge(hidden_from_search: true))
+
+        get resource_url(resource)
+
+        expect(response.headers["X-Robots-Tag"]).to include("noindex")
+      end
+    end
   end
 
   describe "GET /index (non-preview action)" do

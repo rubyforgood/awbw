@@ -1,5 +1,7 @@
 module Events
   class RegistrationsController < ApplicationController
+    include SearchEngineHideable
+    before_action :noindex!, only: [ :show, :invoice, :receipt ]
     before_action :authenticate_user!, only: [ :create ]
     before_action :set_event, only: [ :create ]
     before_action :set_registrant, only: [ :create ]
