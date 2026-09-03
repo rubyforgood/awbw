@@ -993,16 +993,20 @@ RSpec.describe "Forms", type: :request do
         expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
       end
 
-      it "shows an organization filter for an event-connected form" do
-        form = create(:form)
-        create(:event_form, form: form, event: create(:event), role: "registration")
+      it "searches people and organizations from one picker" do
+        form = create(:form, :standalone)
+        create(:form_submission, form: form)
 
         get results_form_path(form)
 
-        expect(Nokogiri::HTML(response.body).at_css("select#organization_id")).to be_present
+        picker = Nokogiri::HTML(response.body).at_css("select#submitter_sgid")
+        expect(picker).to be_present
+        expect(picker["data-remote-select-model-value"]).to eq("person_or_organization")
+        expect(Nokogiri::HTML(response.body).at_css("select#person_id")).to be_nil
+        expect(Nokogiri::HTML(response.body).at_css("select#organization_id")).to be_nil
       end
 
-      it "renders the results filters as question, event, person, organization, submitted from, submitted to" do
+      it "renders the results filters as question, event, person or organization, submitted from, submitted to" do
         form = create(:form)
         create(:event_form, form: form, event: create(:event), role: "registration")
         create(:event_form, form: form, event: create(:event), role: "continuing_education")
@@ -1013,8 +1017,52 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         ids = doc.css("form label").map { |l| l["for"] }.compact
-        ids &= %w[question event_id person_id organization_id start_date end_date]
-        expect(ids).to eq(%w[question event_id person_id organization_id start_date end_date])
+        ids &= %w[question event_id submitter_sgid start_date end_date]
+        expect(ids).to eq(%w[question event_id submitter_sgid start_date end_date])
+      end
+
+      it "narrows the rollup to a person picked through the combined picker" do
+        form = create(:form, :standalone)
+        person = create(:person)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form, person: person),
+                             form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form, person: create(:person)),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form, submitter_sgid: person.to_sgid.to_s)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
+
+      it "narrows the rollup to an organization picked through the combined picker" do
+        form = create(:form, :standalone)
+        org = create(:organization)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        linked = create(:form_submission, form: form)
+        linked.link_organization!(org.id)
+        create(:form_answer, form_submission: linked, form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form, submitter_sgid: org.to_sgid.to_s)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
+
+      # An eyebrow back from the answers list hands plain ids, not a signed one.
+      it "seeds the picker from a plain person_id handed back by a return link" do
+        form = create(:form, :standalone)
+        person = create(:person, first_name: "Priya", last_name: "Patel")
+        create(:form_submission, form: form, person: person)
+
+        get results_form_path(form, person_id: person.id)
+
+        option = Nokogiri::HTML(response.body).at_css("select#submitter_sgid option[selected]")
+        expect(option.text).to include("Priya Patel")
+        expect(GlobalID::Locator.locate_signed(option["value"])).to eq(person)
       end
 
       it "offers a clear-filters control that drops back to the unfiltered rollup" do
