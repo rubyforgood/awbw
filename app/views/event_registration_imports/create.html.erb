@@ -21,6 +21,10 @@
       [ "Promoted to attended", @result.registrations_promoted ],
       [ "Orgs to link", @result.organizations_linked ],
       [ "Orgs to reconcile", @result.organizations_to_reconcile ],
+      [ "Payments", @result.payments_recorded ],
+      [ "Amount", dollars_from_cents(@result.payments_amount_cents) ],
+      [ "Discounts", @result.discounts_recorded ],
+      [ "Comped", dollars_from_cents(@result.discounts_amount_cents) ],
       [ "Rows", @result.rows_processed ],
       [ "Skipped", @result.skipped.size ]
     ].each do |label, count| %>
@@ -49,6 +53,7 @@
             <th class="px-3 py-2 text-left">Person</th>
             <th class="px-3 py-2 text-left">Registration</th>
             <th class="px-3 py-2 text-left">Organization</th>
+            <th class="px-3 py-2 text-left">Payment</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -58,7 +63,7 @@
               <td class="px-3 py-2 text-gray-900"><%= "#{row.first_name} #{row.last_name}".strip.presence || "—" %></td>
               <td class="px-3 py-2 text-gray-600"><%= row.email.presence || "—" %></td>
               <% if row.skipped_reason %>
-                <td class="px-3 py-2" colspan="3">
+                <td class="px-3 py-2" colspan="4">
                   <span class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs text-red-700">
                     Skipped — <%= row.skipped_reason %>
                   </span>
@@ -90,6 +95,37 @@
                   <% when :to_reconcile %>
                     <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="No organization by this name yet — queued for the link-organization reconciliation page">
                       Reconcile: <%= row.organization_name %>
+                    </span>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </td>
+                <td class="px-3 py-2">
+                  <% case row.payment_status %>
+                  <% when :will_record %>
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="<%= row.payment_label %> — applied to the registration">
+                      <%= row.payment_label %> <%= dollars_from_cents(row.payment_amount_cents) %>
+                    </span>
+                    <% if row.discount_cents.present? %>
+                      <span class="ml-1 inline-flex items-center rounded-md bg-purple-100 px-2 py-1 text-xs text-purple-800" title="Remainder comped so the registration reads as paid">
+                        + <%= dollars_from_cents(row.discount_cents) %> discount
+                      </span>
+                    <% end %>
+                  <% when :free %>
+                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600" title="Free event — nothing to apply the amount against">
+                      Free event — not applied
+                    </span>
+                  <% when :unknown_type %>
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="Unrecognized payment type — no payment recorded">
+                      Unknown type<%= ": #{row.payment_label}" if row.payment_label.present? %>
+                    </span>
+                  <% when :missing_check_number %>
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="Check payment needs a check number — no payment recorded">
+                      Check # missing
+                    </span>
+                  <% when :invalid %>
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="Amount could not be read — no payment recorded">
+                      Bad amount
                     </span>
                   <% else %>
                     <span class="text-gray-400">—</span>
