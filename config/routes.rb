@@ -59,7 +59,9 @@ Rails.application.routes.draw do
 
   resources :fm_archives, only: [ :index, :show ]
 
-  resources :comments, only: [ :index ]
+  # Top-level update lets the aggregated feed flag/edit any comment by id, even
+  # when its commentable has no nested comments route (affiliations, staff tags…).
+  resources :comments, only: [ :index, :update ]
 
   resources :banners
   resources :bookmarks do

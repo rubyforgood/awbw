@@ -4,6 +4,6 @@
   <% end %>
 <% else %>
   <%= turbo_stream.replace dom_id(@comment, :flag) do %>
-    <%= render "comments/flag_toggle", commentable: @commentable, comment: @comment %>
+    <%= render "comments/flag_toggle", comment: @comment %>
   <% end %>
 <% end %>
