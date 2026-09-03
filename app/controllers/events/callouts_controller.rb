@@ -4,9 +4,11 @@ module Events
   # Each is reachable by the registration slug — the slug is the authorization,
   # so no login is required (mirrors the public ticket/invoice pages).
   class CalloutsController < ApplicationController
+    include SearchEngineHideable
     # Real registrant pages are public (the slug is the authorization); the
     # sample-ticket previews instead require an admin (authorized in #authorize_callout).
     skip_before_action :authenticate_user!, unless: :sample_preview?
+    before_action :noindex!
     before_action :set_event_registration
     before_action :authorize_callout
     before_action :set_event

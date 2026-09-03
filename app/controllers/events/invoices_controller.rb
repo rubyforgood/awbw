@@ -3,8 +3,10 @@ module Events
   # event's content (line item + cost); when a `submission_id` is supplied it
   # autofills the bill-to/attention from that bulk-payment submission.
   class InvoicesController < ApplicationController
+    include SearchEngineHideable
     # Bulk-payment payers have no account; authorization (below) gates access.
     skip_before_action :authenticate_user!, only: [ :show ]
+    before_action :noindex!, only: [ :show ]
     before_action :set_event
 
     def show
