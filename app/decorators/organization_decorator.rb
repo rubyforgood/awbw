@@ -82,8 +82,8 @@ class OrganizationDecorator < ApplicationDecorator
   # optional field. FileMaker ID is intentionally left out — it's admin-only.
   # HTML-safe.
   def background_summary
-    type = agency_type_option.presence
-    type = "#{type}: #{object.agency_type_other}" if type == Organization::AGENCY_TYPE_OTHER && object.agency_type_other.present?
+    type = organization_type_option.presence
+    type = "#{type}: #{object.organization_type_other}" if type == Organization::ORGANIZATION_TYPE_OTHER && object.organization_type_other.present?
 
     parts = [ h.content_tag(:span, type || "Type not set", class: "text-gray-600") ]
     BACKGROUND_FIELD_LABELS.each do |attr, pill_label|
