@@ -14,7 +14,7 @@
   <% back_label = "← Staff tags" %>
 <% end %>
 <% tag_options = (StaffTag.published.ordered.to_a | [ @staff_tagging.staff_tag ]).compact %>
-<div class="min-h-screen py-8">
+<div class="min-h-screen">
   <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div class="mb-4">
       <%= link_to back_label, back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
