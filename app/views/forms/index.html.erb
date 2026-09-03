@@ -15,7 +15,7 @@
   <% end %>
 <% end %>
 <%= render layout: "shared/index_page",
-           locals: { domain: :forms, eyebrow: "Forms", title: "All forms",
+           locals: { domain: :forms, title: "Forms",
                      subtitle: "Reusable forms for any need, including event registrations and collaboration agreements",
                      topbar: topbar, actions: actions } do %>
   <% result_src = forms_path + "?" + request.query_string %>
