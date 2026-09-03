@@ -1,7 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="min-h-screen">
   <div class="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
-    <div class="admin-only rounded bg-blue-100 p-6">
       <div class="mx-auto max-w-7xl <%= DomainTheme.bg_class_for(:category_types, intensity: 100) %>
         border-primary/10 rounded-2xl border p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl">
       <div class="space-y-6">
@@ -97,7 +96,6 @@
           <%= tailwind_paginate @category_types %>
         </div>
       </div>
-    </div>
     </div>
   </div>
 </div>
