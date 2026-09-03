@@ -54,12 +54,9 @@
   released_on: 2026-09-03
   summary: >-
     A new "Close program" form lets a facilitator or organization tell us their
-    AWBW program is ending. Submitting it end-dates their Facilitator affiliation
-    at the named organization as of the date they give — and their job
-    affiliation too, if they say they're also leaving — leaving a comment with
-    the reason. An exact organization-name match is processed automatically;
-    anything ambiguous waits for you to link the organization on the submission's
-    processing panel.
+    AWBW program is ending. Submitting it end-dates their affiliations at the
+    named organization — automatically on an exact name match, or after an admin
+    links the organization — with a comment recording why.
   action_path: /forms
   pr_number: 2518
   pro_tips:
