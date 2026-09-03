@@ -255,6 +255,46 @@ RSpec.describe "Comments and communications", type: :request do
       expect(row.text).to include("Welcome!")
       expect(row.at_css("button")).to be_nil
     end
+
+    it "shows a Responded checkbox for an incoming manual communication" do
+      notification = create(:notification, :incoming, noticeable: person, recipient_email: "primary@example.com",
+                                                       email_subject: "Called in", kind: "manual_log",
+                                                       channel: "phone", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
+      expect(row.at_css("[data-controller='autosave'] input[name='notification[responded]'][type=checkbox]")).to be_present
+    end
+
+    it "shows a Responded checkbox for a contact-us FYI even though it's an automated, non-editable row" do
+      contact_us_fyi = create(:notification, noticeable: person, recipient_email: "primary@example.com",
+                                             kind: "contact_us_fyi", email_subject: "New message from the site",
+                                             notification_type: 0)
+      expect(contact_us_fyi.requires_response?).to be(true)
+      expect(contact_us_fyi.manual_log?).to be(false)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(contact_us_fyi)}")
+      expect(row.at_css("[data-controller='autosave'] input[name='notification[responded]'][type=checkbox]")).to be_present
+      expect(row.at_css("button")).to be_nil
+    end
+
+    it "hides the Responded checkbox for a communication that doesn't need one" do
+      notification = create(:notification, noticeable: person, recipient_email: "primary@example.com",
+                                           email_subject: "FYI, no reply needed", kind: "manual_log",
+                                           channel: "email", recipient_role: "person", notification_type: 0)
+      expect(notification.requires_response?).to be(false)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
+      expect(row.at_css("[data-controller='autosave']")).to be_nil
+    end
   end
 
   describe "the combined section's link to the feed" do

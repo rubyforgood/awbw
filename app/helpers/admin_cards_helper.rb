@@ -29,7 +29,7 @@ module AdminCardsHelper
     [
       custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
-      model_card(:notifications, icon: "🔔", title: t("communications.title")),
+      custom_card(t("communications.all_section_title"), comments_and_communications_path, icon: "🗂️", color: DomainTheme.color_for(:notifications), intensity: 50),
       custom_card("Event reports", reports_events_path, icon: "📊", color: :blue),
       model_card(:scholarships, icon: "🎓"),
       model_card(:topic_subscriptions, icon: "✉️", intensity: 100, title: "Subscriptions"),
@@ -101,7 +101,7 @@ module AdminCardsHelper
       custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
       custom_card("CE registrations", continuing_education_registrations_path, icon: "📜", color: :sky, intensity: 100),
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),
-      custom_card(t("communications.all_section_title"), comments_and_communications_path, icon: "🗂️", color: :sky, intensity: 100),
+      custom_card(t("communications.title"), notifications_path, icon: "🔔", color: :sky, intensity: 100),
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :sky, intensity: 100),
       disabled_card("Affiliations", icon: "🤝"),
       disabled_card("Reports", icon: "📄"),

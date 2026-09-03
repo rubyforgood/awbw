@@ -14,11 +14,13 @@
    end %>
 <% edit_button = content_tag(:button, safe_join([ content_tag(:i, "", class: "fa-solid fa-pen text-2xs"), " Edit" ]),
                               type: "button",
-                              class: "ml-auto shrink-0 text-xs #{eyebrow_link_class}",
+                              class: "shrink-0 text-xs #{eyebrow_link_class}",
                               data: { action: "edit-toggle#toggle" }) %>
+<% trailing = content_tag(:span, safe_join([ render("notifications/responded_checkbox", notification: entry), edit_button ]),
+                           class: "ml-auto flex shrink-0 items-center gap-3") %>
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
   <div data-edit-toggle-target="view">
-    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, leading: source_chip, trailing: edit_button %>
+    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, leading: source_chip, trailing: trailing %>
   </div>
 
   <div data-edit-toggle-target="edit" class="hidden rounded-md border <%= communication_card_class %> px-3 py-2">

@@ -1,0 +1,20 @@
+<%# The "Responded" toggle from the notifications index, reused wherever a
+    communication row is shown — visible only when the notification actually
+    needs a reply (incoming, or a contact-us FYI; see Notification#requires_response?).
+    Self-contained autosave: each change PATCHes notification_path immediately,
+    independent of any surrounding form. Locals: notification. %>
+<% return unless notification.requires_response? %>
+<span data-controller="autosave"
+      data-autosave-url-value="<%= notification_path(notification) %>"
+      data-autosave-id-value="<%= notification.id %>"
+      data-action="change->autosave#save">
+  <input type="hidden" name="notification[responded]" value="0">
+  <label class="inline-flex cursor-pointer items-center gap-1.5" title="Responded to by staff">
+    <input type="checkbox"
+           name="notification[responded]"
+           value="1"
+           <%= "checked" if notification.responded? %>
+           class="h-4 w-4 cursor-pointer rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500">
+    <span class="text-xs text-gray-600">Responded</span>
+  </label>
+</span>
