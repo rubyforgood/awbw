@@ -63,6 +63,18 @@ RSpec.describe ScholarshipMailer, type: :mailer do
       expect(mail.subject).to include("Scholarship accepted")
       expect(mail.subject).to include(scholarship.recipient.full_name)
     end
+
+    context "when the scholarship is funded by a grant" do
+      let(:funder) { create(:organization, name: "Acme Foundation") }
+      let(:grant) { create(:grant, name: "Spring 2026 Fund", funder:) }
+      let(:scholarship) { create(:scholarship, recipient: registration.registrant, amount_cents: 5_000, grant:) }
+
+      it "shows the grant and its funder in the body" do
+        body = mail.body.encoded
+        expect(body).to include("Spring 2026 Fund")
+        expect(body).to include("Acme Foundation")
+      end
+    end
   end
 
   describe "#accepted_confirmation" do
