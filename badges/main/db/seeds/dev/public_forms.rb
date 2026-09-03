@@ -4,8 +4,7 @@
 # (/f/:slug), each with a few submissions + answers — so the public endpoint,
 # the form editor's "Public form" card, and the form submissions index (where
 # these appear as role: "public", event-less) all have real data to eyeball.
-# Includes the three collaboration agreement scenario forms plus the
-# close-program form (all Form::AGREEMENT_ROLES).
+# Includes the three collaboration agreement scenario forms (Form::AGREEMENT_ROLES).
 #
 # Idempotent throughout: forms are looked up by slug, submissions by (form,
 # person), answers skipped when already present.
@@ -91,10 +90,9 @@ public_forms.each do |spec|
   end
 end
 
-# The three collaboration agreement scenario forms (on-demand is a standalone
-# registration-role form; new_job and reinstatement are their own roles; the
-# close-program form is seeded separately below), each publicly fillable with
-# one submission — so the
+# The three collaboration agreement scenario forms (Form::AGREEMENT_ROLES —
+# on-demand is a standalone registration-role form; new_job and reinstatement
+# are their own roles), each publicly fillable with one submission — so the
 # per-scenario counting, the person-page "send link" buttons, and the
 # submission processing panel (affiliation actions, portal invite) all have
 # data to eyeball. The new-job and reinstatement submitters carry pre-existing
@@ -171,52 +169,4 @@ agreement_forms.each do |spec|
     submission.form_answers.create!(form_field: field, submitted_answer: value,
                                     question_name_when_answered: field.name)
   end
-end
-
-# The Close Program agreement form — the mirror of the others: its submission
-# end-dates the submitter's affiliations at the named org rather than creating
-# them. Seeded published with one submission whose submitter still holds an
-# active Facilitator + job affiliation at the named org, so the processing panel
-# has real affiliations to end (the seed records the submission directly, so
-# nothing is auto-processed — an admin closes it from the panel).
-puts "Creating the Close Program agreement form…"
-
-close_program_form = Form.standalone.find_by(slug: "close-program") ||
-  FormBuilderService.new(name: "Close Program", sections: %i[person_identifier close_program], role: "close_program").call
-close_program_form.update!(
-  slug: "close-program", published: true, role: "close_program",
-  name: "Close Program",
-  header: "Winding down your AWBW program? Let us know so we can update our records."
-)
-
-closing_org = Organization.find_or_create_by!(name: "Sunset Youth Services") do |org|
-  org.organization_status = active_status
-end
-closing_person = Person.find_or_create_by!(email: "casey.closing@example.com") do |p|
-  p.first_name = "Casey"
-  p.last_name = "Closing"
-end
-closing_person.affiliations.find_or_create_by!(organization: closing_org, title: Affiliation::FACILITATOR_TITLE) do |affiliation|
-  affiliation.start_date = Date.new(2021, 9, 1)
-end
-closing_person.affiliations.find_or_create_by!(organization: closing_org, title: "Program Director") do |affiliation|
-  affiliation.start_date = Date.new(2021, 9, 1)
-end
-
-close_submission = FormSubmission.find_or_create_by!(form: close_program_form, person: closing_person, role: "public")
-
-{
-  "first_name" => "Casey",
-  "last_name" => "Closing",
-  "primary_email" => "casey.closing@example.com",
-  "organization_name" => closing_org.name,
-  "close_effective_date" => Date.current.end_of_month.iso8601,
-  "close_reason" => "Our grant funding ended, so we're winding down the art workshop program.",
-  "close_leaving_job" => "No"
-}.each do |identifier, value|
-  field = close_program_form.form_fields.find_by(field_identifier: identifier)
-  next unless field
-  next if close_submission.form_answers.where(form_field: field).any?
-  close_submission.form_answers.create!(form_field: field, submitted_answer: value,
-                                        question_name_when_answered: field.name)
 end

@@ -172,20 +172,19 @@ class FormSubmission < ApplicationRecord
   LINKING_SCENARIOS = {
     "on_demand" => "On-demand agreement",
     "new_job" => "New job agreement",
-    "reinstatement" => "Reinstatement agreement",
-    "close_program" => "Program closure"
+    "reinstatement" => "Reinstatement agreement"
   }.freeze
 
-  # Agreement-scenario submissions — a specific scenario, or "any" for all of
-  # them at once. On-demand is a standalone public submission to a
-  # registration-role form; new_job/reinstatement/close_program are form roles.
+  # Agreement-scenario submissions — a specific scenario, or "any" for all
+  # three at once. On-demand is a standalone public submission to a
+  # registration-role form; new_job/reinstatement are form roles.
   scope :scenario, ->(value) {
     scoped = joins(:form)
     on_demand = scoped.where(role: "public", forms: { role: "registration" })
     case value
     when "on_demand" then on_demand
-    when "new_job", "reinstatement", "close_program" then scoped.where(forms: { role: value })
-    when "any" then scoped.where(forms: { role: %w[new_job reinstatement close_program] }).or(on_demand)
+    when "new_job", "reinstatement" then scoped.where(forms: { role: value })
+    when "any" then scoped.where(forms: { role: %w[new_job reinstatement] }).or(on_demand)
     else all
     end
   }
@@ -303,7 +302,7 @@ class FormSubmission < ApplicationRecord
   # on-demand agreement. Nil for everything else — no agreement processing.
   def linking_scenario
     case form.role
-    when "new_job", "reinstatement", "close_program" then form.role
+    when "new_job", "reinstatement" then form.role
     when "registration" then "on_demand" if role == "public"
     end
   end

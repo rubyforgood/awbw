@@ -37,8 +37,7 @@ class FormBuilderService
     day_2_survey: { label: "Day 2 survey", method: :build_day_2_survey_fields },
     recipient_survey: { label: "Scholarship recipient survey", method: :build_recipient_survey_fields },
     content_sharing_preferences: { label: "Content sharing preferences", method: :build_content_sharing_preferences_fields },
-    bulk_payment: { label: "Bulk payment", method: :build_bulk_payment_fields },
-    close_program: { label: "Close program", method: :build_close_program_fields }
+    bulk_payment: { label: "Bulk payment", method: :build_bulk_payment_fields }
   }.freeze
 
   def initialize(name:, sections:, role: nil)
@@ -86,8 +85,7 @@ class FormBuilderService
     day_2_survey: %w[],
     recipient_survey: %w[],
     content_sharing_preferences: %w[anonymous_contributions display_name_preference],
-    bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees],
-    close_program: %w[organization_name close_effective_date close_reason close_leaving_job]
+    bulk_payment: %w[first_name last_name primary_email phone organization_name number_of_attendees payment_method bulk_payment_attendees]
   }.freeze
 
   # Header questions created by each section's builder method
@@ -106,8 +104,7 @@ class FormBuilderService
     day_2_survey: [ "Day 2 evaluation" ],
     recipient_survey: [ "Post-training recipient questions" ],
     content_sharing_preferences: [ "Sharing preferences" ],
-    bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ],
-    close_program: [ "Close your program" ]
+    bulk_payment: [ "Payer Information", "Payment Information", "Attendees" ]
   }.freeze
 
   # User-facing field labels each section's builder creates (questions only,
@@ -191,12 +188,6 @@ class FormBuilderService
     bulk_payment: [
       "Payer first name", "Payer last name", "Payer email", "Phone", "Organization",
       "Payment method", "Number of attendees", "Attendees"
-    ],
-    close_program: [
-      "Organization name",
-      "As of what date is your program closing?",
-      "Why are you closing your program?",
-      "Are you also leaving your job?"
     ]
   }.freeze
 
@@ -224,23 +215,19 @@ class FormBuilderService
     day_2_survey: %w[day_2_survey],
     recipient_survey: %w[recipient_survey],
     content_sharing_preferences: %w[content_sharing],
-    bulk_payment: %w[bulk_payment],
-    close_program: %w[close_program]
+    bulk_payment: %w[bulk_payment]
   }.freeze
 
-  # Built-in section keys that apply to a form with the given role. Scholarship,
-  # bulk-payment, continuing-education, and close-program forms each show only
-  # their own section(s); every other role shows all sections except those.
-  SINGLE_PURPOSE_SECTIONS = %i[scholarship bulk_payment continuing_education close_program].freeze
-
+  # Built-in section keys that apply to a form with the given role. Scholarship
+  # and bulk-payment forms show only their own section; every other role shows
+  # all sections except those two.
   def self.applicable_section_keys(role)
     SECTIONS.keys.select do |key|
       case role
       when "scholarship" then key == :scholarship
       when "bulk_payment" then key == :bulk_payment
       when "continuing_education" then key == :continuing_education
-      when "close_program" then key.in?(%i[person_identifier close_program])
-      else !key.in?(SINGLE_PURPOSE_SECTIONS)
+      else key != :scholarship && key != :bulk_payment && key != :continuing_education
       end
     end
   end
@@ -849,30 +836,6 @@ class FormBuilderService
                          datatype: :number_integer, width: :half)
     position = add_field(form, position, "Attendees", :no_user_input,
                          key: "bulk_payment_attendees", group: "bulk_payment", required: false)
-    position
-  end
-
-  # The close-program agreement: a facilitator/organization tells us their AWBW
-  # program is ending. Processing this submission (auto on an exact org match,
-  # otherwise when an admin links the organization) end-dates their Facilitator
-  # affiliation there to the effective date — and their job affiliation too when
-  # they're also leaving the job — leaving a comment with the stated reason. The
-  # organization name resolves the org (shared identifier with the other
-  # agreement forms); the answers drive AffiliationServices::CloseProgram.
-  def build_close_program_fields(form, position)
-    position = add_header(form, position, "Close your program", group: "close_program")
-
-    position = add_field(form, position, "Organization name", :free_form_input_one_line,
-                         key: "organization_name", group: "close_program", required: true)
-    position = add_field(form, position, "As of what date is your program closing?", :free_form_input_one_line,
-                         key: "close_effective_date", group: "close_program", required: true,
-                         datatype: :date, width: :half)
-    position = add_field(form, position, "Why are you closing your program?", :free_form_input_paragraph,
-                         key: "close_reason", group: "close_program", required: true)
-    position = add_field(form, position, "Are you also leaving your job?", :single_select_radio,
-                         key: "close_leaving_job", group: "close_program", required: true,
-                         subtitle: "If yes, we'll also end your job affiliation with this organization.",
-                         options: %w[Yes No])
     position
   end
 end

@@ -166,19 +166,6 @@ class SmartFormFields
       ]
     },
     {
-      key: :close_program,
-      title: "Closing a program",
-      summary: "Answered on a Close program form. Its submission ends the person's affiliations at the " \
-               "organization named above rather than creating them: an exact organization-name match is " \
-               "processed automatically, and anything else waits for an admin to link the organization on " \
-               "the submission's processing page.",
-      fields: [
-        [ "close_effective_date", "Program closing date", "The date the program closes. The person's Facilitator affiliation at the named organization is end-dated to this date." ],
-        [ "close_reason", "Reason for closing", "Recorded as a comment on each affiliation that's ended, so the reason stays with the record." ],
-        [ "close_leaving_job", "Are you also leaving your job?", "Answering yes also end-dates the person's job affiliation at that organization; otherwise only the Facilitator affiliation is ended." ]
-      ]
-    },
-    {
       key: :bulk_payment,
       title: "Bulk payment",
       summary: "Answered on a bulk payment form, where one payer registers several attendees. These " \

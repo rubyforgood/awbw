@@ -1,6 +1,6 @@
-FirstName,LastName,Organization,EMail,AmountPaid,PaymentType,CheckNumber
-Cidney,Acosta,A New Leaf,cacosta@turnanewleaf.org,$5.00,Cash,
-Mariel,Acosta,Unknown Org LLC,macosta@wrcnbc.org,10.99,Check,12345
-Kaela,Adams,A New Leaf,kadams@rcoe.us,,,
-Cidney,Acosta,A New Leaf,cacosta@turnanewleaf.org,5.00,Cash,
-Angel,,A New Leaf,angel.agudo@alvordschools.org,10.99,Cash,
+FirstName,LastName,Organization,EMail
+Cidney,Acosta,A New Leaf,cacosta@turnanewleaf.org
+Mariel,Acosta,Unknown Org LLC,macosta@wrcnbc.org
+Kaela,Adams,A New Leaf,kadams@rcoe.us
+Cidney,Acosta,A New Leaf,cacosta@turnanewleaf.org
+Angel,,A New Leaf,angel.agudo@alvordschools.org

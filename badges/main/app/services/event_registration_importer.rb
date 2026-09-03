@@ -1,5 +1,4 @@
 require "csv"
-require "bigdecimal"
 
 # Bulk-imports event registrants into one existing event from an uploaded CSV
 # (columns FirstName, LastName, Organization, EMail). Every row is treated as
@@ -21,15 +20,6 @@ require "bigdecimal"
 #     submission) and, on a facilitator-training event, a "Facilitator" affiliation
 #     is minted (AffiliationServices::CreateFromRegistration). An unmatched name is
 #     left for reconciliation; it is never invented here.
-#   * Payment — only when the row carries an AmountPaid. Finds (its own prior
-#     import payment for this person + amount + type on this event, keyed by
-#     metadata) or creates one, then finds-or-creates an Allocation applying it to
-#     the registration, capped at the registration's remaining cost. PaymentType
-#     picks the payment kind (cash / check / card, defaulting to cash); a free
-#     event ignores the amount, since there's nothing to allocate against.
-#   * Discount — the gap between the event cost and what was actually paid is
-#     comped with a Discount allocation, so a partial AmountPaid (e.g. $50 on a
-#     $750 event) still reads as "Paid". A full payment leaves no discount.
 #
 # No emails are sent, no mailing-list subscription, tags, addresses, or CE are
 # created — the sheet carries none of that, and this is a historical backfill.
@@ -63,51 +53,7 @@ class EventRegistrationImporter
     "org" => :organization,
     "email" => :email,
     "e-mail" => :email,
-    "email address" => :email,
-    "amount" => :amount_paid,
-    "amount paid" => :amount_paid,
-    "amount_paid" => :amount_paid,
-    "amountpaid" => :amount_paid,
-    "paid" => :amount_paid,
-    "payment amount" => :amount_paid,
-    "payment_amount" => :amount_paid,
-    "type" => :payment_type,
-    "method" => :payment_type,
-    "payment type" => :payment_type,
-    "payment_type" => :payment_type,
-    "paymenttype" => :payment_type,
-    "payment method" => :payment_type,
-    "payment_method" => :payment_type,
-    "check number" => :check_number,
-    "check_number" => :check_number,
-    "checknumber" => :check_number,
-    "check #" => :check_number,
-    "check no" => :check_number,
-    "check_no" => :check_number,
-    "checkno" => :check_number
-  }.freeze
-
-  # Normalized PaymentType token → the STI Payment subclass to create. A blank
-  # type on a row carrying an amount falls back to cash; an unrecognized token
-  # records no payment (surfaced in the preview) rather than guessing.
-  PAYMENT_TYPES = {
-    "cash" => CashPayment,
-    "check" => CheckPayment,
-    "cheque" => CheckPayment,
-    "card" => ExternalProcessorPayment,
-    "credit" => ExternalProcessorPayment,
-    "credit card" => ExternalProcessorPayment,
-    "debit" => ExternalProcessorPayment,
-    "stripe" => ExternalProcessorPayment,
-    "online" => ExternalProcessorPayment,
-    "external" => ExternalProcessorPayment
-  }.freeze
-  DEFAULT_PAYMENT_TYPE = CashPayment
-
-  PAYMENT_TYPE_LABELS = {
-    "CashPayment" => "Cash",
-    "CheckPayment" => "Check",
-    "ExternalProcessorPayment" => "Card"
+    "email address" => :email
   }.freeze
 
   SUPPORTED_EXTENSIONS = %w[csv].freeze
@@ -126,8 +72,6 @@ class EventRegistrationImporter
     :rows_processed, :people_created, :people_matched,
     :registrations_created, :registrations_promoted, :registrations_already_attended,
     :organizations_linked, :organizations_to_reconcile,
-    :payments_recorded, :payments_amount_cents,
-    :discounts_recorded, :discounts_amount_cents,
     :skipped, :rows,
     keyword_init: true
   ) do
@@ -142,8 +86,6 @@ class EventRegistrationImporter
         "registrations created: #{registrations_created}, promoted to attended: #{registrations_promoted}, " \
           "already attended: #{registrations_already_attended}",
         "organizations linked: #{organizations_linked}, to reconcile: #{organizations_to_reconcile}",
-        "payments recorded: #{payments_recorded} (#{MoneyFormatter.dollars_from_cents(payments_amount_cents)})",
-        "discounts recorded: #{discounts_recorded} (#{MoneyFormatter.dollars_from_cents(discounts_amount_cents)})",
         "skipped: #{skipped.size}"
       ].join("\n")
     end
@@ -154,7 +96,6 @@ class EventRegistrationImporter
     :number, :first_name, :last_name, :email, :organization_name,
     :person_status, :person_label,
     :registration_status, :organization_status,
-    :payment_status, :payment_label, :payment_amount_cents, :discount_cents,
     :skipped_reason,
     keyword_init: true
   )
@@ -174,8 +115,6 @@ class EventRegistrationImporter
       rows_processed: 0, people_created: 0, people_matched: 0,
       registrations_created: 0, registrations_promoted: 0, registrations_already_attended: 0,
       organizations_linked: 0, organizations_to_reconcile: 0,
-      payments_recorded: 0, payments_amount_cents: 0,
-      discounts_recorded: 0, discounts_amount_cents: 0,
       skipped: [], rows: []
     )
     @organization_cache = {}
@@ -219,10 +158,7 @@ class EventRegistrationImporter
       first_name: clean(row[:first_name]),
       last_name: clean(row[:last_name]),
       email: clean(row[:email])&.downcase,
-      organization: clean(row[:organization]),
-      amount_paid: clean(row[:amount_paid]),
-      payment_type: clean(row[:payment_type]),
-      check_number: clean(row[:check_number])
+      organization: clean(row[:organization])
     }
     preview = RowPreview.new(
       number: number, first_name: values[:first_name], last_name: values[:last_name],
@@ -241,7 +177,6 @@ class EventRegistrationImporter
     person = resolve_person(values, preview)
     registration = resolve_registration(person, preview)
     set_organization_preview(values[:organization], preview)
-    set_payment_preview(values, preview)
 
     persist_registration(person, registration, values) unless @dry_run
 
@@ -317,44 +252,10 @@ class EventRegistrationImporter
     end
   end
 
-  def set_payment_preview(values, preview)
-    return if values[:amount_paid].blank?
-
-    cents = parse_cents(values[:amount_paid])
-    return preview.payment_status = :invalid if cents.nil? || cents <= 0
-
-    preview.payment_amount_cents = cents
-    payment_class = payment_class_for(values[:payment_type])
-    if payment_class.nil?
-      preview.payment_label = values[:payment_type]
-      return preview.payment_status = :unknown_type
-    end
-    return preview.payment_status = :missing_check_number if payment_class == CheckPayment && values[:check_number].blank?
-    return preview.payment_status = :free if @event.cost_cents.to_i <= 0
-
-    preview.payment_status = :will_record
-    preview.payment_label = PAYMENT_TYPE_LABELS[payment_class.name]
-    applied = [ cents, @event.cost_cents.to_i ].min
-    @result.payments_recorded += 1
-    @result.payments_amount_cents += applied
-
-    discount = @event.cost_cents.to_i - applied
-    return unless discount.positive?
-
-    preview.discount_cents = discount
-    @result.discounts_recorded += 1
-    @result.discounts_amount_cents += discount
-  end
-
   def persist_registration(person, registration, values)
     return if registration.nil?
 
     submission = import_submission(person, values)
-    link_organization(person, registration, submission, values)
-    apply_payment(person, registration, values)
-  end
-
-  def link_organization(person, registration, submission, values)
     organization = values[:organization].present? ? find_organization(values[:organization]) : nil
     return unless organization
 
@@ -369,64 +270,6 @@ class EventRegistrationImporter
       facilitator_training: @event.facilitator_training,
       event_registration: registration
     )
-  end
-
-  # Applies the row's AmountPaid to the registration by finding-or-creating a
-  # payment and then an allocation, capped at what the registration still owes —
-  # so a re-run adds nothing and a fully-covered amount reads as "Paid".
-  def apply_payment(person, registration, values)
-    cents = parse_cents(values[:amount_paid])
-    return if cents.nil? || cents <= 0
-
-    payment_class = payment_class_for(values[:payment_type])
-    return if payment_class.nil?
-    return if payment_class == CheckPayment && values[:check_number].blank?
-
-    to_allocate = [ cents, registration.remaining_cost ].min
-    if to_allocate.positive?
-      payment = resolve_payment(person, cents, payment_class, values[:check_number])
-      registration.allocations.find_or_create_by!(source: payment) do |allocation|
-        allocation.amount = to_allocate
-      end
-    end
-
-    cover_remainder_with_discount(registration)
-  end
-
-  # Comps whatever the payment didn't cover — the gap between the event cost and
-  # what was actually paid — so a partial amount still reads as "Paid". A re-run
-  # sees nothing left to cover and adds no second discount.
-  def cover_remainder_with_discount(registration)
-    registration.allocations.reset
-    remaining = registration.remaining_cost
-    return unless remaining.positive?
-
-    discount = Discount.new(amount_cents: remaining)
-    discount.created_by = @import_user if discount.respond_to?(:created_by=)
-    discount.updated_by = @import_user if discount.respond_to?(:updated_by=)
-    discount.save!
-    registration.allocations.create!(source: discount, amount: remaining)
-  end
-
-  # Reuses our own prior import payment for this person + amount + type on this
-  # event (keyed by the import metadata), so re-running never mints duplicates and
-  # imports into other events never steal each other's money; otherwise creates one.
-  def resolve_payment(person, cents, payment_class, check_number)
-    existing = payment_class
-      .where(person_id: person.id, amount_cents: cents)
-      .detect { |candidate| candidate.metadata&.[](IMPORT_SOURCE_KEY).present? && candidate.metadata["event_id"] == @event.id }
-    return existing if existing
-
-    payment = payment_class.new(
-      person: person, amount_cents: cents, currency: "usd",
-      metadata: { IMPORT_SOURCE_KEY => @source, "event_id" => @event.id, "name" => person.full_name, "email" => person.email }
-    )
-    payment.check_number = check_number if payment_class == CheckPayment
-    payment.skip_pay_charge_validation = true if payment.respond_to?(:skip_pay_charge_validation=)
-    payment.created_by = @import_user if payment.respond_to?(:created_by=)
-    payment.updated_by = @import_user if payment.respond_to?(:updated_by=)
-    payment.save!
-    payment
   end
 
   # The import's OWN registration submission — created alongside, never in place
@@ -474,21 +317,5 @@ class EventRegistrationImporter
 
   def clean(value)
     value.to_s.strip.presence
-  end
-
-  def payment_class_for(raw)
-    return DEFAULT_PAYMENT_TYPE if raw.blank?
-
-    PAYMENT_TYPES[normalize_header(raw)]
-  end
-
-  # Parses a money cell ("$1,099.00", "10.99", "10") to integer cents; nil on junk.
-  def parse_cents(raw)
-    cleaned = raw.to_s.gsub(/[^0-9.\-]/, "")
-    return nil if cleaned.blank?
-
-    (BigDecimal(cleaned) * 100).round
-  rescue ArgumentError
-    nil
   end
 end

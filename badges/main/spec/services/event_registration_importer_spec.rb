@@ -52,22 +52,9 @@ RSpec.describe EventRegistrationImporter do
       expect(result.organizations_to_reconcile).to eq(1)
     end
 
-    it "counts the rows carrying a payment and their total" do
-      expect(result.payments_recorded).to eq(2)
-      expect(result.payments_amount_cents).to eq(1599)
-    end
-
-    it "counts the discount that comps an underpaid row" do
-      expect(result.discounts_recorded).to eq(1)
-      expect(result.discounts_amount_cents).to eq(599)
-    end
-
     it "writes nothing" do
       expect { import(dry_run: true) }.not_to change(Person, :count)
       expect { import(dry_run: true) }.not_to change(FormSubmission, :count)
-      expect { import(dry_run: true) }.not_to change(Payment, :count)
-      expect { import(dry_run: true) }.not_to change(Discount, :count)
-      expect { import(dry_run: true) }.not_to change(Allocation, :count)
     end
   end
 
@@ -185,88 +172,6 @@ RSpec.describe EventRegistrationImporter do
         person = Person.find_by(email: "cacosta@turnanewleaf.org")
         expect(registration_for("cacosta@turnanewleaf.org").organizations.pluck(:name)).to eq([ "A New Leaf" ])
         expect(person.affiliations.where(title: Affiliation::FACILITATOR_TITLE)).to be_empty
-      end
-    end
-  end
-
-  describe "payments" do
-    it "records the payment actually paid and marks the registration paid in full" do
-      import(dry_run: false)
-      registration = registration_for("cacosta@turnanewleaf.org")
-
-      expect(registration).to be_paid_in_full
-      expect(registration).to be_payment_received
-      allocation = registration.allocations.find_by(source_type: "Payment")
-      expect(allocation.amount).to eq(500)
-      expect(allocation.source).to be_a(CashPayment)
-    end
-
-    it "comps the unpaid remainder with a discount so a partial payment reads as paid" do
-      import(dry_run: false)
-      registration = registration_for("cacosta@turnanewleaf.org")
-      discount_allocation = registration.allocations.find_by(source_type: "Discount")
-
-      expect(discount_allocation.amount).to eq(599)
-      expect(registration.allocations_sum).to eq(1099)
-    end
-
-    it "creates no discount when the payment covers the full cost" do
-      import(dry_run: false)
-      registration = registration_for("macosta@wrcnbc.org")
-
-      expect(registration.allocations.where(source_type: "Discount")).to be_empty
-      expect(registration.allocations.find_by(source_type: "Payment").amount).to eq(1099)
-    end
-
-    it "uses the check number for a check-type row" do
-      import(dry_run: false)
-      registration = registration_for("macosta@wrcnbc.org")
-      payment = registration.allocations.find_by(source_type: "Payment").source
-
-      expect(payment).to be_a(CheckPayment)
-      expect(payment.check_number).to eq("12345")
-    end
-
-    it "records no payment or discount for a row without an amount" do
-      import(dry_run: false)
-      registration = registration_for("kadams@rcoe.us")
-      expect(registration.allocations).to be_empty
-    end
-
-    it "creates one payment per paying row and a discount only for the underpaid one" do
-      expect { import(dry_run: false) }
-        .to change(Payment, :count).by(2)
-        .and change(Discount, :count).by(1)
-    end
-
-    it "stamps the payment as imported and scoped to the event" do
-      import(dry_run: false)
-      payment = registration_for("cacosta@turnanewleaf.org").allocations.find_by(source_type: "Payment").source
-      expect(payment.metadata).to include("imported_from", "event_id" => event.id)
-    end
-
-    it "reports the payments and discounts recorded" do
-      result = import(dry_run: false)
-      expect(result.payments_recorded).to eq(2)
-      expect(result.payments_amount_cents).to eq(1599)
-      expect(result.discounts_recorded).to eq(1)
-      expect(result.discounts_amount_cents).to eq(599)
-    end
-
-    it "is idempotent — re-running adds no duplicate payments, discounts, or allocations" do
-      import(dry_run: false)
-      expect { import(dry_run: false) }.not_to change(Payment, :count)
-      expect { import(dry_run: false) }.not_to change(Discount, :count)
-      expect { import(dry_run: false) }.not_to change(Allocation, :count)
-    end
-
-    context "on a free event" do
-      let(:event) { create(:event, cost_cents: 0, facilitator_training: true) }
-
-      it "ignores the amount, recording no payment or discount" do
-        expect { import(dry_run: false) }.not_to change(Payment, :count)
-        expect { import(dry_run: false) }.not_to change(Discount, :count)
-        expect(registration_for("cacosta@turnanewleaf.org").allocations).to be_empty
       end
     end
   end

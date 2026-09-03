@@ -48,21 +48,7 @@
     profile", and data that used to live only on the edit form now sits in an
     "Admin details" panel.
   pr_number: 2502
-- name: "Close a program with a form"
-  area: people
-  display_status: admin_facing
-  released_on: 2026-09-03
-  summary: >-
-    A new "Close program" form lets a facilitator or organization tell us their
-    AWBW program is ending. Submitting it end-dates their affiliations at the
-    named organization — automatically on an exact name match, or after an admin
-    links the organization — with a comment recording why.
-  action_path: /forms
-  pr_number: 2518
-  pro_tips:
-    - >-
-      The organization's status closes to Inactive on its own once the last
-      active Facilitator affiliation ends.
+
 - name: "Tell comments from emails at a glance on the activity feed"
   area: communications
   display_status: admin_facing
@@ -2699,13 +2685,12 @@
   action_path: "/event_registrations/import"
   summary: >-
     Bulk-add attended registrants to an event from a CSV roster. Every row becomes an
-    attended registration — matched to an existing person by email and name (no
-    duplicates), with the organization linked when we recognize it. An amount-paid
-    column marks the registration paid too.
+    attended registration, exactly as if the person had registered — matched to an
+    existing person by email and name (no duplicates), with the organization linked
+    when we recognize it.
   pro_tips:
     - "Expected columns: FirstName, LastName, Organization, EMail. Export your spreadsheet as a .csv first."
-    - "To record payment, add an AmountPaid column (plus PaymentType — cash, check, or card — and a CheckNumber for checks). The amount is applied to the registration so it shows as paid; a partial amount is topped up with a discount for the difference. Free events ignore it."
-    - "You get a full preview — new vs. matched people, new vs. promoted registrations, which orgs will link vs. need reconciling, and the payments to record — before anything is saved."
+    - "You get a full preview — new vs. matched people, new vs. promoted registrations, and which orgs will link vs. need reconciling — before anything is saved."
     - "Organizations we don't recognize aren't created; they're queued on each registrant's \"link organization\" page so you can reconcile them the same way as a normal registration."
     - "On facilitator trainings, a linked organization also adds the person's facilitator affiliation."
     - "No emails are sent, so it's safe for historical rosters. Reach it from the \"Import registrants\" button on the registrants page."

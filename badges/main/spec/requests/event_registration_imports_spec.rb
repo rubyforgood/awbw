@@ -97,17 +97,6 @@ RSpec.describe "Event registration imports", type: :request do
       expect(flash[:notice]).to match(/3 attended registrations created/)
     end
 
-    it "records the payments and comping discounts carried on the sheet" do
-      expect {
-        post confirm_event_registration_import_path,
-             params: { signed_id: signed_blob, event_id: event.id }
-      }.to change(Payment, :count).by(2)
-        .and change(Discount, :count).by(1)
-        .and change(Allocation, :count).by(3)
-
-      expect(flash[:notice]).to match(/2 payments/)
-    end
-
     it "redirects with an alert when the upload is gone" do
       post confirm_event_registration_import_path,
            params: { signed_id: "bogus", event_id: event.id }

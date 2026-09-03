@@ -512,9 +512,3 @@ workshop_settings_type.categories
 # task so prod can create them without the full seed. Idempotent on form name.
 puts "Creating post-event survey forms…"
 SurveyFormSeeder.call
-
-# The Close Program agreement form — a standalone public form whose submission
-# end-dates the submitter's affiliations at the named org. Shared with the
-# data:seed_close_program_form task. Idempotent on form name.
-puts "Creating the Close Program form…"
-CloseProgramFormSeeder.call

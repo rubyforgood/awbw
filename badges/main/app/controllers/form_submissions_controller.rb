@@ -188,8 +188,6 @@ class FormSubmissionsController < ApplicationController
   # handling: agreement scenarios confer the standing Facilitator affiliation
   # dated to the submission, and a new job ends the person's other orgs' rows.
   def link_and_report(organization, verb:)
-    return close_program_and_report(organization, verb:) if @form_submission.linking_scenario == "close_program"
-
     result = OrganizationServices::LinkSubmittedOrganization.call(
       person: @form_submission.person,
       organization: organization,
@@ -207,30 +205,5 @@ class FormSubmissionsController < ApplicationController
     warning = result.warning(organization: organization)
     flash[:warning] = warning if warning
     result.notice(organization: organization, verb: verb)
-  end
-
-  # A close-program submission deactivates instead of creating: link the org, then
-  # end-date the person's Facilitator affiliation there (and their job affiliation
-  # too when they said they're leaving), with a comment recording the reason and
-  # date. Mirrors the auto-processing PublicFormSubmission runs on an exact match.
-  def close_program_and_report(organization, verb:)
-    answers = @form_submission.answers_by_identifier
-    ended = AffiliationServices::CloseProgram.call(
-      person: @form_submission.person,
-      organization: organization,
-      effective_date: FormSubmission.parse_date(answers["close_effective_date"]),
-      reason: answers["close_reason"],
-      leaving_job: answers["close_leaving_job"].to_s.casecmp?("Yes")
-    )
-
-    @form_submission.link_organization!(organization.id)
-    @form_submission.record_scenario_ended!(ended.map(&:id))
-
-    notice = "#{ERB::Util.html_escape(organization.name)} #{verb}."
-    if ended.any?
-      titles = ended.map { |a| ERB::Util.html_escape(a.title.presence || "no title") }
-      notice += " Ended #{@form_submission.person.name}'s #{"affiliation".pluralize(ended.size)} here: #{titles.to_sentence}."
-    end
-    notice
   end
 end

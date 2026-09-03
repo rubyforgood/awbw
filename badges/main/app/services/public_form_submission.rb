@@ -37,7 +37,6 @@ class PublicFormSubmission
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
       register_for_on_demand_training(submission)
-      process_close_program(submission)
       send_notifications(submission)
 
       Result.new(success?: true, form_submission: submission, person: person, errors: [])
@@ -71,42 +70,6 @@ class PublicFormSubmission
     # Created "registered" (the column default), then flipped: an on-demand
     # agreement only arrives after the external LMS training is complete.
     registration.update!(status: "attended") unless registration.status == "attended"
-  end
-
-  # A close-program submission end-dates the person's affiliations at the named
-  # organization (see AffiliationServices::CloseProgram). We only auto-process
-  # when the submitted organization name resolves to exactly one org — an exact,
-  # case-insensitive name match. Anything ambiguous (no match, or two same-named
-  # orgs) is left for an admin to resolve on the submission's processing panel,
-  # which runs the same service once they link the organization by hand.
-  def process_close_program(submission)
-    return unless @form.role == "close_program"
-    return unless submission.person
-
-    answers = submission.answers_by_identifier
-    name = answers["organization_name"].to_s.strip
-    return if name.blank?
-
-    matches = Organization.where("LOWER(name) = ?", name.downcase)
-    return unless matches.count == 1
-
-    organization = matches.first
-    ended = AffiliationServices::CloseProgram.call(
-      person: submission.person,
-      organization: organization,
-      effective_date: parse_date(answers["close_effective_date"]),
-      reason: answers["close_reason"],
-      leaving_job: answers["close_leaving_job"].to_s.casecmp?("Yes")
-    )
-
-    submission.link_organization!(organization.id)
-    submission.record_scenario_ended!(ended.map(&:id))
-  end
-
-  def parse_date(value)
-    Date.iso8601(value.to_s)
-  rescue ArgumentError, TypeError
-    nil
   end
 
   def field_value(identifier)
