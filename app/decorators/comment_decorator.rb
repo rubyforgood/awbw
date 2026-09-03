@@ -25,4 +25,10 @@ class CommentDecorator < ApplicationDecorator
   def timestamp
     created_at.strftime("%-m/%-d/%Y %-I:%M %p")
   end
+
+  def type_chip(**options)
+    content = h.safe_join([ h.content_tag(:i, "", class: "fa-solid fa-comment", "aria-hidden": "true"), "Com't" ], " ")
+    chip_class = "inline-flex min-w-18 shrink-0 items-center justify-center gap-1 rounded #{DomainTheme.bg_class_for(:comments, intensity: 100)} px-1.5 py-0.5 text-xs font-medium #{DomainTheme.text_class_for(:comments, intensity: 800)}"
+    h.content_tag(:span, content, { class: chip_class, title: "Comment" }.merge(options))
+  end
 end

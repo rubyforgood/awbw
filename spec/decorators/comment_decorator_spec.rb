@@ -65,4 +65,12 @@ RSpec.describe CommentDecorator do
       expect(comment.decorate.source_theme).to eq(:scholarships)
     end
   end
+
+  describe "#type_chip" do
+    it "renders a chat icon and a Com't label for parity with the Email chip" do
+      chip = create(:comment).decorate.type_chip
+      expect(chip).to include("fa-comment")
+      expect(chip).to include("Com&#39;t")
+    end
+  end
 end

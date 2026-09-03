@@ -218,7 +218,7 @@ class NotificationDecorator < ApplicationDecorator
     return "" if icon_class.blank?
 
     content = h.safe_join([ h.content_tag(:i, "", class: "fa-solid #{icon_class}", "aria-hidden": "true"), CHANNEL_LABELS[channel] || channel.to_s.titleize ], " ")
-    chip_class = "inline-flex items-center gap-1 rounded #{DomainTheme.bg_class_for(:notifications, intensity: 100)} px-1.5 py-0.5 text-xs font-medium #{DomainTheme.text_class_for(:notifications, intensity: 800)}"
+    chip_class = "inline-flex min-w-18 shrink-0 items-center justify-center gap-1 rounded #{DomainTheme.bg_class_for(:notifications, intensity: 100)} px-1.5 py-0.5 text-xs font-medium #{DomainTheme.text_class_for(:notifications, intensity: 800)}"
     h.content_tag(:span, content, { class: chip_class }.merge(options))
   end
 
