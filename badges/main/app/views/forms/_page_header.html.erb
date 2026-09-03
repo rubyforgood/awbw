@@ -3,7 +3,7 @@
     a domain tint, a circular icon badge, a domain-coloured eyebrow, and the
     title in the display serif. Optional `meta` holds the right-hand stat chips.
     locals: icon, eyebrow, title; optional meta. %>
-<%= render "shared/brand_accent_strip", rounded: true %>
+<%= render accent_strip_partial, rounded: true %>
 <div class="<%= DomainTheme.bg_class_for(:forms, intensity: 100) %> px-6 py-6 sm:px-8">
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-4">

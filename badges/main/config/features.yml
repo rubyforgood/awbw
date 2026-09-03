@@ -81,6 +81,18 @@
   action_path: /form_answers
   pr_number: 2508
 
+- name: "The page accent rule now reflects who can see the page"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    The colored rule atop each page card now signals its access level: a quiet
+    navy strip on admin-only pages, a half navy/rainbow strip on admin-or-owner
+    pages, and a teal rainbow for any signed-in user — so you can tell an
+    internal page from a public, brand-facing one at a glance.
+  action_path: /forms
+  pr_number: 2516
+
 - name: "Jump from the activity timeline to the page each row logged"
   area: reporting
   display_status: admin_facing

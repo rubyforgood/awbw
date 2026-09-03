@@ -271,6 +271,23 @@ module ApplicationHelper
     base.change(hour: 9, min: 0)
   end
 
+  # The accent strip partial for the current page, chosen from its page_bg_class
+  # policy marker (set with content_for at the top of the view, so it is captured
+  # before the shell renders):
+  #   admin-only            → brand-navy admin sweep (internal tool)
+  #   any …public…          → public rainbow rule (genuinely public pages)
+  #   admin-or-owner…       → half navy / half rainbow (admin OR the record owner)
+  #   admin-or-auth…        → the teal rainbow rule (any authenticated user)
+  #   otherwise             → public rainbow rule
+  def accent_strip_partial
+    marker = content_for(:page_bg_class).to_s
+    return "shared/admin_accent_strip" if marker.start_with?("admin-only")
+    return "shared/brand_accent_strip" if marker.include?("public")
+    return "shared/owner_accent_strip" if marker.include?("owner")
+    return "shared/brand_accent_strip_alt" if marker.include?("auth")
+    "shared/brand_accent_strip"
+  end
+
   # Rainbow gradient accent bar shown beside form section headers.
   def form_section_bar_class
     "h-5 w-1 rounded-full bg-[linear-gradient(to_bottom,#ec4899,#f97316,#22c55e,#3b82f6,#8b5cf6)]"

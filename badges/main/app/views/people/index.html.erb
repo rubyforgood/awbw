@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
 <div class="border-primary/10 <%= DomainTheme.bg_class_for(:people) %> mx-auto max-w-7xl overflow-hidden rounded-2xl border shadow-sm">
-  <%= render "shared/brand_accent_strip" %>
+  <%= render accent_strip_partial %>
   <div class="w-full p-6">
     <% back_label, back_path =
          case params[:return_to]
