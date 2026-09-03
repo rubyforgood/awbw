@@ -1,13 +1,14 @@
-<%# Shared shell for an index page: the brand card (rainbow rule, rounded corners,
+<%# Shared shell for an index page: the brand card (accent rule, rounded corners,
     soft domain border) over the domain's own tint, then the serif title with an
     optional eyebrow, subtitle and right-hand actions, and the page body as a block.
+    The accent rule adapts to the page's access level (see accent_strip_partial).
     locals: domain (a DomainTheme key), title; optional eyebrow, subtitle,
     actions (captured markup), surface (defaults to the domain's 50 tint),
     topbar (captured back-eyebrow / sub-nav row, justify-between at the card top),
     subtitle_width (subtitle max-width class, defaults to max-w-3xl). %>
 <% surface = local_assigns[:surface].presence || DomainTheme.bg_class_for(domain, intensity: 50) %>
 <div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> mx-auto w-full max-w-7xl rounded-2xl border shadow-sm">
-  <%= render "shared/brand_accent_strip", rounded: true %>
+  <%= render accent_strip_partial, rounded: true %>
   <div class="w-full p-6">
     <% if local_assigns[:topbar].present? %>
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2"><%= topbar %></div>

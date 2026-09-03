@@ -134,6 +134,17 @@ module PersonHelper
     end
   end
 
+  # Text-link sibling of user_button for the audit footer. Non-admin viewers, who
+  # can't follow the admin-only user show page, get the plain name instead.
+  def user_link(user, data: {})
+    name = user.try(:full_name).presence || user.try(:name).presence || user.email
+    return content_tag(:span, name, class: "font-medium text-gray-700") unless allowed_to?(:show?, user)
+
+    link_to name, user_path(user),
+            data: { turbo_prefetch: false }.merge(data),
+            class: "font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
+  end
+
   private
 
   # Shared color palette for the person profile/edit buttons, keyed off the same

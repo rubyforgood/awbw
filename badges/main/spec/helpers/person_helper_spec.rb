@@ -115,4 +115,25 @@ RSpec.describe PersonHelper, type: :helper do
       expect(link["data-turbo-frame"]).to eq("_top")
     end
   end
+
+  describe "#user_link" do
+    let(:user) { create(:user, person: create(:person, first_name: "Cara", last_name: "Lang")) }
+
+    it "renders a plain text link to the user's show page for a viewer who may see it" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(true)
+      link = Nokogiri::HTML(helper.user_link(user)).at_css("a")
+
+      expect(link["href"]).to eq(user_path(user))
+      expect(link.text).to eq("Cara Lang")
+      expect(link["class"]).to include("hover:underline")
+    end
+
+    it "renders a plain name, not a link, when the viewer may not see the user" do
+      allow(helper).to receive(:allowed_to?).with(:show?, user).and_return(false)
+      html = helper.user_link(user)
+
+      expect(html).not_to include("href=")
+      expect(html).to include("Cara Lang")
+    end
+  end
 end

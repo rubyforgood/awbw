@@ -1,7 +1,7 @@
 <%# Centered — brand-polished centered layout: a cream card holds the header
     image, and a second cream card below holds the title, details and body. %>
 <% sample = local_assigns.fetch(:sample, false) %>
-<%= render "shared/brand_accent_strip_alt" %>
+<%= render accent_strip_partial %>
 
 <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
   <% if event.rhino_header.present? %>
