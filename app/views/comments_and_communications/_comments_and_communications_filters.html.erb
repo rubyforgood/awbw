@@ -7,7 +7,7 @@
 <% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
 <%= form_with url: url, method: :get,
               data: { controller: "collection", turbo_frame: frame },
-              html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4" do |f| %>
+              html: { autocomplete: "off" }, class: "bg-brand-cream space-y-3 rounded-lg border border-gray-200 p-4" do |f| %>
   <div class="flex items-center gap-2 text-gray-600">
     <i class="fa-solid fa-filter text-xs"></i>
     <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>

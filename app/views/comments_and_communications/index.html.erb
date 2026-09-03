@@ -1,64 +1,49 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<%# Eyebrow: back to the record whose combined section linked here, then the
-    person's profile, then the global people list when the feed spans everyone. %>
 <% return_record = notification_return_record %>
-<div class="mb-3">
+<%# Topbar: back to the record whose combined section linked here, then the
+    person's profile, then the global people list when the feed spans everyone. %>
+<% topbar = capture do %>
   <% if return_record %>
-    <%= link_to notification_return_path(return_record), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    <%= link_to notification_return_path(return_record), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= noticeable_label(return_record) %>
     <% end %>
   <% elsif @person %>
-    <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    <%= link_to person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to <%= @person.full_name %>
     <% end %>
   <% else %>
-    <%= link_to people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+    <%= link_to people_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to people
     <% end %>
   <% end %>
-</div>
-
-<%# The page keeps the admin-only policy marker, but the card carries the people
-    theme so the feed doesn't read as one flat blue wash. %>
-<div class="border-primary/10 overflow-hidden rounded-2xl border shadow-sm <%= DomainTheme.bg_class_for(:people, intensity: 50) %>">
-  <div class="<%= DomainTheme.bg_class_for(:people, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:people) %> px-8 py-3">
-    <div class="flex items-center gap-2">
-      <i class="fa-solid fa-comments <%= DomainTheme.text_class_for(:people, intensity: 700) %>"></i>
-      <span class="text-sm font-semibold <%= DomainTheme.text_class_for(:people, intensity: 900) %> tracking-wide uppercase"><%= t("communications.all_section_title") %></span>
-    </div>
+<% end %>
+<%# Jump straight to one person's own combined feed — a full page swap (title,
+    eyebrow, ready composers), not a same-page filter. Sits to the right of the
+    page title, next to the entry count. %>
+<% actions = capture do %>
+  <div class="flex items-center gap-2">
+    <%= select_tag :jump_person_id, options_for_select([]),
+                   include_blank: true, prompt: "Jump to a person…",
+                   class: "w-44 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500",
+                   data: { controller: "remote-select navigate-select",
+                           remote_select_model_value: "person",
+                           remote_select_exclude_value: @person&.id,
+                           navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
+                           action: "change->navigate-select#navigate" } %>
+    <% if @person %>
+      <%= link_to "View everyone", comments_and_communications_path, class: "text-xs #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
+    <% end %>
   </div>
+<% end %>
+<% subtitle = capture do %>
+  <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
+<% end %>
 
-  <div class="space-y-6 p-4 sm:p-8">
-    <div class="flex flex-wrap items-baseline justify-between gap-2">
-      <div class="flex flex-wrap items-baseline gap-3">
-        <h1 class="text-primary font-display text-2xl font-semibold">
-          <% if @person %>
-            <%= link_to @person.full_name, person_path(@person), class: "hover:underline" %>
-          <% else %>
-            Everyone
-          <% end %>
-        </h1>
-        <div class="flex items-center gap-2">
-          <%# Jump straight to one person's own combined feed — a full page swap
-              (title, eyebrow, ready composers), not a same-page filter. %>
-          <%= select_tag :jump_person_id, options_for_select([]),
-                         include_blank: true, prompt: "Jump to a person…",
-                         class: "w-44 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500",
-                         data: { controller: "remote-select navigate-select",
-                                 remote_select_model_value: "person",
-                                 remote_select_exclude_value: @person&.id,
-                                 navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
-                                 action: "change->navigate-select#navigate" } %>
-          <% if @person %>
-            <%= link_to "View everyone", comments_and_communications_path, class: "text-xs #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
-          <% end %>
-        </div>
-      </div>
-      <p class="text-sm text-gray-500">
-        <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
-      </p>
-    </div>
-
+<%= render layout: "shared/index_page",
+           locals: { domain: :people, surface: "bg-white", eyebrow: "Comments & communications",
+                     title: (@person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone"),
+                     subtitle: subtitle, topbar: topbar, actions: actions } do %>
+  <div class="space-y-6">
     <%# Add-a-note / log-a-communication, each revealing a composer with a picker
         for which of the person's records to file it against. On a person's own
         feed the composers are ready; on the everyone feed you pick the person
@@ -68,7 +53,7 @@
                  new_comment: @new_comment, new_notification: @new_notification,
                  record_targets: @record_targets %>
     <% else %>
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <div class="bg-brand-cream rounded-lg border border-gray-200 p-4">
         <%= form_with url: composers_comments_and_communications_path, method: :get,
                       data: { controller: "collection", turbo_frame: "cc_composers" },
                       class: "flex items-center gap-2" do %>
@@ -92,4 +77,4 @@
       <div class="py-6 text-center text-sm text-gray-400">Loading comments &amp; communications…</div>
     <% end %>
   </div>
-</div>
+<% end %>

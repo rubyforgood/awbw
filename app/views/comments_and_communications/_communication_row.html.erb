@@ -1,7 +1,10 @@
-<%# One communication row on the combined feed, editable inline (mirrors
-    comment_row's edit-toggle pattern). Saving PATCHes the notification directly
-    with combined: 1, which the controller's turbo_stream response uses to
-    re-render this same row in place. Locals: entry (a Notification). %>
+<%# One manually-logged communication row on the combined feed, editable inline
+    (mirrors comment_row's edit-toggle pattern). Saving PATCHes the notification
+    directly with combined: 1, which the controller's turbo_stream response uses
+    to re-render this same row in place. An autoemail is generated, not
+    authored, so it renders through communication_row_readonly instead — this
+    partial is only reached when entry.manual_log? is true. Locals: entry (a
+    Notification). %>
 <% chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900" %>
 <% record = entry.noticeable %>
 <% source_chip = if record.present?

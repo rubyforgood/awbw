@@ -11,8 +11,10 @@
       <% @entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
           <%= render "comments_and_communications/comment_row", entry: entry %>
-        <% else %>
+        <% elsif entry.manual_log? %>
           <%= render "comments_and_communications/communication_row", entry: entry %>
+        <% else %>
+          <%= render "comments_and_communications/communication_row_readonly", entry: entry %>
         <% end %>
       <% end %>
     <% else %>

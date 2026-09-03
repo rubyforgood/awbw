@@ -11,7 +11,7 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path(person_id: person.id)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("All comments &amp; communications")
+      expect(response.body).to include("Comments &amp; communications")
       # The shared filters, each answered on both models' own columns.
       expect(response.body).to include("Subject or topic")
       expect(response.body).to include("From or author")
@@ -241,6 +241,19 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
       expect(response.body).to include("Updated subject")
       expect(notification.reload.email_subject).to eq("Updated subject")
+    end
+
+    it "hides the Edit control for an automated email" do
+      autoemail = create(:notification, noticeable: person, recipient_email: "primary@example.com",
+                                        email_subject: "Welcome!", notification_type: 0)
+      expect(autoemail.manual_log?).to be(false)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(autoemail)}")
+      expect(row.text).to include("Welcome!")
+      expect(row.at_css("button")).to be_nil
     end
   end
 
