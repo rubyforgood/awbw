@@ -993,20 +993,18 @@ RSpec.describe "Forms", type: :request do
         expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
       end
 
-      it "searches people and organizations from one picker" do
+      it "filters by organization, not by person" do
         form = create(:form, :standalone)
         create(:form_submission, form: form)
 
         get results_form_path(form)
 
-        picker = Nokogiri::HTML(response.body).at_css("select#submitter_sgid")
-        expect(picker).to be_present
-        expect(picker["data-remote-select-model-value"]).to eq("person_or_organization")
-        expect(Nokogiri::HTML(response.body).at_css("select#person_id")).to be_nil
-        expect(Nokogiri::HTML(response.body).at_css("select#organization_id")).to be_nil
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.at_css("select#organization_id")).to be_present
+        expect(doc.at_css("select#person_id")).to be_nil
       end
 
-      it "renders the results filters as question, event, person or organization, submitted from, submitted to" do
+      it "renders the results filters as question, event, organization, submitted from, submitted to" do
         form = create(:form)
         create(:event_form, form: form, event: create(:event), role: "registration")
         create(:event_form, form: form, event: create(:event), role: "continuing_education")
@@ -1017,79 +1015,20 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         ids = doc.css("form label").map { |l| l["for"] }.compact
-        ids &= %w[question event_id submitter_sgid start_date end_date]
-        expect(ids).to eq(%w[question event_id submitter_sgid start_date end_date])
-      end
-
-      it "narrows the rollup to a person picked through the combined picker" do
-        form = create(:form, :standalone)
-        person = create(:person)
-        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
-        create(:form_answer, form_submission: create(:form_submission, form: form, person: person),
-                             form_field: color, submitted_answer: "Blue")
-        create(:form_answer, form_submission: create(:form_submission, form: form, person: create(:person)),
-                             form_field: color, submitted_answer: "Red")
-
-        get results_form_path(form, submitter_sgid: person.to_sgid.to_s)
-
-        expect(response.body).to include("Blue")
-        expect(response.body).not_to include("Red")
-      end
-
-      it "narrows the rollup to an organization picked through the combined picker" do
-        form = create(:form, :standalone)
-        org = create(:organization)
-        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
-        linked = create(:form_submission, form: form)
-        linked.link_organization!(org.id)
-        create(:form_answer, form_submission: linked, form_field: color, submitted_answer: "Blue")
-        create(:form_answer, form_submission: create(:form_submission, form: form),
-                             form_field: color, submitted_answer: "Red")
-
-        get results_form_path(form, submitter_sgid: org.to_sgid.to_s)
-
-        expect(response.body).to include("Blue")
-        expect(response.body).not_to include("Red")
-      end
-
-      # An eyebrow back from the answers list hands plain ids, not a signed one.
-      it "seeds the picker from a plain person_id handed back by a return link" do
-        form = create(:form, :standalone)
-        person = create(:person, first_name: "Priya", last_name: "Patel")
-        create(:form_submission, form: form, person: person)
-
-        get results_form_path(form, person_id: person.id)
-
-        option = Nokogiri::HTML(response.body).at_css("select#submitter_sgid option[selected]")
-        expect(option.text).to include("Priya Patel")
-        expect(GlobalID::Locator.locate_signed(option["value"])).to eq(person)
+        ids &= %w[question event_id organization_id start_date end_date]
+        expect(ids).to eq(%w[question event_id organization_id start_date end_date])
       end
 
       it "offers a clear-filters control that drops back to the unfiltered rollup" do
         form = create(:form, :standalone)
         create(:form_submission, form: form)
 
-        get results_form_path(form, person_id: create(:person).id)
+        get results_form_path(form, organization_id: create(:organization).id)
 
         doc = Nokogiri::HTML(response.body)
         clear = doc.css("a").find { |a| a.text.strip == "Clear filters" }
         expect(clear).to be_present
         expect(clear["href"]).to eq(results_form_path(form))
-      end
-
-      it "narrows the rollup to the selected person's submissions" do
-        form = create(:form, :standalone)
-        person = create(:person)
-        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
-        create(:form_answer, form_submission: create(:form_submission, form: form, person: person),
-                             form_field: color, submitted_answer: "Blue")
-        create(:form_answer, form_submission: create(:form_submission, form: form, person: create(:person)),
-                             form_field: color, submitted_answer: "Red")
-
-        get results_form_path(form, person_id: person.id)
-
-        expect(response.body).to include("Blue")
-        expect(response.body).not_to include("Red")
       end
 
       it "narrows the rollup to submissions in the selected date range" do
@@ -1193,21 +1132,6 @@ RSpec.describe "Forms", type: :request do
                                                    event_id: event.id, return_to: "form_results"))
       end
 
-      it "carries the selected person into the form answers links" do
-        form = create(:form, :standalone)
-        person = create(:person)
-        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
-        create(:form_answer, form_submission: create(:form_submission, form: form, person: person),
-                             form_field: thoughts, submitted_answer: "Loved it")
-
-        get results_form_path(form, person_id: person.id)
-
-        doc = Nokogiri::HTML(response.body)
-        hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", form_field_id: thoughts.id,
-                                                   person_id: person.id, return_to: "form_results"))
-      end
-
       it "carries the submitted date range into the form answers links" do
         form = create(:form, :standalone)
         thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
@@ -1241,18 +1165,30 @@ RSpec.describe "Forms", type: :request do
                                                    organization_id: org.id, return_to: "form_results"))
       end
 
-      it "carries the results filters into a response's View submission link, so the eyebrow comes back filtered" do
+      it "carries the results filters and the card into a response's View submission link" do
         form = create(:form, :standalone)
-        person = create(:person)
+        org = create(:organization)
         thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
-        submission = create(:form_submission, form: form, person: person)
+        submission = create(:form_submission, form: form)
+        submission.link_organization!(org.id)
         create(:form_answer, form_submission: submission, form_field: thoughts, submitted_answer: "Loved it")
 
-        get results_form_path(form, person_id: person.id)
+        get results_form_path(form, organization_id: org.id)
 
         hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_submission_path(submission, return_to: "form_results",
-                                                      form_id: form.id, person_id: person.id))
+        expect(hrefs).to include(form_submission_path(submission, return_to: "form_results", form_id: form.id,
+                                                      form_field_id: thoughts.id, organization_id: org.id))
+      end
+
+      it "anchors each question card so a return link can scroll back to it" do
+        form = create(:form, :standalone)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: color, submitted_answer: "Blue")
+
+        get results_form_path(form)
+
+        expect(Nokogiri::HTML(response.body).at_css("#form-question-#{color.id}")).to be_present
       end
 
       it "carries the question search out as results_question, so `question` stays the drilled-into card" do
@@ -1273,7 +1209,7 @@ RSpec.describe "Forms", type: :request do
         form = create(:form, :standalone)
         create(:form_submission, form: form)
 
-        get results_form_path(form, person_id: create(:person).id)
+        get results_form_path(form, organization_id: create(:organization).id)
 
         expect(response.body).to include("No submissions match the selected filters yet.")
         expect(response.body).not_to include("No submissions to this form yet.")

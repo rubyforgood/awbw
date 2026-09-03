@@ -199,6 +199,19 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).to include("Volunteer interest results")
       end
 
+      it "anchors the way back to the results card the drill-down opened" do
+        form = create(:form, name: "Volunteer interest")
+        field = create(:form_field, form: form, name: "Any thoughts")
+        create(:form_answer, form_field: field, form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, return_to: "form_results",
+                              question: "Any thoughts", form_field_id: field.id)
+
+        expect(response.body).to include(CGI.escapeHTML(
+          results_form_path(form, anchor: "form-question-#{field.id}")
+        ))
+      end
+
       it "restores the results page's own question search on the way back" do
         form = create(:form, name: "Volunteer interest")
         create(:form_answer, form_submission: create(:form_submission, form: form))

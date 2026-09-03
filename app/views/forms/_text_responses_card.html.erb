@@ -31,7 +31,9 @@
               <span><%= response.submitted_at.to_date.to_fs(:long) %></span>
             <% end %>
             <span aria-hidden="true">·</span>
-            <%= link_to "View", form_submission_path(response.submission_id, return_to: "form_results", form_id: form.id, **form_results_link_params), class: link_class %>
+            <%= link_to "View", form_submission_path(response.submission_id, return_to: "form_results",
+                  form_id: form.id, form_field_id: report.field.id, **form_results_link_params),
+                  class: link_class %>
           </div>
         </li>
       <% end %>

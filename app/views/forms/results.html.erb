@@ -25,13 +25,13 @@
   <% connected_events = @form.events.distinct.order(:start_date).to_a %>
   <% has_submissions = @form.form_submissions.exists? %>
   <%# Event filter only earns its place on a form shared by more than one event.
-      The submitter/date filters need submissions to slice — gated on the unscoped
+      The organization/date filters need submissions to slice — gated on the unscoped
       total so they stay put when a filter empties the current view. %>
   <% show_event_filter = connected_events.many? %>
   <% show_question_filter = has_submissions && @aggregator.question_count.positive? %>
-  <% show_submitter_filter = has_submissions %>
+  <% show_org_filter = has_submissions %>
   <% show_date_filter = has_submissions %>
-  <% if show_event_filter || show_question_filter || show_submitter_filter || show_date_filter %>
+  <% if show_event_filter || show_question_filter || show_org_filter || show_date_filter %>
     <%# Auto-submits on change (collection controller) as a full-page Turbo visit:
         every select/date narrows the rollup, the question search narrows which
         question cards show. %>
@@ -60,20 +60,15 @@
                   class: search_field_class(extra: "search-select-placeholder") %>
           </div>
         <% end %>
-        <% if show_submitter_filter %>
-          <%# One picker over people and organizations (the payer/funder pattern),
-              bound to the signed global id that says which kind was chosen. Seeded
-              with just the current pick so the value shows without preloading
-              everyone; the rest arrive from the remote search. %>
-          <% submitter = @selected_submitter&.compound_search_label %>
+        <% if show_org_filter %>
           <div class="w-full sm:w-56">
-            <%= label_tag :submitter_sgid, "Person or organization", class: search_label_class %>
-            <%= select_tag :submitter_sgid,
-                  options_for_select(submitter ? [ [ submitter[:label], submitter[:id] ] ] : [], submitter&.dig(:id)),
+            <%= label_tag :organization_id, "Organization", class: search_label_class %>
+            <%= select_tag :organization_id,
+                  options_for_select(Organization.where(id: @selected_organization_id).map { |org| [ org.name, org.id ] }, @selected_organization_id),
                   include_blank: true,
-                  prompt: "All people and organizations",
+                  prompt: "All organizations",
                   class: search_field_class,
-                  data: { controller: "remote-select", remote_select_model_value: "person_or_organization" } %>
+                  data: { controller: "remote-select", remote_select_model_value: "organization" } %>
           </div>
         <% end %>
         <% if show_date_filter %>
@@ -129,7 +124,9 @@
         the tall charts. Each card avoids breaking across a column. %>
     <div class="columns-1 gap-6 lg:columns-2 xl:columns-3">
       <% @aggregator.field_reports.each do |report| %>
-        <div class="mb-6 break-inside-avoid">
+        <%# scroll-mt clears the card of the top of the viewport when a return link
+            anchors here. %>
+        <div id="<%= form_results_card_id(report.field.id) %>" class="mb-6 scroll-mt-24 break-inside-avoid">
           <% case report.kind %>
           <% when :select %>
             <%= render "events/breakdown_card", title: report.label, data: report.rows,

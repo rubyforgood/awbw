@@ -45,16 +45,13 @@ class FormsController < ApplicationController
     # Honor the event filter only for an event genuinely connected to this shared
     # form; an unknown id falls back to the unfiltered rollup.
     @selected_event_id = @form.events.where(id: params[:event_id]).pick(:id) if params[:event_id].present?
-    @selected_submitter = results_submitter
-    @selected_person_id = @selected_submitter.id if @selected_submitter.is_a?(Person)
-    @selected_organization_id = @selected_submitter.id if @selected_submitter.is_a?(Organization)
+    @selected_organization_id = params[:organization_id].presence
     @selected_start_date = params[:start_date].presence
     @selected_end_date = params[:end_date].presence
     @selected_question = params[:question].presence
     @aggregator = FormResponseAggregator.new(@form, event_id: @selected_event_id,
-                  person_id: @selected_person_id, organization_id: @selected_organization_id,
-                  start_date: @selected_start_date, end_date: @selected_end_date,
-                  question_query: @selected_question)
+                  organization_id: @selected_organization_id, start_date: @selected_start_date,
+                  end_date: @selected_end_date, question_query: @selected_question)
   end
 
   def new
@@ -159,22 +156,6 @@ class FormsController < ApplicationController
   end
 
   private
-
-  # Whose submissions the results filter is narrowed to. One picker searches
-  # people and organizations together and posts a signed global id saying which
-  # kind was chosen; a plain person_id/organization_id also resolves, so an
-  # eyebrow back from the answers list (which filters on those) lands on the same
-  # slice. An unresolvable id falls back to the unfiltered rollup.
-  def results_submitter
-    submitter = if params[:submitter_sgid].present?
-      GlobalID::Locator.locate_signed(params[:submitter_sgid])
-    elsif params[:person_id].present?
-      Person.find_by(id: params[:person_id])
-    elsif params[:organization_id].present?
-      Organization.find_by(id: params[:organization_id])
-    end
-    submitter if submitter.is_a?(Person) || submitter.is_a?(Organization)
-  end
 
   # Sorts the standalone forms for the index frame. Count columns join their
   # association and order by the aggregate; direction is a symbol resolved from

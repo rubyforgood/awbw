@@ -53,7 +53,6 @@ module FormsHelper
   def form_results_filter_params
     {
       event_id: @selected_event_id,
-      person_id: @selected_person_id,
       organization_id: @selected_organization_id,
       start_date: @selected_start_date,
       end_date: @selected_end_date
@@ -67,15 +66,24 @@ module FormsHelper
     form_results_filter_params.merge(results_question: @selected_question).compact
   end
 
-  # The same state read back off a page the results linked to, for its eyebrow.
+  # Stable anchor for a question's card on the results page, so a page reached
+  # from that card can scroll back to exactly the card it opened. Mirrors
+  # FormSubmissionsHelper#form_submission_row_id.
+  def form_results_card_id(field_id)
+    "form-question-#{field_id}"
+  end
+
+  # The same state read back off a page the results linked to, for its eyebrow —
+  # including which card was opened, so the return lands on it rather than at the
+  # top of the rollup.
   def form_results_return_params(params)
     {
       event_id: params[:event_id].presence,
-      person_id: params[:person_id].presence,
       organization_id: params[:organization_id].presence,
       start_date: params[:start_date].presence,
       end_date: params[:end_date].presence,
-      question: params[:results_question].presence
+      question: params[:results_question].presence,
+      anchor: params[:form_field_id].presence && form_results_card_id(params[:form_field_id])
     }.compact
   end
 

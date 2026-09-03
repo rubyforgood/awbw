@@ -257,20 +257,6 @@ RSpec.describe FormResponseAggregator do
     end
   end
 
-  describe "person scoping" do
-    it "narrows the rollup to one person's submissions" do
-      person = create(:person)
-      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
-      answer(create(:form_submission, form: form, person: person), field, "Blue")
-      answer(create(:form_submission, form: form, person: create(:person)), field, "Red")
-
-      aggregator = described_class.new(form, person_id: person.id)
-
-      expect(aggregator.submission_count).to eq(1)
-      expect(aggregator.field_reports.first.rows).to eq([ [ "Blue", 1 ] ])
-    end
-  end
-
   describe "submission date scoping" do
     it "narrows the rollup to submissions in the date range" do
       field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
