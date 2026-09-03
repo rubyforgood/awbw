@@ -478,6 +478,15 @@ class PeopleController < ApplicationController
     # saving the form can't drop a person's other category connections.
     @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
 
+    # category_ids is applied via assign_associations only on a successful save, so
+    # on a validation-error re-render reflect the just-submitted selections rather
+    # than the stale persisted set — otherwise the checkboxes silently revert.
+    @selected_category_ids = if params.dig(:person, :category_ids)
+      Array(params[:person][:category_ids]).reject(&:blank?).map(&:to_i)
+    else
+      @person.category_ids
+    end
+
     @staff_tags_collection = StaffTag.published.ordered.pluck(:name, :id)
     @current_staff_tag_ids = @person.staff_tag_ids
   end
