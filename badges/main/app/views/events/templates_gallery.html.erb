@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-or-owner bg-blue-100") %>
 <% content_for(:full_width, true) %>
 
-<div class="mx-auto w-full max-w-7xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
+<div class="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
   <% if @sample_event && params[:event_id].present? %>
     <%= link_to "← Back to event", edit_event_path(@sample_event, section: "page_content", anchor: "page_content_button"), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   <% else %>

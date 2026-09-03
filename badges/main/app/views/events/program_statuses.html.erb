@@ -2,7 +2,7 @@
 <%# Opt out of the layout's max-w-7xl cap to match the wider event manage pages. %>
 <% content_for(:full_width, true) %>
 
-<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8 py-6">
+<div class="mx-auto max-w-[96rem] px-2 sm:px-6 lg:px-8">
   <div class="<%= DomainTheme.bg_class_for(:events) %> border border-primary/10 rounded-2xl shadow-sm p-6">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
       <% if params[:return_to] == "dashboard" && params[:event_id].present? %>
