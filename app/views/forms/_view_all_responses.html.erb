@@ -3,6 +3,6 @@
     Locals: form, count, question. %>
 <div class="mt-3 border-t border-gray-100 pt-3 text-center">
   <%= link_to "View all #{count} #{"response".pluralize(count)}",
-              form_answers_path(form_id: form.id, question: question, event_id: @selected_event_id),
+              form_answers_path(form_id: form.id, question: question, event_id: @selected_event_id, organization_id: @selected_organization_id),
               class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
 </div>

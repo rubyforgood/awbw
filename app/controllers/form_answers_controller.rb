@@ -33,6 +33,9 @@ class FormAnswersController < ApplicationController
     if params[:event_id].present?
       scope = scope.joins(:form_submission).where(form_submissions: { event_id: params[:event_id] })
     end
+    if params[:organization_id].present?
+      scope = scope.where(form_submission_id: FormSubmission.for_organization(params[:organization_id]).select(:id))
+    end
     if params[:person].present?
       term = "%#{Person.sanitize_sql_like(params[:person])}%"
       scope = scope.joins(form_submission: :person).where(

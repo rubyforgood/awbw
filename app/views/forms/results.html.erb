@@ -22,11 +22,16 @@
     </div>
   </div>
 
-  <% show_event_filter = @form.event_connected? %>
+  <% connected_events = @form.events.distinct.order(:start_date).to_a %>
+  <%# Event filter only earns its place on a form shared by more than one event;
+      organization linking is an event-registration concept, so its filter shows
+      for any event-connected form. %>
+  <% show_event_filter = connected_events.many? %>
+  <% show_org_filter = connected_events.any? %>
   <% show_question_filter = @aggregator.question_count.positive? %>
-  <% if show_event_filter || show_question_filter %>
+  <% if show_event_filter || show_org_filter || show_question_filter %>
     <%# Auto-submits on change (collection controller) as a full-page Turbo visit:
-        the event select narrows a shared form's rollup to one event, the question
+        the event/organization selects narrow a shared form's rollup, the question
         search narrows which question cards show. %>
     <%= form_with url: results_form_path(@form), method: :get, autocomplete: "off",
           data: { controller: "collection" },
@@ -40,10 +45,12 @@
           <div>
             <%= label_tag :event_id, "Event", class: search_label_class %>
             <%= select_tag :event_id,
-                  options_for_select(@form.events.distinct.order(:start_date).map { |event| [ event.decorate.title_with_month_year, event.id ] }, @selected_event_id),
+                  options_for_select(connected_events.map { |event| [ event.decorate.title_with_month_year, event.id ] }, @selected_event_id),
                   include_blank: "All events",
                   class: search_field_class(extra: "search-select-placeholder") %>
           </div>
+        <% end %>
+        <% if show_org_filter %>
           <div>
             <%= label_tag :organization_id, "Organization", class: search_label_class %>
             <%= select_tag :organization_id,

@@ -68,6 +68,19 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("at-other-event")
       end
 
+      it "filters by organization" do
+        org = create(:organization)
+        linked = create(:form_submission)
+        linked.link_organization!(org.id)
+        create(:form_answer, submitted_answer: "for-this-org", form_submission: linked)
+        create(:form_answer, submitted_answer: "for-other-org", form_submission: create(:form_submission))
+
+        get form_answers_path(organization_id: org.id), headers: frame_headers
+
+        expect(response.body).to include("for-this-org")
+        expect(response.body).not_to include("for-other-org")
+      end
+
       it "filters by person name" do
         priya = create(:person, first_name: "Priya", last_name: "Patel")
         other = create(:person, first_name: "Sam", last_name: "Jones")

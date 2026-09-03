@@ -966,10 +966,10 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).not_to include("Duplicate form")
       end
 
-      it "shows an event filter for an event-connected form" do
+      it "shows an event filter for a form shared across more than one event" do
         form = create(:form)
-        event = create(:event, title: "Spring Cohort")
-        create(:event_form, form: form, event: event, role: "registration")
+        create(:event_form, form: form, event: create(:event, title: "Spring Cohort"), role: "registration")
+        create(:event_form, form: form, event: create(:event, title: "Fall Cohort"), role: "registration")
 
         get results_form_path(form)
 
@@ -977,10 +977,18 @@ RSpec.describe "Forms", type: :request do
         select = doc.at_css("select#event_id")
         expect(select).to be_present
         expect(select.text).to include("Spring Cohort")
+        expect(select.text).to include("Fall Cohort")
       end
 
       it "omits the event filter for a form with no connected events" do
         form = create(:form, :standalone)
+        get results_form_path(form)
+        expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
+      end
+
+      it "omits the event filter for a form connected to a single event" do
+        form = create(:form)
+        create(:event_form, form: form, event: create(:event), role: "registration")
         get results_form_path(form)
         expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
       end
@@ -1067,6 +1075,22 @@ RSpec.describe "Forms", type: :request do
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
         expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", event_id: event.id))
+      end
+
+      it "carries the selected organization into the form answers links" do
+        form = create(:form)
+        org = create(:organization)
+        create(:event_form, form: form, event: create(:event), role: "registration")
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        linked = create(:form_submission, form: form)
+        linked.link_organization!(org.id)
+        create(:form_answer, form_submission: linked, form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, organization_id: org.id)
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", organization_id: org.id))
       end
     end
 
