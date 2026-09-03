@@ -994,6 +994,24 @@ RSpec.describe "Events::Callouts", type: :request do
       end
     end
 
+    context "for an on-demand facilitator training event" do
+      let(:event) { create(:event, :ended, facilitator_training: true, on_demand: true, title: "On-Demand Windows Facilitator Training 2027") }
+
+      it "renders the on-demand certificate frame with the live course title" do
+        get registration_certificate_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("certificate-ondemand-border")
+        expect(response.body).to include("Certificate of Completion")
+        expect(response.body).to include("presented to")
+        expect(response.body).to include(registration.registrant.full_name)
+        expect(response.body).to include("On-Demand Windows Facilitator Training 2027")
+        # Not the scheduled-training frame, nor the default completion copy.
+        expect(response.body).not_to include("certificate-training-border")
+        expect(response.body).not_to include("This certifies that")
+      end
+    end
+
     it "uses the default completion certificate for non-training events" do
       get registration_certificate_path(registration.slug)
 

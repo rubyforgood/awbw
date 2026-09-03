@@ -68,11 +68,18 @@
     </div>
   <% end %>
 
-  <%# Facilitator trainings get the branded painted-border certificate (full-bleed
-      in print so the painted border reaches the paper edge); every other event
-      keeps the default CSS-drawn completion certificate, inset from the edge. %>
+  <%# Facilitator trainings get a branded painted-border certificate (full-bleed
+      in print so the painted border reaches the paper edge) — on-demand trainings
+      use their own frame, live trainings the scheduled-training frame; every other
+      event keeps the default CSS-drawn completion certificate, inset from the edge. %>
   <% training = @event.facilitator_training? %>
-  <% certificate_partial = training ? "training_certificate" : "completion_certificate" %>
+  <% certificate_partial = if @event.on_demand_facilitator_training?
+       "ondemand_certificate"
+     elsif training
+       "training_certificate"
+     else
+       "completion_certificate"
+     end %>
   <div class="px-4 py-6 sm:px-8 <%= training ? "print:p-0" : "print:p-[0.4in]" %>">
     <%= render certificate_partial,
           event: event,
