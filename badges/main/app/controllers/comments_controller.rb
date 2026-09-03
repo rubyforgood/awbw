@@ -1,7 +1,7 @@
 class CommentsController < ApplicationController
   include AhoyTracking
 
-  before_action :set_commentable, except: :index
+  before_action :set_commentable, only: :create
 
   # Global, admin-only index of every comment, with the same search boxes as a
   # person's aggregated feed plus remote person/event filters. The nested
@@ -39,7 +39,7 @@ class CommentsController < ApplicationController
   end
 
   def update
-    @comment = @commentable.comments.find(params[:id])
+    @comment = Comment.find(params[:id])
     authorize! @comment
     @comment.update(comment_params)
     setup_aggregated_context if aggregated?

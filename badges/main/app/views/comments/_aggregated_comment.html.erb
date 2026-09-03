@@ -18,7 +18,7 @@
         <% end %>
       </div>
       <div class="flex shrink-0 items-center gap-3">
-        <%= render "comments/flag_toggle", commentable: comment.commentable, comment: comment.object %>
+        <%= render "comments/flag_toggle", comment: comment.object %>
         <button type="button" data-action="edit-toggle#toggle"
                 class="text-xs <%= eyebrow_link_class %>">
           <i class="fa-solid fa-pen text-2xs"></i> Edit
@@ -31,7 +31,7 @@
 
   <div data-edit-toggle-target="edit" class="hidden">
     <%= simple_form_for comment.object,
-                        url: polymorphic_path([ comment.commentable, comment.object ]), method: :patch do |f| %>
+                        url: comment_path(comment.object), method: :patch do |f| %>
       <%= hidden_field_tag :aggregated, 1 %>
       <% if person %><%= hidden_field_tag :for_person_id, person.id %><% end %>
       <div class="flex items-start gap-x-2">
