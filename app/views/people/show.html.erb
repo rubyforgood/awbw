@@ -258,35 +258,9 @@
         <% end %>
       </div>
     </div>
-    <%# Program settings (profile-specific categories) — admin-only, no public home. %>
+    <!-- ADMIN DETAILS (record data with no public profile home) -->
     <% if allowed_to?(:manage?, Person) %>
-      <% program_categories = @person.categorizable_items.filter_map(&:category).select { |c| c.category_type&.profile_specific? && c.category_type.name != "AgeRange" }.group_by(&:category_type) %>
-      <% other_settings = @person.other_workshop_setting_responses %>
-      <% if program_categories.any? || other_settings.any? %>
-        <div class="admin-only rounded-xl border border-blue-200 bg-blue-100 p-4">
-          <div class="mb-3 flex flex-wrap items-center gap-2">
-            <h2 class="font-display text-2xl text-gray-900">Program settings</h2>
-            <%= render "people/admin_only_badge" %>
-          </div>
-          <% program_categories.sort_by { |type, _| type.name.to_s.downcase }.each do |type, cats| %>
-            <div class="mb-2">
-              <h3 class="text-sm font-semibold text-gray-700"><%= type.display_label %></h3>
-              <div class="mt-1 flex flex-wrap gap-1.5">
-                <% cats.sort_by { |c| c.name.to_s.downcase }.each do |category| %>
-                  <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900"><%= category.name %></span>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-          <% if other_settings.any? %>
-            <div class="mt-2 flex flex-wrap gap-1.5">
-              <% other_settings.each do |response| %>
-                <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900 italic"><%= response %></span>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+      <%= render "people/admin_details", person: @person %>
     <% end %>
     <!-- Bio -->
     <% if @person.bio.present? && profile_piece_shown?(@person, :profile_show_bio) %>
@@ -400,10 +374,6 @@
         edit page (Membership section there), not on the public-facing profile. %>
     <% if allowed_to?(:own_membership?, @person) %>
       <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay %>
-    <% end %>
-    <!-- ADMIN DETAILS (record data with no public profile home) -->
-    <% if allowed_to?(:manage?, Person) %>
-      <%= render "people/admin_details", person: @person %>
     <% end %>
     <!-- SUBMITTED SECTION -->
     <% if allowed_to?(:own_record?, @person) %>
