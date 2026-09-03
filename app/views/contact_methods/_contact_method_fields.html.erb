@@ -2,7 +2,7 @@
   <%= f.hidden_field :kind, value: :phone %>
 <%# Flex-wrap (not a fixed 5-col grid) so the row reflows to multiple lines in a
       narrow container, e.g. the half-width Phones column on the person form. %>
-  <div class="flex flex-wrap items-end gap-x-4 gap-y-3 mb-6">
+  <div class="mb-6 flex flex-wrap items-end gap-x-4 gap-y-3">
     <!-- Contact Type -->
     <div class="min-w-[8rem] flex-1">
       <%= f.input :contact_type,
