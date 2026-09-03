@@ -346,13 +346,27 @@ input.date-filter-empty::-webkit-datetime-edit {
   @apply bg-transparent;
 }
 
+/* The multiselect control carries its own `!py-2` (added by the searchable-
+   checkbox controller). That padding lives in Tailwind's `utilities` cascade
+   layer, so an unlayered `!important` on the control can't out-rank it — the
+   control keeps its vertical padding. To stop the wrapper's own `py-2` from
+   stacking on top of it (which renders the field a line taller than its
+   siblings), drop the wrapper's vertical padding instead: this is a normal
+   unlayered rule, which does beat the layered `py-2` utility. Scoped to `.multi`
+   so the single-select flat variant — which has no `!py-2` and relies on the
+   wrapper padding below — is untouched. */
+.ts-wrapper.ts-flat.multi {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .ts-wrapper.ts-flat .ts-control,
 .ts-wrapper.ts-flat.focus .ts-control {
   background: transparent;
   border: 0;
   box-shadow: none;
-  /* !important beats the searchable-checkbox controller's `!py-2` on the control,
-     so a flat multiselect stays height-matched to the sibling fields. */
+  /* Zeroes the single-select flat control's padding (no competing `!py-2`);
+     the multiselect control keeps its `!py-2`, handled by the wrapper rule above. */
   padding: 0 !important;
   min-height: 1.5rem;
 }
