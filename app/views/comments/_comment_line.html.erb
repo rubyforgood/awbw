@@ -20,7 +20,7 @@
 <% created_color = chip_color(created_user&.id) %>
 <% is_age_range_data = comment.body&.include?("[AGE_RANGE_DATA]") %>
 <% body_class = is_age_range_data ? "text-amber-700" : "text-gray-900" %>
-<span class="shrink-0 text-xs whitespace-nowrap text-gray-400">
+<span class="w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
   <%= comment.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
 </span>
 <span class="inline-flex w-20 shrink-0 items-center gap-x-1">
@@ -33,18 +33,19 @@
   <% end %>
 </span>
 <% if truncate_body %>
-  <span class="min-w-0 flex-1 truncate text-sm <%= body_class %>"
-        <% if body_target %>data-edit-toggle-target="body"<% end %>
-        title="<%= [ comment.topic, comment.body ].compact_blank.join(" — ") %>">
-    <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i><% end %>
-    <% if comment.topic.present? %><span class="font-bold tracking-wide uppercase"><%= comment.topic %></span> <% end %><%= comment.body %>
-  </span>
+  <div class="flex min-w-0 flex-1 items-start gap-1 text-sm <%= body_class %>">
+    <% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0"></i><% end %>
+    <%= comment.decorate.type_chip %>
+    <span class="line-clamp-2 min-w-0 flex-1"
+          <% if body_target %>data-edit-toggle-target="body"<% end %>
+          title="<%= [ comment.topic, comment.body ].compact_blank.join(" — ") %>">
+      <% if comment.topic.present? %><span class="font-bold"><%= comment.topic %></span> <% end %><%= comment.body %>
+    </span>
+  </div>
 <% else %>
   <%# Topic and body share one column so the body starts flush with the topic. %>
   <div class="min-w-0 flex-1 text-sm <%= body_class %>">
-    <% if comment.topic.present? || is_age_range_data %>
-      <span><% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i> <% end %><span class="font-bold tracking-wide uppercase"><%= comment.topic %></span></span>
-    <% end %>
+    <span><% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i> <% end %><%= comment.decorate.type_chip %> <% if comment.topic.present? %><span class="font-bold"><%= comment.topic %></span><% end %></span>
     <div class="pt-1 whitespace-pre-line"><%= comment.body %></div>
   </div>
 <% end %>
