@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="mx-auto mb-4 flex w-full max-w-7xl flex-wrap items-center justify-between gap-2">
+<% topbar = capture do %>
   <div>
     <% if params[:return_to] == "form_results" && @form %>
       <%= link_to results_form_path(@form), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class}" do %>
@@ -24,7 +24,7 @@
   <% elsif !@person %>
     <%= render "forms/index_subnav", current: :submissions %>
   <% end %>
-</div>
+<% end %>
 <% subtitle = capture do %>
   <% if @person %>
     Forms submitted by <span class="font-medium text-gray-900"><%= @person.name %></span>.
@@ -34,7 +34,7 @@
 <% end %>
 <%= render layout: "shared/index_page",
            locals: { domain: :forms, eyebrow: "Forms", title: "Submissions",
-                     subtitle: subtitle } do %>
+                     subtitle: subtitle, topbar: topbar } do %>
     <%# Filters. Auto-submit into the results frame on change. %>
     <%= form_with url: form_submissions_path, method: :get, autocomplete: "off",
           data: { controller: "collection searchable-checkbox", turbo_frame: "form_submissions_results" },

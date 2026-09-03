@@ -1,13 +1,14 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
-<div class="mx-auto mb-4 flex w-full max-w-7xl flex-wrap items-center justify-between gap-2">
+<% topbar = capture do %>
   <%= link_to forms_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
     <i class="fa-solid fa-arrow-left text-xs"></i> Forms
   <% end %>
   <%= render "forms/index_subnav", current: :answers %>
-</div>
+<% end %>
 <%= render layout: "shared/index_page",
            locals: { domain: :forms, eyebrow: "Forms", title: "Answers",
-                     subtitle: "Every answer submitted on any of the site's forms — search the answer text or filter by form, person, submission, or question type" } do %>
+                     subtitle: "Every answer submitted on any of the site's forms — search the answer text or filter by form, person, submission, or question type",
+                     topbar: topbar } do %>
     <%# GET filter form outside the frame. The collection controller debounce-submits
         the text boxes and submits the selects on change, into the results frame. %>
     <%= form_with url: form_answers_path, method: :get,

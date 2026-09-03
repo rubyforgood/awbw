@@ -2,11 +2,16 @@
     soft domain border) over the domain's own tint, then the serif title with an
     optional eyebrow, subtitle and right-hand actions, and the page body as a block.
     locals: domain (a DomainTheme key), title; optional eyebrow, subtitle,
-    actions (captured markup), surface (defaults to the domain's 50 tint). %>
+    actions (captured markup), surface (defaults to the domain's 50 tint),
+    topbar (captured markup for a back-eyebrow / sub-nav row, laid out
+    justify-between at the top of the card — pass a left group and a right group). %>
 <% surface = local_assigns[:surface].presence || DomainTheme.bg_class_for(domain, intensity: 50) %>
 <div class="<%= surface %> <%= DomainTheme.border_class_for(domain, intensity: 200) %> mx-auto w-full max-w-7xl rounded-2xl border shadow-sm">
   <%= render "shared/brand_accent_strip", rounded: true %>
   <div class="w-full p-6">
+    <% if local_assigns[:topbar].present? %>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2"><%= topbar %></div>
+    <% end %>
     <div class="mb-6 flex items-start justify-between gap-4">
       <div class="pr-6">
         <% if local_assigns[:eyebrow].present? %>
