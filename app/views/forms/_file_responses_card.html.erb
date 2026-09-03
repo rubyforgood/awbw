@@ -1,15 +1,25 @@
 <%# A file-upload question: files aren't charted or previewed here, just counted.
+    The count opens the answers themselves (each row names its uploaded file).
     Locals: report — a FormResponseAggregator::FieldReport with kind: :file; form. %>
 <div class="scroll-mt-24 break-inside-avoid rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
   <div class="mb-3 flex items-center justify-between">
     <h2 class="text-sm font-semibold text-gray-700"><%= report.label %></h2>
     <span class="text-xs text-gray-500"><i class="fa-solid fa-paperclip" aria-hidden="true"></i></span>
   </div>
-  <p class="py-6 text-center text-gray-700">
-    <span class="text-2xl font-bold tabular-nums"><%= report.answered_count %></span>
-    <span class="ml-1 text-sm text-gray-500"><%= "file".pluralize(report.answered_count) %> uploaded</span>
-  </p>
+  <% uploaded = "#{"file".pluralize(report.answered_count)} uploaded" %>
   <% if report.answered_count.positive? %>
-    <%= render "forms/view_all_responses", form: form, count: report.answered_count %>
+    <%# The big figure inherits the link color so it greys normally and goes purple
+        on hover; the label keeps its own lighter grey. %>
+    <%= link_to form_answers_path(**form_results_drilldown_params(form, report)),
+          class: "block py-6 text-center text-gray-700 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline" do %>
+      <span class="text-2xl font-bold tabular-nums"><%= report.answered_count %></span>
+      <span class="ml-1 text-sm text-gray-500"><%= uploaded %></span>
+    <% end %>
+    <%= render "forms/view_all_responses", form: form, report: report %>
+  <% else %>
+    <p class="py-6 text-center text-gray-700">
+      <span class="text-2xl font-bold tabular-nums"><%= report.answered_count %></span>
+      <span class="ml-1 text-sm text-gray-500"><%= uploaded %></span>
+    </p>
   <% end %>
 </div>

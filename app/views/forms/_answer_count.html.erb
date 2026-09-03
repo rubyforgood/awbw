@@ -1,0 +1,10 @@
+<%# The count in a results card's header: how many answers this question got,
+    opening exactly those answers in the Form answers list. Reads as a plain grey
+    figure until you reach for it. Locals: form, report. %>
+<% label = pluralize(report.answered_count, "answer") %>
+<% if report.answered_count.positive? %>
+  <%= link_to label, form_answers_path(**form_results_drilldown_params(form, report)),
+        class: "text-xs text-gray-500 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline" %>
+<% else %>
+  <span class="text-xs text-gray-500"><%= label %></span>
+<% end %>

@@ -14,7 +14,10 @@
       note:          optional hover text on an info icon beside the title, for a
                      figure whose basis needs spelling out.
       footer:        optional markup rendered inside the card below the table
-                     (e.g. a "view all" link); omit for no footer. %>
+                     (e.g. a "view all" link); omit for no footer.
+      count:         optional markup for the figure at the top right, replacing
+                     the default row count (e.g. a form results card's answer
+                     count, which links to those answers). %>
 <% chart = local_assigns.fetch(:chart, nil) %>
 <% empty_message = local_assigns.fetch(:empty_message, nil) %>
 <%# map_color: optional base hex for the choropleth ramp (e.g. the addresses color). %>
@@ -24,19 +27,19 @@
 <%# Stable section id (derived from the title) so registrants-page drill-downs can
     return here, with scroll-mt so the section clears the sticky header on return. %>
 <% anchor = title.parameterize %>
-<div id="<%= anchor %>" class="scroll-mt-24 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
-  <div class="flex items-center justify-between mb-3">
+<div id="<%= anchor %>" class="scroll-mt-24 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <div class="mb-3 flex items-center justify-between">
     <h2 class="text-sm font-semibold text-gray-700">
       <%= title %>
       <% if local_assigns[:note] %>
-        <i class="fa-solid fa-circle-info text-gray-400 text-[0.65rem]" title="<%= local_assigns[:note] %>"></i>
+        <i class="fa-solid fa-circle-info text-[0.65rem] text-gray-400" title="<%= local_assigns[:note] %>"></i>
       <% end %>
     </h2>
-    <span class="text-xs text-gray-500"><%= data.size %></span>
+    <%= local_assigns[:count] || tag.span(data.size, class: "text-xs text-gray-500") %>
   </div>
 
   <% if data.empty? %>
-    <p class="text-sm text-gray-400 italic text-center py-8"><%= empty_message || "No data yet." %></p>
+    <p class="py-8 text-center text-sm text-gray-400 italic"><%= empty_message || "No data yet." %></p>
   <% else %>
     <% if chart == :pie %>
       <%= pie_chart data, colors: palette, legend: false, height: "220px" %>
@@ -57,7 +60,7 @@
       </div>
     <% end %>
 
-    <table class="w-full mt-3 text-sm">
+    <table class="mt-3 w-full text-sm">
       <tbody>
         <% data.each_with_index do |(label, count), i| %>
           <% path = row_paths[label] %>

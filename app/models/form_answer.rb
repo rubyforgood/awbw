@@ -19,6 +19,10 @@ class FormAnswer < ApplicationRecord
   # display and export shows something readable.
   has_one :asset, as: :owner, dependent: :destroy
 
+  # A submission writes a row for every field it posts, so an optional question
+  # left blank still has an answer row. Only these count as responses.
+  scope :answered, -> { where.not(submitted_answer: [ nil, "" ]) }
+
   def name
     "#{question_name_when_answered.presence || form_field&.name}: #{submitted_answer}"
   end

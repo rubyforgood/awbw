@@ -217,4 +217,79 @@ RSpec.describe FormResponseAggregator do
 
     expect(labels).to eq([ "First", "Second" ])
   end
+
+  describe "event scoping" do
+    it "narrows the rollup to one event's submissions when given an event_id" do
+      event = create(:event)
+      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+      answer(create(:form_submission, form: form, event: event), field, "Blue")
+      answer(create(:form_submission, form: form, event: create(:event)), field, "Red")
+
+      aggregator = described_class.new(form, event_id: event.id)
+
+      expect(aggregator.submission_count).to eq(1)
+      expect(aggregator.field_reports.first.rows).to eq([ [ "Blue", 1 ] ])
+    end
+
+    it "rolls up every submission when no event_id is given" do
+      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+      answer(create(:form_submission, form: form, event: create(:event)), field, "Blue")
+      answer(create(:form_submission, form: form, event: create(:event)), field, "Red")
+
+      expect(described_class.new(form).submission_count).to eq(2)
+      expect(described_class.new(form, event_id: nil).submission_count).to eq(2)
+    end
+  end
+
+  describe "organization scoping" do
+    it "narrows the rollup to submissions linked to the organization" do
+      org = create(:organization)
+      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+      linked = create(:form_submission, form: form)
+      linked.link_organization!(org.id)
+      answer(linked, field, "Blue")
+      answer(create(:form_submission, form: form), field, "Red")
+
+      aggregator = described_class.new(form, organization_id: org.id)
+
+      expect(aggregator.submission_count).to eq(1)
+      expect(aggregator.field_reports.first.rows).to eq([ [ "Blue", 1 ] ])
+    end
+  end
+
+  describe "submission date scoping" do
+    it "narrows the rollup to submissions in the date range" do
+      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+      answer(create(:form_submission, form: form, created_at: Date.new(2026, 1, 10)), field, "Old")
+      answer(create(:form_submission, form: form, created_at: Date.new(2026, 6, 10)), field, "New")
+
+      aggregator = described_class.new(form, start_date: "2026-05-01", end_date: "2026-07-01")
+
+      expect(aggregator.submission_count).to eq(1)
+      expect(aggregator.field_reports.first.rows).to eq([ [ "New", 1 ] ])
+    end
+  end
+
+  describe "question name filtering" do
+    before do
+      create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio, position: 1)
+      create(:form_field, form: form, name: "Favorite food", answer_type: :single_select_radio, position: 2)
+      create(:form_submission, form: form)
+    end
+
+    it "reports only the questions whose name matches, case-insensitively" do
+      labels = described_class.new(form, question_query: "COLOR").field_reports.map(&:label)
+      expect(labels).to eq([ "Favorite color" ])
+    end
+
+    it "still counts every question in the Questions total" do
+      aggregator = described_class.new(form, question_query: "color")
+      expect(aggregator.field_reports.size).to eq(1)
+      expect(aggregator.question_count).to eq(2)
+    end
+
+    it "reports every question when the query is blank" do
+      expect(described_class.new(form, question_query: "  ").field_reports.size).to eq(2)
+    end
+  end
 end

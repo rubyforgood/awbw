@@ -35,8 +35,13 @@ class FormResponseAggregator
   US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state organization_state].to_set
   COUNTRY_IDENTIFIERS = %w[mailing_country organization_country].to_set
 
-  def initialize(form)
+  def initialize(form, event_id: nil, organization_id: nil, start_date: nil, end_date: nil, question_query: nil)
     @form = form
+    @event_id = event_id.presence
+    @organization_id = organization_id.presence
+    @start_date = start_date.presence
+    @end_date = end_date.presence
+    @question_query = question_query.to_s.strip.downcase.presence
   end
 
   def submission_count
@@ -64,13 +69,22 @@ class FormResponseAggregator
   end
 
   def field_reports
-    @field_reports ||= input_fields.map { |field| build_report(field) }
+    @field_reports ||= reportable_fields.map { |field| build_report(field) }
   end
 
   private
 
   def submissions
-    @submissions ||= @form.form_submissions.includes(:person).to_a
+    @submissions ||= scoped_submissions.includes(:person).to_a
+  end
+
+  # Optionally narrowed by event, organization, and submission date, so a
+  # shared form's rollup can be read a slice at a time.
+  def scoped_submissions
+    scope = @form.form_submissions
+    scope = scope.where(event_id: @event_id) if @event_id
+    scope = scope.for_organization(@organization_id) if @organization_id
+    scope.submitted_between(FormSubmission.parse_date(@start_date), FormSubmission.parse_date(@end_date))
   end
 
   def submission_by_id
@@ -79,6 +93,14 @@ class FormResponseAggregator
 
   def input_fields
     @input_fields ||= @form.form_fields.select(&:collects_input?).sort_by { |field| field.position.to_i }
+  end
+
+  # The questions to render as cards — every input field, or just those whose
+  # name matches the search. The Questions stat still counts the full set.
+  def reportable_fields
+    return input_fields unless @question_query
+
+    input_fields.select { |field| field.name.to_s.downcase.include?(@question_query) }
   end
 
   def answers_by_field_id

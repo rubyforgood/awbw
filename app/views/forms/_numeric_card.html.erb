@@ -3,6 +3,9 @@
     the "Average / Total / Responses" figures on the funder summary. %>
 <% decimals = report.integer_valued ? 0 : 1 %>
 <div class="border-primary/10 rounded-2xl border bg-white p-5 shadow-sm">
+  <%# No "N answers" link like the other cards: answered_count here counts only the
+      answers that parse as numbers, so it would undercount the list it opened
+      (someone typing "varies" answered the question but isn't in the figures). %>
   <h3 class="font-semibold text-gray-900"><%= report.label %></h3>
 
   <% if report.answered_count.zero? %>

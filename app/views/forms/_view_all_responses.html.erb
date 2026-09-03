@@ -1,7 +1,11 @@
-<%# Footer link from a results card to the full, filterable submissions list for
-    this form. Locals: form, count. %>
+<%# Footer link from a results card to the Form submissions list, filtered to the
+    submissions that answered this question (and narrowed like the rollup) — the
+    people behind the chart, where the header count opens their answers.
+    return_to plus the card id gives that list an eyebrow back to this card.
+    Locals: form, report. %>
+<% count = report.answered_count %>
 <div class="mt-3 border-t border-gray-100 pt-3 text-center">
-  <%= link_to "View all #{count} #{"response".pluralize(count)}",
-              form_submissions_path(form_id: form.id, return_to: "form_results"),
-              class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} underline" %>
+  <%= link_to "View #{count} #{"submission".pluralize(count)}",
+              form_submissions_path(**form_results_submissions_params(form, report)),
+              class: "text-sm text-gray-500 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline" %>
 </div>

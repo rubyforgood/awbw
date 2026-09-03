@@ -37,6 +37,49 @@
     internal notes from communications at a glance. Rows line up in even columns
     and show up to two lines of text.
   pr_number: 2515
+- name: "Filter a form's results"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    A form's Results page gained a filter row at the top — narrow the rolled-up
+    answers by question name, event (for forms used by several events),
+    organization, or the date a form was submitted, and clear the lot with one
+    button.
+  pr_number: 2508
+
+- name: "Open the answers or the submissions behind a results chart"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    Each question on a form's Results page now says how many answers it got, and
+    that count opens the Form answers list showing just those answers. The link
+    under each chart opens the submissions behind the whole rollup. Either way,
+    coming back lands you on the question you left.
+  pr_number: 2508
+
+- name: "Form answers list hides blank answers"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    An optional question nobody filled in used to leave a blank row in the Form
+    answers list, so its counts disagreed with a form's Results page. Those rows
+    are now hidden. Switch "Empty answers" to Included to see them again.
+  action_path: /form_answers
+  pr_number: 2508
+
+- name: "Filter form answers by organization and submission date"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-02
+  summary: >-
+    The Form answers list gained an Organization filter and a submitted-date
+    range. The dates read the date the form was submitted, so they answer the
+    same question a form's Results page does.
+  action_path: /form_answers
+  pr_number: 2508
 
 - name: "Jump from the activity timeline to the page each row logged"
   area: reporting

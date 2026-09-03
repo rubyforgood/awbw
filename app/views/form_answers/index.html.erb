@@ -1,7 +1,16 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% topbar = capture do %>
-  <%= link_to forms_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-    <i class="fa-solid fa-arrow-left text-xs"></i> Forms
+  <% if params[:return_to] == "form_results" && @form %>
+    <%# A form's results linked here, so the eyebrow goes back there — still
+        narrowed the same way — rather than to the generic Forms index. %>
+    <%= link_to results_form_path(@form, **form_results_return_params(params)),
+                class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
+    <% end %>
+  <% else %>
+    <%= link_to forms_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Forms
+    <% end %>
   <% end %>
   <%= render "forms/index_subnav", current: :answers %>
 <% end %>
@@ -15,6 +24,10 @@
           data: { controller: "collection", turbo_frame: "form_answers_results" },
           autocomplete: "off",
           class: "mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" do %>
+      <%# Carried so a filter change keeps the eyebrow, and the View links keep their origin. %>
+      <% if params[:return_to].present? %><%= hidden_field_tag :return_to, params[:return_to] %><% end %>
+      <%# Keeps a results drill-down pinned to its exact question while the Question box still names it. %>
+      <% if params[:form_field_id].present? %><%= hidden_field_tag :form_field_id, params[:form_field_id] %><% end %>
       <div class="mb-3 flex items-center gap-2 text-gray-600">
         <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
         <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>
@@ -36,9 +49,14 @@
                 include_blank: "All types",
                 class: search_field_class(extra: "search-select-placeholder") %>
         </div>
-        <div class="w-44">
-          <%= label_tag :person, "Person", class: search_label_class %>
-          <%= text_field_tag :person, params[:person], class: search_field_class, placeholder: "Name or email" %>
+        <div class="w-56">
+          <%= label_tag :person_id, "Person", class: search_label_class %>
+          <%= select_tag :person_id,
+                options_for_select(Person.where(id: params[:person_id]).map { |person| [ person.full_name, person.id ] }, params[:person_id]),
+                include_blank: true,
+                prompt: "Search for a person",
+                class: search_field_class,
+                data: { controller: "remote-select", remote_select_model_value: "person" } %>
         </div>
         <div class="w-24">
           <%= label_tag :form_submission_id, "Submission #", class: search_label_class %>
@@ -63,6 +81,30 @@
                 class: search_field_class,
                 data: { controller: "remote-select", remote_select_model_value: "event" } %>
         </div>
+        <div class="w-56">
+          <%= label_tag :organization_id, "Organization", class: search_label_class %>
+          <%= select_tag :organization_id,
+                options_for_select(Organization.where(id: params[:organization_id]).map { |org| [ org.name, org.id ] }, params[:organization_id]),
+                include_blank: true,
+                prompt: "Search for an organization",
+                class: search_field_class,
+                data: { controller: "remote-select", remote_select_model_value: "organization" } %>
+        </div>
+        <div class="w-44">
+          <%= label_tag :start_date, "Submitted from", class: search_label_class %>
+          <%= date_field_tag :start_date, params[:start_date], class: date_filter_class(search_field_class, params[:start_date]) %>
+        </div>
+        <div class="w-44">
+          <%= label_tag :end_date, "Submitted to", class: search_label_class %>
+          <%= date_field_tag :end_date, params[:end_date], class: date_filter_class(search_field_class, params[:end_date]) %>
+        </div>
+        <div class="w-44">
+          <%= label_tag :empty, "Empty answers", class: search_label_class %>
+          <%# Hidden by default, so a question's count here matches the response count on form results. %>
+          <%= select_tag :empty,
+                options_for_select([ [ "Hidden", "" ], [ "Included", FormAnswersController::INCLUDE_EMPTY_ANSWERS ] ], params[:empty]),
+                class: search_field_class %>
+        </div>
         <div class="flex items-end">
           <%= render "shared/search_clear", url: form_answers_path %>
         </div>
@@ -71,7 +113,7 @@
 
     <% result_src = form_answers_path(request.query_parameters) %>
     <%= turbo_frame_tag :form_answers_results, src: result_src, data: { turbo: "temporary" } do %>
-      <div class="rounded-2xl border border-primary/10 bg-white py-16 text-center text-gray-400 shadow-sm">
+      <div class="border-primary/10 rounded-2xl border bg-white py-16 text-center text-gray-400 shadow-sm">
         <i class="fa-solid fa-spinner fa-spin text-2xl" aria-hidden="true"></i>
         <p class="mt-2 text-sm">Loading answers…</p>
       </div>
