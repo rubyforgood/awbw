@@ -115,11 +115,59 @@ RSpec.describe FormField do
     end
   end
 
+  describe "slider answer type" do
+    let(:form) { create(:form) }
+    let(:field) { build(:form_field, form: form, answer_type: :slider) }
+
+    it "collects input but is not selectable or free-form text" do
+      expect(field.collects_input?).to be true
+      expect(field.selectable?).to be false
+      expect(field.free_form_text?).to be false
+    end
+
+    it "labels the type" do
+      expect(field.answer_type_label).to eq("Slider (0–100)")
+    end
+
+    describe "#slider_range_error" do
+      it "is nil for a blank value (left to the required check)" do
+        expect(field.slider_range_error("")).to be_nil
+        expect(field.slider_range_error(nil)).to be_nil
+      end
+
+      it "is nil for a whole number within bounds" do
+        expect(field.slider_range_error("0")).to be_nil
+        expect(field.slider_range_error("50")).to be_nil
+        expect(field.slider_range_error("100")).to be_nil
+      end
+
+      it "flags a value outside the bounds" do
+        expect(field.slider_range_error("101")).to eq("must be a whole number between 0 and 100")
+        expect(field.slider_range_error("-1")).to eq("must be a whole number between 0 and 100")
+      end
+
+      it "flags a non-integer value" do
+        expect(field.slider_range_error("40.5")).to eq("must be a whole number between 0 and 100")
+        expect(field.slider_range_error("lots")).to eq("must be a whole number between 0 and 100")
+      end
+
+      it "flags a hand-crafted literal the range input can't produce" do
+        expect(field.slider_range_error("0x40")).to eq("must be a whole number between 0 and 100")
+        expect(field.slider_range_error("1_0")).to eq("must be a whole number between 0 and 100")
+      end
+
+      it "does not apply to non-slider fields" do
+        text = build(:form_field, form: form, answer_type: :free_form_input_one_line)
+        expect(text.slider_range_error("101")).to be_nil
+      end
+    end
+  end
+
   describe 'enums' do
     it { should define_enum_for(:status).with_values([ :inactive, :active ]) }
     it { should define_enum_for(:answer_type).with_values([ :free_form_input_one_line, :free_form_input_paragraph,
                                                            :single_select_radio, :no_user_input, :multi_select_checkbox,
-                                                           :group_header, :single_select_dropdown, :file_upload ]) }
+                                                           :group_header, :single_select_dropdown, :file_upload, :slider ]) }
     it { should define_enum_for(:input_type).with_values([ :text_alphanumeric, :number_integer, :number_decimal, :date ]) }
   end
 

@@ -5,10 +5,9 @@
 # participant demographics, program impact on you, spread-the-word), plus ~20
 # varied submissions so /forms/:id/results has a real report to show.
 #
-# Percentage and count questions are number fields (input_type number_integer),
-# so the results page rolls them up as average/total/responses. Once the slider
-# answer type ships, the percentage questions can switch to sliders — the stored
-# values and the rollup are identical either way.
+# Percentage questions are sliders and the yearly-reach counts are number fields;
+# both store a whole number, so the results page rolls them up the same way
+# (average / total / responses), with percentages headlined as a %.
 #
 # Idempotent: the form is looked up by slug, fields by name, submissions by
 # (form, person), and each answer is skipped when already present. Distributions
@@ -63,6 +62,11 @@ def ae_number!(form, name, **opts)
   ae_field!(form, name, :free_form_input_one_line, input_type: :number_integer, **opts)
 end
 
+# A 0-100 percentage slider (the slider shows its own 0/50/100 scale).
+def ae_slider!(form, name, **opts)
+  ae_field!(form, name, :slider, **opts)
+end
+
 # ── About you ────────────────────────────────────────────────────────────────
 # First/last name and primary email are the person-identity fields: they save to
 # the Person (by field_identifier) and are logged_out_only, so once prefill lands
@@ -108,8 +112,8 @@ outside_us = ae_field!(form, "Do you offer art workshops outside the United Stat
 ae_field!(form, "If you offer outside the US, please share which countries", :free_form_input_one_line, width: :half)
 other_language = ae_field!(form, "Do you facilitate art workshops in languages other than English?", :single_select_radio, required: true, width: :half, options: YES_NO)
 ae_field!(form, "If you offer in other languages, please share which ones", :free_form_input_one_line, width: :half)
-pct_one_on_one = ae_number!(form, "What percentage of your art workshops are one-on-one?", hint_text: "0–100%", width: :half)
-pct_groups = ae_number!(form, "What percentage of your art workshops are with groups?", hint_text: "0–100%", width: :half)
+pct_one_on_one = ae_slider!(form, "What percentage of your art workshops are one-on-one?", width: :half)
+pct_groups = ae_slider!(form, "What percentage of your art workshops are with groups?", width: :half)
 ae_field!(form, "How else do you use art beyond direct client work?", :multi_select_checkbox,
   subtitle: "Select all that apply.",
   options: [
@@ -128,7 +132,7 @@ reach_children = ae_number!(form, "Children (ages 0-12)", required: true, width:
 reach_teens = ae_number!(form, "Teens (ages 13-17)", required: true, width: :quarter)
 reach_adults = ae_number!(form, "Adults (age 18-64)", required: true, width: :quarter)
 reach_elders = ae_number!(form, "Elders (age 65+)", required: true, width: :quarter)
-pct_families = ae_number!(form, "What percentage of participants consists of families of two or more individuals?", required: true,
+pct_families = ae_slider!(form, "What percentage of participants consists of families of two or more individuals?", required: true,
   subtitle: "Family relationships can include parents, children, siblings, grandparents, aunts, uncles, and more.")
 # Dynamic field: options come from the AgeRange categories and the answer resolves
 # to the facilitator's primary age group, exactly like the registration form.
@@ -150,28 +154,28 @@ without_awbw = ae_field!(form, "Would you or your organization have an art progr
 # ── Your art workshop participants (ethnicity) ───────────────────────────────
 ae_header!(form, "Your art workshop participants",
   subtitle: "What percentage of your participants are from the following ethnic backgrounds? Your total allocation across all ethnic backgrounds should add up to 100%. Please use your best estimations.")
-pct_alaskan = ae_number!(form, "What percentage of your participants are Alaskan Native?", hint_text: "0–100%", width: :third)
-ae_number!(form, "What percentage of your participants are American Indian or Native American?", hint_text: "0–100%", width: :third)
-pct_asian = ae_number!(form, "What percentage of your participants are Asian?", hint_text: "0–100%", width: :third)
-pct_black = ae_number!(form, "What percentage of your participants are Black or African American?", hint_text: "0–100%", width: :third)
-pct_latinx = ae_number!(form, "What percentage of your participants are Latinx?", hint_text: "0–100%", width: :third)
-ae_number!(form, "What percentage of your participants are Middle Eastern?", hint_text: "0–100%", width: :third)
-ae_number!(form, "What percentage of your participants are multi-racial?", hint_text: "0–100%", width: :third)
-ae_number!(form, "What percentage of your participants are Native Hawaiian or other Pacific Islander?", hint_text: "0–100%", width: :third)
-pct_white = ae_number!(form, "What percentage of your participants are White?", hint_text: "0–100%", width: :third)
-ae_number!(form, "What percentage of your participants are of an ethnicity not listed above?", hint_text: "0–100%", width: :half)
+pct_alaskan = ae_slider!(form, "What percentage of your participants are Alaskan Native?", width: :third)
+ae_slider!(form, "What percentage of your participants are American Indian or Native American?", width: :third)
+pct_asian = ae_slider!(form, "What percentage of your participants are Asian?", width: :third)
+pct_black = ae_slider!(form, "What percentage of your participants are Black or African American?", width: :third)
+pct_latinx = ae_slider!(form, "What percentage of your participants are Latinx?", width: :third)
+ae_slider!(form, "What percentage of your participants are Middle Eastern?", width: :third)
+ae_slider!(form, "What percentage of your participants are multi-racial?", width: :third)
+ae_slider!(form, "What percentage of your participants are Native Hawaiian or other Pacific Islander?", width: :third)
+pct_white = ae_slider!(form, "What percentage of your participants are White?", width: :third)
+ae_slider!(form, "What percentage of your participants are of an ethnicity not listed above?", width: :half)
 ae_field!(form, "For participants whose ethnic identities are not listed above, please specify their ethnicities", :free_form_input_one_line, width: :half)
-pct_poverty = ae_number!(form, "What percentage of your participants are at or below the Federal Poverty Line?",
+pct_poverty = ae_slider!(form, "What percentage of your participants are at or below the Federal Poverty Line?",
   hint_text: "See the current Federal Poverty Level Guidelines. 0–100%")
 
 # ── Participant gender identity ──────────────────────────────────────────────
 ae_header!(form, "Participant gender identity",
   subtitle: "What percentage of your participants identify as the following? Please use your best estimations.")
-pct_female = ae_number!(form, "What percentage of your participants identify as female?", hint_text: "0–100%", width: :quarter)
-pct_male = ae_number!(form, "What percentage of your participants identify as male?", hint_text: "0–100%", width: :quarter)
-ae_number!(form, "What percentage of your participants identify as non-binary?", hint_text: "0–100%", width: :quarter)
-ae_number!(form, "What percentage of your participants identify as transgender?", hint_text: "0–100%", width: :quarter)
-ae_number!(form, "What percentage of your participants have a gender identity not listed above?", hint_text: "0–100%", width: :half)
+pct_female = ae_slider!(form, "What percentage of your participants identify as female?", width: :quarter)
+pct_male = ae_slider!(form, "What percentage of your participants identify as male?", width: :quarter)
+ae_slider!(form, "What percentage of your participants identify as non-binary?", width: :quarter)
+ae_slider!(form, "What percentage of your participants identify as transgender?", width: :quarter)
+ae_slider!(form, "What percentage of your participants have a gender identity not listed above?", width: :half)
 ae_field!(form, "For participants whose gender identities are not listed above, please specify how they identify", :free_form_input_one_line, width: :half)
 
 # ── Program impact on you ────────────────────────────────────────────────────

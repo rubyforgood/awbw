@@ -157,6 +157,21 @@ RSpec.describe FormResponseAggregator do
              answer_type: :free_form_input_one_line, input_type: :number_integer)
     end
 
+    it "averages a slider question as a percentage" do
+      field = create(:form_field, form: form, name: "% one-on-one", answer_type: :slider)
+      answer(create(:form_submission, form: form), field, "20")
+      answer(create(:form_submission, form: form), field, "40")
+      answer(create(:form_submission, form: form), field, "60")
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.kind).to eq(:number)
+      expect(report.answered_count).to eq(3)
+      expect(report.total).to eq(120)
+      expect(report.average).to eq(40.0)
+      expect(report.percent).to be(true)
+    end
+
     it "averages and totals a whole-number field as an open count" do
       field = number_field("Adults served")
       answer(create(:form_submission, form: form), field, "10")
@@ -171,6 +186,7 @@ RSpec.describe FormResponseAggregator do
       expect(report.minimum).to eq(10)
       expect(report.maximum).to eq(25)
       expect(report.integer_valued).to be(true)
+      expect(report.percent).to be(false)
     end
 
     it "drops blank and non-numeric answers from the figures" do

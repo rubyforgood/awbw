@@ -14,7 +14,7 @@ class FormResponseAggregator
   FieldReport = Struct.new(
     :field, :label, :kind, :answered_count,
     :rows, :chart, :multi, :specify_rows, :responses,
-    :average, :total, :minimum, :maximum, :integer_valued,
+    :average, :total, :minimum, :maximum, :integer_valued, :percent,
     keyword_init: true
   )
 
@@ -118,14 +118,15 @@ class FormResponseAggregator
     build_text_report(field, answers)
   end
 
-  # Number-typed free-form fields hold a figure worth averaging and summing
-  # (counts served, percentages), not free text.
+  # Sliders and number-typed free-form fields hold a figure worth averaging and
+  # summing (percentages, counts served), not free text.
   def numeric_field?(field)
-    field.number_integer? || field.number_decimal?
+    field.slider? || field.number_integer? || field.number_decimal?
   end
 
-  # An average / total / range summary of a number question. Non-numeric stray
-  # values are dropped rather than skewing the figures.
+  # An average / total / range summary of a numeric question. Sliders are
+  # percentages (headlined with a %, 0-100); number fields are open-ended counts.
+  # Non-numeric stray values are dropped rather than skewing the figures.
   def build_numeric_report(field, answers)
     values = answers.filter_map { |answer| numeric_value(field, answer.submitted_answer) }
     count = values.size
@@ -136,7 +137,7 @@ class FormResponseAggregator
       total: total,
       average: count.zero? ? nil : total.to_f / count,
       minimum: values.min, maximum: values.max,
-      integer_valued: !field.number_decimal?
+      integer_valued: !field.number_decimal?, percent: field.slider?
     )
   end
 
