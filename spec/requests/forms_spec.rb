@@ -1002,6 +1002,50 @@ RSpec.describe "Forms", type: :request do
         expect(Nokogiri::HTML(response.body).at_css("select#organization_id")).to be_present
       end
 
+      it "renders the results filters as question, event, person, organization, submitted from, submitted to" do
+        form = create(:form)
+        create(:event_form, form: form, event: create(:event), role: "registration")
+        create(:event_form, form: form, event: create(:event), role: "continuing_education")
+        create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+        create(:form_submission, form: form)
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        ids = doc.css("form label").map { |l| l["for"] }.compact
+        ids &= %w[question event_id person_id organization_id start_date end_date]
+        expect(ids).to eq(%w[question event_id person_id organization_id start_date end_date])
+      end
+
+      it "narrows the rollup to the selected person's submissions" do
+        form = create(:form, :standalone)
+        person = create(:person)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form, person: person),
+                             form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form, person: create(:person)),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form, person_id: person.id)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
+
+      it "narrows the rollup to submissions in the selected date range" do
+        form = create(:form, :standalone)
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        create(:form_answer, form_submission: create(:form_submission, form: form, created_at: Date.new(2026, 1, 10)),
+                             form_field: color, submitted_answer: "Old")
+        create(:form_answer, form_submission: create(:form_submission, form: form, created_at: Date.new(2026, 6, 10)),
+                             form_field: color, submitted_answer: "New")
+
+        get results_form_path(form, start_date: "2026-05-01", end_date: "2026-07-01")
+
+        expect(response.body).to include("New")
+        expect(response.body).not_to include("Old")
+      end
+
       it "narrows the rollup to the selected organization's submissions" do
         form = create(:form)
         event = create(:event)

@@ -35,10 +35,13 @@ class FormResponseAggregator
   US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state organization_state].to_set
   COUNTRY_IDENTIFIERS = %w[mailing_country organization_country].to_set
 
-  def initialize(form, event_id: nil, organization_id: nil, question_query: nil)
+  def initialize(form, event_id: nil, person_id: nil, organization_id: nil, start_date: nil, end_date: nil, question_query: nil)
     @form = form
     @event_id = event_id.presence
+    @person_id = person_id.presence
     @organization_id = organization_id.presence
+    @start_date = start_date.presence
+    @end_date = end_date.presence
     @question_query = question_query.to_s.strip.downcase.presence
   end
 
@@ -76,13 +79,14 @@ class FormResponseAggregator
     @submissions ||= scoped_submissions.includes(:person).to_a
   end
 
-  # Optionally narrowed to one connected event and/or one linked organization, so
-  # a shared form's rollup can be read a slice at a time.
+  # Optionally narrowed by event, person, organization, and submission date, so a
+  # shared form's rollup can be read a slice at a time.
   def scoped_submissions
     scope = @form.form_submissions
     scope = scope.where(event_id: @event_id) if @event_id
+    scope = scope.where(person_id: @person_id) if @person_id
     scope = scope.for_organization(@organization_id) if @organization_id
-    scope
+    scope.submitted_between(FormSubmission.parse_date(@start_date), FormSubmission.parse_date(@end_date))
   end
 
   def submission_by_id

@@ -43,9 +43,9 @@
   released_on: 2026-09-02
   summary: >-
     A form's Results page gained filters at the top — narrow the rolled-up answers
-    to one event (for forms shared across several events), to a single organization,
-    or search by question name. Each question's response count now links straight to
-    the Form answers list, pre-filtered to that question (and event).
+    by question name, event (for forms shared across several events), person,
+    organization, or submission date. Each question's response count now links
+    straight to the Form answers list, pre-filtered to that question.
   pr_number: 2508
 
 - name: "Jump from the activity timeline to the page each row logged"

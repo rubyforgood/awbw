@@ -45,9 +45,11 @@ class FormsController < ApplicationController
     # Honor the event filter only for an event genuinely connected to this shared
     # form; an unknown id falls back to the unfiltered rollup.
     @selected_event_id = @form.events.where(id: params[:event_id]).pick(:id) if params[:event_id].present?
+    @selected_person_id = params[:person_id].presence
     @selected_organization_id = params[:organization_id].presence
     @aggregator = FormResponseAggregator.new(@form, event_id: @selected_event_id,
-                  organization_id: @selected_organization_id, question_query: params[:question])
+                  person_id: @selected_person_id, organization_id: @selected_organization_id,
+                  start_date: params[:start_date], end_date: params[:end_date], question_query: params[:question])
   end
 
   def new

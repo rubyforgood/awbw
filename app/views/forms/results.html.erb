@@ -23,16 +23,21 @@
   </div>
 
   <% connected_events = @form.events.distinct.order(:start_date).to_a %>
+  <% has_submissions = @form.form_submissions.exists? %>
   <%# Event filter only earns its place on a form shared by more than one event;
       organization linking is an event-registration concept, so its filter shows
-      for any event-connected form. %>
+      for any event-connected form. The person/date filters need submissions to
+      slice — gated on the unscoped total so they stay put when a filter empties
+      the current view. %>
   <% show_event_filter = connected_events.many? %>
   <% show_org_filter = connected_events.any? %>
-  <% show_question_filter = @aggregator.question_count.positive? %>
-  <% if show_event_filter || show_org_filter || show_question_filter %>
+  <% show_question_filter = has_submissions && @aggregator.question_count.positive? %>
+  <% show_person_filter = has_submissions %>
+  <% show_date_filter = has_submissions %>
+  <% if show_event_filter || show_org_filter || show_question_filter || show_person_filter || show_date_filter %>
     <%# Auto-submits on change (collection controller) as a full-page Turbo visit:
-        the event/organization selects narrow a shared form's rollup, the question
-        search narrows which question cards show. %>
+        every select/date narrows the rollup, the question search narrows which
+        question cards show. %>
     <%= form_with url: results_form_path(@form), method: :get, autocomplete: "off",
           data: { controller: "collection" },
           class: "mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" do %>
@@ -41,6 +46,12 @@
         <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
       </div>
       <div class="grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <% if show_question_filter %>
+          <div>
+            <%= label_tag :question, "Question", class: search_label_class %>
+            <%= text_field_tag :question, params[:question], placeholder: "Search questions", class: search_field_class %>
+          </div>
+        <% end %>
         <% if show_event_filter %>
           <div>
             <%= label_tag :event_id, "Event", class: search_label_class %>
@@ -48,6 +59,17 @@
                   options_for_select(connected_events.map { |event| [ event.decorate.title_with_month_year, event.id ] }, @selected_event_id),
                   include_blank: "All events",
                   class: search_field_class(extra: "search-select-placeholder") %>
+          </div>
+        <% end %>
+        <% if show_person_filter %>
+          <div>
+            <%= label_tag :person_id, "Person", class: search_label_class %>
+            <%= select_tag :person_id,
+                  options_for_select(Person.where(id: @selected_person_id).map { |person| [ person.full_name, person.id ] }, @selected_person_id),
+                  include_blank: true,
+                  prompt: "All people",
+                  class: search_field_class,
+                  data: { controller: "remote-select", remote_select_model_value: "person" } %>
           </div>
         <% end %>
         <% if show_org_filter %>
@@ -61,10 +83,14 @@
                   data: { controller: "remote-select", remote_select_model_value: "organization" } %>
           </div>
         <% end %>
-        <% if show_question_filter %>
+        <% if show_date_filter %>
           <div>
-            <%= label_tag :question, "Question", class: search_label_class %>
-            <%= text_field_tag :question, params[:question], placeholder: "Search questions", class: search_field_class %>
+            <%= label_tag :start_date, "Submitted from", class: search_label_class %>
+            <%= date_field_tag :start_date, params[:start_date], class: date_filter_class(search_field_class, params[:start_date]) %>
+          </div>
+          <div>
+            <%= label_tag :end_date, "Submitted to", class: search_label_class %>
+            <%= date_field_tag :end_date, params[:end_date], class: date_filter_class(search_field_class, params[:end_date]) %>
           </div>
         <% end %>
       </div>
