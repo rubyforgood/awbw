@@ -1196,6 +1196,39 @@ RSpec.describe "Forms", type: :request do
                                                        return_to: "form_results"))
       end
 
+      it "links a file question's upload count to those answers" do
+        form = create(:form, :standalone)
+        upload = create(:form_field, form: form, name: "Sample of your work", answer_type: :file_upload)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: upload, submitted_answer: "sample.jpg")
+
+        get results_form_path(form)
+
+        count = Nokogiri::HTML(response.body).css("a").find { |a| a.text.include?("file uploaded") }
+        expect(count).to be_present
+        expect(count["href"]).to eq(form_answers_path(form_id: form.id, question: "Sample of your work",
+                                                      form_field_id: upload.id, return_to: "form_results"))
+      end
+
+      # answered_count on a number question counts only the answers that parse as
+      # numbers, so a link would undercount the list it opened.
+      it "leaves a number question's card unlinked" do
+        form = create(:form, :standalone)
+        served = create(:form_field, form: form, name: "People served",
+                        answer_type: :free_form_input_one_line, input_type: :number_integer)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: served, submitted_answer: "12")
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: served, submitted_answer: "varies")
+
+        get results_form_path(form)
+
+        expect(response.body).to include("People served")
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).not_to include(form_answers_path(form_id: form.id, question: "People served",
+                                                       form_field_id: served.id, return_to: "form_results"))
+      end
+
       it "counts a charted question's answers in its header too, linking to them" do
         form = create(:form, :standalone)
         color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
