@@ -675,6 +675,30 @@ RSpec.describe "FormSubmissions", type: :request do
         end
       end
 
+      describe "linking a close-program submission" do
+        let(:form) { create(:form, role: "close_program", name: "Close Program") }
+
+        it "ends the person's affiliations at the linked org instead of creating any, and flags them" do
+          add_answer("organization_name", "Sunset Youth Services")
+          add_answer("close_effective_date", "2026-06-30")
+          add_answer("close_reason", "Funding ended.")
+          add_answer("close_leaving_job", "Yes")
+          organization = create(:organization, name: "Sunset Youth Services")
+          facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+          job = create(:affiliation, person: person, organization: organization, title: "Program Director")
+
+          expect {
+            post select_organization_form_submission_path(submission, organization_id: organization.id)
+          }.not_to change { person.affiliations.count }
+
+          expect(facilitator.reload.end_date).to eq(Date.new(2026, 6, 30))
+          expect(job.reload.end_date).to eq(Date.new(2026, 6, 30))
+          expect(facilitator.comments.last.topic).to eq("Program closure")
+          expect(submission.reload.scenario_ended_affiliation_ids).to contain_exactly(facilitator.id, job.id)
+          expect(flash[:notice]).to include("Ended")
+        end
+      end
+
       context "as a non-admin" do
         before { sign_in create(:user) }
 

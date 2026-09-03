@@ -75,10 +75,10 @@
           <div class="sm:w-56">
             <label class="mb-1 block text-sm font-medium text-gray-700">Form role</label>
             <%= f.select :role,
-                  [["General", "general"], ["Registration", "registration"], ["New job", "new_job"], ["Reinstatement", "reinstatement"], ["Scholarship", "scholarship"], ["Bulk Payment", "bulk_payment"], ["Continuing Education", "continuing_education"]],
+                  [["General", "general"], ["Registration", "registration"], ["New job", "new_job"], ["Reinstatement", "reinstatement"], ["Scholarship", "scholarship"], ["Bulk Payment", "bulk_payment"], ["Continuing Education", "continuing_education"], ["Close program", "close_program"]],
                   { selected: @form.role.presence || "general" },
                   class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 text-sm" %>
-            <p class="mt-1 text-xs text-gray-500">A standalone public registration form is the on-demand agreement; new job and reinstatement carry their own affiliation processing (each submission gets a processing panel).</p>
+            <p class="mt-1 text-xs text-gray-500">A standalone public registration form is the on-demand agreement; new job, reinstatement, and close program carry their own affiliation processing (each submission gets a processing panel).</p>
           </div>
         </div>
 

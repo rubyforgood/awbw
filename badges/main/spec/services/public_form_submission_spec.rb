@@ -176,4 +176,69 @@ RSpec.describe PublicFormSubmission do
     expect([ response.field_identifier, response.text, response.kind ])
       .to eq([ "additional_sectors", "Equine therapy", "sector" ])
   end
+
+  describe "close-program processing" do
+    let(:form) { create(:form, slug: "close-program", published: true, role: "close_program") }
+    let!(:org_field) { create(:form_field, form: form, name: "Organization name", field_identifier: "organization_name") }
+    let!(:date_field) { create(:form_field, form: form, name: "As of what date?", field_identifier: "close_effective_date") }
+    let!(:reason_field) { create(:form_field, form: form, name: "Why?", field_identifier: "close_reason") }
+    let!(:leaving_field) { create(:form_field, form: form, name: "Leaving your job?", field_identifier: "close_leaving_job") }
+
+    let(:organization) { create(:organization, name: "Sunset Youth Services") }
+
+    def close_params(org_name: "Sunset Youth Services", date: "2026-06-30", reason: "Funding ended.", leaving: "No")
+      {
+        first_name_field.id.to_s => "Casey",
+        last_name_field.id.to_s => "Closing",
+        email_field.id.to_s => "casey@example.com",
+        org_field.id.to_s => org_name,
+        date_field.id.to_s => date,
+        reason_field.id.to_s => reason,
+        leaving_field.id.to_s => leaving
+      }
+    end
+
+    it "end-dates the person's facilitator affiliation at the exact-match org and links it" do
+      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+
+      result = described_class.call(form: form, form_params: close_params)
+
+      expect(facilitator.reload.end_date).to eq(Date.new(2026, 6, 30))
+      expect(facilitator.comments.last.topic).to eq("Program closure")
+      expect(result.form_submission.linked_organization_ids).to include(organization.id)
+      expect(result.form_submission.scenario_ended_affiliation_ids).to include(facilitator.id)
+    end
+
+    it "also ends the job affiliation when they say they're leaving" do
+      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+      job = create(:affiliation, person: person, organization: organization, title: "Program Director")
+
+      described_class.call(form: form, form_params: close_params(leaving: "Yes"))
+
+      expect(facilitator.reload.end_date).to eq(Date.new(2026, 6, 30))
+      expect(job.reload.end_date).to eq(Date.new(2026, 6, 30))
+    end
+
+    it "does not auto-process when the org name has no exact match — it waits for the panel" do
+      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+
+      result = described_class.call(form: form, form_params: close_params(org_name: "Sunset Youth"))
+
+      expect(facilitator.reload.end_date).to be_nil
+      expect(result.form_submission.linked_organization_ids).to be_empty
+    end
+
+    it "does not auto-process when two organizations share the submitted name" do
+      create(:organization, name: "Sunset Youth Services")
+      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
+
+      described_class.call(form: form, form_params: close_params)
+
+      expect(facilitator.reload.end_date).to be_nil
+    end
+  end
 end
