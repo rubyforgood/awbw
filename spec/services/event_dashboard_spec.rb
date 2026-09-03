@@ -454,6 +454,13 @@ RSpec.describe EventDashboard do
         expect(dashboard.referral_source_counts.map(&:first)).not_to include("Word of Mouth")
       end
 
+      it "counts a registrant who submitted the form twice for this event once" do
+        create(:form_answer, form_field: referral_field, submitted_answer: "Online Search",
+                             form_submission: create(:form_submission, person: person1, form: registration_form, event: event))
+
+        expect(dashboard.referral_source_counts).to eq([ [ "Online Search", 1 ], [ "Other", 1 ] ])
+      end
+
       it "ignores the same registrant's answer on the shared form for a different event" do
         other_event = create(:event)
         create(:form_answer, form_field: referral_field, submitted_answer: "Presentation",
