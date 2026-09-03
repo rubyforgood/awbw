@@ -985,6 +985,33 @@ RSpec.describe "Forms", type: :request do
         expect(Nokogiri::HTML(response.body).at_css("select#event_id")).to be_nil
       end
 
+      it "shows an organization filter for an event-connected form" do
+        form = create(:form)
+        create(:event_form, form: form, event: create(:event), role: "registration")
+
+        get results_form_path(form)
+
+        expect(Nokogiri::HTML(response.body).at_css("select#organization_id")).to be_present
+      end
+
+      it "narrows the rollup to the selected organization's submissions" do
+        form = create(:form)
+        event = create(:event)
+        org = create(:organization)
+        create(:event_form, form: form, event: event, role: "registration")
+        color = create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio)
+        linked = create(:form_submission, form: form, event: event)
+        linked.link_organization!(org.id)
+        create(:form_answer, form_submission: linked, form_field: color, submitted_answer: "Blue")
+        create(:form_answer, form_submission: create(:form_submission, form: form, event: event),
+                             form_field: color, submitted_answer: "Red")
+
+        get results_form_path(form, organization_id: org.id)
+
+        expect(response.body).to include("Blue")
+        expect(response.body).not_to include("Red")
+      end
+
       it "narrows the rollup to the selected event's submissions" do
         form = create(:form)
         event = create(:event)

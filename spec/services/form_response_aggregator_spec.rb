@@ -241,6 +241,22 @@ RSpec.describe FormResponseAggregator do
     end
   end
 
+  describe "organization scoping" do
+    it "narrows the rollup to submissions linked to the organization" do
+      org = create(:organization)
+      field = create(:form_field, form: form, name: "Color", answer_type: :single_select_radio)
+      linked = create(:form_submission, form: form)
+      linked.link_organization!(org.id)
+      answer(linked, field, "Blue")
+      answer(create(:form_submission, form: form), field, "Red")
+
+      aggregator = described_class.new(form, organization_id: org.id)
+
+      expect(aggregator.submission_count).to eq(1)
+      expect(aggregator.field_reports.first.rows).to eq([ [ "Blue", 1 ] ])
+    end
+  end
+
   describe "question name filtering" do
     before do
       create(:form_field, form: form, name: "Favorite color", answer_type: :single_select_radio, position: 1)

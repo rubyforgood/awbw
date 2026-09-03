@@ -35,9 +35,10 @@ class FormResponseAggregator
   US_STATE_IDENTIFIERS = %w[mailing_state ce_license_issuing_state organization_state].to_set
   COUNTRY_IDENTIFIERS = %w[mailing_country organization_country].to_set
 
-  def initialize(form, event_id: nil, question_query: nil)
+  def initialize(form, event_id: nil, organization_id: nil, question_query: nil)
     @form = form
     @event_id = event_id.presence
+    @organization_id = organization_id.presence
     @question_query = question_query.to_s.strip.downcase.presence
   end
 
@@ -75,12 +76,13 @@ class FormResponseAggregator
     @submissions ||= scoped_submissions.includes(:person).to_a
   end
 
-  # Optionally narrowed to one connected event, so a shared form's rollup can be
-  # read one event at a time.
+  # Optionally narrowed to one connected event and/or one linked organization, so
+  # a shared form's rollup can be read a slice at a time.
   def scoped_submissions
-    return @form.form_submissions unless @event_id
-
-    @form.form_submissions.where(event_id: @event_id)
+    scope = @form.form_submissions
+    scope = scope.where(event_id: @event_id) if @event_id
+    scope = scope.for_organization(@organization_id) if @organization_id
+    scope
   end
 
   def submission_by_id
