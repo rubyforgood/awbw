@@ -41,7 +41,7 @@ module Events
       # conditions until then, so there's nothing to gate here.
       # Facilitator trainings render the branded certificate, whose signatures
       # come from an admin-managed record (never committed to this public repo).
-      @signature_file = Resource.training_certificate_signatures_file if @event.facilitator_training?
+      @signature_file = certificate_signature_file if @event.facilitator_training?
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a
@@ -516,6 +516,15 @@ module Events
       callout = @builtin_callout
       callout = nil if action_name == "payment"
       @builtin_resource_cards = resource_cards_for(callout, icon: "fa-solid fa-file-lines", return_to: action_name)
+    end
+
+    # The certificate's signature strip: the certificate callout's first linked
+    # resource when an admin connected one (attached overrides the default), else
+    # the title-matched record. Mirrors the payment callout's W-9 resolution.
+    def certificate_signature_file
+      connected = @builtin_callout&.resources&.first
+      return connected.signature_file if connected
+      Resource.training_certificate_signatures_file
     end
 
     # This registrant's cards for a callout's linked resources (nil callout → none).

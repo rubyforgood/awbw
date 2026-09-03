@@ -116,6 +116,25 @@ RSpec.describe BuiltinCallouts do
       expect(payment.resources).to eq([ w9 ])
     end
 
+    it "links the signatures record to the Certificate card as a removable resource" do
+      signatures = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      event = create(:event)
+
+      described_class.seed(event)
+
+      certificate = event.registration_ticket_callouts.find_by(builtin_key: "certificate")
+      expect(certificate.resources).to eq([ signatures ])
+    end
+
+    it "leaves the Certificate card unlinked when the signatures record isn't seeded" do
+      event = create(:event)
+
+      described_class.seed(event)
+
+      certificate = event.registration_ticket_callouts.find_by(builtin_key: "certificate")
+      expect(certificate.resources).to be_empty
+    end
+
     it "seeds CE hours with its default title and no content" do
       event = create(:event)
 
