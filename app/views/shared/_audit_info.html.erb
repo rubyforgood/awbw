@@ -15,7 +15,7 @@
         <span class="font-medium">Created:</span>
         <%= resource.created_at.strftime("%b %d, %Y at %-l:%M %p") %>
         <% if created_by_user %>
-          by <%= user_button(created_by_user) %>
+          by <%= user_link(created_by_user) %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
@@ -32,7 +32,7 @@
         <span class="font-medium">Last updated:</span>
         <%= resource.updated_at.strftime("%b %d, %Y at %-l:%M %p") %>
         <% if updated_by_user %>
-          by <%= user_button(updated_by_user) %>
+          by <%= user_link(updated_by_user) %>
         <% end %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
