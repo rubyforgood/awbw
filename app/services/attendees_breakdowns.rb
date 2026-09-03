@@ -63,6 +63,18 @@ class AttendeesBreakdowns
     @all_age_group_counts ||= distinct_person_counts(age_rows) { |row| row[1] }
   end
 
+  # --- Referral source -------------------------------------------------------
+
+  # "How did you hear about this AWBW training?" answers across the scoped events'
+  # submissions, as [ label, count ] rows counting DISTINCT people per answer (so
+  # someone who gave the same answer at two trainings counts once; one who gave
+  # two different answers counts under each). A "specify" answer ("Other: Facebook")
+  # collapses to its option label, matching the single-event roster and results page.
+  def referral_source_counts
+    @referral_source_counts ||= distinct_person_counts(referral_rows) { |row| row[1] }
+      .sort_by { |label, count| [ -count, label ] }
+  end
+
   # --- Locations -------------------------------------------------------------
 
   def state_counts
@@ -259,6 +271,23 @@ class AttendeesBreakdowns
       .joins(category: :category_type)
       .where(categorizable_type: "Person", categorizable_id: person_ids, category_types: { name: "AgeRange" })
       .pluck(:categorizable_id, :category_id, :is_primary)
+  end
+
+  # [ [ person_id, label ], ... ] for referral-source answers on the scoped
+  # events' submissions by the scoped people. Each answer text is split (defensive
+  # for multi-value) and a "specify" answer folded to its option label.
+  def referral_rows
+    @referral_rows ||= FormAnswer
+      .joins(:form_field, :form_submission)
+      .where(form_fields: { field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER })
+      .where(form_submissions: { event_id: @events.select(:id), person_id: person_ids })
+      .pluck(Arel.sql("form_submissions.person_id"), :submitted_answer)
+      .flat_map do |person_id, submitted_answer|
+        submitted_answer.to_s.split(", ").map(&:strip).reject(&:blank?).map do |raw|
+          base = raw.split(": ", 2).first
+          [ person_id, FormField.specify_option?(base) ? base : raw ]
+        end
+      end
   end
 
   def category_counts(category_type_name)

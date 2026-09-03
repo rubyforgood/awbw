@@ -326,6 +326,21 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).to include("All sectors")
         end
 
+        it "renders the referral-source breakdown from attendees' \"how did you hear\" answers" do
+          registration_form = create(:form, name: "Registration")
+          create(:event_form, event: recent_training, form: registration_form, role: "registration")
+          field = create(:form_field, form: registration_form,
+                                      field_identifier: FormField::REFERRAL_SOURCE_FIELD_IDENTIFIER,
+                                      name: "How did you hear about this AWBW training?",
+                                      answer_type: :single_select_radio)
+          submission = create(:form_submission, person: attendee, form: registration_form, event: recent_training)
+          create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Online Search")
+
+          get attendees_events_url, headers: charts_frame_headers
+          expect(response.body).to include("How did you hear about this AWBW training?")
+          expect(response.body).to include("Online Search")
+        end
+
         it "filters by a breakdown drill-in (country)" do
           create(:address, addressable: attendee, country: "Canada", inactive: false)
           other = create(:person, first_name: "Zed", last_name: "Zulu")

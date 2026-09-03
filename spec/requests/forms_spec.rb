@@ -142,6 +142,14 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("Smart fields that do nothing extra")
       end
 
+      it "notes where the referral-source answer is surfaced" do
+        get smart_form_settings_forms_path
+
+        expect(response.body).to include("event breakdowns")
+        expect(response.body).to include("reports breakdowns")
+        expect(response.body).to include("form results")
+      end
+
       # Reached from a form editor, so it has to offer a way back to that editor
       # rather than dropping the admin on the generic forms list.
       it "links back to the form it was opened from" do

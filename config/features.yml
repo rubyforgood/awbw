@@ -3195,8 +3195,8 @@
   display_status: admin_facing
   released_on: 2026-09-02
   summary: >-
-    An event's roster charts now include a "How did you hear about this AWBW
-    training?" breakdown, right below All age groups — the same referral-source
-    tally shown on a form's results page, but scoped to that training's
-    registrants.
+    The event roster charts and the reports (attendees) breakdowns now include a
+    "How did you hear about this AWBW training?" tally, right below All age groups
+    — the same referral-source breakdown shown on a form's results page, scoped to
+    the training(s) in view.
   pr_number: 2513
