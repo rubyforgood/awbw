@@ -1,7 +1,8 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <% return_record = notification_return_record %>
 <%# Topbar: back to the record whose combined section linked here, then the
-    person's profile, then the global people list when the feed spans everyone. %>
+    person's profile, then the global people list when the feed spans everyone
+    — paired with quick nav to other admin areas on the right. %>
 <% topbar = capture do %>
   <% if return_record %>
     <%= link_to notification_return_path(return_record), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -16,33 +17,40 @@
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to people
     <% end %>
   <% end %>
+
+  <div class="flex flex-wrap items-center gap-1">
+    <%= link_to "Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "Activities", admin_activities_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  </div>
 <% end %>
-<%# Jump straight to one person's own combined feed — a full page swap (title,
-    eyebrow, ready composers), not a same-page filter. Sits to the right of the
-    page title, next to the entry count. %>
-<% actions = capture do %>
-  <div class="flex items-center gap-2">
+<% subtitle = capture do %>
+  <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
+<% end %>
+<%# Title: the person's name (or "Everyone"), with the jump-to-a-person picker
+    right beside it — a full page swap (title, eyebrow, ready composers), not a
+    same-page filter. A <span> (not <div>) keeps this valid phrasing content
+    inside the layout's <h1>. %>
+<% title = capture do %>
+  <%= @person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone" %>
+  <span class="ml-3 inline-flex items-center gap-2 align-middle">
     <%= select_tag :jump_person_id, options_for_select([]),
                    include_blank: true, prompt: "Jump to a person…",
-                   class: "w-44 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500",
+                   class: "w-44 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-sans focus:border-blue-500 focus:ring-blue-500",
                    data: { controller: "remote-select navigate-select",
                            remote_select_model_value: "person",
                            remote_select_exclude_value: @person&.id,
                            navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
                            action: "change->navigate-select#navigate" } %>
     <% if @person %>
-      <%= link_to "View everyone", comments_and_communications_path, class: "text-xs #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
+      <%= link_to "View everyone", comments_and_communications_path, class: "text-xs font-sans #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
     <% end %>
-  </div>
-<% end %>
-<% subtitle = capture do %>
-  <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
+  </span>
 <% end %>
 
 <%= render layout: "shared/index_page",
            locals: { domain: :people, surface: "bg-white", eyebrow: "Comments & communications",
-                     title: (@person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone"),
-                     subtitle: subtitle, topbar: topbar, actions: actions } do %>
+                     title: title, subtitle: subtitle, topbar: topbar } do %>
   <div class="space-y-6">
     <%# Add-a-note / log-a-communication, each revealing a composer with a picker
         for which of the person's records to file it against. On a person's own
