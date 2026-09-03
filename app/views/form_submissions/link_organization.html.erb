@@ -6,7 +6,7 @@
     name; linking creates the affiliations — so there is no Unlink here;
     affiliations are managed on the person record. %>
 <% edit_affiliations_path = edit_person_path(@person, anchor: "affiliations", return_to: "form_submission", form_submission_id: @form_submission.id) %>
-<div class="max-w-2xl mx-auto py-8 px-4">
+<div class="max-w-2xl mx-auto px-4">
   <div class="mb-4">
     <% if params[:return_to] == "form_submissions" %>
       <%= link_to "← Back to form submissions", form_submissions_path(highlight: @form_submission.id, anchor: form_submission_row_id(@form_submission)), class: "text-sm #{eyebrow_link_class}" %>
