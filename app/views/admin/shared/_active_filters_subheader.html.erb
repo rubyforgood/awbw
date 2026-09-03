@@ -13,7 +13,7 @@
     "staff"    => "Admins"
   }
 
-  default_audiences = %w[visitors users]
+  default_audiences = local_assigns.fetch(:default_audiences, %w[visitors users])
   audience_values = Array(params[:audience]).reject(&:blank?).presence || default_audiences
   audience_labels = audience_values.filter_map { |v| audience_labels_map[v] }
 
@@ -24,7 +24,7 @@
   cast = ActiveModel::Type::Boolean.new
   hidden_labels = {
     "Account hidden" => cast.cast(params[:hide_account]),
-    "Interactions hidden" => cast.cast(params[:hide_interactions]),
+    "Interactions hidden" => local_assigns.fetch(:hide_interactions, cast.cast(params[:hide_interactions])),
     "Communications hidden" => cast.cast(params[:hide_communications])
   }.select { |_label, on| on }.keys
 

@@ -1,6 +1,12 @@
 module Admin
   class AhoyActivitiesController < ApplicationController
-    helper_method :scoped_visits, :scoped_events
+    helper_method :scoped_visits, :scoped_events, :hide_interactions?
+
+    # Most audience-filtered views (charts, visits) measure real-user engagement,
+    # so admins stay out by default. The events timeline is an audit log, where
+    # admins' own actions matter, so it defaults to including them.
+    DEFAULT_AUDIENCES = %w[visitors users].freeze
+    EVENTS_DEFAULT_AUDIENCES = %w[visitors users staff].freeze
 
     def index
       authorize! :ahoy_activity, to: :index?
@@ -10,6 +16,8 @@ module Admin
       # The full page renders only the header, filters, and an empty results frame;
       # the frame's src request (turbo_frame_request?) loads the filtered rows.
       return render :index unless turbo_frame_request?
+
+      @audience_default = EVENTS_DEFAULT_AUDIENCES
 
       @users = params[:user_id].present? ? User.where(id: params[:user_id].to_s.split("--")) : nil
 
@@ -734,14 +742,23 @@ module Admin
     end
 
     def selected_audiences
-      @selected_audiences ||= Array(params[:audience]).reject(&:blank?).presence || %w[visitors users]
+      @selected_audiences ||= Array(params[:audience]).reject(&:blank?).presence || (@audience_default || DEFAULT_AUDIENCES)
     end
 
     def hidden_name_patterns
       patterns = []
       patterns.concat(Ahoy::Event::ACCOUNT_NAME_PATTERNS) if param_true?(params[:hide_account])
-      patterns.concat(Ahoy::Event::INTERACTION_NAME_PATTERNS) if param_true?(params[:hide_interactions])
+      patterns.concat(Ahoy::Event::INTERACTION_NAME_PATTERNS) if hide_interactions?
       patterns
+    end
+
+    # Read/browse noise dominates the timeline, so hide it unless the toggle is
+    # explicitly off. An absent param means the default (hidden); the toggle's
+    # hidden field submits "0" so unchecking is distinguishable from first load.
+    def hide_interactions?
+      return true unless params.key?(:hide_interactions)
+
+      param_true?(params[:hide_interactions])
     end
 
     def hide_communications?
