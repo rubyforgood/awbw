@@ -1,0 +1,166 @@
+<%# Admin-only dossier: record data managed on the edit form that has no public
+    profile home — professional licenses, addresses, internal fields, and profile
+    preferences. Gated by `manage?` at the call site. Locals: person. %>
+<% licenses = person.professional_licenses.to_a %>
+<% addresses = person.addresses.to_a %>
+<% staff_tag_names = person.staff_tags.map(&:name) %>
+<% topic_labels = person.topic_subscriptions.active.map(&:topic_label).compact_blank %>
+<div class="admin-only overflow-hidden rounded-2xl border-2 border-blue-200 bg-blue-50 shadow-sm">
+  <div class="flex items-center gap-3 border-b border-blue-200 bg-blue-100 px-5 py-4 sm:px-6">
+    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-200 text-blue-800">
+      <i class="fa-solid fa-lock"></i>
+    </span>
+    <h2 class="font-display text-2xl text-gray-900">Admin details</h2>
+    <span class="ml-auto"><%= render "people/admin_only_badge" %></span>
+  </div>
+  <div class="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
+    <% program_categories = person.categorizable_items.filter_map(&:category).select { |c| c.category_type&.profile_specific? && c.category_type.name != "AgeRange" }.group_by(&:category_type) %>
+    <% other_settings = person.other_workshop_setting_responses %>
+    <% if program_categories.any? || other_settings.any? %>
+      <div>
+        <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Program settings</h3>
+        <% program_categories.sort_by { |type, _| type.name.to_s.downcase }.each do |type, cats| %>
+          <div class="mb-2">
+            <h4 class="text-sm font-medium text-gray-600"><%= type.display_label %></h4>
+            <div class="mt-1 flex flex-wrap gap-1.5">
+              <% cats.sort_by { |c| c.name.to_s.downcase }.each do |category| %>
+                <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900"><%= category.name %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        <% if other_settings.any? %>
+          <div class="mt-2 flex flex-wrap gap-1.5">
+            <% other_settings.each do |response| %>
+              <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900 italic"><%= response %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    <% if licenses.any? %>
+      <div>
+        <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Professional licenses</h3>
+        <div class="space-y-2">
+          <% licenses.each do |license| %>
+            <% badge = license.decorate.expiry_badge %>
+            <div class="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2">
+              <span class="font-medium text-gray-900"><%= license.name %></span>
+              <% if license.issuing_state.present? %>
+                <span class="text-sm text-gray-500"><%= license.issuing_state %></span>
+              <% end %>
+              <%= render "shared/badge", label: badge.label, classes: badge.classes, icon: badge.icon %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <% if addresses.any? %>
+      <div>
+        <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Addresses</h3>
+        <div class="space-y-2">
+          <% addresses.each do |address| %>
+            <div class="rounded-lg border border-blue-200 bg-white px-3 py-2 <%= "opacity-60" if address.inactive? %>">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-medium text-gray-900"><%= address.name %></span>
+                <% if address.primary? %>
+                  <span class="text-2xs rounded-full bg-blue-100 px-2 py-0.5 tracking-wide text-blue-700 uppercase">Primary</span>
+                <% end %>
+                <% if address.inactive? %>
+                  <span class="text-2xs rounded-full bg-gray-100 px-2 py-0.5 tracking-wide text-gray-500 uppercase">Inactive</span>
+                <% end %>
+              </div>
+              <div class="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-gray-500">
+                <% if address.address_type.present? %><span><%= address.address_type.titleize %></span><% end %>
+                <% if address.locality.present? %><span><%= address.locality %></span><% end %>
+                <% if address.county.present? %><span><%= address.county %> County</span><% end %>
+                <% if address.country.present? %><span><%= address.country %></span><% end %>
+                <% if address.district.present? %><span>District <%= address.district %></span><% end %>
+                <% if address.la_city_council_district.present? %><span>LA council district <%= address.la_city_council_district %></span><% end %>
+                <% if address.la_supervisorial_district.present? %><span>LA supervisorial district <%= address.la_supervisorial_district %></span><% end %>
+                <% if address.la_service_planning_area.present? %><span>LA SPA <%= address.la_service_planning_area %></span><% end %>
+                <% if address.phone.present? %><span><i class="fa-solid fa-phone text-2xs"></i> <%= address.phone %></span><% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div>
+        <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Internal</h3>
+        <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+          <dt class="font-medium text-gray-500">FileMaker code</dt>
+          <dd class="text-gray-900">
+            <% if person.filemaker_code.present? %>
+              <% if FmRolodex.exists?(fm_id: person.filemaker_code) %>
+                <%= link_to person.filemaker_code, fm_archive_path(person.filemaker_code, table: "rolodexes"), class: "text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
+              <% else %>
+                <%= person.filemaker_code %>
+              <% end %>
+            <% else %>—<% end %>
+          </dd>
+          <dt class="font-medium text-gray-500">Racial/ethnic identity</dt>
+          <dd class="text-gray-900"><%= person.racial_ethnic_identity.presence || "—" %></dd>
+          <dt class="font-medium text-gray-500">Staff tags</dt>
+          <dd class="text-gray-900">
+            <% if staff_tag_names.any? %>
+              <span class="flex flex-wrap gap-1.5">
+                <% staff_tag_names.each do |tag_name| %>
+                  <span class="text-2xs inline-flex rounded-full border border-blue-300 bg-white px-2 py-0.5 tracking-wide text-blue-800 uppercase"><%= tag_name %></span>
+                <% end %>
+              </span>
+            <% else %>—<% end %>
+          </dd>
+          <dt class="font-medium text-gray-500">Topic subscriptions</dt>
+          <dd class="text-gray-900"><%= topic_labels.any? ? topic_labels.join(", ") : "—" %></dd>
+        </dl>
+      </div>
+      <div>
+        <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Preferences</h3>
+        <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+          <dt class="font-medium text-gray-500">Searchable</dt>
+          <dd class="text-gray-900"><%= person.profile_is_searchable? ? "Yes" : "No" %></dd>
+          <dt class="font-medium text-gray-500">Display name</dt>
+          <dd class="text-gray-900"><%= Person::DISPLAY_NAME_PREFERENCE_LABELS[person.display_name_preference] || "—" %></dd>
+          <dt class="font-medium text-gray-500">Contributions</dt>
+          <dd class="text-gray-900"><%= Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[person.anonymous_contributions] %></dd>
+        </dl>
+      </div>
+    </div>
+    <%# Most recent 3 of the merged comments + communications feed. Same row
+        partials as the full feed; "View all" opens it. %>
+    <% if allowed_to?(:manage?, Comment) %>
+      <% comment_entries = person.comments.to_a %>
+      <% communication_entries = person.communications_scope.order(created_at: :desc).to_a %>
+      <% activity_total = comment_entries.size + communication_entries.size %>
+      <% recent_activity = (comment_entries + communication_entries).sort_by(&:created_at).reverse.first(3) %>
+      <% if recent_activity.any? %>
+        <div>
+          <div class="mb-2 flex flex-wrap items-center gap-2">
+            <h3 class="text-sm font-semibold tracking-wide text-gray-700 uppercase">Comments &amp; communications</h3>
+            <% if activity_total > recent_activity.size %>
+              <%= link_to "View all #{activity_total}", comments_and_communications_person_path(person), class: "text-xs text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
+            <% end %>
+          </div>
+          <div class="space-y-2">
+            <% recent_activity.each do |entry| %>
+              <% if entry.is_a?(Comment) %>
+                <div class="rounded-md border <%= comment_card_class(warning: entry.body&.include?("[AGE_RANGE_DATA]")) %> px-3 py-2">
+                  <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
+                    <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none" title="<%= entry.flagged? ? "Flagged for follow-up" : "Not flagged" %>">
+                      <i class="fa-flag <%= entry.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-400" %>"></i>
+                    </span>
+                    <%= render "comments/comment_line", comment: entry %>
+                  </div>
+                </div>
+              <% else %>
+                <%= render "notifications/communication_line", notification: entry, admin: true %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

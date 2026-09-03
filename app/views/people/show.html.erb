@@ -63,35 +63,61 @@
       </div>
       <div class="flex-1 text-center md:text-left">
         <h1 class="font-display text-primary text-4xl font-semibold tracking-tight">
-          <%= @person.name %><% if @person.profile_show_credentials? && @person.license_credentials.present? %><span class="font-normal text-gray-600">, <%= @person.license_credentials %></span><% end %>
-          <% if @person.pronouns.present? && @person.profile_show_pronouns? %>
-            <span class="font-sans text-base font-normal text-gray-500 italic">(<%= @person.pronouns %>)</span>
+          <%= @person.name %><% if @person.license_credentials.present? && profile_piece_shown?(@person, :profile_show_credentials) %><% if profile_piece_hidden_for_admin?(@person, :profile_show_credentials) %><span class="admin-only rounded bg-blue-100 px-1.5 font-sans text-base font-normal text-blue-800" title="Hidden from profile"><i class="fa-solid fa-eye-slash text-2xs"></i> <%= @person.license_credentials %></span><% else %><span class="font-normal text-gray-600">, <%= @person.license_credentials %></span><% end %><% end %>
+          <% if @person.pronouns.present? && profile_piece_shown?(@person, :profile_show_pronouns) %>
+            <% if profile_piece_hidden_for_admin?(@person, :profile_show_pronouns) %>
+              <span class="admin-only rounded bg-blue-100 px-1.5 font-sans text-base font-normal text-blue-800 italic" title="Hidden from profile"><i class="fa-solid fa-eye-slash text-2xs not-italic"></i> (<%= @person.pronouns %>)</span>
+            <% else %>
+              <span class="font-sans text-base font-normal text-gray-500 italic">(<%= @person.pronouns %>)</span>
+            <% end %>
           <% end %>
         </h1>
-        <% if @person.profile_show_member_since? %>
+        <% if profile_piece_shown?(@person, :profile_show_member_since) %>
+          <% member_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_member_since) %>
           <% if @person.facilitator_since_date.present? %>
-            <p class="mt-1 text-sm text-gray-600">
+            <p class="mt-1 text-sm text-gray-600 <%= "admin-only inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-0.5" if member_hidden %>">
+              <% if member_hidden %><i class="fa-solid fa-eye-slash text-2xs text-blue-700" title="Hidden from profile"></i><% end %>
               Facilitator since
               <span class="text-primary font-semibold"><%= @person.facilitator_since_date.strftime("%B %Y") %></span>
             </p>
           <% elsif @person.affiliated_since_date.present? %>
-            <p class="mt-1 text-sm text-gray-600">
+            <p class="mt-1 text-sm text-gray-600 <%= "admin-only inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-0.5" if member_hidden %>">
+              <% if member_hidden %><i class="fa-solid fa-eye-slash text-2xs text-blue-700" title="Hidden from profile"></i><% end %>
               Affiliated since
               <span class="text-primary font-semibold"><%= @person.affiliated_since_date.strftime("%B %Y") %></span>
             </p>
           <% end %>
         <% end %>
+        <%# Admin-only identity extras managed on the edit form. %>
+        <% if allowed_to?(:manage?, Person) &&
+              (@person.legal_first_name.present? || @person.pronunciation.present? || @person.date_of_birth.present? || @person.user&.time_zone.present?) %>
+          <div class="admin-only mt-2 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+            <% if @person.legal_first_name.present? && @person.legal_first_name != @person.first_name %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Legal first name (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Legal first name: <%= @person.legal_first_name %></span>
+            <% end %>
+            <% if @person.pronunciation.present? %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Name pronunciation (admin only)"><i class="fa-solid fa-lock text-2xs text-blue-700"></i> Pronunciation: <%= @person.pronunciation %></span>
+            <% end %>
+            <% if @person.date_of_birth.present? %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Birthday (admin only)"><i class="fa-solid fa-cake-candles text-2xs text-blue-700"></i> <%= @person.date_of_birth.strftime("%b %-d") %></span>
+            <% end %>
+            <% if @person.user&.time_zone.present? %>
+              <span class="<%= admin_only_chip_class %> text-sm" title="Time zone (admin only)"><i class="fa-solid fa-clock text-2xs text-blue-700"></i> <%= @person.user.time_zone %></span>
+            <% end %>
+          </div>
+        <% end %>
         <!-- Contact info + social -->
         <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
           <% email = @person.user&.email || @person.email %>
+          <% email_type = @person.email_type.presence || @person.user&.email_type %>
           <% if email.present? %>
             <% if @person.profile_show_email? %>
               <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-                <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on-->
+                <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on--><% if email_type.present? %> <span class="text-2xs text-gray-500 uppercase">(<%= email_type %>)</span><% end %>
               </span>
             <% elsif allowed_to?(:manage?, Person) %>
-              <span class="admin-only inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-                <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on-->
+              <span class="admin-only inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-blue-900" title="Hidden from profile">
+                <i class="fa-solid fa-eye-slash text-xs text-blue-700"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on--><% if email_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= email_type %>)</span><% end %>
               </span>
             <% end %>
             <% if @person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, @person) %>
@@ -108,13 +134,47 @@
             <% end %>
           <% end %>
           <% phone = @person.phone_number || @person.user&.phone %>
-          <% if @person.profile_show_phone? && phone.present? %>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-              <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
-            </span>
+          <% if phone.present? && profile_piece_shown?(@person, :profile_show_phone) %>
+            <% if profile_piece_hidden_for_admin?(@person, :profile_show_phone) %>
+              <span class="admin-only inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-blue-900" title="Hidden from profile">
+                <i class="fa-solid fa-eye-slash text-xs text-blue-700"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
+              </span>
+            <% else %>
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+                <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
+              </span>
+            <% end %>
           <% end %>
-          <% if @person.profile_show_social_media? %>
-            <%= render "people/social_media_buttons", person: @person %>
+          <% has_social = [ @person.linked_in_url, @person.instagram_url, @person.facebook_url, @person.twitter_url, @person.youtube_url ].any?(&:present?) %>
+          <% if has_social && profile_piece_shown?(@person, :profile_show_social_media) %>
+            <% if profile_piece_hidden_for_admin?(@person, :profile_show_social_media) %>
+              <span class="admin-only inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-100 px-2 py-1" title="Hidden from profile">
+                <i class="fa-solid fa-eye-slash text-xs text-blue-700"></i>
+                <%= render "people/social_media_buttons", person: @person %>
+              </span>
+            <% else %>
+              <%= render "people/social_media_buttons", person: @person %>
+            <% end %>
+          <% end %>
+          <%# Admin-only contact extras that have no public profile home. %>
+          <% if allowed_to?(:manage?, Person) %>
+            <% if @person.email_2.present? %>
+              <span class="<%= admin_only_chip_class %>" title="Secondary email (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.email_2, @person.email_2, class: "hover:text-primary" %><!--email_on--><% if @person.email_2_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= @person.email_2_type %>)</span><% end %>
+              </span>
+            <% end %>
+            <% shown_phone = @person.phone_number %>
+            <% @person.contact_methods.each do |cm| %>
+              <% next if cm.phone? && !cm.inactive? && cm.value == shown_phone %>
+              <span class="<%= admin_only_chip_class %> <%= "opacity-60" if cm.inactive? %>" title="<%= cm.kind.humanize %> (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <%= cm.value %> <span class="text-2xs text-blue-700 uppercase">(<%= [ cm.kind, cm.contact_type, (cm.inactive? ? "inactive" : nil) ].compact_blank.join(" · ") %>)</span>
+              </span>
+            <% end %>
+            <% if @person.best_time_to_call.present? %>
+              <span class="<%= admin_only_chip_class %>" title="Best time to call (admin only)">
+                <i class="fa-solid fa-clock text-xs text-blue-700"></i> Best time: <%= @person.best_time_to_call %>
+              </span>
+            <% end %>
           <% end %>
         </div>
         <!-- Badges -->
@@ -134,9 +194,13 @@
     <div>
       <div class="grid grid-cols-1 gap-8 md:grid-cols-5">
         <!-- Organization affiliations -->
-        <% if @person.profile_show_affiliations? %>
-          <div id="affiliations" class="scroll-mt-4 md:col-span-3">
-            <h2 class="mb-3 font-display text-2xl text-gray-900">Affiliations</h2>
+        <% if profile_piece_shown?(@person, :profile_show_affiliations) %>
+          <% affiliations_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_affiliations) %>
+          <div id="affiliations" class="scroll-mt-4 md:col-span-3 <%= profile_hidden_section_class if affiliations_hidden %>">
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <h2 class="font-display text-2xl text-gray-900">Affiliations</h2>
+              <%= render "people/hidden_from_profile" if affiliations_hidden %>
+            </div>
             <%= turbo_frame_tag "person_affiliations_section", src: person_path(@person, section: "affiliations"), loading: :lazy do %>
               <p class="text-gray-500 italic">Loading affiliations...</p>
             <% end %>
@@ -147,10 +211,12 @@
             stray legacy tagging is dropped from the displayed list. %>
         <% sectorable_items = @person.sectorable_items.includes(:sector).reject { |si| si.sector&.name == Sector::OTHER_SECTOR_NAME }.sort_by { |si| [ si.is_primary? ? 0 : 1, si.sector&.name.to_s.downcase ] } %>
         <% other_sectors = @person.other_sector_responses %>
-        <% show_sectors = @person.profile_show_sectors? %>
+        <% show_sectors = profile_piece_shown?(@person, :profile_show_sectors) %>
+        <% sectors_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_sectors) %>
         <% primary_age_groups = @person.primary_age_groups.to_a %>
         <% additional_age_groups = @person.additional_age_groups.to_a %>
-        <% show_age = @person.profile_show_age_ranges? && (primary_age_groups.any? || additional_age_groups.any?) %>
+        <% show_age = profile_piece_shown?(@person, :profile_show_age_ranges) && (primary_age_groups.any? || additional_age_groups.any?) %>
+        <% age_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_age_ranges) %>
         <% if show_sectors || show_age %>
           <div class="md:col-span-2">
             <div class="flex items-start gap-4">
@@ -158,8 +224,11 @@
                 <%# One combined list: the primary sector leads as a darker-green
                     starred chip, then additional sectors alphabetically and any
                     free-text "Other" responses. %>
-                <div class="min-w-0 flex-1">
-                  <h2 class="mb-3 font-display text-2xl text-gray-900">Sectors</h2>
+                <div class="min-w-0 flex-1 <%= profile_hidden_section_class if sectors_hidden %>">
+                  <div class="mb-3 flex flex-wrap items-center gap-2">
+                    <h2 class="font-display text-2xl text-gray-900">Sectors</h2>
+                    <%= render "people/hidden_from_profile" if sectors_hidden %>
+                  </div>
                   <% if sectorable_items.any? || other_sectors.any? %>
                     <div class="flex flex-wrap gap-2">
                       <% sectorable_items.each do |si| %>
@@ -177,8 +246,11 @@
                 </div>
               <% end %>
               <% if show_age %>
-                <div class="w-32 flex-shrink-0">
-                  <h2 class="mb-3 font-display text-2xl text-gray-900">Age ranges</h2>
+                <div class="w-32 flex-shrink-0 <%= profile_hidden_section_class if age_hidden %>">
+                  <div class="mb-3 flex flex-wrap items-center gap-2">
+                    <h2 class="font-display text-2xl text-gray-900">Age ranges</h2>
+                    <%= render "people/hidden_from_profile" if age_hidden %>
+                  </div>
                   <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups, compact: true %>
                 </div>
               <% end %>
@@ -187,21 +259,28 @@
         <% end %>
       </div>
     </div>
+    <!-- ADMIN DETAILS (record data with no public profile home) -->
+    <% if allowed_to?(:manage?, Person) %>
+      <%= render "people/admin_details", person: @person %>
+    <% end %>
     <!-- Bio -->
-    <% if @person.profile_show_bio? && @person.bio.present? %>
-      <div class="<%= DomainTheme.bg_class_for(:person_bio, intensity: 50) %>
-          border-2 <%= DomainTheme.border_class_for(:person_bio) %> rounded-2xl p-5 sm:p-6">
-        <h2 class="mb-3 font-display text-2xl text-gray-900">Bio</h2>
+    <% if @person.bio.present? && profile_piece_shown?(@person, :profile_show_bio) %>
+      <% bio_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_bio) %>
+      <div class="rounded-2xl border-2 p-5 sm:p-6 <%= bio_hidden ? "admin-only border-blue-200 bg-blue-100" : "#{DomainTheme.bg_class_for(:person_bio, intensity: 50)} #{DomainTheme.border_class_for(:person_bio)}" %>">
+        <div class="mb-3 flex flex-wrap items-center gap-2">
+          <h2 class="font-display text-2xl text-gray-900">Bio</h2>
+          <%= render "people/hidden_from_profile" if bio_hidden %>
+        </div>
         <div class="leading-relaxed text-gray-700">
           <%= sanitize(@person.bio, tags: %w[p br strong em a ul ol li b i], attributes: %w[href]) %>
         </div>
       </div>
     <% end %>
     <!-- AUTHORED SECTION -->
-    <% if @person.profile_show_workshops? ||
-            @person.profile_show_workshop_variations? ||
-            @person.profile_show_stories? ||
-            @person.profile_show_resources?  %>
+    <% if profile_piece_shown?(@person, :profile_show_workshops) ||
+            profile_piece_shown?(@person, :profile_show_workshop_variations) ||
+            profile_piece_shown?(@person, :profile_show_stories) ||
+            profile_piece_shown?(@person, :profile_show_resources) %>
       <div class="person-only border-2 bg-white <%= DomainTheme.border_class_for(:workshops) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
         <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:workshops, intensity: 200) %>">
@@ -213,36 +292,52 @@
         <!-- Contributed Content -->
         <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">
           <!-- Workshops authored -->
-          <% if @person.profile_show_workshops? %>
-            <div>
-              <h3 class="mb-3 font-display text-xl text-gray-900">Workshops authored</h3>
+          <% if profile_piece_shown?(@person, :profile_show_workshops) %>
+            <% workshops_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_workshops) %>
+            <div class="<%= profile_hidden_section_class if workshops_hidden %>">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
+                <h3 class="font-display text-xl text-gray-900">Workshops authored</h3>
+                <%= render "people/hidden_from_profile" if workshops_hidden %>
+              </div>
               <%= turbo_frame_tag "person_workshops_section", src: person_path(@person, section: "workshops"), loading: :lazy  do %>
                 <p class="text-gray-500 italic">Loading workshops...</p>
               <% end %>
             </div>
           <% end %>
           <!-- Workshop variations  -->
-          <% if @person.profile_show_workshop_variations? %>
-            <div>
-              <h3 class="mb-3 font-display text-xl text-gray-900">Workshop variations authored</h3>
+          <% if profile_piece_shown?(@person, :profile_show_workshop_variations) %>
+            <% workshop_variations_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_workshop_variations) %>
+            <div class="<%= profile_hidden_section_class if workshop_variations_hidden %>">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
+                <h3 class="font-display text-xl text-gray-900">Workshop variations authored</h3>
+                <%= render "people/hidden_from_profile" if workshop_variations_hidden %>
+              </div>
               <%= turbo_frame_tag "person_workshop_variations_section", src: person_path(@person, section: "workshop_variations"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading workshop variations...</p>
               <% end %>
             </div>
           <% end %>
           <!-- Stories authored -->
-          <% if @person.profile_show_stories? %>
-            <div>
-              <h3 class="mb-3 font-display text-xl text-gray-900">Stories authored/featured</h3>
+          <% if profile_piece_shown?(@person, :profile_show_stories) %>
+            <% stories_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_stories) %>
+            <div class="<%= profile_hidden_section_class if stories_hidden %>">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
+                <h3 class="font-display text-xl text-gray-900">Stories authored/featured</h3>
+                <%= render "people/hidden_from_profile" if stories_hidden %>
+              </div>
               <%= turbo_frame_tag "person_stories_section", src: person_path(@person, section: "stories"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading stories...</p>
               <% end %>
             </div>
           <% end %>
           <!-- Resources authored -->
-          <% if @person.profile_show_resources? %>
-            <div>
-              <h3 class="mb-3 font-display text-xl text-gray-900">Resources authored</h3>
+          <% if profile_piece_shown?(@person, :profile_show_resources) %>
+            <% resources_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_resources) %>
+            <div class="<%= profile_hidden_section_class if resources_hidden %>">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
+                <h3 class="font-display text-xl text-gray-900">Resources authored</h3>
+                <%= render "people/hidden_from_profile" if resources_hidden %>
+              </div>
               <%= turbo_frame_tag "person_resources_section", src: person_path(@person, section: "resources"), loading: :lazy do %>
                 <p class="text-gray-500 italic">Loading resources...</p>
               <% end %>
@@ -252,7 +347,8 @@
       </div>
     <% end %>
     <!-- PARTICIPATION SECTION -->
-    <% if @person.profile_show_events_registered? %>
+    <% if profile_piece_shown?(@person, :profile_show_events_registered) %>
+      <% events_hidden = profile_piece_hidden_for_admin?(@person, :profile_show_events_registered) %>
       <div class="person-only border-2 bg-white <%= DomainTheme.border_class_for(:events) %> overflow-hidden rounded-2xl shadow-sm">
         <!-- Header -->
         <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= DomainTheme.border_class_for(:events, intensity: 200) %>">
@@ -263,14 +359,15 @@
         </div>
         <!-- Events attended -->
         <div class="section-content space-y-8 px-4 py-5 sm:space-y-10 sm:px-6 sm:py-6">
-          <% if @person.profile_show_events_registered? %>
-            <div>
-              <h3 class="mb-3 font-display text-xl text-gray-900">Events attended</h3>
-              <%= turbo_frame_tag "person_events_section", src: person_path(@person, section: "events"), loading: :lazy do %>
-                <p class="text-gray-500 italic">Loading events...</p>
-              <% end %>
+          <div class="<%= profile_hidden_section_class if events_hidden %>">
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <h3 class="font-display text-xl text-gray-900">Events attended</h3>
+              <%= render "people/hidden_from_profile" if events_hidden %>
             </div>
-          <% end %>
+            <%= turbo_frame_tag "person_events_section", src: person_path(@person, section: "events"), loading: :lazy do %>
+              <p class="text-gray-500 italic">Loading events...</p>
+            <% end %>
+          </div>
         </div>
       </div>
     <% end %>
