@@ -8,13 +8,13 @@
   <% has_affiliations = f.object.persisted? && f.object.affiliations.any? %>
   <% automanaged_notice = "<span class='text-xs text-amber-700 mt-1'>Auto-managed by affiliations</span>" %>
 
-  <div class="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 mb-8 items-start">
+  <div class="mb-8 grid grid-cols-1 items-start gap-6 md:grid-cols-[3fr_1fr]">
     <!-- LEFT SIDE (3/4): name, Windows audience, and the collapsed config sections,
          stacked so this column tracks the logo's height and leaves no dead space
          under the collapsed sections. -->
     <div class="space-y-6">
       <!-- Organization Name + Parent -->
-      <div class="grid grid-cols-1 <%= "md:grid-cols-[3fr_1fr]" if allowed_to?(:manage?, Organization) %> gap-4 items-start">
+      <div class="grid grid-cols-1 <%= "md:grid-cols-[3fr_1fr]" if allowed_to?(:manage?, Organization) %> items-start gap-4">
         <div>
           <%= f.input :name,
                       label: "Organization Name",
@@ -59,16 +59,16 @@
       <%# Sectors is collapsible — collapses to the list of tagged sectors. Open on
           a new org or when there are errors. %>
       <% sectors_open = !f.object.persisted? || f.object.errors.any? %>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+      <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
         <details class="form-group group"<%= " open".html_safe if sectors_open %>>
           <%# Title is a fixed column; the names flow in the flex-1 column and wrap
               indented under themselves (hanging indent), chevron trailing. %>
-          <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-            <span class="font-semibold shrink-0">Sectors:</span>
-            <span class="text-sm text-gray-500 flex-1 min-w-0"><%= f.object.decorate.sectors_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
+          <summary class="flex cursor-pointer list-none items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
+            <span class="shrink-0 font-semibold">Sectors:</span>
+            <span class="min-w-0 flex-1 text-sm text-gray-500"><%= f.object.decorate.sectors_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
           </summary>
 
-          <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 mb-4 shadow-sm mt-2">
+          <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> mt-2 mb-4 p-4 shadow-sm">
             <%= f.simple_fields_for :sectorable_items do |sfi| %>
               <%= render "shared/sectorable_item_fields", f: sfi %>
             <% end %>
@@ -90,7 +90,7 @@
         <!-- Windows audience -->
         <% windows_open = !f.object.persisted? || f.object.errors.any? %>
         <details class="form-group group"<%= " open".html_safe if windows_open %>>
-          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+          <summary class="flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
             <span class="font-semibold">Windows audience:</span>
             <span class="text-sm text-gray-500"><%= f.object.windows_type&.name.presence || "None selected" %></span>
             <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
@@ -433,16 +433,16 @@
     </div>
   </details>
 
-  <details class="profile-preferences-section mb-8 group">
-    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+  <details class="profile-preferences-section group mb-8">
+    <summary class="flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-medium">Profile display preferences</span>
       <span class="text-sm text-gray-500"><%= f.object.decorate.profile_display_summary %></span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
 
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
-      <div class="pl-3 pr-3 pb-3">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+    <div class="mt-2 mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <div class="pr-3 pb-3 pl-3">
+        <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <%= f.input :profile_show_email, label: "Show email" %>
           <%= f.input :profile_show_phone, label: "Show phone" %>
           <%= f.input :profile_show_website, label: "Show website" %>
@@ -467,11 +467,11 @@
   <% if f.object.persisted? %>
     <%= render "shared/comments_and_communications", f: f %>
 
-    <div class="form-group space-y-4 mb-8">
-      <div class="font-semibold text-gray-700 mb-2">
+    <div class="form-group mb-8 space-y-4">
+      <div class="mb-2 font-semibold text-gray-700">
         Associated records
       </div>
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm">
+      <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
         <%= render "associated_records", organization: f.object %>
       </div>
     </div>
