@@ -1145,6 +1145,21 @@ RSpec.describe "Forms", type: :request do
         expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", person_id: person.id, return_to: "form_results"))
       end
 
+      it "carries the submitted date range into the form answers links" do
+        form = create(:form, :standalone)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form, created_at: Date.new(2026, 6, 5)),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, start_date: "2026-05-01", end_date: "2026-07-01")
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts",
+                                                   start_date: "2026-05-01", end_date: "2026-07-01",
+                                                   return_to: "form_results"))
+      end
+
       it "carries the selected organization into the form answers links" do
         form = create(:form)
         org = create(:organization)

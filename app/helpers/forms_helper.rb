@@ -48,6 +48,23 @@ module FormsHelper
       class: "text-sm #{eyebrow_link_class} px-2 py-1"
   end
 
+  # A results card's drill-down into the Form answers list: this question, on
+  # this form, narrowed exactly like the rollup the admin is looking at, plus the
+  # origin that gives that list an eyebrow back here. Built here so every card
+  # link stays in step with the results filters.
+  def form_results_drilldown_params(form, question)
+    {
+      form_id: form.id,
+      question: question,
+      event_id: @selected_event_id,
+      person_id: @selected_person_id,
+      organization_id: @selected_organization_id,
+      start_date: @selected_start_date,
+      end_date: @selected_end_date,
+      return_to: "form_results"
+    }.compact
+  end
+
   # Human-readable role for a form: "Registration", "Bulk Payment", etc.,
   # falling back to "General" when no role is set.
   def form_role_label(form)

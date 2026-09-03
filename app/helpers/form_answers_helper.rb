@@ -12,6 +12,8 @@ module FormAnswersHelper
       person_id: params[:person_id].presence,
       organization_id: params[:organization_id].presence,
       form_submission_id: params[:form_submission_id].presence,
+      start_date: params[:start_date].presence,
+      end_date: params[:end_date].presence,
       empty: params[:empty].presence
     }.compact
   end

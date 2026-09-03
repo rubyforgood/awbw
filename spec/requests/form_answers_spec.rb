@@ -120,6 +120,20 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("short-answer")
       end
 
+      # By the submission's date, not the answer row's, so this list and a form's
+      # results page answer the same date range the same way.
+      it "filters by when the submission was made" do
+        create(:form_answer, submitted_answer: "winter-answer",
+               form_submission: create(:form_submission, created_at: Date.new(2026, 1, 5)))
+        create(:form_answer, submitted_answer: "summer-answer",
+               form_submission: create(:form_submission, created_at: Date.new(2026, 6, 5)))
+
+        get form_answers_path(start_date: "2026-05-01", end_date: "2026-07-01"), headers: frame_headers
+
+        expect(response.body).to include("summer-answer")
+        expect(response.body).not_to include("winter-answer")
+      end
+
       it "hides the blank answer rows an unfilled optional question leaves behind" do
         form = create(:form)
         create(:form_answer, submitted_answer: "answered-it",

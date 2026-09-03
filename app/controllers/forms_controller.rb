@@ -47,9 +47,11 @@ class FormsController < ApplicationController
     @selected_event_id = @form.events.where(id: params[:event_id]).pick(:id) if params[:event_id].present?
     @selected_person_id = params[:person_id].presence
     @selected_organization_id = params[:organization_id].presence
+    @selected_start_date = params[:start_date].presence
+    @selected_end_date = params[:end_date].presence
     @aggregator = FormResponseAggregator.new(@form, event_id: @selected_event_id,
                   person_id: @selected_person_id, organization_id: @selected_organization_id,
-                  start_date: params[:start_date], end_date: params[:end_date], question_query: params[:question])
+                  start_date: @selected_start_date, end_date: @selected_end_date, question_query: params[:question])
   end
 
   def new

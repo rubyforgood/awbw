@@ -54,6 +54,16 @@ class FormAnswersController < ApplicationController
     if params[:answer_type].present? && FormField.answer_types.key?(params[:answer_type])
       scope = scope.joins(:form_field).where(form_fields: { answer_type: FormField.answer_types[params[:answer_type]] })
     end
-    scope
+    date_scoped(scope)
+  end
+
+  # By when the submission was made, not when the answer row was written, so this
+  # list agrees with the same date range on a form's results page.
+  def date_scoped(scope)
+    start_date = FormSubmission.parse_date(params[:start_date])
+    end_date = FormSubmission.parse_date(params[:end_date])
+    return scope unless start_date || end_date
+
+    scope.joins(:form_submission).merge(FormSubmission.submitted_between(start_date, end_date))
   end
 end
