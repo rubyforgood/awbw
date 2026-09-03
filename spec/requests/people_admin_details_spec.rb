@@ -41,7 +41,8 @@ RSpec.describe "Person profile admin-only details", type: :request do
     "Pipeline VIP",
     "FMK-12345",
     "Demographic detail here",
-    "First name only"
+    "First name only",
+    "Comments &amp; communications"
   ]
 
   context "when an admin views the profile" do
@@ -68,5 +69,13 @@ RSpec.describe "Person profile admin-only details", type: :request do
         expect(response.body).not_to include(marker)
       end
     end
+  end
+
+  it "renders the comments & communications frame without error for an admin" do
+    sign_in admin
+    get comments_and_communications_person_path(person),
+        headers: { "Turbo-Frame" => "comments_and_communications_results" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("comments_and_communications_results")
   end
 end

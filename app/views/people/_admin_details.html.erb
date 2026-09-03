@@ -2,7 +2,7 @@
     profile home — professional licenses, addresses, internal fields, and profile
     preferences. Gated by `manage?` at the call site. Locals: person. %>
 <% licenses = person.professional_licenses.to_a %>
-<% addresses = person.addresses.reject(&:inactive?) %>
+<% addresses = person.addresses.to_a %>
 <% staff_tag_names = person.staff_tags.map(&:name) %>
 <% topic_labels = person.topic_subscriptions.active.map(&:topic_label).compact_blank %>
 <div class="admin-only overflow-hidden rounded-2xl border-2 border-blue-200 bg-blue-50 shadow-sm">
@@ -60,17 +60,26 @@
         <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Addresses</h3>
         <div class="space-y-2">
           <% addresses.each do |address| %>
-            <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
+            <div class="rounded-lg border border-blue-200 bg-white px-3 py-2 <%= "opacity-60" if address.inactive? %>">
               <div class="flex flex-wrap items-center gap-2">
                 <span class="font-medium text-gray-900"><%= address.name %></span>
                 <% if address.primary? %>
                   <span class="text-2xs rounded-full bg-blue-100 px-2 py-0.5 tracking-wide text-blue-700 uppercase">Primary</span>
                 <% end %>
+                <% if address.inactive? %>
+                  <span class="text-2xs rounded-full bg-gray-100 px-2 py-0.5 tracking-wide text-gray-500 uppercase">Inactive</span>
+                <% end %>
               </div>
-              <div class="mt-0.5 flex flex-wrap gap-x-3 text-sm text-gray-500">
+              <div class="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-gray-500">
                 <% if address.address_type.present? %><span><%= address.address_type.titleize %></span><% end %>
                 <% if address.locality.present? %><span><%= address.locality %></span><% end %>
                 <% if address.county.present? %><span><%= address.county %> County</span><% end %>
+                <% if address.country.present? %><span><%= address.country %></span><% end %>
+                <% if address.district.present? %><span>District <%= address.district %></span><% end %>
+                <% if address.la_city_council_district.present? %><span>LA council district <%= address.la_city_council_district %></span><% end %>
+                <% if address.la_supervisorial_district.present? %><span>LA supervisorial district <%= address.la_supervisorial_district %></span><% end %>
+                <% if address.la_service_planning_area.present? %><span>LA SPA <%= address.la_service_planning_area %></span><% end %>
+                <% if address.phone.present? %><span><i class="fa-solid fa-phone text-2xs"></i> <%= address.phone %></span><% end %>
               </div>
             </div>
           <% end %>
@@ -82,7 +91,15 @@
         <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Internal</h3>
         <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt class="font-medium text-gray-500">FileMaker code</dt>
-          <dd class="text-gray-900"><%= person.filemaker_code.presence || "—" %></dd>
+          <dd class="text-gray-900">
+            <% if person.filemaker_code.present? %>
+              <% if FmRolodex.exists?(fm_id: person.filemaker_code) %>
+                <%= link_to person.filemaker_code, fm_archive_path(person.filemaker_code, table: "rolodexes"), class: "text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
+              <% else %>
+                <%= person.filemaker_code %>
+              <% end %>
+            <% else %>—<% end %>
+          </dd>
           <dt class="font-medium text-gray-500">Racial/ethnic identity</dt>
           <dd class="text-gray-900"><%= person.racial_ethnic_identity.presence || "—" %></dd>
           <dt class="font-medium text-gray-500">Staff tags</dt>
