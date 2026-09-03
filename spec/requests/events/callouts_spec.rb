@@ -968,6 +968,20 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).to include("/rails/active_storage/blobs/proxy")
       end
 
+      it "prefers a resource linked to the certificate callout over the title default" do
+        # The title-matched default carries no image, so a title-only lookup renders nothing.
+        create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+        connected = create(:resource, title: "Event-specific signatures", hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: connected)
+        create(:registration_ticket_callout, :action, event: event, builtin_key: "certificate",
+                                                       title: "Certificate of completion", resource: connected)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response.body).to include("Signed by Christy Turek Rials")
+        expect(response.body).to include("/rails/active_storage/blobs/proxy")
+      end
+
       it "still adds the shared CE accreditation clause when CE credit is earned" do
         event.update!(ce_hours_offered: 6)
         license = create(:professional_license, person: registration.registrant, number: "LIC-T")

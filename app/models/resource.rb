@@ -25,11 +25,13 @@ class Resource < ApplicationRecord
   # record/upload isn't present (e.g. dev/OSS), so the certificate simply omits
   # the signatures rather than erroring.
   def self.training_certificate_signatures_file
-    resource = find_by(title: TRAINING_CERTIFICATE_SIGNATURES_TITLE)
-    return unless resource
+    find_by(title: TRAINING_CERTIFICATE_SIGNATURES_TITLE)&.signature_file
+  end
 
-    [ resource.primary_asset, resource.downloadable_asset ].compact
-      .map(&:file).find(&:attached?)
+  # The first attached image on this resource (primary asset, then downloadable),
+  # for use as a certificate signature strip. Nil when nothing is attached.
+  def signature_file
+    [ primary_asset, downloadable_asset ].compact.map(&:file).find(&:attached?)
   end
 
   has_rich_text :rhino_body

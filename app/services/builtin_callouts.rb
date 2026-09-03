@@ -293,7 +293,12 @@ class BuiltinCallouts
         color_class: "green",
         # A published row shows before it unlocks as a pending card; once unlocked it
         # links to the certificate (BuiltinCalloutCards guards this).
-        hidden: ->(_event) { true }
+        hidden: ->(_event) { true },
+        # The facilitator-training certificate's signature strip is a removable linked
+        # resource, attached on create by title so admins can swap it per event. When
+        # nothing is linked (e.g. the record isn't seeded yet), the page falls back to
+        # the title-matched default. Mirrors the payment callout's W-9.
+        resources: -> { [ Resource.find_by(title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE) ].compact }
       },
       {
         builtin_key: "faq",

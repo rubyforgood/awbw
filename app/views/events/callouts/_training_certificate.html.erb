@@ -1,7 +1,8 @@
 <%# The facilitator-training certificate — the branded painted-border design.
     The border/title are static brand assets (app/assets/images/certificates); the
-    signature strip is an admin-managed upload (Resource.training_certificate_signatures_file,
-    passed in as signature_file) so real signatures never live in this public repo.
+    signature strip is an admin-managed upload (the certificate callout's linked
+    resource, else the title-matched default), passed in as signature_file, so real
+    signatures never live in this public repo.
     The recipient name, dates, and CE clause are rendered live over the card.
     Sizes use container-query units (cqw) so the whole certificate scales as one. %>
 <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
