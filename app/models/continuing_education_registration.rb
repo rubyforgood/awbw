@@ -2,6 +2,7 @@ class ContinuingEducationRegistration < ApplicationRecord
   include Registerable
   include Certifiable
   include Communicable
+  include RemoteSearchable
 
   # AWBW's continuing-education accreditation, referenced by the CE callout copy
   # and the completion certificate's CE clause. Kept here as the single source of
@@ -188,6 +189,19 @@ class ContinuingEducationRegistration < ApplicationRecord
     return "Paid" if paid_in_full?
     return "Partial" if partially_paid?
     "Due"
+  end
+
+  remote_searchable_by :event_registration,
+    scope: ->(query) {
+      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
+      return none if words.blank?
+      pattern = "%#{words.join('%')}%"
+      joins(event_registration: :registrant)
+        .where("people.first_name LIKE :p OR people.last_name LIKE :p OR people.email LIKE :p", p: pattern)
+    }
+
+  def remote_search_label
+    { id: id, label: "#{registrant.full_name} · CE ##{id}" }
   end
 
   private

@@ -2,6 +2,7 @@ class Story < ApplicationRecord
   include AuthorCreditable
   include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Communicable
+  include RemoteSearchable
 
   has_rich_text :rhino_body
 
@@ -133,6 +134,8 @@ class Story < ApplicationRecord
   def communications_email
     author_person&.preferred_email
   end
+
+  remote_searchable_by :title
 
   def organization_name
     organization&.name

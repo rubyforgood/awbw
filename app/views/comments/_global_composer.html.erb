@@ -1,0 +1,43 @@
+<%# "New comment" composer for the global comments index. Unlike comments/_composer
+    (used on a person's page, whose "Add a note to…" picker is a static list of
+    that person's own records), this page has no single-person context, so the
+    picker is a live cross-type search instead (remote-select against the
+    "commentable" virtual model in SearchController). Submits as a plain,
+    non-Turbo request so the redirect lands back on a freshly loaded index —
+    the same stream: false pattern comments/_composer uses on the combined
+    comments & communications page. %>
+<div id="global_comment_composer"
+     class="hidden rounded-lg border <%= DomainTheme.border_class_for(:comments) %> <%= DomainTheme.bg_class_for(:comments, intensity: 50) %> p-4 shadow-sm">
+  <%= simple_form_for Comment.new, url: comments_path, data: { turbo: false } do |f| %>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+      <div class="sm:w-1/3 shrink-0">
+        <label class="block text-xs font-semibold text-gray-600 mb-1" for="commentable_sgid">Add a note to</label>
+        <%= select_tag :commentable_sgid, nil,
+                       include_blank: true, prompt: "Search for a person, registration, scholarship…",
+                       class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
+                       data: { controller: "remote-select", remote_select_model_value: "commentable" } %>
+        <%= f.input_field :topic,
+                          placeholder: "Topic (optional)",
+                          class: "mt-2 w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+      </div>
+      <div class="grow">
+        <label class="block text-xs font-semibold text-gray-600 mb-1" for="comment_body">Comment</label>
+        <%= f.input_field :body,
+                          as: :text,
+                          rows: 3,
+                          required: true,
+                          placeholder: "Type your comment",
+                          class: "w-full bg-white rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
+      </div>
+    </div>
+
+    <div class="mt-3 flex items-center gap-x-3">
+      <%= f.submit "Add comment", class: button_classes(:secondary_outline) %>
+      <label class="inline-flex items-center cursor-pointer select-none" title="Flag this note for follow-up">
+        <%= f.check_box :flagged, class: "peer sr-only" %>
+        <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
+        <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flag</span>
+      </label>
+    </div>
+  <% end %>
+</div>

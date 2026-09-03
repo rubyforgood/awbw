@@ -1,5 +1,6 @@
 class Scholarship < ApplicationRecord
   include Communicable
+  include RemoteSearchable
   belongs_to :recipient, class_name: "Person"
   belongs_to :grant, optional: true
   belongs_to :created_by, class_name: "User", optional: true
@@ -148,6 +149,19 @@ class Scholarship < ApplicationRecord
 
   def communications_email
     recipient&.preferred_email
+  end
+
+  remote_searchable_by :recipient,
+    scope: ->(query) {
+      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
+      return none if words.blank?
+      pattern = "%#{words.join('%')}%"
+      joins(:recipient)
+        .where("people.first_name LIKE :p OR people.last_name LIKE :p OR people.email LIKE :p", p: pattern)
+    }
+
+  def remote_search_label
+    { id: id, label: "#{recipient.full_name} · Scholarship ##{id}" }
   end
 
   private

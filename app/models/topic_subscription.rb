@@ -1,5 +1,6 @@
 class TopicSubscription < ApplicationRecord
   include Communicable
+  include RemoteSearchable
   belongs_to :person
   belongs_to :topic_subscription_type
   # Optional narrowing to a specific event (e.g. one training). Null = the topic
@@ -95,6 +96,19 @@ class TopicSubscription < ApplicationRecord
 
   def topic_label
     topic_subscription_type&.name
+  end
+
+  remote_searchable_by :person,
+    scope: ->(query) {
+      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
+      return none if words.blank?
+      pattern = "%#{words.join('%')}%"
+      joins(:person)
+        .where("people.first_name LIKE :p OR people.last_name LIKE :p OR people.email LIKE :p", p: pattern)
+    }
+
+  def remote_search_label
+    { id: id, label: "#{person.full_name} · #{topic_label}" }
   end
 
   def unsubscribe!

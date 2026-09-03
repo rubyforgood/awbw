@@ -3,4 +3,9 @@ class ContinuingEducationRegistrationPolicy < ApplicationPolicy
   alias_rule :index?, :show?, :new?, :create?, :edit?, :update?, :destroy?, :toggle_certificate?, to: :manage?
 
   def manage? = admin?
+
+  relation_scope do |relation|
+    next relation if admin?
+    relation.none
+  end
 end

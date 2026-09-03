@@ -16,8 +16,19 @@
   <div class="space-y-6 p-4 sm:p-8">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
       <h1 class="text-primary font-display text-2xl font-semibold">All comments</h1>
-      <p class="text-sm text-gray-500"><%= pluralize(@total_count, "comment") %></p>
+      <div class="flex items-center gap-3">
+        <p class="text-sm text-gray-500"><%= pluralize(@total_count, "comment") %></p>
+        <button type="button"
+                data-controller="dropdown"
+                data-action="dropdown#toggle"
+                data-dropdown-payload-param='[{"global_comment_composer":"hidden"}]'
+                class="<%= button_classes(:secondary_outline) %>">
+          <i class="fa-solid fa-plus"></i> New comment
+        </button>
+      </div>
     </div>
+
+    <%= render "comments/global_composer" %>
 
     <%= render "comments/search_boxes",
                url: comments_path,

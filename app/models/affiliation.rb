@@ -1,5 +1,6 @@
 class Affiliation < ApplicationRecord
   include Communicable
+  include RemoteSearchable
   # Standing title given to the "facilitator affiliation" we create on registration
   # and org linking. Matches the `facilitators` scope / `facilitator?` predicate
   # (both treat exactly "Facilitator" as canonical).
@@ -169,6 +170,19 @@ class Affiliation < ApplicationRecord
 
   def name
     "#{person.name}" if person
+  end
+
+  remote_searchable_by :person,
+    scope: ->(query) {
+      words = query.split.flat_map { |w| w.split(/[\s\-]+/) }.reject(&:blank?)
+      return none if words.blank?
+      pattern = "%#{words.join('%')}%"
+      joins(:person, :organization)
+        .where("people.first_name LIKE :p OR people.last_name LIKE :p OR organizations.name LIKE :p", p: pattern)
+    }
+
+  def remote_search_label
+    { id: id, label: "#{person&.full_name} @ #{organization&.name}" }
   end
 
   private

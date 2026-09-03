@@ -1,6 +1,7 @@
 class StoryIdea < ApplicationRecord
   include AuthorCreditable
   include Communicable
+  include RemoteSearchable
   # The submitter is the author when none is named.
   credits_creator
 
@@ -85,5 +86,11 @@ class StoryIdea < ApplicationRecord
 
   def organization_description
     organization&.organization_description
+  end
+
+  remote_searchable_by :title
+
+  def remote_search_label
+    { id: id, label: title.presence || "Story idea ##{id}" }
   end
 end

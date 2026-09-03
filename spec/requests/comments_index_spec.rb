@@ -14,6 +14,13 @@ RSpec.describe "Comments index", type: :request do
       expect(response.body).to include("person_id", "event_id")
     end
 
+    it "includes a New comment composer with a searchable commentable picker" do
+      sign_in admin
+      get comments_path
+
+      expect(response.body).to include("New comment", "global_comment_composer", "commentable_sgid")
+    end
+
     it "lists every comment in the results frame" do
       sign_in admin
       create(:comment, commentable: create(:person), body: "One")

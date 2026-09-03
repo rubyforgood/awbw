@@ -24,6 +24,18 @@ RSpec.describe "Comments", type: :request do
     end
   end
 
+  describe "POST /comments (commentable_sgid)" do
+    it "creates a comment against a record with no nested comments route, like an affiliation" do
+      affiliation = create(:affiliation)
+
+      expect {
+        post comments_path, params: { commentable_sgid: affiliation.to_sgid.to_s, comment: { body: "Ended after training." } }
+      }.to change(affiliation.comments, :count).by(1)
+
+      expect(affiliation.comments.last.body).to eq("Ended after training.")
+    end
+  end
+
   describe "PATCH /people/:person_id/comments/:id" do
     it "toggles the flagged state" do
       comment = create(:comment, commentable: person, body: "Called the family.")
@@ -34,6 +46,18 @@ RSpec.describe "Comments", type: :request do
 
       patch person_comment_path(person, comment), params: { comment: { flagged: "false" } }, as: :turbo_stream
       expect(comment.reload).not_to be_flagged
+    end
+  end
+
+  describe "PATCH /comments/:id" do
+    it "toggles the flagged state on a comment whose commentable has no nested comments route" do
+      affiliation = create(:affiliation)
+      comment = create(:comment, commentable: affiliation, body: "A note.")
+
+      patch comment_path(comment), params: { comment: { flagged: "true" } }, as: :turbo_stream
+
+      expect(response).to have_http_status(:ok)
+      expect(comment.reload).to be_flagged
     end
   end
 end

@@ -1,5 +1,6 @@
 class StaffTagging < ApplicationRecord
   include Communicable
+  include RemoteSearchable
 
   belongs_to :staff_tag
   belongs_to :staff_taggable, polymorphic: true, touch: true
@@ -65,6 +66,15 @@ class StaffTagging < ApplicationRecord
                                     .where("notifications.email_subject LIKE :q OR notifications.email_body_text LIKE :q OR notifications.custom_subject LIKE :q OR notifications.custom_message LIKE :q", q: like)
                                     .select(:noticeable_id)
     where(id: comment_ids).or(where(id: communication_ids)) }
+
+  remote_searchable_by :staff_tag,
+    scope: ->(query) {
+      where(staff_taggable_type: "Person", staff_taggable_id: matching_person_ids(query))
+    }
+
+  def remote_search_label
+    { id: id, label: "#{staff_taggable.try(:full_name) || "Person ##{staff_taggable_id}"} · #{staff_tag.name}" }
+  end
 
   def self.search_by_params(params)
     results = all
