@@ -1113,7 +1113,8 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", return_to: "form_results"))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts",
+                                                   form_field_id: thoughts.id, return_to: "form_results"))
       end
 
       it "carries the selected event into the form answers links" do
@@ -1128,7 +1129,8 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", event_id: event.id, return_to: "form_results"))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", form_field_id: thoughts.id,
+                                                   event_id: event.id, return_to: "form_results"))
       end
 
       it "carries the selected person into the form answers links" do
@@ -1142,7 +1144,8 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", person_id: person.id, return_to: "form_results"))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", form_field_id: thoughts.id,
+                                                   person_id: person.id, return_to: "form_results"))
       end
 
       it "carries the submitted date range into the form answers links" do
@@ -1156,6 +1159,7 @@ RSpec.describe "Forms", type: :request do
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
         expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts",
+                                                   form_field_id: thoughts.id,
                                                    start_date: "2026-05-01", end_date: "2026-07-01",
                                                    return_to: "form_results"))
       end
@@ -1173,7 +1177,46 @@ RSpec.describe "Forms", type: :request do
 
         doc = Nokogiri::HTML(response.body)
         hrefs = doc.css("a").map { |a| a["href"] }.compact
-        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", organization_id: org.id, return_to: "form_results"))
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", form_field_id: thoughts.id,
+                                                   organization_id: org.id, return_to: "form_results"))
+      end
+
+      it "carries the results filters into a response's View submission link, so the eyebrow comes back filtered" do
+        form = create(:form, :standalone)
+        person = create(:person)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        submission = create(:form_submission, form: form, person: person)
+        create(:form_answer, form_submission: submission, form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, person_id: person.id)
+
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_submission_path(submission, return_to: "form_results",
+                                                      form_id: form.id, person_id: person.id))
+      end
+
+      it "carries the question search out as results_question, so `question` stays the drilled-into card" do
+        form = create(:form, :standalone)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, question: "thoughts")
+
+        hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts",
+                                                   form_field_id: thoughts.id, results_question: "thoughts",
+                                                   return_to: "form_results"))
+      end
+
+      it "says a filter emptied the rollup rather than that the form has no submissions" do
+        form = create(:form, :standalone)
+        create(:form_submission, form: form)
+
+        get results_form_path(form, person_id: create(:person).id)
+
+        expect(response.body).to include("No submissions match the selected filters yet.")
+        expect(response.body).not_to include("No submissions to this form yet.")
       end
     end
 

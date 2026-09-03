@@ -3,11 +3,7 @@
   <% if params[:return_to] == "form_results" && @form %>
     <%# A form's results linked here, so the eyebrow goes back there — still
         narrowed the same way — rather than to the generic Forms index. %>
-    <%= link_to results_form_path(@form, event_id: params[:event_id].presence,
-                                  person_id: params[:person_id].presence,
-                                  organization_id: params[:organization_id].presence,
-                                  start_date: params[:start_date].presence,
-                                  end_date: params[:end_date].presence),
+    <%= link_to results_form_path(@form, **form_results_return_params(params)),
                 class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= @form.display_name %> results
     <% end %>
@@ -30,6 +26,8 @@
           class: "mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" do %>
       <%# Carried so a filter change keeps the eyebrow, and the View links keep their origin. %>
       <% if params[:return_to].present? %><%= hidden_field_tag :return_to, params[:return_to] %><% end %>
+      <%# Keeps a results drill-down pinned to its exact question while the Question box still names it. %>
+      <% if params[:form_field_id].present? %><%= hidden_field_tag :form_field_id, params[:form_field_id] %><% end %>
       <div class="mb-3 flex items-center gap-2 text-gray-600">
         <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
         <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>

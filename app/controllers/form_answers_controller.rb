@@ -30,12 +30,7 @@ class FormAnswersController < ApplicationController
     if params[:q].present?
       scope = scope.where("form_answers.submitted_answer LIKE ?", "%#{FormAnswer.sanitize_sql_like(params[:q])}%")
     end
-    if params[:question].present?
-      term = "%#{FormField.sanitize_sql_like(params[:question])}%"
-      scope = scope.left_joins(:form_field).where(
-        "form_fields.name LIKE :t OR form_answers.question_name_when_answered LIKE :t", t: term
-      )
-    end
+    scope = question_scoped(scope)
     if params[:form_id].present?
       scope = scope.joins(:form_submission).where(form_submissions: { form_id: params[:form_id] })
     end
@@ -55,6 +50,31 @@ class FormAnswersController < ApplicationController
       scope = scope.joins(:form_field).where(form_fields: { answer_type: FormField.answer_types[params[:answer_type]] })
     end
     date_scoped(scope)
+  end
+
+  # The Question box stays a free-text search: it matches any question whose name
+  # (or the name it carried when answered) contains the term. A results-card
+  # drill-down additionally sends the exact form_field_id, because that search
+  # would otherwise also sweep in a sibling question whose name contains this
+  # one's ("Email" pulling in "Email 2") and disagree with the card's count.
+  def question_scoped(scope)
+    field_id = pinned_field_id
+    return scope.where(form_field_id: field_id) if field_id
+    return scope if params[:question].blank?
+
+    term = "%#{FormField.sanitize_sql_like(params[:question])}%"
+    scope.left_joins(:form_field).where(
+      "form_fields.name LIKE :t OR form_answers.question_name_when_answered LIKE :t", t: term
+    )
+  end
+
+  # The pinned question, while the box still holds its name — editing or clearing
+  # the box releases the pin and the term searches normally again.
+  def pinned_field_id
+    id = params[:form_field_id].presence
+    return if id.blank? || params[:question].blank?
+
+    id if FormField.where(id: id).pick(:name) == params[:question]
   end
 
   # By when the submission was made, not when the answer row was written, so this

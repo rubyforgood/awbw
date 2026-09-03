@@ -157,6 +157,38 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).to include("Skipped question")
       end
 
+      # The Question box is a free-text search, so on its own it would also match a
+      # sibling question whose name contains this one's. A results drill-down sends
+      # the field id alongside so its list matches the count on the card.
+      it "pins a results drill-down to the exact question it names" do
+        form = create(:form)
+        email = create(:form_field, form: form, name: "Email")
+        create(:form_field, form: form, name: "Email 2")
+        create(:form_answer, form_field: email, submitted_answer: "pinned-answer",
+               form_submission: create(:form_submission, form: form))
+        create(:form_answer, form_field: form.form_fields.find_by(name: "Email 2"),
+               submitted_answer: "sibling-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "Email", form_field_id: email.id), headers: frame_headers
+
+        expect(response.body).to include("pinned-answer")
+        expect(response.body).not_to include("sibling-answer")
+      end
+
+      it "searches by name again once the question box no longer names the pinned question" do
+        form = create(:form)
+        email = create(:form_field, form: form, name: "Email")
+        create(:form_answer, form_field: email, submitted_answer: "pinned-answer",
+               form_submission: create(:form_submission, form: form))
+        create(:form_answer, form_field: create(:form_field, form: form, name: "Phone"),
+               submitted_answer: "phone-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "Phone", form_field_id: email.id), headers: frame_headers
+
+        expect(response.body).to include("phone-answer")
+        expect(response.body).not_to include("pinned-answer")
+      end
+
       it "links back to the form's results page when it linked here" do
         form = create(:form, name: "Volunteer interest")
         create(:form_answer, form_submission: create(:form_submission, form: form))
@@ -165,6 +197,16 @@ RSpec.describe "FormAnswers", type: :request do
 
         expect(response.body).to include(CGI.escapeHTML(results_form_path(form)))
         expect(response.body).to include("Volunteer interest results")
+      end
+
+      it "restores the results page's own question search on the way back" do
+        form = create(:form, name: "Volunteer interest")
+        create(:form_answer, form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, return_to: "form_results",
+                              question: "Any thoughts", results_question: "thoughts")
+
+        expect(response.body).to include(CGI.escapeHTML(results_form_path(form, question: "thoughts")))
       end
 
       it "keeps every filter on the round trip through a submission" do

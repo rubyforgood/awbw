@@ -9,7 +9,7 @@
     <h2 class="text-sm font-semibold text-gray-700"><%= report.label %></h2>
     <% if report.answered_count.positive? %>
       <%= link_to report.answered_count,
-                  form_answers_path(**form_results_drilldown_params(form, report.label)),
+                  form_answers_path(**form_results_drilldown_params(form, report)),
                   class: "text-xs #{link_class}" %>
     <% else %>
       <span class="text-xs text-gray-500"><%= report.answered_count %></span>
@@ -31,12 +31,12 @@
               <span><%= response.submitted_at.to_date.to_fs(:long) %></span>
             <% end %>
             <span aria-hidden="true">·</span>
-            <%= link_to "View", form_submission_path(response.submission_id, return_to: "form_results", form_id: form.id), class: link_class %>
+            <%= link_to "View", form_submission_path(response.submission_id, return_to: "form_results", form_id: form.id, **form_results_link_params), class: link_class %>
           </div>
         </li>
       <% end %>
     </ul>
 
-    <%= render "forms/view_all_responses", form: form, count: report.responses.size, question: report.label %>
+    <%= render "forms/view_all_responses", form: form, count: report.responses.size, report: report %>
   <% end %>
 </div>

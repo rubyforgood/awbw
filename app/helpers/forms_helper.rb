@@ -48,20 +48,49 @@ module FormsHelper
       class: "text-sm #{eyebrow_link_class} px-2 py-1"
   end
 
-  # A results card's drill-down into the Form answers list: this question, on
-  # this form, narrowed exactly like the rollup the admin is looking at, plus the
-  # origin that gives that list an eyebrow back here. Built here so every card
-  # link stays in step with the results filters.
-  def form_results_drilldown_params(form, question)
+  # Which submissions the rollup covers. The empty state reads these to tell a
+  # filtered-to-nothing view apart from a form nobody has filled in.
+  def form_results_filter_params
     {
-      form_id: form.id,
-      question: question,
       event_id: @selected_event_id,
       person_id: @selected_person_id,
       organization_id: @selected_organization_id,
       start_date: @selected_start_date,
-      end_date: @selected_end_date,
-      return_to: "form_results"
+      end_date: @selected_end_date
+    }.compact
+  end
+
+  # Everything a link out of a results card must carry to land back on the same
+  # view: those filters plus the question search, renamed because the answers
+  # list spends `question` on the one card that was drilled into.
+  def form_results_link_params
+    form_results_filter_params.merge(results_question: @selected_question).compact
+  end
+
+  # The same state read back off a page the results linked to, for its eyebrow.
+  def form_results_return_params(params)
+    {
+      event_id: params[:event_id].presence,
+      person_id: params[:person_id].presence,
+      organization_id: params[:organization_id].presence,
+      start_date: params[:start_date].presence,
+      end_date: params[:end_date].presence,
+      question: params[:results_question].presence
+    }.compact
+  end
+
+  # A results card's drill-down into the Form answers list: this question, on
+  # this form, narrowed exactly like the rollup the admin is looking at, plus the
+  # origin that gives that list an eyebrow back here. `form_field_id` pins the
+  # exact question — the name alone is a LIKE search there, which would also
+  # match a sibling question whose name contains this one's.
+  def form_results_drilldown_params(form, report)
+    {
+      form_id: form.id,
+      question: report.label,
+      form_field_id: report.field&.id,
+      return_to: "form_results",
+      **form_results_link_params
     }.compact
   end
 

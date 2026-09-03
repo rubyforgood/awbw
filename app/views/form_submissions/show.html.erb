@@ -11,7 +11,7 @@
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to form answers
       <% end %>
     <% elsif params[:return_to] == "form_results" && params[:form_id].present? %>
-      <%= link_to results_form_path(params[:form_id]), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <%= link_to results_form_path(params[:form_id], **form_results_return_params(params)), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Back to results
       <% end %>
     <% elsif event && params[:return_to] == "bulk_payments" %>

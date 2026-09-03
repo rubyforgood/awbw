@@ -49,9 +49,11 @@ class FormsController < ApplicationController
     @selected_organization_id = params[:organization_id].presence
     @selected_start_date = params[:start_date].presence
     @selected_end_date = params[:end_date].presence
+    @selected_question = params[:question].presence
     @aggregator = FormResponseAggregator.new(@form, event_id: @selected_event_id,
                   person_id: @selected_person_id, organization_id: @selected_organization_id,
-                  start_date: @selected_start_date, end_date: @selected_end_date, question_query: params[:question])
+                  start_date: @selected_start_date, end_date: @selected_end_date,
+                  question_query: @selected_question)
   end
 
   def new

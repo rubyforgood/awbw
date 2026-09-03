@@ -6,6 +6,8 @@ module FormAnswersHelper
     {
       q: params[:q].presence,
       question: params[:question].presence,
+      form_field_id: params[:form_field_id].presence,
+      results_question: params[:results_question].presence,
       answer_type: params[:answer_type].presence,
       form_id: params[:form_id].presence,
       event_id: params[:event_id].presence,
