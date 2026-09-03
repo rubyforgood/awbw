@@ -429,7 +429,7 @@
   area: communications
   display_status: admin_facing
   released_on: 2026-08-23
-  action_path: "/people/1/comments_and_communications"
+  action_path: "/comments_and_communications?person_id=1"
   pr_number: 2355
   summary: >-
     One filterable page per person merging every comment and every communication, reached
