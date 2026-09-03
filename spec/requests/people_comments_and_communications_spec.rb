@@ -48,11 +48,12 @@ RSpec.describe "Person comments and communications", type: :request do
 
       get comments_and_communications_person_path(person), headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
-      chip = Nokogiri::HTML(response.body).at_css("a[href='#{edit_event_registration_path(registration)}']")
-      body = Nokogiri::HTML(response.body).css("div").find { |div| div.text.strip == "On the registration" }
+      doc = Nokogiri::HTML(response.body)
+      chip = doc.at_css("a[href='#{edit_event_registration_path(registration)}']")
+      body = doc.css("div").find { |div| div.text.strip == "On the registration" }
       expect(chip).to be_present
-      # The chip closes the headline row; the body follows it as a full-width line.
-      expect(chip.path < body.path).to be(true)
+      # The chip leads the headline row; the body follows it as a full-width line.
+      expect(chip <=> body).to eq(-1)
     end
 
     it "links a communication's chip to its noticeable and names the record" do

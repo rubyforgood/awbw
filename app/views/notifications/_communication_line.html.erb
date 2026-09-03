@@ -4,11 +4,13 @@
     All comments & communications page passes truncate: false, which leaves
     channel/badges/subject on the headline row, drops the full body onto its own
     line underneath, and — since a card-wide link can hold no other links — makes
-    the subject the link to the communication so `trailing` can be a link too (the
-    attached-record chip, pointing at that record's edit page). %>
+    the subject the link to the communication so `leading` can be a link too (the
+    neutral source chip, pointing at that record's edit page, with the channel icon
+    inside it). %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
+<% leading = local_assigns[:leading] %>
 <% trailing = local_assigns[:trailing] %>
 <% decorated = notification.decorate %>
 <% body_admin_only = notification.channel != "autoemail" %>
@@ -49,7 +51,7 @@
     <% else %>
       <div class="min-w-0 flex-1 text-sm">
         <span>
-          <%= decorated.channel_chip %>
+          <%= leading || decorated.channel_chip %>
           <%= decorated.flag_badges %>
           <% if !admin %>
             <span class="font-semibold text-gray-900"><%= subject %></span>

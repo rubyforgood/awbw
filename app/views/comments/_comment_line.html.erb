@@ -7,10 +7,13 @@
     one line, so the body rides along in the headline; the standalone page passes
     false, which leaves the topic alone on the headline row and drops the full
     body onto its own line underneath), body_target (default false — the section
-    marks the headline so edit-toggle can sync unsaved edits into it), trailing
-    (HTML to close the headline row with, e.g. the attached-record chip). %>
+    marks the headline so edit-toggle can sync unsaved edits into it), leading (a
+    chip to open the headline with in place of the type chip — the aggregated feed
+    passes the neutral source chip, whose icon already conveys the type), trailing
+    (HTML to close the headline row with). %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
 <% body_target = local_assigns.fetch(:body_target, false) %>
+<% leading = local_assigns[:leading] %>
 <% trailing = local_assigns[:trailing] %>
 <% created_user = comment.created_by %>
 <% updated_user = comment.updated_by %>
@@ -45,7 +48,7 @@
 <% else %>
   <%# Topic and body share one column so the body starts flush with the topic. %>
   <div class="min-w-0 flex-1 text-sm <%= body_class %>">
-    <span><% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i> <% end %><%= comment.decorate.type_chip %> <% if comment.topic.present? %><span class="font-bold"><%= comment.topic %></span><% end %></span>
+    <span><% if is_age_range_data %><i class="fa-solid fa-triangle-exclamation"></i> <% end %><%= leading || comment.decorate.type_chip %> <% if comment.topic.present? %><span class="font-bold"><%= comment.topic %></span><% end %></span>
     <div class="pt-1 whitespace-pre-line"><%= comment.body %></div>
   </div>
 <% end %>
