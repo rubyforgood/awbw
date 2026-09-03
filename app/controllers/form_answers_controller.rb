@@ -36,12 +36,8 @@ class FormAnswersController < ApplicationController
     if params[:organization_id].present?
       scope = scope.where(form_submission_id: FormSubmission.for_organization(params[:organization_id]).select(:id))
     end
-    if params[:person].present?
-      term = "%#{Person.sanitize_sql_like(params[:person])}%"
-      scope = scope.joins(form_submission: :person).where(
-        "people.first_name LIKE :t OR people.last_name LIKE :t OR people.email LIKE :t OR CONCAT(people.first_name, ' ', people.last_name) LIKE :t",
-        t: term
-      )
+    if params[:person_id].present?
+      scope = scope.joins(:form_submission).where(form_submissions: { person_id: params[:person_id] })
     end
     if params[:form_submission_id].present?
       scope = scope.where(form_submission_id: params[:form_submission_id])

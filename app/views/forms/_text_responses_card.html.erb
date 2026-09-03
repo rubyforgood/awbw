@@ -9,7 +9,7 @@
     <h2 class="text-sm font-semibold text-gray-700"><%= report.label %></h2>
     <% if report.answered_count.positive? %>
       <%= link_to report.answered_count,
-                  form_answers_path(form_id: form.id, question: report.label, event_id: @selected_event_id, organization_id: @selected_organization_id),
+                  form_answers_path(form_id: form.id, question: report.label, event_id: @selected_event_id, person_id: @selected_person_id, organization_id: @selected_organization_id),
                   class: "text-xs #{link_class}" %>
     <% else %>
       <span class="text-xs text-gray-500"><%= report.answered_count %></span>

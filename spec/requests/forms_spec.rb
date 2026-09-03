@@ -1121,6 +1121,20 @@ RSpec.describe "Forms", type: :request do
         expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", event_id: event.id))
       end
 
+      it "carries the selected person into the form answers links" do
+        form = create(:form, :standalone)
+        person = create(:person)
+        thoughts = create(:form_field, form: form, name: "Any thoughts", answer_type: :free_form_input_paragraph)
+        create(:form_answer, form_submission: create(:form_submission, form: form, person: person),
+                             form_field: thoughts, submitted_answer: "Loved it")
+
+        get results_form_path(form, person_id: person.id)
+
+        doc = Nokogiri::HTML(response.body)
+        hrefs = doc.css("a").map { |a| a["href"] }.compact
+        expect(hrefs).to include(form_answers_path(form_id: form.id, question: "Any thoughts", person_id: person.id))
+      end
+
       it "carries the selected organization into the form answers links" do
         form = create(:form)
         org = create(:organization)

@@ -81,7 +81,7 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("for-other-org")
       end
 
-      it "filters by person name" do
+      it "filters by person" do
         priya = create(:person, first_name: "Priya", last_name: "Patel")
         other = create(:person, first_name: "Sam", last_name: "Jones")
         create(:form_answer, submitted_answer: "priya-answer",
@@ -89,7 +89,7 @@ RSpec.describe "FormAnswers", type: :request do
         create(:form_answer, submitted_answer: "sam-answer",
                form_submission: create(:form_submission, person: other))
 
-        get form_answers_path(person: "Priya"), headers: frame_headers
+        get form_answers_path(person_id: priya.id), headers: frame_headers
 
         expect(response.body).to include("priya-answer")
         expect(response.body).not_to include("sam-answer")
