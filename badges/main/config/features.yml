@@ -3347,6 +3347,7 @@
     Consultant. Every other event keeps the standard certificate of completion.
   action_path: /events
   pr_number: 2504
+
 - name: "Slider questions on forms"
   area: registration
   display_status: admin_facing
@@ -3370,3 +3371,12 @@
     across all people, filterable by keyword, author, date, and follow-up. Add
     a note or log a communication right from it by picking a person.
   action_path: "/comments_and_communications"
+
+- name: "Emails greet you by first name"
+  area: communications
+  display_status: user_facing
+  summary: >-
+    Portal emails now open with just your first name ("Hello Jane,") instead of
+    your full name, so confirmations, reminders, and other messages read a little
+    warmer and less form-letter.
+  released_on: 2026-09-02
