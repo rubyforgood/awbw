@@ -14,7 +14,7 @@ RSpec.describe "FormAnswers", type: :request do
         get form_answers_path
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Form answers")
+        expect(response.body).to include("Answers")
       end
 
       it "searches by answer text" do
