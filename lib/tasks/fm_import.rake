@@ -15,7 +15,7 @@ namespace :fm do
       { model: FmService, csv: "Service.csv", key: "RecordID" },
       { model: FmPersonnel, csv: "Personnel.csv", key: "PrsnlRecID" },
       { model: FmPayment, csv: "Payments.csv", key: "RecordID" },
-      { model: FmParticipant, csv: "Participants.csv", key: "ParticipantID" },
+      { model: FmParticipant, csv: "Participants.csv", key: "PRecID" },
       { model: FmActivity, csv: "Activity.csv", key: "ActivityLogID" },
       { model: FmNote, csv: "Notes.csv", key: "NoteID" },
       { model: FmAddress, csv: "Addresses.csv", key: "AddrsID" },

@@ -9,7 +9,7 @@
 #   RolodexID             FK → FmRolodex, the payer
 #   OrgID                 FK → FmOrganization
 #   ProjectID             FK → FmProject
-#   ParticRecID           FK → FmParticipant.PRecID, redundant with FmParticipant.PaymentID
+#   ParticRecID           FK → FmParticipant, the registration this paid for
 #   PledgeID              FK → FmPayment, pledge this payment pays down
 #   FormSubmissionID      external ref, e.g. FSB03117
 #   InvoiceID             external ref
@@ -42,7 +42,8 @@ class FmPayment < ApplicationRecord
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes",
     "OrgID" => "fm_organizations",
-    "ProjectID" => "fm_projects"
+    "ProjectID" => "fm_projects",
+    "ParticRecID" => "fm_participants"
   }.freeze
 
   HAS_MANY = {
