@@ -107,7 +107,7 @@ class FmRolodex < ApplicationRecord
     "fm_notes" => { via: "RolodexID", label: "Notes" },
     "fm_personnels" => { via: "PersonID", label: "Personnel" },
     "fm_workshop_logs" => { via: "LeaderID", label: "Workshop Logs" },
-    "fm_participants" => { via: :fm_id, label: "Participations" },
+    "fm_participants" => { via: "ParticipantID", label: "Participations" },
     "fm_funding" => { via: "FunderID", label: "Funding" },
     "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" }
   }.freeze
