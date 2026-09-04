@@ -169,6 +169,8 @@ class EventPolicy < ApplicationPolicy
 
   params_filter do |params|
     permitted = [ :cost,
+                  :discount_code,
+                  :discount_amount,
                   :created_by_id,
                   :location_id,
                   :title,

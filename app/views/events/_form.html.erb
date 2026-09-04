@@ -137,29 +137,61 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <%= f.label :cost, class: "block font-medium mb-1" do %>Event cost <span class="text-xs font-normal text-gray-500">Enter $0 if the event is free</span><% end %>
+          <div>
+            <%= f.label :cost, class: "block font-medium mb-1" do %>Event cost <span class="text-xs font-normal text-gray-500">Enter $0 if the event is free</span><% end %>
 
-              <div class="relative">
-                <span class="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-500">$</span>
+            <div class="relative">
+              <span class="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-500">$</span>
 
-                <%= f.text_field :cost,
-                         type: "number",
-                         step: "0.01",
-                         min: "0",
-                         placeholder: "0.00",
-                         oninput:
-                           "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
-                         class:
-                           "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-              </div>
-
-              <% if f.object.errors[:cost].any? %>
-                <p class="mt-1 text-sm text-red-500">Cost <%= f.object.errors[:cost].join(", ") %></p>
-              <% end %>
+              <%= f.text_field :cost,
+                       type: "number",
+                       step: "0.01",
+                       min: "0",
+                       placeholder: "0.00",
+                       oninput:
+                         "if(this.value.includes('.')) { var parts = this.value.split('.'); if(parts[1] && parts[1].length > 2) { this.value = parts[0] + '.' + parts[1].substring(0, 2); } }",
+                       class:
+                         "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
             </div>
 
+            <% if f.object.errors[:cost].any? %>
+              <p class="mt-1 text-sm text-red-500">Cost <%= f.object.errors[:cost].join(", ") %></p>
+            <% end %>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <%= f.label :discount_code, "Discount code", class: "block font-medium mb-1" %>
+              <%= f.text_field :discount_code,
+                    class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
+                    placeholder: "e.g. SAVE50" %>
+            </div>
+
+            <div>
+              <%= f.label :discount_amount, "Discount amount", class: "block font-medium mb-1" %>
+              <div class="relative">
+                <span class="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-500">$</span>
+                <%= f.text_field :discount_amount,
+                      type: "number",
+                      step: "0.01",
+                      min: "0",
+                      placeholder: "0.00",
+                      class: "w-full rounded border-gray-300 shadow-sm pl-8 pr-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+              </div>
+            </div>
+          </div>
+
+          <% if f.object.discount_code? %>
+            <p class="mt-1 mb-0 text-xs text-gray-500">
+              Discount link:
+              <%= link_to new_event_public_registration_url(f.object, discount_code: f.object.discount_code),
+                    new_event_public_registration_url(f.object, discount_code: f.object.discount_code),
+                    class: "text-blue-600 hover:underline", target: "_blank" %>
+            </p>
+            <p class="text-xs text-gray-500">(Must click save after changing the code for the link to update)</p>
+          <% end %>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <%= f.label :payment_due_deadline_date, "Payment due by", class: "block font-medium mb-1" %>
               <div class="flex gap-2">
