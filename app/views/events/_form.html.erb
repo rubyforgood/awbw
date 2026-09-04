@@ -115,21 +115,18 @@
 
             <div class="rounded-lg border border-gray-200 bg-white p-3">
               <h3 class="mb-2 font-medium">Registration closed</h3>
-              <% rc_default = @event.registration_close_date || event_registration_close_default(@event) %>
 
               <div class="mb-2">
                 <label class="mb-0.5 block text-xs text-gray-600">Date</label>
 
                 <%= f.text_field :registration_close_date_date,
                          type: "date",
-                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         value: rc_default.strftime("%Y-%m-%d") %>
+                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
               </div>
 
               <div><label class="mb-0.5 block text-xs text-gray-600">Time</label><%= f.text_field :registration_close_date_time,
                          type: "time",
-                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500",
-                         value: rc_default.strftime("%H:%M") %></div>
+                         class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %></div>
 
               <% if f.object.errors[:registration_close_date].any? %>
                 <p class="mt-1 text-sm text-red-500">Registration close date <%= f.object.errors[:registration_close_date].join(", ") %></p>
