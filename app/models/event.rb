@@ -478,6 +478,25 @@ class Event < ApplicationRecord
     end
   end
 
+  # Virtual attribute for discount amount in dollars (converts to/from
+  # discount_amount_cents), mirroring #cost.
+  def discount_amount
+    return nil if discount_amount_cents.nil?
+    discount_amount_cents / 100.0
+  end
+
+  def discount_amount=(dollar_amount)
+    if dollar_amount.blank?
+      self.discount_amount_cents = nil
+    else
+      self.discount_amount_cents = (dollar_amount.to_s.gsub(/[^\d.]/, "").to_f * 100).round
+    end
+  end
+
+  def discount_code?
+    discount_code.present? && discount_amount_cents.to_i > 0
+  end
+
   # An event grants CE credit when it offers a positive number of hours. Derived
   # from ce_hours_offered rather than a separate stored flag, so there's a single
   # source of truth.
