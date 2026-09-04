@@ -16,6 +16,9 @@
 <% hint ||= nil %>
 <% rounded ||= false %>
 <% multiple ||= false %>
+<%# Tailwind size classes for the preview/placeholder box; callers can pass a
+    smaller box (e.g. "w-24 h-24") to keep a section compact. %>
+<% size ||= "w-32 h-32" %>
 <% file ||= nil %>
 <% use_profile_placeholder ||= false %>
 <% show_file_field = show_file_field.to_s.present? ? show_file_field : true %>
@@ -54,7 +57,7 @@
                         id: image_dom_id,
                         alt: "#{label}",
                         data: { file_preview_target: "preview" },
-                        class: "w-32 h-32 object-cover border border-gray-300 shadow-sm hover:opacity-90 transition-opacity #{rounded ? 'rounded-full' : ''}" %>
+                        class: "#{size} object-cover border border-gray-300 shadow-sm hover:opacity-90 transition-opacity #{rounded ? 'rounded-full' : ''}" %>
         <% end %>
 
         <%# ---------- PDF PREVIEW ---------- %>
@@ -65,15 +68,15 @@
                         id: image_dom_id,
                         alt: "#{label} PDF preview",
                         data: { file_preview_target: "preview" },
-                        class: "w-32 h-32 object-contain border border-gray-300 shadow-sm hover:opacity-90 transition-opacity" %>
+                        class: "#{size} object-contain border border-gray-300 shadow-sm hover:opacity-90 transition-opacity" %>
         <% end %>
 
         <%# ---------- PLACEHOLDER ---------- %>
       <% else %>
-        <div class="relative h-32 w-32">
+        <div class="relative <%= size %>">
           <img id="<%= image_dom_id %>"
                data-file-preview-target="preview"
-               class="hidden h-32 w-32 border border-gray-300 object-cover shadow-sm">
+               class="hidden <%= size %> border border-gray-300 object-cover shadow-sm">
 
           <div data-file-preview-target="placeholder"
                class="absolute inset-0 flex items-center justify-center border border-gray-300 bg-gray-50 text-6xl text-gray-400 shadow-sm">

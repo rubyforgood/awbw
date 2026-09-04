@@ -71,6 +71,76 @@ class PersonDecorator < ApplicationDecorator
     @badges ||= compute_badges
   end
 
+  # Profile display toggles in form order, mapped to the noun used on each
+  # checkbox ("Show email" => "email"). Drives the collapsed form section's
+  # one-line summary.
+  PROFILE_DISPLAY_LABELS = {
+    profile_show_credentials: "credentials",
+    profile_show_pronouns: "pronouns",
+    profile_show_email: "email",
+    profile_show_phone: "phone",
+    profile_show_social_media: "social media",
+    profile_show_member_since: "facilitator since",
+    profile_show_bio: "bio",
+    profile_show_affiliations: "affiliations",
+    profile_show_sectors: "sectors",
+    profile_show_workshops: "workshops",
+    profile_show_workshop_variations: "workshop variations",
+    profile_show_stories: "stories",
+    profile_show_resources: "resources",
+    profile_show_events_registered: "registrations",
+    profile_show_story_ideas: "story ideas",
+    profile_show_workshop_ideas: "workshop ideas",
+    profile_show_workshop_variation_ideas: "variation ideas",
+    profile_show_workshop_logs: "workshop logs"
+  }.freeze
+
+  # One-line summary of the profile display preferences for the collapsed form
+  # section. Most people show everything, so it names only what's hidden
+  # ("Hide phone and bio") and says "All shown" when nothing is hidden.
+  def profile_display_summary
+    hidden = PROFILE_DISPLAY_LABELS.reject { |attr, _| object.public_send(attr) }.values
+    hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
+  end
+
+  # Social-media URL fields mapped to the platform label shown as a pill in the
+  # collapsed section summary when the field is filled in.
+  SOCIAL_MEDIA_LABELS = {
+    linked_in_url: "LinkedIn",
+    facebook_url: "Facebook",
+    instagram_url: "Instagram",
+    youtube_url: "YouTube",
+    twitter_url: "Twitter"
+  }.freeze
+
+  # One-line summary of the social-media links for the collapsed form section: a
+  # grey pill for each platform with a URL on file, or "None". HTML-safe.
+  def social_media_summary
+    present = SOCIAL_MEDIA_LABELS.select { |attr, _| object.public_send(attr).present? }.values
+    return "None" if present.empty?
+
+    h.safe_join(present.map { |label|
+      h.content_tag(:span, label, class: "text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600")
+    }, " ")
+  end
+
+  # One-line summary of the tagged age ranges for a collapsed form section. The
+  # primary age group is bold with a ⭐ (age ranges have no leader flag). HTML-safe.
+  def age_ranges_summary
+    items = object.age_range_items_ordered
+    return "None selected" if items.empty?
+
+    h.safe_join(items.map { |item|
+      name = item.category&.name.to_s
+      inner = if item.is_primary?
+        h.safe_join([ h.content_tag(:i, "", class: "fa-solid fa-star text-amber-400"), h.content_tag(:strong, name) ], " ")
+      else
+        name
+      end
+      h.content_tag(:span, inner, class: "whitespace-nowrap")
+    }, ", ")
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= begin
       facilitator_affiliations = affiliations.facilitators

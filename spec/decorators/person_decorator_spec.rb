@@ -160,4 +160,67 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.full_name_with_display_name).to eq("Mariana Lopez (Mariana L.)")
     end
   end
+
+  describe "#profile_display_summary" do
+    it "says everything is shown when no toggle is hidden" do
+      expect(create(:person).decorate.profile_display_summary).to eq("All shown")
+    end
+
+    it "names only the hidden items, prefixed with Hide" do
+      person = create(:person, profile_show_phone: false, profile_show_bio: false)
+      expect(person.decorate.profile_display_summary).to eq("Hide phone and bio")
+    end
+
+    it "uses the checkbox wording for a hidden item" do
+      person = create(:person, profile_show_member_since: false)
+      expect(person.decorate.profile_display_summary).to eq("Hide facilitator since")
+    end
+  end
+
+  describe "#social_media_summary" do
+    it "is 'None' with no links" do
+      expect(create(:person).decorate.social_media_summary).to eq("None")
+    end
+
+    it "shows a pill for each platform with a URL on file" do
+      person = create(:person, linked_in_url: "https://linkedin.com/in/x", youtube_url: "https://youtu.be/x")
+      summary = person.decorate.social_media_summary
+      expect(summary).to include("LinkedIn", "YouTube")
+      expect(summary).not_to include("Facebook", "Instagram", "Twitter")
+    end
+  end
+
+  describe "#sectors_summary" do
+    it "is 'None selected' with no sectors" do
+      expect(create(:person).decorate.sectors_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary, crowns and labels the leader" do
+      person = create(:person)
+      health = create(:sector, name: "Health/Medical")
+      create(:sectorable_item, sectorable: person, sector: health, is_primary: true, is_leader: true)
+
+      summary = person.reload.decorate.sectors_summary
+      expect(summary).to include("fa-star", "fa-crown", "<strong>Health/Medical</strong>", "(sector leader)")
+    end
+  end
+
+  describe "#age_ranges_summary" do
+    it "is 'None selected' with no age ranges" do
+      expect(create(:person).decorate.age_ranges_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary age range (no crown)" do
+      person = create(:person)
+      age_type = create(:category_type, :published, name: "AgeRange")
+      kids = create(:category, :published, category_type: age_type, name: "Children (0-12)")
+      teens = create(:category, :published, category_type: age_type, name: "Teens (13-17)")
+      create(:categorizable_item, categorizable: person, category: kids, is_primary: true)
+      create(:categorizable_item, categorizable: person, category: teens)
+
+      summary = person.reload.decorate.age_ranges_summary
+      expect(summary).to include("fa-star", "<strong>Children (0-12)</strong>", "Teens (13-17)")
+      expect(summary).not_to include("fa-crown")
+    end
+  end
 end
