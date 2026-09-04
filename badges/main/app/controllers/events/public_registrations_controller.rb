@@ -15,6 +15,7 @@ module Events
         return
       end
 
+      @discount_code = params[:discount_code] if @event.discount_code? && params[:discount_code].present?
       @form_fields = visible_form_fields
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
@@ -75,6 +76,8 @@ module Events
         # Stamp the just-created submission onto the request's buffered lifecycle
         # events (flushed after this action) so every record it wrote is traceable.
         Current.form_submission_id = result.form_submission&.id
+
+        apply_discount_code(registration)
 
         if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
@@ -145,6 +148,14 @@ module Events
 
     private
 
+    def apply_discount_code(registration)
+      code = params[:discount_code].to_s.strip
+      return unless @event.discount_code? && code.casecmp?(@event.discount_code)
+
+      discount = Discount.create!(amount_cents: @event.discount_amount_cents)
+      Allocation.create!(source: discount, allocatable: registration, amount: @event.discount_amount_cents)
+    end
+
     # A file input can't be repopulated, so a form re-rendered after a validation
     # error carries the already-uploaded blob's signed id in retained_uploads.
     # An untouched file input still posts a blank value, so fall back to the
@@ -170,7 +181,7 @@ module Events
 
     def create_stripe_checkout_session(registration, submission = nil)
       person = registration.registrant
-      amount = @event.cost_cents
+      amount = registration.remaining_cost
 
       metadata = { event_registration_id: registration.id, event_id: @event.id }
       metadata[:form_submission_id] = submission.id if submission

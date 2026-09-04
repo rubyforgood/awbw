@@ -363,6 +363,81 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "discount code" do
+    describe "validations" do
+      it "allows alphanumeric codes with hyphens and underscores" do
+        event = build(:event, discount_code: "SAVE50-ABC_123")
+        expect(event).to be_valid
+      end
+
+      it "allows blank codes" do
+        event = build(:event, discount_code: "")
+        expect(event).to be_valid
+      end
+
+      it "rejects codes with spaces" do
+        event = build(:event, discount_code: "SAVE 50")
+        expect(event).not_to be_valid
+        expect(event.errors[:discount_code]).to be_present
+      end
+
+      it "rejects codes with URL-unsafe characters" do
+        event = build(:event, discount_code: "SAVE?50&x=y")
+        expect(event).not_to be_valid
+        expect(event.errors[:discount_code]).to be_present
+      end
+    end
+
+    describe "#discount_code?" do
+      it "returns true when code and amount are present" do
+        event = build(:event, discount_code: "SAVE50", discount_amount_cents: 2500)
+        expect(event.discount_code?).to be true
+      end
+
+      it "returns false when code is blank" do
+        event = build(:event, discount_code: nil, discount_amount_cents: 2500)
+        expect(event.discount_code?).to be false
+      end
+
+      it "returns false when amount is zero" do
+        event = build(:event, discount_code: "SAVE50", discount_amount_cents: 0)
+        expect(event.discount_code?).to be false
+      end
+    end
+
+    describe "#discount_amount" do
+      it "converts cents to dollars" do
+        event = build(:event, discount_amount_cents: 2500)
+        expect(event.discount_amount).to eq(25.0)
+      end
+
+      it "returns nil when blank" do
+        event = build(:event, discount_amount_cents: nil)
+        expect(event.discount_amount).to be_nil
+      end
+    end
+
+    describe "#discount_amount=" do
+      it "converts dollar amount to cents" do
+        event = build(:event)
+        event.discount_amount = 25.0
+        expect(event.discount_amount_cents).to eq(2500)
+      end
+
+      it "handles string input" do
+        event = build(:event)
+        event.discount_amount = "10.99"
+        expect(event.discount_amount_cents).to eq(1099)
+      end
+
+      it "sets nil when blank" do
+        event = build(:event)
+        event.discount_amount = ""
+        expect(event.discount_amount_cents).to be_nil
+      end
+    end
+  end
+
   describe "#build_public_registration_form" do
     let!(:default_form) { create(:form, name: "Short Event Registration") }
     let!(:extended_form) { create(:form, name: "Extended Event Registration") }

@@ -971,4 +971,100 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(unstamped.map(&:first)).to be_empty
     end
   end
+
+  describe "discount code" do
+    let(:event) { create(:event, cost_cents: 10_000, discount_code: "SAVE50", discount_amount_cents: 2500) }
+    let(:user) { create(:user, :with_person) }
+    let(:form) { create(:form) }
+    let!(:essay_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_paragraph,
+             name: "Tell us why", required: true, min_words: 5)
+    end
+    let!(:first_name_field) do
+      create(:form_field, form: form, field_identifier: "first_name", name: "First name", required: false)
+    end
+    let!(:last_name_field) do
+      create(:form_field, form: form, field_identifier: "last_name", name: "Last name", required: false)
+    end
+    let!(:email_field) do
+      create(:form_field, form: form, field_identifier: "primary_email", name: "Email", required: false)
+    end
+    let!(:payment_method_field) do
+      field = create(:form_field, form: form, field_identifier: "payment_method",
+                     name: "Payment method", required: false)
+      FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option_name|
+        field.form_field_answer_options.create!(answer_option: AnswerOption.find_or_create_by!(name: option_name))
+      end
+      field
+    end
+    let(:fake_session) { double(url: "https://checkout.stripe.com/test", id: "cs_test_123") }
+
+    before do
+      fake_processor = double(checkout: fake_session)
+      allow_any_instance_of(Person).to receive(:set_payment_processor)
+      allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
+    end
+
+    def post_with_code(code: nil, payment: nil)
+      fields = {
+        essay_field.id.to_s => "this answer has enough words for validation",
+        first_name_field.id.to_s => "Pat",
+        last_name_field.id.to_s => "Lee",
+        email_field.id.to_s => "pat-#{SecureRandom.hex(4)}@example.com"
+      }
+      fields[payment_method_field.id.to_s] = payment if payment
+
+      params = { public_registration: { Honeypot::FIELD_NAME => "", form_fields: fields } }
+      params[:discount_code] = code if code
+
+      post event_public_registration_path(event), params: params
+    end
+
+    it "creates a discount allocation when code matches" do
+      expect {
+        post_with_code(code: "SAVE50", payment: "Credit card (now)")
+      }.to change(Discount, :count).by(1)
+        .and change(Allocation, :count).by(1)
+
+      registration = EventRegistration.last
+      expect(registration.discount_sum).to eq(2500)
+      expect(registration.remaining_cost).to eq(7500)
+    end
+
+    it "charges the discounted amount to Stripe" do
+      captured = nil
+      fake_processor = double
+      allow(fake_processor).to receive(:checkout) { |args| captured = args; fake_session }
+      allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
+
+      post_with_code(code: "SAVE50", payment: "Credit card (now)")
+
+      expect(captured[:line_items].first[:price_data][:unit_amount]).to eq(7500)
+    end
+
+    it "ignores an invalid code" do
+      expect {
+        post_with_code(code: "WRONG", payment: "Credit card (now)")
+      }.not_to change(Discount, :count)
+
+      registration = EventRegistration.last
+      expect(registration.remaining_cost).to eq(10_000)
+    end
+
+    it "matches case-insensitively" do
+      expect {
+        post_with_code(code: "save50", payment: "Credit card (now)")
+      }.to change(Discount, :count).by(1)
+
+      expect(EventRegistration.last.discount_sum).to eq(2500)
+    end
+
+    it "does not create a discount when event has no code" do
+      event.update!(discount_code: nil, discount_amount_cents: nil)
+
+      expect {
+        post_with_code(code: "SAVE50")
+      }.not_to change(Discount, :count)
+    end
+  end
 end
