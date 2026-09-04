@@ -88,6 +88,7 @@ class Event < ApplicationRecord
   validates :hint_dates, length: { maximum: 255 }
   validates :hint_times, length: { maximum: 255 }
   validates :hint_registration_cost, length: { maximum: 255 }
+  validates :discount_code, format: { with: /\A[A-Za-z0-9_-]+\z/, message: "can only contain letters, numbers, hyphens, and underscores" }, allow_blank: true
   validate :end_date_not_before_start_date
   validate :registration_form_required_when_publicly_registerable, on: :update
   validate :staff_members_are_unique, on: :update
