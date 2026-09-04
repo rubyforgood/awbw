@@ -479,8 +479,6 @@ class Event < ApplicationRecord
     end
   end
 
-  # Virtual attribute for discount amount in dollars (converts to/from
-  # discount_amount_cents), mirroring #cost.
   def discount_amount
     return nil if discount_amount_cents.nil?
     discount_amount_cents / 100.0
