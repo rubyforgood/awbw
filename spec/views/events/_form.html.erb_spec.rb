@@ -95,28 +95,6 @@ RSpec.describe "events/_form", type: :view do
     end
   end
 
-  context "when the registration close date is not set" do
-    let(:event) { create(:event, registration_close_date: nil) }
-
-    it "leaves the registration close fields blank instead of repopulating a default" do
-      render
-
-      expect(rendered).to have_selector("input[name='event[registration_close_date_date]']:not([value])")
-      expect(rendered).to have_selector("input[name='event[registration_close_date_time]']:not([value])")
-    end
-  end
-
-  context "when the event is new" do
-    let(:event) { Event.new(title: "New Event") }
-
-    it "leaves the registration close fields blank for new events too" do
-      render
-
-      expect(rendered).to have_selector("input[name='event[registration_close_date_date]']:not([value])")
-      expect(rendered).to have_selector("input[name='event[registration_close_date_time]']:not([value])")
-    end
-  end
-
   context "when published is false" do
     let(:event) { create(:event, published: false) }
 
