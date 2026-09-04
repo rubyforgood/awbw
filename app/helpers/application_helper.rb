@@ -262,15 +262,6 @@ module ApplicationHelper
     "at #{time} #{local.strftime("%Z")}"
   end
 
-  # Default registration close datetime suggested on the event form: 9am on the
-  # Monday before the event's start date. New events without a start date yet
-  # fall back to two days out at 9am.
-  def event_registration_close_default(event)
-    start = event&.start_date
-    base = start ? (start.in_time_zone(Time.zone) - 1.day).beginning_of_week(:monday) : 2.days.from_now
-    base.change(hour: 9, min: 0)
-  end
-
   # The accent strip partial for the current page, chosen from its page_bg_class
   # policy marker (set with content_for at the top of the view, so it is captured
   # before the shell renders):
