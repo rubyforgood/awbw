@@ -47,6 +47,10 @@ class Membership < ApplicationRecord
     self.cost_cents = value.present? ? (value.to_d * 100).to_i : nil
   end
 
+  def good_through
+    membership_invoices.active_on(Date.current).unscope(:order).first&.end_date
+  end
+
   def stripe_subscription
     return if person.blank?
 
@@ -61,7 +65,7 @@ class Membership < ApplicationRecord
     sub = stripe_subscription
     return unless sub&.active?
 
-    sub.cancel
+    sub.cancel_now! # `now!` prevents customer from reactivating in stripe portal. Must create new subscription if admin allows
   rescue Stripe::StripeError, Pay::Error => e
     Rails.logger.warn("[Membership] Could not cancel Stripe subscription for membership #{id}: #{e.message}")
   end

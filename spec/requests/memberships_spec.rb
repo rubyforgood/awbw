@@ -425,19 +425,19 @@ RSpec.describe "Memberships", type: :request do
         expect(response).to redirect_to(person_memberships_path(person))
       end
 
-      it "cancels the linked Stripe subscription so autopay stops renewing" do
+      it "cancels the linked Stripe subscription immediately so the portal can't re-enable autopay" do
         customer = Pay::Customer.create!(owner: person, processor: "stripe",
           processor_id: "cus_test", default: true)
         Pay::Stripe::Subscription.create!(customer: customer, name: "default",
           processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1,
           metadata: { "membership_id" => subscription.id })
-        allow(Stripe::Subscription).to receive(:update).and_return(double(cancel_at: Time.current + 1.year))
+        allow(Stripe::Subscription).to receive(:cancel)
+          .and_return(double(ended_at: Time.current, trial_end: nil, status: "canceled"))
 
         patch membership_path(subscription), params: { membership: { cancelled: "1" } }
 
         expect(subscription.reload).to be_cancelled
-        expect(Stripe::Subscription).to have_received(:update)
-          .with("sub_test", hash_including(cancel_at_period_end: true), anything)
+        expect(Stripe::Subscription).to have_received(:cancel).with("sub_test", anything, anything)
       end
 
       it "leaves an existing year untouched when cancelling" do

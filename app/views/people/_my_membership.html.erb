@@ -5,6 +5,13 @@
   </div>
 
   <div class="section-content px-3 sm:px-4 py-4">
+    <% if membership&.good_through %>
+      <p class="mb-3 px-3 text-sm text-gray-700">
+        Membership good through:
+        <span class="font-medium"><%= membership.good_through.strftime("%b %-d, %Y") %></span>
+      </p>
+    <% end %>
+
     <% if membership&.current_invoice %>
       <ul class="mb-4">
         <%= render "membership_invoices/invoice_row", invoice: membership.current_invoice %>
@@ -12,7 +19,11 @@
     <% end %>
 
     <div class="px-3">
-      <% if autopay_cancelling %>
+      <% if membership&.cancelled? %>
+        <p class="mb-3 text-sm text-gray-700">
+          Your membership is set to expire. Please contact us if this is not correct.
+        </p>
+      <% elsif autopay_cancelling %>
         <p class="mb-3 text-sm text-gray-700">
           Your automatic payment for membership is set to stop renewing at the end of the current billing cycle.
           You can change this or update your card below.

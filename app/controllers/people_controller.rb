@@ -49,7 +49,8 @@ class PeopleController < ApplicationController
       .first
 
     @membership_autopay = allowed_to?(:own_membership?, @person) &&
-                          membership_sub&.active?
+                          membership_sub.present? &&
+                          @person.pay_subscriptions.for_name(Pay.default_product_name).active.exists?
 
     @membership_autopay_cancelling = @membership_autopay &&
                                      membership_sub.canceled? &&

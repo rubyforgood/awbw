@@ -107,13 +107,31 @@ RSpec.describe Membership, type: :model do
     end
   end
 
+  describe "#good_through" do
+    it "returns the active membership invoice's end date" do
+      membership = create(:membership)
+      invoice = create(:membership_invoice, membership: membership,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months)
+
+      expect(membership.good_through).to eq(invoice.end_date)
+    end
+
+    it "is nil when no invoice covers today" do
+      membership = create(:membership)
+      create(:membership_invoice, membership: membership,
+        start_date: Date.current + 1.month, end_date: Date.current + 13.months)
+
+      expect(membership.good_through).to be_nil
+    end
+  end
+
   describe "cancelling a membership" do
-    it "cancels the linked Stripe subscription at period end, keeping the paid year" do
+    it "cancels the linked Stripe subscription immediately so the portal can't re-enable autopay" do
       membership = create(:membership)
       subscription = instance_double("Pay::Stripe::Subscription", active?: true)
       allow(membership).to receive(:stripe_subscription).and_return(subscription)
 
-      expect(subscription).to receive(:cancel)
+      expect(subscription).to receive(:cancel_now!)
       membership.update!(cancelled_at: Time.current)
     end
 
@@ -137,7 +155,7 @@ RSpec.describe Membership, type: :model do
       membership = create(:membership)
       subscription = instance_double("Pay::Stripe::Subscription", active?: true)
       allow(membership).to receive(:stripe_subscription).and_return(subscription)
-      allow(subscription).to receive(:cancel).and_raise(Pay::Stripe::Error.new("boom"))
+      allow(subscription).to receive(:cancel_now!).and_raise(Pay::Stripe::Error.new("boom"))
       allow(Rails.logger).to receive(:warn)
 
       expect { membership.update!(cancelled_at: Time.current) }.not_to raise_error
