@@ -80,4 +80,69 @@ RSpec.describe Membership, type: :model do
       expect(subscription.person.membership_invoices).to contain_exactly(invoice)
     end
   end
+
+  describe "#stripe_subscription" do
+    it "finds the Pay::Subscription carrying this membership's id in its metadata" do
+      membership = create(:membership)
+      customer = Pay::Customer.create!(owner: membership.person, processor: "stripe",
+        processor_id: "cus_test", default: true)
+      subscription = Pay::Subscription.create!(customer: customer, name: "default",
+        processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1,
+        metadata: { "membership_id" => membership.id })
+      Pay::Subscription.create!(customer: customer, name: "default",
+        processor_id: "sub_other", processor_plan: "membership", status: "active", quantity: 1,
+        metadata: { "membership_id" => create(:membership).id })
+
+      expect(membership.stripe_subscription).to eq(subscription)
+    end
+
+    it "is nil for a membership with no subscription" do
+      expect(create(:membership).stripe_subscription).to be_nil
+    end
+
+    it "does not create a Pay customer just by looking" do
+      membership = create(:membership)
+
+      expect { membership.stripe_subscription }.not_to change { membership.person.pay_customers.count }
+    end
+  end
+
+  describe "cancelling a membership" do
+    it "cancels the linked Stripe subscription at period end, keeping the paid year" do
+      membership = create(:membership)
+      subscription = instance_double("Pay::Stripe::Subscription", active?: true)
+      allow(membership).to receive(:stripe_subscription).and_return(subscription)
+
+      expect(subscription).to receive(:cancel)
+      membership.update!(cancelled_at: Time.current)
+    end
+
+    it "leaves a membership with no Stripe subscription untouched" do
+      membership = create(:membership)
+
+      expect { membership.update!(cancelled_at: Time.current) }.not_to raise_error
+      expect(membership.reload).to be_cancelled
+    end
+
+    it "does not cancel anything when resuming (clearing cancelled_at)" do
+      membership = create(:membership, :cancelled)
+      allow(membership).to receive(:stripe_subscription)
+
+      membership.update!(cancelled_at: nil)
+
+      expect(membership).not_to have_received(:stripe_subscription)
+    end
+
+    it "still saves the local cancel when Stripe errors" do
+      membership = create(:membership)
+      subscription = instance_double("Pay::Stripe::Subscription", active?: true)
+      allow(membership).to receive(:stripe_subscription).and_return(subscription)
+      allow(subscription).to receive(:cancel).and_raise(Pay::Stripe::Error.new("boom"))
+      allow(Rails.logger).to receive(:warn)
+
+      expect { membership.update!(cancelled_at: Time.current) }.not_to raise_error
+      expect(membership.reload).to be_cancelled
+      expect(Rails.logger).to have_received(:warn).with(/Stripe/i)
+    end
+  end
 end

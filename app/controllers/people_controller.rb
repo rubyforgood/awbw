@@ -41,8 +41,19 @@ class PeopleController < ApplicationController
     @person = Person.includes(:avatar_attachment, :contact_methods, :user,
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
+
     @membership = membership_for(@person)
-    @membership_autopay = allowed_to?(:own_membership?, @person) && @person.payment_processor.subscribed?
+    membership_sub = @person.pay_subscriptions
+      .for_name(Pay.default_product_name)
+      .order(created_at: :desc)
+      .first
+
+    @membership_autopay = allowed_to?(:own_membership?, @person) &&
+                          membership_sub&.active?
+
+    @membership_autopay_cancelling = @membership_autopay &&
+                                     membership_sub.canceled? &&
+                                     !membership_sub.ended?
 
     if params[:checkout] == "success"
       flash[:notice] = "Thank you for your donation!"

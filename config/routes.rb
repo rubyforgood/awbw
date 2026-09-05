@@ -350,6 +350,7 @@ Rails.application.routes.draw do
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update ]
   resources :membership_checkouts, only: [ :create ]
+  resources :membership_billing_portals, only: [ :create ]
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses

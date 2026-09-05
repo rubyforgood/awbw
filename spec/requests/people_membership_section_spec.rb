@@ -156,15 +156,12 @@ RSpec.describe "Person profile membership section", type: :request do
       expect(response.body).not_to include(allocations_path(allocatable_sgid: year.to_sgid.to_s))
     end
 
-    it "creates their Stripe customer record, ready for checkout" do
-      expect { get person_path(person) }.to change { person.pay_customers.count }.by(1)
-
-      customer = person.pay_customers.sole
-      expect(customer).to have_attributes(processor: "stripe", default: true, processor_id: nil)
+    it "does not create a Stripe customer just from viewing the profile" do
+      expect { get person_path(person) }.not_to change { person.pay_customers.count }
     end
 
     it "reuses that customer on later views" do
-      get person_path(person)
+      Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
 
       expect { get person_path(person) }.not_to change { person.pay_customers.count }
     end
@@ -179,6 +176,58 @@ RSpec.describe "Person profile membership section", type: :request do
 
       expect(response.body).to include("renews automatically")
       expect(response.body).not_to include("Set up annual membership")
+    end
+
+    it "says autopay will stop renewing when the subscription is cancelled at period end" do
+      membership_invoice_for
+      customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
+      Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
+        processor_plan: "membership", status: "active", quantity: 1,
+        ends_at: 30.days.from_now)
+
+      get person_path(person)
+
+      expect(response.body).to include("set to stop renewing")
+      expect(response.body).not_to include("renews automatically")
+      expect(response.body).not_to include("Set up annual membership")
+    end
+
+    it "still lets a cycle-cancelling member manage autopay to un-cancel" do
+      membership_invoice_for
+      customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
+      Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
+        processor_plan: "membership", status: "active", quantity: 1,
+        ends_at: 30.days.from_now)
+
+      get person_path(person)
+
+      expect(response.body).to include("Manage autopay")
+      expect(response.body).to include(membership_billing_portals_path)
+    end
+
+    it "links to the Stripe billing portal to manage autopay" do
+      membership_invoice_for
+      customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
+      Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
+        processor_plan: "membership", status: "active", quantity: 1)
+
+      get person_path(person)
+
+      expect(response.body).to include("Manage autopay")
+      expect(response.body).to include(membership_billing_portals_path)
+    end
+
+    it "opts the billing portal button out of Turbo, which cannot follow the redirect to Stripe" do
+      membership_invoice_for
+      customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
+      Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
+        processor_plan: "membership", status: "active", quantity: 1)
+
+      get person_path(person)
+
+      button = Nokogiri::HTML(response.body)
+        .at_css("form[action='#{membership_billing_portals_path}'] button[type=submit]")
+      expect(button["data-turbo"]).to eq("false")
     end
   end
 

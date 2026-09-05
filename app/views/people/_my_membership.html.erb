@@ -12,8 +12,21 @@
     <% end %>
 
     <div class="px-3">
-      <% if autopay %>
-        <p class="text-sm text-gray-700">Your membership renews automatically on the card you have on file.</p>
+      <% if autopay_cancelling %>
+        <p class="mb-3 text-sm text-gray-700">
+          Your automatic payment for membership is set to stop renewing at the end of the current billing cycle.
+          You can change this or update your card below.
+        </p>
+        <%# Turbo can't follow the cross-origin redirect to the Stripe billing portal. %>
+        <%= button_to "Manage autopay", membership_billing_portals_path,
+                      class: button_classes(:secondary_outline, size: :sm),
+                      data: { turbo: false } %>
+      <% elsif autopay %>
+        <p class="mb-3 text-sm text-gray-700">Your membership renews automatically on the card you have on file.</p>
+        <%# Turbo can't follow the cross-origin redirect to the Stripe billing portal. %>
+        <%= button_to "Manage autopay", membership_billing_portals_path,
+                      class: button_classes(:secondary_outline, size: :sm),
+                      data: { turbo: false } %>
       <% else %>
         <p class="mb-3 text-sm text-gray-700">
           Set up your membership to renew automatically each year at

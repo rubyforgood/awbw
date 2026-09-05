@@ -29,6 +29,8 @@ class Membership < ApplicationRecord
   scope :not_cancelled, -> { where(cancelled_at: nil) }
   scope :cancelled, -> { where.not(cancelled_at: nil) }
 
+  after_update :cancel_stripe_subscription, if: :saved_change_to_cancelled_at?
+
   def cancelled? = cancelled_at.present?
   alias_method :cancelled, :cancelled?
 
@@ -45,7 +47,24 @@ class Membership < ApplicationRecord
     self.cost_cents = value.present? ? (value.to_d * 100).to_i : nil
   end
 
+  def stripe_subscription
+    return if person.blank?
+
+    person.pay_subscriptions.find { |sub| sub.metadata&.dig("membership_id").to_i == id }
+  end
+
   private
+
+  def cancel_stripe_subscription
+    return unless cancelled_at.present?
+
+    sub = stripe_subscription
+    return unless sub&.active?
+
+    sub.cancel
+  rescue Stripe::StripeError, Pay::Error => e
+    Rails.logger.warn("[Membership] Could not cancel Stripe subscription for membership #{id}: #{e.message}")
+  end
 
   def one_uncancelled_membership_per_person
     return if cancelled_at.present? || person_id.blank?
