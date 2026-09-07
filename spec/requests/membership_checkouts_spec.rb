@@ -65,12 +65,33 @@ RSpec.describe "Membership checkouts", type: :request do
     expect(checkout_args.dig(:line_items, 0, :price_data, :recurring)).to eq({ interval: "year" })
   end
 
-  it "charges immediately when the current year is unpaid" do
+  it "charges immediately with no anchor when the current year is unpaid and not yet started" do
     sign_in user
 
     post membership_checkouts_path
 
+    expect(checkout_args[:subscription_data]).not_to have_key(:billing_cycle_anchor)
     expect(checkout_args[:subscription_data]).not_to have_key(:trial_end)
+    expect(checkout_args[:line_items].size).to eq(1)
+  end
+
+  it "charges an already-started, unpaid year one-time and returns to the profile" do
+    subscription = create(:membership, person: person)
+    invoice = create(:membership_invoice, membership: subscription, cost_cents: 2_500,
+      start_date: Date.current - 30.days, end_date: Date.current - 30.days + 1.year - 1.day)
+    sign_in user
+
+    post membership_checkouts_path
+
+    expect(response).to redirect_to("https://checkout.stripe.com/membership")
+    expect(checkout_args[:mode]).to eq("payment")
+    expect(checkout_args[:subscription_data]).to be_nil
+    expect(checkout_args[:metadata]).to eq({ membership_id: subscription.id })
+    expect(checkout_args[:payment_intent_data]).to eq({ metadata: { membership_id: subscription.id } })
+    expect(checkout_args[:line_items].size).to eq(1)
+    expect(checkout_args[:line_items][0][:price_data][:unit_amount]).to eq(invoice.remaining_cost)
+    expect(checkout_args[:line_items][0][:price_data]).not_to have_key(:recurring)
+    expect(checkout_args[:success_url]).to eq(person_url(person, membership_checkout: "success"))
   end
 
   it "defers the first charge to the day after a year that is already paid" do
@@ -82,8 +103,10 @@ RSpec.describe "Membership checkouts", type: :request do
 
     post membership_checkouts_path
 
-    expect(checkout_args[:subscription_data][:trial_end])
+    expect(checkout_args[:subscription_data][:billing_cycle_anchor])
       .to eq(Time.use_zone(Membership::TIME_ZONE) { (invoice.end_date + 1.day).beginning_of_day.to_i })
+    expect(checkout_args[:subscription_data][:proration_behavior]).to eq("none")
+    expect(checkout_args[:line_items].size).to eq(1)
   end
 
   it "carries the subscription id so renewal charges can be traced back" do

@@ -14,6 +14,8 @@ class Membership < ApplicationRecord
   GRACE_PERIOD_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", 30).to_i
   RENEWAL_WINDOW_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", 30).to_i
 
+  attr_accessor :end_coverage_today
+
   has_paper_trail
 
   belongs_to :person
@@ -30,6 +32,7 @@ class Membership < ApplicationRecord
   scope :cancelled, -> { where.not(cancelled_at: nil) }
 
   after_update :cancel_stripe_subscription, if: :saved_change_to_cancelled_at?
+  after_save :apply_end_coverage_today, if: :end_coverage_today?
 
   def cancelled? = cancelled_at.present?
   alias_method :cancelled, :cancelled?
@@ -38,6 +41,15 @@ class Membership < ApplicationRecord
     flag = ActiveModel::Type::Boolean.new.cast(value)
     self.cancelled_at = flag ? (cancelled_at || Time.current) : nil
   end
+
+  # Admin "Cancel now": end the current invoice's coverage at the end of today
+  # and drop any already-minted future year that is still unbilled. The paired
+  # cancelled="1" param cancels the Stripe subscription via cancel_stripe_subscription.
+  def end_coverage_today=(value)
+    @end_coverage_today = ActiveModel::Type::Boolean.new.cast(value)
+  end
+
+  def end_coverage_today? = !!@end_coverage_today
 
   def cost_dollars
     cost_cents.to_d / 100 if cost_cents
@@ -58,6 +70,15 @@ class Membership < ApplicationRecord
   end
 
   private
+
+  def apply_end_coverage_today
+    transaction do
+      membership_invoices.active_on(Date.current).first&.update!(end_date: Date.current)
+      membership_invoices.where("start_date > ?", Date.current).each do |invoice|
+        invoice.destroy! if invoice.allocations.none?
+      end
+    end
+  end
 
   def cancel_stripe_subscription
     return unless cancelled_at.present?

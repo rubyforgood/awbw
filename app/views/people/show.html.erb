@@ -373,7 +373,7 @@
     <% end %>
     <%# The person's own membership view. The admin membership card lives on the
         edit page (Membership section there), not on the public-facing profile. %>
-    <% if allowed_to?(:own_membership?, @person) %>
+    <% if allowed_to?(:own_membership?, @person) || allowed_to?(:manage, @membership) %>
       <%= render "people/my_membership", membership: @membership, autopay: @membership_autopay, autopay_cancelling: @membership_autopay_cancelling %>
     <% end %>
     <!-- SUBMITTED SECTION -->

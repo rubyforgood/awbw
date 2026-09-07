@@ -4,6 +4,45 @@ puts "Creating memberships for dev people…"
 
 standard = Membership::ANNUAL_COST_CENTS
 
+# Checkout-flow scenarios for the named seed users — sign in and press
+# "Set up annual membership" to see each billed shape:
+#   amy   → grace period: current year already started, unpaid (one-time cover)
+#   aisha → on time: current year starts today, unpaid (charged immediately)
+# Umberto is deliberately absent: affiliation_history seeds his first membership
+# and builds a multi-year history on it, so he can't be a checkout demo too.
+# The "paid up — renewal defers to the anniversary" shape comes from the pool
+# block's "paid up for the current year" person below.
+# Skipped once the person already has an uncancelled membership, so reseeding
+# doesn't clobber state you've since changed. Consumes these users before the
+# pool block below, so their invoices stay the canonical checkout demos.
+{
+  "amy.user@example.com" => { label: "grace period — one-time cover + anchored renewal", start: Date.current - 10.days, pay: false },
+  "aisha.user@example.com" => { label: "on time — charged immediately, no anchor", start: Date.current, pay: false }
+}.each do |email, scenario|
+  user = User.find_by(email: email)
+  person = user&.person
+  next unless person
+  next if person.memberships.not_cancelled.exists?
+
+  membership = person.memberships.create!
+  invoice = MembershipInvoice.create!(
+    membership: membership,
+    start_date: scenario[:start],
+    cost_cents: membership.cost_cents || standard
+  )
+  if scenario[:pay]
+    payment = CashPayment.create!(
+      person: person,
+      amount_cents: invoice.cost_cents,
+      amount_cents_remaining: invoice.cost_cents,
+      currency: "usd"
+    )
+    Allocation.create!(source: payment, allocatable: invoice, amount: invoice.cost_cents)
+  end
+
+  puts "  #{person.full_name}: #{scenario[:label]}"
+end
+
 pool = Person.where.missing(:memberships).order(:last_name, :first_name).to_a
 
 if pool.size < 9
