@@ -46,10 +46,6 @@
                       method: :patch, class: button_classes(:secondary_outline, size: :sm),
                       params: { membership: { cancelled: "1" } },
                       data: { turbo_confirm: "Stop renewing membership for #{@person.full_name}? They keep the invoice period they have already paid for." } %>
-                <%= button_to "Cancel now", membership_path(membership),
-                      method: :patch, class: button_classes(:danger_outline, size: :sm),
-                      params: { membership: { cancelled: "1", end_coverage_today: "1" } },
-                      data: { turbo_confirm: "End #{@person.full_name}'s coverage immediately? Their current invoice period is cut short to today, renewals are cancelled, and an unbilled next year is removed." } %>
               <% elsif !active_membership %>
                 <%= button_to "Resume", membership_path(membership),
                       method: :patch, class: button_classes(:secondary_outline, size: :sm),

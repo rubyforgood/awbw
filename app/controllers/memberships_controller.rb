@@ -37,7 +37,6 @@ class MembershipsController < ApplicationController
 
   def update
     authorize! @membership
-    @end_coverage_today = params[:membership][:end_coverage_today] == "1"
 
     if @membership.update(authorized_scope(params.require(:membership)))
       redirect_to person_memberships_path(@person),
@@ -66,7 +65,6 @@ class MembershipsController < ApplicationController
   end
 
   def update_notice
-    return "Membership ended today. Coverage cut to today, renewals cancelled, and unbilled future years removed." if @end_coverage_today
     return "Cost updated. Changes will only be applied to future years." unless @membership.saved_change_to_cancelled_at?
     return "Membership cancelled. Autorenewal turned off." if @membership.cancelled?
 

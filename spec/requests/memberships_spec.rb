@@ -86,24 +86,20 @@ RSpec.describe "Memberships", type: :request do
         expect(response.body).to include("No membership invoices yet")
       end
 
-      it "offers cancel-recurring and cancel-now for a live subscription" do
+      it "offers cancelling for a live subscription" do
         create(:membership, person: person)
 
         get person_memberships_path(person)
 
-        body = response.body
-        expect(body).to include("Cancel recurring")
-        expect(body).to include("Cancel now")
+        expect(response.body).to include("Cancel recurring")
       end
 
-      it "hides the cancel buttons once the subscription is cancelled" do
+      it "hides the cancel control once the subscription is cancelled" do
         create(:membership, :cancelled, person: person)
 
         get person_memberships_path(person)
 
-        body = response.body
-        expect(body).not_to include("Cancel recurring")
-        expect(body).not_to include("Cancel now")
+        expect(response.body).not_to include("Cancel recurring")
       end
     end
   end
@@ -406,21 +402,21 @@ RSpec.describe "Memberships", type: :request do
     it "permits only the cancelled flag for a non-admin" do
       policy = MembershipPolicy.new(subscription, user: create(:user))
       filtered = policy.apply_scope(
-        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1", end_coverage_today: "1"),
+        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1"),
         type: :action_controller_params
       )
 
       expect(filtered.keys).to contain_exactly("cancelled")
     end
 
-    it "permits all three for an admin" do
+    it "permits both for an admin" do
       policy = MembershipPolicy.new(subscription, user: admin)
       filtered = policy.apply_scope(
-        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1", end_coverage_today: "1"),
+        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1"),
         type: :action_controller_params
       )
 
-      expect(filtered.keys).to contain_exactly("cost_dollars", "cancelled", "end_coverage_today")
+      expect(filtered.keys).to contain_exactly("cost_dollars", "cancelled")
     end
   end
 
@@ -490,69 +486,27 @@ RSpec.describe "Memberships", type: :request do
 
         expect { IssueMembershipInvoicesJob.new.perform }.to change(MembershipInvoice, :count).by(1)
       end
-    end
-  end
 
-  describe "PATCH /memberships/:id — cancelling now" do
-    let!(:subscription) { create(:membership, person: person) }
-
-    it "is not available to a non-admin" do
-      year = create(:membership_invoice, membership: subscription)
-      sign_in create(:user)
-
-      patch membership_path(subscription), params: { membership: { cancelled: "1", end_coverage_today: "1" } }
-
-      expect(response).to redirect_to(root_path)
-      expect(subscription.reload).not_to be_cancelled
-      expect(year.reload.end_date).to eq(Date.current + 1.year - 1.day)
-    end
-
-    context "as an admin" do
-      before { sign_in admin }
-
-      it "ends the current year at today and cancels the linked Stripe subscription immediately" do
-        customer = Pay::Customer.create!(owner: person, processor: "stripe",
-          processor_id: "cus_test", default: true)
-        Pay::Stripe::Subscription.create!(customer: customer, name: "default",
-          processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1,
-          metadata: { "membership_id" => subscription.id })
-        allow(Stripe::Subscription).to receive(:cancel)
-          .and_return(double(ended_at: Time.current, trial_end: nil, status: "canceled"))
-        year = create(:membership_invoice, membership: subscription)
-
-        patch membership_path(subscription), params: { membership: { cancelled: "1", end_coverage_today: "1" } }
-
-        expect(subscription.reload).to be_cancelled
-        expect(year.reload.end_date).to eq(Date.current)
-        expect(person.reload).not_to be_membership_current(as_of: Date.tomorrow)
-        expect(Stripe::Subscription).to have_received(:cancel).with("sub_test", anything, anything)
-        expect(response).to redirect_to(person_memberships_path(person))
-        expect(flash[:notice]).to match(/ended today/i)
-      end
-
-      it "deletes an unbilled future year when cancelling now" do
+      it "retires an unbilled future year when cancelling" do
         current = create(:membership_invoice, membership: subscription)
         future = create(:membership_invoice, membership: subscription,
           start_date: current.end_date + 1.day, end_date: current.end_date + 1.year)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "1", end_coverage_today: "1" } }
+        patch membership_path(subscription), params: { membership: { cancelled: "1" } }
 
-        expect(Membership.find(subscription.id)).to be_cancelled
         expect(MembershipInvoice.exists?(future.id)).to be false
-        expect(MembershipInvoice.exists?(current.id)).to be true
-        expect(current.reload.end_date).to eq(Date.current)
+        expect(current.reload.end_date).to eq(Date.current + 1.year - 1.day)
       end
 
-      it "keeps a paid future year when cancelling now" do
+      it "keeps a paid future year when cancelling" do
         current = create(:membership_invoice, membership: subscription)
         future = create(:membership_invoice, membership: subscription,
           start_date: current.end_date + 1.day, end_date: current.end_date + 1.year)
         create(:allocation, source: create(:payment), allocatable: future, amount: future.cost_cents)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "1", end_coverage_today: "1" } }
+        patch membership_path(subscription), params: { membership: { cancelled: "1" } }
 
         expect(MembershipInvoice.exists?(future.id)).to be true
-        expect(future.reload).to be_persisted
       end
     end
   end
