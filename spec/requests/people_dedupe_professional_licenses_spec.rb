@@ -300,6 +300,42 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     end
   end
 
+  describe "avatar" do
+    def attach_avatar(person)
+      blob = ActiveStorage::Blob.create_before_direct_upload!(
+        filename: "face.png", byte_size: 1, checksum: "x", content_type: "image/png"
+      )
+      ActiveStorage::Attachment.create!(name: "avatar", record: person, blob: blob)
+    end
+
+    it "moves the deleted person's avatar to the keeper when the keeper has none" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      attachment = attach_avatar(delete_rec)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(attachment.reload.record_id).to eq(keep.id)
+      expect(keep.reload.avatar).to be_attached
+    end
+
+    it "keeps the survivor's own avatar and drops the deleted person's" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      attach_avatar(keep)
+      dupe_attachment = attach_avatar(delete_rec)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.avatar).to be_attached
+      expect(ActiveStorage::Attachment.exists?(dupe_attachment.id)).to be false
+    end
+  end
+
   describe "only the surviving license carries CE (losing placeholder is empty)" do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }

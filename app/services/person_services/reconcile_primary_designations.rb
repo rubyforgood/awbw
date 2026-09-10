@@ -1,16 +1,10 @@
 module PersonServices
-  # After a person merge, the kept person holds both people's sector and age-range
-  # taggings. Identical taggings (same sector / same age range) collapse to one in
-  # the merge, but the surviving row keeps whichever primary flag the kept person's
-  # own tagging had — which can drop a primary, or leave two different sectors both
-  # flagged primary. Either way Person's single-primary validations would then reject
-  # the record and block its next edit.
-  #
-  # Settle it to exactly one primary per dimension: the survivor's own pre-merge
-  # primary, or — when the survivor had none — the deleted person's. That target id
-  # is captured before the merge (afterwards the merged-in taggings are
-  # indistinguishable from the survivor's own). Promote the target tagging and demote
-  # every other, so a collapsed-away flag is restored and duplicate primaries are cleared.
+  # Settles a merged person to exactly one primary sector and one primary age range,
+  # as Person's single-primary validations require. The target for each dimension is
+  # the survivor's own pre-merge primary, or — when it had none — the deleted person's;
+  # it's passed in because it must be read before the merge, once the merged-in
+  # taggings can no longer be told apart from the survivor's own. The target tagging is
+  # marked primary and every other demoted.
   class ReconcilePrimaryDesignations
     def initialize(person, primary_sector_id:, primary_age_category_id:)
       @person = person

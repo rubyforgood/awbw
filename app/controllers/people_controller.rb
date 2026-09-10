@@ -361,6 +361,9 @@ class PeopleController < ApplicationController
       model_class: Person,
       domain: :people,
       candidate_finder: -> { PersonServices::DuplicateFinder.new.groups },
+      # Carry the deleted person's avatar onto the keeper when the keeper has none;
+      # otherwise it's purged with the deleted person (has_one_attached dependent: :purge).
+      movable_attachments: %w[avatar],
       editable_columns: %w[
         first_name legal_first_name last_name email email_type email_2 email_2_type
         date_of_birth pronouns filemaker_code member_since notes
