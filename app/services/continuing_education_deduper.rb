@@ -3,11 +3,11 @@
 # Collapses duplicate CE registrations that a merge left sharing one parent. Two
 # duplicate people (or event registrations) each carry their own CE registration;
 # once merged they land on the same event registration and license, so the person
-# now holds two CE records for a single enrollment. There is no DB unique index to
-# make ModelDeduper collapse them (and a blind destroy would cascade away the
-# duplicate's payments), so this consolidates them by hand: same event registration
-# + license is one CE record, and the losers' allocations (payments) and comments
-# move onto the survivor before the losers are destroyed.
+# now holds two CE records for a single enrollment. CE has no DB unique index, so
+# ModelDeduper never compares CE rows and just moves them all onto the keeper. We
+# consolidate them here instead: same event registration + license is one CE record,
+# and the losers' allocations (payments) and comments move onto the survivor before
+# the losers are destroyed.
 class ContinuingEducationDeduper
   def initialize(registrations)
     @registrations = registrations

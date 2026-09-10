@@ -373,12 +373,23 @@ class PeopleController < ApplicationController
 
         [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
       },
-      # Two duplicate people can each hold a CE registration for the same event; the
-      # merge lands both on the kept person's one event registration and license,
-      # leaving a duplicate CE record. Collapse those into one, preserving the
-      # loser's payments, so the person isn't billed twice for a single enrollment.
+      # Snapshot the survivor's own primary sector + age range before the merge moves
+      # the deleted person's taggings on — afterwards they're indistinguishable, and
+      # we need to know which primary designation to keep.
+      merge_keeper: ->(keep, _delete) {
+        @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id
+        @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id
+      },
+      # Reconcile what the generic merge leaves inconsistent on the kept person:
+      #   * duplicate CE registrations for one event (collapse them, preserving the
+      #     loser's payments, so the person isn't billed twice for a single enrollment);
+      #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest),
+      #     which Person's single-primary validations would otherwise reject.
       after_merge: ->(keep) {
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
+        PersonServices::ReconcilePrimaryDesignations.new(keep,
+          primary_sector_id: @keeper_primary_sector_id,
+          primary_age_category_id: @keeper_primary_age_category_id).call
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence

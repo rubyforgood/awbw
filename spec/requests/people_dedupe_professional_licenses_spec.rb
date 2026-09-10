@@ -164,6 +164,61 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     end
   end
 
+  describe "primary sector and age range designations" do
+    let!(:age_type) { create(:category_type, :published, name: "AgeRange") }
+    let!(:keep_sector) { create(:sector) }
+    let!(:dupe_sector) { create(:sector) }
+    let!(:keep_age) { create(:category, :published, category_type: age_type) }
+    let!(:dupe_age) { create(:category, :published, category_type: age_type) }
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+
+    before do
+      create(:sectorable_item, sectorable: keep, sector: keep_sector, is_primary: true)
+      create(:sectorable_item, sectorable: delete_rec, sector: dupe_sector, is_primary: true)
+      create(:categorizable_item, categorizable: keep, category: keep_age, is_primary: true)
+      create(:categorizable_item, categorizable: delete_rec, category: dupe_age, is_primary: true)
+    end
+
+    it "keeps only the survivor's primary sector" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      primaries = keep.reload.sectorable_items.where(is_primary: true)
+      expect(primaries.count).to eq(1)
+      expect(primaries.first.sector_id).to eq(keep_sector.id)
+    end
+
+    it "keeps only the survivor's primary age range" do
+      merge!(keep: keep, delete: delete_rec)
+
+      primaries = keep.reload.age_range_categorizable_items.where(is_primary: true)
+      expect(primaries.count).to eq(1)
+      expect(primaries.first.category_id).to eq(keep_age.id)
+    end
+
+    it "keeps both people's sectors and age ranges, just not both as primary" do
+      merge!(keep: keep, delete: delete_rec)
+
+      expect(keep.reload.sectorable_items.pluck(:sector_id)).to contain_exactly(keep_sector.id, dupe_sector.id)
+      expect(keep.age_range_categorizable_items.pluck(:category_id)).to contain_exactly(keep_age.id, dupe_age.id)
+    end
+
+    it "succeeds even when the keeper is edited in the same request" do
+      post dedupe_perform_people_path, params: {
+        person_to_keep_id: keep.id,
+        person_to_delete_id: delete_rec.id,
+        person_to_keep: { first_name: "Renamed" }
+      }
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.first_name).to eq("Renamed")
+      expect(keep.sectorable_items.where(is_primary: true).count).to eq(1)
+    end
+  end
+
   describe "only the surviving license carries CE (losing placeholder is empty)" do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }
