@@ -118,6 +118,52 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     end
   end
 
+  describe "duplicate CE registrations for the same event" do
+    let!(:event) { create(:event) }
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+    let!(:keep_reg) { create(:event_registration, registrant: keep, event: event) }
+    let!(:delete_reg) { create(:event_registration, registrant: delete_rec, event: event) }
+    let!(:keep_license) { create(:professional_license, :placeholder, person: keep, kind: "LMFT") }
+    let!(:delete_license) { create(:professional_license, :placeholder, person: delete_rec, kind: "LMFT") }
+    let!(:keep_ce) { create(:continuing_education_registration, event_registration: keep_reg, professional_license: keep_license) }
+    let!(:delete_ce) { create(:continuing_education_registration, event_registration: delete_reg, professional_license: delete_license) }
+    let!(:payment) { create(:payment, person: delete_rec, amount_cents: 5_000, amount_cents_remaining: 0) }
+    let!(:allocation) { create(:allocation, source: payment, allocatable: delete_ce, amount: 5_000) }
+
+    it "collapses them into a single CE registration" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(ContinuingEducationRegistration.for_registrant(keep.id).count).to eq(1)
+    end
+
+    it "keeps the losing CE registration's payment on the survivor" do
+      merge!(keep: keep, delete: delete_rec)
+
+      survivor = ContinuingEducationRegistration.for_registrant(keep.id).first
+      expect(Allocation.exists?(allocation.id)).to be true
+      expect(survivor.allocations.pluck(:id)).to include(allocation.id)
+      expect(survivor.allocations_sum).to eq(5_000)
+    end
+  end
+
+  describe "CE registrations for different events" do
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+    let!(:keep_license) { license_with_ce(keep, number: nil) }
+    let!(:delete_license) { license_with_ce(delete_rec, number: nil) }
+
+    it "keeps both CE registrations (only same-event duplicates collapse)" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(ContinuingEducationRegistration.for_registrant(keep.id).count).to eq(2)
+    end
+  end
+
   describe "only the surviving license carries CE (losing placeholder is empty)" do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }

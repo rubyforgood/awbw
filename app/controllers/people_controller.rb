@@ -373,6 +373,13 @@ class PeopleController < ApplicationController
 
         [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
       },
+      # Two duplicate people can each hold a CE registration for the same event; the
+      # merge lands both on the kept person's one event registration and license,
+      # leaving a duplicate CE record. Collapse those into one, preserving the
+      # loser's payments, so the person isn't billed twice for a single enrollment.
+      after_merge: ->(keep) {
+        ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
+      },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
       }
