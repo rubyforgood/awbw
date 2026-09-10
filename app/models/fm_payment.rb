@@ -13,7 +13,8 @@
 #   PledgeID              FK → FmPayment, pledge this payment pays down
 #   FormSubmissionID      external ref, e.g. FSB03117
 #   InvoiceID             external ref
-#   RefID                 external ref
+#   RefID                 FK, polymorphic by id prefix: E → FmEvent (18,098),
+#                         F → FmFunding (607), e → FmEvent (9, lowercase)
 #   FormLetterID          acknowledgment letter
 #   Name
 #   Description
@@ -43,7 +44,14 @@ class FmPayment < ApplicationRecord
     "RolodexID" => "fm_rolodexes",
     "OrgID" => "fm_organizations",
     "ProjectID" => "fm_projects",
-    "ParticRecID" => "fm_participants"
+    "ParticRecID" => "fm_participants",
+    "RefID" => nil # polymorphic — resolved by prefix via REFID_PREFIX_MAP
+  }.freeze
+
+  REFID_PREFIX_MAP = {
+    "E" => "fm_events",
+    "F" => "fm_fundings",
+    "e" => "fm_events"
   }.freeze
 
   HAS_MANY = {
