@@ -430,6 +430,14 @@ class ModelDeduper
   # now-childless loser — so a row that owns real records (e.g. a professional license
   # with CE registrations) has them consolidated onto the survivor.
   def collapse_into(survivor, loser)
-    self.class.new(model_class: loser.class, logger: logger, dry_run: false).merge(survivor, loser)
+    collapse_deduper_for(loser.class).merge(survivor, loser)
+  end
+
+  # One deduper per collapsed class, reused across every collision in this merge:
+  # building one scans every table's foreign keys (uncached information_schema
+  # queries), and that scan depends only on the class.
+  def collapse_deduper_for(klass)
+    @collapse_dedupers ||= {}
+    @collapse_dedupers[klass] ||= self.class.new(model_class: klass, logger: logger, dry_run: false)
   end
 end

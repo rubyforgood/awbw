@@ -50,4 +50,22 @@ RSpec.describe "Event registration dedupe — continuing education", type: :requ
     expect(survivor.allocations.pluck(:id)).to include(allocation.id)
     expect(survivor.allocations_sum).to eq(5_000)
   end
+
+  # A legacy placeholder license can store an empty string where another stores
+  # nil. Both are "no number on file", so the repoint must land on the kept
+  # registrant's existing placeholder rather than spawning a third license that
+  # leaves the enrollment split across two CE records.
+  context "when both registrants hold a blank-number placeholder license" do
+    let!(:keep_license) { create(:professional_license, person: keep_person, number: "", kind: "LMFT") }
+    let!(:delete_license) { create(:professional_license, person: delete_person, number: nil, kind: "LMFT") }
+
+    it "collapses onto the keeper's existing placeholder license" do
+      merge!
+
+      ce_records = keep_reg.reload.continuing_education_registrations
+      expect(ce_records.count).to eq(1)
+      expect(ce_records.first.professional_license_id).to eq(keep_license.id)
+      expect(keep_person.reload.professional_licenses.count).to eq(1)
+    end
+  end
 end
