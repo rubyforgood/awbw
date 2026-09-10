@@ -20,6 +20,8 @@
                 <%= link_to value, fm_archive_path(value, table: link_target.sub("fm_", "")), class: "text-primary hover:underline" %>
               <% elsif link_target.nil? && value.present? && @record.class.const_defined?(:CONTEXT_LINK_MAP) && (ctx = @record.data["Context"]) && (ctx_target = @record.class::CONTEXT_LINK_MAP[ctx]) %>
                 <%= link_to value, fm_archive_path(value, table: ctx_target.sub("fm_", "")), class: "text-primary hover:underline" %>
+              <% elsif link_target.nil? && value.present? && @record.class.const_defined?(:PREFIX_LINK_MAP) && (prefix_target = @record.class::PREFIX_LINK_MAP[value.to_s[0]]) %>
+                <%= link_to value, fm_archive_path(value, table: prefix_target.sub("fm_", "")), class: "text-primary hover:underline" %>
               <% else %>
                 <%= value %>
               <% end %>

@@ -8,7 +8,10 @@
 #   RecordID            PK
 #   ProjectID           FK → FmProject
 #   LeaderID            FK → FmRolodex
-#   AgencyID            FK → FmRolodex
+#   AgencyID            FK → FmRolodex (9,632 rows use bare numeric IDs from the
+#                         legacy FileMaker internal ID system, not the ORG-prefixed
+#                         format — cannot resolve to fm_organizations without a
+#                         crosswalk; the rolodex link is correct for the export format)
 #   LeaderName          denormalized from LeaderID
 #   WorkshopID          e.g. W0421
 #   sqlWorkshopID       external/legacy key
