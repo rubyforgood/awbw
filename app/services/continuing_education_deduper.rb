@@ -1,13 +1,9 @@
 # frozen_string_literal: true
 
-# Collapses duplicate CE registrations that a merge left sharing one parent. Two
-# duplicate people (or event registrations) each carry their own CE registration;
-# once merged they land on the same event registration and license, so the person
-# now holds two CE records for a single enrollment. CE has no DB unique index, so
-# ModelDeduper never compares CE rows and just moves them all onto the keeper. We
-# consolidate them here instead: same event registration + license is one CE record,
-# and the losers' allocations (payments) and comments move onto the survivor before
-# the losers are destroyed.
+# Consolidates a record's duplicate CE registrations after a merge: CE registrations
+# that share an event registration and professional license are one enrollment, so
+# they collapse to a single record. The losers' allocations (payments) and comments
+# move onto the survivor, then the losers are destroyed.
 class ContinuingEducationDeduper
   def initialize(registrations)
     @registrations = registrations
@@ -29,11 +25,10 @@ class ContinuingEducationDeduper
       loser.reload.destroy!
     end
 
-    # Keep the fuller hours and any certificate, but leave cost at the real figure
-    # rather than inventing one to cover the combined payments — if the merged
-    # payments now exceed it, ContinuingEducationRegistration#over_allocated? flags
-    # it for an admin. update_columns so that allowed over-allocation persists past
-    # the cost_not_below_allocations validation.
+    # Keep the fuller hours and any certificate, and the real cost. When the merged-in
+    # payments exceed that cost the survivor reads as over-allocated, flagged for an
+    # admin (ContinuingEducationRegistration#over_allocated?); update_columns lets that
+    # over-allocation persist past the cost_not_below_allocations validation.
     survivor.update_columns(
       hours: group.map(&:hours).max,
       cost_cents: group.map(&:cost_cents).max,

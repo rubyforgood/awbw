@@ -424,12 +424,11 @@ class ModelDeduper
     raise "ABORT: #{remaining} #{jc.name} items still reference #{model_label} #{dupe.id}" if remaining > 0
   end
 
-  # The primary already holds an equivalent row (same natural key), so the losing
-  # row can't just move onto it. Merge the loser into the survivor with the deduper
-  # itself, which reassigns the loser's own children first — so a row that owns real
-  # records (e.g. a professional license with CE registrations) consolidates them
-  # onto the survivor instead of cascading them away, or aborting the whole merge on
-  # a protective before_destroy — before the now-childless loser is destroyed.
+  # The primary already holds an equivalent row (same natural key), so the loser can't
+  # just move onto it. Merge the loser into the survivor with the deduper itself, which
+  # moves the loser's own children onto the survivor first, then destroys the
+  # now-childless loser — so a row that owns real records (e.g. a professional license
+  # with CE registrations) has them consolidated onto the survivor.
   def collapse_into(survivor, loser)
     self.class.new(model_class: loser.class, logger: logger, dry_run: false).merge(survivor, loser)
   end

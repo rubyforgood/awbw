@@ -388,8 +388,8 @@ class PeopleController < ApplicationController
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * duplicate CE registrations for one event (collapse them, preserving the
       #     loser's payments, so the person isn't billed twice for a single enrollment);
-      #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest),
-      #     which Person's single-primary validations would otherwise reject.
+      #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest,
+      #     leaving the single primary Person's single-primary validations require).
       after_merge: ->(keep) {
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
         PersonServices::ReconcilePrimaryDesignations.new(keep,

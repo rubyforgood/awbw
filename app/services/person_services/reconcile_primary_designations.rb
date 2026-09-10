@@ -2,8 +2,8 @@ module PersonServices
   # Settles a merged person to exactly one primary sector and one primary age range,
   # as Person's single-primary validations require. The target for each dimension is
   # the survivor's own pre-merge primary, or — when it had none — the deleted person's;
-  # it's passed in because it must be read before the merge, once the merged-in
-  # taggings can no longer be told apart from the survivor's own. The target tagging is
+  # it's passed in because it must be read before the merge, while the merged-in
+  # taggings can still be told apart from the survivor's own. The target tagging is
   # marked primary and every other demoted.
   class ReconcilePrimaryDesignations
     def initialize(person, primary_sector_id:, primary_age_category_id:)

@@ -181,11 +181,10 @@ class ContinuingEducationRegistration < ApplicationRecord
     end
   end
 
-  # More has been allocated (payments, scholarships, discounts) than the record
-  # costs — e.g. a $0 CE that still carries a payment. A person merge that folds two
-  # CE records for one enrollment into one can produce this (their combined payments
-  # exceeding the single cost); it isn't auto-corrected because inventing a cost would
-  # misrepresent the fee, so it's surfaced for an admin to reconcile.
+  # True when more is allocated (payments, scholarships, discounts) than the record
+  # costs — e.g. a $0 CE that still carries a payment, which a merge folding two CE
+  # records for one enrollment onto one can produce. Drives the "Check payments" flag
+  # for an admin to reconcile.
   def over_allocated?
     allocations_sum > cost_cents.to_i
   end

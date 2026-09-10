@@ -12,9 +12,9 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     PAYMENT_STATUS_BADGES.fetch(payment_status_label)
   end
 
-  # Warning pill when more is allocated than the record costs (e.g. a $0 CE that
-  # still carries a payment, which a merge can produce) — nil otherwise. Signals an
-  # admin needs to reconcile the payments; nothing auto-corrects it.
+  # Warning pill when the record is over-allocated — more allocated than it costs,
+  # e.g. a $0 CE that still carries a payment — nil otherwise. Signals an admin needs
+  # to reconcile the payments.
   def overpayment_badge
     return unless over_allocated?
 
