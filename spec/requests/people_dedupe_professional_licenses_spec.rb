@@ -368,6 +368,57 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     end
   end
 
+  describe "billing (Pay) records" do
+    def customer_with_charge(person, processor_id:, default: true)
+      customer = Pay::Customer.create!(owner: person, processor: "fake", processor_id: processor_id, default: default)
+      Pay::Charge.create!(customer: customer, amount: 5_000, processor_id: "ch_#{processor_id}",
+                          object: { "paid" => false, "refunds" => { "data" => [] } })
+      customer
+    end
+
+    it "reassigns the deleted person's Pay customer (and its charges) to the survivor" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      customer = customer_with_charge(delete_rec, processor_id: "cus_delete")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(customer.reload.owner_id).to eq(keep.id)
+      expect(keep.reload.pay_customers).to include(customer)
+      expect(keep.pay_charges.count).to eq(1)
+    end
+
+    it "keeps both people's Pay customers on the survivor when each had one" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      keep_customer = customer_with_charge(keep, processor_id: "cus_keep")
+      delete_customer = customer_with_charge(delete_rec, processor_id: "cus_delete")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.pay_customers).to contain_exactly(keep_customer, delete_customer)
+      expect(keep.pay_charges.count).to eq(2)
+    end
+
+    it "leaves the survivor with a single default customer (its own) when both were default" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      keep_customer = customer_with_charge(keep, processor_id: "cus_keep", default: true)
+      delete_customer = customer_with_charge(delete_rec, processor_id: "cus_delete", default: true)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.pay_customers.active.where(default: true)).to contain_exactly(keep_customer)
+      expect(delete_customer.reload.default).to be false
+    end
+  end
+
   describe "only the surviving license carries CE (losing placeholder is empty)" do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }
