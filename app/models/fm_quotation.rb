@@ -6,10 +6,12 @@
 # summary fields are imported too but left out here — nothing reads them.
 #
 #   RecordID              PK
-#   RolodexID             FK → FmRolodex
+#   RolodexID             FK → FmRolodex (31 rows contain IDs from ~10 unknown
+#                           tables: J, N, F, L, M, P, X, A, B, E, K, S, T prefixes)
 #   EventID               FK → FmEvent
-#   ProjectID             FK → FmProject
-#   SourceID              FK → FmRolodex
+#   ProjectID             FK → FmProject (4 rows: newline-delimited ID list, free
+#                           text project names, bare numeric without P prefix)
+#   SourceID              FK → FmRolodex (9 rows are bare numeric, not Q-prefixed)
 #   WorkshopID
 #   Quotation
 #   QuotationDate

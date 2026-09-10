@@ -6,7 +6,9 @@
 # summary fields are imported too but left out here — nothing reads them.
 #
 #   ID                        PK, e.g. 00006
-#   OrgID                     FK → FmOrganization
+#   OrgID                     FK → FmOrganization (7 rows contain professional
+#                               credentials like BSW, LCSW-C instead of ORG IDs
+#                               — data-entry errors)
 #   PrimaryContactID          FK → FmRolodex
 #   PrimaryAddrsID            FK → FmAddress
 #   WorksiteAddrsID           FK → FmAddress

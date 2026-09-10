@@ -6,7 +6,8 @@
 # summary fields are imported too but left out here — nothing reads them.
 #
 #   DocID                 PK
-#   SignatureID           FK → FmRolodex
+#   SignatureID           lookup key (always 1), not a real FK to FmRolodex;
+#                         the signatory name is denormalized in Signatory column
 #   DocumentName
 #   DocumentText
 #   Page2Text

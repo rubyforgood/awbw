@@ -13,8 +13,10 @@
 #   RolodexID             FK → FmRolodex
 #   ProjectID             FK → FmProject
 #   PaymentID             FK → FmPayment
-#   ParticRecID           FK → FmParticipant
-#   PersonnelID           external ref
+#   ParticRecID           FK → FmParticipant (uses P prefix format, e.g. P52646,
+#                         differs from canonical bare-numeric ParticipantID)
+#   PersonnelID           FK → FmPersonnel (uses PS prefix, e.g. PS10005,
+#                         differs from Personnel's own bare-numeric PrsnlRecID)
 #   FormTitle
 #   FormType
 #   EntryStatusWP
