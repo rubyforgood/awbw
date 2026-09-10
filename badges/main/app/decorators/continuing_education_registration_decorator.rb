@@ -12,6 +12,15 @@ class ContinuingEducationRegistrationDecorator < ApplicationDecorator
     PAYMENT_STATUS_BADGES.fetch(payment_status_label)
   end
 
+  # Warning pill when the record is over-allocated — more allocated than it costs,
+  # e.g. a $0 CE that still carries a payment — nil otherwise. Signals an admin needs
+  # to reconcile the payments.
+  def overpayment_badge
+    return unless over_allocated?
+
+    Badge.new(label: "Check payments", icon: "fa-solid fa-triangle-exclamation", classes: "bg-amber-50 text-amber-700 border-amber-200")
+  end
+
   # Pill for whether the completion certificate has been issued.
   def certificate_badge
     if certificate_sent_at.present?

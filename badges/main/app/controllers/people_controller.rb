@@ -361,6 +361,9 @@ class PeopleController < ApplicationController
       model_class: Person,
       domain: :people,
       candidate_finder: -> { PersonServices::DuplicateFinder.new.groups },
+      # Carry the deleted person's avatar onto the keeper when the keeper has none;
+      # otherwise it's purged with the deleted person (has_one_attached dependent: :purge).
+      movable_attachments: %w[avatar],
       editable_columns: %w[
         first_name legal_first_name last_name email email_type email_2 email_2_type
         date_of_birth pronouns filemaker_code member_since notes
@@ -372,6 +375,30 @@ class PeopleController < ApplicationController
         next [] unless keep.user && delete.user
 
         [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
+      },
+      # Before the merge moves the deleted person's taggings onto the keeper (where
+      # they become indistinguishable), capture which primary sector + age range to
+      # keep: the survivor's own, or — when it has none — the deleted person's.
+      merge_keeper: ->(keep, delete) {
+        @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id ||
+          delete.sectorable_items.find_by(is_primary: true)&.sector_id
+        @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
+          delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
+      },
+      # Reconcile what the generic merge leaves inconsistent on the kept person:
+      #   * redundant professional licenses within a kind (fold blank-number
+      #     placeholders into a real license — done first so any CE it moves is then
+      #     collapsed by the CE deduper below);
+      #   * duplicate CE registrations for one event (collapse them, preserving the
+      #     loser's payments, so the person isn't billed twice for a single enrollment);
+      #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest,
+      #     leaving the single primary Person's single-primary validations require).
+      after_merge: ->(keep) {
+        PersonServices::ReconcileProfessionalLicenses.new(keep).call
+        ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
+        PersonServices::ReconcilePrimaryDesignations.new(keep,
+          primary_sector_id: @keeper_primary_sector_id,
+          primary_age_category_id: @keeper_primary_age_category_id).call
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
