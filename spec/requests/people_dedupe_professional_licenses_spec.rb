@@ -6,9 +6,7 @@ require "rails_helper"
 # destroying a license that carries CE history. A license identified by the same
 # (kind, number) collides on the unique index, so the merge collapses the two into
 # one — but the losing license's CE registrations must move to the survivor, not
-# cascade away (ProfessionalLicense refuses to destroy a license with CE regs, which
-# is exactly what used to blow the whole merge up with "Failed to destroy
-# ProfessionalLicense with id=...").
+# cascade away (ProfessionalLicense refuses to destroy a license with CE regs).
 RSpec.describe "People dedupe — professional licenses", type: :request do
   let(:admin) { create(:user, :admin) }
 
