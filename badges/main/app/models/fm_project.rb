@@ -63,6 +63,9 @@ class FmProject < ApplicationRecord
     "fm_expenditures" => { via: "ProjectID", label: "Expenditures" },
     "fm_allocations" => { via: "ProjectID", label: "Allocations" },
     "fm_program_sponsorships" => { via: "ProgramID", label: "Program Sponsorships" },
-    "fm_projects" => { via: "MergerWithID", label: "Merged Into" }
+    "fm_projects" => { via: "MergerWithID", label: "Merged Into" },
+    "fm_art_registries" => { via: "ProjectID", label: "Art Registries" },
+    "fm_form_submissions" => { via: "ProjectID", label: "Form Submissions" },
+    "fm_quotations" => { via: "ProjectID", label: "Quotations" }
   }.freeze
 end
