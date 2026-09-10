@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_10_000002) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1037,13 +1037,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
     t.index ["fm_id"], name: "index_fm_quotations_on_fm_id", unique: true
   end
 
-  create_table "fm_reporting", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+  create_table "fm_reportings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "data", null: false
     t.string "fm_id", null: false
     t.string "fm_key_name", default: "ReportID", null: false
     t.datetime "updated_at", null: false
-    t.index ["fm_id"], name: "index_fm_reporting_on_fm_id", unique: true
+    t.index ["fm_id"], name: "index_fm_reportings_on_fm_id", unique: true
   end
 
   create_table "fm_rolodexes", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
