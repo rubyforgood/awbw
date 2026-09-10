@@ -48,6 +48,8 @@ class FmPayment < ApplicationRecord
 
   HAS_MANY = {
     "fm_activities" => { via: "LinkID", label: "Activities" },
-    "fm_participants" => { via: "PaymentID", label: "Participants" }
+    "fm_participants" => { via: "PaymentID", label: "Participants" },
+    "fm_match_donations" => { via: "RefDonationID", label: "Match Donations" },
+    "fm_form_submissions" => { via: "PaymentID", label: "Form Submissions" }
   }.freeze
 end
