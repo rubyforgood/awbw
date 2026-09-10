@@ -279,6 +279,28 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
       end
     end
 
+    # The Allocation model blocks allocating past the cost, so an over-allocation
+    # only arises when the cost is later lowered under existing payments — which is
+    # exactly what a merge does when it folds two paid records onto one.
+    describe "#over_allocated?" do
+      it "is false when allocations are within the cost" do
+        pay(ce_reg, 5_000)
+        expect(ce_reg).not_to be_over_allocated
+      end
+
+      it "is true when a $0-cost registration still carries a payment" do
+        pay(ce_reg, 5_000)
+        ce_reg.update_columns(cost_cents: 0)
+        expect(ce_reg).to be_over_allocated
+      end
+
+      it "is true when allocations exceed the cost" do
+        pay(ce_reg, 10_000)
+        ce_reg.update_columns(cost_cents: 4_000)
+        expect(ce_reg).to be_over_allocated
+      end
+    end
+
     describe "#discounted? / #discount_sum" do
       it "are set by a discount allocation" do
         create(:allocation, source: create(:discount, amount_cents: 4_000), allocatable: ce_reg, amount: 4_000)
