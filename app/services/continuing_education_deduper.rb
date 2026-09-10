@@ -26,13 +26,18 @@ class ContinuingEducationDeduper
     losers.each do |loser|
       Allocation.where(allocatable: loser).update_all(allocatable_id: survivor.id)
       Comment.where(commentable: loser).update_all(commentable_id: survivor.id)
-      survivor.hours = [ survivor.hours, loser.hours ].max
-      survivor.cost_cents = [ survivor.cost_cents, loser.cost_cents ].max
-      survivor.certificate_sent_at ||= loser.certificate_sent_at
       loser.reload.destroy!
     end
 
-    survivor.cost_cents = [ survivor.cost_cents, survivor.allocations.sum(:amount) ].max
-    survivor.save!
+    # Keep the fuller hours and any certificate, but leave cost at the real figure
+    # rather than inventing one to cover the combined payments — if the merged
+    # payments now exceed it, ContinuingEducationRegistration#over_allocated? flags
+    # it for an admin. update_columns so that allowed over-allocation persists past
+    # the cost_not_below_allocations validation.
+    survivor.update_columns(
+      hours: group.map(&:hours).max,
+      cost_cents: group.map(&:cost_cents).max,
+      certificate_sent_at: group.map(&:certificate_sent_at).compact.min
+    )
   end
 end

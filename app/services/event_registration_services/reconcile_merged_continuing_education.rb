@@ -25,7 +25,10 @@ module EventRegistrationServices
         next if license.person_id == registrant.id
 
         equivalent = ProfessionalLicense.find_or_create_for(person: registrant, number: license.number, kind: license.kind)
-        ce.update!(professional_license: equivalent)
+        # update_columns: the repoint makes the record valid again, and skips the
+        # cost_not_below_allocations check so an already-over-allocated CE (allowed;
+        # flagged in the UI) doesn't block the repair.
+        ce.update_columns(professional_license_id: equivalent.id)
       end
     end
   end

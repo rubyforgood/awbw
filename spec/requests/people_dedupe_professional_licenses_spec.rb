@@ -270,6 +270,36 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     end
   end
 
+  describe "consolidation keeps the real cost rather than inventing one" do
+    let!(:event) { create(:event) }
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+    let!(:keep_reg) { create(:event_registration, registrant: keep, event: event) }
+    let!(:delete_reg) { create(:event_registration, registrant: delete_rec, event: event) }
+    let!(:keep_license) { create(:professional_license, :placeholder, person: keep, kind: "LMFT") }
+    let!(:delete_license) { create(:professional_license, :placeholder, person: delete_rec, kind: "LMFT") }
+    # Each record was legitimately paid in full on its own; folding them onto one
+    # $5,000 enrollment leaves $10,000 allocated. The merge keeps the real $5,000
+    # cost (not an invented $10,000) and flags the over-allocation for a human.
+    let!(:keep_ce) { create(:continuing_education_registration, event_registration: keep_reg, professional_license: keep_license, cost_cents: 5_000) }
+    let!(:delete_ce) { create(:continuing_education_registration, event_registration: delete_reg, professional_license: delete_license, cost_cents: 5_000) }
+    let!(:keep_payment) { create(:allocation, source: create(:payment, person: keep, amount_cents: 5_000, amount_cents_remaining: 0), allocatable: keep_ce, amount: 5_000) }
+    let!(:delete_payment) { create(:allocation, source: create(:payment, person: delete_rec, amount_cents: 5_000, amount_cents_remaining: 0), allocatable: delete_ce, amount: 5_000) }
+
+    it "keeps the real cost intact and flags the survivor as over-allocated" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      survivors = ContinuingEducationRegistration.for_registrant(keep.id)
+      expect(survivors.count).to eq(1)
+      survivor = survivors.first
+      expect(survivor.cost_cents).to eq(5_000)
+      expect(survivor).to be_over_allocated
+      expect(survivor.allocations_sum).to eq(10_000)
+    end
+  end
+
   describe "only the surviving license carries CE (losing placeholder is empty)" do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }
