@@ -219,6 +219,57 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     end
   end
 
+  describe "both people share the same primary sector and age range" do
+    let!(:age_type) { create(:category_type, :published, name: "AgeRange") }
+    let!(:sector) { create(:sector) }
+    let!(:age) { create(:category, :published, category_type: age_type) }
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+
+    before do
+      create(:sectorable_item, sectorable: keep, sector: sector, is_primary: true)
+      create(:sectorable_item, sectorable: delete_rec, sector: sector, is_primary: true)
+      create(:categorizable_item, categorizable: keep, category: age, is_primary: true)
+      create(:categorizable_item, categorizable: delete_rec, category: age, is_primary: true)
+    end
+
+    it "collapses to a single primary tagging, not one primary and one not" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      sectors = keep.reload.sectorable_items
+      expect(sectors.count).to eq(1)
+      expect(sectors.first).to be_is_primary
+      ages = keep.age_range_categorizable_items
+      expect(ages.count).to eq(1)
+      expect(ages.first).to be_is_primary
+    end
+  end
+
+  describe "only the deleted person has a primary sector" do
+    let!(:age_type) { create(:category_type, :published, name: "AgeRange") }
+    let!(:keep_sector) { create(:sector) }
+    let!(:dupe_sector) { create(:sector) }
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+
+    before do
+      create(:sectorable_item, sectorable: keep, sector: keep_sector, is_primary: false)
+      create(:sectorable_item, sectorable: delete_rec, sector: dupe_sector, is_primary: true)
+    end
+
+    it "keeps the deleted person's primary when the survivor had none" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      primaries = keep.reload.sectorable_items.where(is_primary: true)
+      expect(primaries.count).to eq(1)
+      expect(primaries.first.sector_id).to eq(dupe_sector.id)
+    end
+  end
+
   describe "only the surviving license carries CE (losing placeholder is empty)" do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }

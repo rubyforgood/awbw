@@ -373,12 +373,14 @@ class PeopleController < ApplicationController
 
         [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
       },
-      # Snapshot the survivor's own primary sector + age range before the merge moves
-      # the deleted person's taggings on — afterwards they're indistinguishable, and
-      # we need to know which primary designation to keep.
-      merge_keeper: ->(keep, _delete) {
-        @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id
-        @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id
+      # Before the merge moves the deleted person's taggings onto the keeper (where
+      # they become indistinguishable), capture which primary sector + age range to
+      # keep: the survivor's own, or — when it has none — the deleted person's.
+      merge_keeper: ->(keep, delete) {
+        @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id ||
+          delete.sectorable_items.find_by(is_primary: true)&.sector_id
+        @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
+          delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * duplicate CE registrations for one event (collapse them, preserving the
