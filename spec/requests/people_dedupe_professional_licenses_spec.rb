@@ -92,13 +92,45 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     let!(:keep_license) { license_with_ce(keep, number: "LIC-A") }
     let!(:delete_license) { license_with_ce(delete_rec, number: nil) }
 
-    it "keeps them as two separate licenses on the keeper" do
+    it "folds the empty placeholder into the numbered license, keeping its CE" do
       merge!(keep: keep, delete: delete_rec)
 
       follow_redirect!
       expect(response.body).to include("merged successfully")
-      expect(keep.reload.professional_licenses.count).to eq(2)
-      expect(keep.professional_licenses.map(&:number)).to contain_exactly("LIC-A", nil)
+      expect(keep.reload.professional_licenses.pluck(:number)).to eq([ "LIC-A" ])
+      expect(keep.professional_licenses.first.continuing_education_registrations.count).to eq(2)
+    end
+  end
+
+  describe 'one license blank as "" and the other nil (same kind)' do
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+    let!(:keep_license) { license_with_ce(keep, number: "") }
+    let!(:delete_license) { license_with_ce(delete_rec, number: nil) }
+
+    it "collapses the two empty licenses into one" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.professional_licenses.count).to eq(1)
+      expect(keep.professional_licenses.first.continuing_education_registrations.count).to eq(2)
+    end
+  end
+
+  describe "two real numbers plus an empty placeholder (same kind)" do
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+    let!(:keep_license) { license_with_ce(keep, number: "LIC-A") }
+    let!(:numbered_b) { license_with_ce(delete_rec, number: "LIC-B") }
+    let!(:placeholder) { license_with_ce(delete_rec, number: nil) }
+
+    it "keeps both real numbers and folds the placeholder into one of them" do
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.professional_licenses.order(:number).pluck(:number)).to eq(%w[LIC-A LIC-B])
     end
   end
 

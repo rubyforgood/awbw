@@ -386,11 +386,15 @@ class PeopleController < ApplicationController
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
+      #   * redundant professional licenses within a kind (fold blank-number
+      #     placeholders into a real license — done first so any CE it moves is then
+      #     collapsed by the CE deduper below);
       #   * duplicate CE registrations for one event (collapse them, preserving the
       #     loser's payments, so the person isn't billed twice for a single enrollment);
       #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest,
       #     leaving the single primary Person's single-primary validations require).
       after_merge: ->(keep) {
+        PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
         PersonServices::ReconcilePrimaryDesignations.new(keep,
           primary_sector_id: @keeper_primary_sector_id,
