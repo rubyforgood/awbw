@@ -951,8 +951,12 @@ class EventsController < ApplicationController
     Address.active.where(addressable_type: "Person", country: country).select(:addressable_id)
   end
 
+  # People affiliated with an organization address in the given school district
+  # (Affiliation#organization_address → Address#district), matching the breakdown's
+  # affiliation-based source.
   def person_school_district_ids(district)
-    Address.active.where(addressable_type: "Person", district: district).select(:addressable_id)
+    address_ids = Address.active.where(district: district).select(:id)
+    Affiliation.where(organization_address_id: address_ids).select(:person_id)
   end
 
   # Person ids with the given org linked on one of their in-scope registrations.

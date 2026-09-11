@@ -1445,23 +1445,25 @@ shoutout_texts = [
   end
 end
 
-puts "Recording school districts on registrant addresses…"
-# The Background page breaks registrants out by school district (Address#district).
-# The address pass above leaves district blank, so assign a deterministic spread
-# to a subset of the data-rich trainings' US registrants. Idempotent: skips an
-# address that already has a district, and only US addresses get one (K-12
-# districts are domestic).
+puts "Recording school districts on affiliation organization addresses…"
+# The Background page breaks registrants out by school district, sourced from each
+# registrant's affiliation organization address (Affiliation#organization_address →
+# Address#district). Assign a deterministic spread to a subset of the data-rich
+# trainings' registrants that have an affiliation. Idempotent: skips an affiliation
+# already pointing at a districted org address.
 school_district_names = [ "Los Angeles Unified", "Garden Grove Unified", "Compton Unified",
                           "Riverside Unified", "Long Beach Unified" ]
 [ facilitator_training, trauma_training ].compact.each do |evt|
-  evt.event_registrations.active.includes(registrant: :addresses).order(:registrant_id).each_with_index do |registration, i|
+  evt.event_registrations.active.includes(registrant: { affiliations: :organization }).order(:registrant_id).each_with_index do |registration, i|
     next unless i.even? # roughly half the registrants are tied to a district
-    person = registration.registrant
-    address = person&.addresses&.reject(&:inactive?)&.first
-    next unless address && address.district.blank?
-    next unless address.country.blank? || address.country == "United States"
+    affiliation = registration.registrant&.affiliations&.detect(&:organization)
+    next unless affiliation
+    next if affiliation.organization_address&.district.present?
 
+    address = affiliation.organization.addresses.reject(&:inactive?).first ||
+              affiliation.organization.addresses.build
     address.update!(district: school_district_names[(i / 2) % school_district_names.size])
+    affiliation.update!(organization_address: address)
   end
 end
 

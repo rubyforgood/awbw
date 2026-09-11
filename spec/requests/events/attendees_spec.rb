@@ -351,6 +351,18 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Zed Zulu")
         end
 
+        it "filters by a school-district drill-in (via the affiliation's org address)" do
+          org = create(:organization, name: "Compton Schools")
+          org_address = create(:address, addressable: org, district: "Compton Unified", inactive: false)
+          create(:affiliation, person: attendee, organization: org, organization_address: org_address)
+          other = create(:person, first_name: "Zed", last_name: "Zulu")
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+
+          get attendees_events_url(school_district: "Compton Unified"), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).not_to include("Zed Zulu")
+        end
+
         it "renders the cities breakdown and filters by an org-city drill-in" do
           org = create(:organization, name: "Wellness Org")
           create(:address, addressable: org, city: "Austin", state: "TX", inactive: false)

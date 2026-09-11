@@ -900,20 +900,20 @@ class EventDashboard
       .pluck(:addressable_id)
   end
 
-  # School districts on file across active registrants' active addresses
-  # (Address#district), sorted by name.
+  # School districts across active registrants' affiliation organization addresses
+  # (Affiliation#organization_address → Address#district), sorted by name.
   def school_districts
-    @school_districts ||= district_addresses.distinct.pluck(:district).sort
+    @school_districts ||= school_district_registrant_ids_by_district.keys.sort
   end
 
   # Distinct registrant count per school district.
   def school_district_counts
-    @school_district_counts ||= district_addresses.group(:district).distinct.count(:addressable_id)
+    @school_district_counts ||= school_district_registrant_ids_by_district.transform_values(&:size)
   end
 
-  # Registrant ids that have at least one active address with a school district.
+  # Registrant ids affiliated with at least one school district.
   def school_district_registrant_ids
-    @school_district_registrant_ids ||= district_addresses.distinct.pluck(:addressable_id)
+    @school_district_registrant_ids ||= affiliation_district_pairs.map(&:last).uniq
   end
 
   # Registrant ids per country, keyed by country name — the people behind each
@@ -929,13 +929,14 @@ class EventDashboard
       .transform_values { |rows| rows.map(&:last).uniq }
   end
 
-  # Registrant ids per school district, for the breakdown's per-row drill-in.
+  # Registrant ids per school district, for the breakdown's per-row drill-in. A
+  # registrant affiliated in more than one district appears under each.
   def school_district_registrant_ids_by_district
-    @school_district_registrant_ids_by_district ||= district_addresses
-      .distinct
-      .pluck(:district, :addressable_id)
-      .group_by(&:first)
-      .transform_values { |rows| rows.map(&:last).uniq }
+    @school_district_registrant_ids_by_district ||= affiliation_district_pairs
+      .each_with_object(Hash.new { |hash, key| hash[key] = Set.new }) do |(district, person_id), map|
+        map[district] << person_id
+      end
+      .transform_values(&:to_a)
   end
 
   # Distinct [ state, county ] pairs across active registrants' active addresses,
@@ -1022,11 +1023,30 @@ class EventDashboard
       .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
   end
 
-  def district_addresses
-    Address
-      .active
-      .where(addressable_type: "Person", addressable_id: registrant_ids)
-      .where.not(district: [ nil, "" ])
+  # [ [ district, registrant_id ], ... ] from each registrant's affiliations active
+  # as of the event (#reference_date), via the affiliation's chosen organization
+  # address (Affiliation#organization_address → Address#district). Registrants whose
+  # affiliation has no organization address, or whose org address has a blank
+  # district, are absent. A registrant affiliated in more than one district appears
+  # once per district.
+  def affiliation_district_pairs
+    @affiliation_district_pairs ||= begin
+      pairs = Affiliation
+        .active_by_date_on(reference_date)
+        .where(person_id: registrant_ids)
+        .where.not(organization_address_id: nil)
+        .pluck(:organization_address_id, :person_id)
+      district_by_address_id = Address
+        .active
+        .where(id: pairs.map(&:first).uniq)
+        .where.not(district: [ nil, "" ])
+        .pluck(:id, :district)
+        .to_h
+      pairs.filter_map do |address_id, person_id|
+        district = district_by_address_id[address_id]
+        [ district, person_id ] if district
+      end
+    end
   end
 
   def active_registrations

@@ -506,12 +506,15 @@ RSpec.describe EventDashboard do
 
     describe "school districts" do
       before do
-        person1.addresses.first.update!(district: "Los Angeles Unified")
-        person2.addresses.where(inactive: false).first.update!(district: "Garden Grove Unified")
-        cancelled_person.addresses.first.update!(district: "Excluded Unified")
+        org_a_address = create(:address, addressable: org_a, district: "Los Angeles Unified")
+        org_c_address = create(:address, addressable: org_c, district: "Garden Grove Unified")
+        org_excluded_address = create(:address, addressable: org_excluded, district: "Excluded Unified")
+        person1.affiliations.find_by(organization: org_a).update!(organization_address: org_a_address)
+        person2.affiliations.find_by(organization: org_c).update!(organization_address: org_c_address)
+        cancelled_person.affiliations.find_by(organization: org_excluded).update!(organization_address: org_excluded_address)
       end
 
-      it "lists distinct school districts from active registrants' addresses" do
+      it "lists distinct school districts from active registrants' affiliation addresses" do
         expect(dashboard.school_districts).to eq([ "Garden Grove Unified", "Los Angeles Unified" ])
       end
 
@@ -520,6 +523,17 @@ RSpec.describe EventDashboard do
       end
 
       it "returns the registrant ids behind each district, excluding cancelled" do
+        expect(dashboard.school_district_registrant_ids).to contain_exactly(person1.id, person2.id)
+      end
+
+      it "counts a registrant in each district they're affiliated with" do
+        org_b_address = create(:address, addressable: org_b, district: "Pasadena Unified")
+        person1.affiliations.find_by(organization: org_b).update!(organization_address: org_b_address)
+
+        expect(dashboard.school_district_counts).to eq(
+          "Los Angeles Unified" => 1, "Garden Grove Unified" => 1, "Pasadena Unified" => 1
+        )
+        expect(dashboard.school_district_registrant_ids_by_district["Pasadena Unified"]).to contain_exactly(person1.id)
         expect(dashboard.school_district_registrant_ids).to contain_exactly(person1.id, person2.id)
       end
     end

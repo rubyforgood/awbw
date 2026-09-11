@@ -41,6 +41,15 @@ RSpec.describe AttendeesBreakdowns do
     expect(rows.first.registrant_count).to eq(1)
   end
 
+  it "groups attendees by the school district of their affiliation's organization address" do
+    organization = create(:organization, name: "Wellness Org")
+    org_address = create(:address, addressable: organization, district: "Austin ISD", inactive: false)
+    create(:affiliation, person: person, organization: organization, organization_address: org_address)
+
+    expect(breakdowns.school_district_counts).to eq("Austin ISD" => 1)
+    expect(breakdowns.school_district_registrant_ids_by_district["Austin ISD"]).to eq([ person.id ])
+  end
+
   it "counts scholarship recipients and CE registrants across training registrations" do
     scholarship = create(:scholarship, recipient: person, amount_cents: 1_000)
     create(:allocation, source: scholarship, allocatable: registration, amount: 1_000)
