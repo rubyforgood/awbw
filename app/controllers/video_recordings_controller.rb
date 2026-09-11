@@ -59,7 +59,7 @@ class VideoRecordingsController < ApplicationController
     end
 
     if success
-      redirect_to @video_recording, notice: "#{VideoRecording.model_name.human} was successfully created."
+      redirect_to @video_recording, notice: "#{VideoRecording.model_name.human} was successfully created.", status: :see_other
     else
       @video_recording = @video_recording.decorate
       set_form_variables

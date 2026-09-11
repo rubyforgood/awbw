@@ -1151,6 +1151,11 @@ RSpec.describe "Events", type: :request do
         expect(response).to redirect_to(event_url(Event.last))
       end
 
+      it "redirects with 303 See Other so Turbo advances past the form" do
+        post events_path, params: valid_params
+        expect(response).to have_http_status(:see_other)
+      end
+
       it "persists edited built-in callouts from the new form without duplicating them" do
         params = valid_params.deep_dup
         params[:event][:registration_ticket_callouts_attributes] = {
