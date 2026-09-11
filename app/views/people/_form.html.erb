@@ -20,100 +20,126 @@
   <div class="flex flex-col items-start gap-8 md:flex-row">
     <div class="w-full md:w-5/6">
       <div class="space-y-6">
-        <div class="flex flex-col gap-4 md:flex-row md:flex-wrap"><%= f.input :first_name, wrapper_html: { class: "w-full md:w-40" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-40" }, input_html: { class: "w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-40" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "How to say the name", wrapper_html: { class: "w-full md:w-44" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-32" }, input_html: { class: "w-full" } %></div>
+<%# 2-up on mobile, 4-across on md+. %>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name" %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronunciation, hint: "How to say the name" %><%= f.input :pronouns %></div>
 
-        <div class="emails">
-          <h3 class="mb-2 font-semibold text-gray-700">Emails</h3>
+        <%# Emails and Phones sit parallel (50/50). Each collapses to the value(s)
+            on file; both open on a new person or when there are errors. %>
+        <% primary_email = f.object.user&.email.presence || f.object.email.presence %>
+        <% email_summary = [ primary_email, f.object.email_2.presence ].compact %>
+        <% contacts_open = !f.object.persisted? || f.object.errors.any? %>
+        <% phone_values = f.object.contact_methods.reject(&:marked_for_destruction?).filter_map { |cm| cm.value.presence } %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <details class="emails group"<%= " open".html_safe if contacts_open %>>
+            <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-2">
+              <span class="font-semibold">Emails:</span>
+              <span class="text-sm text-gray-500"><%= email_summary.any? ? email_summary.to_sentence : "None" %></span>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+            </summary>
 
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-            <div class="flex flex-col gap-4 md:flex-row">
-              <% if f.object.user %>
-                <div>
-                  <label class="mb-1 block text-md font-medium text-gray-700">Primary email</label>
-                  <span class="font-medium text-gray-900"><%= f.object.user&.email %></span>
-                  <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
-                    <% pending_label = capture do %>Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation<% end %>
-                    <%= render "shared/badge",
-                          label: pending_label,
-                          classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
-                          icon: "fa-solid fa-triangle-exclamation text-yellow-500",
-                          extra: "mt-1",
-                          title: "Only the person and admins can see this pending change; it is hidden from other profile visitors." %>
-                  <% end %>
-
-                  <p class="mt-1 text-sm text-gray-500">
-                    Only
-                    <% if allowed_to?(:edit?, f.object.user) %>
-                      <%= link_to "editable by admins",
-                                  edit_user_path(f.object.user),
-                                  class: "underline" %>
-                    <% else %>
-                      editable by admins
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+              <%# Two per row so the secondary email + type wrap to the next line
+                  in the narrow half-width column. %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <% if f.object.user %>
+                  <div>
+                    <label class="block text-md font-medium text-gray-700 mb-1">Primary email</label>
+                    <span class="text-gray-900 font-medium"><%= f.object.user&.email %></span>
+                    <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
+                      <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-50 border border-yellow-300 rounded-full text-xs font-medium text-yellow-800" title="Only the person and admins can see this pending change; it is hidden from other profile visitors.">
+                        <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                        Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation
+                      </div>
                     <% end %>
-                  </p>
-                </div>
-              <% else %>
-                <%= f.input :email, label: "Primary email" %>
+
+                    <p class="text-sm text-gray-500 mt-1">
+                      Only
+                      <% if allowed_to?(:edit?, f.object.user) %>
+                        <%= link_to "editable by admins",
+                                    edit_user_path(f.object.user),
+                                    class: "underline" %>
+                      <% else %>
+                        editable by admins
+                      <% end %>
+                    </p>
+                  </div>
+                <% else %>
+                  <%= f.input :email, label: "Primary email" %>
+                <% end %>
+
+                <%= f.input :email_type,
+                            label: "Primary email type",
+                            as: :select,
+                            collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                            selected: f.object.email_type || f.object.user&.email_type,
+                            include_blank: true %>
+
+                <%= f.input :email_2, label: "Secondary email" %>
+
+                <%= f.input :email_2_type,
+                            label: "Secondary email type",
+                            as: :select,
+                            collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                            include_blank: true %>
+              </div>
+            </div>
+          </details>
+
+          <details id="phones" class="phones scroll-mt-4 group"<%= " open".html_safe if contacts_open %>>
+            <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-2">
+              <span class="font-semibold">Phones:</span>
+              <span class="text-sm text-gray-500"><%= phone_values.any? ? phone_values.to_sentence : "None" %></span>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+            </summary>
+
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+              <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
+                <%= f.input :best_time_to_call %>
               <% end %>
 
-              <%= f.input :email_type,
-                          label: "Primary email type",
-                          as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                          selected: f.object.email_type || f.object.user&.email_type,
-                          include_blank: true %>
+              <%= f.simple_fields_for :contact_methods do |cf| %>
+                <%= render "contact_methods/contact_method_fields", f: cf %>
+              <% end %>
 
-              <%= f.input :email_2, label: "Secondary email" %>
-
-              <%= f.input :email_2_type,
-                          label: "Secondary email type",
-                          as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                          include_blank: true %>
+              <%= link_to_add_association "➕ Add phone",
+                                          f,
+                                          :contact_methods,
+                                          partial: "contact_methods/contact_method_fields",
+                                          class: "btn btn-secondary-outline" %>
             </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>
 
     <!-- Avatar -->
-    <div class="flex w-full flex-col items-center gap-4 md:w-1/6"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
+<div class="w-full md:w-1/4 flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :avatar, size: "w-24 h-24" %></div>
   </div>
 
-  <div class="phones scroll-mt-4" id="phones">
-    <div class="form-group space-y-4">
-      <div class="mb-2 font-semibold text-gray-700">
-        Phones
-      </div>
-
-      <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-        <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
-          <%= f.input :best_time_to_call %>
-        <% end %>
-
-        <%= f.simple_fields_for :contact_methods do |f| %>
-          <%= render "contact_methods/contact_method_fields", f: f %>
-        <% end %>
-
-        <%= link_to_add_association "➕ Add phone",
-                                    f,
-                                    :contact_methods,
-                                    partial: "contact_methods/contact_method_fields",
-                                    class: button_classes(:secondary_outline) %>
-      </div>
-    </div>
-  </div>
-
-  <div class="addresses scroll-mt-4" id="addresses">
+<div class="addresses scroll-mt-4" id="addresses">
     <!-- Primary Address Choice -->
     <div class="flex flex-col gap-4 md:flex-row"><%# = f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %></div>
 
-    <div class="form-group space-y-4">
-      <div class="mb-2 font-semibold text-gray-700">
-        Addresses
-      </div>
+<%# Collapsible — usually just one address, so collapse to a one-line summary.
+        Stays open on a new person or when an address (or the person) has errors. %>
+    <% person_addresses = f.object.addresses.reject(&:marked_for_destruction?) %>
+    <% addresses_open = !f.object.persisted? || f.object.errors.any? ||
+         person_addresses.any? { |address| address.errors.any? } %>
+    <% address_summary = if person_addresses.none?
+         "None"
+       elsif person_addresses.one?
+         person_addresses.first.name
+       else
+         pluralize(person_addresses.size, "address")
+       end %>
+    <details class="form-group group/section"<%= " open".html_safe if addresses_open %>>
+      <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+        <span class="font-semibold">Addresses:</span>
+        <span class="text-sm text-gray-500"><%= address_summary %></span>
+        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
+      </summary>
 
-      <div class="mb-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
+      <div class="rounded-lg border border-gray-200 bg-yellow-50 p-4 mb-4 shadow-sm mt-2">
         <%= f.simple_fields_for :addresses do |f| %>
           <%= render "addresses/address_fields", f: f %>
         <% end %>
@@ -123,7 +149,7 @@
                                     :addresses,
                                     class: button_classes(:secondary_outline) %>
       </div>
-    </div>
+    </details>
   </div>
 
   <!-- Sectors + Age ranges (split width; both wrap their chips) -->
@@ -139,21 +165,26 @@
   <% (@managed_category_type_ids || []).each do |type_id| %>
     <%= hidden_field_tag "person[managed_category_type_ids][]", type_id %>
   <% end %>
-  <div class="flex flex-wrap gap-4 items-stretch">
+  <%# Sectors and Age ranges collapse to a one-line summary of their tagged chips
+      — they rarely change. items-start (not stretch) so a collapsed column keeps
+      its natural height. Both open on a new person or when there are errors. %>
+  <div class="flex flex-wrap gap-4 items-start">
     <!-- Sectors -->
-    <div class="form-group flex flex-col flex-1 min-w-[20rem]">
-      <div class="font-semibold text-gray-700 mb-2">
-        Sectors
-      </div>
-      <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm
+    <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+    <%# "Other" is never a real sector tag (it's captured as an OtherResponse),
+        so drop any stray legacy tagging from the editable list. %>
+    <% editable_sector_items = sectors_owner.sectorable_items_ordered.reject { |item| item.sector&.name == Sector::OTHER_SECTOR_NAME } %>
+    <% sectors_open = !sectors_owner.persisted? || sectors_owner.errors.any? %>
+    <details class="form-group flex flex-col flex-1 min-w-[20rem] group"<%= " open".html_safe if sectors_open %>>
+      <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+        <span class="font-semibold shrink-0">Sectors:</span>
+        <span class="text-sm text-gray-500 flex-1 min-w-0"><%= sectors_owner.decorate.sectors_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
+      </summary>
+      <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm mt-2
                   flex flex-wrap items-center content-start gap-2 flex-1"
            data-controller="primary-tag"
            data-primary-tag-primary-class="border-lime-500 bg-lime-100"
            data-primary-tag-default-class="border-gray-300 bg-white">
-        <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-        <%# "Other" is never a real sector tag (it's captured as an OtherResponse),
-            so drop any stray legacy tagging from the editable list. %>
-        <% editable_sector_items = sectors_owner.sectorable_items_ordered.reject { |item| item.sector&.name == Sector::OTHER_SECTOR_NAME } %>
         <%= f.simple_fields_for :sectorable_items, editable_sector_items do |sfi| %>
           <%= render "shared/sectorable_item_fields", f: sfi, show_admin_flags: true %>
         <% end %>
@@ -169,19 +200,22 @@
                                     class: button_classes(:secondary_outline) %>
         <%= render "people/other_sector_responses", responses: @person.other_sector_responses, dismissable: true, curatable: true, return_to: "person_edit" %>
       </div>
-    </div>
+    </details>
 
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
-      <div class="form-group flex min-w-[20rem] flex-1 flex-col">
-        <div class="mb-2 font-semibold text-gray-700">
-          Age ranges
-        </div>
-        <div class="flex flex-1 flex-wrap content-start items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm"
+      <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+      <% age_ranges_open = !age_owner.persisted? || age_owner.errors.any? %>
+      <details class="form-group flex flex-col flex-1 min-w-[20rem] group"<%= " open".html_safe if age_ranges_open %>>
+        <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+          <span class="font-semibold shrink-0">Age ranges:</span>
+          <span class="text-sm text-gray-500 flex-1 min-w-0"><%= age_owner.decorate.age_ranges_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
+        </summary>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2
+                    flex flex-wrap items-center content-start gap-2 flex-1"
              data-controller="primary-tag"
              data-primary-tag-primary-class="border-amber-300 bg-amber-50"
              data-primary-tag-default-class="border-gray-300 bg-white">
-        <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
         <%= f.simple_fields_for :age_range_categorizable_items, age_owner.age_range_items_ordered do |afi| %>
           <%= render "shared/age_range_item_fields", f: afi %>
         <% end %>
@@ -195,7 +229,7 @@
                                         .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
                                     class: button_classes(:secondary_outline) %>
         </div>
-      </div>
+      </details>
     <% end %>
   </div>
 
@@ -230,17 +264,26 @@
   <% if other_category_types.present? %>
     <div class="form-group space-y-4">
       <% other_category_types.each do |type, cats| %>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-          <h3 class="mb-3 font-semibold text-gray-700"><%= type.display_label %></h3>
-          <div class="flex flex-wrap gap-3">
-            <% cats.each do |category| %>
-              <%= render "shared/category_checkbox", param_key: "person", category: category,
-                         checked: (@selected_category_ids || @person.category_ids).include?(category.id),
-                         is_age: false,
-                         primary_checked: false %>
-            <% end %>
+<%# Collapsed to a one-line summary of the current selections so the long
+            option grid doesn't have to be scrolled past every edit. %>
+        <% selected_names = cats.select { |category| (@selected_category_ids || @person.category_ids).include?(category.id) }.map(&:name) %>
+        <details class="group">
+          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+            <span class="font-semibold"><%= type.display_label %>:</span>
+            <span class="text-sm text-gray-500"><%= selected_names.any? ? selected_names.to_sentence : "None selected" %></span>
+            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
+            <div class="flex flex-wrap gap-3">
+              <% cats.each do |category| %>
+                <%= render "shared/category_checkbox", param_key: "person", category: category,
+                           checked: (@selected_category_ids || @person.category_ids).include?(category.id),
+                           is_age: false,
+                           primary_checked: false %>
+              <% end %>
+            </div>
           </div>
-        </div>
+        </details>
       <% end %>
       <% workshop_other = @person.other_workshop_setting_responses %>
       <% if workshop_other.any? %>
@@ -254,12 +297,18 @@
   <!-- Organization Affiliations -->
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
-  <div id="affiliations" class="form-group scroll-mt-4 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
-    </div>
+  <details id="affiliations" class="form-group scroll-mt-4 group/section" open>
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-semibold">Affiliations</span>
+      <% affiliation_count = person.affiliations.reject(&:marked_for_destruction?).size %>
+      <% if affiliation_count.positive? %>
+        <span class="text-sm text-gray-500"><%= pluralize(affiliation_count, "affiliation") %></span>
+      <% end %>
+      <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
+    </summary>
 
-    <div class="admin-only mb-4 rounded-lg border border-gray-200 bg-blue-50 p-4 shadow-sm">
+    <div class="rounded-lg border border-gray-200 admin-only bg-blue-50 p-4 mb-4 shadow-sm mt-2">
       <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
         <div class="admin-only mb-4 rounded-lg bg-blue-100 p-4">
           <%= f.input :member_since,
@@ -360,35 +409,69 @@
         <%= render "agreement_form_links", person: person %>
       <% end %>
     </div>
-  </div>
+  </details>
 
   <!-- PERSON FIELDS -->
-  <div class="form-group space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Background
-    </div>
+  <%# Collapsible like the sections above. Stays open on a new person or when the
+      form has errors so nothing hides behind the summary. %>
+  <% background_open = !f.object.persisted? || f.object.errors.any? %>
+  <details class="form-group group"<%= " open".html_safe if background_open %>>
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-semibold">Background</span>
+      <% if f.object.bio.present? %>
+        <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Bio present</span>
+      <% end %>
+      <% if f.object.shoutout_text.present? %>
+        <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Shout-out present</span>
+      <% end %>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
 
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <%# Shout-out text is edited on the registration's "Shout out" section, not here. %>
-      <%= f.input :bio,
-                  wrapper_html: { class: "w-full" },
-                  as: :text,
-                  input_html: {
-                    rows: 2,
-                    maxlength: 1650,
-                    class: "w-full rounded-md border-gray-300 shadow-sm
-                        focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                  },
-                  hint: "Maximum 250 characters" %>
-    </div>
-  </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
+      <%# Bio and Shout-out share one row, each half width. %>
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
+        <div class="w-full sm:w-1/2 space-y-4">
+          <%= f.input :bio,
+                      wrapper_html: { class: "w-full" },
+                      as: :text,
+                      input_html: {
+                        rows: 2,
+                        maxlength: 1650,
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      },
+                      hint: "Maximum 250 characters" %>
+        </div>
 
-  <div id="professional-licenses" class="form-group scroll-mt-4 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Professional licenses
+        <div class="w-full sm:w-1/2 space-y-4">
+          <%= f.input :shoutout_text,
+                      label: "Shout-out",
+                      wrapper_html: { class: "w-full" },
+                      as: :text,
+                      input_html: {
+                        rows: 2,
+                        maxlength: 1650,
+                        class: "w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      },
+                      hint: "Shown on an event's scholarship recipients page if designated for a shout-out" %>
+        </div>
+      </div>
     </div>
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <p class="mb-3 text-sm text-gray-500">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
+  </details>
+
+<%# Collapsible — collapses to a count of licenses on file. Open on a new person
+      or when there are errors so an invalid license stays visible. %>
+  <% licenses = f.object.professional_licenses.reject(&:marked_for_destruction?) %>
+  <% licenses_open = !f.object.persisted? || f.object.errors.any? %>
+  <details id="professional-licenses" class="form-group scroll-mt-4 group"<%= " open".html_safe if licenses_open %>>
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-semibold">Professional licenses:</span>
+      <span class="text-sm text-gray-500"><%= licenses.any? ? licenses.map(&:name).to_sentence : "None" %></span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
+      <p class="text-sm text-gray-500 mb-3">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
       <%= f.simple_fields_for :professional_licenses do |license_form| %>
         <%= render "professional_licenses/professional_license_fields", f: license_form %>
       <% end %>
@@ -398,11 +481,20 @@
                                   partial: "professional_licenses/professional_license_fields",
                                   class: button_classes(:secondary_outline) %>
     </div>
-  </div>
+  </details>
 
-  <div class="flex flex-col items-stretch gap-6 lg:flex-row">
-    <div class="w-full rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm lg:w-auto lg:flex-1">
-      <div class="flex flex-col items-start gap-6 sm:flex-row">
+<%# Extras collapses the less-frequently-edited fields — birthday, time zone,
+      and the admin-only demographics/FileMaker block. Open on a new person or
+      when there are errors. %>
+  <% extras_open = !f.object.persisted? || f.object.errors.any? %>
+  <details class="form-group group"<%= " open".html_safe if extras_open %>>
+    <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-semibold">Extras</span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
+  <div class="flex flex-col lg:flex-row gap-6 items-stretch mt-2">
+    <div class="w-full lg:w-auto rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm lg:flex-1">
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
         <div class="w-full sm:w-56">
           <%= f.input :date_of_birth,
                       label: "Birthday",
@@ -482,14 +574,17 @@
       </div>
     <% end %>
   </div>
+  </details>
 
-  <div class="profile-preferences-section">
-    <div class="mb-2 block font-medium text-gray-700">
-      Social media links
-    </div>
+<details class="profile-preferences-section group">
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-medium">Social media links</span>
+      <span class="text-sm text-gray-500"><%= @person.decorate.social_media_summary %></span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
 
-    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="flex flex-col gap-4 px-3 pb-3 md:flex-row">
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
+      <div class="flex flex-col md:flex-row gap-4 pl-3 pr-3 pb-3">
         <%= f.input :linked_in_url, as: :text, input_html: { rows: 1 } %>
         <%= f.input :facebook_url, as: :text, input_html: { rows: 1 } %>
         <%= f.input :instagram_url, as: :text, input_html: { rows: 1 } %>
@@ -497,19 +592,21 @@
         <%= f.input :twitter_url, as: :text, input_html: { rows: 1 } %>
       </div>
     </div>
-  </div>
+  </details>
 
-  <div id="profile-preferences" class="profile-preferences-section scroll-mt-4">
-    <div class="mb-2 block font-medium text-gray-700">
-      Profile display preferences
-    </div>
-    <p class="mb-3 text-sm text-gray-500">
-      Updating these preferences applies to how you show up sitewide: stories, workshop variations, the people index, and more.
-    </p>
+<details id="profile-preferences" class="profile-preferences-section scroll-mt-4 group">
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <span class="font-medium">Profile display preferences</span>
+      <span class="text-sm text-gray-500"><%= f.object.decorate.profile_display_summary %></span>
+      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+    </summary>
 
-    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="px-3 pb-3">
-        <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
+      <p class="mb-3 text-sm text-gray-500">
+        Updating these preferences applies to how you show up sitewide: stories, workshop variations, the people index, and more.
+      </p>
+      <div class="pl-3 pr-3 pb-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
           <%= f.input :profile_is_searchable,
                     hint: ("Findable on " + (link_to "people index",
                                                     people_path,
@@ -554,7 +651,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </details>
 
   <% if f.object.persisted? %>
     <%# Combined comments & communications — comment bodies/controls are admin-only

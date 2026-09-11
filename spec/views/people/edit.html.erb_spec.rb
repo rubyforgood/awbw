@@ -21,7 +21,9 @@ RSpec.describe "people/edit", type: :view do
     expect(rendered).to have_field('First name', with: person.first_name)
     expect(rendered).to have_field('Last name', with: person.last_name)
     expect(rendered).to have_field('Pronouns', with: person.pronouns)
-    expect(rendered).to have_checked_field('person_profile_show_pronouns') if person.profile_show_pronouns
+    # Profile display preferences collapse to a summary by default, so the
+    # toggle is present but not visible until the section is expanded.
+    expect(rendered).to have_checked_field('person_profile_show_pronouns', visible: :all) if person.profile_show_pronouns
   end
 
   it "has a link to the show page" do
@@ -59,7 +61,9 @@ RSpec.describe "people/edit", type: :view do
     end
 
     it "displays an editable email type field" do
-      expect(rendered).to have_select('Primary email type')
+      # Emails collapse to a summary by default, so the field is present but not
+      # visible until the section is expanded.
+      expect(rendered).to have_select('Primary email type', visible: :all)
     end
   end
 
@@ -72,11 +76,11 @@ RSpec.describe "people/edit", type: :view do
     end
 
     it "displays an editable email field" do
-      expect(rendered).to have_field('Primary email', with: person_without_user.email)
+      expect(rendered).to have_field('Primary email', with: person_without_user.email, visible: :all)
     end
 
     it "displays an editable email type field" do
-      expect(rendered).to have_select('Primary email type')
+      expect(rendered).to have_select('Primary email type', visible: :all)
     end
   end
 end

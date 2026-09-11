@@ -365,7 +365,10 @@ module ApplicationHelper
   # model identity (DomainTheme color + default label + default icon + count
   # + default index path). Pass `params:` for filter params, or `path:` to
   # override entirely (e.g. nested routes).
-  def index_button(collection, params: {}, path: nil, label: nil, icon: nil, hide_count: false, hide_icon: false, data: {})
+  # wrap: renders a fixed two-line-tall button whose label wraps (rather than
+  # truncating on one line) — used where buttons share a row at equal width, so
+  # long labels stay readable and every button lines up to the same height.
+  def index_button(collection, params: {}, path: nil, label: nil, icon: nil, hide_count: false, hide_icon: false, wrap: false, data: {})
     klass = collection.klass
     key = klass.name.underscore.pluralize.to_sym
     label ||= key.to_s.humanize
@@ -380,17 +383,18 @@ module ApplicationHelper
     link_to path,
             data: { turbo_prefetch: false }.merge(data),
             class: "group flex items-center gap-3 w-full px-3 py-2 rounded-lg
+                    #{'h-full min-h-[3.5rem]' if wrap}
                     border #{border} #{bg} #{hover_bg}
                     transition-colors duration-200 shadow-sm" do
       icon_tag = if hide_icon
         "".html_safe
       else
-        content_tag(:span, class: "#{text} w-5 text-center") do
+        content_tag(:span, class: "#{text} w-5 text-center shrink-0") do
           content_tag(:i, "", class: "fa-solid #{icon}")
         end
       end
 
-      label_tag = content_tag(:span, label, class: "font-medium #{text} truncate")
+      label_tag = content_tag(:span, label, class: "font-medium #{text} #{wrap ? 'line-clamp-2' : 'truncate'}")
 
       count = collection.count
       count_tag = if hide_count || count.zero?
@@ -398,7 +402,7 @@ module ApplicationHelper
       else
         content_tag(:span,
                     number_with_delimiter(count),
-                    class: "ml-auto inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white #{text} border #{border}")
+                    class: "ml-auto shrink-0 inline-flex items-center justify-center min-w-[2.25rem] px-2 py-0.5 text-sm font-semibold rounded-full bg-white #{text} border #{border}")
       end
 
       icon_tag + label_tag + count_tag
