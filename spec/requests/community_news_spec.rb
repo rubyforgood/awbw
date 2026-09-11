@@ -175,6 +175,41 @@ RSpec.describe "/community_news", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
       end
     end
+
+    context "with an image-only body (no typed text)" do
+      let(:image_only_attributes) {
+        valid_attributes.merge(rhino_body: %(<img src="http://example.com/newsletter.png">))
+      }
+
+      it "creates the CommunityNews instead of rejecting it as blank" do
+        expect {
+          post community_news_index_url, params: { community_news: image_only_attributes }
+        }.to change(CommunityNews, :count).by(1)
+      end
+
+      it "advances to the created record instead of re-rendering the form" do
+        post community_news_index_url, params: { community_news: image_only_attributes }
+        expect(response).to redirect_to(community_news_url(CommunityNews.last))
+      end
+    end
+
+    context "with a genuinely empty body" do
+      let(:empty_body_attributes) {
+        valid_attributes.merge(rhino_body: "<p><br></p>")
+      }
+
+      it "does not create a CommunityNews" do
+        expect {
+          post community_news_index_url, params: { community_news: empty_body_attributes }
+        }.to change(CommunityNews, :count).by(0)
+      end
+
+      it "shows the friendly field label in the error, not the internal attribute name" do
+        post community_news_index_url, params: { community_news: empty_body_attributes }
+        expect(response.body).to include("Body / Description can&#39;t be blank")
+        expect(response.body).not_to include("Rhino body can&#39;t be blank")
+      end
+    end
   end
 
   describe "PATCH /update" do

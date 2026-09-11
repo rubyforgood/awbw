@@ -37,6 +37,16 @@
     you copy just the people you're looking at, not everyone.
   action_path: "/people"
 
+- name: "Post image-only community news"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-10
+  summary: >-
+    Community news can now be saved when the body is just an embedded image (an
+    image-based newsletter) with no typed text — it's no longer rejected as
+    blank. A truly empty body is still required to have content.
+  action_path: "/community_news/new"
+
 - name: "Activities feed defaults to admins in, interactions hidden"
   area: reporting
   display_status: admin_facing
