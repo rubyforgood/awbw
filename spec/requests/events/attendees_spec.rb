@@ -358,9 +358,16 @@ RSpec.describe "Events attendees", type: :request do
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
+          # An ended affiliation to the same district is excluded, matching the chart's as-of.
+          lapsed = create(:person, first_name: "Old", last_name: "Timer")
+          create(:event_registration, event: recent_training, registrant: lapsed, status: "attended")
+          create(:affiliation, person: lapsed, organization: org, organization_address: org_address,
+                               start_date: 2.years.ago.to_date, end_date: 1.year.ago.to_date)
+
           get attendees_events_url(school_district: "Compton Unified"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
+          expect(response.body).not_to include("Old Timer")
         end
 
         it "renders the cities breakdown and filters by an org-city drill-in" do
