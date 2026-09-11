@@ -41,10 +41,10 @@ RSpec.describe AttendeesBreakdowns do
     expect(rows.first.registrant_count).to eq(1)
   end
 
-  it "groups attendees by the school district of their affiliation's organization address" do
+  it "groups attendees by the school district of the org they registered under" do
     organization = create(:organization, name: "Wellness Org")
     org_address = create(:address, addressable: organization, district: "Austin ISD", inactive: false)
-    create(:affiliation, person: person, organization: organization, organization_address: org_address)
+    create(:affiliation, person: person, organization: organization, organization_address: org_address, event_registration: registration)
 
     expect(breakdowns.school_district_counts).to eq("Austin ISD" => 1)
     expect(breakdowns.school_district_registrant_ids_by_district["Austin ISD"]).to eq([ person.id ])

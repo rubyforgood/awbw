@@ -1445,25 +1445,26 @@ shoutout_texts = [
   end
 end
 
-puts "Recording school districts on affiliation organization addresses…"
-# The Background page breaks registrants out by school district, sourced from each
-# registrant's affiliation organization address (Affiliation#organization_address →
-# Address#district). Assign a deterministic spread to a subset of the data-rich
-# trainings' registrants that have an affiliation. Idempotent: skips an affiliation
-# already pointing at a districted org address.
+puts "Recording school districts on registration-linked affiliation org addresses…"
+# The Background page breaks registrants out by school district, sourced from the
+# affiliation linked to each event registration (the org they registered under), via
+# Affiliation#organization_address → Address#district. Assign a deterministic spread
+# to a subset of the data-rich trainings' registrations. Idempotent: skips an
+# affiliation already pointing at a districted org address.
 school_district_names = [ "Los Angeles Unified", "Garden Grove Unified", "Compton Unified",
                           "Riverside Unified", "Long Beach Unified" ]
 [ facilitator_training, trauma_training ].compact.each do |evt|
-  evt.event_registrations.active.includes(registrant: { affiliations: :organization }).order(:registrant_id).each_with_index do |registration, i|
-    next unless i.even? # roughly half the registrants are tied to a district
-    affiliation = registration.registrant&.affiliations&.detect(&:organization)
+  evt.event_registrations.active.includes(:affiliations, registrant: { affiliations: :organization }).order(:registrant_id).each_with_index do |registration, i|
+    next unless i.even? # roughly half the registrations are tied to a district
+    affiliation = registration.affiliations.detect(&:organization) ||
+                  registration.registrant&.affiliations&.detect(&:organization)
     next unless affiliation
     next if affiliation.organization_address&.district.present?
 
     address = affiliation.organization.addresses.reject(&:inactive?).first ||
               affiliation.organization.addresses.build
     address.update!(district: school_district_names[(i / 2) % school_district_names.size])
-    affiliation.update!(organization_address: address)
+    affiliation.update!(organization_address: address, event_registration: registration)
   end
 end
 

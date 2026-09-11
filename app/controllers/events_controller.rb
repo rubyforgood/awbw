@@ -951,14 +951,14 @@ class EventsController < ApplicationController
     Address.active.where(addressable_type: "Person", country: country).select(:addressable_id)
   end
 
-  # People affiliated with an organization address in the given school district
-  # (Affiliation#organization_address → Address#district), active now — matching the
-  # cross-event breakdown's affiliation source and its as-of date, so an ended
-  # affiliation doesn't leak into the drilled list.
+  # People whose event-registration-linked affiliation points at an organization
+  # address in the given school district (Affiliation#organization_address →
+  # Address#district), scoped to the in-scope registrations — matching the
+  # breakdown's registration-linked affiliation source.
   def person_school_district_ids(district)
     address_ids = Address.active.where(district: district).select(:id)
     Affiliation
-      .active_by_date_on(Date.current)
+      .where(event_registration_id: attendee_registrations.select(:id))
       .where(organization_address_id: address_ids)
       .select(:person_id)
   end

@@ -324,17 +324,16 @@ class AttendeesBreakdowns
       .pluck(:organization_id, Arel.sql("event_registrations.registrant_id"))
   end
 
-  # [ [ district, person_id ], ... ] from each attendee's affiliations active as of
-  # #as_of (an event's start when a caller is scoped to one, else today), via the
+  # [ [ district, person_id ], ... ] from the affiliations linked to the attended-
+  # training registrations (the org each attendee registered under), via the
   # affiliation's chosen organization address (Affiliation#organization_address →
   # Address#district). Attendees whose affiliation has no organization address, or
-  # whose org address has a blank district, are absent. Someone affiliated in more
-  # than one district appears once per district.
+  # whose org address has a blank district, are absent. Someone who registered under
+  # more than one district appears once per district.
   def affiliation_district_pairs
     @affiliation_district_pairs ||= begin
       pairs = Affiliation
-        .active_by_date_on(@as_of || Date.current)
-        .where(person_id: person_ids)
+        .where(event_registration_id: registration_ids)
         .where.not(organization_address_id: nil)
         .pluck(:organization_address_id, :person_id)
       district_by_address_id = Address

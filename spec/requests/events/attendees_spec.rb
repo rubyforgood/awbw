@@ -351,23 +351,23 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Zed Zulu")
         end
 
-        it "filters by a school-district drill-in (via the affiliation's org address)" do
+        it "filters by a school-district drill-in (via the org they registered under)" do
           org = create(:organization, name: "Compton Schools")
           org_address = create(:address, addressable: org, district: "Compton Unified", inactive: false)
-          create(:affiliation, person: attendee, organization: org, organization_address: org_address)
+          create(:affiliation, person: attendee, organization: org, organization_address: org_address, event_registration: attendee_registration)
           other = create(:person, first_name: "Zed", last_name: "Zulu")
           create(:event_registration, event: recent_training, registrant: other, status: "attended")
 
-          # An ended affiliation to the same district is excluded, matching the chart's as-of.
-          lapsed = create(:person, first_name: "Old", last_name: "Timer")
-          create(:event_registration, event: recent_training, registrant: lapsed, status: "attended")
-          create(:affiliation, person: lapsed, organization: org, organization_address: org_address,
-                               start_date: 2.years.ago.to_date, end_date: 1.year.ago.to_date)
+          # An affiliation to the same district that isn't linked to a training
+          # registration is excluded — only the org each attendee registered under counts.
+          unlinked = create(:person, first_name: "Off", last_name: "Roster")
+          create(:event_registration, event: recent_training, registrant: unlinked, status: "attended")
+          create(:affiliation, person: unlinked, organization: org, organization_address: org_address)
 
           get attendees_events_url(school_district: "Compton Unified"), headers: frame_headers
           expect(response.body).to include("Ada Lovelace")
           expect(response.body).not_to include("Zed Zulu")
-          expect(response.body).not_to include("Old Timer")
+          expect(response.body).not_to include("Off Roster")
         end
 
         it "renders the cities breakdown and filters by an org-city drill-in" do

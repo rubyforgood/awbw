@@ -1023,17 +1023,16 @@ class EventDashboard
       .where("UPPER(addresses.state) IN (?)", Address::US_STATE_ABBREVIATIONS)
   end
 
-  # [ [ district, registrant_id ], ... ] from each registrant's affiliations active
-  # as of the event (#reference_date), via the affiliation's chosen organization
-  # address (Affiliation#organization_address → Address#district). Registrants whose
-  # affiliation has no organization address, or whose org address has a blank
-  # district, are absent. A registrant affiliated in more than one district appears
-  # once per district.
+  # [ [ district, registrant_id ], ... ] from the affiliations linked to this event's
+  # active registrations (the org each registrant registered under), via the
+  # affiliation's chosen organization address (Affiliation#organization_address →
+  # Address#district). Registrations whose affiliation has no organization address, or
+  # whose org address has a blank district, are absent. A registrant who registered
+  # under more than one district appears once per district.
   def affiliation_district_pairs
     @affiliation_district_pairs ||= begin
       pairs = Affiliation
-        .active_by_date_on(reference_date)
-        .where(person_id: registrant_ids)
+        .where(event_registration_id: active_registration_ids)
         .where.not(organization_address_id: nil)
         .pluck(:organization_address_id, :person_id)
       district_by_address_id = Address

@@ -3164,9 +3164,9 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Countries")
         end
 
-        it "shows a school districts breakdown from a registrant's affiliation address" do
+        it "shows a school districts breakdown from the org a registrant registered under" do
           org_address = create(:address, addressable: organization, district: "Compton Unified", inactive: false)
-          person.affiliations.find_by(organization: organization).update!(organization_address: org_address)
+          person.affiliations.find_by(organization: organization).update!(organization_address: org_address, event_registration: registration)
 
           get roster_event_path(owned_event), headers: charts_headers
 
