@@ -384,6 +384,7 @@ class PeopleController < ApplicationController
           delete.sectorable_items.find_by(is_primary: true)&.sector_id
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
+        @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (fold blank-number
@@ -392,13 +393,17 @@ class PeopleController < ApplicationController
       #   * duplicate CE registrations for one event (collapse them, preserving the
       #     loser's payments, so the person isn't billed twice for a single enrollment);
       #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest,
-      #     leaving the single primary Person's single-primary validations require).
+      #     leaving the single primary Person's single-primary validations require);
+      #   * two default Pay customers (keep the survivor's own, demote the rest, so
+      #     `payment_processor` isn't ambiguous).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
         PersonServices::ReconcilePrimaryDesignations.new(keep,
           primary_sector_id: @keeper_primary_sector_id,
           primary_age_category_id: @keeper_primary_age_category_id).call
+        PersonServices::ReconcileDefaultPayCustomer.new(keep,
+          preferred_customer_id: @keeper_default_pay_customer_id).call
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
