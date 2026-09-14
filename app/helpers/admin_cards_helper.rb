@@ -68,9 +68,9 @@ module AdminCardsHelper
   def deduper_cards
     [
       custom_card("Dedupe people", dedupe_index_people_path, icon: "🧹", color: DomainTheme.color_for(:people), intensity: 100),
-      custom_card("Dedupe event registrations", dedupe_index_event_registrations_path, icon: "🧹", color: DomainTheme.color_for(:event_registrations), intensity: 100),
       custom_card("Dedupe organizations", dedupe_index_organizations_path, icon: "🧹", color: DomainTheme.color_for(:organizations), intensity: 100),
       custom_card("Dedupe categories", dedupe_index_categories_path, icon: "🧹", color: DomainTheme.color_for(:categories), intensity: 100),
+      custom_card("Dedupe event registrations", dedupe_index_event_registrations_path, icon: "🧹", color: DomainTheme.color_for(:event_registrations), intensity: 100),
       custom_card("Dedupe sectors", dedupe_index_sectors_path, icon: "🧹", color: DomainTheme.color_for(:sectors), intensity: 100)
     ]
   end
