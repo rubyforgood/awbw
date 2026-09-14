@@ -3,6 +3,34 @@ require 'rails_helper'
 RSpec.describe CommunityNews, type: :model do
   it_behaves_like "author_creditable", factory: :community_news, org_credited: true
 
+  describe "rhino_body presence" do
+    it "is valid with text content" do
+      expect(build(:community_news, rhino_body: "<p>Hello</p>")).to be_valid
+    end
+
+    it "is valid when the body is only an uploaded image attachment" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("img"), filename: "newsletter.png", content_type: "image/png"
+      )
+      attachment_only = %(<action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment>)
+      expect(build(:community_news, rhino_body: attachment_only)).to be_valid
+    end
+
+    it "is valid when the body is only an image with no text" do
+      news = build(:community_news, rhino_body: %(<img src="http://example.com/newsletter.png">))
+      expect(news.rhino_body.to_plain_text).to be_blank
+      expect(news).to be_valid
+    end
+
+    it "is invalid when the body is visually empty" do
+      [ "", "   ", "<p><br></p>", "<div></div>" ].each do |body|
+        news = build(:community_news, rhino_body: body)
+        expect(news).to be_invalid
+        expect(news.errors[:rhino_body]).to include("can't be blank")
+      end
+    end
+  end
+
   describe "#author_person" do
     let(:creator) { create(:user, :with_person) }
     let(:person) { create(:person) }
