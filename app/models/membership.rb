@@ -14,6 +14,15 @@ class Membership < ApplicationRecord
   GRACE_PERIOD_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", 30).to_i
   RENEWAL_WINDOW_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", 30).to_i
 
+  # The admin overview's sections, in display order: the index's default query is
+  # :overdue. Keys double as Membership scopes and section_invoice keys.
+  OVERVIEW_SECTIONS = {
+    overdue: "Overdue",
+    within_grace: "Grace period",
+    upcoming: "Upcoming",
+    current: "Current"
+  }.freeze
+
   has_paper_trail
 
   belongs_to :person
@@ -72,6 +81,25 @@ class Membership < ApplicationRecord
 
   def good_through
     membership_invoices.active_on(Date.current).unscope(:order).first&.end_date
+  end
+
+  def covered_on?(date = Date.current)
+    membership_invoices.any? { |invoice| invoice.active_on?(date) }
+  end
+
+  def current_invoice
+    membership_invoices.find { |invoice| invoice.active_on?(Date.current) } || membership_invoices.first
+  end
+
+  # The invoice that puts this membership in the given overview section, or nil.
+  # Computed over the preloaded invoices so the admin index pays no per-row query.
+  def section_invoice(section_key, as_of: Date.current)
+    case section_key.to_sym
+    when :current then membership_invoices.find { |invoice| invoice.active_on?(as_of) }
+    when :upcoming then membership_invoices.find { |invoice| invoice.start_date && invoice.start_date > as_of }
+    when :within_grace then membership_invoices.find { |invoice| invoice.within_grace?(as_of) }
+    when :overdue then membership_invoices.find { |invoice| invoice.overdue?(as_of) }
+    end
   end
 
   def stripe_subscription

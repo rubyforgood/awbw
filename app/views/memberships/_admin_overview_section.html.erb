@@ -5,20 +5,16 @@
   current: "No current memberships."
 }.fetch(section_key) %>
 
-<%= turbo_frame_tag "membership_overview_#{section_key}" do %>
-  <section class="border-primary/10 rounded-2xl border bg-white p-4 shadow-sm sm:p-5">
-    <h2 class="text-primary mb-4 font-display text-lg font-bold"><%= title %></h2>
-
-    <% if memberships.any? %>
-      <div class="space-y-4">
-        <% memberships.each do |membership| %>
-          <%= render "memberships/membership_card", membership: membership, section_key: section_key %>
-        <% end %>
-      </div>
-      <div class="mt-6 flex justify-center"><%= tailwind_paginate memberships %></div>
-    <% else %>
-      <p class="text-gray-500 italic"><%= empty_copy %></p>
-    <% end %>
-  </section>
-<% end %>
+<section class="border-primary/10 rounded-2xl border bg-white p-4 shadow-sm sm:p-5">
+  <% if memberships.any? %>
+    <div class="space-y-4">
+      <% memberships.each do |membership| %>
+        <%= render "memberships/membership_card", membership: membership, section_key: section_key %>
+      <% end %>
+    </div>
+    <div class="mt-6 flex justify-center"><%= tailwind_paginate memberships %></div>
+  <% else %>
+    <p class="text-gray-500 italic"><%= empty_copy %></p>
+  <% end %>
+</section>
 

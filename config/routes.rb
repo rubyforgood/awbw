@@ -291,7 +291,7 @@ Rails.application.routes.draw do
       post :send_form_link
     end
     resources :comments, only: [ :create, :update ]
-    resources :memberships, only: [ :index, :new, :create ]
+    resources :memberships, only: [ :index, :new, :create ], controller: "people/memberships"
   end
   resources :comments_and_communications, only: [ :index ] do
     collection do
