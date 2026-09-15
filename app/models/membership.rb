@@ -38,9 +38,9 @@ class Membership < ApplicationRecord
   scope :not_cancelled, -> { where(cancelled_at: nil) }
   scope :cancelled, -> { where.not(cancelled_at: nil) }
 
-  # Memberships with an invoice active on the given date.
+  # Memberships with an invoice active on the given date that is paid.
   scope :current, ->(as_of = Date.current) {
-    where(id: MembershipInvoice.active_on(as_of).select(:membership_id))
+    where(id: MembershipInvoice.active_on(as_of).paid_in_full.select(:membership_id))
   }
 
   # Memberships with a future-starting invoice (e.g. a pre-issued renewal).
@@ -48,10 +48,11 @@ class Membership < ApplicationRecord
     where(id: MembershipInvoice.where("start_date > ?", as_of).select(:membership_id))
   }
 
-  # Memberships with an unpaid invoice whose start is within the grace window.
+  # Memberships with an unpaid invoice whose start is within the grace window
+  # (started but not yet overdue).
   scope :within_grace, ->(as_of = Date.current) {
     where(id: MembershipInvoice.not_paid_in_full
-      .where("start_date >= ?", as_of - GRACE_PERIOD_DAYS)
+      .where(start_date: (as_of - GRACE_PERIOD_DAYS)..as_of)
       .select(:membership_id))
   }
 

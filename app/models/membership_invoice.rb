@@ -73,7 +73,7 @@ class MembershipInvoice < ApplicationRecord
   end
 
   def within_grace?(as_of = Date.current)
-    return false if paid_in_full?
+    return false if paid_in_full? || start_date.blank? || start_date > as_of
 
     !overdue?(as_of)
   end
