@@ -181,6 +181,14 @@ class ContinuingEducationRegistration < ApplicationRecord
     end
   end
 
+  # True when more is allocated (payments, scholarships, discounts) than the record
+  # costs — e.g. a $0 CE that still carries a payment, which a merge folding two CE
+  # records for one enrollment onto one can produce. Drives the "Check payments" flag
+  # for an admin to reconcile.
+  def over_allocated?
+    allocations_sum > cost_cents.to_i
+  end
+
   # Human-readable payment status, mirroring EventRegistration#payment_status_label.
   # CE has no "intends to pay" concept (that's an event-access affordance), so the
   # middle state is a genuine partial payment instead.

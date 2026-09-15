@@ -1,0 +1,6 @@
+<span id="people_email_addresses_link">
+  <% if allowed_to?(:manage?, Person) %>
+    <%= link_to "Email addresses", email_addresses_people_path(request.query_parameters.except("page")),
+                class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+  <% end %>
+</span>

@@ -44,4 +44,13 @@ RSpec.describe "People email addresses", type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  describe "Email addresses link on the filtered index frame" do
+    it "carries the active filter into the Email addresses link" do
+      get people_path(contact_info: "Alice"), headers: { "Turbo-Frame" => "people_results" }
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include(email_addresses_people_path(contact_info: "Alice"))
+    end
+  end
 end

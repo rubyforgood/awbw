@@ -52,7 +52,12 @@
         </div>
         <div class="bg-white px-4 py-3">
           <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Payment</dt>
-          <dd class="mt-1"><%= render "shared/badge", label: payment.label, classes: payment.classes, icon: payment.icon %></dd>
+          <dd class="mt-1 flex flex-wrap items-center gap-1">
+            <%= render "shared/badge", label: payment.label, classes: payment.classes, icon: payment.icon %>
+            <% if (overpayment = ce.overpayment_badge) %>
+              <%= render "shared/badge", label: overpayment.label, classes: overpayment.classes, icon: overpayment.icon %>
+            <% end %>
+          </dd>
         </div>
         <div class="bg-white px-4 py-3">
           <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Certificate</dt>

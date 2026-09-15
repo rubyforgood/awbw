@@ -29,7 +29,7 @@ class CommunityNews < ApplicationRecord
   # author is required in the form; left optional at the model so legacy rows
   # (created before author became a person) remain valid.
   validates :title, presence: true, length: { maximum: 150 }
-  validates :rhino_body, presence: true
+  validate :rhino_body_present
   validates :reference_url, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
 
@@ -83,5 +83,16 @@ class CommunityNews < ApplicationRecord
     community_news = community_news.where(organization_id: params[:organization_id]) if params[:organization_id].present?
     community_news = community_news.authored_by(params[:author_id])
     community_news
+  end
+
+  private
+
+  # ActionText's blank? is text-only, so a body that's just an embedded image
+  # (an image-based newsletter) reads as blank. Count any media as content too.
+  def rhino_body_present
+    return if rhino_body.to_plain_text.present?
+    content = rhino_body.body
+    return if content && (content.attachments.any? || content.fragment.source.css("img").any?)
+    errors.add(:rhino_body, :blank)
   end
 end

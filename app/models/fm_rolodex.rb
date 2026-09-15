@@ -6,7 +6,9 @@
 # summary fields are imported too but left out here — nothing reads them.
 #
 #   ID                        PK, e.g. 00006
-#   OrgID                     FK → FmOrganization
+#   OrgID                     FK → FmOrganization (7 rows contain professional
+#                               credentials like BSW, LCSW-C instead of ORG IDs
+#                               — data-entry errors)
 #   PrimaryContactID          FK → FmRolodex
 #   PrimaryAddrsID            FK → FmAddress
 #   WorksiteAddrsID           FK → FmAddress
@@ -109,6 +111,19 @@ class FmRolodex < ApplicationRecord
     "fm_workshop_logs" => { via: "LeaderID", label: "Workshop Logs" },
     "fm_participants" => { via: "ParticipantID", label: "Participations" },
     "fm_funding" => { via: "FunderID", label: "Funding" },
-    "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" }
+    "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" },
+    "fm_ancillary_data" => { via: "RolodexID", label: "Ancillary Data" },
+    "fm_art_registries" => { via: "ArtistID", label: "Art Registries (Artist)" },
+    "fm_committee_members" => { via: "MemberID", label: "Committee Memberships" },
+    "fm_contacts" => { via: "ContacteeID", label: "Contacts" },
+    "fm_donor_developers" => { via: "RolodexID", label: "Donor Developments" },
+    "fm_form_letters" => { via: "SignatureID", label: "Form Letters (Signed)" },
+    "fm_group_members" => { via: "ContactID", label: "Group Memberships" },
+    "fm_invoices" => { via: "RolodexID", label: "Invoices" },
+    "fm_people_to_organizations" => { via: "PersonID", label: "Org Affiliations" },
+    "fm_quotations" => { via: "RolodexID", label: "Quotations" },
+    "fm_solicitations" => { via: "DonorID", label: "Solicitations" },
+    "fm_volunteers" => { via: "VRecID", label: "Volunteer Records" },
+    "fm_workshops" => { via: "AuthorID", label: "Workshops (Authored)" }
   }.freeze
 end

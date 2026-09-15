@@ -1,5 +1,6 @@
 <%= turbo_frame_tag :people_results do %>
   <%= turbo_stream.replace("people_count", partial: "people_count") %>
+  <%= turbo_stream.replace("people_email_addresses_link", partial: "email_addresses_link") %>
 
   <div class="border-primary/10 animate-fade overflow-hidden rounded-2xl border bg-white blur-on-submit">
     <% if @people.any? %>

@@ -6,7 +6,8 @@
 # summary fields are imported too but left out here — nothing reads them.
 #
 #   ActivityLogID    PK
-#   ID               FK → FmRolodex
+#   ID               FK → FmRolodex (251 rows contain newline-delimited lists
+#                      of Rolodex IDs for batch mailings — up to 2,393 chars)
 #   LinkID           FK → FmPayment
 #   Date
 #   Time

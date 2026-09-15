@@ -304,7 +304,7 @@ class ModelDeduper
   end
 
   def model_label
-    model_class.name.underscore.humanize.downcase
+    (model_class.name || model_class.table_name).underscore.humanize.downcase
   end
 
   def join_label(join_class)
@@ -344,7 +344,7 @@ class ModelDeduper
 
   def merge_duplicate(primary, dupe, usage)
     dupe_usage = usage[dupe.id] || 0
-    logger.info "MERGE #{dupe.id} | #{dupe.name} | usage=#{dupe_usage}"
+    logger.info "MERGE #{dupe.id} | #{display_string(dupe) || "##{dupe.id}"} | usage=#{dupe_usage}"
 
     return if dry_run
 
@@ -405,21 +405,39 @@ class ModelDeduper
       return
     end
 
-    existing = join_references(join, primary.id).pluck(*natural_key).map { |values| Array(values) }.to_set
+    survivors = join_references(join, primary.id).index_by { |row| natural_key.map { |col| row.public_send(col) } }
 
     join_references(join, dupe.id).find_each do |item|
       key = natural_key.map { |col| item.public_send(col) }
-      if existing.include?(key)
-        item.destroy!
+      survivor = survivors[key]
+      if survivor
+        collapse_into(survivor, item)
         logger.info "  deleted duplicate #{jc.name} #{item.id} (primary already has it)"
       else
         item.update!(fk => primary.id)
-        existing << key
+        survivors[key] = item
         logger.info "  moved #{jc.name} #{item.id} to primary"
       end
     end
 
     remaining = join_references(join, dupe.id).count
     raise "ABORT: #{remaining} #{jc.name} items still reference #{model_label} #{dupe.id}" if remaining > 0
+  end
+
+  # The primary already holds an equivalent row (same natural key), so the loser can't
+  # just move onto it. Merge the loser into the survivor with the deduper itself, which
+  # moves the loser's own children onto the survivor first, then destroys the
+  # now-childless loser — so a row that owns real records (e.g. a professional license
+  # with CE registrations) has them consolidated onto the survivor.
+  def collapse_into(survivor, loser)
+    collapse_deduper_for(loser.class).merge(survivor, loser)
+  end
+
+  # One deduper per collapsed class, reused across every collision in this merge:
+  # building one scans every table's foreign keys (uncached information_schema
+  # queries), and that scan depends only on the class.
+  def collapse_deduper_for(klass)
+    @collapse_dedupers ||= {}
+    @collapse_dedupers[klass] ||= self.class.new(model_class: klass, logger: logger, dry_run: false)
   end
 end

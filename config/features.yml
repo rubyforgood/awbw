@@ -27,6 +27,26 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Email addresses respect the people filter"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-10
+  summary: >-
+    The "Email addresses" list on the People directory now matches whatever
+    you have filtered to, even after you change the filters on the page — so
+    you copy just the people you're looking at, not everyone.
+  action_path: "/people"
+
+- name: "Post image-only community news"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-10
+  summary: >-
+    Community news can now be saved when the body is just an embedded image (an
+    image-based newsletter) with no typed text — it's no longer rejected as
+    blank. A truly empty body is still required to have content.
+  action_path: "/community_news/new"
+
 - name: "Activities feed defaults to admins in, interactions hidden"
   area: reporting
   display_status: admin_facing
@@ -3380,3 +3400,28 @@
     your full name, so confirmations, reminders, and other messages read a little
     warmer and less form-letter.
   released_on: 2026-09-02
+
+- name: "Merges keep CE credit, licenses, and primary designations intact"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-10
+  pr_number: 2530
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two duplicate people — or two duplicate registrations for one event —
+    now consolidates their CE registrations and professional licenses instead of
+    stopping with an error, and settles the kept person on a single primary sector
+    and age range.
+  description: >-
+    When both records hold the same license (or a placeholder with no number on
+    file), the merge folds them into one and moves the CE history onto the
+    surviving license, so nothing is lost and the merge no longer fails on a
+    license that has CE credit attached. Two CE registrations for the same
+    enrollment collapse into one, keeping both records' payments. The kept person
+    ends up with one primary sector and one primary age range — theirs if they had
+    one, otherwise the duplicate's — while every other sector and age range is
+    kept as an additional tag. The deleted person's profile photo moves over when
+    the kept person has none.
+  pro_tips:
+    - "If folding two paid CE records onto one enrollment leaves more paid than it costs, the CE registration shows a \"Check payments\" flag so you can reconcile the payments — the cost is never inflated to hide it."
+    - "The preview tells you what will move before you merge. It still can't be undone."

@@ -41,6 +41,10 @@ class FmEvent < ApplicationRecord
   FM_LINKS = {}.freeze
 
   HAS_MANY = {
-    "fm_participants" => { via: "EventID", label: "Participants" }
+    "fm_participants" => { via: "EventID", label: "Participants" },
+    "fm_exhibited_items" => { via: "EventID", label: "Exhibited Items" },
+    "fm_form_submissions" => { via: "EventID", label: "Form Submissions" },
+    "fm_volunteers" => { via: "EventID", label: "Volunteers" },
+    "fm_quotations" => { via: "EventID", label: "Quotations" }
   }.freeze
 end

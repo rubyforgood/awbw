@@ -11,9 +11,10 @@
 # the 68,497 registrations against the unique fm_id index.
 #
 #   PRecID            PK
-#   ParticipantID     FK → FmRolodex, the registrant
+#   ParticipantID     FK → FmRolodex, the registrant (52 rows contain person
+#                       names instead of IDs — data-entry errors, unresolvable)
 #   EventID           FK → FmEvent
-#   ProjectID         FK → FmProject
+#   ProjectID         FK → FmProject (2 rows contain free text: "none", "CAST")
 #   OrgID             FK → FmOrganization
 #   AllocRecID        FK → FmAllocation, scholarship funding the seat
 #   PaymentID         FK → FmPayment

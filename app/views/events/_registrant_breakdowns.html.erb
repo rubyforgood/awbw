@@ -164,7 +164,7 @@
                                        data: referral_source_data, chart: :bar, palette: palette %>
         <% end %>
         <% if school_district_data.any? %>
-          <%= render "breakdown_card", title: "School districts (via Address data)", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
+          <%= render "breakdown_card", title: "School districts (via affiliation)", data: school_district_data, chart: :bar, palette: palette, row_paths: school_district_paths %>
         <% end %>
       </div>
     <% end %>

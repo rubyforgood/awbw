@@ -92,6 +92,25 @@ RSpec.describe "ContinuingEducationRegistrations", type: :request do
       expect(response.body).not_to include(other.event_registration.registrant.full_name)
     end
 
+    it "flags an over-allocated CE registration (payments exceed cost) in the index" do
+      create(:allocation, source: create(:payment, person: registration.registrant), allocatable: ce_registration, amount: 5_000)
+      ce_registration.update_columns(cost_cents: 0)
+
+      get continuing_education_registrations_path,
+        headers: { "Turbo-Frame" => "continuing_education_registrations_results" }
+
+      expect(response.body).to include("Check payments")
+    end
+
+    it "does not flag a normally-paid CE registration" do
+      ce_registration
+
+      get continuing_education_registrations_path,
+        headers: { "Turbo-Frame" => "continuing_education_registrations_results" }
+
+      expect(response.body).not_to include("Check payments")
+    end
+
     it "filters by certificate status" do
       ce_registration.update!(certificate_sent_at: Time.current)
       pending = create(:continuing_education_registration)

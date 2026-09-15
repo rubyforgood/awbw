@@ -193,15 +193,17 @@ class AttendeesBreakdowns
   end
 
   def state_registrant_ids_by_state
-    @state_registrant_ids_by_state ||= person_ids_by(address_rows.select { |_, state, _, _| Address::US_STATE_ABBREVIATIONS.include?(state.to_s.upcase) }) { |row| row[1] }
+    @state_registrant_ids_by_state ||= person_ids_by(address_rows.select { |_, state, _| Address::US_STATE_ABBREVIATIONS.include?(state.to_s.upcase) }) { |row| row[1] }
   end
 
   def country_registrant_ids_by_country
-    @country_registrant_ids_by_country ||= person_ids_by(address_rows.reject { |_, _, country, _| country.blank? }) { |row| row[2] }
+    @country_registrant_ids_by_country ||= person_ids_by(address_rows.reject { |_, _, country| country.blank? }) { |row| row[2] }
   end
 
   def school_district_registrant_ids_by_district
-    @school_district_registrant_ids_by_district ||= person_ids_by(address_rows.reject { |_, _, _, district| district.blank? }) { |row| row[3] }
+    @school_district_registrant_ids_by_district ||= affiliation_district_pairs
+      .group_by(&:first)
+      .transform_values { |pairs| pairs.map(&:last).uniq }
   end
 
   def organization_registrant_ids_by_org
@@ -300,10 +302,10 @@ class AttendeesBreakdowns
       .pluck(:categorizable_id, :category_id)
   end
 
-  # [ [ person_id, state, country, district ], ... ] — one load behind the state,
-  # country and district counts and their id maps.
+  # [ [ person_id, state, country ], ... ] — one load behind the state and country
+  # counts and their id maps.
   def address_rows
-    @address_rows ||= active_addresses.pluck(:addressable_id, :state, :country, :district)
+    @address_rows ||= active_addresses.pluck(:addressable_id, :state, :country)
   end
 
   # { key => distinct person ids }, grouping [ person_id, ... ] rows by the block.
@@ -320,6 +322,31 @@ class AttendeesBreakdowns
       .joins(:event_registration)
       .where(event_registration_id: registration_ids)
       .pluck(:organization_id, Arel.sql("event_registrations.registrant_id"))
+  end
+
+  # [ [ district, person_id ], ... ] from the affiliations linked to the attended-
+  # training registrations (the org each attendee registered under), via the
+  # affiliation's chosen organization address (Affiliation#organization_address →
+  # Address#district). Attendees whose affiliation has no organization address, or
+  # whose org address has a blank district, are absent. Someone who registered under
+  # more than one district appears once per district.
+  def affiliation_district_pairs
+    @affiliation_district_pairs ||= begin
+      pairs = Affiliation
+        .where(event_registration_id: registration_ids)
+        .where.not(organization_address_id: nil)
+        .pluck(:organization_address_id, :person_id)
+      district_by_address_id = Address
+        .active
+        .where(id: pairs.map(&:first).uniq)
+        .where.not(district: [ nil, "" ])
+        .pluck(:id, :district)
+        .to_h
+      pairs.filter_map do |address_id, person_id|
+        district = district_by_address_id[address_id]
+        [ district, person_id ] if district
+      end
+    end
   end
 
   # Judged on #as_of — the event's start date when the caller is scoped to one,
