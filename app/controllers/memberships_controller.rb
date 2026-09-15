@@ -48,7 +48,7 @@ class MembershipsController < ApplicationController
   def overview_section(key, page:)
     authorized_scope(Membership.all)
       .not_cancelled
-      .includes(:person, membership_invoices: :allocations)
+      .includes(person: :user, membership_invoices: :allocations)
       .references(:person)
       .public_send(key)
       .order("people.first_name", "people.last_name")
