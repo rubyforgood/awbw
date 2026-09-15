@@ -52,7 +52,7 @@ class MembershipsController < ApplicationController
       .references(:person)
       .public_send(key)
       .order("people.first_name", "people.last_name")
-      .paginate(page: page, per_page: 25)
+      .paginate(page: page, per_page: 10)
   end
 
   def render_overview_section
