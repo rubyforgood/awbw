@@ -29,6 +29,28 @@ class Membership < ApplicationRecord
   scope :not_cancelled, -> { where(cancelled_at: nil) }
   scope :cancelled, -> { where.not(cancelled_at: nil) }
 
+  # Memberships with an invoice active on the given date.
+  scope :current, ->(as_of = Date.current) {
+    where(id: MembershipInvoice.active_on(as_of).select(:membership_id))
+  }
+
+  # Memberships with a future-starting invoice (e.g. a pre-issued renewal).
+  scope :upcoming, ->(as_of = Date.current) {
+    where(id: MembershipInvoice.where("start_date > ?", as_of).select(:membership_id))
+  }
+
+  # Memberships with an unpaid invoice whose start is within the grace window.
+  scope :within_grace, ->(as_of = Date.current) {
+    where(id: MembershipInvoice.not_paid_in_full
+      .where("start_date >= ?", as_of - GRACE_PERIOD_DAYS)
+      .select(:membership_id))
+  }
+
+  # Memberships with an unpaid invoice past the grace window.
+  scope :overdue, ->(as_of = Date.current) {
+    where(id: MembershipInvoice.overdue(as_of).select(:membership_id))
+  }
+
   after_update :cancel_stripe_subscription, if: :saved_change_to_cancelled_at?
   after_update :expire_unbilled_future_invoices, if: :saved_change_to_cancelled_at?
 

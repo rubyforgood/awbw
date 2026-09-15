@@ -18,7 +18,8 @@ module AdminCardsHelper
       model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),
       model_card(:banners, icon: "📣"),
       model_card(:community_news, icon: "📰"),
-      model_card(:faqs, icon: "❔", title: "FAQs")
+      model_card(:faqs, icon: "❔", title: "FAQs"),
+      (custom_card("Memberships", memberships_path, icon: "🪪", color: DomainTheme.color_for(:memberships), intensity: 100) if Membership.enabled?)
     ]
   end
 

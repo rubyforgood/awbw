@@ -344,7 +344,7 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
-  resources :memberships, only: [ :edit, :update ] do
+  resources :memberships, only: [ :index, :edit, :update ] do
     resources :membership_invoices, only: [ :new, :create ]
   end
 

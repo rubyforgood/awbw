@@ -176,6 +176,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/membership_invoices/new.html.erb"        => "admin-only bg-blue-100",
     "app/views/membership_invoices/edit.html.erb"       => "admin-only bg-blue-100",
     "app/views/memberships/index.html.erb"      => "admin-only bg-blue-100",
+    "app/views/memberships/admin_index.html.erb" => "admin-only bg-blue-100",
     "app/views/memberships/new.html.erb"        => "admin-only bg-blue-100",
     "app/views/memberships/edit.html.erb"       => "admin-only bg-blue-100",
     "app/views/grants/index.html.erb"                  => "admin-only bg-blue-100",

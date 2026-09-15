@@ -1,0 +1,16 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-6xl">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-primary font-display text-2xl font-bold">Memberships</h1>
+    <%= link_to "Membership invoices", membership_invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  </div>
+
+  <div class="space-y-8">
+    <%= render "memberships/admin_overview_section", section_key: :overdue, title: "Overdue", memberships: @overdue_memberships %>
+    <%= render "memberships/admin_overview_section", section_key: :within_grace, title: "Grace period", memberships: @within_grace_memberships %>
+    <%= render "memberships/admin_overview_section", section_key: :upcoming, title: "Upcoming", memberships: @upcoming_memberships %>
+    <%= render "memberships/admin_overview_section", section_key: :current, title: "Current", memberships: @current_memberships %>
+  </div>
+</div>
+
