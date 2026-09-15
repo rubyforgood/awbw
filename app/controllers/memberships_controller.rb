@@ -61,7 +61,7 @@ class MembershipsController < ApplicationController
 
     memberships = overview_section(section_key, page: params[:page])
 
-    render "memberships/membership_results",
+    render "memberships/memberships_results",
       locals: { section_key: section_key, memberships: memberships }
   end
 end

@@ -19,7 +19,7 @@
     <% end %>
   </nav>
 
-  <%= turbo_frame_tag :membership_results, src: memberships_path(section: current_section), data: { turbo: "temporary" } do %>
+  <%= turbo_frame_tag :memberships_results, src: memberships_path(section: current_section), data: { turbo: "temporary" } do %>
     <%= render "memberships/results_skeleton" %>
   <% end %>
 </div>
