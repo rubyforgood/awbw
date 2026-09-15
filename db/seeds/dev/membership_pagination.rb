@@ -1,0 +1,80 @@
+# Membership pagination seeds (dev-only) — run on their own via
+# `rake db:seed:membership_pagination`. NOT part of `rake db:seed:dev`, so the
+# standard dev dataset stays small; run this when you want the admin overview
+# (`/memberships`) to show a second page on every tab.
+#
+# Each tab's section paginates at 25 rows, so 30 memberships per tab means page
+# 2 shows the tail. People are dedicated to this seed (names + marker emails) so
+# the states stay controlled the same way bulk_payments.rb keeps its own:
+#
+#   * current AND upcoming  — a paid active invoice + a pre-issued renewal that
+#     starts the day after it (one membership lands on both tabs)
+#   * within_grace          — a single unpaid invoice inside the grace window
+#   * overdue               — a single unpaid invoice past the grace window
+#
+# Re-runnable: people are found by their marker email, and memberships are only
+# created for people without one, so rerunning adds nothing.
+
+puts "Creating membership pagination volume…"
+
+first_names = %w[
+  Ada Ben Cleo Dana Ellery Finn Gita Hana Idris Jules Keir Lena Micah Nina Ona
+  Priya Quincy Rosa Sana Theo Uma Vale Wes Xena Yara Zoe Amir Bree Cato Del
+].freeze
+last_name_for = {
+  current: "OnTime",
+  grace: "InGrace",
+  overdue: "Overdue"
+}
+standard = Membership::ANNUAL_COST_CENTS
+
+pay_invoice = ->(invoice) do
+  payment = CashPayment.create!(
+    person: invoice.person,
+    amount_cents: invoice.cost_cents,
+    amount_cents_remaining: invoice.cost_cents,
+    currency: "usd"
+  )
+  Allocation.create!(source: payment, allocatable: invoice, amount: invoice.cost_cents)
+end
+
+add_membership = ->(first_name, last_name, marker, &build) do
+  person = Person.find_or_create_by!(email: "#{marker}@paginationdemo.membership.seed.example.com") do |p|
+    p.first_name = first_name
+    p.last_name = last_name
+  end
+  return if person.memberships.not_cancelled.exists?
+
+  membership = person.memberships.create!
+  build.call(membership) if build
+  puts "  #{person.full_name}: #{last_name}"
+  membership
+end
+
+# 30 "paid up, renewal pre-issued" memberships → one row on current + one on upcoming.
+first_names.each_with_index do |first_name, i|
+  add_membership.call(first_name, last_name_for[:current], "current#{'%02d' % i}") do |membership|
+    year = membership.membership_invoices.create!(start_date: Date.current - 3.months, cost_cents: standard)
+    pay_invoice.call(year)
+    membership.membership_invoices.create!(start_date: year.end_date + 1.day, cost_cents: standard)
+  end
+end
+
+# 30 memberships with one unpaid invoice inside the grace window.
+first_names.each_with_index do |first_name, i|
+  add_membership.call(first_name, last_name_for[:grace], "grace#{'%02d' % i}") do |membership|
+    membership.membership_invoices.create!(start_date: Date.current - 5.days, cost_cents: standard)
+  end
+end
+
+# 30 memberships with one unpaid invoice past the grace window.
+first_names.each_with_index do |first_name, i|
+  add_membership.call(first_name, last_name_for[:overdue], "overdue#{'%02d' % i}") do |membership|
+    membership.membership_invoices.create!(
+      start_date: Date.current - (Membership::GRACE_PERIOD_DAYS + 15).days,
+      cost_cents: standard
+    )
+  end
+end
+
+puts "  #{Membership.count} memberships, #{MembershipInvoice.count} membership invoices"
