@@ -1,20 +1,4 @@
-# Membership pagination seeds (dev-only) — run on their own via
-# `rake db:seed:membership_pagination`. NOT part of `rake db:seed:dev`, so the
-# standard dev dataset stays small; run this when you want the admin overview
-# (`/memberships`) to show a second page on every tab.
-#
-# Each tab's section paginates at 25 rows, so 30 memberships per tab means page
-# 2 shows the tail. People are dedicated to this seed (names + marker emails) so
-# the states stay controlled the same way bulk_payments.rb keeps its own:
-#
-#   * current AND upcoming  — a paid active invoice + a pre-issued renewal that
-#     starts the day after it (one membership lands on both tabs)
-#   * within_grace          — a single unpaid invoice inside the grace window
-#   * overdue               — a single unpaid invoice past the grace window
-#
-# Re-runnable: people are found by their marker email, and memberships are only
-# created for people without one, so rerunning adds nothing.
-
+# `rake db:seed:membership_pagination`. not part of `rake db:seed:dev`
 puts "Creating membership pagination volume…"
 
 first_names = %w[
