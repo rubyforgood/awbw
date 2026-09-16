@@ -56,7 +56,8 @@ module EventRegistrationServices
         password_confirmation: password,
         person: @person,
         created_by: @current_user,
-        updated_by: @current_user
+        updated_by: @current_user,
+        locked: true
       )
       user.skip_confirmation_notification!
 

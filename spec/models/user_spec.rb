@@ -264,6 +264,18 @@ RSpec.describe User do
       user = create(:user, locked: true)
       expect(user.active_for_authentication?).to be false
     end
+
+    # The invite gate: a never-invited account starts locked, and a password
+    # reset must not unlock it (Devise's Recoverable doesn't touch the lock), so
+    # resetting a password can't be used to sign in without an invite.
+    it "stays locked after a password reset" do
+      user = create(:user, :locked)
+
+      user.reset_password("NewPassword123!", "NewPassword123!")
+
+      expect(user.reload.locked_at).to be_present
+      expect(user.active_for_authentication?).to be false
+    end
   end
 
   describe "#first_name_or_email" do

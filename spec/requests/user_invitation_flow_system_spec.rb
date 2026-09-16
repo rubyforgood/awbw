@@ -68,11 +68,11 @@ RSpec.describe "User Invitation Flow (System Test)", type: :request do
       follow_redirect!
       expect(response.body).to include("Welcome! Your password has been set successfully")
 
-      # Verify welcome token is cleared
+      # Verify welcome token is cleared (sent_at is kept as the invite audit trail)
       unconfirmed_user.reload
       expect(unconfirmed_user.welcome_instructions_token).to be_nil
       expect(unconfirmed_user.welcome_instructions_created_at).to be_nil
-      expect(unconfirmed_user.welcome_instructions_sent_at).to be_nil
+      expect(unconfirmed_user.welcome_instructions_sent_at).to be_present
 
       # Verify user is logged in by checking Warden
       expect(session["warden.user.user.key"]).to be_present
