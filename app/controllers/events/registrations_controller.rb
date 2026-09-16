@@ -1,5 +1,6 @@
 module Events
   class RegistrationsController < ApplicationController
+    include AhoyTracking
     include SearchEngineHideable
     before_action :noindex!, only: [ :show, :invoice, :receipt ]
     before_action :authenticate_user!, only: [ :create ]
@@ -35,6 +36,7 @@ module Events
 
       @event = @event_registration.event
       @invoice = EventInvoice.from_registration(@event_registration)
+      track_view("invoices", { event_id: @event.id, registration_id: @event_registration.id })
     end
 
     def receipt

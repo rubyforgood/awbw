@@ -3,6 +3,7 @@ module Events
   # event's content (line item + cost); when a `submission_id` is supplied it
   # autofills the bill-to/attention from that bulk-payment submission.
   class InvoicesController < ApplicationController
+    include AhoyTracking
     include SearchEngineHideable
     # Bulk-payment payers have no account; authorization (below) gates access.
     skip_before_action :authenticate_user!, only: [ :show ]
@@ -22,6 +23,7 @@ module Events
         @invoice = EventInvoice.from_event(@event)
       end
 
+      track_view("invoices", { event_id: @event.id, submission_id: @submission&.id }.compact)
       @event = @event.decorate
     end
 
