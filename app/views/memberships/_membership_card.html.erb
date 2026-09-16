@@ -1,7 +1,5 @@
 <% person = membership.person %>
-<% current_invoice = membership.section_invoice(:current) %>
-<% section_invoice = membership.section_invoice(section_key) %>
-<% invoices = [ current_invoice, section_invoice ].compact.uniq(&:id) %>
+<% invoice = membership.section_invoice(section_key) %>
 
 <div class="border-primary/10 rounded-xl border bg-gray-50 p-2 sm:p-2">
   <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6">
@@ -20,11 +18,10 @@
 
     <div class="min-w-0">
       <ul class="space-y-0.5">
-        <% invoices.each do |invoice| %>
+        <% if invoice %>
           <%= render "membership_invoices/invoice_row", invoice: invoice, editable: false, linked: true %>
         <% end %>
       </ul>
     </div>
   </div>
 </div>
-
