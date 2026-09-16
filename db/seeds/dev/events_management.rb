@@ -1462,7 +1462,7 @@ school_district_names = [ "Los Angeles Unified", "Garden Grove Unified", "Compto
     next if affiliation.organization_address&.district.present?
 
     address = affiliation.organization.addresses.reject(&:inactive?).first ||
-              affiliation.organization.addresses.build
+              affiliation.organization.addresses.build(street_address: "100 Demo St", city: "Los Angeles", state: "CA", zip_code: "90012", locality: "LA City")
     address.update!(district: school_district_names[(i / 2) % school_district_names.size])
     affiliation.update!(organization_address: address, event_registration: registration)
   end
