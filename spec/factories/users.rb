@@ -8,6 +8,8 @@ FactoryBot.define do
     # but for testing convenience we set it to current time here.
     # Use the :unconfirmed trait to create unconfirmed users.
 
+    welcome_instructions_sent_at { Time.current }
+
     # LOCKABLE
     locked_at { nil }
     failed_attempts { 0 }
@@ -54,6 +56,11 @@ FactoryBot.define do
 
     trait :unconfirmed do
       confirmed_at { nil }
+    end
+
+    trait :uninvited do
+      confirmed_at { nil }
+      welcome_instructions_sent_at { nil }
     end
 
     trait :locked do

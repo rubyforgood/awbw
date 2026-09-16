@@ -143,13 +143,17 @@ class User < ApplicationRecord
   end
 
   def active_for_authentication?
-    super && !inactive?
+    super && !inactive? && (super_user? || welcome_instructions_sent_at.present?)
   end
 
   # Instance-level mirror of the `has_access` scope: the account can sign in —
   # confirmed, not locked, not deactivated.
   def has_access?
     locked_at.nil? && !inactive? && confirmed_at.present?
+  end
+
+  def invited?
+    welcome_instructions_sent_at.present? || confirmed_at.present?
   end
 
   def bookmark_for(record)
@@ -253,8 +257,7 @@ class User < ApplicationRecord
   def clear_welcome_instructions_token!
     update_columns(
       welcome_instructions_token: nil,
-      welcome_instructions_created_at: nil,
-      welcome_instructions_sent_at: nil
+      welcome_instructions_created_at: nil
     )
   end
 
