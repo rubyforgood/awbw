@@ -18,20 +18,4 @@ RSpec.describe 'Passwords', type: :request do
         "You will receive an email with instructions on how to reset your password in a few minutes. Email us or fill out our Contact Us form if you don't receive an email.")
     end
   end
-
-  describe 'PUT /password for invited user' do
-    let(:invited_user) { create(:user, :unconfirmed, welcome_instructions_sent_at: Time.current) }
-
-    it "invite_confirmable? returns true when invited" do
-      expect(invited_user.invited?).to be true
-    end
-  end
-
-  describe 'PUT /password for uninvited user' do
-    let(:uninvited_user) { create(:user, :uninvited) }
-
-    it "invite_confirmable? returns false when not invited" do
-      expect(uninvited_user.invited?).to be false
-    end
-  end
 end

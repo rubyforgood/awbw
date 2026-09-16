@@ -58,11 +58,6 @@ FactoryBot.define do
       confirmed_at { nil }
     end
 
-    trait :uninvited do
-      confirmed_at { nil }
-      welcome_instructions_sent_at { nil }
-    end
-
     trait :locked do
       locked_at { Time.current }
     end

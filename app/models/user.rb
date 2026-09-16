@@ -152,10 +152,6 @@ class User < ApplicationRecord
     locked_at.nil? && !inactive? && confirmed_at.present?
   end
 
-  def invited?
-    welcome_instructions_sent_at.present? || confirmed_at.present?
-  end
-
   def bookmark_for(record)
     if bookmarks.loaded?
       bookmarks.detect { |b| b.bookmarkable_type == record.class.name && b.bookmarkable_id == record.id && !b.destroyed? }
