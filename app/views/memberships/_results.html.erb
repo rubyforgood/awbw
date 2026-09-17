@@ -4,9 +4,9 @@
   current: "No current memberships."
 }.fetch(section_key) %>
 
-<section class="border-primary/10 min-h-screen rounded-2xl border bg-white p-1 shadow-sm sm:p-1">
+<section class="border-primary/10 rounded-2xl border bg-white p-1 shadow-sm sm:p-1">
   <% if memberships.any? %>
-    <div class="divide-y divide-gray-200">
+    <div class="space-y-2">
       <% memberships.each do |membership| %>
         <%= render "memberships/membership_card", membership: membership, section_key: section_key %>
       <% end %>

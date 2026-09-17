@@ -1,8 +1,7 @@
 <% invoice = invoice.decorate %>
 <span class="flex items-center gap-x-2 text-sm text-gray-600">
+  <span>Invoice: </span>
   <span class="tabular-nums"><%= invoice.period_range %></span>
-  <span class="text-gray-400">·</span>
-  <span><%= invoice.cost %><% unless invoice.comped? %> · <%= invoice.paid %> paid<% end %></span>
   <%= render "membership_invoices/status_pill", invoice: invoice, linked: local_assigns.fetch(:linked, false) %>
 </span>
 
