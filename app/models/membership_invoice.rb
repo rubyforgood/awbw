@@ -70,7 +70,7 @@ class MembershipInvoice < ApplicationRecord
   def overdue?(as_of = Date.current)
     return false if paid_in_full? || start_date.blank?
 
-    start_date < as_of
+    start_date <= as_of
   end
 
   # The year has started and still owes its balance — the profile's membership
