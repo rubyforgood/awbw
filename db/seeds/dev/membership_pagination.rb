@@ -44,18 +44,18 @@ first_names.each_with_index do |first_name, i|
   end
 end
 
-# 30 memberships with one unpaid invoice inside the grace window.
+# 30 memberships with one unpaid invoice whose term has started.
 first_names.each_with_index do |first_name, i|
   add_membership.call(first_name, last_name_for[:grace], "grace#{'%02d' % i}") do |membership|
     membership.membership_invoices.create!(start_date: Date.current - 5.days, cost_cents: standard)
   end
 end
 
-# 30 memberships with one unpaid invoice past the grace window.
+# 30 memberships with one unpaid invoice past start date.
 first_names.each_with_index do |first_name, i|
   add_membership.call(first_name, last_name_for[:overdue], "overdue#{'%02d' % i}") do |membership|
     membership.membership_invoices.create!(
-      start_date: Date.current - (Membership::GRACE_PERIOD_DAYS + 15).days,
+      start_date: Date.current - 45.days,
       cost_cents: standard
     )
   end

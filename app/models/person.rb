@@ -284,7 +284,7 @@ class Person < ApplicationRecord
   scope :membership_paid, -> {
     where(id: MembershipInvoice.active_on.paid_in_full.joins(:membership).select("memberships.person_id")) }
   scope :membership_due, -> {
-    where(id: MembershipInvoice.active_on.not_paid_in_full.paid_or_within_grace
+    where(id: MembershipInvoice.active_on.overdue
       .joins(:membership).select("memberships.person_id")) }
   scope :membership_overdue, -> {
     where(id: MembershipInvoice.active_on.overdue.joins(:membership).select("memberships.person_id")) }
@@ -293,7 +293,6 @@ class Person < ApplicationRecord
     when "active" then membership_active
     when "inactive" then membership_inactive
     when "paid" then membership_paid
-    when "due" then membership_due
     when "overdue" then membership_overdue
     else all
     end }
@@ -311,7 +310,6 @@ class Person < ApplicationRecord
     [ "Active", "active" ],
     [ "Inactive", "inactive" ],
     [ "Paid", "paid" ],
-    [ "Due", "due" ],
     [ "Overdue", "overdue" ]
   ].freeze
 
@@ -349,7 +347,7 @@ class Person < ApplicationRecord
   end
 
   def membership_current?(as_of: Date.current)
-    membership_invoices.active_on(as_of).paid_or_within_grace(as_of).exists?
+    membership_invoices.active_on(as_of).paid_or_not_started(as_of).exists?
   end
 
   def sector_list

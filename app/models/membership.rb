@@ -11,14 +11,12 @@ class Membership < ApplicationRecord
   INVOICE_PERIOD = 1.year
 
   ANNUAL_COST_CENTS = ENV.fetch("ANNUAL_MEMBERSHIP_CENTS", 10000).to_i
-  GRACE_PERIOD_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", 30).to_i
   RENEWAL_WINDOW_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", 30).to_i
 
   # The admin overview's sections, in display order: the index's default query is
   # :overdue. Keys double as Membership scopes and section_invoice keys.
   OVERVIEW_SECTIONS = {
     overdue: "Overdue",
-    within_grace: "Grace period",
     upcoming: "Upcoming",
     current: "Current"
   }.freeze
@@ -48,15 +46,7 @@ class Membership < ApplicationRecord
     where(id: MembershipInvoice.where("start_date > ?", as_of).select(:membership_id))
   }
 
-  # Memberships with an unpaid invoice whose start is within the grace window
-  # (started but not yet overdue).
-  scope :within_grace, ->(as_of = Date.current) {
-    where(id: MembershipInvoice.not_paid_in_full
-      .where(start_date: (as_of - GRACE_PERIOD_DAYS)..as_of)
-      .select(:membership_id))
-  }
-
-  # Memberships with an unpaid invoice past the grace window.
+  # Memberships with an unpaid invoice whose term has started.
   scope :overdue, ->(as_of = Date.current) {
     where(id: MembershipInvoice.overdue(as_of).select(:membership_id))
   }
@@ -98,7 +88,6 @@ class Membership < ApplicationRecord
     case section_key.to_sym
     when :current then membership_invoices.find { |invoice| invoice.active_on?(as_of) }
     when :upcoming then membership_invoices.find { |invoice| invoice.start_date && invoice.start_date > as_of }
-    when :within_grace then membership_invoices.find { |invoice| invoice.within_grace?(as_of) }
     when :overdue then membership_invoices.find { |invoice| invoice.overdue?(as_of) }
     end
   end

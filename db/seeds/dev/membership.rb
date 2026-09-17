@@ -6,7 +6,7 @@ standard = Membership::ANNUAL_COST_CENTS
 
 # Checkout-flow scenarios for the named seed users — sign in and press
 # "Set up annual membership" to see each billed shape:
-#   amy   → grace period: current year already started, unpaid (one-time cover)
+#   amy   → overdue: current year already started, unpaid (one-time cover)
 #   aisha → on time: current year starts today, unpaid (charged immediately)
 # Umberto is deliberately absent: affiliation_history seeds his first membership
 # and builds a multi-year history on it, so he can't be a checkout demo too.
@@ -16,7 +16,7 @@ standard = Membership::ANNUAL_COST_CENTS
 # doesn't clobber state you've since changed. Consumes these users before the
 # pool block below, so their invoices stay the canonical checkout demos.
 {
-  "amy.user@example.com" => { label: "grace period — one-time cover + anchored renewal", start: Date.current - 10.days, pay: false },
+  "amy.user@example.com" => { label: "overdue — one-time cover + anchored renewal", start: Date.current - 10.days, pay: false },
   "aisha.user@example.com" => { label: "on time — charged immediately, no anchor", start: Date.current, pay: false }
 }.each do |email, scenario|
   user = User.find_by(email: email)
@@ -70,14 +70,14 @@ else
     [ "paid up for the current year", nil, nil,
       [ [ Date.current - 3.months, standard ] ], [ [ 0, standard ] ] ],
 
-    [ "part paid inside the grace window — badge shows what is left", nil, nil,
+    [ "part paid — badge shows Overdue", nil, nil,
       [ [ Date.current - 10.days, standard ] ], [ [ 0, 1_000 ] ] ],
 
-    [ "unpaid but still inside the grace window", nil, nil,
+    [ "unpaid — badge shows Overdue", nil, nil,
       [ [ Date.current - 5.days, standard ] ], [] ],
 
-    [ "overdue — unpaid past the grace window", nil, nil,
-      [ [ Date.current - (Membership::GRACE_PERIOD_DAYS + 15).days, standard ] ], [] ],
+    [ "overdue — unpaid past start date", nil, nil,
+      [ [ Date.current - 45.days, standard ] ], [] ],
 
     [ "renewal already created for next year", nil, nil,
       [ [ Date.current - 11.months, standard ], [ Date.current + 1.month, standard ] ],

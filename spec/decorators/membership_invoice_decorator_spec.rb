@@ -23,19 +23,19 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
       expect(invoice(cost_cents: 0).status_badge.label).to eq("Paid")
     end
 
-    it "shows what's left while inside the grace window" do
+    it "reads Overdue for an unpaid invoice whose term has started" do
       badge = invoice(start_date: Date.current - 1).status_badge
 
-      expect(badge.label).to eq("$25 due")
-      expect(badge.classes).to eq(described_class::BADGE_CLASSES[:amber])
+      expect(badge.label).to eq("Overdue")
+      expect(badge.classes).to eq(described_class::BADGE_CLASSES[:red])
     end
 
     it "shows what's left after a part payment" do
-      expect(invoice(paid: 1_000, start_date: Date.current - 1).status_badge.label).to eq("$15 due")
+      expect(invoice(paid: 1_000, start_date: Date.current).status_badge.label).to eq("$15 due")
     end
 
-    it "reads Overdue past the grace window" do
-      badge = invoice(start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1).status_badge
+    it "reads Overdue for an unpaid invoice whose term started long ago" do
+      badge = invoice(start_date: Date.current - 2.months).status_badge
 
       expect(badge.label).to eq("Overdue")
       expect(badge.classes).to eq(described_class::BADGE_CLASSES[:red])

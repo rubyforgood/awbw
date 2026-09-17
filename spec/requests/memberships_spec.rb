@@ -71,7 +71,7 @@ RSpec.describe "Memberships", type: :request do
 
       it "shows the status badge for each year" do
         subscription = create(:membership, person: person)
-        membership_invoice_for(subscription: subscription, start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1)
+        membership_invoice_for(subscription: subscription, start_date: 60.days.ago)
 
         get person_memberships_path(person)
 
@@ -457,7 +457,7 @@ RSpec.describe "Memberships", type: :request do
       end
 
       it "leaves an existing year untouched when cancelling" do
-        year = create(:membership_invoice, membership: subscription)
+        year = create(:membership_invoice, :comped, membership: subscription)
 
         patch membership_path(subscription), params: { membership: { cancelled: "1" } }
 

@@ -61,7 +61,7 @@ RSpec.describe "MembershipInvoices", type: :request do
       end
 
       it "shows the status badge for an overdue year" do
-        term_for("Behind", start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1)
+        term_for("Behind", start_date: 60.days.ago)
 
         get membership_invoices_path, headers: frame
 

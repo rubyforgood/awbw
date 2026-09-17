@@ -29,14 +29,14 @@ RSpec.describe Person, type: :model do
       expect(person).to be_membership_current
     end
 
-    it "is true on an unpaid term still inside the grace window" do
+    it "is false on an unpaid term whose term has started" do
       term(cost_cents: 2_500, start_date: Date.current - 1, subscription: subscription)
-      expect(person).to be_membership_current
+      expect(person).not_to be_membership_current
     end
 
-    it "is false on an unpaid term past the grace window" do
+    it "is false on an unpaid term whose term started long ago" do
       term(cost_cents: 2_500,
-        start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1,
+        start_date: Date.current - 60.days,
         subscription: subscription)
 
       expect(person).not_to be_membership_current
@@ -647,15 +647,15 @@ RSpec.describe Person, type: :model do
         expect(results).to include(member)
       end
 
-      it "due: includes people owing on a current invoice still within grace" do
-        member = create(:person, first_name: "Due", last_name: "Member")
+      it "overdue: includes people owing on a current invoice whose term has started" do
+        member = create(:person, first_name: "Overdue", last_name: "Member")
         create(:membership_invoice, membership: create(:membership, person: member),
-                                    start_date: Date.current)
-        results = Person.search_by_params(membership_status: "due")
+                                    start_date: 60.days.ago, end_date: 305.days.from_now)
+        results = Person.search_by_params(membership_status: "overdue")
         expect(results).to include(member)
       end
 
-      it "overdue: includes people owing past the grace period" do
+      it "overdue: includes people owing on a current invoice whose term has started" do
         member = create(:person, first_name: "Overdue", last_name: "Member")
         create(:membership_invoice, membership: create(:membership, person: member),
                                     start_date: 60.days.ago, end_date: 305.days.from_now)

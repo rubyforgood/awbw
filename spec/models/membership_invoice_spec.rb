@@ -218,56 +218,38 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
-  describe "the grace window" do
-    let(:grace) { Membership::GRACE_PERIOD_DAYS }
-
-    def term_starting(days_ago, cost_cents: 2_500)
-      create(:membership_invoice,
-        cost_cents: cost_cents,
-        start_date: Date.current - days_ago,
-        end_date: Date.current - days_ago + 1.year - 1.day)
-    end
-
-    it "treats an unpaid invoice inside the window as not overdue" do
-      invoice = term_starting(grace - 1)
-      expect(described_class.overdue).to be_empty
-      expect(invoice).not_to be_overdue
-      expect(invoice).to be_within_grace
-    end
-
-    it "treats an unpaid invoice past the window as overdue" do
-      invoice = term_starting(grace + 1)
-      expect(described_class.overdue).to contain_exactly(invoice)
+  describe "overdue semantics (no grace window)" do
+    it "treats an unpaid invoice whose term has started as overdue" do
+      invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
       expect(invoice).to be_overdue
-      expect(invoice).not_to be_within_grace
+      expect(described_class.overdue).to include(invoice)
     end
 
-    it "counts the window's final day as still in grace" do
-      invoice = term_starting(grace)
-      expect(invoice).to be_within_grace
-      expect(described_class.overdue).to be_empty
+    it "does not treat an unpaid invoice whose term hasn't started as overdue" do
+      invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current + 1)
+      expect(invoice).not_to be_overdue
+      expect(described_class.overdue).not_to include(invoice)
     end
 
     it "never treats a paid or comped invoice as overdue" do
-      term_starting(grace + 1, cost_cents: 0)
-      paid = term_starting(grace + 1)
+      create(:membership_invoice, cost_cents: 0, start_date: Date.current - 1)
+      paid = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
       create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: paid, amount: 2_500)
 
-      expect(described_class.overdue).to be_empty
       expect(paid.reload).not_to be_overdue
-      expect(paid).not_to be_within_grace
+      expect(described_class.overdue).not_to include(paid)
     end
 
-    it ".paid_or_within_grace is the exact complement of .overdue" do
-      term_starting(grace + 1)
-      term_starting(grace - 1)
-      term_starting(grace + 1, cost_cents: 0)
+    it ".paid_or_not_started is the exact complement of .overdue" do
+      create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
+      create(:membership_invoice, cost_cents: 2_500, start_date: Date.current + 1)
+      paid = create(:membership_invoice, cost_cents: 0, start_date: Date.current - 1)
 
       overdue_ids = described_class.overdue.ids
-      honored_ids = described_class.paid_or_within_grace.ids
+      complement_ids = described_class.paid_or_not_started.ids
 
-      expect(overdue_ids & honored_ids).to be_empty
-      expect((overdue_ids + honored_ids).sort).to eq(described_class.ids.sort)
+      expect(overdue_ids & complement_ids).to be_empty
+      expect((overdue_ids + complement_ids).sort).to eq(described_class.ids.sort)
     end
   end
 
