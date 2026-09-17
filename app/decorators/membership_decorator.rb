@@ -23,4 +23,13 @@ class MembershipDecorator < ApplicationDecorator
       "#{start_str} – #{ends.last.strftime("%b %-d, %Y")}"
     end
   end
+
+  def cancelled_expires_on
+    return unless cancelled?
+
+    ends = membership_invoices.filter_map(&:end_date).sort
+    return if ends.empty? || ends.last < Date.current
+
+    ends.last.strftime("%b %-d, %Y")
+  end
 end

@@ -31,16 +31,30 @@ RSpec.describe MembershipDecorator, type: :decorator do
   end
 
   describe "#period_label" do
-    it "spans the earliest invoice start to the latest invoice end" do
+    it "shows present when current and not cancelled" do
       membership = create(:membership)
       create(:membership_invoice, membership: membership, start_date: Date.new(2025, 1, 15), end_date: Date.new(2026, 1, 15))
       create(:membership_invoice, membership: membership, start_date: Date.new(2026, 1, 16), end_date: Date.new(2027, 1, 15))
 
-      expect(membership.reload.decorate.period_label).to eq("Jan 15, 2025 – Jan 15, 2027")
+      expect(membership.reload.decorate.period_label).to eq("Jan 15, 2025 – present")
     end
 
     it "is nil when there are no invoices" do
       expect(create(:membership).decorate.period_label).to be_nil
+    end
+
+    it "shows the cancellation expiration date when cancelled but still current" do
+      membership = create(:membership, cancelled_at: Time.zone.parse("2026-08-03 12:00"))
+      create(:membership_invoice, membership: membership, start_date: Date.new(2026, 1, 1), end_date: Date.new(2027, 1, 1))
+
+      expect(membership.reload.decorate.cancelled_expires_on).to eq("Jan 1, 2027")
+    end
+
+    it "is nil when cancelled but no future end date" do
+      membership = create(:membership, cancelled_at: Time.zone.parse("2026-08-03 12:00"))
+      create(:membership_invoice, membership: membership, start_date: Date.new(2025, 1, 1), end_date: Date.new(2025, 12, 31))
+
+      expect(membership.reload.decorate.cancelled_expires_on).to be_nil
     end
   end
 end
