@@ -2,7 +2,7 @@
 <% invoice = membership.section_invoice(section_key) %>
 <% member = membership.decorate %>
 
-<div class="hover:bg-gray-50 transition-colors">
+<div id="membership_card_<%= membership.id %>" class="hover:bg-gray-50 transition-colors">
   <div class="flex flex-wrap items-center gap-3 px-3 py-2 sm:grid sm:grid-cols-[1fr_auto] sm:gap-x-4 sm:flex-row">
     <div class="min-w-0">
       <div class="flex items-baseline gap-2 min-w-0">
@@ -16,8 +16,11 @@
       <% end %>
     </div>
     <% if invoice %>
-      <div class="min-w-0">
+      <div class="min-w-0 flex items-center gap-x-3">
         <%= render "memberships/membership_invoice_row", invoice: invoice, linked: true %>
+        <% if membership.person.user %>
+          <%= render "memberships/membership_lock_toggle", membership: membership, section_key: section_key %>
+        <% end %>
       </div>
     <% end %>
   </div>
