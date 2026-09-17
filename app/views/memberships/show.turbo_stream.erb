@@ -2,4 +2,6 @@
   <%= render "memberships/membership_invoices_list", invoices: @invoices %>
 <% end %>
 
-<%= turbo_stream.remove dom_id(@membership, :invoice) %>
+<%= turbo_stream.replace dom_id(@membership, :invoice) do %>
+  <%= link_to "View all memberships", person_memberships_path(@membership.person), data: { turbo_frame: "_top" }, class: "text-xs text-gray-400 hover:text-primary transition" %>
+<% end %>
