@@ -10,12 +10,12 @@ class MembershipInvoiceDecorator < ApplicationDecorator
   }.freeze
 
   def status_badge(as_of: Date.current)
-    return badge("Upcoming", "fa-solid fa-hourglass-start", :blue) if start_date > as_of
-    return badge("Overdue", "fa-solid fa-triangle-exclamation", :red) if overdue?(as_of)
-    return badge("Expired", "fa-solid fa-clock-rotate-left", :gray) if end_date < as_of
+    upcoming = start_date > as_of
+    return badge("Upcoming · Paid", "fa-solid fa-circle-check", :green) if upcoming && paid_in_full?
+    return badge("Upcoming · #{remaining}", "fa-solid fa-hourglass-start", :blue) if upcoming
     return badge("Paid", "fa-solid fa-circle-check", :green) if paid_in_full?
 
-    badge("#{h.dollars_from_cents(remaining_cost)} due", "fa-solid fa-dollar-sign", :amber)
+    badge("Overdue · #{remaining}", "fa-solid fa-triangle-exclamation", :red)
   end
 
   def period_range
