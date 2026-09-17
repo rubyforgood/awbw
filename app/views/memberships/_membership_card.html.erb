@@ -21,7 +21,11 @@
         <% if membership.person.user %>
           <%= render "memberships/membership_lock_toggle", membership: membership, section_key: section_key %>
         <% end %>
+        <%= link_to membership_path(membership), data: { turbo_method: :get, turbo_stream: true }, class: "text-xs text-gray-400 hover:text-primary transition" do %>
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        <% end %>
       </div>
     <% end %>
   </div>
+  <div id="membership_invoices_<%= membership.id %>"></div>
 </div>

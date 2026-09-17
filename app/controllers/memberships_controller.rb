@@ -11,6 +11,17 @@ class MembershipsController < ApplicationController
     end
   end
 
+  def show
+    @membership = Membership.find(params[:id]).decorate
+    authorize! @membership
+    @invoices = @membership.membership_invoices.includes(:allocations)
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
+  end
+
   def edit
     authorize! @membership
   end

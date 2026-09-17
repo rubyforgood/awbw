@@ -1,0 +1,9 @@
+<% if invoices.any? %>
+  <ul class="space-y-2">
+    <% invoices.each do |invoice| %>
+      <%= render "memberships/membership_invoice_row", invoice: invoice, linked: true %>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="text-gray-500 italic">No membership invoices yet.</p>
+<% end %>

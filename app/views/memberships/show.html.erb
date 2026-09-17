@@ -1,0 +1,36 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-6xl">
+  <div class="mb-6 flex items-center justify-between">
+    <%= link_to person_path(@membership.person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= @membership.person.full_name %>
+    <% end %>
+    <%= link_to "All memberships", membership_invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  </div>
+
+  <div class="border-primary/10 rounded-2xl border bg-white p-3 sm:p-4">
+    <div class="mb-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+      <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= @membership.cost_label %></span></span>
+        <span class="text-gray-600">Status: <span class="font-medium text-gray-800"><%= @membership.status_label %></span></span>
+        <% if @membership.period_label.present? %>
+          <span class="text-gray-600">Dates: <span class="font-medium text-gray-800"><%= @membership.period_label %></span></span>
+        <% end %>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <%= link_to "Add invoice", new_membership_membership_invoice_path(@membership), class: button_classes(:secondary_outline, size: :sm) %>
+        <%= link_to "Edit cost", edit_membership_path(@membership), class: button_classes(:secondary_outline, size: :sm) %>
+      </div>
+    </div>
+
+    <% if @invoices.any? %>
+      <ul class="space-y-2">
+        <% @invoices.each do |invoice| %>
+          <%= render "memberships/membership_invoice_row", invoice: invoice, linked: true %>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-gray-500 italic">No membership invoices yet.</p>
+    <% end %>
+  </div>
+</div>
