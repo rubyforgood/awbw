@@ -253,7 +253,8 @@ class User < ApplicationRecord
   def clear_welcome_instructions_token!
     update_columns(
       welcome_instructions_token: nil,
-      welcome_instructions_created_at: nil
+      welcome_instructions_created_at: nil,
+      welcome_instructions_sent_at: nil
     )
   end
 
