@@ -8,14 +8,27 @@ FactoryBot.define do
     # but for testing convenience we set it to current time here.
     # Use the :unconfirmed trait to create unconfirmed users.
 
-    welcome_instructions_sent_at { Time.current }
-
     # LOCKABLE
     locked_at { nil }
     failed_attempts { 0 }
 
     # TRACKABLE
     sign_in_count { 0 }
+
+    # A factory user is "invited" by default so User#active_for_authentication?
+    # lets them sign in. Written after create (update_column - no callbacks) so it
+    # does not fire the real invite side effect, after_commit :start_membership,
+    # which would otherwise mint a Membership for every factory person. Pass
+    # invited: false for a genuinely uninvited user.
+    transient do
+      invited { true }
+    end
+
+    after(:create) do |user, evaluator|
+      if evaluator.invited && user.welcome_instructions_sent_at.nil?
+        user.update_column(:welcome_instructions_sent_at, Time.current)
+      end
+    end
 
     # address { "MyString" }
     # address2 { "MyString" }

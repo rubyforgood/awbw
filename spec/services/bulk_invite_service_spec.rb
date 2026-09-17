@@ -27,7 +27,7 @@ RSpec.describe BulkInviteService do
 
     context "with dry_run" do
       it "does not modify users or enqueue jobs" do
-        user = create(:user, :unconfirmed)
+        user = create(:user, :unconfirmed, invited: false)
 
         expect {
           described_class.call(ids: [ user.id ], dry_run: true)
