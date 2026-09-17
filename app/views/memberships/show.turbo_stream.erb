@@ -1,3 +1,5 @@
 <%= turbo_stream.replace "membership_invoices_#{@membership.id}" do %>
   <%= render "memberships/membership_invoices_list", invoices: @invoices %>
 <% end %>
+
+<%= turbo_stream.remove dom_id(@membership, :invoice) %>

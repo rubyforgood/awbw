@@ -1,7 +1,2 @@
 <% invoice = invoice.decorate %>
-<span class="flex items-center gap-x-2 text-sm text-gray-600">
-  <span>Invoice: </span>
-  <span class="tabular-nums"><%= invoice.period_range %></span>
-  <%= render "membership_invoices/status_pill", invoice: invoice, linked: local_assigns.fetch(:linked, false) %>
-</span>
-
+<span class="flex items-center justify-center p-2 gap-x-2 text-sm text-gray-600"><span>Invoice: </span><span class="tabular-nums"><%= invoice.period_range %></span><%= render "membership_invoices/status_pill", invoice: invoice, linked: local_assigns.fetch(:linked, false) %></span>
