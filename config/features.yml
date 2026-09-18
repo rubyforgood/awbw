@@ -27,6 +27,21 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Request a change to your profile's locked details"
+  area: people
+  display_status: user_facing
+  released_on: 2026-09-18
+  summary: >-
+    On your own profile, the details only AWBW staff can edit — your primary
+    email, organization name, and affiliation history — now have a "Contact us
+    to request a change" link right beside them, so you can ask us to correct
+    them without hunting for who to email.
+  pro_tips:
+    - >-
+      The message comes pre-filled with what you're asking about — just add the
+      correction and send.
+  pr_number: 2543
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing
