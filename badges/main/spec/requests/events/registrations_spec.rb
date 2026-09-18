@@ -135,6 +135,12 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("$1,500")
     end
 
+    it "tracks a view event carrying the event and registration" do
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "view.invoices", { event_id: event.id, registration_id: registration.id })
+      get registration_invoice_path(registration.slug)
+    end
+
     it "shows the balance due once a scholarship or payment is applied" do
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 60_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 60_000)
