@@ -51,6 +51,8 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
         expect(new_user.email).to eq("test@example.com")
         expect(new_user.created_by).to eq(admin)
         expect(new_user.person).to eq(person)
+        # New accounts start locked until the invite is accepted.
+        expect(new_user.locked_at).to be_present
       end
 
       it "does nothing when person already has a user" do

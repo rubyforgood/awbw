@@ -76,8 +76,9 @@ class UsersController < ApplicationController
       end
     end
 
-    # do NOT have Devise send confirmation email - we'll handle that manually after creation via send_welcome_instructions
+    # default to locked and do NOT have Devise send confirmation email - we'll handle that manually after creation via send_welcome_instructions
     @user.skip_confirmation_notification!
+    @user.locked = true
 
     # Optional: assign random password if none provided
     @user.password ||= SecureRandom.hex(8)

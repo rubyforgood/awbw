@@ -20,6 +20,8 @@ RSpec.describe PersonInviter do
       expect(user.email).to eq("newbie@example.com")
       expect(user.welcome_instructions_sent_at).to be_present
       expect(user.welcome_instructions_sent_by).to eq(sender)
+      # New accounts start locked until the invite is accepted (WelcomeController#update).
+      expect(user.locked_at).to be_present
     end
 
     it "invites an existing unconfirmed user without creating a second account" do
