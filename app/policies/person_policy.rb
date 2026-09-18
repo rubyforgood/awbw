@@ -32,14 +32,17 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
-  # Admin-only for now; flips to `admin? || owner?` at profile launch, when the
-  # owner read-only affiliation view on the edit form goes live.
+  # Admin, or the profile's own person once owner self-service editing is turned
+  # on (staged behind `Person.owner_editing_enabled?` for a staging trial before
+  # the profile-launch flip). Owners edit their own fields and request changes to
+  # the admin-only ones (primary email, affiliations); the controller strips those
+  # from an owner's submission as a server-side backstop.
   def edit?
-    admin?
+    admin? || owner_self_edit?
   end
 
   def update?
-    admin?
+    admin? || owner_self_edit?
   end
 
   def destroy?
@@ -67,6 +70,10 @@ class PersonPolicy < ApplicationPolicy
   def owner?
     return false unless authenticated?
     record.user == user
+  end
+
+  def owner_self_edit?
+    owner? && Person.owner_editing_enabled?
   end
 
   def has_associated_data?

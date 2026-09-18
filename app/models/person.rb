@@ -92,6 +92,13 @@ class Person < ApplicationRecord
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
 
+  # Owner self-service profile editing is staged behind this flag so it can be
+  # trialed in staging before PersonPolicy#edit? flips from admin-only to
+  # admin-or-owner at profile launch. Default off; set OWNER_PROFILE_EDIT=true.
+  def self.owner_editing_enabled?
+    ENV.fetch("OWNER_PROFILE_EDIT", "false") == "true"
+  end
+
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
   # since a person still has to be listed somehow on the people index.
   DISPLAY_NAME_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only].freeze
