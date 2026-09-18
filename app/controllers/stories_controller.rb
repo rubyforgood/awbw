@@ -84,7 +84,7 @@ class StoriesController < ApplicationController
     end
 
     if success
-      redirect_to @story, notice: "Story was successfully created."
+      redirect_to @story, notice: "Story was successfully created.", status: :see_other
     else
       @story = @story.decorate
       set_form_variables

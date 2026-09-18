@@ -149,6 +149,11 @@ RSpec.describe "/community_news", type: :request do
         expect(response).to redirect_to(community_news_url(CommunityNews.last))
       end
 
+      it "redirects with 303 See Other so Turbo advances past the form" do
+        post community_news_index_url, params: { community_news: valid_attributes }
+        expect(response).to have_http_status(:see_other)
+      end
+
       it "records the current user as created_by regardless of submitted value" do
         someone_else = create(:user)
         post community_news_index_url, params: { community_news: valid_attributes.merge(created_by_id: someone_else.id) }

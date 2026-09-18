@@ -61,7 +61,7 @@ class WorkshopsController < ApplicationController
 
     if success
       flash[:notice] = "Workshop created successfully."
-      redirect_to @workshop
+      redirect_to @workshop, status: :see_other
     else
       set_form_variables
       flash.now[:alert] = "Unable to save the workshop."

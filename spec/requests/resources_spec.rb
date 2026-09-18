@@ -149,6 +149,11 @@ RSpec.describe "/resources", type: :request do
         expect(response).to redirect_to(resource_url(Resource.last))
       end
 
+      it "redirects with 303 See Other so Turbo advances past the form" do
+        post resources_url, params: { resource: valid_attributes }
+        expect(response).to have_http_status(:see_other)
+      end
+
       it "credits the chosen person as author and records the creator" do
         facilitator = create(:person)
 
