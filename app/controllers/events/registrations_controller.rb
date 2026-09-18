@@ -6,7 +6,7 @@ module Events
     before_action :authenticate_user!, only: [ :create ]
     before_action :set_event, only: [ :create ]
     before_action :set_registrant, only: [ :create ]
-    before_action :set_event_registration, only: [ :show, :invoice, :receipt, :resend_confirmation, :cancel, :reactivate, :pay ]
+    before_action :set_event_registration, only: [ :show, :invoice, :invoice_download, :receipt, :resend_confirmation, :cancel, :reactivate, :pay ]
 
     def show
       authorize! @event_registration, to: :show_public?
@@ -37,6 +37,18 @@ module Events
       @event = @event_registration.event
       @invoice = EventInvoice.from_registration(@event_registration)
       track_view("invoices", { event_id: @event.id, registration_id: @event_registration.id })
+    end
+
+    # Records the "Download PDF" click (the button prints client-side), pinged
+    # by the invoice page before it opens the print dialog.
+    def invoice_download
+      authorize! @event_registration, to: :show_public?
+
+      track_event("download.invoices", {
+        event_id: @event_registration.event_id,
+        registration_id: @event_registration.id
+      })
+      head :no_content
     end
 
     def receipt

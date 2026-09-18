@@ -89,4 +89,54 @@ RSpec.describe "Events::Invoices", type: :request do
       end
     end
   end
+
+  describe "POST /events/:event_id/invoice/download" do
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "tracks a download event carrying the event" do
+        expect(Analytics::AhoyTracker).to receive(:track_event)
+          .with(anything, "download.invoices", { event_id: event.id })
+        post download_event_invoice_path(event)
+        expect(response).to have_http_status(:no_content)
+      end
+
+      context "with a submission_id" do
+        let(:form) { create(:form) }
+        let!(:submission) { create(:form_submission, form: form, event: event, role: "bulk_payment") }
+
+        it "tracks a download event carrying the event and submission" do
+          expect(Analytics::AhoyTracker).to receive(:track_event)
+            .with(anything, "download.invoices", { event_id: event.id, submission_id: submission.id })
+          post download_event_invoice_path(event, submission_id: submission.id)
+          expect(response).to have_http_status(:no_content)
+        end
+      end
+    end
+
+    context "as a non-admin" do
+      before { sign_in create(:user) }
+
+      it "is denied the blank template download" do
+        post download_event_invoice_path(event)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "as a guest (no account)" do
+      let(:form) { create(:form) }
+      let!(:submission) { create(:form_submission, form: form, event: event, role: "bulk_payment") }
+
+      it "can record a bulk-payment submission's download" do
+        post download_event_invoice_path(event, submission_id: submission.id)
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it "is denied a non-bulk submission download" do
+        other = create(:form_submission, form: form, event: event, role: "registration")
+        post download_event_invoice_path(event, submission_id: other.id)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
 end
