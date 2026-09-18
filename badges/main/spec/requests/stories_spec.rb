@@ -251,6 +251,11 @@ RSpec.describe "/stories", type: :request do
         expect(response).to redirect_to(story_url(Story.last))
       end
 
+      it "redirects with 303 See Other so Turbo advances past the form" do
+        post stories_url, params: { story: base_attributes }
+        expect(response).to have_http_status(:see_other)
+      end
+
       it "records the current user as created_by regardless of submitted value" do
         someone_else = create(:user)
         post stories_url, params: { story: base_attributes.merge(created_by_id: someone_else.id) }

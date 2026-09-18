@@ -92,7 +92,7 @@ class ResourcesController < ApplicationController
     end
 
     if success
-      redirect_to @resource
+      redirect_to @resource, status: :see_other
     else
       @resource = @resource.decorate
       set_form_variables

@@ -22,6 +22,18 @@ RSpec.describe "/workshops", type: :request do
       expect(Workshop.last.sectors).to include(sector)
     end
 
+    it "redirects with 303 See Other so Turbo advances past the form" do
+      post workshops_url, params: {
+        workshop: {
+          title: "See Other Workshop",
+          windows_type_id: windows_type.id,
+          category_ids: [ "" ]
+        }
+      }
+
+      expect(response).to have_http_status(:see_other)
+    end
+
     it "updates sectors via sector_ids on update" do
       workshop = create(:workshop)
       second_sector = create(:sector, :published)
