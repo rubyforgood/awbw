@@ -198,7 +198,7 @@ RSpec.describe PersonPolicy, type: :policy do
       it { is_expected.to be_allowed_to(:edit?) }
     end
 
-    context "with owner" do
+    context "with owner while owner editing is disabled" do
       subject { policy_for(record: owned_person, user: owner_user) }
 
       it { is_expected.to be_allowed_to(:edit?) }
@@ -211,11 +211,43 @@ RSpec.describe PersonPolicy, type: :policy do
       end
     end
 
-    context "with regular user who is not the owner" do
+    context "with owner while owner editing is enabled" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      before { allow(Person).to receive(:owner_editing_enabled?).and_return(true) }
+
+      it { is_expected.to be_allowed_to(:edit?) }
+    end
+
+    context "with regular user who is not the owner, even when owner editing is enabled" do
       subject { policy_for(record: searchable_person, user: regular_user) }
+
+      before { allow(Person).to receive(:owner_editing_enabled?).and_return(true) }
 
       it { is_expected.not_to be_allowed_to(:edit?) }
       it { is_expected.not_to be_allowed_to(:update?) }
+    end
+  end
+
+  describe "#update?" do
+    context "with admin user" do
+      subject { policy_for(record: searchable_person, user: admin_user) }
+
+      it { is_expected.to be_allowed_to(:update?) }
+    end
+
+    context "with owner while owner editing is disabled" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      it { is_expected.not_to be_allowed_to(:update?) }
+    end
+
+    context "with owner while owner editing is enabled" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      before { allow(Person).to receive(:owner_editing_enabled?).and_return(true) }
+
+      it { is_expected.to be_allowed_to(:update?) }
     end
   end
 
