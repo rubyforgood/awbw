@@ -279,6 +279,7 @@ class PeopleController < ApplicationController
 
     attrs = person_params
     reject_locked_license_changes!(attrs)
+    reject_owner_locked_changes!(attrs)
     @person.assign_attributes(attrs)
 
     if @person.save
@@ -643,6 +644,18 @@ class PeopleController < ApplicationController
       rule = destroying ? :destroy? : :update?
       license_attrs.delete(key) unless allowed_to?(rule, record)
     end
+  end
+
+  # Server-side backstop for owner self-service profile editing: primary email
+  # and affiliations are rendered read-only for owners, who can only *request*
+  # changes to them. Drop those from a non-admin owner's submission so a crafted
+  # request can't slip past. No-op for admins, who edit them directly.
+  def reject_owner_locked_changes!(attrs)
+    return if allowed_to?(:manage?, Person)
+
+    attrs.delete(:email)
+    attrs.delete(:affiliations_attributes)
+    attrs[:user_attributes]&.delete(:email)
   end
 
   def person_params
