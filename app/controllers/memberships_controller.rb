@@ -1,5 +1,5 @@
 class MembershipsController < ApplicationController
-  before_action :set_membership, only: [ :edit, :update ]
+  before_action :set_membership, only: [ :edit, :update, :destroy ]
 
   def index
     authorize!
@@ -35,6 +35,20 @@ class MembershipsController < ApplicationController
     else
       redirect_to person_memberships_path(@person),
         alert: @membership.errors.full_messages.to_sentence, status: :see_other
+    end
+  end
+
+  def destroy
+    authorize! @membership
+
+    if @membership.deletable?
+      @membership.destroy!
+      redirect_to person_memberships_path(@person),
+        notice: "Membership deleted.", status: :see_other
+    else
+      redirect_to person_memberships_path(@person),
+        alert: "Cannot delete this membership because #{@membership.deletion_blocked_reason}.",
+        status: :see_other
     end
   end
 

@@ -51,8 +51,10 @@ class Membership < ApplicationRecord
     where(id: MembershipInvoice.overdue(as_of).select(:membership_id))
   }
 
-  after_update :cancel_stripe_subscription, if: :saved_change_to_cancelled_at?
-  after_update :expire_unbilled_future_invoices, if: :saved_change_to_cancelled_at?
+  after_update :cancel_stripe_subscription, if: :just_cancelled?
+  after_update :expire_unbilled_future_invoices, if: :just_cancelled?
+  before_destroy :prepare_destroy, prepend: true
+  before_destroy :cancel_stripe_subscription
 
   def cancelled? = cancelled_at.present?
   alias_method :cancelled, :cancelled?
@@ -98,18 +100,51 @@ class Membership < ApplicationRecord
     person.pay_subscriptions.find { |sub| sub.metadata&.dig("membership_id").to_i == id }
   end
 
+  def deletable?
+    deletion_blocked_reason.nil?
+  end
+
+  def deletion_blocked_reason
+    return "it has invoices with payments or credits applied" if membership_invoices.joins(:allocations).exists?
+
+    nil
+  end
+
+  # Set by a parent (Person) cascade-destroying this membership, so the
+  # admin-facing delete guard doesn't block the parent's own delete.
+  attr_accessor :skip_deletion_guard
+
   private
+
+  def just_cancelled?
+    saved_change_to_cancelled_at? && cancelled_at.present?
+  end
+
+  # Runs before the association's dependent destroy: aborts unless the membership
+  # is deletable (or the destroy is a parent cascade), then tells each invoice to
+  # skip its own standalone guard (the membership's guard is the gate for it).
+  def prepare_destroy
+    unless skip_deletion_guard
+      unless deletable?
+        errors.add(:base, "Cannot delete this membership because #{deletion_blocked_reason}.")
+        throw :abort
+      end
+    end
+
+    membership_invoices.each { |invoice| invoice.skip_deletion_guard = true }
+  end
 
   def expire_unbilled_future_invoices
     return unless cancelled_at.present?
     membership_invoices.where("start_date > ?", Date.current).each do |invoice|
-      invoice.destroy! if invoice.allocations.none?
+      next unless invoice.allocations.none?
+
+      invoice.skip_deletion_guard = true
+      invoice.destroy!
     end
   end
 
   def cancel_stripe_subscription
-    return unless cancelled_at.present?
-
     sub = stripe_subscription
     return unless sub&.active?
 

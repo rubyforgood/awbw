@@ -268,6 +268,65 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "#deletable?" do
+    let(:person) { create(:person) }
+    let(:subscription) { create(:membership, person: person) }
+
+    def sibling(start_date)
+      create(:membership_invoice, membership: subscription,
+        start_date: start_date, end_date: start_date + 1.year - 1.day)
+    end
+
+    it "is true for an unpaid future invoice when another invoice remains" do
+      sibling(Date.current + 2.years)
+      future = sibling(Date.current + 1.day)
+
+      expect(future).to be_deletable
+      expect(future.deletion_blocked_reason).to be_nil
+    end
+
+    it "is false once anything is allocated to it" do
+      sibling(Date.current + 2.years)
+      invoice = sibling(Date.current + 1.day)
+      create(:allocation, source: create(:payment, amount_cents: 100), allocatable: invoice, amount: 100)
+
+      expect(invoice.reload).not_to be_deletable
+      expect(invoice.deletion_blocked_reason).to match(/payments or credits/)
+    end
+
+    it "is false when comped" do
+      sibling(Date.current + 2.years)
+      comped = create(:membership_invoice, :comped, membership: subscription,
+        start_date: Date.current + 1.day, end_date: Date.current + 1.year)
+
+      expect(comped).not_to be_deletable
+      expect(comped.deletion_blocked_reason).to eq("it is comped")
+    end
+
+    it "is false while it covers today" do
+      sibling(Date.current + 2.years)
+      active = create(:membership_invoice, membership: subscription,
+        start_date: Date.current - 1.day, end_date: Date.current + 1.day)
+
+      expect(active).not_to be_deletable
+      expect(active.deletion_blocked_reason).to eq("it covers today")
+    end
+
+    it "is false when it is the membership's only invoice" do
+      only = sibling(Date.current + 1.day)
+
+      expect(only).not_to be_deletable
+      expect(only.deletion_blocked_reason).to eq("it is the membership's only invoice")
+    end
+
+    it "blocks destroy at the model level" do
+      only = sibling(Date.current + 1.day)
+
+      expect { only.destroy }.not_to change(MembershipInvoice, :count)
+      expect(only.errors[:base].join).to match(/Cannot delete/)
+    end
+  end
+
   describe ".by_person_name" do
     it "filters to invoices whose person's name matches" do
       named = create(:person, first_name: "Bartholomew", last_name: "Snazzlepants")

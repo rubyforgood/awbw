@@ -101,6 +101,14 @@ RSpec.describe "Memberships", type: :request do
 
         expect(response.body).not_to include("Cancel recurring")
       end
+
+      it "offers deleting a subscription" do
+        create(:membership, person: person)
+
+        get person_memberships_path(person)
+
+        expect(response.body).to include("Delete membership")
+      end
     end
   end
 
@@ -507,6 +515,40 @@ RSpec.describe "Memberships", type: :request do
         patch membership_path(subscription), params: { membership: { cancelled: "1" } }
 
         expect(MembershipInvoice.exists?(future.id)).to be true
+      end
+    end
+  end
+
+  describe "DELETE /memberships/:id" do
+    let!(:subscription) { create(:membership, person: person) }
+
+    it "is not available to a non-admin" do
+      sign_in create(:user)
+
+      expect { delete membership_path(subscription) }.not_to change(Membership, :count)
+      expect(response).to redirect_to(root_path)
+    end
+
+    context "as an admin" do
+      before { sign_in admin }
+
+      it "deletes the membership and its invoices when nothing is allocated" do
+        create(:membership_invoice, membership: subscription)
+
+        expect {
+          delete membership_path(subscription)
+        }.to change(Membership, :count).by(-1).and change(MembershipInvoice, :count).by(-1)
+        expect(response).to redirect_to(person_memberships_path(person))
+        expect(flash[:notice]).to eq("Membership deleted.")
+      end
+
+      it "refuses when an invoice has an allocation" do
+        invoice = create(:membership_invoice, membership: subscription)
+        create(:allocation, source: create(:payment), allocatable: invoice, amount: 100)
+
+        expect { delete membership_path(subscription) }.not_to change(Membership, :count)
+        expect(response).to redirect_to(person_memberships_path(person))
+        expect(flash[:alert]).to match(/payments or credits/)
       end
     end
   end

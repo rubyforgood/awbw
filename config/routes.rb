@@ -344,11 +344,11 @@ Rails.application.routes.draw do
     post :revert, on: :member
   end
 
-  resources :memberships, only: [ :index, :edit, :show, :update ] do
+  resources :memberships, only: [ :index, :edit, :show, :update, :destroy ] do
     resources :membership_invoices, only: [ :new, :create ]
   end
 
-  resources :membership_invoices, only: [ :index, :show, :edit, :update ]
+  resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ]
   resources :membership_checkouts, only: [ :create ]
   resources :membership_billing_portals, only: [ :create ]
 

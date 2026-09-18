@@ -125,6 +125,60 @@ RSpec.describe Membership, type: :model do
     end
   end
 
+  describe "deleting a membership" do
+    it "is deletable when no invoice has anything allocated" do
+      membership = create(:membership)
+      create(:membership_invoice, :comped, membership: membership)
+
+      expect(membership).to be_deletable
+      expect(membership.deletion_blocked_reason).to be_nil
+    end
+
+    it "is not deletable when an invoice has an allocation" do
+      membership = create(:membership)
+      invoice = create(:membership_invoice, membership: membership)
+      create(:allocation, source: create(:payment, amount_cents: 100), allocatable: invoice, amount: 100)
+
+      expect(membership.reload).not_to be_deletable
+      expect(membership.deletion_blocked_reason).to match(/payments or credits/)
+    end
+
+    it "cascades its invoices, even ones their own guard would protect" do
+      membership = create(:membership)
+      create(:membership_invoice, membership: membership)
+
+      expect { membership.destroy }.to change(MembershipInvoice, :count).by(-1)
+    end
+
+    it "cancels the linked Stripe subscription so billing stops" do
+      membership = create(:membership)
+      subscription = instance_double("Pay::Stripe::Subscription", active?: true)
+      allow(membership).to receive(:stripe_subscription).and_return(subscription)
+
+      expect(subscription).to receive(:cancel_now!)
+      membership.destroy
+    end
+
+    it "refuses to destroy when an invoice has an allocation" do
+      membership = create(:membership)
+      invoice = create(:membership_invoice, membership: membership)
+      create(:allocation, source: create(:payment, amount_cents: 100), allocatable: invoice, amount: 100)
+
+      expect { membership.destroy }.not_to change(Membership, :count)
+      expect(membership.errors[:base].join).to match(/Cannot delete/)
+    end
+
+    it "still cascade-destroys when its person is deleted" do
+      person = create(:person)
+      membership = create(:membership, person: person)
+      invoice = create(:membership_invoice, membership: membership)
+      create(:allocation, source: create(:payment, amount_cents: 100), allocatable: invoice, amount: 100)
+
+      expect { person.destroy }.to change(Person, :count).by(-1)
+      expect(Membership.exists?(membership.id)).to be false
+    end
+  end
+
   describe "cancelling a membership" do
     it "cancels the linked Stripe subscription immediately so the portal can't re-enable autopay" do
       membership = create(:membership)

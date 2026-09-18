@@ -11,7 +11,7 @@ class Person < ApplicationRecord
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
-  has_many :memberships, dependent: :destroy
+  has_many :memberships
   has_many :membership_invoices, through: :memberships
   has_many :communal_reports, through: :organizations, source: :reports
   has_many :windows_types, through: :organizations
@@ -66,6 +66,7 @@ class Person < ApplicationRecord
   end
 
   before_validation :strip_whitespace
+  before_destroy :destroy_memberships, prepend: true
 
   # Validations
   validates :avatar,
@@ -577,6 +578,13 @@ class Person < ApplicationRecord
     self.legal_first_name = legal_first_name&.strip
     self.email = email&.strip
     self.email_2 = email_2&.strip
+  end
+
+  def destroy_memberships
+    memberships.each do |membership|
+      membership.skip_deletion_guard = true
+      membership.destroy!
+    end
   end
 
   def unique_name_and_email_combination

@@ -64,6 +64,10 @@
                       params: { membership: { cancelled: "0" } },
                       data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
               <% end %>
+
+              <%= button_to "Delete membership", membership_path(membership),
+                    method: :delete, class: button_classes(:danger_outline, size: :sm),
+                    data: { turbo_confirm: "Delete this membership and all of its invoices? This cannot be undone." } %>
             </div>
           </div>
 

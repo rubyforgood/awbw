@@ -36,6 +36,7 @@ class MembershipInvoice < ApplicationRecord
   }
 
   before_validation :derive_end_date, on: :create
+  before_destroy :prevent_destroy_unless_deletable
 
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
@@ -88,7 +89,36 @@ class MembershipInvoice < ApplicationRecord
     self.cost_cents = (value.to_d * 100).to_i if value.present?
   end
 
+  # Set while a membership cascade-destroys its invoices, so the per-invoice
+  # guards (which exist for standalone deletes) don't block the cascade — the
+  # membership's own "no allocations" guard is the gate there.
+  attr_accessor :skip_deletion_guard
+
+  def deletable?
+    deletion_blocked_reason.nil?
+  end
+
+  def deletion_blocked_reason
+    return "it has payments or credits applied" if allocations.exists?
+    return "it is comped" if cost_cents.to_i.zero?
+    return "it covers today" if active_on?(Date.current)
+    return "it is the membership's only invoice" unless other_invoices?
+
+    nil
+  end
+
   private
+
+  def other_invoices?
+    membership.membership_invoices.where.not(id: id).exists?
+  end
+
+  def prevent_destroy_unless_deletable
+    return if skip_deletion_guard || deletable?
+
+    errors.add(:base, "Cannot delete this invoice because #{deletion_blocked_reason}.")
+    throw :abort
+  end
 
   def derive_end_date
     return if end_date.present? || start_date.blank?
