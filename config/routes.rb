@@ -319,6 +319,13 @@ Rails.application.routes.draw do
       post :resend
     end
   end
+  resources :profile_change_requests, only: [ :index, :new, :create ] do
+    member do
+      post :approve
+      post :decline
+      post :resolve
+    end
+  end
   # Friendly alias — the feature is called "Communications" in the UI, but the
   # controller and routes stay :notifications. Redirect, preserving any filters.
   get "communications", to: redirect { |_params, req| [ "/notifications", req.query_string.presence ].compact.join("?") }, as: :communications

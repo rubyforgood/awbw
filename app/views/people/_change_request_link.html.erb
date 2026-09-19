@@ -1,4 +1,4 @@
-<%# locals: (subject:, message:) %>
-<%= link_to "Contact us to request a change",
-            contact_us_path(return_to: "person_edit", subject: subject, message: message),
+<%# locals: (person:, field:, label: "Contact us to request a change") %>
+<%= link_to local_assigns.fetch(:label, "Contact us to request a change"),
+            new_profile_change_request_path(person_id: person, field: field),
             class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>

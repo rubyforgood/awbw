@@ -11,6 +11,7 @@ class Person < ApplicationRecord
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
+  has_many :profile_change_requests, dependent: :destroy
   has_many :memberships, dependent: :destroy
   has_many :membership_invoices, through: :memberships
   has_many :communal_reports, through: :organizations, source: :reports
