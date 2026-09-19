@@ -218,6 +218,26 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def profile_change_requested_fyi(notification)
+    @request = notification.noticeable
+    @person = @request.person
+    @requester = @request.requested_by
+
+    mail(
+      subject: "#{FYI_PREFIX} #{@person.full_name} requested a change to their #{@request.field_label.downcase}"
+    )
+  end
+
+  def profile_change_requested(notification)
+    @request = notification.noticeable
+    @person = @request.person
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} We received your change request"
+    )
+  end
+
   private
 
   def extract_attachments(noticeable)

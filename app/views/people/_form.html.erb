@@ -50,8 +50,8 @@
                     <% else %>
                       editable by admins.
                       <%= render "people/change_request_link",
-                            subject: "Request to update my primary email",
-                            message: "Hi AWBW team,\n\nI'd like to request a change to my primary email.\n\nCurrent email: #{f.object.user.email}\nPlease change it to:\n" %>
+                            person: f.object, field: "primary_email",
+                            label: "Request a change" %>
                     <% end %>
                   </p>
                 </div>
@@ -348,10 +348,19 @@
           <p class="ps-6 text-gray-500 italic">No affiliations on record.</p>
         <% end %>
         <div class="mt-4 ps-6 text-sm text-gray-600">
-          Affiliation records — including organization names, titles, and dates — are maintained by AWBW staff. See something that needs correcting?
-          <%= render "people/change_request_link",
-                subject: "Request to update my affiliation history",
-                message: "Hi AWBW team,\n\nI'd like to request a change to my affiliations. Here's what needs updating (organization name, title, role, or dates):\n\n" %>.
+          Affiliation records are maintained by AWBW staff. See something that needs correcting?
+          <ul class="mt-1 list-disc space-y-0.5 ps-5">
+            <li>
+              <%= render "people/change_request_link",
+                    person: f.object, field: "affiliation",
+                    label: "Request an affiliation change (title, role, or dates)" %>
+            </li>
+            <li>
+              <%= render "people/change_request_link",
+                    person: f.object, field: "organization_name",
+                    label: "Request an organization name change" %>
+            </li>
+          </ul>
         </div>
       <% end %>
 
