@@ -240,6 +240,31 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.workshop_log_submitted_fyi(notification)
   end
 
+  def profile_change_requested
+    request = ProfileChangeRequest.first
+    notification = find_valid_notification("profile_change_requested") ||
+      Notification.create!(
+        noticeable: request,
+        notification_type: 0,
+        kind: "profile_change_requested",
+        recipient_role: "person",
+        recipient_email: request&.requested_by&.email || "preview@example.com"
+      )
+    NotificationMailer.profile_change_requested(notification)
+  end
+
+  def profile_change_requested_fyi
+    notification = find_valid_notification("profile_change_requested_fyi") ||
+      Notification.create!(
+        noticeable: ProfileChangeRequest.first,
+        notification_type: 0,
+        kind: "profile_change_requested_fyi",
+        recipient_role: "admin",
+        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      )
+    NotificationMailer.profile_change_requested_fyi(notification)
+  end
+
   private
 
   def find_valid_notification(kind)

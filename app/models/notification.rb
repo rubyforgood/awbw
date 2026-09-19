@@ -44,6 +44,9 @@ class Notification < ApplicationRecord
     form_submission_confirmation_fyi
     form_link_request
 
+    profile_change_requested
+    profile_change_requested_fyi
+
     manual_log
   ].freeze
 
@@ -70,6 +73,7 @@ class Notification < ApplicationRecord
     EventRegistration
     FormSubmission
     Person
+    ProfileChangeRequest
     Report
     Scholarship
     Story
