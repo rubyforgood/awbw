@@ -1,0 +1,16 @@
+<h1 style="margin: 0 0 16px;">Thanks — we got your request</h1>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  We received your request to update your <strong><%= @request.field_label.downcase %></strong>.
+  AWBW staff will review it and follow up. There's nothing more you need to do.
+</p>
+
+<% if @request.requested_value.present? %>
+  <p style="margin: 0 0 8px; color:#6b7280;">You asked us to change it to:</p>
+  <p style="margin: 0 0 16px;"><strong><%= @request.requested_value %></strong></p>
+<% end %>
+
+<% if @request.details.present? %>
+  <p style="margin: 0 0 8px; color:#6b7280;">Your note:</p>
+  <p style="margin: 0 0 16px; white-space: pre-line;"><%= @request.details %></p>
+<% end %>
