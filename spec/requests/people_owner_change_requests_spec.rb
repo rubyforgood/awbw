@@ -18,14 +18,13 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
   end
 
   describe "the edit form" do
-    it "offers request-a-change links for the primary email and affiliations" do
+    it "offers change-request links for the primary email, organization name, and affiliations" do
       get edit_person_path(person)
 
       expect(response).to be_successful
-      expect(response.body).to include("Contact us to request a change")
-      expect(response.body).to include("Request+to+update+my+primary+email")
-      expect(response.body).to include("Request+to+update+my+affiliation+history")
-      expect(response.body).to include("return_to=person_edit")
+      expect(response.body).to include("field=primary_email")
+      expect(response.body).to include("field=affiliation")
+      expect(response.body).to include("field=organization_name")
     end
   end
 

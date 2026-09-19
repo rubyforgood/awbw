@@ -1,0 +1,46 @@
+<% content_for(:page_bg_class, "admin-or-owner") %>
+<div class="mx-auto w-full max-w-2xl px-4 py-6">
+  <div class="mb-2">
+    <%= link_to edit_person_path(@person, anchor: "affiliations"), class: "text-sm #{eyebrow_link_class}" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
+    <% end %>
+  </div>
+
+  <h1 class="text-2xl font-semibold text-gray-900">Request a change</h1>
+  <p class="mt-1 text-gray-600">
+    <%= @request.field_label %> is maintained by AWBW staff. Tell us what should change and we'll review it.
+  </p>
+
+  <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+    <%= simple_form_for @request, url: profile_change_requests_path(person_id: @person), method: :post, html: { class: "space-y-5" } do |f| %>
+      <%= render "shared/errors", resource: @request if @request.errors.any? %>
+      <%= f.hidden_field :field %>
+
+      <% if @request.current_value.present? %>
+        <div>
+          <span class="block text-sm font-medium text-gray-700">Current <%= @request.field_label.downcase %></span>
+          <span class="font-medium text-gray-900"><%= @request.current_value %></span>
+        </div>
+      <% end %>
+
+      <% if @request.auto_appliable? %>
+        <%= f.input :requested_value,
+                    label: "Change #{@request.field_label.downcase} to",
+                    input_html: { class: "w-full" } %>
+        <%= f.input :details,
+                    as: :text,
+                    label: "Anything else we should know? (optional)",
+                    input_html: { rows: 3, class: "w-full" } %>
+      <% else %>
+        <%= f.input :details,
+                    as: :text,
+                    label: "What needs correcting? (organization name, title, role, or dates)",
+                    input_html: { rows: 5, class: "w-full" } %>
+      <% end %>
+
+      <div class="flex justify-end">
+        <%= f.button :submit, "Send request", class: button_classes(:primary) %>
+      </div>
+    <% end %>
+  </div>
+</div>
