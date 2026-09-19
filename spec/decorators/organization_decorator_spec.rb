@@ -347,4 +347,58 @@ RSpec.describe OrganizationDecorator do
       expect(organization.decorate.organization_type_option).to eq("")
     end
   end
+
+  describe "#profile_display_summary" do
+    it "says everything is shown when no toggle is hidden" do
+      expect(create(:organization).decorate.profile_display_summary).to eq("All shown")
+    end
+
+    it "names only the hidden items, prefixed with Hide" do
+      organization = create(:organization, profile_show_phone: false, profile_show_website: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide phone and website")
+    end
+
+    it "uses the checkbox wording for a hidden item" do
+      organization = create(:organization, profile_show_events_registered: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide events hosted")
+    end
+  end
+
+  describe "#background_summary" do
+    it "leads with the organization type" do
+      org = create(:organization, organization_type: "501c3/nonprofit")
+      expect(org.decorate.background_summary).to include("501c3/nonprofit")
+    end
+
+    it "shows the specify-text for an 'Other' type" do
+      org = create(:organization, organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: "Co-op")
+      expect(org.decorate.background_summary).to include("Co-op")
+    end
+
+    it "adds a pill for each filled optional field and omits blank ones" do
+      org = create(:organization, organization_type: "501c3/nonprofit", email: "hi@example.org",
+                   description: "About us", website_url: "", mission_vision_values: "")
+      summary = org.decorate.background_summary
+      expect(summary).to include("Email", "Description")
+      expect(summary).not_to include("Website", "Mission/vision/values")
+    end
+  end
+
+  describe "#sectors_summary" do
+    it "is 'None selected' with no sectors" do
+      expect(create(:organization).decorate.sectors_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary, crowns and labels the leader" do
+      org = create(:organization)
+      health = create(:sector, name: "Health/Medical")
+      housing = create(:sector, name: "Housing")
+      create(:sectorable_item, sectorable: org, sector: health, is_primary: true, is_leader: true)
+      create(:sectorable_item, sectorable: org, sector: housing)
+
+      summary = org.reload.decorate.sectors_summary
+      expect(summary).to include("fa-star", "fa-crown", "<strong>Health/Medical</strong>", "(sector leader)")
+      expect(summary).to include("Housing")
+    end
+  end
 end

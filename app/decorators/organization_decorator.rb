@@ -68,6 +68,31 @@ class OrganizationDecorator < ApplicationDecorator
                   "aria-hidden": true)
   end
 
+  # Optional Background-info fields, mapped to the short pill label shown in the
+  # collapsed section summary when they're filled in.
+  BACKGROUND_FIELD_LABELS = {
+    email: "Email",
+    website_url: "Website",
+    description: "Description",
+    mission_vision_values: "Mission/vision/values"
+  }.freeze
+
+  # One-line summary for the collapsed Background Info section: the organization
+  # type (the specify-text when it's "Other"), followed by a pill for each filled
+  # optional field. FileMaker ID is intentionally left out — it's admin-only.
+  # HTML-safe.
+  def background_summary
+    type = organization_type_option.presence
+    type = "#{type}: #{object.organization_type_other}" if type == Organization::ORGANIZATION_TYPE_OTHER && object.organization_type_other.present?
+
+    parts = [ h.content_tag(:span, type || "Type not set", class: "text-gray-600") ]
+    BACKGROUND_FIELD_LABELS.each do |attr, pill_label|
+      next if object.public_send(attr).blank?
+      parts << h.content_tag(:span, pill_label, class: "text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600")
+    end
+    h.safe_join(parts, " ")
+  end
+
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end
@@ -207,6 +232,29 @@ class OrganizationDecorator < ApplicationDecorator
   # without an N+1. `date` may be a datetime (event.start_date is one).
   def facilitator_status_as_of(date)
     object.facilitator_program_status(as_of: date&.to_date)
+  end
+
+  # Profile display toggles in form order, mapped to the noun used on each
+  # checkbox ("Show email" => "email"). Drives the collapsed form section's
+  # one-line summary.
+  PROFILE_DISPLAY_LABELS = {
+    profile_show_email: "email",
+    profile_show_phone: "phone",
+    profile_show_website: "website",
+    profile_show_description: "description",
+    profile_show_sectors: "sectors",
+    profile_show_workshops: "workshops",
+    profile_show_stories: "stories",
+    profile_show_events_registered: "events hosted",
+    profile_show_workshop_logs: "workshop logs"
+  }.freeze
+
+  # One-line summary of the profile display preferences for the collapsed form
+  # section. Most orgs show everything, so it names only what's hidden
+  # ("Hide phone and website") and says "All shown" when nothing is hidden.
+  def profile_display_summary
+    hidden = PROFILE_DISPLAY_LABELS.reject { |attr, _| object.public_send(attr) }.values
+    hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
   end
 
   def badges

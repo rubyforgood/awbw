@@ -1,13 +1,17 @@
 <% return unless organization.persisted? %>
 <% org_filter = { organization_id: organization.id } %>
 <% monthly_reports = MonthlyReport.where(org_filter) %>
-<ul class="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 md:grid-cols-3">
-  <li><%= index_button CommunityNews.where(org_filter), params: org_filter %></li>
-  <li><%= index_button Story.where(org_filter), params: org_filter %></li>
-  <li><%= index_button organization.workshop_logs, params: org_filter %></li>
-  <li><%= index_button organization.event_registrations, params: org_filter %></li>
-  <li><%= index_button StoryIdea.where(org_filter), params: org_filter %></li>
+<%# Stacked on mobile, a single equal-width row on md+ (each item flex-1). Buttons
+    are two lines tall (wrap: true) so long labels wrap and every button lines up
+    to the same height. Alphabetical by label, which keeps Stories and Story ideas
+    adjacent. %>
+<ul class="flex flex-col gap-x-6 gap-y-2 md:flex-row">
+  <li class="md:min-w-0 md:flex-1"><%= index_button CommunityNews.where(org_filter), params: org_filter, wrap: true %></li>
+  <li class="md:min-w-0 md:flex-1"><%= index_button organization.event_registrations, params: org_filter, wrap: true %></li>
   <% if monthly_reports.exists? %>
-    <li><%= index_button monthly_reports, params: org_filter %></li>
+    <li class="md:min-w-0 md:flex-1"><%= index_button monthly_reports, params: org_filter, wrap: true %></li>
   <% end %>
+  <li class="md:min-w-0 md:flex-1"><%= index_button Story.where(org_filter), params: org_filter, wrap: true %></li>
+  <li class="md:min-w-0 md:flex-1"><%= index_button StoryIdea.where(org_filter), params: org_filter, wrap: true, label: safe_join([ "Story", tag.br, "ideas" ]) %></li>
+  <li class="md:min-w-0 md:flex-1"><%= index_button organization.workshop_logs, params: org_filter, wrap: true %></li>
 </ul>
