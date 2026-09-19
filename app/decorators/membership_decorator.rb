@@ -6,9 +6,9 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def status_label
-    return "Active" unless cancelled?
+    return "Active" unless autorenewal_cancelled?
 
-    "Cancelled #{cancelled_at.strftime("%b %-d, %Y")}"
+    "Renewals stopped #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}"
   end
 
   def period_label
@@ -25,7 +25,7 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def cancelled_expires_on
-    return unless cancelled?
+    return unless autorenewal_cancelled?
 
     ends = membership_invoices.filter_map(&:end_date).sort
     return if ends.empty? || ends.last < Date.current

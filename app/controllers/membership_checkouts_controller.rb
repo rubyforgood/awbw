@@ -3,7 +3,7 @@ class MembershipCheckoutsController < ApplicationController
     authorize! :membership_checkout, to: :create?
 
     person = current_user.person
-    membership = person.memberships.not_cancelled.first || person.memberships.create!
+    membership = person.memberships.autorenewal_not_cancelled.first || person.memberships.create!
     invoice = Membership::EnsureInvoice.call(membership: membership)
 
     person.set_payment_processor :stripe

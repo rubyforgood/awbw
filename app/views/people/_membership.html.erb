@@ -14,6 +14,10 @@
           <span class="text-gray-600">Status: <span class="font-medium text-gray-800"><%= membership.status_label %></span></span>
         </div>
 
+        <% if membership.end_date %>
+          <p class="mb-3 text-sm text-gray-700">Membership good through: <span class="font-medium"><%= membership.end_date.strftime("%b %-d, %Y") %></span></p>
+        <% end %>
+
         <% if membership.current_invoice.blank? %>
           <p class="text-gray-500 italic">No membership invoices yet.</p>
         <% else %>

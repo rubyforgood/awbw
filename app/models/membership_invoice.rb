@@ -37,6 +37,8 @@ class MembershipInvoice < ApplicationRecord
 
   before_validation :derive_end_date, on: :create
   before_destroy :prevent_destroy_unless_deletable
+  after_save :sync_membership_dates, if: :paid_in_full?
+  after_commit :sync_membership_dates, on: :update, if: :paid_in_full?
 
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
@@ -107,8 +109,6 @@ class MembershipInvoice < ApplicationRecord
     nil
   end
 
-  private
-
   def other_invoices?
     membership.membership_invoices.where.not(id: id).exists?
   end
@@ -150,5 +150,11 @@ class MembershipInvoice < ApplicationRecord
 
     errors.add(:cost_cents,
       "can't be less than the amount already allocated (#{MoneyFormatter.dollars_from_cents(allocations_sum)})")
+  end
+
+  private
+
+  def sync_membership_dates
+    membership.sync_dates_from_invoice(self)
   end
 end

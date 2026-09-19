@@ -31,10 +31,10 @@ class Membership < ApplicationRecord
   # When nil, charge standard cost. A value is an override
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-  validate :one_uncancelled_membership_per_person
+  validate :one_active_membership_per_person
 
-  scope :not_cancelled, -> { where(cancelled_at: nil) }
-  scope :cancelled, -> { where.not(cancelled_at: nil) }
+  scope :autorenewal_not_cancelled, -> { where(autorenewal_cancelled_at: nil) }
+  scope :autorenewal_cancelled, -> { where.not(autorenewal_cancelled_at: nil) }
 
   # Memberships with an invoice active on the given date that is paid.
   scope :current, ->(as_of = Date.current) {
@@ -51,17 +51,19 @@ class Membership < ApplicationRecord
     where(id: MembershipInvoice.overdue(as_of).select(:membership_id))
   }
 
-  after_update :cancel_stripe_subscription, if: :just_cancelled?
-  after_update :expire_unbilled_future_invoices, if: :just_cancelled?
+  after_update :cancel_stripe_subscription, if: :just_autorenewal_cancelled?
+  after_update :expire_unbilled_future_invoices, if: :just_autorenewal_cancelled?
   before_destroy :prepare_destroy, prepend: true
   before_destroy :cancel_stripe_subscription
 
-  def cancelled? = cancelled_at.present?
-  alias_method :cancelled, :cancelled?
+  def active? = end_date.present? && end_date >= Date.current
 
-  def cancelled=(value)
+  def autorenewal_cancelled? = autorenewal_cancelled_at.present?
+  alias_method :autorenewal_cancelled, :autorenewal_cancelled?
+
+  def autorenewal_cancelled=(value)
     flag = ActiveModel::Type::Boolean.new.cast(value)
-    self.cancelled_at = flag ? (cancelled_at || Time.current) : nil
+    self.autorenewal_cancelled_at = flag ? (autorenewal_cancelled_at || Time.current) : nil
   end
 
   def cost_dollars
@@ -72,9 +74,7 @@ class Membership < ApplicationRecord
     self.cost_cents = value.present? ? (value.to_d * 100).to_i : nil
   end
 
-  def good_through
-    membership_invoices.active_on(Date.current).unscope(:order).first&.end_date
-  end
+  
 
   def covered_on?(date = Date.current)
     membership_invoices.any? { |invoice| invoice.active_on?(date) }
@@ -114,10 +114,32 @@ class Membership < ApplicationRecord
   # admin-facing delete guard doesn't block the parent's own delete.
   attr_accessor :skip_deletion_guard
 
+  # Update membership start_date/end_date from a newly created paid or free invoice.
+  # Called from MembershipInvoice after_save. Only increases dates; never decreases.
+  def sync_dates_from_invoice(invoice)
+    return unless invoice.paid_in_full?
+
+    new_start = invoice.start_date
+    new_end = invoice.end_date
+    changed = false
+
+    if start_date.blank? || (new_start && new_start < start_date)
+      self.start_date = new_start
+      changed = true
+    end
+
+    if end_date.blank? || (new_end && new_end > end_date)
+      self.end_date = new_end
+      changed = true
+    end
+
+    save(validate: false, touch: false) if changed
+  end
+
   private
 
-  def just_cancelled?
-    saved_change_to_cancelled_at? && cancelled_at.present?
+  def just_autorenewal_cancelled?
+    saved_change_to_autorenewal_cancelled_at? && autorenewal_cancelled_at.present?
   end
 
   # Runs before the association's dependent destroy: aborts unless the membership
@@ -135,7 +157,7 @@ class Membership < ApplicationRecord
   end
 
   def expire_unbilled_future_invoices
-    return unless cancelled_at.present?
+    return unless autorenewal_cancelled_at.present?
     membership_invoices.where("start_date > ?", Date.current).each do |invoice|
       next unless invoice.allocations.none?
 
@@ -153,13 +175,13 @@ class Membership < ApplicationRecord
     Rails.logger.warn("[Membership] Could not cancel Stripe subscription for membership #{id}: #{e.message}")
   end
 
-  def one_uncancelled_membership_per_person
-    return if cancelled_at.present? || person_id.blank?
+  def one_active_membership_per_person
+    return if autorenewal_cancelled_at.present? || person_id.blank?
 
-    others = Membership.not_cancelled.where(person_id: person_id)
+    others = Membership.autorenewal_not_cancelled.where(person_id: person_id)
     others = others.where.not(id: id) if persisted?
     return unless others.exists?
 
-    errors.add(:base, "This person already has a membership that hasn't been cancelled")
+    errors.add(:base, "This person already has a membership that is active")
   end
 end

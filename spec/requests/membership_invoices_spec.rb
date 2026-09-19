@@ -78,11 +78,11 @@ RSpec.describe "MembershipInvoices", type: :request do
 
       it "notes a cancelled subscription" do
         invoice = term_for("Gone")
-        invoice.membership.update!(cancelled_at: Time.current)
+        invoice.membership.update!(autorenewal_cancelled_at: Time.current)
 
         get membership_invoices_path, headers: frame
 
-        expect(response.body).to include("Membership cancelled")
+        expect(response.body).to include("Membership renewals stopped")
       end
 
       it "says so when there are none" do
@@ -208,7 +208,7 @@ RSpec.describe "MembershipInvoices", type: :request do
       end
 
       it "adds a year to a cancelled subscription" do
-        subscription.update!(cancelled_at: Time.current)
+        subscription.update!(autorenewal_cancelled_at: Time.current)
 
         expect { post membership_membership_invoices_path(subscription), params: valid_params }
           .to change(MembershipInvoice, :count).by(1)

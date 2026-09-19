@@ -278,10 +278,9 @@ class Person < ApplicationRecord
     else all
     end }
   # People whose membership/current invoice is in the given state.
-  scope :membership_active, -> { where(id: Membership.not_cancelled.select(:person_id)) }
+  scope :membership_active, -> { where(id: Membership.where("end_date IS NULL OR end_date >= ?", Date.current).select(:person_id)) }
   scope :membership_inactive, -> {
-    where(id: Membership.select(:person_id))
-      .where.not(id: Membership.not_cancelled.select(:person_id)) }
+    where(id: Membership.where("end_date IS NOT NULL AND end_date < ?", Date.current).select(:person_id)) }
   scope :membership_paid, -> {
     where(id: MembershipInvoice.active_on.paid_in_full.joins(:membership).select("memberships.person_id")) }
   scope :membership_due, -> {

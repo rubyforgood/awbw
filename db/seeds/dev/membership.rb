@@ -22,9 +22,12 @@ standard = Membership::ANNUAL_COST_CENTS
   user = User.find_by(email: email)
   person = user&.person
   next unless person
-  next if person.memberships.not_cancelled.exists?
+  next if person.memberships.autorenewal_not_cancelled.exists?
 
-  membership = person.memberships.create!
+  membership = person.memberships.create!(
+        start_date: scenario[:start],
+        end_date: scenario[:start] + Membership::INVOICE_PERIOD - 1.day
+      )
   invoice = MembershipInvoice.create!(
     membership: membership,
     start_date: scenario[:start],
@@ -63,7 +66,7 @@ else
   end
 
   scenarios = [
-    # [ label, cost_cents, cancelled_at, years, payments ]
+    # [ label, cost_cents, autorenewal_cancelled_at, years, payments ]
     [ "comped first year, as an invite leaves it", nil, nil,
       [ [ Date.current - 2.months, 0 ] ], [] ],
 
@@ -94,10 +97,16 @@ else
       [ [ Date.current - 4.months, standard ] ], [ [ 0, standard ] ] ]
   ]
 
-  scenarios.each_with_index do |(label, cost_cents, cancelled_at, years, payments), index|
+  scenarios.each_with_index do |(label, cost_cents, autorenewal_cancelled_at, years, payments), index|
     person = pool[index]
+    first_start = years.first&.first || Date.current
 
-    subscription = person.memberships.create!(cost_cents: cost_cents, cancelled_at: cancelled_at)
+    subscription = person.memberships.create!(
+      cost_cents: cost_cents,
+      autorenewal_cancelled_at: autorenewal_cancelled_at,
+      start_date: first_start,
+      end_date: first_start + Membership::INVOICE_PERIOD - 1.day
+    )
     created = years.map { |start_date, cost_cents| year_for.(subscription, start_date, cost_cents) }
     payments.each { |year_index, cents| pay.(created[year_index], cents) }
 
@@ -107,10 +116,18 @@ else
   # New subscription after old sub lapsed
   rejoiner = pool[9] || pool.first
   if rejoiner.memberships.count < 2
-    lapsed = rejoiner.memberships.create!(cost_cents: 1_500, cancelled_at: Time.current - 2.years)
+    lapsed = rejoiner.memberships.create!(
+      cost_cents: 1_500,
+      autorenewal_cancelled_at: Time.current - 2.years,
+      start_date: Date.current - 4.years,
+      end_date: Date.current - 4.years + Membership::INVOICE_PERIOD - 1.day
+    )
     pay.(year_for.(lapsed, Date.current - 4.years, 1_500), 1_500)
 
-    rejoined = rejoiner.memberships.create!
+    rejoined = rejoiner.memberships.create!(
+      start_date: Date.current - 1.month,
+      end_date: Date.current - 1.month + Membership::INVOICE_PERIOD - 1.day
+    )
     pay.(year_for.(rejoined, Date.current - 1.month, standard), standard)
 
     puts "  #{rejoiner.full_name}: lapsed at the old cost, rejoined at the standard one"

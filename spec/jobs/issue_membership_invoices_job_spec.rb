@@ -35,7 +35,7 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
     end
 
     it "skips a cancelled subscription" do
-      term_ending(Date.current + 10.days, subscription: create(:membership, :cancelled))
+      term_ending(Date.current + 10.days, subscription: create(:membership, :autorenewal_cancelled))
 
       expect { described_class.new.perform }.not_to change(MembershipInvoice, :count)
     end

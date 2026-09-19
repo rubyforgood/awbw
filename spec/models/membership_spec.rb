@@ -16,7 +16,7 @@ RSpec.describe Membership, type: :model do
       expect(subscription.errors[:cost_cents]).to be_present
     end
 
-    it "rejects a second uncancelled subscription for the same person" do
+    it "rejects a second autorenewal_cancelled subscription for the same person" do
       person = create(:person)
       create(:membership, person: person)
 
@@ -25,9 +25,9 @@ RSpec.describe Membership, type: :model do
       expect(second.errors[:base].join).to match(/already has a membership/)
     end
 
-    it "allows a new subscription once the previous one is cancelled" do
+    it "allows a new subscription once the previous one is autorenewal_cancelled" do
       person = create(:person)
-      create(:membership, :cancelled, person: person)
+      create(:membership, :autorenewal_cancelled, person: person)
 
       expect(build(:membership, person: person)).to be_valid
     end
@@ -44,23 +44,39 @@ RSpec.describe Membership, type: :model do
     end
   end
 
-  describe "#cancelled?" do
-    it "is false while cancelled_at is blank" do
-      expect(build(:membership)).not_to be_cancelled
+  describe "#autorenewal_cancelled?" do
+    it "is false while autorenewal_cancelled_at is blank" do
+      expect(build(:membership)).not_to be_autorenewal_cancelled
     end
 
-    it "is true once cancelled_at is stamped" do
-      expect(build(:membership, :cancelled)).to be_cancelled
+    it "is true once autorenewal_cancelled_at is stamped" do
+      expect(build(:membership, :autorenewal_cancelled)).to be_autorenewal_cancelled
     end
   end
 
   describe "scopes" do
     let!(:open_subscription) { create(:membership) }
-    let!(:cancelled_subscription) { create(:membership, :cancelled) }
+    let!(:cancelled_subscription) { create(:membership, :autorenewal_cancelled) }
 
     it "separates cancelled from uncancelled" do
-      expect(described_class.not_cancelled).to contain_exactly(open_subscription)
-      expect(described_class.cancelled).to contain_exactly(cancelled_subscription)
+      expect(described_class.autorenewal_not_cancelled).to contain_exactly(open_subscription)
+      expect(described_class.autorenewal_cancelled).to contain_exactly(cancelled_subscription)
+    end
+  end
+
+  describe "#active?" do
+    it "is true when end_date is in the future" do
+      expect(create(:membership, end_date: Date.current + 1.month)).to be_active
+    end
+
+    it "is false when end_date is in the past" do
+      expect(create(:membership, end_date: Date.current - 1.month)).not_to be_active
+    end
+
+    it "is false when end_date is nil" do
+      membership = create(:membership).tap { |m| m.update!(end_date: nil) }
+
+      expect(membership).not_to be_active
     end
   end
 
@@ -107,21 +123,54 @@ RSpec.describe Membership, type: :model do
     end
   end
 
-  describe "#good_through" do
-    it "returns the active membership invoice's end date" do
-      membership = create(:membership)
-      invoice = create(:membership_invoice, membership: membership,
-        start_date: Date.current - 1.month, end_date: Date.current + 11.months)
+describe "#end_date" do
+     it "returns the end_date when set" do
+       membership = create(:membership, end_date: Date.current + 11.months)
 
-      expect(membership.good_through).to eq(invoice.end_date)
+       expect(membership.end_date).to eq(Date.current + 11.months)
+     end
+
+     it "is nil when end_date is not set" do
+       membership = create(:membership, end_date: nil)
+
+       expect(membership.end_date).to be_nil
+     end
+   end
+
+  describe "#sync_dates_from_invoice" do
+    it "sets start_date and end_date from a paid invoice" do
+      membership = create(:membership).tap { |m| m.update!(end_date: nil) }
+      invoice = build(:membership_invoice, membership: membership,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months, cost_cents: 0)
+
+      invoice.save!
+      membership.reload
+
+      expect(membership.start_date).to eq(Date.current - 1.month)
+      expect(membership.end_date).to eq(Date.current + 11.months)
     end
 
-    it "is nil when no invoice covers today" do
-      membership = create(:membership)
-      create(:membership_invoice, membership: membership,
-        start_date: Date.current + 1.month, end_date: Date.current + 13.months)
+    it "never decreases end_date" do
+      membership = create(:membership, end_date: Date.current + 2.years)
+      invoice = build(:membership_invoice, membership: membership,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months, cost_cents: 0)
 
-      expect(membership.good_through).to be_nil
+      invoice.save!
+      membership.reload
+
+      expect(membership.end_date).to eq(Date.current + 2.years)
+    end
+
+    it "does not set dates for unpaid invoices" do
+      membership = create(:membership).tap { |m| m.update!(end_date: nil) }
+      invoice = build(:membership_invoice, membership: membership,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months, cost_cents: 1_500)
+
+      invoice.save!
+      membership.reload
+
+      expect(membership.start_date).to be_nil
+      expect(membership.end_date).to be_nil
     end
   end
 
@@ -179,28 +228,28 @@ RSpec.describe Membership, type: :model do
     end
   end
 
-  describe "cancelling a membership" do
+  describe "autorenewal-cancelling a membership" do
     it "cancels the linked Stripe subscription immediately so the portal can't re-enable autopay" do
       membership = create(:membership)
       subscription = instance_double("Pay::Stripe::Subscription", active?: true)
       allow(membership).to receive(:stripe_subscription).and_return(subscription)
 
       expect(subscription).to receive(:cancel_now!)
-      membership.update!(cancelled_at: Time.current)
+      membership.update!(autorenewal_cancelled_at: Time.current)
     end
 
     it "leaves a membership with no Stripe subscription untouched" do
       membership = create(:membership)
 
-      expect { membership.update!(cancelled_at: Time.current) }.not_to raise_error
-      expect(membership.reload).to be_cancelled
+      expect { membership.update!(autorenewal_cancelled_at: Time.current) }.not_to raise_error
+      expect(membership.reload).to be_autorenewal_cancelled
     end
 
-    it "does not cancel anything when resuming (clearing cancelled_at)" do
-      membership = create(:membership, :cancelled)
+    it "does not cancel anything when resuming (clearing autorenewal_cancelled_at)" do
+      membership = create(:membership, :autorenewal_cancelled)
       allow(membership).to receive(:stripe_subscription)
 
-      membership.update!(cancelled_at: nil)
+      membership.update!(autorenewal_cancelled_at: nil)
 
       expect(membership).not_to have_received(:stripe_subscription)
     end
@@ -212,8 +261,8 @@ RSpec.describe Membership, type: :model do
       allow(subscription).to receive(:cancel_now!).and_raise(Pay::Stripe::Error.new("boom"))
       allow(Rails.logger).to receive(:warn)
 
-      expect { membership.update!(cancelled_at: Time.current) }.not_to raise_error
-      expect(membership.reload).to be_cancelled
+      expect { membership.update!(autorenewal_cancelled_at: Time.current) }.not_to raise_error
+      expect(membership.reload).to be_autorenewal_cancelled
       expect(Rails.logger).to have_received(:warn).with(/Stripe/i)
     end
   end

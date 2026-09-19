@@ -8,7 +8,7 @@ RSpec.describe Membership::Start do
 
     expect(subscription.person).to eq(person)
     expect(subscription.cost_cents).to be_nil
-    expect(subscription).not_to be_cancelled
+    expect(subscription).not_to be_autorenewal_cancelled
 
     invoice = subscription.membership_invoices.sole
     expect(invoice.cost_cents).to eq(0)
@@ -30,7 +30,7 @@ RSpec.describe Membership::Start do
   end
 
   it "does nothing when the person already has a cancelled subscription" do
-    create(:membership, :cancelled, person: person)
+    create(:membership, :autorenewal_cancelled, person: person)
 
     expect { described_class.call(person: person) }.not_to change(Membership, :count)
   end

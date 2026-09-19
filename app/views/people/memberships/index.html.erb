@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<% active_membership = @memberships.any? { |membership| !membership.cancelled? } %>
+<% active_membership = @memberships.any? { |membership| membership.active? } %>
 
 <div class="border-primary/10 mx-auto max-w-3xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
@@ -53,15 +53,15 @@
 
               <%= link_to "Edit cost", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
 
-              <% if !membership.cancelled? %>
+              <% if membership.active? %>
                 <%= button_to "Cancel recurring", membership_path(membership),
                       method: :patch, class: button_classes(:secondary_outline, size: :sm),
-                      params: { membership: { cancelled: "1" } },
+                      params: { membership: { autorenewal_cancelled: "1" } },
                       data: { turbo_confirm: "Stop renewing membership for #{@person.full_name}? They keep the invoice period they have already paid for." } %>
-              <% elsif !active_membership %>
+              <% elsif membership.autorenewal_cancelled? %>
                 <%= button_to "Resume", membership_path(membership),
                       method: :patch, class: button_classes(:secondary_outline, size: :sm),
-                      params: { membership: { cancelled: "0" } },
+                      params: { membership: { autorenewal_cancelled: "0" } },
                       data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
               <% end %>
 

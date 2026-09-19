@@ -100,7 +100,7 @@ RSpec.describe Membership::EnsureInvoice do
   end
 
   describe "a cancelled subscription" do
-    before { subscription.update!(cancelled_at: Time.current) }
+    before { subscription.update!(autorenewal_cancelled_at: Time.current) }
 
     it "creates nothing" do
       expect {

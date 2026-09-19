@@ -19,8 +19,8 @@ class MembershipPolicy < ApplicationPolicy
   end
 
   params_filter do |params|
-    next params.permit(:cost_dollars, :cancelled) if admin?
+    next params.permit(:cost_dollars, :autorenewal_cancelled) if admin?
 
-    params.permit(:cancelled)
+    params.permit(:autorenewal_cancelled)
   end
 end

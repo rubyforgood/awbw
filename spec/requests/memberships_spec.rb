@@ -59,7 +59,7 @@ RSpec.describe "Memberships", type: :request do
       end
 
       it "lists past subscriptions alongside the current one" do
-        past = create(:membership, :cancelled, person: person, cost_cents: 1_500)
+        past = create(:membership, :autorenewal_cancelled, person: person, cost_cents: 1_500)
         membership_invoice_for(subscription: past, start_date: Date.current - 3.years)
         create(:membership, person: person)
 
@@ -95,7 +95,7 @@ RSpec.describe "Memberships", type: :request do
       end
 
       it "hides the cancel control once the subscription is cancelled" do
-        create(:membership, :cancelled, person: person)
+        create(:membership, :autorenewal_cancelled, person: person, end_date: Date.current - 1.day)
 
         get person_memberships_path(person)
 
@@ -193,7 +193,7 @@ RSpec.describe "Memberships", type: :request do
       end
 
       it "rejects a year overlapping an existing one" do
-        existing = create(:membership, :cancelled, person: person)
+        existing = create(:membership, :autorenewal_cancelled, person: person)
         create(:membership_invoice, membership: existing,
           start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
@@ -282,21 +282,21 @@ RSpec.describe "Memberships", type: :request do
       end
 
       it "explains a resume that conflicts with a newer subscription" do
-        subscription.update!(cancelled_at: Time.current)
+        subscription.update!(autorenewal_cancelled_at: Time.current)
         create(:membership, person: person)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "0" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "0" } }
 
         expect(response).to redirect_to(person_memberships_path(person))
         expect(flash[:alert]).to match(/already has a membership/)
-        expect(subscription.reload).to be_cancelled
+        expect(subscription.reload).to be_autorenewal_cancelled
       end
 
       it "ignores a raw cancellation timestamp — only the virtual flag is permitted" do
         patch membership_path(subscription),
-          params: { membership: { cost_dollars: "15", cancelled_at: Time.current } }
+          params: { membership: { cost_dollars: "15", autorenewal_cancelled_at: Time.current } }
 
-        expect(subscription.reload.cancelled_at).to be_nil
+        expect(subscription.reload.autorenewal_cancelled_at).to be_nil
         expect(subscription.cost_cents).to eq(1_500)
       end
     end
@@ -343,12 +343,12 @@ RSpec.describe "Memberships", type: :request do
     end
 
     it "is offered again once the only subscription is cancelled" do
-      create(:membership, :cancelled, person: person)
+            create(:membership, :autorenewal_cancelled, person: person, end_date: Date.current - 1.day)
 
-      get person_memberships_path(person)
+            get person_memberships_path(person)
 
-      expect(response.body).to include("New membership")
-    end
+            expect(response.body).to include("New membership")
+          end
 
     it "can be forced back with ?admin=true" do
       create(:membership, person: person)
@@ -407,24 +407,24 @@ RSpec.describe "Memberships", type: :request do
       expect(subscription.reload.cost_cents).to eq(1_500)
     end
 
-    it "permits only the cancelled flag for a non-admin" do
-      policy = MembershipPolicy.new(subscription, user: create(:user))
-      filtered = policy.apply_scope(
-        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1"),
-        type: :action_controller_params
-      )
+    it "permits only the autorenewal_cancelled flag for a non-admin" do
+           policy = MembershipPolicy.new(subscription, user: create(:user))
+           filtered = policy.apply_scope(
+             ActionController::Parameters.new(cost_dollars: "0", autorenewal_cancelled: "1"),
+             type: :action_controller_params
+           )
 
-      expect(filtered.keys).to contain_exactly("cancelled")
-    end
+           expect(filtered.keys).to contain_exactly("autorenewal_cancelled")
+         end
 
     it "permits both for an admin" do
       policy = MembershipPolicy.new(subscription, user: admin)
       filtered = policy.apply_scope(
-        ActionController::Parameters.new(cost_dollars: "0", cancelled: "1"),
+        ActionController::Parameters.new(cost_dollars: "0", autorenewal_cancelled: "1"),
         type: :action_controller_params
       )
 
-      expect(filtered.keys).to contain_exactly("cost_dollars", "cancelled")
+      expect(filtered.keys).to contain_exactly("cost_dollars", "autorenewal_cancelled")
     end
   end
 
@@ -433,19 +433,19 @@ RSpec.describe "Memberships", type: :request do
 
     it "is not available to a non-admin" do
       sign_in create(:user)
-      patch membership_path(subscription), params: { membership: { cancelled: "1" } }
+      patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "1" } }
 
       expect(response).to redirect_to(root_path)
-      expect(subscription.reload).not_to be_cancelled
+      expect(subscription.reload).not_to be_autorenewal_cancelled
     end
 
     context "as an admin" do
       before { sign_in admin }
 
       it "stamps the cancellation" do
-        patch membership_path(subscription), params: { membership: { cancelled: "1" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "1" } }
 
-        expect(subscription.reload).to be_cancelled
+        expect(subscription.reload).to be_autorenewal_cancelled
         expect(response).to redirect_to(person_memberships_path(person))
       end
 
@@ -458,39 +458,39 @@ RSpec.describe "Memberships", type: :request do
         allow(Stripe::Subscription).to receive(:cancel)
           .and_return(double(ended_at: Time.current, trial_end: nil, status: "canceled"))
 
-        patch membership_path(subscription), params: { membership: { cancelled: "1" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "1" } }
 
-        expect(subscription.reload).to be_cancelled
+        expect(subscription.reload).to be_autorenewal_cancelled
         expect(Stripe::Subscription).to have_received(:cancel).with("sub_test", anything, anything)
       end
 
       it "leaves an existing year untouched when cancelling" do
         year = create(:membership_invoice, :comped, membership: subscription)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "1" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "1" } }
 
         expect(year.reload.end_date).to be_present
         expect(person.reload).to be_membership_current
       end
 
       it "clears the cancellation on resume, keeping the cost" do
-        subscription.update!(cancelled_at: Time.current, cost_cents: 1_500)
+        subscription.update!(autorenewal_cancelled_at: Time.current, cost_cents: 1_500)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "0" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "0" } }
 
         subscription.reload
-        expect(subscription).not_to be_cancelled
+        expect(subscription).not_to be_autorenewal_cancelled
         expect(subscription.cost_cents).to eq(1_500)
       end
 
       it "lets the nightly job renew again once resumed" do
         create(:membership_invoice, membership: subscription,
           start_date: Date.current - 1.year + 10.days, end_date: Date.current + 10.days)
-        subscription.update!(cancelled_at: Time.current)
+        subscription.update!(autorenewal_cancelled_at: Time.current)
 
         expect { IssueMembershipInvoicesJob.new.perform }.not_to change(MembershipInvoice, :count)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "0" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "0" } }
 
         expect { IssueMembershipInvoicesJob.new.perform }.to change(MembershipInvoice, :count).by(1)
       end
@@ -500,7 +500,7 @@ RSpec.describe "Memberships", type: :request do
         future = create(:membership_invoice, membership: subscription,
           start_date: current.end_date + 1.day, end_date: current.end_date + 1.year)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "1" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "1" } }
 
         expect(MembershipInvoice.exists?(future.id)).to be false
         expect(current.reload.end_date).to eq(Date.current + 1.year - 1.day)
@@ -512,7 +512,7 @@ RSpec.describe "Memberships", type: :request do
           start_date: current.end_date + 1.day, end_date: current.end_date + 1.year)
         create(:allocation, source: create(:payment), allocatable: future, amount: future.cost_cents)
 
-        patch membership_path(subscription), params: { membership: { cancelled: "1" } }
+        patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "1" } }
 
         expect(MembershipInvoice.exists?(future.id)).to be true
       end

@@ -62,8 +62,8 @@ class MembershipsController < ApplicationController
   end
 
   def update_notice
-    return "Cost updated. Changes will only be applied to future years." unless @membership.saved_change_to_cancelled_at?
-    return "Membership cancelled. Autorenewal turned off." if @membership.cancelled?
+    return "Cost updated. Changes will only be applied to future years." unless @membership.saved_change_to_autorenewal_cancelled_at?
+    return "Membership cancelled. Autorenewal turned off." if @membership.autorenewal_cancelled?
 
     "Membership resumed. Autorenewal turned back on."
   end
@@ -72,7 +72,7 @@ class MembershipsController < ApplicationController
 
   def overview_section(key, page:)
     authorized_scope(Membership.all)
-      .not_cancelled
+      .autorenewal_not_cancelled
       .includes(person: :user, membership_invoices: :allocations)
       .references(:person)
       .public_send(key)

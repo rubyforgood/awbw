@@ -54,7 +54,7 @@ RSpec.describe Person, type: :model do
 
     it "still counts a term whose subscription was cancelled, until the term ends" do
       term(cost_cents: 0, subscription: subscription)
-      subscription.update!(cancelled_at: Time.current)
+      subscription.update!(autorenewal_cancelled_at: Time.current)
 
       expect(person.reload).to be_membership_current
     end
@@ -634,7 +634,7 @@ RSpec.describe Person, type: :model do
 
       it "inactive: includes people whose only membership is cancelled" do
         former = create(:person, first_name: "Former", last_name: "Member")
-        create(:membership, :cancelled, person: former)
+        create(:membership, :autorenewal_cancelled, person: former, end_date: Date.current - 1.day)
         results = Person.search_by_params(membership_status: "inactive")
         expect(results).to include(former)
         expect(results).not_to include(person_alice)
