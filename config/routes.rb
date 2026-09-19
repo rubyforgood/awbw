@@ -96,6 +96,7 @@ Rails.application.routes.draw do
   post "bulk_payment/:slug/resend_confirmation", to: "events/bulk_payment_form_submissions#resend_confirmation", as: :bulk_payment_resend_confirmation
   get "registration/:slug", to: "events/registrations#show", as: :registration_ticket
   get "registration/:slug/invoice", to: "events/registrations#invoice", as: :registration_invoice
+  post "registration/:slug/invoice/download", to: "events/registrations#invoice_download", as: :registration_invoice_download
   get "registration/:slug/receipt", to: "events/registrations#receipt", as: :registration_receipt
   get "registration/:slug/scholarship", to: "events/callouts#scholarship", as: :registration_scholarship
   post "registration/:slug/scholarship/agreement", to: "events/callouts#sign_agreement", as: :registration_scholarship_agreement
@@ -264,7 +265,9 @@ Rails.application.routes.draw do
     resource :registrations, only: %i[ create ], module: :events, as: :registrant_registration
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_form_submissions"
-    resource :invoice, only: [ :show ], module: :events
+    resource :invoice, only: [ :show ], module: :events do
+      post :download
+    end
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end
   resources :author_credit_divergences, only: :index do

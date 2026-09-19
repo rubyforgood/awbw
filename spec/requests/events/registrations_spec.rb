@@ -141,6 +141,13 @@ RSpec.describe "Events::Registrations", type: :request do
       get registration_invoice_path(registration.slug)
     end
 
+    it "tracks a download event when the invoice is downloaded" do
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "download.invoices", { event_id: event.id, registration_id: registration.id })
+      post registration_invoice_download_path(registration.slug)
+      expect(response).to have_http_status(:no_content)
+    end
+
     it "shows the balance due once a scholarship or payment is applied" do
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 60_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 60_000)

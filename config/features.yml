@@ -3425,3 +3425,16 @@
   pro_tips:
     - "If folding two paid CE records onto one enrollment leaves more paid than it costs, the CE registration shows a \"Check payments\" flag so you can reconcile the payments — the cost is never inflated to hide it."
     - "The preview tells you what will move before you merge. It still can't be undone."
+
+- name: "Invoice views and downloads show up in the activity feed"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-18
+  action_path: "/admin/activities/events"
+  pr_number: 2544
+  summary: >-
+    Opening an invoice and clicking Download PDF are now both logged to the
+    activity feed, so you can see who looked at an invoice and who actually saved
+    a copy — for both the admin invoice and a registrant's own invoice.
+  pro_tips:
+    - "Views and downloads are interaction activity, hidden by default on the Activities feed — flip the interactions toggle on to see them."

@@ -15,7 +15,8 @@
       [ dashboard_event_path(@event), "Back to event" ]
     end
 %>
-<%= render "events/invoices/actions", back_path: back_path, back_label: back_label %>
+<%= render "events/invoices/actions", back_path: back_path, back_label: back_label,
+      track_download_url: download_event_invoice_path(@event, submission_id: @submission&.id) %>
 <div class="px-4 py-6 sm:px-8 print:p-0">
   <%= render "events/invoices/invoice", invoice: @invoice %>
 </div>
