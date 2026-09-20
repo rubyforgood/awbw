@@ -1,19 +1,25 @@
 class ProfileChangeRequestsController < ApplicationController
-  before_action :set_request, only: [ :approve, :decline, :resolve ]
+  before_action :set_request, only: [ :edit, :update, :approve, :decline, :resolve ]
 
   def index
     authorize! ProfileChangeRequest, to: :index?
     @status = ProfileChangeRequest::STATUSES.include?(params[:status]) ? params[:status] : "pending"
+    return unless turbo_frame_request?
+
     @requests = authorized_scope(ProfileChangeRequest.all)
                   .where(status: @status)
                   .includes(:person, :requested_by, :reviewed_by)
                   .newest_first
+    render :profile_change_requests_results
   end
 
   def new
     @person = Person.find(params[:person_id])
     @request = @person.profile_change_requests.new(field: requested_field, requested_by: current_user)
     authorize! @request, to: :new?
+
+    existing = @person.profile_change_requests.pending.find_by(field: requested_field)
+    redirect_to edit_profile_change_request_path(existing) if existing
   end
 
   def create
@@ -27,7 +33,25 @@ class ProfileChangeRequestsController < ApplicationController
       redirect_to edit_person_path(@person, anchor: "affiliations"),
                   notice: "Thanks — we've sent your change request to AWBW staff."
     else
+      @person = @request.person
       render :new, status: :unprocessable_content
+    end
+  end
+
+  def edit
+    authorize! @request, to: :update?
+    @person = @request.person
+  end
+
+  def update
+    authorize! @request, to: :update?
+
+    if @request.update(profile_change_request_params)
+      redirect_to edit_person_path(@request.person, anchor: "affiliations"),
+                  notice: "Your change request was updated."
+    else
+      @person = @request.person
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -35,25 +59,29 @@ class ProfileChangeRequestsController < ApplicationController
     authorize! @request, to: :approve?
     result = ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user)
 
-    if result.applied
-      @request.resolve!(method: "approved", reviewer: current_user)
-      redirect_back fallback_location: profile_change_requests_path, notice: "Approved. #{result.message}"
-    else
+    unless result.applied
       redirect_back fallback_location: profile_change_requests_path,
                     alert: "Couldn't apply automatically: #{result.message} Use \"Update manually\", then mark it resolved."
+      return
     end
+
+    @request.resolve!(method: "approved", reviewer: current_user)
+    notify_reviewed(@request)
+    respond_with_updated_row("Approved. #{result.message}")
   end
 
   def resolve
     authorize! @request, to: :resolve?
-    @request.resolve!(method: "manual", reviewer: current_user)
-    redirect_back fallback_location: profile_change_requests_path, notice: "Marked as resolved."
+    @request.resolve!(method: "manual", reviewer: current_user, note: review_note)
+    notify_reviewed(@request)
+    respond_with_updated_row("Marked as resolved.")
   end
 
   def decline
     authorize! @request, to: :decline?
-    @request.decline!(reviewer: current_user)
-    redirect_back fallback_location: profile_change_requests_path, notice: "Request declined."
+    @request.decline!(reviewer: current_user, note: review_note)
+    notify_reviewed(@request)
+    respond_with_updated_row("Request declined.")
   end
 
   private
@@ -66,8 +94,25 @@ class ProfileChangeRequestsController < ApplicationController
     ProfileChangeRequest::FIELDS.include?(params[:field]) ? params[:field] : "affiliation"
   end
 
+  def review_note
+    params[:reviewer_note].presence
+  end
+
   def profile_change_request_params
     params.require(:profile_change_request).permit(:field, :requested_value, :details)
+  end
+
+  def respond_with_updated_row(notice)
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          ActionView::RecordIdentifier.dom_id(@request),
+          partial: "profile_change_requests/request",
+          locals: { request: @request }
+        )
+      end
+      format.html { redirect_back fallback_location: profile_change_requests_path, notice: notice }
+    end
   end
 
   def notify_admins_and_submitter(request)
@@ -85,6 +130,20 @@ class ProfileChangeRequestsController < ApplicationController
       recipient_email: current_user.email,
       kind: "profile_change_requested",
       notification_type: "profile_change_requested_confirmation",
+      sender: current_user
+    )
+  end
+
+  def notify_reviewed(request)
+    email = request.requested_by&.email
+    return if email.blank?
+
+    NotificationServices::CreateNotification.call(
+      noticeable: request,
+      recipient_role: :person,
+      recipient_email: email,
+      kind: "profile_change_reviewed",
+      notification_type: "profile_change_reviewed_notification",
       sender: current_user
     )
   end
