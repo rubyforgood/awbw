@@ -205,6 +205,25 @@ class NotificationDecorator < ApplicationDecorator
     "#{DomainTheme.bg_class_for(:notifications)} border-gray-200"
   end
 
+  # The Event a communication is about, resolved through its polymorphic
+  # noticeable — an EventRegistration or an event-bearing FormSubmission
+  # (bulk-payment kinds). nil for communications with no event, or when the
+  # noticeable was nullified.
+  def event
+    target = object.noticeable
+    target.event if target.respond_to?(:event)
+  end
+
+  # Compact event-abbreviation chip shown before the subject on event
+  # communications, with the full title on hover. Empty for a communication
+  # that isn't about an event.
+  def event_chip(**options)
+    return "" unless event
+
+    chip_class = "inline-flex shrink-0 items-center rounded #{DomainTheme.bg_class_for(:events, intensity: 100)} px-1.5 py-0.5 text-xs font-medium #{DomainTheme.text_class_for(:events, intensity: 800)}"
+    h.content_tag(:span, event.decorate.compact_label, { class: chip_class, title: event.title }.merge(options))
+  end
+
   def channel_icon(**options)
     icon_class = CHANNEL_ICONS[channel]
     return "" if icon_class.blank?

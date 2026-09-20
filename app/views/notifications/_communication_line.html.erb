@@ -44,6 +44,7 @@
         <%= decorated.channel_chip %>
         <span class="line-clamp-2 min-w-0 flex-1">
           <%= decorated.flag_badges %>
+          <%= decorated.event_chip %>
           <span class="font-semibold text-gray-900"><%= subject %></span>
           <% if body.present? %><span class="<%= body_class %>" title="<%= body %>"><%= body %></span><% end %>
         </span>
@@ -53,6 +54,7 @@
         <span>
           <%= leading || decorated.channel_chip %>
           <%= decorated.flag_badges %>
+          <%= decorated.event_chip %>
           <% if !admin %>
             <span class="font-semibold text-gray-900"><%= subject %></span>
           <% else %>
