@@ -1,16 +1,17 @@
-<%# ---- The editable fields for a manual-log communication (From / Channel /
-    Subject / Body + Remove). Shared by a new entry and the edit mode of a
-    persisted one in _notification_fields. From is a non-editable sender chip
-    (same colored badge the comments box uses for the author); Channel is a
-    compact select; Subject and Body sit beside them as two-row textareas.
+<%# ---- The editable fields for a manual-log communication. Shared by a new
+    entry and the edit mode of a persisted one in _notification_fields. Channel,
+    From (a non-editable sender chip), and the date/time it happened sit in the
+    left column; Subject sits beside them with Direction and the "already
+    responded" toggle beneath it; Body is a brief summary. `created_at` is
+    editable so a contact can be logged after the fact with the time it happened.
     Subject is required once the row is in use (server-side reject_if drops a
     blank-subject entry), so field-required marks it required as soon as the
     subject or body is touched — a partially filled entry can't be silently
-    dropped, while an untouched added row stays optional and won't block the
-    parent form. ---- %>
+    dropped, while an untouched added row stays optional. ---- %>
 <% sender_user = f.object.sender || current_user %>
 <% sender_color = chip_color(sender_user&.id) %>
 <% sender_first = sender_user&.person&.first_name || sender_user&.name.to_s.split.first %>
+<% logged_at = (f.object.created_at || Time.current).strftime("%Y-%m-%dT%H:%M") %>
 <% select_class = "min-w-0 flex-1 truncate bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <div data-controller="field-required conditional-fields" data-action="input->field-required#update">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -26,23 +27,32 @@
         <span class="<%= sender_color[0] %> <%= sender_color[1] %> text-xs px-1.5 py-0.5 rounded cursor-default truncate" title="<%= sender_user&.full_name %>"><%= truncate(sender_first.presence || "--", length: 10, omission: "..") %></span>
       </div>
       <%= f.hidden_field :sender_id, value: sender_user&.id %>
-      <div class="flex items-center gap-2">
-        <span class="w-20 shrink-0 text-sm font-medium text-gray-700">Direction</span>
-        <%= render "notifications/direction_toggle", f: f, compact: true,
-                   source_data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
-      </div>
-      <label class="flex items-center gap-2" data-conditional-fields-target="field" data-show-when="incoming" hidden>
-        <%= f.check_box :responded, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
-        <span class="text-sm text-gray-700">Already responded</span>
+      <label class="flex items-center gap-2">
+        <span class="w-20 shrink-0 text-sm font-medium text-gray-700">When</span>
+        <%= f.datetime_field :created_at, value: logged_at, class: select_class %>
       </label>
     </div>
     <%# Subject marked required (shows the asterisk) — a blank subject is dropped
         on save. field-required only enforces it once the row is in use, so an
-        untouched added row still won't block the parent form. %>
-    <%= f.input :email_subject, as: :text, label: "Subject", required: true,
-                input_html: { rows: 2, placeholder: "Topic or subject line",
-                              data: { field_required_target: "field required" } },
-                wrapper_html: { class: "flex-1" } %>
+        untouched added row still won't block the parent form. Direction and the
+        "already responded" toggle sit beneath the subject. %>
+    <div class="flex-1 space-y-2">
+      <%= f.input :email_subject, as: :text, label: "Subject", required: true,
+                  input_html: { rows: 1, placeholder: "Topic or subject line",
+                                data: { field_required_target: "field required" } },
+                  wrapper_html: { class: "mb-0" } %>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-700">Direction</span>
+          <%= render "notifications/direction_toggle", f: f, compact: true,
+                     source_data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } %>
+        </div>
+        <label class="flex items-center gap-2" data-conditional-fields-target="field" data-show-when="incoming" hidden>
+          <%= f.check_box :responded, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+          <span class="text-sm text-gray-700">Already responded</span>
+        </label>
+      </div>
+    </div>
     <%= f.input :email_body_text, as: :text, label: "Body (brief summary)",
                 input_html: { rows: 2, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
                               data: { field_required_target: "field" } },

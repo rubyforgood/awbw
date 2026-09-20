@@ -160,6 +160,6 @@ class NotificationsController < ApplicationController
   end
 
   def notification_params
-    params.require(:notification).permit(:responded, :channel, :email_subject, :email_body_text, :direction)
+    params.require(:notification).permit(:responded, :channel, :email_subject, :email_body_text, :direction, :created_at)
   end
 end
