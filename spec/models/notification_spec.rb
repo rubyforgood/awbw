@@ -44,6 +44,32 @@ RSpec.describe Notification do
     end
   end
 
+  describe "binding to the recipient person" do
+    it "resolves person from the recipient email on create" do
+      person = create(:person, user: nil, email: "recip@example.com", email_2: nil)
+
+      notification = create(:notification, recipient_email: "recip@example.com")
+
+      expect(notification.person).to eq(person)
+    end
+
+    it "leaves person nil when no one owns the recipient email" do
+      notification = create(:notification, recipient_email: "stranger@example.com")
+
+      expect(notification.person).to be_nil
+    end
+
+    it "keeps an explicitly assigned person instead of overwriting from the email" do
+      owner = create(:person, user: nil, email: "recip@example.com", email_2: nil)
+      explicit = create(:person, user: nil, email: "other@example.com", email_2: nil)
+
+      notification = create(:notification, recipient_email: "recip@example.com", person: explicit)
+
+      expect(notification.person).to eq(explicit)
+      expect(notification.person).not_to eq(owner)
+    end
+  end
+
   describe "Ahoy lifecycle tracking" do
     after { Current.reset }
 

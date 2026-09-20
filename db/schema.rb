@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_20_234025) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1366,6 +1366,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
     t.string "noticeable_type"
     t.integer "notification_type"
     t.integer "parent_notification_id"
+    t.bigint "person_id"
     t.string "recipient_email", null: false
     t.string "recipient_role", null: false
     t.boolean "responded", default: false, null: false
@@ -1377,6 +1378,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
     t.index ["parent_notification_id"], name: "index_notifications_on_parent_notification_id"
+    t.index ["person_id"], name: "index_notifications_on_person_id"
     t.index ["root_notification_id"], name: "index_notifications_on_root_notification_id"
     t.index ["sender_id"], name: "index_notifications_on_sender_id"
     t.index ["updated_by_id"], name: "index_notifications_on_updated_by_id"
@@ -2640,6 +2642,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
   add_foreign_key "monthly_reports", "organizations"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
+  add_foreign_key "notifications", "people"
   add_foreign_key "notifications", "users", column: "created_by_id"
   add_foreign_key "notifications", "users", column: "sender_id"
   add_foreign_key "notifications", "users", column: "updated_by_id"
