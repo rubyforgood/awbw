@@ -11,8 +11,9 @@
 <% record_type = record.model_name.name %>
 <% list_id = "#{record.model_name.param_key}-activity-list" %>
 
-<%# Non-admins only see transactional emails; admins see every communication.
-    NotificationPolicy's scope is the single source of that rule. %>
+<%# Non-admins see the emails the portal sent them (transactional and bulk);
+    admins see every communication. NotificationPolicy's scope is the single
+    source of that rule. %>
 <% notifications = authorized_scope(record.communications_scope, with: NotificationPolicy).order(created_at: :desc).to_a %>
 <% new_notifications = admin ? record.notifications.select(&:new_record?) : [] %>
 <% editable_notifications = admin ? notifications.select { |n| n.channel != "autoemail" && n.noticeable_type == record_type && n.noticeable_id == record.id } : [] %>

@@ -31,9 +31,9 @@ class NotificationPolicy < ApplicationPolicy
   relation_scope do |relation|
     next relation if admin?
     next relation.none unless authenticated?
-    # A non-admin only sees transactional emails addressed to their own email —
-    # never staff hand logs about them, nor admin bulk sends.
-    relation.where(recipient_email: user.email).transactional_emails
+    # A non-admin sees the emails the portal sent them (automated transactional
+    # and bulk sends), addressed to their own email — never staff hand logs.
+    relation.where(recipient_email: user.email).portal_sent
   end
 
   private

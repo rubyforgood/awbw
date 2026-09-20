@@ -3,8 +3,9 @@ require "rails_helper"
 # The person edit page's combined comments & communications section is staged
 # behind the profile-launch policy flip: PersonPolicy#edit? is admin-only for
 # now and goes to admin || owner at launch. These specs simulate that flip to
-# exercise the non-admin (owner) branch that lights up then, where only
-# transactional emails (autoemail, non-bulk) are shown.
+# exercise the non-admin (owner) branch that lights up then, where the portal
+# emails sent to the person (autoemail — transactional and bulk) are shown, but
+# hand-logged staff communications are not.
 RSpec.describe "Owner view of communications on the person edit form", type: :request do
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
@@ -33,12 +34,12 @@ RSpec.describe "Owner view of communications on the person edit form", type: :re
       allow_any_instance_of(PersonPolicy).to receive(:edit?).and_return(true)
     end
 
-    it "shows transactional emails but hides bulk sends and hand-logged communications" do
+    it "shows portal-sent emails (transactional and bulk) but hides hand-logged communications" do
       get edit_person_path(person)
 
       expect(response).to be_successful
       expect(response.body).to include("We received your response")
-      expect(response.body).not_to include("Event reminder blast")
+      expect(response.body).to include("Event reminder blast")
       expect(response.body).not_to include("Left a voicemail")
     end
   end

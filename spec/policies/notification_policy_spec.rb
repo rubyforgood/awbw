@@ -119,8 +119,8 @@ RSpec.describe NotificationPolicy, type: :policy do
       expect(scoped_for(admin_user)).to contain_exactly(portal, hand_logged, bulk_blast, someone_elses)
     end
 
-    it "returns only transactional emails addressed to a non-admin" do
-      expect(scoped_for(regular_user)).to contain_exactly(portal)
+    it "returns portal-sent emails (transactional and bulk) addressed to a non-admin" do
+      expect(scoped_for(regular_user)).to contain_exactly(portal, bulk_blast)
     end
 
     it "returns nothing for a guest" do
