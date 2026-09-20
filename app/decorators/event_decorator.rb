@@ -141,6 +141,13 @@ class EventDecorator < ApplicationDecorator
     object.abbreviation.presence || object.title
   end
 
+  # Event-chip label for feed rows: the admin-set abbreviation when present,
+  # otherwise the title with its start date so different occurrences of the same
+  # event stay distinguishable.
+  def chip_label
+    object.abbreviation.presence || [ object.title, object.start_date&.strftime("%b %-d, %Y") ].compact_blank.join(" · ")
+  end
+
   # `show_videoconference_details` controls whether the join link/ID/passcode are
   # carried into the calendar entry. Callers with a registration pass that
   # registrant's gate (date + paid/intends); the default falls back to the

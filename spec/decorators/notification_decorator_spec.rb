@@ -49,6 +49,21 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#event_registration" do
+    it "is the EventRegistration noticeable" do
+      registration = build_stubbed(:event_registration)
+      notification = build_stubbed(:notification, noticeable: registration)
+
+      expect(notification.decorate.event_registration).to eq(registration)
+    end
+
+    it "is nil for a noticeable that isn't a registration" do
+      notification = build_stubbed(:notification, noticeable: build_stubbed(:person))
+
+      expect(notification.decorate.event_registration).to be_nil
+    end
+  end
+
   describe "#event_chip" do
     it "shows the event abbreviation for an event communication" do
       event = build_stubbed(:event, abbreviation: "TOS205", title: "Trauma of Separation 205")
@@ -59,6 +74,26 @@ RSpec.describe NotificationDecorator, type: :decorator do
 
       expect(chip).to include("TOS205")
       expect(chip).to include("Trauma of Separation 205")
+    end
+
+    it "links to the registration's edit page when asked" do
+      registration = build_stubbed(:event_registration, event: build_stubbed(:event, abbreviation: "TOS205"))
+      notification = build_stubbed(:notification, noticeable: registration)
+
+      chip = notification.decorate.event_chip(linked: true)
+
+      expect(chip).to include("<a")
+      expect(chip).to include(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+    end
+
+    it "stays a plain span even when linked if there is no registration to link to" do
+      event = build_stubbed(:event, abbreviation: "TOS205")
+      notification = build_stubbed(:notification, noticeable: build_stubbed(:form_submission, event: event))
+
+      chip = notification.decorate.event_chip(linked: true)
+
+      expect(chip).to include("TOS205")
+      expect(chip).not_to include("<a")
     end
 
     it "is blank for a communication that isn't about an event" do
