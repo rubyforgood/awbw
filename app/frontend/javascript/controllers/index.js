@@ -24,9 +24,6 @@ application.register("attendance-status", AttendanceStatusController)
 import AssetPickerController from "./asset_picker_controller"
 application.register("asset-picker", AssetPickerController)
 
-import AutoPrintController from "./auto_print_controller"
-application.register("auto-print", AutoPrintController)
-
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 

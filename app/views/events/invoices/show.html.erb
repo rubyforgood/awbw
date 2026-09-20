@@ -16,7 +16,7 @@
     end
 %>
 <%= render "events/invoices/actions", back_path: back_path, back_label: back_label,
-      download_url: download_event_invoice_path(@event, submission_id: @submission&.id) %>
-<div class="px-4 py-6 sm:px-8 print:p-0" data-controller="<%= "auto-print" if @auto_print %>">
+      download_url: (download_event_invoice_path(@event, submission_id: @submission&.id) unless @print_view) %>
+<div class="px-4 py-6 sm:px-8 print:p-0">
   <%= render "events/invoices/invoice", invoice: @invoice %>
 </div>

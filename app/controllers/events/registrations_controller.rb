@@ -37,8 +37,8 @@ module Events
       @event = @event_registration.event
       @invoice = EventInvoice.from_registration(@event_registration)
       properties = { event_id: @event.id, registration_id: @event_registration.id }
-      @auto_print = params[:print].present?
-      track_event(@auto_print ? "download.invoices" : "view.invoices", properties)
+      @print_view = params[:print].present?
+      track_event(@print_view ? "download.invoices" : "view.invoices", properties)
     end
 
     def receipt

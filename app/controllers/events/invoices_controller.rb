@@ -24,8 +24,8 @@ module Events
       end
 
       properties = { event_id: @event.id, submission_id: @submission&.id }.compact
-      @auto_print = params[:print].present?
-      track_event(@auto_print ? "download.invoices" : "view.invoices", properties)
+      @print_view = params[:print].present?
+      track_event(@print_view ? "download.invoices" : "view.invoices", properties)
       @event = @event.decorate
     end
 
