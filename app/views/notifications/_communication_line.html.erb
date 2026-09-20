@@ -30,8 +30,9 @@
                 end %>
 <% row = capture do %>
   <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
-    <%# Flag column left empty — communications have no follow-up flag. %>
-    <span class="w-4 shrink-0"></span>
+    <%# Follow-up flag, mirroring a comment row's. A `flag` local (the single-click
+        toggle) is passed on the combined feed; elsewhere the column stays empty. %>
+    <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none"><%= local_assigns[:flag] %></span>
     <span class="w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
       <%= notification.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
     </span>

@@ -141,6 +141,17 @@ RSpec.describe PersonCommentAndCommunicationAggregator do
 
       expect(described_class.new(person, { follow_up: "responded" }).entries).to contain_exactly(answered)
     end
+
+    it "returns the flagged comment and the flagged communication when flagged is set" do
+      flagged_comment = comment_on(person, body: "Follow up", flagged: true)
+      flagged_comm = communication("primary@example.com", email_subject: "Chase this", flagged: true)
+      comment_on(person, body: "Just a note")
+      communication("primary@example.com", email_subject: "Nothing urgent")
+
+      entries = described_class.new(person, { flagged: "1" }).entries
+
+      expect(entries).to contain_exactly(flagged_comment, flagged_comm)
+    end
   end
 
   describe "kind selection" do
@@ -162,15 +173,16 @@ RSpec.describe PersonCommentAndCommunicationAggregator do
   end
 
   describe "counts" do
-    it "reports the unfiltered total and the flagged comment count" do
+    it "reports the unfiltered total and the flagged count across both kinds" do
       comment_on(person, body: "Follow up", flagged: true)
       comment_on(person, body: "Just a note")
+      communication("primary@example.com", email_subject: "Chase this", flagged: true)
       communication("primary@example.com", email_subject: "A message")
 
       feed = described_class.new(person, { query: "follow" })
 
-      expect(feed.total_count).to eq(3)
-      expect(feed.flagged_count).to eq(1)
+      expect(feed.total_count).to eq(4)
+      expect(feed.flagged_count).to eq(2)
     end
   end
 

@@ -28,7 +28,7 @@
 
   <% if paged.total_pages > 1 %>
     <div class="mt-4 flex justify-center">
-      <%= tailwind_paginate paged, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :from, :to, :email_topic, :group_by_subject).permit! %>
+      <%= tailwind_paginate paged, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :flagged, :from, :to, :email_topic, :group_by_subject).permit! %>
     </div>
   <% end %>
 <% end %>

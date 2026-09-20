@@ -449,6 +449,28 @@ RSpec.describe "Notifications", type: :request do
 
         patch notification_path(outgoing), params: { notification: { email_body_text: "Changed" } }
       end
+
+      context "flagging for follow-up" do
+        let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html" } }
+
+        it "raises the flag and re-renders the toggle as flagged" do
+          patch notification_path(contact_notification), params: { notification: { flagged: "1" } }, headers: turbo_headers
+
+          expect(response).to have_http_status(:ok)
+          expect(contact_notification.reload).to be_flagged
+          expect(response.body).to include("flag_notification_#{contact_notification.id}")
+          expect(response.body).to include("text-orange-500")
+        end
+
+        it "clears the flag" do
+          contact_notification.update!(flagged: true)
+
+          patch notification_path(contact_notification), params: { notification: { flagged: "0" } }, headers: turbo_headers
+
+          expect(response).to have_http_status(:ok)
+          expect(contact_notification.reload).not_to be_flagged
+        end
+      end
     end
 
     context "as a regular user" do

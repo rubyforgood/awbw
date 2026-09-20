@@ -114,6 +114,14 @@
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
+    <div class="shrink-0 pb-2">
+      <label class="inline-flex cursor-pointer items-center select-none" title="Flagged for follow-up">
+        <%= check_box_tag :flagged, "1", params[:flagged] == "1", class: "peer sr-only", onchange: "this.form.requestSubmit()" %>
+        <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
+        <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flagged</span>
+      </label>
+    </div>
+
     <div class="w-36">
       <label for="from" class="<%= search_label_class %>">From date</label>
       <%= f.date_field :from, value: params[:from],
