@@ -9,8 +9,8 @@
      [ registration_ticket_path(@event_registration.slug), "Back to ticket" ]
    end %>
 <%= render "events/invoices/actions", back_path: back_path, back_label: back_label,
-      track_download_url: registration_invoice_download_path(@event_registration.slug) %>
-<div class="px-4 py-6 sm:px-8 print:p-0">
+      download_url: registration_invoice_download_path(@event_registration.slug) %>
+<div class="px-4 py-6 sm:px-8 print:p-0" data-controller="<%= "auto-print" if @auto_print %>">
   <div class="print:hidden"><%= render "event_registrations/transfer_notice", event_registration: @event_registration %></div>
   <%= render "events/invoices/invoice", invoice: @invoice %>
 </div>

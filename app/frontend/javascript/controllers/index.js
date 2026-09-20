@@ -24,6 +24,9 @@ application.register("attendance-status", AttendanceStatusController)
 import AssetPickerController from "./asset_picker_controller"
 application.register("asset-picker", AssetPickerController)
 
+import AutoPrintController from "./auto_print_controller"
+application.register("auto-print", AutoPrintController)
+
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
@@ -137,9 +140,6 @@ application.register("prefetch-lazy", PrefetchLazyController)
 
 import PrintOptionsController from "./print_options_controller"
 application.register("print-options", PrintOptionsController)
-
-import PrintTrackingController from "./print_tracking_controller"
-application.register("print-tracking", PrintTrackingController)
 
 import ReminderPreviewController from "./reminder_preview_controller"
 application.register("reminder-preview", ReminderPreviewController)

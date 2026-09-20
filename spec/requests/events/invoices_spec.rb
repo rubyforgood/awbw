@@ -90,15 +90,16 @@ RSpec.describe "Events::Invoices", type: :request do
     end
   end
 
-  describe "POST /events/:event_id/invoice/download" do
+  describe "GET /events/:event_id/invoice/download" do
     context "as an admin" do
       before { sign_in admin }
 
-      it "tracks a download event carrying the event" do
+      it "renders the invoice and tracks a download event carrying the event" do
         expect(Analytics::AhoyTracker).to receive(:track_event)
           .with(anything, "download.invoices", { event_id: event.id })
-        post download_event_invoice_path(event)
-        expect(response).to have_http_status(:no_content)
+        get download_event_invoice_path(event)
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include("INVOICE")
       end
 
       context "with a submission_id" do
@@ -108,8 +109,8 @@ RSpec.describe "Events::Invoices", type: :request do
         it "tracks a download event carrying the event and submission" do
           expect(Analytics::AhoyTracker).to receive(:track_event)
             .with(anything, "download.invoices", { event_id: event.id, submission_id: submission.id })
-          post download_event_invoice_path(event, submission_id: submission.id)
-          expect(response).to have_http_status(:no_content)
+          get download_event_invoice_path(event, submission_id: submission.id)
+          expect(response).to have_http_status(:success)
         end
       end
     end
@@ -118,7 +119,7 @@ RSpec.describe "Events::Invoices", type: :request do
       before { sign_in create(:user) }
 
       it "is denied the blank template download" do
-        post download_event_invoice_path(event)
+        get download_event_invoice_path(event)
         expect(response).to redirect_to(root_path)
       end
     end
@@ -127,14 +128,14 @@ RSpec.describe "Events::Invoices", type: :request do
       let(:form) { create(:form) }
       let!(:submission) { create(:form_submission, form: form, event: event, role: "bulk_payment") }
 
-      it "can record a bulk-payment submission's download" do
-        post download_event_invoice_path(event, submission_id: submission.id)
-        expect(response).to have_http_status(:no_content)
+      it "can download a bulk-payment submission's invoice" do
+        get download_event_invoice_path(event, submission_id: submission.id)
+        expect(response).to have_http_status(:success)
       end
 
       it "is denied a non-bulk submission download" do
         other = create(:form_submission, form: form, event: event, role: "registration")
-        post download_event_invoice_path(event, submission_id: other.id)
+        get download_event_invoice_path(event, submission_id: other.id)
         expect(response).to redirect_to(root_path)
       end
     end

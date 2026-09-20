@@ -1,20 +1,18 @@
 <%# Eyebrow + "Download PDF" controls above an invoice. Hidden when printing so
     only the invoice document lands in the PDF. `back_path` / `back_label` set
-    the return link to wherever the invoice was opened from. Pass
-    `track_download_url` to record the click via Ahoy before printing. %>
-<% track_download_url = local_assigns[:track_download_url] %>
+    the return link to wherever the invoice was opened from. Pass `download_url`
+    (the invoice's ?print endpoint) to make Download PDF open the print view the
+    server logs the download from; without it the button just prints in place. %>
+<% download_url = local_assigns[:download_url] %>
 <div class="mx-auto flex max-w-3xl flex-wrap items-center gap-2 px-4 pt-4 sm:px-8 print:hidden">
   <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
     <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
   <% end %>
-  <% if track_download_url %>
-    <button type="button"
-            data-controller="print-tracking"
-            data-print-tracking-url-value="<%= track_download_url %>"
-            data-action="print-tracking#print"
-            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+  <% if download_url %>
+    <%= link_to download_url, target: "_blank", rel: "noopener",
+          class: "ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50" do %>
       <i class="fa-solid fa-file-arrow-down"></i> Download PDF
-    </button>
+    <% end %>
   <% else %>
     <button type="button"
             onclick="window.print();"
