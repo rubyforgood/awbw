@@ -3431,8 +3431,8 @@
   display_status: public_facing
   released_on: 2026-09-20
   summary: >-
-    When you view your own communications history, you see the automated emails
-    the portal sent you — registration confirmations, receipts, and reminders.
+    When you view your own communications history, you see the emails the portal
+    sent you — registration confirmations, receipts, and reminders.
 
 - name: "People see portal emails they received, not internal staff notes"
   area: communications
