@@ -3425,3 +3425,20 @@
   pro_tips:
     - "If folding two paid CE records onto one enrollment leaves more paid than it costs, the CE registration shows a \"Check payments\" flag so you can reconcile the payments — the cost is never inflated to hide it."
     - "The preview tells you what will move before you merge. It still can't be undone."
+
+- name: "Your communications history shows the portal emails sent to you"
+  area: communications
+  display_status: public_facing
+  released_on: 2026-09-20
+  summary: >-
+    When you view your own communications history, you see the emails the portal
+    sent you — registration confirmations, receipts, and reminders.
+
+- name: "People see portal emails they received, not internal staff notes"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    People can see "autoemail" communications sent to them by and through the
+    portal. Internal staff communications (logged calls, emails, texts, and
+    other hand-recorded comms) stay private to staff.

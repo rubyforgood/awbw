@@ -64,14 +64,14 @@
 
         <div>
           <%= f.input :email_subject, as: :text, required: true,
-                      label: "Subject (visible to user)",
+                      label: "Subject",
                       input_html: { rows: 1, placeholder: "Topic or subject line",
                                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
         </div>
 
         <div>
           <%= f.input :email_body_text, as: :text,
-                      label: "Body (internal staff note, hidden from user)",
+                      label: "Body (brief summary)",
                       input_html: { rows: 4, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
                                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
         </div>

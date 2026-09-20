@@ -93,6 +93,41 @@ RSpec.describe NotificationPolicy, type: :policy do
     end
   end
 
+  describe "relation_scope" do
+    let!(:portal) do
+      create(:notification, recipient_email: "user@example.com", channel: "autoemail",
+                            kind: "form_submission_confirmation", recipient_role: "person")
+    end
+    let!(:hand_logged) do
+      create(:notification, recipient_email: "user@example.com", channel: "phone",
+                            kind: "manual_log", recipient_role: "person", email_subject: "Left a voicemail")
+    end
+    let!(:bulk_blast) do
+      create(:notification, recipient_email: "user@example.com", channel: "autoemail", bulk: true,
+                            kind: "event_registration_reminder", recipient_role: "person")
+    end
+    let!(:someone_elses) do
+      create(:notification, recipient_email: "other@example.com", channel: "autoemail",
+                            kind: "form_submission_confirmation", recipient_role: "person")
+    end
+
+    def scoped_for(user)
+      described_class.new(user: user).apply_scope(Notification.all, type: :active_record_relation)
+    end
+
+    it "returns every communication for an admin" do
+      expect(scoped_for(admin_user)).to contain_exactly(portal, hand_logged, bulk_blast, someone_elses)
+    end
+
+    it "returns portal-sent emails (transactional and bulk) addressed to a non-admin" do
+      expect(scoped_for(regular_user)).to contain_exactly(portal, bulk_blast)
+    end
+
+    it "returns nothing for a guest" do
+      expect(scoped_for(nil)).to be_empty
+    end
+  end
+
   describe "#resend?" do
     context "with admin user" do
       subject { policy_for(record: notification, user: admin_user) }
