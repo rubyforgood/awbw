@@ -73,6 +73,10 @@ class NotificationsController < ApplicationController
       render turbo_stream: turbo_stream.replace(
         helpers.dom_id(@notification), partial: "comments_and_communications/communication_row", locals: { entry: @notification }
       )
+    elsif request.format.turbo_stream?
+      render turbo_stream: turbo_stream.replace(
+        helpers.dom_id(@notification, :flag), partial: "notifications/flag_toggle", locals: { notification: @notification }
+      )
     else
       head :ok
     end
@@ -162,6 +166,6 @@ class NotificationsController < ApplicationController
   end
 
   def notification_params
-    params.require(:notification).permit(:responded, :channel, :email_subject, :email_body_text, :direction, :created_at)
+    params.require(:notification).permit(:responded, :flagged, :channel, :email_subject, :email_body_text, :direction, :created_at)
   end
 end

@@ -143,6 +143,10 @@ class Notification < ApplicationRecord
   # Scopes
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
+  # A manual follow-up flag any staff member can raise on any communication —
+  # the same idea as Comment#flagged, and independent of the responded/
+  # requires_response reply-tracking axis.
+  scope :flagged, -> { where(flagged: true) }
   # Portal-sent emails: everything the platform emails a person (channel
   # "autoemail") — automated transactional messages and admin bulk sends alike.
   # Excludes hand-logged staff communications (manual channels). This is the set
@@ -289,6 +293,7 @@ class Notification < ApplicationRecord
     stories = stories.from_user(params[:author_id]) if params[:author_id].present?
     stories = stories.where(noticeable_type: params[:source]) if params[:source].present?
     stories = stories.follow_up_status(params[:follow_up]) if params[:follow_up].present?
+    stories = stories.flagged if params[:flagged] == "1"
     stories
   end
 

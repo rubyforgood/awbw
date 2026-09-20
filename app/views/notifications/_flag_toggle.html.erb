@@ -1,0 +1,11 @@
+<%# Single-click follow-up flag for a communication, mirroring comments/flag_toggle.
+    A button_to that PATCHes the negated flag; the controller's turbo_stream response
+    replaces this same form in place. Locals: notification. %>
+<%= button_to notification_path(notification),
+              method: :patch,
+              params: { notification: { flagged: !notification.flagged } },
+              form: { id: dom_id(notification, :flag) },
+              class: "leading-none",
+              title: notification.flagged? ? "Flagged for follow-up — click to clear" : "Flag for follow-up" do %>
+  <i class="fa-flag <%= notification.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-500 hover:text-orange-400" %>"></i>
+<% end %>
