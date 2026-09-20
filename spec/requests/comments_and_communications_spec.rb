@@ -30,6 +30,25 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Welcome aboard")
     end
 
+    it "groups entries by subject in the results frame when the toggle is on" do
+      create(:comment, commentable: person, topic: "Scholarship", body: "A note about it", created_by: admin)
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Scholarship",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+      # An unattached communication exercises the nil-noticeable path under grouping.
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Loose end",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id, group_by_subject: "1"),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comments_and_communications_results")
+      # The comment and communication that share "Scholarship" sit under one group header.
+      expect(response.body).to include("2 items")
+      expect(response.body).to include("A note about it")
+      expect(response.body).to include("Loose end")
+    end
+
     it "starts the comment body flush under its topic instead of truncating it" do
       create(:comment, commentable: person, topic: "Topic line", body: "A note", created_by: admin)
 

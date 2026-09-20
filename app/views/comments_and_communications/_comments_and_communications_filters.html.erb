@@ -66,6 +66,13 @@
     </div>
 
     <div class="shrink-0 pb-2">
+      <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
+        <%= check_box_tag :group_by_subject, "1", params[:group_by_subject].present?, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", onchange: "this.form.requestSubmit()" %>
+        <span class="text-sm text-gray-600">Group by subject</span>
+      </label>
+    </div>
+
+    <div class="shrink-0 pb-2">
       <button type="button"
               class="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs <%= eyebrow_link_class %>"
               data-action="expandable-card#toggle">

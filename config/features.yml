@@ -42,6 +42,16 @@
     - "Use the cyan \"See one person…\" box by the title to jump to just one person's history."
     - "Keyword searches the text of both comments and communications; \"More filters\" narrows by date, sender, follow-up and more."
 
+- name: "Group comments & communications by subject"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The Comments & communications feed has a new "Group by subject" toggle. Turn
+    it on to cluster items that share a subject line — a comment's topic and an
+    email's subject — instead of one flat chronological list. It's off by default.
+  action_path: "/comments_and_communications"
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing
