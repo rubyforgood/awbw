@@ -18,6 +18,21 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     created_at.strftime("%b %-d, %Y")
   end
 
+  # Confirmation prompt for "Approve", spelling out the blast radius where the
+  # change reaches beyond this one person (renaming a shared organization).
+  def approve_confirm
+    case field
+    when "primary_email"
+      "Approve and send a confirmation email to #{requested_value}?"
+    when "organization_name"
+      org = target_organization
+      count = org ? org.affiliations.count : 0
+      "Rename \"#{org&.name}\" to \"#{requested_value}\"? #{helpers.pluralize(count, "affiliation")} across the portal use this organization."
+    else
+      "Approve and apply this change now?"
+    end
+  end
+
   # Where "Update manually" sends an admin to make the edit by hand.
   def manual_edit_path
     case field

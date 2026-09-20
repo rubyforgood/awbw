@@ -1714,17 +1714,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
   end
 
   create_table "profile_change_requests", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "affiliation_id"
     t.datetime "created_at", null: false
     t.text "details"
     t.string "field", null: false
+    t.integer "organization_id"
     t.bigint "person_id", null: false
     t.integer "requested_by_id", null: false
     t.string "requested_value"
     t.string "resolution_method"
     t.datetime "reviewed_at"
     t.integer "reviewed_by_id"
+    t.text "reviewer_note"
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
+    t.index ["affiliation_id"], name: "index_profile_change_requests_on_affiliation_id"
+    t.index ["organization_id"], name: "index_profile_change_requests_on_organization_id"
     t.index ["person_id"], name: "index_profile_change_requests_on_person_id"
     t.index ["requested_by_id"], name: "index_profile_change_requests_on_requested_by_id"
     t.index ["reviewed_by_id"], name: "index_profile_change_requests_on_reviewed_by_id"
@@ -2724,6 +2729,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "professional_licenses", "people"
+  add_foreign_key "profile_change_requests", "affiliations"
+  add_foreign_key "profile_change_requests", "organizations"
   add_foreign_key "profile_change_requests", "people"
   add_foreign_key "profile_change_requests", "users", column: "requested_by_id"
   add_foreign_key "profile_change_requests", "users", column: "reviewed_by_id"

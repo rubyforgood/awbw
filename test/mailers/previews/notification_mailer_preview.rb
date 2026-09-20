@@ -265,6 +265,19 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.profile_change_requested_fyi(notification)
   end
 
+  def profile_change_reviewed
+    request = ProfileChangeRequest.first
+    notification = find_valid_notification("profile_change_reviewed") ||
+      Notification.create!(
+        noticeable: request,
+        notification_type: 0,
+        kind: "profile_change_reviewed",
+        recipient_role: "person",
+        recipient_email: request&.requested_by&.email || "preview@example.com"
+      )
+    NotificationMailer.profile_change_reviewed(notification)
+  end
+
   private
 
   def find_valid_notification(kind)

@@ -319,7 +319,7 @@ Rails.application.routes.draw do
       post :resend
     end
   end
-  resources :profile_change_requests, only: [ :index, :new, :create ] do
+  resources :profile_change_requests, only: [ :index, :new, :create, :edit, :update ] do
     member do
       post :approve
       post :decline

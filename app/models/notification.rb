@@ -47,6 +47,7 @@ class Notification < ApplicationRecord
 
     profile_change_requested
     profile_change_requested_fyi
+    profile_change_reviewed
 
     manual_log
   ].freeze

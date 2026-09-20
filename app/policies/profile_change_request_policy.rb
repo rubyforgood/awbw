@@ -15,6 +15,10 @@ class ProfileChangeRequestPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  def update?
+    (admin? || owner?) && record.pending?
+  end
+
   def approve?
     admin?
   end

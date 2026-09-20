@@ -1,0 +1,24 @@
+<%# locals: (f:, request:) %>
+<%= f.hidden_field :field %>
+
+<% if request.current_value.present? %>
+  <div>
+    <span class="block text-sm font-medium text-gray-700">Current <%= request.field_label.downcase %></span>
+    <span class="font-medium text-gray-900"><%= request.current_value %></span>
+  </div>
+<% end %>
+
+<% if request.auto_appliable? %>
+  <%= f.input :requested_value,
+              label: "Change #{request.field_label.downcase} to",
+              input_html: { class: "w-full" } %>
+  <%= f.input :details,
+              as: :text,
+              label: "Anything else we should know? (optional)",
+              input_html: { rows: 3, class: "w-full" } %>
+<% else %>
+  <%= f.input :details,
+              as: :text,
+              label: "What needs correcting? (organization name, title, role, or dates)",
+              input_html: { rows: 5, class: "w-full" } %>
+<% end %>

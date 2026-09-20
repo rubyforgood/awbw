@@ -11,23 +11,9 @@
     Requests from facilitators to update profile details they can't edit themselves.
   </p>
 
-  <div class="mt-4 flex flex-wrap gap-2">
-    <% ProfileChangeRequest::STATUSES.each do |status| %>
-      <%= link_to status.capitalize,
-                  profile_change_requests_path(status: status),
-                  class: "rounded-full px-3 py-1 text-sm #{status == @status ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}" %>
-    <% end %>
-  </div>
-
-  <div class="mt-6 space-y-3">
-    <% if @requests.any? %>
-      <% @requests.each do |request| %>
-        <%= render "profile_change_requests/request", request: request %>
-      <% end %>
-    <% else %>
-      <p class="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-500">
-        No <%= @status %> requests.
-      </p>
-    <% end %>
-  </div>
+  <%= turbo_frame_tag :profile_change_requests_results,
+                      src: profile_change_requests_path(status: @status),
+                      data: { turbo: "temporary" } do %>
+    <p class="mt-6 text-gray-400">Loading…</p>
+  <% end %>
 </div>

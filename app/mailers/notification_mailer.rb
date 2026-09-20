@@ -238,6 +238,17 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def profile_change_reviewed(notification)
+    @request = notification.noticeable
+    @person = @request.person
+    @outcome = @request.declined? ? "declined" : "completed"
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Update on your change request"
+    )
+  end
+
   private
 
   def extract_attachments(noticeable)
