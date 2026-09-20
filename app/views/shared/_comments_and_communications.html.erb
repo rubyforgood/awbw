@@ -11,7 +11,9 @@
 <% record_type = record.model_name.name %>
 <% list_id = "#{record.model_name.param_key}-activity-list" %>
 
-<% notifications = record.communications_scope.order(created_at: :desc).to_a %>
+<%# Non-admins only see transactional emails; admins see every communication.
+    NotificationPolicy's scope is the single source of that rule. %>
+<% notifications = authorized_scope(record.communications_scope, with: NotificationPolicy).order(created_at: :desc).to_a %>
 <% new_notifications = admin ? record.notifications.select(&:new_record?) : [] %>
 <% editable_notifications = admin ? notifications.select { |n| n.channel != "autoemail" && n.noticeable_type == record_type && n.noticeable_id == record.id } : [] %>
 <%# Render the in-memory notification (by id) so an admin's unsaved edits survive a re-render. %>

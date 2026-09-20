@@ -133,6 +133,11 @@ class Notification < ApplicationRecord
   # Scopes
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
+  # Transactional emails: automated messages the platform sends a person (channel
+  # "autoemail", non-bulk) — confirmations, receipts, reminders it triggers. Excludes
+  # hand-logged staff communications (manual channels) and admin bulk sends
+  # (bulk: true). This is the set a non-admin (the person) may see about themselves.
+  scope :transactional_emails, -> { where(channel: "autoemail", bulk: false) }
 
   # The portal launched on this date. Any undelivered email created before it is
   # pre-launch data (imported/legacy) whose delivery job is long gone — it will
