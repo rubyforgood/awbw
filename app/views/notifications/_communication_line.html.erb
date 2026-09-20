@@ -54,7 +54,7 @@
         <span>
           <%= leading || decorated.channel_chip %>
           <%= decorated.flag_badges %>
-          <%= decorated.event_chip %>
+          <%= decorated.event_chip(linked: true) %>
           <% if !admin %>
             <span class="font-semibold text-gray-900"><%= subject %></span>
           <% else %>

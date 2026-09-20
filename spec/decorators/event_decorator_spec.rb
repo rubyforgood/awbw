@@ -68,6 +68,18 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#chip_label" do
+    it "returns the abbreviation when present" do
+      event = build(:event, title: "Trauma-Informed Onsite", abbreviation: "TOS205").decorate
+      expect(event.chip_label).to eq("TOS205")
+    end
+
+    it "falls back to the title with the start date when abbreviation is blank" do
+      event = build(:event, title: "Trauma-Informed Onsite", abbreviation: "", start_date: Time.zone.local(2026, 10, 8)).decorate
+      expect(event.chip_label).to eq("Trauma-Informed Onsite · Oct 8, 2026")
+    end
+  end
+
   describe "#title_with_month_year" do
     it "appends the start month and year in parentheses" do
       event = build(:event, title: "Facilitator Training", start_date: Time.zone.local(2026, 10, 3)).decorate
