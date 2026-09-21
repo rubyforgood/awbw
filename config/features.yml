@@ -3442,3 +3442,14 @@
     People can see "autoemail" communications sent to them by and through the
     portal. Internal staff communications (logged calls, emails, texts, and
     other hand-recorded comms) stay private to staff.
+
+- name: "History buttons for a person's activity timeline"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-20
+  pr_number: 2551
+  summary: >-
+    Admins can jump to a person's activity history from more places: a button in
+    each people-index row and on every profile's Admin details section, plus a
+    "my history" button by the account avatar and a portal-wide history button on
+    the people index.
