@@ -17,8 +17,19 @@
               label: "Anything else we should know? (optional)",
               input_html: { rows: 3, class: "w-full" } %>
 <% else %>
+  <% affiliations = request.person.affiliations.includes(:organization).map { |a| [ "#{a.title.presence || Affiliation::FACILITATOR_TITLE} @ #{a.organization&.name}", a.id ] } %>
+  <%= f.input :affiliation_id,
+              collection: affiliations,
+              include_blank: "A new or different affiliation",
+              label: "Which affiliation?",
+              input_html: { class: "w-full" } %>
+  <%= f.input :requested_value,
+              collection: ProfileChangeRequest::AFFILIATION_CHANGE_TYPES,
+              include_blank: "Select what to change…",
+              label: "What should change?",
+              input_html: { class: "w-full" } %>
   <%= f.input :details,
               as: :text,
-              label: "What needs correcting? (organization name, title, role, or dates)",
+              label: "Details — what it should be",
               input_html: { rows: 5, class: "w-full" } %>
 <% end %>

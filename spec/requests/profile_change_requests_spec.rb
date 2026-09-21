@@ -27,6 +27,26 @@ RSpec.describe "Profile change requests", type: :request do
       expect(subjects).to include("requested a change")
     end
 
+    it "submits a structured affiliation change targeting a specific affiliation" do
+      org = create(:organization, name: "Sunrise Center")
+      affiliation = create(:affiliation, person: person, organization: org, title: "Facilitator")
+
+      expect {
+        post profile_change_requests_path(person_id: person), params: {
+          profile_change_request: {
+            field: "affiliation",
+            affiliation_id: affiliation.id,
+            requested_value: "Start or end dates",
+            details: "End date should be June 2020."
+          }
+        }
+      }.to change(ProfileChangeRequest, :count).by(1)
+
+      request = ProfileChangeRequest.last
+      expect(request.affiliation).to eq(affiliation)
+      expect(request.requested_value).to eq("Start or end dates")
+    end
+
     it "forbids submitting for someone else" do
       stranger = create(:person, user: nil)
       post profile_change_requests_path(person_id: stranger), params: {
@@ -100,10 +120,10 @@ RSpec.describe "Profile change requests", type: :request do
   describe "editing and de-duplicating a pending request" do
     before { sign_in owner_user }
 
-    it "opens the existing pending request instead of creating a duplicate" do
-      existing = create(:profile_change_request, person: person, field: "affiliation", details: "old")
+    it "opens the existing pending request instead of creating a duplicate (single-target field)" do
+      existing = create(:profile_change_request, :primary_email, person: person)
 
-      get new_profile_change_request_path(person_id: person, field: "affiliation")
+      get new_profile_change_request_path(person_id: person, field: "primary_email")
 
       expect(response).to redirect_to(edit_profile_change_request_path(existing))
     end
@@ -118,10 +138,10 @@ RSpec.describe "Profile change requests", type: :request do
       expect(request.reload.details).to eq("new details")
     end
 
-    it "rejects a second pending request for the same field" do
-      create(:profile_change_request, person: person, field: "affiliation", details: "first")
+    it "rejects a second pending request for the same target" do
+      create(:profile_change_request, :primary_email, person: person)
 
-      second = build(:profile_change_request, person: person, field: "affiliation", details: "second")
+      second = build(:profile_change_request, :primary_email, person: person)
       expect(second).not_to be_valid
     end
   end

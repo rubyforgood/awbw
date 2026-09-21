@@ -16,6 +16,12 @@
   </div>
 
   <dl class="mt-3 space-y-1 text-sm">
+    <% if request.affiliation_summary.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">Affiliation</dt>
+        <dd class="text-gray-800"><%= request.affiliation_summary %></dd>
+      </div>
+    <% end %>
     <% if request.current_value.present? %>
       <div class="flex gap-2">
         <dt class="w-32 shrink-0 text-gray-500">Current</dt>

@@ -41,7 +41,8 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     when "organization_name"
       person.primary_organization ? h.edit_organization_path(person.primary_organization) : h.edit_person_path(person, anchor: "affiliations")
     else
-      h.edit_person_path(person, anchor: "affiliations")
+      anchor = affiliation ? h.dom_id(affiliation) : "affiliations"
+      h.edit_person_path(person, anchor: anchor)
     end
   end
 end
