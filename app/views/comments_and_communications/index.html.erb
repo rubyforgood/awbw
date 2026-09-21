@@ -74,7 +74,7 @@
       <%= form_with url: composers_comments_and_communications_path, method: :get,
                     data: { controller: "collection", turbo_frame: "cc_composers" },
                     class: "flex flex-wrap items-center gap-2" do %>
-        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who's the new log about?</label>
+        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who is this about?</label>
         <%= select_tag :person_id, options_for_select([]),
                        include_blank: true, prompt: "Search by name…",
                        "aria-label": "Person the note is about",
@@ -91,7 +91,7 @@
       filter sits in a cool gray toolbar so it doesn't blend into the Add panel. %>
   <div class="space-y-6">
     <h2 class="flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-      <i class="fa-solid fa-list"></i> Browse the feed
+      <i class="fa-solid fa-magnifying-glass"></i> Find a comment or communication
     </h2>
 
     <%= render "comments_and_communications/comments_and_communications_filters",
