@@ -31,6 +31,13 @@ export default class extends Controller {
   sync(name, shown) {
     this.buttonsFor(name).forEach(button => {
       button.setAttribute("aria-expanded", String(shown))
+      // A trigger can opt to disappear once its panel is open (e.g. an "Add" button
+      // whose panel carries its own Cancel), instead of relabelling to "Cancel".
+      // Inline style, not a `hidden` class, because these triggers are `inline-flex`
+      // and that utility outranks `.hidden` in the generated stylesheet.
+      if ("panelToggleHideWhenShown" in button.dataset) {
+        button.style.display = shown ? "none" : ""
+      }
       const label = this.labelTargets.find(target => button.contains(target))
       if (label) {
         label.textContent = shown

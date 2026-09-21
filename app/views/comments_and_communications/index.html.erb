@@ -64,17 +64,17 @@
   <section class="bg-brand-cream rounded-lg border border-gray-200 p-4">
     <% if @person %>
       <%= render "comments_and_communications/add_area", person: @person,
-                 heading: "Log a comment or communication",
+                 heading: "Add a comment or communication",
                  new_comment: @new_comment, new_notification: @new_notification,
                  record_targets: @record_targets %>
     <% else %>
       <h2 class="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-        <i class="fa-solid fa-pen-to-square"></i> Log a comment or communication
+        <i class="fa-solid fa-pen-to-square"></i> Add a comment or communication
       </h2>
       <%= form_with url: composers_comments_and_communications_path, method: :get,
                     data: { controller: "collection", turbo_frame: "cc_composers" },
                     class: "flex flex-wrap items-center gap-2" do %>
-        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who's it about?</label>
+        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who's the new log about?</label>
         <%= select_tag :person_id, options_for_select([]),
                        include_blank: true, prompt: "Search by name…",
                        "aria-label": "Person the note is about",

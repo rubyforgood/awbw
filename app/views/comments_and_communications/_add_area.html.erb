@@ -18,7 +18,8 @@
               class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
               data-panel-toggle-name="<%= name %>"
               data-panel-toggle-hidden-label="<%= label %>"
-              data-panel-toggle-shown-label="Cancel"
+              data-panel-toggle-shown-label="<%= label %>"
+              data-panel-toggle-hide-when-shown
               data-panel-toggle-target="button"
               data-action="panel-toggle#toggle"
               aria-expanded="false">
@@ -31,9 +32,10 @@
 
   <div class="mt-3 hidden" data-panel-toggle-name="comment" data-panel-toggle-target="panel">
     <%= render "comments/composer", person: person, comment: new_comment,
-               comment_targets: record_targets, stream: false %>
+               comment_targets: record_targets, stream: false, cancel_name: "comment" %>
   </div>
   <div class="mt-3 hidden" data-panel-toggle-name="communication" data-panel-toggle-target="panel">
-    <%= render "notifications/composer", person: person, notification: new_notification, record_targets: record_targets %>
+    <%= render "notifications/composer", person: person, notification: new_notification,
+               record_targets: record_targets, cancel_name: "communication" %>
   </div>
 </div>
