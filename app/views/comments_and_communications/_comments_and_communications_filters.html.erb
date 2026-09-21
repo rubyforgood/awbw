@@ -25,7 +25,10 @@
         same-frame filter — but it reads as "filter to one person" so it sits here. %>
     <div class="w-56">
       <label for="jump_person_id" class="<%= search_label_class %>">Person</label>
-      <%= select_tag :jump_person_id, options_for_select([]),
+      <%# Preselect the current person so the field shows who the feed is scoped to,
+          rather than reading blank. Picking another navigates to their feed. %>
+      <%= select_tag :jump_person_id,
+                     (person ? options_for_select([ [ person.full_name, person.id ] ], person.id) : options_for_select([])),
                      include_blank: true, prompt: "Filter to one person…",
                      "aria-label": "Filter to one person's comments and communications",
                      class: search_field_class(extra: "bg-white"),
