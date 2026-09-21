@@ -14,12 +14,15 @@
     <div class="flex flex-wrap justify-end gap-2">
     <% [ [ "comment", t("communications.add_comment"), "fa-comment" ],
          [ "communication", t("communications.add"), "fa-envelope" ] ].each do |name, label, icon| %>
+      <%# aria-expanded:hidden collapses the trigger once its panel opens (the
+          composer carries its own Cancel). No JS: panel-toggle already flips
+          aria-expanded, and the attribute selector outranks inline-flex, which
+          a plain `.hidden` class can't. %>
       <button type="button"
-              class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 aria-expanded:hidden"
               data-panel-toggle-name="<%= name %>"
               data-panel-toggle-hidden-label="<%= label %>"
               data-panel-toggle-shown-label="<%= label %>"
-              data-panel-toggle-hide-when-shown
               data-panel-toggle-target="button"
               data-action="panel-toggle#toggle"
               aria-expanded="false">
