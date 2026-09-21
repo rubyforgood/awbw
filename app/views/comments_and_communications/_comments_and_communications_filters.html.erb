@@ -11,7 +11,7 @@
 <% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
 <%# Open the advanced panel on load when any of its filters is already applied, so
     an active filter is never hidden from the person looking at the results. %>
-<% advanced_active = params[:subject].present? || params[:author_id].present? || params[:follow_up].present? || params[:from].present? || params[:to].present? || params[:email_topic].present? %>
+<% advanced_active = params[:subject].present? || params[:author_id].present? || params[:follow_up].present? || params[:flagged].present? || params[:from].present? || params[:to].present? || params[:email_topic].present? %>
 <%= form_with url: url, method: :get,
               data: { controller: "collection expandable-card", turbo_frame: frame, expandable_card_expanded_value: advanced_active },
               html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-100 p-4" do |f| %>
