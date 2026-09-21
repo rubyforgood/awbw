@@ -1,8 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Shows/hides fields based on a source control (a <select>, or a checkbox that
-// reports its value when on and "" when off). A field appears when its
-// data-show-when matches the source's value, or — for option-driven conditions —
+// reports its value when on and "" when off). A field appears when the source's
+// value is listed in its data-show-when (a single value, or a comma-separated set
+// so one field can show for several options), or — for option-driven conditions —
 // when its data-show-when-attr names a data-* flag that is "true" on the selected
 // option (e.g. data-show-when-attr="eventSelector" reads the option's
 // data-event-selector).
@@ -21,7 +22,7 @@ export default class extends Controller {
       const attr = el.dataset.showWhenAttr
       el.hidden = attr
         ? selected?.dataset[attr] !== "true"
-        : el.dataset.showWhen !== value
+        : !el.dataset.showWhen.split(",").includes(value)
     })
   }
 }

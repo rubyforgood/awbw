@@ -1723,6 +1723,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_155233) do
     t.string "field", null: false
     t.integer "organization_id"
     t.bigint "person_id", null: false
+    t.date "proposed_end_date"
+    t.string "proposed_organization_name"
+    t.date "proposed_start_date"
+    t.string "proposed_title"
     t.integer "requested_by_id", null: false
     t.string "requested_value"
     t.string "resolution_method"
