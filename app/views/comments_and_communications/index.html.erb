@@ -27,31 +27,15 @@
 <% subtitle = capture do %>
   <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
 <% end %>
-<%# Title: the person's name (or "Everyone"), with the view-switcher picker right
-    beside it — a full page swap (title, eyebrow, ready composers), not a same-page
-    filter. Tinted in the people color and clearly captioned so it reads as the way
-    to open someone's feed, distinct from the "log a note" picker below. A <span>
-    (not <div>) keeps this valid phrasing content inside the layout's <h1>. %>
+<%# Title: the person's name (or "Everyone"), with a "View everyone" reset link on
+    a person's feed. The person picker that scopes the feed lives in the filter row
+    below (Filter to one person). %>
 <% title = capture do %>
   <%= @person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone" %>
-  <span class="ml-3 inline-flex flex-wrap items-center gap-2 align-middle text-sm font-normal">
-    <%# The remote-select controller forces the visible control to its parent's
-        width, so size it here rather than on the field's own class. %>
-    <div class="w-64">
-      <%= select_tag :jump_person_id, options_for_select([]),
-                     include_blank: true, prompt: "See one person…",
-                     "aria-label": "See one person's comments and communications",
-                     class: "rounded-lg border-2 #{DomainTheme.border_class_for(:people, intensity: 300)} #{DomainTheme.bg_class_for(:people, intensity: 50)} px-3 py-2 text-sm font-sans #{DomainTheme.text_class_for(:people, intensity: 900)} shadow-sm focus:border-blue-500 focus:ring-blue-500",
-                     data: { controller: "remote-select navigate-select",
-                             remote_select_model_value: "person",
-                             remote_select_exclude_value: @person&.id,
-                             navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
-                             action: "change->navigate-select#navigate" } %>
-    </div>
-    <% if @person %>
-      <%= link_to "View everyone", comments_and_communications_path, class: "text-xs font-sans #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
-    <% end %>
-  </span>
+  <% if @person %>
+    <%= link_to "View everyone", comments_and_communications_path,
+                class: "ml-3 align-middle text-sm font-sans font-normal #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
+  <% end %>
 <% end %>
 
 <%# Person feed: the composer triggers sit top-right by the name; their panels open
@@ -66,31 +50,16 @@
 <%= render layout: "shared/index_page",
            locals: { domain: :people, surface: "bg-white", eyebrow: "Comments & communications",
                      title: title, subtitle: subtitle, topbar: topbar, actions: actions,
+                     header_align: "items-center",
                      content_data: (@person ? { controller: "panel-toggle" } : nil) } do %>
   <% if @person %>
     <%# Composers open here — the top-right New comment / New communication buttons
-        toggle them via the card-level panel-toggle scope. %>
+        toggle them via the card-level panel-toggle scope. The everyone feed has no
+        target person, so it carries no add area — pick a person via "See one
+        person…" first. %>
     <%= render "comments_and_communications/composer_panels", person: @person,
                new_comment: @new_comment, new_notification: @new_notification,
                record_targets: @record_targets %>
-  <% else %>
-    <%# Everyone feed: pick who the note is about, then the composers load in-frame. %>
-    <h2 class="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-      <i class="fa-solid fa-pen-to-square"></i> Add a comment or communication
-    </h2>
-    <section class="bg-brand-cream rounded-lg border border-gray-200 p-4">
-      <%= form_with url: composers_comments_and_communications_path, method: :get,
-                    data: { controller: "collection", turbo_frame: "cc_composers" },
-                    class: "flex flex-wrap items-center gap-2" do %>
-        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who will this be about?</label>
-        <%= select_tag :person_id, options_for_select([]),
-                       include_blank: true, prompt: "Search by name…",
-                       "aria-label": "Person the note is about",
-                       class: "min-w-[240px] rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500",
-                       data: { controller: "remote-select", remote_select_model_value: "person" } %>
-      <% end %>
-      <%= turbo_frame_tag "cc_composers", class: "mt-3 block" %>
-    </section>
   <% end %>
 
   <hr class="my-6 border-gray-200">
@@ -105,7 +74,7 @@
     <%= render "comments_and_communications/comments_and_communications_filters",
                url: comments_and_communications_path(person_id: @person&.id),
                clear_path: comments_and_communications_path(person_id: @person&.id),
-               frame: "comments_and_communications_results" %>
+               frame: "comments_and_communications_results", person: @person %>
 
     <% result_src = comments_and_communications_path(request.query_parameters) %>
     <%= turbo_frame_tag "comments_and_communications_results", src: result_src, data: { turbo: "temporary" } do %>

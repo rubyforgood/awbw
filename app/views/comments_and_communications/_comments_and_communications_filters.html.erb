@@ -4,7 +4,8 @@
     same idea differently, so each side answers on its own column (author/from,
     subject/topic, attached-to, follow-up). Only "Email topic" is communications-only.
     Auto-submits into `frame` (collection Stimulus); the toggle reuses the
-    expandable-card text-link+chevron pattern. Locals: url, frame, clear_path. %>
+    expandable-card text-link+chevron pattern. The Person field navigates (full-page
+    swap) rather than filtering the frame. Locals: url, frame, clear_path, person. %>
 <%# The record each entry hangs off — commentable_type for a comment,
     noticeable_type for a communication. %>
 <% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
@@ -20,7 +21,22 @@
   </div>
 
   <div class="flex flex-wrap items-end gap-3">
-    <div class="min-w-[150px] grow">
+    <%# Scoping the feed to one person is a full-page swap (navigate-select), not a
+        same-frame filter — but it reads as "filter to one person" so it sits here. %>
+    <div class="w-56">
+      <label for="jump_person_id" class="<%= search_label_class %>">Person</label>
+      <%= select_tag :jump_person_id, options_for_select([]),
+                     include_blank: true, prompt: "Filter to one person…",
+                     "aria-label": "Filter to one person's comments and communications",
+                     class: search_field_class(extra: "bg-white"),
+                     data: { controller: "remote-select navigate-select",
+                             remote_select_model_value: "person",
+                             remote_select_exclude_value: person&.id,
+                             navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
+                             action: "change->navigate-select#navigate" } %>
+    </div>
+
+    <div class="w-64">
       <label for="query" class="<%= search_label_class %>">Keyword</label>
       <div class="relative">
         <%= f.text_field :query, value: params[:query],

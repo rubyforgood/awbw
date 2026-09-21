@@ -6,12 +6,12 @@
 <% [ [ "comment", "New comment", "fa-comment" ],
      [ "communication", "New communication", "fa-envelope" ] ].each do |name, label, icon| %>
   <button type="button"
-          class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 aria-expanded:hidden"
+          class="<%= button_classes(:primary_outline, extra: "admin-only bg-blue-100 cursor-pointer aria-expanded:hidden") %>"
           data-panel-toggle-name="<%= name %>"
           data-panel-toggle-target="button"
           data-action="panel-toggle#toggle"
           aria-expanded="false">
-    <i class="fa-solid <%= icon %> text-2xs"></i>
+    <i class="fa-solid <%= icon %>"></i>
     <%= label %>
   </button>
 <% end %>
