@@ -27,21 +27,27 @@
 <% subtitle = capture do %>
   <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
 <% end %>
-<%# Title: the person's name (or "Everyone"), with the jump-to-a-person picker
-    right beside it — a full page swap (title, eyebrow, ready composers), not a
-    same-page filter. A <span> (not <div>) keeps this valid phrasing content
-    inside the layout's <h1>. %>
+<%# Title: the person's name (or "Everyone"), with the view-switcher picker right
+    beside it — a full page swap (title, eyebrow, ready composers), not a same-page
+    filter. Tinted in the people color and clearly captioned so it reads as the way
+    to open someone's feed, distinct from the "log a note" picker below. A <span>
+    (not <div>) keeps this valid phrasing content inside the layout's <h1>. %>
 <% title = capture do %>
   <%= @person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone" %>
-  <span class="ml-3 inline-flex items-center gap-2 align-middle">
-    <%= select_tag :jump_person_id, options_for_select([]),
-                   include_blank: true, prompt: "Jump to a person…",
-                   class: "w-44 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-sans focus:border-blue-500 focus:ring-blue-500",
-                   data: { controller: "remote-select navigate-select",
-                           remote_select_model_value: "person",
-                           remote_select_exclude_value: @person&.id,
-                           navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
-                           action: "change->navigate-select#navigate" } %>
+  <span class="ml-3 inline-flex flex-wrap items-center gap-2 align-middle text-sm font-normal">
+    <%# The remote-select controller forces the visible control to its parent's
+        width, so size it here rather than on the field's own class. %>
+    <div class="w-64">
+      <%= select_tag :jump_person_id, options_for_select([]),
+                     include_blank: true, prompt: "Open a person's feed…",
+                     "aria-label": "Open a person's feed",
+                     class: "rounded-lg border-2 #{DomainTheme.border_class_for(:people, intensity: 300)} #{DomainTheme.bg_class_for(:people, intensity: 50)} px-3 py-2 text-sm font-sans #{DomainTheme.text_class_for(:people, intensity: 900)} shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                     data: { controller: "remote-select navigate-select",
+                             remote_select_model_value: "person",
+                             remote_select_exclude_value: @person&.id,
+                             navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
+                             action: "change->navigate-select#navigate" } %>
+    </div>
     <% if @person %>
       <%= link_to "View everyone", comments_and_communications_path, class: "text-xs font-sans #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
     <% end %>
@@ -58,19 +64,20 @@
   <section class="bg-brand-cream rounded-lg border border-gray-200 p-4">
     <% if @person %>
       <%= render "comments_and_communications/add_area", person: @person,
-                 heading: "Add to this feed",
+                 heading: "Log a comment or communication",
                  new_comment: @new_comment, new_notification: @new_notification,
                  record_targets: @record_targets %>
     <% else %>
       <h2 class="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-        <i class="fa-solid fa-pen-to-square"></i> Add to this feed
+        <i class="fa-solid fa-pen-to-square"></i> Log a comment or communication
       </h2>
       <%= form_with url: composers_comments_and_communications_path, method: :get,
                     data: { controller: "collection", turbo_frame: "cc_composers" },
-                    class: "flex items-center gap-2" do %>
-        <label for="person_id" class="text-xs font-medium whitespace-nowrap text-gray-600">Add for a person</label>
+                    class: "flex flex-wrap items-center gap-2" do %>
+        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who's it about?</label>
         <%= select_tag :person_id, options_for_select([]),
-                       include_blank: true, prompt: "Search people…",
+                       include_blank: true, prompt: "Search by name…",
+                       "aria-label": "Person the note is about",
                        class: "min-w-[240px] rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-blue-500 focus:ring-blue-500",
                        data: { controller: "remote-select", remote_select_model_value: "person" } %>
       <% end %>
