@@ -2,7 +2,7 @@
 <div class="<%= DomainTheme.bg_class_for(:admin_only) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
 
       <div class="mb-2 flex flex-wrap items-center gap-y-2">
-        <%# Scoped to a person (from their edit page's History card, or the filter) —
+        <%# Scoped to a person (from their edit page's Activity card, or the filter) —
             return to that person, not the generic Admin default. %>
         <% if @person %>
           <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1 text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -21,7 +21,7 @@
       </div>
 
       <div class="flex items-baseline gap-3 mb-6 leading-none">
-        <h1 class="font-display text-2xl font-semibold text-primary leading-none">History</h1>
+        <h1 class="font-display text-2xl font-semibold text-primary leading-none">Activity</h1>
         <%= render "count" %>
       </div>
 
@@ -40,7 +40,7 @@
               data: { controller: "collection", turbo_frame: "activity_results", turbo_action: "advance" },
               autocomplete: "off" do %>
 
-          <%# These scope the timeline (person History, per-user history, a record's
+          <%# These scope the timeline (person Activity, per-user history, a record's
               audit trail) but have no visible control, so carry them as hidden
               fields — otherwise submitting the form drops them and reverts to the
               global feed. %>

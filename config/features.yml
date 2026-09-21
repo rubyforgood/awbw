@@ -3443,15 +3443,15 @@
     portal. Internal staff communications (logged calls, emails, texts, and
     other hand-recorded comms) stay private to staff.
 
-- name: "History buttons for a person's activity timeline"
+- name: "Activity buttons for a person's timeline"
   area: people
   display_status: admin_facing
   released_on: 2026-09-20
   pr_number: 2551
   summary: >-
-    Admins can jump to a person's activity history from more places: a button in
-    each people-index row and on every profile's Admin details section, plus a
-    portal-wide history button on the people index.
+    Admins can jump to a person's activity from more places: a button in each
+    people-index row and on every profile's Admin details section, plus a
+    portal-wide activity button on the people index.
 
 - name: "Log a communication after the fact with the date it happened"
   area: communications
@@ -3461,13 +3461,3 @@
     When you log a call, text, or email by hand, you can now set the date and
     time it actually happened — so a contact recorded days later still lands in
     the right spot on the person's timeline.
-
-- name: "Portal activity is now called History"
-  area: reporting
-  display_status: admin_facing
-  released_on: 2026-09-20
-  summary: >-
-    The admin home "Portal activity" tile and its "Activities" section are now
-    labeled "History" — matching the "History" card on a person's edit page that
-    already links there.
-  action_path: "/admin/activities/counts"

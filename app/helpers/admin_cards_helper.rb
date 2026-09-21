@@ -27,7 +27,7 @@ module AdminCardsHelper
   # -----------------------------
   def user_content_cards
     [
-      custom_card("Portal history", admin_activities_counts_path, icon: "📊"),
+      custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       custom_card(t("communications.section_title"), comments_and_communications_path, icon: "🗂️", color: DomainTheme.color_for(:notifications), intensity: 50),
       custom_card("Event reports", reports_events_path, icon: "📊", color: :blue),

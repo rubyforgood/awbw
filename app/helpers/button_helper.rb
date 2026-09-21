@@ -62,7 +62,7 @@ module ButtonHelper
     tokens.join(" ")
   end
 
-  # Admin-only action buttons (Edit/User/History on the people index, the profile
+  # Admin-only action buttons (Edit/User/Activity on the people index, the profile
   # admin dossier) carry the blue admin tint. Wraps button_classes with that fill
   # so call sites just pick a size; pass `size: nil` to supply your own padding.
   def admin_button_classes(size: :sm, extra: nil)
