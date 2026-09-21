@@ -68,9 +68,13 @@
                       input_html: { rows: 1, placeholder: "Topic or subject line",
                                     class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
           <div class="mt-3">
-            <label class="mb-1 block text-sm font-medium text-gray-700" for="notification_created_at">Date &amp; time</label>
-            <%= f.datetime_field :created_at, value: (@notification.created_at || Time.current).strftime("%Y-%m-%dT%H:%M"),
-                                 class: "w-full bg-white rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
+            <div class="flex items-center gap-2">
+              <label class="shrink-0 text-sm font-medium text-gray-700" for="notification_created_at">Date &amp; time</label>
+              <div class="min-w-0 flex-1">
+                <%= f.datetime_field :created_at, value: (@notification.created_at || Time.current).strftime("%Y-%m-%dT%H:%M"),
+                                     class: "w-full bg-white rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" %>
+              </div>
+            </div>
             <p class="mt-1 text-xs text-gray-500">When the communication happened — backdate it if you're logging it after the fact.</p>
           </div>
         </div>

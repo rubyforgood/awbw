@@ -35,8 +35,12 @@
                           placeholder: "Topic or subject line",
                           class: field_class %>
         <%# Editable so a contact can be logged after the fact with the time it happened. %>
-        <label class="mb-1 block text-xs font-semibold text-gray-600" for="notification_created_at">When</label>
-        <%= f.datetime_field :created_at, value: (notification.created_at || Time.current).strftime("%Y-%m-%dT%H:%M"), class: field_class %>
+        <div class="flex items-center gap-2">
+          <label class="shrink-0 text-xs font-semibold text-gray-600" for="notification_created_at">When</label>
+          <div class="min-w-0 flex-1">
+            <%= f.datetime_field :created_at, value: (notification.created_at || Time.current).strftime("%Y-%m-%dT%H:%M"), class: field_class %>
+          </div>
+        </div>
         <%= f.input_field :email_body_text,
                           as: :text,
                           rows: 3,
