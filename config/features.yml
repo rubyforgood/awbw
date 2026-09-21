@@ -3451,5 +3451,4 @@
   summary: >-
     Admins can jump to a person's activity history from more places: a button in
     each people-index row and on every profile's Admin details section, plus a
-    "my history" button by the account avatar and a portal-wide history button on
-    the people index.
+    portal-wide history button on the people index.
