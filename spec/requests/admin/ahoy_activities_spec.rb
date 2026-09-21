@@ -926,7 +926,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       it "visitors-only shows no top engaged users" do
         get charts_path, params: { time_period: "all_time", audience: [ "visitors" ] }
 
-        # Top users by activities chart should have no user names since visitors are anonymous
+        # Top users by activity chart should have no user names since visitors are anonymous
         expect(response.body).not_to include(regular_user.full_name)
         expect(response.body).not_to include(staff_user.full_name)
       end
