@@ -3452,3 +3452,12 @@
     Admins can jump to a person's activity history from more places: a button in
     each people-index row and on every profile's Admin details section, plus a
     portal-wide history button on the people index.
+
+- name: "Log a communication after the fact with the date it happened"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    When you log a call, text, or email by hand, you can now set the date and
+    time it actually happened — so a contact recorded days later still lands in
+    the right spot on the person's timeline.

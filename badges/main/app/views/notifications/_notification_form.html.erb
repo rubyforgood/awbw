@@ -1,16 +1,17 @@
-<%# ---- The editable fields for a manual-log communication (From / Channel /
-    Subject / Body + Remove). Shared by a new entry and the edit mode of a
-    persisted one in _notification_fields. From is a non-editable sender chip
-    (same colored badge the comments box uses for the author); Channel is a
-    compact select; Subject and Body sit beside them as two-row textareas.
-    Subject is required once the row is in use (server-side reject_if drops a
-    blank-subject entry), so field-required marks it required as soon as the
-    subject or body is touched — a partially filled entry can't be silently
-    dropped, while an untouched added row stays optional and won't block the
-    parent form. ---- %>
+<%# ---- The editable fields for a manual-log communication. Shared by a new
+    entry and the edit mode of a persisted one in _notification_fields. Channel,
+    From (a non-editable sender chip), Direction, and the "already responded"
+    toggle sit in the left column; Subject sits beside them with the editable
+    date/time beneath it; Body is a brief summary. `created_at` is editable so a
+    contact can be logged after the fact
+    with the time it happened. Subject is required once the row is in use
+    (server-side reject_if drops a blank-subject entry), so field-required marks
+    it required as soon as the subject or body is touched — a partially filled
+    entry can't be silently dropped, while an untouched added row stays optional. ---- %>
 <% sender_user = f.object.sender || current_user %>
 <% sender_color = chip_color(sender_user&.id) %>
 <% sender_first = sender_user&.person&.first_name || sender_user&.name.to_s.split.first %>
+<% logged_at = (f.object.created_at || Time.current).strftime("%Y-%m-%dT%H:%M") %>
 <% select_class = "min-w-0 flex-1 truncate bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
 <div data-controller="field-required conditional-fields" data-action="input->field-required#update">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -38,11 +39,18 @@
     </div>
     <%# Subject marked required (shows the asterisk) — a blank subject is dropped
         on save. field-required only enforces it once the row is in use, so an
-        untouched added row still won't block the parent form. %>
-    <%= f.input :email_subject, as: :text, label: "Subject", required: true,
-                input_html: { rows: 2, placeholder: "Topic or subject line",
-                              data: { field_required_target: "field required" } },
-                wrapper_html: { class: "flex-1" } %>
+        untouched added row still won't block the parent form. The editable
+        date/time sits beneath the subject. %>
+    <div class="flex-1 space-y-2">
+      <%= f.input :email_subject, as: :text, label: "Subject", required: true,
+                  input_html: { rows: 1, placeholder: "Topic or subject line",
+                                data: { field_required_target: "field required" } },
+                  wrapper_html: { class: "mb-0" } %>
+      <label class="flex items-center gap-2">
+        <span class="shrink-0 text-sm font-medium text-gray-700">When</span>
+        <%= f.datetime_field :created_at, value: logged_at, class: select_class %>
+      </label>
+    </div>
     <%= f.input :email_body_text, as: :text, label: "Body (brief summary)",
                 input_html: { rows: 2, placeholder: "What happened? (e.g. left voicemail, sent reminder)",
                               data: { field_required_target: "field" } },

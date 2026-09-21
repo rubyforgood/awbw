@@ -56,6 +56,15 @@ class Notification < ApplicationRecord
   # is excluded — it is reserved for email this platform sends automatically.
   MANUAL_CHANNELS = (CHANNELS - %w[autoemail]).freeze
 
+  # Attributes an admin may set when logging or editing a manual communication
+  # inline (nested under a parent record's form). `created_at` is editable so a
+  # contact can be logged after the fact with the date/time it actually happened.
+  # Shared by every host controller so they permit the same set.
+  PERMITTED_LOG_ATTRIBUTES = %i[
+    id channel sender_id email_subject email_body_text direction responded
+    created_at noticeable_type noticeable_id _destroy
+  ].freeze
+
   # Devise-originated kinds that require security tokens and cannot be resent
   # through the notification system. Admins should use Devise's own resend
   # mechanisms (e.g. ProcessEmailManualConfirm) for these.
