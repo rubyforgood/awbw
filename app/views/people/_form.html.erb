@@ -336,11 +336,11 @@
           <ul class="space-y-1.5 ps-6">
             <% owner_affiliations.each do |affiliation| %>
               <li class="flex flex-wrap items-center gap-2 text-gray-700">
+                <%= affiliation.decorate.status_badge %>
                 <span class="font-medium"><%= affiliation.title.presence || Affiliation::FACILITATOR_TITLE %></span>
                 <span>–</span>
                 <%= link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline" %>
                 <span class="text-sm text-gray-500"><%= affiliation.decorate.period_label %></span>
-                <%= affiliation.decorate.status_badge %>
               </li>
             <% end %>
           </ul>

@@ -27,7 +27,7 @@ RSpec.describe "Profile change requests", type: :request do
       expect(subjects).to include("requested a change")
     end
 
-    it "submits a structured affiliation change targeting a specific affiliation" do
+    it "submits a structured affiliation date change targeting a specific affiliation" do
       org = create(:organization, name: "Sunrise Center")
       affiliation = create(:affiliation, person: person, organization: org, title: "Facilitator")
 
@@ -37,14 +37,14 @@ RSpec.describe "Profile change requests", type: :request do
             field: "affiliation",
             affiliation_id: affiliation.id,
             requested_value: "Start or end dates",
-            details: "End date should be June 2020."
+            proposed_end_date: "2020-06-01"
           }
         }
       }.to change(ProfileChangeRequest, :count).by(1)
 
       request = ProfileChangeRequest.last
       expect(request.affiliation).to eq(affiliation)
-      expect(request.requested_value).to eq("Start or end dates")
+      expect(request.proposed_end_date).to eq(Date.new(2020, 6, 1))
     end
 
     it "forbids submitting for someone else" do
@@ -79,6 +79,32 @@ RSpec.describe "Profile change requests", type: :request do
 
       expect(org.reload.name).to eq("New Name")
       expect(request.reload).to be_resolved
+    end
+
+    it "approves an affiliation title change by updating the affiliation" do
+      affiliation = create(:affiliation, person: person, title: "Facilitator")
+      request = create(:profile_change_request, person: person, field: "affiliation",
+                       requested_value: "Title or role", affiliation: affiliation,
+                       proposed_title: "Lead Facilitator", details: nil)
+
+      post approve_profile_change_request_path(request)
+
+      expect(affiliation.reload.title).to eq("Lead Facilitator")
+      expect(request.reload).to be_resolved
+    end
+
+    it "approves an add-a-new-affiliation request by creating it" do
+      org = create(:organization, name: "New Org")
+      request = create(:profile_change_request, person: person, field: "affiliation",
+                       requested_value: "Add a new affiliation", organization: org,
+                       proposed_title: "Facilitator", proposed_start_date: "2026-01-01", details: nil)
+
+      expect {
+        post approve_profile_change_request_path(request)
+      }.to change { person.affiliations.count }.by(1)
+
+      expect(request.reload).to be_resolved
+      expect(person.affiliations.exists?(organization: org, title: "Facilitator")).to be(true)
     end
 
     it "marks a request resolved manually" do

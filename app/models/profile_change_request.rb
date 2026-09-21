@@ -19,14 +19,23 @@ class ProfileChangeRequest < ApplicationRecord
   RESOLUTION_METHODS = %w[approved manual].freeze
   # What an affiliation request is asking to change (stored in requested_value),
   # so the person picks a structured category rather than only free text.
+  AFFILIATION_CHANGE_TITLE = "Title or role".freeze
+  AFFILIATION_CHANGE_DATES = "Start or end dates".freeze
+  AFFILIATION_CHANGE_ORGANIZATION = "Organization".freeze
+  AFFILIATION_CHANGE_REMOVE = "Remove this affiliation".freeze
+  AFFILIATION_CHANGE_ADD = "Add a new affiliation".freeze
+  AFFILIATION_CHANGE_OTHER = "Other".freeze
   AFFILIATION_CHANGE_TYPES = [
-    "Title or role",
-    "Start or end dates",
-    "Organization",
-    "This affiliation is incorrect or should be removed",
-    "Add a new affiliation",
-    "Other"
+    AFFILIATION_CHANGE_TITLE,
+    AFFILIATION_CHANGE_DATES,
+    AFFILIATION_CHANGE_ORGANIZATION,
+    AFFILIATION_CHANGE_REMOVE,
+    AFFILIATION_CHANGE_ADD,
+    AFFILIATION_CHANGE_OTHER
   ].freeze
+  # Every affiliation category except "Other" carries a structured value Approve
+  # can apply directly; "Other" is free text an admin handles by hand.
+  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - [ AFFILIATION_CHANGE_OTHER ]).freeze
 
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
@@ -34,11 +43,14 @@ class ProfileChangeRequest < ApplicationRecord
   validates :requested_value, presence: true
   validates :requested_value, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
                               if: -> { field == "primary_email" && requested_value.present? }
-  validates :details, presence: true, unless: :auto_appliable?
+  validates :details, presence: true, if: :requires_details?
   validate :affiliation_belongs_to_person
+  validate :affiliation_target_present, if: -> { field == "affiliation" }
+  validate :affiliation_proposed_values, if: -> { field == "affiliation" }
   validate :one_pending_per_target, if: :pending?
 
   before_validation :snapshot_target, on: :create
+  before_validation :clear_irrelevant_affiliation_fields, if: -> { field == "affiliation" }
 
   scope :pending, -> { where(status: "pending") }
   scope :resolved, -> { where(status: "resolved") }
@@ -50,11 +62,33 @@ class ProfileChangeRequest < ApplicationRecord
   def declined? = status == "declined"
 
   def auto_appliable?
-    field.in?(AUTO_APPLIABLE_FIELDS)
+    return true if field.in?(AUTO_APPLIABLE_FIELDS)
+    field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES)
   end
 
   def field_label
     FIELD_LABELS.fetch(field, field.humanize)
+  end
+
+  # A human-readable summary of the proposed change, for the admin card and emails.
+  def proposed_change_summary
+    return unless field == "affiliation"
+
+    case requested_value
+    when AFFILIATION_CHANGE_TITLE then proposed_title
+    when AFFILIATION_CHANGE_DATES then proposed_dates_label
+    when AFFILIATION_CHANGE_ORGANIZATION then proposed_organization_name
+    when AFFILIATION_CHANGE_REMOVE then "End-date and mark inactive"
+    when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name, proposed_dates_label ].compact_blank.join(" · ")
+    end
+  end
+
+  def proposed_dates_label
+    start_text = proposed_start_date&.strftime("%b %-d, %Y")
+    end_text = proposed_end_date&.strftime("%b %-d, %Y")
+    return "#{start_text} – #{end_text}" if start_text && end_text
+    return "Starts #{start_text}" if start_text
+    "Ends #{end_text}" if end_text
   end
 
   # The organization an "organization name" request renames. Snapshotted on
@@ -95,9 +129,46 @@ class ProfileChangeRequest < ApplicationRecord
     self.organization ||= person&.primary_organization if field == "organization_name"
   end
 
+  def requires_details?
+    field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER
+  end
+
+  # A category's hidden sibling inputs still post their (stale) values; drop the
+  # ones this category doesn't use so the stored request stays clean.
+  def clear_irrelevant_affiliation_fields
+    self.affiliation_id = nil if requested_value == AFFILIATION_CHANGE_ADD
+    self.organization_id = nil unless requested_value == AFFILIATION_CHANGE_ADD
+    self.proposed_title = nil unless requested_value.in?([ AFFILIATION_CHANGE_TITLE, AFFILIATION_CHANGE_ADD ])
+    unless requested_value.in?([ AFFILIATION_CHANGE_DATES, AFFILIATION_CHANGE_ADD ])
+      self.proposed_start_date = nil
+      self.proposed_end_date = nil
+    end
+    self.proposed_organization_name = nil unless requested_value == AFFILIATION_CHANGE_ORGANIZATION
+  end
+
   def affiliation_belongs_to_person
     return if affiliation.blank?
     errors.add(:affiliation, "is not one of this person's affiliations") if affiliation.person_id != person_id
+  end
+
+  # Every affiliation category except "add a new" / "other" acts on an existing row.
+  def affiliation_target_present
+    return if requested_value.in?([ AFFILIATION_CHANGE_ADD, AFFILIATION_CHANGE_OTHER ])
+    errors.add(:affiliation_id, "must be selected") if affiliation_id.blank?
+  end
+
+  def affiliation_proposed_values
+    case requested_value
+    when AFFILIATION_CHANGE_TITLE
+      errors.add(:proposed_title, "can't be blank") if proposed_title.blank?
+    when AFFILIATION_CHANGE_DATES
+      errors.add(:base, "Enter a new start or end date") if proposed_start_date.blank? && proposed_end_date.blank?
+    when AFFILIATION_CHANGE_ORGANIZATION
+      errors.add(:proposed_organization_name, "can't be blank") if proposed_organization_name.blank?
+    when AFFILIATION_CHANGE_ADD
+      errors.add(:organization_id, "must be selected") if organization_id.blank?
+      errors.add(:proposed_title, "can't be blank") if proposed_title.blank?
+    end
   end
 
   # One open request per target — per (person, field) for email/organization, and

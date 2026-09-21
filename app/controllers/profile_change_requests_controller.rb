@@ -103,7 +103,10 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   def profile_change_request_params
-    params.require(:profile_change_request).permit(:field, :requested_value, :details, :affiliation_id)
+    params.require(:profile_change_request).permit(
+      :field, :requested_value, :details, :affiliation_id, :organization_id,
+      :proposed_title, :proposed_start_date, :proposed_end_date, :proposed_organization_name
+    )
   end
 
   def respond_with_updated_row(notice)

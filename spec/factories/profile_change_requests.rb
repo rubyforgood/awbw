@@ -3,7 +3,7 @@ FactoryBot.define do
     person
     requested_by { association :user }
     field { "affiliation" }
-    requested_value { "Start or end dates" }
+    requested_value { "Other" }
     details { "Please update my end date to 2020." }
     status { "pending" }
 
