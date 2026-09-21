@@ -30,6 +30,7 @@ module DomainTheme
     workshop_variation_ideas: :purple,
     story_ideas:              :fuchsia,
     event_registrations:      :teal,
+    reports:                  :cyan,
 
     banners:                  :yellow,
     users:                    :rose,
