@@ -14,7 +14,7 @@ RSpec.describe "users/sections/_account_activity", type: :view do
   # user), with no time limit and every audience included. "See all user
   # activity" must land on that same full history — so it links with
   # time_period=all_time and all three audiences, matching the person edit
-  # "History" card. A bare user_id (actor FK) instead inherits the index's
+  # "Activity" card. A bare user_id (actor FK) instead inherits the index's
   # past-month + visitors/users defaults, which drop staff and older events —
   # returning zero for a super_user.
   context "when the user has a person" do

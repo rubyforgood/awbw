@@ -3461,3 +3461,14 @@
     When you log a call, text, or email by hand, you can now set the date and
     time it actually happened — so a contact recorded days later still lands in
     the right spot on the person's timeline.
+
+- name: "\"Activity\" is the single name for the portal timeline"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The portal timeline is now called "Activity" everywhere — the admin home
+    tile, the section and its tabs, and every "History" button on a person's
+    record. One consistent word, and it no longer collides with the app's other
+    histories (payment, participation, CE, communications).
+  action_path: "/admin/activities/counts"
