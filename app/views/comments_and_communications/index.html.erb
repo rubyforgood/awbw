@@ -39,8 +39,8 @@
         width, so size it here rather than on the field's own class. %>
     <div class="w-64">
       <%= select_tag :jump_person_id, options_for_select([]),
-                     include_blank: true, prompt: "Open a person's feed…",
-                     "aria-label": "Open a person's feed",
+                     include_blank: true, prompt: "See one person…",
+                     "aria-label": "See one person's comments and communications",
                      class: "rounded-lg border-2 #{DomainTheme.border_class_for(:people, intensity: 300)} #{DomainTheme.bg_class_for(:people, intensity: 50)} px-3 py-2 text-sm font-sans #{DomainTheme.text_class_for(:people, intensity: 900)} shadow-sm focus:border-blue-500 focus:ring-blue-500",
                      data: { controller: "remote-select navigate-select",
                              remote_select_model_value: "person",

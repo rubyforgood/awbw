@@ -1,12 +1,18 @@
-<%# Filter bar for the combined feed. Most filters are shared: the two models name
-    the same idea differently, so each side answers on its own column (author/from,
-    subject/topic, attached-to, follow-up). Only "Email topic" is communications-only.
-    Auto-submits into `frame` (collection Stimulus). Locals: url, frame, clear_path. %>
+<%# Filter bar for the combined feed. Keyword + Show stay visible; the rest sit
+    behind a "More filters" toggle so a non-technical user isn't met by a wall of
+    fields. Most filters are shared: the two models name the same idea differently,
+    so each side answers on its own column (author/from, subject/topic, attached-to,
+    follow-up). Only "Email topic" is communications-only. Auto-submits into `frame`
+    (collection Stimulus); the toggle reuses panel-toggle. Locals: url, frame,
+    clear_path. %>
 <%# The record each entry hangs off — commentable_type for a comment,
     noticeable_type for a communication. %>
 <% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
+<%# Open the advanced panel on load when any of its filters is already applied, so
+    an active filter is never hidden from the person looking at the results. %>
+<% advanced_active = params[:subject].present? || params[:author_id].present? || params[:source].present? || params[:follow_up].present? || params[:from].present? || params[:to].present? || params[:email_topic].present? %>
 <%= form_with url: url, method: :get,
-              data: { controller: "collection", turbo_frame: frame },
+              data: { controller: "collection panel-toggle", turbo_frame: frame },
               html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-100 p-4" do |f| %>
   <div class="flex items-center gap-2 text-gray-600">
     <i class="fa-solid fa-filter text-xs"></i>
@@ -25,6 +31,35 @@
       </div>
     </div>
 
+    <div class="w-40">
+      <label for="kind" class="<%= search_label_class %>">Show</label>
+      <%= f.select :kind,
+                   options_for_select([ [ "Comments & communications", "" ], [ "Comments only", "comments" ], [ "Communications only", "communications" ] ], params[:kind]), {},
+                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="shrink-0 pb-1">
+      <button type="button"
+              class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              data-panel-toggle-name="advanced"
+              data-panel-toggle-hidden-label="More filters"
+              data-panel-toggle-shown-label="Fewer filters"
+              data-panel-toggle-target="button"
+              data-action="panel-toggle#toggle"
+              aria-expanded="<%= advanced_active %>">
+        <i class="fa-solid fa-sliders"></i>
+        <span data-panel-toggle-target="label"><%= advanced_active ? "Fewer filters" : "More filters" %></span>
+      </button>
+    </div>
+
+    <div class="shrink-0 pb-1">
+      <%= render "shared/search_clear", url: clear_path %>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-end gap-3 <%= "hidden" unless advanced_active %>"
+       data-panel-toggle-name="advanced" data-panel-toggle-target="panel">
     <div class="min-w-[150px] grow">
       <label for="subject" class="<%= search_label_class %>">Subject or topic</label>
       <%= f.text_field :subject, value: params[:subject],
@@ -40,16 +75,6 @@
                      include_blank: true, prompt: "Search staff by name",
                      class: search_field_class(extra: "bg-white"),
                      data: { controller: "remote-select", remote_select_model_value: "user" } %>
-    </div>
-  </div>
-
-  <div class="flex flex-wrap items-end gap-3">
-    <div class="w-40">
-      <label for="kind" class="<%= search_label_class %>">Show</label>
-      <%= f.select :kind,
-                   options_for_select([ [ "Comments & communications", "" ], [ "Comments only", "comments" ], [ "Communications only", "communications" ] ], params[:kind]), {},
-                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
-                   onchange: "this.form.requestSubmit()" %>
     </div>
 
     <div class="w-40">
@@ -91,10 +116,6 @@
                    { include_blank: "All" },
                    class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
-    </div>
-
-    <div class="shrink-0 pb-1">
-      <%= render "shared/search_clear", url: clear_path %>
     </div>
   </div>
 <% end %>
