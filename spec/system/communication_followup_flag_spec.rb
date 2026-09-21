@@ -38,15 +38,4 @@ RSpec.describe "Communication follow-up flag", type: :system, js: true do
     expect(page).to have_css("#flag_notification_#{communication.id} i.fa-regular", wait: 5)
     expect(communication.reload).not_to be_flagged
   end
-
-  it "flags a communication from the embedded section on a record's edit page" do
-    visit edit_person_path(person)
-
-    expect(page).to have_field("notification[flagged]", checked: false, visible: :all)
-
-    check "notification[flagged]", allow_label_click: true
-
-    expect(page).to have_css("input[name='notification[flagged]'].ring-green-300", visible: :all, wait: 5)
-    expect(communication.reload).to be_flagged
-  end
 end

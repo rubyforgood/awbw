@@ -70,7 +70,7 @@
         <% else %>
           <div data-paginated-fields-target="item" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
             <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only,
-                       truncate: false, flag: (render("notifications/flag_autosave", notification: entry) if admin) %>
+                       flag: (render("notifications/flag_indicator", notification: entry) if admin) %>
           </div>
         <% end %>
       <% end %>
