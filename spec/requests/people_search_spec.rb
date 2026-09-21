@@ -73,6 +73,18 @@ RSpec.describe "People search", type: :request do
       expect(response.body).not_to include("Alice")
     end
 
+    it "filters by several topic subscriptions at once" do
+      topic_a = create(:topic_subscription_type)
+      topic_b = create(:topic_subscription_type)
+      create(:topic_subscription, person: person_alice, topic_subscription_type: topic_a)
+      create(:topic_subscription, person: person_bob, topic_subscription_type: topic_b)
+
+      get people_path, params: { topic_subscription_type_id: [ topic_a.id, topic_b.id ] }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).to include("Bob")
+    end
+
     it "filters by staff tag" do
       tag = create(:staff_tag)
       create(:staff_tagging, staff_tag: tag, staff_taggable: person_alice)
@@ -82,6 +94,18 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
     end
+
+    it "filters by several staff tags at once" do
+      tag_a = create(:staff_tag)
+      tag_b = create(:staff_tag)
+      create(:staff_tagging, staff_tag: tag_a, staff_taggable: person_alice)
+      create(:staff_tagging, staff_tag: tag_b, staff_taggable: person_bob)
+
+      get people_path, params: { staff_tag_ids: [ tag_a.id, tag_b.id ] }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).to include("Bob")
+    end
   end
 
   describe "GET /people (full page) admin filters" do
@@ -90,7 +114,7 @@ RSpec.describe "People search", type: :request do
 
       get people_path
       page = Capybara.string(response.body)
-      expect(page).to have_css("select[name=staff_tag_ids]")
+      expect(page).to have_css('select[name="staff_tag_ids[]"][multiple]')
       expect(page).to have_link("Manage staff tags", href: staff_tags_path)
     end
 
@@ -99,7 +123,7 @@ RSpec.describe "People search", type: :request do
 
       get people_path
       page = Capybara.string(response.body)
-      expect(page).to have_css("select[name=topic_subscription_type_id]")
+      expect(page).to have_css('select[name="topic_subscription_type_id[]"][multiple]')
       expect(page).to have_link("Manage topics", href: topic_subscription_types_path)
     end
   end
