@@ -46,6 +46,7 @@ class StoryIdeasController < ApplicationController
         assign_associations(@story_idea)
         NotificationServices::CreateNotification.call(
           noticeable: @story_idea,
+          person: @story_idea.created_by&.person,
           kind: :idea_submitted,
           recipient_role: :person,
           recipient_email: @story_idea.created_by.email,

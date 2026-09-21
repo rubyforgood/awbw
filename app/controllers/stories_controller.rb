@@ -163,6 +163,7 @@ class StoriesController < ApplicationController
   def notify_story_promoted
     NotificationServices::CreateNotification.call(
       noticeable: @story,
+      person: @story.story_idea.created_by&.person,
       kind: :story_promoted,
       recipient_role: :person,
       recipient_email: @story.story_idea.created_by.email,

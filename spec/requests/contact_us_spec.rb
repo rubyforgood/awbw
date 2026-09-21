@@ -261,6 +261,13 @@ RSpec.describe "ContactUs", type: :request do
         expect(notification).to be_present
         expect(notification.recipient_role).to eq("admin")
       end
+
+      it "binds the submitter notification to the logged-in person, leaving the admin FYI unbound" do
+        post contact_us_path, params: logged_in_params
+
+        expect(Notification.find_by(kind: "contact_us").person).to eq(user.person)
+        expect(Notification.find_by(kind: "contact_us_fyi").person).to be_nil
+      end
     end
   end
 end

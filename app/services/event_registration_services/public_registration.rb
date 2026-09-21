@@ -551,6 +551,7 @@ module EventRegistrationServices
 
       NotificationServices::CreateNotification.call(
         noticeable: event_registration,
+        person: event_registration.registrant,
         kind: :event_registration_confirmation,
         recipient_role: :person,
         recipient_email: registrant_email,
