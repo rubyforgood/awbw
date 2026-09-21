@@ -378,22 +378,22 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("+ Add option")
     end
 
-    it "shows payment-method options read-only (no editable inputs) without the admin override" do
+    it "shows payment-method options as on/off checkboxes (not editable labels) without the admin override" do
       form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
       payment_field = form.form_fields.find_by(field_identifier: "payment_method")
       expect(payment_field).to be_present
 
       get edit_form_path(form)
 
-      # The options are still shown...
+      # Each option is shown as an on/off checkbox (a _destroy toggle, checked = on)...
       FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option|
         expect(response.body).to include(option)
       end
-      # ...but not as editable inputs, and they can't be added/removed.
-      expect(response.body).not_to match(/payment_method.{0,600}\[option_name\]/m)
-      expect(response.body).not_to match(/payment_method.{0,600}\+ Add option/m)
-      # A note explains why they're locked.
-      expect(response.body).to include("tied to system logic")
+      expect(response.body).to match(%r{<input type="checkbox"[^>]*\[_destroy\][^>]*value="0"})
+      # ...with fixed labels carried as hidden fields (not editable text inputs).
+      expect(response.body).to include('value="Credit card (later)" type="hidden"')
+      # A note explains why the labels are fixed.
+      expect(response.body).to include("tied to payment processing")
     end
 
     it "shows the smart field name input without the admin override, with a link to the reference page" do
@@ -797,6 +797,42 @@ RSpec.describe "Forms", type: :request do
       }.to change { field.reload.form_field_answer_options.count }.by(-1)
 
       expect(field.answer_options.map(&:name)).not_to include("No")
+    end
+
+    it "turns off a payment method when its checkbox is unchecked" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      field = form.form_fields.find_by(field_identifier: "payment_method")
+      later = field.answer_option_join_for("Credit card (later)")
+      expect(later).to be_present
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => {
+          id: field.id, name: field.name, answer_type: field.answer_type,
+          form_field_answer_options_attributes: {
+            "0" => { id: later.id, option_name: "Credit card (later)", _destroy: "1" }
+          }
+        } } }
+      }
+
+      expect(field.reload.answer_options.map(&:name)).to contain_exactly("Credit card (now)", "Check")
+    end
+
+    it "turns a payment method back on when its checkbox is checked" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      field = form.form_fields.find_by(field_identifier: "payment_method")
+      field.answer_option_join_for("Credit card (later)").destroy
+      expect(field.reload.answer_options.map(&:name)).not_to include("Credit card (later)")
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => {
+          id: field.id, name: field.name, answer_type: field.answer_type,
+          form_field_answer_options_attributes: {
+            "0" => { option_name: "Credit card (later)", _destroy: "0" }
+          }
+        } } }
+      }
+
+      expect(field.reload.answer_options.map(&:name)).to include("Credit card (later)")
     end
 
     it "links a resource to a field, making it a per-resource question" do

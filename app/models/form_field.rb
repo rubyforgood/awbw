@@ -55,8 +55,9 @@ class FormField < ApplicationRecord
   DYNAMIC_FIELD_CATEGORY_TYPES = AGE_GROUP_FIELD_IDENTIFIERS.index_with { "AgeRange" }.freeze
 
   # The payment-method field. Its answer options ("Credit card (now)", etc.) are
-  # wired to Stripe charge logic in the controllers, so they must not be edited
-  # casually from the form builder — the editor shows them read-only unless the
+  # wired to Stripe charge logic in the controllers, so their labels must not be
+  # edited casually from the form builder — the editor offers them as fixed
+  # checkboxes (turn a method on or off) rather than free-text options, unless the
   # admin override is present.
   PAYMENT_METHOD_FIELD_IDENTIFIER = "payment_method"
 
@@ -227,10 +228,17 @@ class FormField < ApplicationRecord
   end
 
   # True for fields whose answer options are tied to backend logic (currently the
-  # payment-method field's Stripe wiring) and so should be shown read-only in the
-  # form builder rather than freely edited.
+  # payment-method field's Stripe wiring), so the form builder offers them as
+  # fixed on/off checkboxes rather than freely editable options.
   def fixed_options?
     field_identifier == PAYMENT_METHOD_FIELD_IDENTIFIER
+  end
+
+  # The saved join offering a specific option label, or nil when this field
+  # doesn't currently offer it. Backs the payment-method checkboxes, which show
+  # which of the fixed options are turned on.
+  def answer_option_join_for(label)
+    form_field_answer_options.detect { |join| join.name == label }
   end
 
   def html_id
