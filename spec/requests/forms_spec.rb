@@ -683,6 +683,7 @@ RSpec.describe "Forms", type: :request do
     it "saves the field_identifier for a field" do
       form = create(:form, :standalone)
       field = create(:form_field, form: form, name: "Pick a payment method")
+      create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Check"))
       patch form_path(form), params: {
         form: { form_fields_attributes: { "0" => { id: field.id, field_identifier: "payment_method" } } }
       }
@@ -833,6 +834,25 @@ RSpec.describe "Forms", type: :request do
       }
 
       expect(field.reload.answer_options.map(&:name)).to include("Credit card (later)")
+    end
+
+    it "rejects unchecking every payment method, leaving the options intact" do
+      form = FormBuilderService.new(name: "Test", sections: %i[payment]).call
+      field = form.form_fields.find_by(field_identifier: "payment_method")
+      option_attrs = FormBuilderService::PAYMENT_METHOD_OPTIONS.each_with_index.to_h do |label, i|
+        [ i.to_s, { id: field.answer_option_join_for(label).id, option_name: label, _destroy: "1" } ]
+      end
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => {
+          id: field.id, name: field.name, answer_type: field.answer_type,
+          form_field_answer_options_attributes: option_attrs
+        } } }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("must offer at least one option")
+      expect(field.reload.answer_options.count).to eq(3)
     end
 
     it "links a resource to a field, making it a per-resource question" do

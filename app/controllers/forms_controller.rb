@@ -84,8 +84,13 @@ class FormsController < ApplicationController
 
   def update
     authorize! @form
+    @form.assign_attributes(form_params)
 
-    if @form.update(form_params)
+    if fixed_option_field_emptied?
+      @form.errors.add(:base, "A payment method question must offer at least one option.")
+      @form_fields = @form.form_fields.reorder(position: :asc)
+      render :edit, status: :unprocessable_content
+    elsif @form.save
       redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "Form updated."
     else
       @form_fields = @form.form_fields.reorder(position: :asc)
@@ -184,6 +189,18 @@ class FormsController < ApplicationController
     present = Array(params[:custom_sections]).map(&:to_i)
     kept = Array(params[:kept_custom_sections]).map(&:to_i)
     present - kept
+  end
+
+  # True when the pending edit would leave a fixed-option field (the payment-method
+  # field) with no options — a form offering no payment method renders an
+  # unanswerable required question. Reads the assigned in-memory state so options
+  # unchecked in the builder (marked for removal) don't count as surviving.
+  def fixed_option_field_emptied?
+    @form.form_fields.any? do |field|
+      next false if field.marked_for_destruction?
+
+      field.fixed_options? && field.form_field_answer_options.reject(&:marked_for_destruction?).none?
+    end
   end
 
   def set_form
