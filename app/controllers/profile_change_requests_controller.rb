@@ -18,6 +18,10 @@ class ProfileChangeRequestsController < ApplicationController
     @request = @person.profile_change_requests.new(field: requested_field, requested_by: current_user)
     authorize! @request, to: :new?
 
+    # Affiliation requests target a specific affiliation chosen on the form, so we
+    # can't resolve "the" existing one here — only the single-target fields dedupe.
+    return if requested_field == "affiliation"
+
     existing = @person.profile_change_requests.pending.find_by(field: requested_field)
     redirect_to edit_profile_change_request_path(existing) if existing
   end
@@ -99,7 +103,7 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   def profile_change_request_params
-    params.require(:profile_change_request).permit(:field, :requested_value, :details)
+    params.require(:profile_change_request).permit(:field, :requested_value, :details, :affiliation_id)
   end
 
   def respond_with_updated_row(notice)
