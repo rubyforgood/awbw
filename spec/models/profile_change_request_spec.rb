@@ -23,6 +23,13 @@ RSpec.describe ProfileChangeRequest, type: :model do
       request = build(:profile_change_request, field: "shoe_size")
       expect(request).not_to be_valid
     end
+
+    it "rejects an affiliation that belongs to a different person" do
+      other_affiliation = create(:affiliation)
+      request = build(:profile_change_request, field: "affiliation", affiliation: other_affiliation)
+      expect(request).not_to be_valid
+      expect(request.errors[:affiliation]).to be_present
+    end
   end
 
   describe "#auto_appliable?" do

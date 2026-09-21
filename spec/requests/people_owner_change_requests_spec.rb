@@ -26,6 +26,17 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       expect(response.body).to include("field=affiliation")
       expect(response.body).to include("field=organization_name")
     end
+
+    it "shows the pending request (not a new-request link) once one exists for a field" do
+      request = create(:profile_change_request, :primary_email, person: person,
+                                                requested_by: owner_user, requested_value: "new@example.com")
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("Change requested — pending review")
+      expect(response.body).to include(edit_profile_change_request_path(request))
+      expect(response.body).not_to include("field=primary_email")
+    end
   end
 
   describe "PATCH update" do

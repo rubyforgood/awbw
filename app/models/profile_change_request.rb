@@ -17,15 +17,26 @@ class ProfileChangeRequest < ApplicationRecord
   AUTO_APPLIABLE_FIELDS = %w[primary_email organization_name].freeze
   STATUSES = %w[pending resolved declined].freeze
   RESOLUTION_METHODS = %w[approved manual].freeze
+  # What an affiliation request is asking to change (stored in requested_value),
+  # so the person picks a structured category rather than only free text.
+  AFFILIATION_CHANGE_TYPES = [
+    "Title or role",
+    "Start or end dates",
+    "Organization",
+    "This affiliation is incorrect or should be removed",
+    "Add a new affiliation",
+    "Other"
+  ].freeze
 
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
   validates :resolution_method, inclusion: { in: RESOLUTION_METHODS }, allow_nil: true
-  validates :requested_value, presence: true, if: :auto_appliable?
+  validates :requested_value, presence: true
   validates :requested_value, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
                               if: -> { field == "primary_email" && requested_value.present? }
   validates :details, presence: true, unless: :auto_appliable?
-  validate :one_pending_per_field, if: :pending?
+  validate :affiliation_belongs_to_person
+  validate :one_pending_per_target, if: :pending?
 
   before_validation :snapshot_target, on: :create
 
@@ -60,6 +71,14 @@ class ProfileChangeRequest < ApplicationRecord
     end
   end
 
+  # A one-line description of the affiliation an affiliation request targets.
+  def affiliation_summary
+    return unless affiliation
+
+    org = affiliation.organization&.name
+    [ affiliation.title.presence || Affiliation::FACILITATOR_TITLE, org ].compact.join(" @ ")
+  end
+
   def resolve!(method:, reviewer:, note: nil)
     update!(status: "resolved", resolution_method: method, reviewed_by: reviewer,
             reviewed_at: Time.current, reviewer_note: note.presence)
@@ -76,8 +95,18 @@ class ProfileChangeRequest < ApplicationRecord
     self.organization ||= person&.primary_organization if field == "organization_name"
   end
 
-  def one_pending_per_field
-    scope = ProfileChangeRequest.pending.where(person_id: person_id, field: field).where.not(id: id)
-    errors.add(:base, "You already have a pending request for this field.") if scope.exists?
+  def affiliation_belongs_to_person
+    return if affiliation.blank?
+    errors.add(:affiliation, "is not one of this person's affiliations") if affiliation.person_id != person_id
+  end
+
+  # One open request per target — per (person, field) for email/organization, and
+  # per affiliation for affiliation requests, so a person can flag two different
+  # affiliations at once but not stack duplicates on the same one.
+  def one_pending_per_target
+    scope = ProfileChangeRequest.pending
+                                .where(person_id: person_id, field: field, affiliation_id: affiliation_id)
+                                .where.not(id: id)
+    errors.add(:base, "You already have a pending request for this.") if scope.exists?
   end
 end
