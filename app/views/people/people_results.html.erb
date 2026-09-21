@@ -123,18 +123,20 @@
                 <% if allowed_to?(:manage?, Person) %>
                   <td class="admin-only px-4 py-2">
                     <div class="flex flex-wrap justify-start gap-2">
-                      <%= link_to "Edit", edit_person_path(person),
-                              data: { turbo_frame: "_top" },
-                              class: button_classes(nil, size: nil, extra: "#{admin_button_color_class} px-2.5 py-1 text-xs") %>
-                      <%= link_to "User", user_path(person.user),
-                              data: { turbo_frame: "_top" },
-                              class: button_classes(nil, size: nil, extra: "#{admin_button_color_class} px-2.5 py-1 text-xs") if person.user %>
-                      <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-                        <%= link_to "History", admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
+                      <div class="flex gap-2">
+                        <%= link_to "Edit", edit_person_path(person),
                                 data: { turbo_frame: "_top" },
-                                title: "#{person.name} history",
                                 class: button_classes(nil, size: nil, extra: "#{admin_button_color_class} px-2.5 py-1 text-xs") %>
-                      <% end %>
+                        <%= link_to "User", user_path(person.user),
+                                data: { turbo_frame: "_top" },
+                                class: button_classes(nil, size: nil, extra: "#{admin_button_color_class} px-2.5 py-1 text-xs") if person.user %>
+                        <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+                          <%= link_to "History", admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
+                                  data: { turbo_frame: "_top" },
+                                  title: "#{person.name} history",
+                                  class: button_classes(nil, size: nil, extra: "#{admin_button_color_class} px-2.5 py-1 text-xs") %>
+                        <% end %>
+                      </div>
                       <% person.index_quick_registrations.each do |registration| %>
                         <%= link_to registration.event.decorate.compact_label, event_registration_path(registration),
                                 data: { turbo_frame: "_top" },
