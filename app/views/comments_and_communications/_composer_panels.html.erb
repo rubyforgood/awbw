@@ -1,0 +1,11 @@
+<%# The two hidden composer panels revealed by the add_buttons triggers. Render
+    inside the same panel-toggle scope as the buttons. Locals: person, new_comment,
+    new_notification, record_targets. %>
+<div class="mt-3 hidden" data-panel-toggle-name="comment" data-panel-toggle-target="panel">
+  <%= render "comments/composer", person: person, comment: new_comment,
+             comment_targets: record_targets, stream: false, cancel_name: "comment" %>
+</div>
+<div class="mt-3 hidden" data-panel-toggle-name="communication" data-panel-toggle-target="panel">
+  <%= render "notifications/composer", person: person, notification: new_notification,
+             record_targets: record_targets, cancel_name: "communication" %>
+</div>

@@ -144,12 +144,14 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path
 
       expect(response).to have_http_status(:ok)
-      # The composers load per-person into a frame, so the index itself carries a
-      # person picker and the empty frame, not the composers inline.
+      # The everyone feed carries no add area — you filter to a person first, then
+      # add from that person's feed. So no composers frame and no add picker here,
+      # just the view-switcher that scopes the page to one person.
       doc = Nokogiri::HTML(response.body)
       expect(doc.at_css("[data-controller='panel-toggle']")).to be_nil
-      expect(doc.at_css("turbo-frame#cc_composers")).to be_present
-      expect(doc.at_css("select#person_id")).to be_present
+      expect(doc.at_css("turbo-frame#cc_composers")).to be_nil
+      expect(doc.at_css("select#person_id")).to be_nil
+      expect(doc.at_css("select#jump_person_id")).to be_present
 
       get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
 

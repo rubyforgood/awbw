@@ -1,20 +1,45 @@
-<%# Filter bar for the combined feed. Most filters are shared: the two models name
-    the same idea differently, so each side answers on its own column (author/from,
+<%# Filter bar for the combined feed. Keyword, Show and Attached-to stay visible;
+    the rest sit behind a "More filters" chevron toggle so a non-technical user
+    isn't met by a wall of fields. Most filters are shared: the two models name the
+    same idea differently, so each side answers on its own column (author/from,
     subject/topic, attached-to, follow-up). Only "Email topic" is communications-only.
-    Auto-submits into `frame` (collection Stimulus). Locals: url, frame, clear_path. %>
+    Auto-submits into `frame` (collection Stimulus); the toggle reuses the
+    expandable-card text-link+chevron pattern. The Person field navigates (full-page
+    swap) rather than filtering the frame. Locals: url, frame, clear_path, person. %>
 <%# The record each entry hangs off — commentable_type for a comment,
     noticeable_type for a communication. %>
 <% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
+<%# Open the advanced panel on load when any of its filters is already applied, so
+    an active filter is never hidden from the person looking at the results. %>
+<% advanced_active = params[:subject].present? || params[:author_id].present? || params[:follow_up].present? || params[:from].present? || params[:to].present? || params[:email_topic].present? %>
 <%= form_with url: url, method: :get,
-              data: { controller: "collection", turbo_frame: frame },
-              html: { autocomplete: "off" }, class: "bg-brand-cream space-y-3 rounded-lg border border-gray-200 p-4" do |f| %>
+              data: { controller: "collection expandable-card", turbo_frame: frame, expandable_card_expanded_value: advanced_active },
+              html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-100 p-4" do |f| %>
   <div class="flex items-center gap-2 text-gray-600">
     <i class="fa-solid fa-filter text-xs"></i>
     <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
   </div>
 
   <div class="flex flex-wrap items-end gap-3">
-    <div class="min-w-[150px] grow">
+    <%# Scoping the feed to one person is a full-page swap (navigate-select), not a
+        same-frame filter — but it reads as "filter to one person" so it sits here. %>
+    <div class="w-56">
+      <label for="jump_person_id" class="<%= search_label_class %>">Person</label>
+      <%# Preselect the current person so the field shows who the feed is scoped to,
+          rather than reading blank. Picking another navigates to their feed. %>
+      <%= select_tag :jump_person_id,
+                     (person ? options_for_select([ [ person.full_name, person.id ] ], person.id) : options_for_select([])),
+                     include_blank: true, prompt: "Filter to one person…",
+                     "aria-label": "Filter to one person's comments and communications",
+                     class: search_field_class(extra: "bg-white"),
+                     data: { controller: "remote-select navigate-select",
+                             remote_select_model_value: "person",
+                             remote_select_exclude_value: person&.id,
+                             navigate_select_url_template_value: comments_and_communications_path(person_id: "__ID__"),
+                             action: "change->navigate-select#navigate" } %>
+    </div>
+
+    <div class="w-64">
       <label for="query" class="<%= search_label_class %>">Keyword</label>
       <div class="relative">
         <%= f.text_field :query, value: params[:query],
@@ -25,6 +50,37 @@
       </div>
     </div>
 
+    <div class="w-40">
+      <label for="kind" class="<%= search_label_class %>">Show</label>
+      <%= f.select :kind,
+                   options_for_select([ [ "Comments & communications", "" ], [ "Comments only", "comments" ], [ "Communications only", "communications" ] ], params[:kind]), {},
+                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="w-40">
+      <label for="source" class="<%= search_label_class %>">Attached to</label>
+      <%= f.select :source, options_for_select(attached_to_options, params[:source]), { include_blank: "All records" },
+                   class: search_field_class(extra: "bg-white search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <div class="shrink-0 pb-2">
+      <button type="button"
+              class="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs <%= eyebrow_link_class %>"
+              data-action="expandable-card#toggle">
+        More filters
+        <i class="fa-solid fa-chevron-down transition-transform" data-expandable-card-target="icon"></i>
+      </button>
+    </div>
+
+    <div class="shrink-0 pb-1">
+      <%= render "shared/search_clear", url: clear_path %>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-end gap-3 <%= "hidden" unless advanced_active %>"
+       data-expandable-card-target="body">
     <div class="min-w-[150px] grow">
       <label for="subject" class="<%= search_label_class %>">Subject or topic</label>
       <%= f.text_field :subject, value: params[:subject],
@@ -40,23 +96,6 @@
                      include_blank: true, prompt: "Search staff by name",
                      class: search_field_class(extra: "bg-white"),
                      data: { controller: "remote-select", remote_select_model_value: "user" } %>
-    </div>
-  </div>
-
-  <div class="flex flex-wrap items-end gap-3">
-    <div class="w-40">
-      <label for="kind" class="<%= search_label_class %>">Show</label>
-      <%= f.select :kind,
-                   options_for_select([ [ "Comments & communications", "" ], [ "Comments only", "comments" ], [ "Communications only", "communications" ] ], params[:kind]), {},
-                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
-                   onchange: "this.form.requestSubmit()" %>
-    </div>
-
-    <div class="w-40">
-      <label for="source" class="<%= search_label_class %>">Attached to</label>
-      <%= f.select :source, options_for_select(attached_to_options, params[:source]), { include_blank: "All records" },
-                   class: search_field_class(extra: "bg-white search-select-placeholder"),
-                   onchange: "this.form.requestSubmit()" %>
     </div>
 
     <div class="w-32">
@@ -92,14 +131,5 @@
                    class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
     </div>
-
-    <div class="shrink-0 pb-1">
-      <%= render "shared/search_clear", url: clear_path %>
-    </div>
   </div>
-
-  <p class="text-xs text-gray-500">
-    A comment's follow-up flag stands in for a communication's responded flag, so "Responded"
-    matches communications only — as does picking an email topic.
-  </p>
 <% end %>

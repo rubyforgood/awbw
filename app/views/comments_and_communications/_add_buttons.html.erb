@@ -1,0 +1,17 @@
+<%# The two composer triggers. Each hides once its panel opens
+    (aria-expanded:hidden — the panel carries its own Cancel). Must render inside a
+    panel-toggle scope that also holds comments_and_communications/composer_panels
+    (the person feed shares one scope across the header actions and the body; the
+    everyone feed wraps both in add_area). %>
+<% [ [ "comment", "New comment", "fa-comment" ],
+     [ "communication", "New communication", "fa-envelope" ] ].each do |name, label, icon| %>
+  <button type="button"
+          class="<%= button_classes(:primary_outline, extra: "admin-only bg-blue-100 cursor-pointer aria-expanded:hidden") %>"
+          data-panel-toggle-name="<%= name %>"
+          data-panel-toggle-target="button"
+          data-action="panel-toggle#toggle"
+          aria-expanded="false">
+    <i class="fa-solid <%= icon %>"></i>
+    <%= label %>
+  </button>
+<% end %>
