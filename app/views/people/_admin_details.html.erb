@@ -14,7 +14,7 @@
     <div class="ml-auto flex items-center gap-2">
       <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
         <%= link_to "History", admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
-                    class: button_classes(nil, size: :sm, extra: admin_button_color_class) %>
+                    class: admin_button_classes %>
       <% end %>
       <%= render "people/admin_only_badge" %>
     </div>
