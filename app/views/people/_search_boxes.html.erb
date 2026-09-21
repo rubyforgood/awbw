@@ -2,7 +2,7 @@
 <%= render "shared/filtered_to", record: scoped_organization,
       clear_path: people_path(request.query_parameters.except("organization_id")) %>
 <%= form_tag(people_path, method: :get,
-  data: { controller: "collection", turbo_frame: "people_results" },
+  data: { controller: "collection searchable-checkbox", turbo_frame: "people_results" },
   autocomplete: "off",
   class: "space-y-4") do |f| %>
   <%= hidden_field_tag "organization_id", params[:organization_id] if params[:organization_id].present? %>
@@ -48,7 +48,8 @@
 
     <!-- Clear filters -->
     <div class="w-full md:ml-auto md:w-auto">
-      <%= render "shared/search_clear", url: people_path %>
+      <%= render "shared/search_clear", url: people_path,
+            action: "searchable-checkbox#clear collection#clearAndSubmit" %>
     </div>
   </div>
 
@@ -76,18 +77,18 @@
 
         <!-- Staff tag -->
         <% if allowed_to?(:index?, StaffTag) %>
-          <%= render "events/filter_select", param: :staff_tag_ids, label: "Staff tag",
+          <%= render "events/filter_multiselect", param: :staff_tag_ids, label: "Staff tag",
                 options: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
-                selected: params[:staff_tag_ids], blank: "Any",
-                field_class: search_field_class, wrapper_class: "w-full",
+                selected: Array(params[:staff_tag_ids]).map(&:to_i), placeholder: "Any",
+                wrapper_class: "w-full",
                 hint: link_to("Manage staff tags", staff_tags_path, class: eyebrow_link_class, target: "_blank", rel: "noopener") %>
         <% end %>
 
         <!-- Topic subscription -->
-        <%= render "events/filter_select", param: :topic_subscription_type_id, label: "Topic subscription",
+        <%= render "events/filter_multiselect", param: :topic_subscription_type_id, label: "Topic subscription",
               options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
-              selected: params[:topic_subscription_type_id], blank: "Any topic",
-              field_class: search_field_class, wrapper_class: "w-full",
+              selected: Array(params[:topic_subscription_type_id]).map(&:to_i), placeholder: "Any topic",
+              wrapper_class: "w-full",
               hint: link_to("Manage topics", topic_subscription_types_path, class: eyebrow_link_class, target: "_blank", rel: "noopener") %>
       </div>
     </div>

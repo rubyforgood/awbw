@@ -76,6 +76,20 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).not_to include("Tara Trainings")
     end
 
+    it "filters by several topics at once via the frame request" do
+      news = create(:topic_subscription_type, :news)
+      other = create(:topic_subscription_type)
+      create(:topic_subscription, person: create(:person, first_name: "Tara", last_name: "Trainings"), topic_subscription_type: trainings)
+      create(:topic_subscription, person: create(:person, first_name: "Nora", last_name: "News"), topic_subscription_type: news)
+      create(:topic_subscription, person: create(:person, first_name: "Ollie", last_name: "Other"), topic_subscription_type: other)
+
+      get topic_subscriptions_path(topic_subscription_type_id: [ trainings.id, news.id ]), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Tara Trainings")
+      expect(response.body).to include("Nora News")
+      expect(response.body).not_to include("Ollie Other")
+    end
+
     it "filters by marked status via the frame request" do
       create(:topic_subscription, person: create(:person, first_name: "Mona", last_name: "Marked"), topic_subscription_type: trainings, marked: true)
       create(:topic_subscription, person: create(:person, first_name: "Percy", last_name: "Plain"), topic_subscription_type: trainings, marked: false)
