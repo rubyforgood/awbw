@@ -13,10 +13,8 @@
     <h2 class="font-display text-2xl text-gray-900">Admin details</h2>
     <div class="ml-auto flex items-center gap-2">
       <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-        <%= link_to admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
-                    class: button_classes(nil, size: :sm, extra: admin_button_color_class) do %>
-          <i class="fa-solid fa-clock-rotate-left"></i> History
-        <% end %>
+        <%= link_to "History", admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
+                    class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
       <% end %>
       <%= render "people/admin_only_badge" %>
     </div>
