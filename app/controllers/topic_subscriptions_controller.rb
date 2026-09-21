@@ -170,7 +170,7 @@ class TopicSubscriptionsController < ApplicationController
   # wins, then a stable key (e.g. "facilitator_trainings"), else the canonical
   # interested_in_more type.
   def new_topic_type_id
-    return params[:topic_subscription_type_id] if params[:topic_subscription_type_id].present?
+    return Array(params[:topic_subscription_type_id]).first if params[:topic_subscription_type_id].present?
 
     type = params[:topic_key].present? ? TopicSubscriptionType.find_by(key: params[:topic_key]) : TopicSubscriptionType.interested_in_more
     type&.id
