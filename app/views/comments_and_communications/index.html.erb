@@ -54,22 +54,31 @@
   </span>
 <% end %>
 
+<%# Person feed: the composer triggers sit top-right by the name; their panels open
+    in the body, sharing the card-level panel-toggle scope (content_data). Everyone
+    feed has no target person yet, so its add flow stays in a body card. %>
+<% actions = capture do %>
+  <% if @person %>
+    <%= render "comments_and_communications/add_buttons" %>
+  <% end %>
+<% end %>
+
 <%= render layout: "shared/index_page",
            locals: { domain: :people, surface: "bg-white", eyebrow: "Comments & communications",
-                     title: title, subtitle: subtitle, topbar: topbar } do %>
-  <%# ── Add zone: the section header sits above its warm cream card, mirroring the
-      search zone below. On a person's own feed the composers are ready; on the
-      everyone feed you pick the person first and the composers (with that person's
-      records) load into the frame. %>
-  <h2 class="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-    <i class="fa-solid fa-pen-to-square"></i> Add a comment or communication
-  </h2>
-  <section class="bg-brand-cream rounded-lg border border-gray-200 p-4">
-    <% if @person %>
-      <%= render "comments_and_communications/add_area", person: @person,
-                 new_comment: @new_comment, new_notification: @new_notification,
-                 record_targets: @record_targets %>
-    <% else %>
+                     title: title, subtitle: subtitle, topbar: topbar, actions: actions,
+                     content_data: (@person ? { controller: "panel-toggle" } : nil) } do %>
+  <% if @person %>
+    <%# Composers open here — the top-right New comment / New communication buttons
+        toggle them via the card-level panel-toggle scope. %>
+    <%= render "comments_and_communications/composer_panels", person: @person,
+               new_comment: @new_comment, new_notification: @new_notification,
+               record_targets: @record_targets %>
+  <% else %>
+    <%# Everyone feed: pick who the note is about, then the composers load in-frame. %>
+    <h2 class="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+      <i class="fa-solid fa-pen-to-square"></i> Add a comment or communication
+    </h2>
+    <section class="bg-brand-cream rounded-lg border border-gray-200 p-4">
       <%= form_with url: composers_comments_and_communications_path, method: :get,
                     data: { controller: "collection", turbo_frame: "cc_composers" },
                     class: "flex flex-wrap items-center gap-2" do %>
@@ -81,8 +90,8 @@
                        data: { controller: "remote-select", remote_select_model_value: "person" } %>
       <% end %>
       <%= turbo_frame_tag "cc_composers", class: "mt-3 block" %>
-    <% end %>
-  </section>
+    </section>
+  <% end %>
 
   <hr class="my-6 border-gray-200">
 
