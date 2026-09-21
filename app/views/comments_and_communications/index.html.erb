@@ -57,20 +57,19 @@
 <%= render layout: "shared/index_page",
            locals: { domain: :people, surface: "bg-white", eyebrow: "Comments & communications",
                      title: title, subtitle: subtitle, topbar: topbar } do %>
-  <%# ── Add zone: create a new comment or log a communication. On a person's own
-      feed the composers are ready; on the everyone feed you pick the person first
-      and the composers (with that person's records) load into the frame. Kept in
-      its own warm cream panel so it reads as distinct from the browse zone below. %>
+  <%# ── Add zone: the section header sits above its warm cream card, mirroring the
+      search zone below. On a person's own feed the composers are ready; on the
+      everyone feed you pick the person first and the composers (with that person's
+      records) load into the frame. %>
+  <h2 class="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+    <i class="fa-solid fa-pen-to-square"></i> Add a comment or communication
+  </h2>
   <section class="bg-brand-cream rounded-lg border border-gray-200 p-4">
     <% if @person %>
       <%= render "comments_and_communications/add_area", person: @person,
-                 heading: "Add a comment or communication",
                  new_comment: @new_comment, new_notification: @new_notification,
                  record_targets: @record_targets %>
     <% else %>
-      <h2 class="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-        <i class="fa-solid fa-pen-to-square"></i> Add a comment or communication
-      </h2>
       <%= form_with url: composers_comments_and_communications_path, method: :get,
                     data: { controller: "collection", turbo_frame: "cc_composers" },
                     class: "flex flex-wrap items-center gap-2" do %>

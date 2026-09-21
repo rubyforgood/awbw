@@ -27,6 +27,21 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Clearer comments & communications feed"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The staff comments & communications feed is easier to follow: separate
+    "Add", "Search", and "Results" sections, plainer labels, a green Add
+    button, and the extra filters tucked behind "More filters" so you aren't
+    met by a wall of fields.
+  action_path: "/comments_and_communications"
+  pr_number: 2556
+  pro_tips:
+    - "Use the cyan \"See one person…\" box by the title to jump to just one person's history."
+    - "Keyword searches the text of both comments and communications; \"More filters\" narrows by date, sender, follow-up and more."
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing
