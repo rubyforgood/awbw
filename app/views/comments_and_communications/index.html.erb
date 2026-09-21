@@ -73,7 +73,7 @@
       <%= form_with url: composers_comments_and_communications_path, method: :get,
                     data: { controller: "collection", turbo_frame: "cc_composers" },
                     class: "flex flex-wrap items-center gap-2" do %>
-        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who is this about?</label>
+        <label for="person_id" class="text-xs font-semibold whitespace-nowrap text-gray-700">Who will this be added to?</label>
         <%= select_tag :person_id, options_for_select([]),
                        include_blank: true, prompt: "Search by name…",
                        "aria-label": "Person the note is about",
