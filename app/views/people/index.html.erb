@@ -27,15 +27,15 @@
         </div>
       </div>
       <div class="flex flex-wrap items-center justify-end gap-2 text-right">
+        <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+          <%= link_to "History", admin_activities_events_path(time_period: "all_time", audience: %w[visitors users staff]),
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
         <% if allowed_to?(:index?, TopicSubscription) %>
           <%= link_to "Subscriptions", topic_subscriptions_path,
                       class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
         <%= render "email_addresses_link" %>
-        <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-          <%= link_to "History", admin_activities_events_path(time_period: "all_time", audience: %w[visitors users staff]),
-                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
-        <% end %>
         <% if allowed_to?(:manage?, Person) %>
           <%= link_to "Dedupe", dedupe_index_people_path,
                       class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
