@@ -49,8 +49,16 @@
       </div>
     </div>
 
-    <div class="mt-3">
-      <%= f.submit t("communications.add"), class: button_classes(:secondary_outline) %>
+    <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <%= f.submit t("communications.add"), class: button_classes(:success) %>
+      <% if local_assigns[:cancel_name].present? %>
+        <button type="button" class="<%= button_classes(:utility_outline) %>"
+                data-panel-toggle-name="<%= cancel_name %>"
+                data-panel-toggle-target="button"
+                data-action="panel-toggle#toggle">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+      <% end %>
     </div>
   <% end %>
 </div>
