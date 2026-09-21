@@ -13,6 +13,7 @@ export default class extends Controller {
 
       select._tomSelect = new TomSelect(select, {
         plugins: ["checkbox_options", "remove_button"],
+        placeholder: select.dataset.placeholder,
         onChange: () => {
           this.element.requestSubmit();
         },

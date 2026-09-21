@@ -256,9 +256,11 @@ class Person < ApplicationRecord
     when "formerly_active" then facilitators_formerly_active
     else all
     end }
-  scope :subscribed_to_topic, ->(topic_subscription_type_id) {
+  scope :subscribed_to_topic, ->(type_ids) {
+    ids = Array(type_ids).reject(&:blank?)
+    return all if ids.empty?
     joins(:topic_subscriptions)
-      .where(topic_subscriptions: { topic_subscription_type_id: topic_subscription_type_id, unsubscribed_at: nil })
+      .where(topic_subscriptions: { topic_subscription_type_id: ids, unsubscribed_at: nil })
       .distinct }
   scope :age_range_names_all, ->(name) {
     return all if name.blank?

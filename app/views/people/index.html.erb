@@ -7,7 +7,7 @@
          when "staff_tags"
            [ "Staff tags", staff_tags_path ]
          when "staff_tag"
-           staff_tag = StaffTag.find_by(id: params[:staff_tag_ids]) if allowed_to?(:index?, StaffTag)
+           staff_tag = StaffTag.find_by(id: Array(params[:staff_tag_ids]).first) if allowed_to?(:index?, StaffTag)
            [ staff_tag&.name || "Staff tags", staff_tag ? staff_tag_path(staff_tag) : staff_tags_path ]
          when "tags"
            [ "Tags", tags_path ]

@@ -27,6 +27,19 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Filter by several staff tags or topics at once"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-21
+  summary: >-
+    The staff tag and topic subscription filters now let you pick more than one
+    at a time — on the People directory, the Subscriptions list, the attendees
+    index, and the bulk email recipient picker — so you can pull everyone in
+    any of several tags or topics in one search.
+  action_path: "/people"
+  pro_tips:
+    - "Start typing in the box to search the list, then click to add each tag or topic; click the × on a chip to drop it."
+
 - name: "Clearer comments & communications feed"
   area: communications
   display_status: admin_facing

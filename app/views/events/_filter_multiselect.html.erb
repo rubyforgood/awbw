@@ -1,0 +1,25 @@
+<%# Shared labeled multi-<select> for filter bars — the searchable (TomSelect)
+    multi-value counterpart of events/filter_select, so one filter can match
+    several values at once. The enclosing form must carry the `searchable-checkbox`
+    Stimulus controller (which enhances the select and submits on change); its
+    "Clear filters" button resets the control via collection#clearAndSubmit. Locals:
+      param         – base param name (Symbol); the field submits as `param[]`
+      label         – field label
+      options       – array passed to options_for_select
+      selected      – array of selected values, type-matched to the option values
+      placeholder   – text shown while nothing is selected (optional)
+      wrapper_class – optional wrapper width (defaults to w-full md:w-64)
+      hint          – optional HTML rendered as muted help text under the select %>
+<div class="<%= local_assigns.fetch(:wrapper_class, "w-full md:w-64") %>">
+  <%= label_tag param, label, class: search_label_class %>
+  <%= select_tag "#{param}[]",
+                 options_for_select(options, Array(selected)),
+                 id: param,
+                 multiple: true,
+                 include_blank: false,
+                 class: "w-full",
+                 data: { searchable_checkbox_target: "select", placeholder: local_assigns[:placeholder] } %>
+  <% if local_assigns[:hint].present? %>
+    <p class="mt-1 text-xs text-gray-500"><%= local_assigns[:hint] %></p>
+  <% end %>
+</div>
