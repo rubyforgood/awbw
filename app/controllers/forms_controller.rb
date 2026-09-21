@@ -191,10 +191,9 @@ class FormsController < ApplicationController
     present - kept
   end
 
-  # True when the pending edit would leave a fixed-option field (the payment-method
-  # field) with no options — a form offering no payment method renders an
-  # unanswerable required question. Reads the assigned in-memory state so options
-  # unchecked in the builder (marked for removal) don't count as surviving.
+  # True when the pending edit would leave the payment-method field with no
+  # options — which would render an unanswerable required question. Reads the
+  # assigned state so options unchecked in the builder don't count as surviving.
   def fixed_option_field_emptied?
     @form.form_fields.any? do |field|
       next false if field.marked_for_destruction?

@@ -1,6 +1,5 @@
-<%# One fixed payment-method option, rendered as an on/off checkbox. The label is
-    fixed (hidden field), so admins can only turn the method on or off — checking
-    keeps/creates the join, unchecking destroys it. The hidden _destroy "1" paired
+<%# One payment method as an on/off checkbox: fixed label (hidden), checked
+    keeps/creates the join, unchecked destroys it. The hidden _destroy "1" paired
     with the checkbox "0" inverts the checkbox to mean "included". %>
 <label class="flex items-center gap-2 text-sm text-gray-700">
   <%= opt.hidden_field :option_name, value: label %>

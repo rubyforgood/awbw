@@ -171,9 +171,8 @@
           <% payment_toggles = field.fixed_options? && params[:admin] != "true" %>
           <div class="hidden space-y-2 border-t border-gray-100 pt-3 pl-1" data-answer-options-target="list">
             <% if payment_toggles %>
-              <%# Payment-method options drive Stripe charge logic, so their labels
-                  are fixed. Admins turn each method on or off with a checkbox here;
-                  append ?admin=true to the URL to fully edit them instead. %>
+              <%# Fixed labels (wired to Stripe), so admins only toggle each method
+                  on/off; ?admin=true switches to full editing. %>
               <p class="text-xs text-gray-500">
                 Check which payment methods this form offers. The labels are fixed because they're tied to payment processing.
               </p>

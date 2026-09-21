@@ -385,14 +385,13 @@ RSpec.describe "Forms", type: :request do
 
       get edit_form_path(form)
 
-      # Each option is shown as an on/off checkbox (a _destroy toggle, checked = on)...
+      # Each option is an on/off checkbox (a _destroy toggle)...
       FormBuilderService::PAYMENT_METHOD_OPTIONS.each do |option|
         expect(response.body).to include(option)
       end
       expect(response.body).to match(%r{<input type="checkbox"[^>]*\[_destroy\][^>]*value="0"})
-      # ...with fixed labels carried as hidden fields (not editable text inputs).
+      # ...with fixed labels as hidden fields, not editable inputs.
       expect(response.body).to include('value="Credit card (later)" type="hidden"')
-      # A note explains why the labels are fixed.
       expect(response.body).to include("tied to payment processing")
     end
 
