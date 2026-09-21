@@ -21,7 +21,7 @@
   <div class="flex flex-wrap items-center gap-1">
     <%= link_to "Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <%= link_to "Activities", admin_activities_events_path(person_id: @person&.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "History", admin_activities_events_path(person_id: @person&.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 <% end %>
 <% subtitle = capture do %>

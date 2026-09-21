@@ -3461,3 +3461,13 @@
     When you log a call, text, or email by hand, you can now set the date and
     time it actually happened — so a contact recorded days later still lands in
     the right spot on the person's timeline.
+
+- name: "Portal activity is now called History"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The admin home "Portal activity" tile and its "Activities" section are now
+    labeled "History" — matching the "History" card on a person's edit page that
+    already links there.
+  action_path: "/admin/activities/counts"
