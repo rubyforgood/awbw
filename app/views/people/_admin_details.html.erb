@@ -11,7 +11,15 @@
       <i class="fa-solid fa-lock"></i>
     </span>
     <h2 class="font-display text-2xl text-gray-900">Admin details</h2>
-    <span class="ml-auto"><%= render "people/admin_only_badge" %></span>
+    <div class="ml-auto flex items-center gap-2">
+      <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+        <%= link_to admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
+                    class: button_classes(nil, size: :sm, extra: admin_button_color_class) do %>
+          <i class="fa-solid fa-clock-rotate-left"></i> History
+        <% end %>
+      <% end %>
+      <%= render "people/admin_only_badge" %>
+    </div>
   </div>
   <div class="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
     <% program_categories = person.categorizable_items.filter_map(&:category).select { |c| c.category_type&.profile_specific? && c.category_type.name != "AgeRange" }.group_by(&:category_type) %>

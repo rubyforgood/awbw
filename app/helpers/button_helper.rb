@@ -62,6 +62,13 @@ module ButtonHelper
     tokens.join(" ")
   end
 
+  # The blue tint for admin-only action buttons (Edit/User/History on the people
+  # index, the profile admin dossier, the navbar). Pair with button_classes for
+  # the base + size; call sites that pass `size: nil` add their own padding.
+  def admin_button_color_class
+    "admin-only border border-blue-300 bg-blue-100 text-blue-800 hover:bg-blue-200"
+  end
+
   # The AWBW brand CTA button (marketing "Donate" / "Explore" style): gold fill,
   # navy label, with a raised darker-gold bottom edge that presses on click. The
   # edge comes from the --shadow-brand-cta theme token so it tracks the gold.

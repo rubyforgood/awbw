@@ -142,6 +142,15 @@
         <% if current_user %>
           <%= render "shared/navbar_user" %>
         <% end %>
+
+        <% if current_user&.person && allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+          <%= link_to admin_activities_events_path(person_id: current_user.person_id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
+                      title: "My history",
+                      class: "admin-only ml-3 flex size-10 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-blue-800 shadow-sm transition-colors hover:bg-blue-200" do %>
+            <span class="sr-only">My history</span>
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          <% end %>
+        <% end %>
       </div>
       <% end %>
     </div>
