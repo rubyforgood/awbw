@@ -34,6 +34,12 @@
         <dd class="font-medium text-gray-900"><%= request.requested_value %></dd>
       </div>
     <% end %>
+    <% if request.proposed_change_summary.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">New value</dt>
+        <dd class="font-medium text-gray-900"><%= request.proposed_change_summary %></dd>
+      </div>
+    <% end %>
     <% if request.details.present? %>
       <div class="flex gap-2">
         <dt class="w-32 shrink-0 text-gray-500">Details</dt>

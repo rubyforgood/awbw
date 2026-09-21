@@ -25,12 +25,30 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     when "primary_email"
       "Approve and send a confirmation email to #{requested_value}?"
     when "organization_name"
-      org = target_organization
-      count = org ? org.affiliations.count : 0
-      "Rename \"#{org&.name}\" to \"#{requested_value}\"? #{helpers.pluralize(count, "affiliation")} across the portal use this organization."
+      org_rename_confirm(target_organization, requested_value)
+    when "affiliation"
+      affiliation_approve_confirm
     else
       "Approve and apply this change now?"
     end
+  end
+
+  def affiliation_approve_confirm
+    case requested_value
+    when ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION
+      org_rename_confirm(affiliation&.organization, proposed_organization_name)
+    when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE
+      "End-date and mark this affiliation inactive?"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_ADD
+      "Add this affiliation to the profile?"
+    else
+      "Approve and apply this change now?"
+    end
+  end
+
+  def org_rename_confirm(org, new_name)
+    count = org ? org.affiliations.count : 0
+    "Rename \"#{org&.name}\" to \"#{new_name}\"? #{helpers.pluralize(count, "affiliation")} across the portal use this organization."
   end
 
   # Where "Update manually" sends an admin to make the edit by hand.
