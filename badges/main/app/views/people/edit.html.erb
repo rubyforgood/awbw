@@ -33,7 +33,7 @@
     <%= link_to "User account", user_path(@person.user), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
   <% end %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-    <%= link_to "History", admin_activities_events_path(person_id: @person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "Activity", admin_activities_events_path(person_id: @person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
   <% end %>
   <% if params[:admin] == "true" && @person.filemaker_code.present? && FmRolodex.exists?(fm_id: @person.filemaker_code) %>
     <%= link_to "Rolodex", fm_archive_path(@person.filemaker_code, table: "rolodexes"), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
