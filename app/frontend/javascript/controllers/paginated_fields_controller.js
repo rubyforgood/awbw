@@ -139,8 +139,13 @@ export default class extends Controller {
       groups.get(key).push(el);
     }
 
+    // Newest row first within each group, and groups by their newest row.
+    const ordered = [...groups.values()]
+      .map((rows) => rows.sort((a, b) => this.itemDate(b) - this.itemDate(a)))
+      .sort((a, b) => this.itemDate(b[0]) - this.itemDate(a[0]));
+
     let order = 1;
-    for (const rows of groups.values()) {
+    for (const rows of ordered) {
       const header = this.buildHeader(rows[0], rows.length);
       header.style.order = order++;
       parent.appendChild(header);
@@ -163,6 +168,10 @@ export default class extends Controller {
 
   subjectKey(el) {
     return (el.dataset.subject || "").trim().toLowerCase();
+  }
+
+  itemDate(el) {
+    return Number(el.dataset.createdAt) || 0;
   }
 
   buildHeader(firstRow, count) {

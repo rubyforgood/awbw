@@ -68,7 +68,7 @@
             <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
           <% end %>
         <% else %>
-          <div data-paginated-fields-target="item" data-subject="<%= entry.email_subject %>">
+          <div data-paginated-fields-target="item" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
             <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only %>
           </div>
         <% end %>
