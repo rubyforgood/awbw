@@ -33,10 +33,8 @@
         <% end %>
         <%= render "email_addresses_link" %>
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-          <%= link_to admin_activities_events_path(time_period: "all_time", audience: %w[visitors users staff]),
-                      class: button_classes(nil, size: :sm, extra: admin_button_color_class) do %>
-            <i class="fa-solid fa-clock-rotate-left"></i> History
-          <% end %>
+          <%= link_to "History", admin_activities_events_path(time_period: "all_time", audience: %w[visitors users staff]),
+                      class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
         <% if allowed_to?(:manage?, Person) %>
           <%= link_to "Dedupe", dedupe_index_people_path,
