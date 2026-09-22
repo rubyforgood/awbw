@@ -6,9 +6,9 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def auto_renewal_label
-    return "enable" unless autorenewal_cancelled?
+    return "Auto-renew: enable" unless autorenewal_cancelled?
 
-    "cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}"
+    "Auto-renew: cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}"
   end
 
   def period_label
@@ -17,6 +17,8 @@ class MembershipDecorator < ApplicationDecorator
     end_str = end_date >= Date.current ? "present" : end_date.strftime("%b %-d, %Y")
     "#{start_date.strftime("%b %-d, %Y")} – #{end_str}"
   end
+
+  def stripe_active? = person.pay_customer.subscribed?
 
   def cancelled_expires_on
     return unless autorenewal_cancelled?

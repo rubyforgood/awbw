@@ -19,6 +19,10 @@
             <%= membership.period_label ? tag.span(membership.period_label, class: "truncate text-xs text-gray-500") : nil %>
           </div>
 
+          <% if membership.stripe_active? %>
+            <%= render "shared/badge", label: "Stripe", classes: "bg-green-100 text-green-700 border-green-200" %>
+          <% end %>
+
           <% if person.preferred_email.present? %>
             <span class="block truncate text-xs text-gray-500"><%= person.preferred_email %></span>
           <% end %>
