@@ -18,7 +18,7 @@ class MembershipDecorator < ApplicationDecorator
     "#{start_date.strftime("%b %-d, %Y")} – #{end_str}"
   end
 
-  def stripe_active? = person.pay_customer.subscribed?
+  def stripe_active? = person.payment_processor&.subscribed?
 
   def cancelled_expires_on
     return unless autorenewal_cancelled?

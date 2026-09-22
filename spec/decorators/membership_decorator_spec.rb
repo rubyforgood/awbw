@@ -38,7 +38,9 @@ RSpec.describe MembershipDecorator, type: :decorator do
     end
 
     it "is nil when there are no dates" do
-      expect(create(:membership).decorate.period_label).to be_nil
+      membership = build(:membership, start_date: nil, end_date: nil)
+
+      expect(membership.decorate.period_label).to be_nil
     end
 
     it "shows the fixed end date when cancelled and expired" do

@@ -43,14 +43,11 @@ class PeopleController < ApplicationController
     track_view(@person)
 
     @membership = membership_for(@person)
-    membership_sub = @person.pay_subscriptions
-      .for_name(Pay.default_product_name)
-      .order(created_at: :desc)
-      .first
+    membership_sub = @person.payment_processor&.subscription
 
     @membership_autopay = allowed_to?(:own_membership?, @person) &&
                           membership_sub.present? &&
-                          @person.pay_subscriptions.for_name(Pay.default_product_name).active.exists?
+                          @person.payment_processor&.subscribed?
 
     @membership_autopay_cancelling = @membership_autopay &&
                                      membership_sub.canceled? &&

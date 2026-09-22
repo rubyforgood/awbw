@@ -16,6 +16,28 @@ RSpec.describe Membership, type: :model do
       expect(subscription.errors[:cost_cents]).to be_present
     end
 
+    it "rejects end_date before start_date" do
+      subscription = build(:membership, start_date: Date.current + 1.month, end_date: Date.current)
+      expect(subscription).not_to be_valid
+      expect(subscription.errors[:end_date]).to be_present
+    end
+
+    it "rejects overlapping dates with an existing membership for the same person" do
+      person = create(:person)
+      create(:membership, person: person, start_date: Date.current - 1.month, end_date: Date.current + 1.month)
+
+      overlap = build(:membership, person: person, start_date: Date.current, end_date: Date.current + 2.months)
+      expect(overlap).not_to be_valid
+      expect(overlap.errors[:base].join).to match(/overlaps/)
+    end
+
+    it "allows non-overlapping dates with an existing membership for the same person" do
+      person = create(:person)
+      create(:membership, person: person, start_date: Date.current - 2.months, end_date: Date.current - 1.month)
+
+      expect(build(:membership, person: person, start_date: Date.current, end_date: Date.current + 1.month)).to be_valid
+    end
+
     it "rejects a second autorenewal_cancelled subscription for the same person" do
       person = create(:person)
       create(:membership, person: person)
@@ -25,9 +47,9 @@ RSpec.describe Membership, type: :model do
       expect(second.errors[:base].join).to match(/already has a membership/)
     end
 
-    it "allows a new subscription once the previous one is autorenewal_cancelled" do
+    it "allows a new subscription once the previous one is autorenewal_cancelled and dates don't overlap" do
       person = create(:person)
-      create(:membership, :autorenewal_cancelled, person: person)
+      create(:membership, :autorenewal_cancelled, person: person, start_date: Date.current - 2.months, end_date: Date.current - 1.month)
 
       expect(build(:membership, person: person)).to be_valid
     end
@@ -70,7 +92,7 @@ RSpec.describe Membership, type: :model do
     end
 
     it "is false when end_date is in the past" do
-      expect(create(:membership, end_date: Date.current - 1.month)).not_to be_active
+      expect(create(:membership, start_date: Date.current - 2.months, end_date: Date.current - 1.month)).not_to be_active
     end
 
     it "is false when end_date is nil" do
@@ -161,16 +183,18 @@ describe "#end_date" do
       expect(membership.end_date).to eq(Date.current + 2.years)
     end
 
-    it "does not set dates for unpaid invoices" do
-      membership = create(:membership).tap { |m| m.update!(end_date: nil) }
+    it "does not sync dates for unpaid invoices" do
+      membership = create(:membership)
+      original_start = membership.start_date
+      original_end = membership.end_date
       invoice = build(:membership_invoice, membership: membership,
         start_date: Date.current - 1.month, end_date: Date.current + 11.months, cost_cents: 1_500)
 
       invoice.save!
       membership.reload
 
-      expect(membership.start_date).to be_nil
-      expect(membership.end_date).to be_nil
+      expect(membership.start_date).to eq(original_start)
+      expect(membership.end_date).to eq(original_end)
     end
   end
 

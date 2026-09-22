@@ -1,6 +1,7 @@
 FactoryBot.define do
   factory :membership do
     association :person
+    start_date { Date.current }
     end_date { Date.current + 1.year }
 
     trait :autorenewal_cancelled do

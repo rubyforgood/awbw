@@ -70,7 +70,7 @@ RSpec.describe MembershipInvoice, type: :model do
 
     it "rejects an overlap that sits under a different subscription for the same person" do
       existing.membership.update!(autorenewal_cancelled_at: Time.current)
-      rejoined = create(:membership, person: person)
+      rejoined = create(:membership, person: person, start_date: Date.new(2027, 10, 14), end_date: Date.new(2028, 10, 13))
 
       invoice = build(:membership_invoice,
         membership: rejoined,

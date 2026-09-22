@@ -32,6 +32,8 @@ class Membership < ApplicationRecord
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   validate :one_active_membership_per_person
+  validate :end_date_after_start_date
+  validate :no_overlapping_membership_dates
 
   scope :autorenewal_not_cancelled, -> { where(autorenewal_cancelled_at: nil) }
   scope :autorenewal_cancelled, -> { where.not(autorenewal_cancelled_at: nil) }
@@ -175,11 +177,29 @@ class Membership < ApplicationRecord
     Rails.logger.warn("[Membership] Could not cancel Stripe subscription for membership #{id}: #{e.message}")
   end
 
+  def end_date_after_start_date
+    return if start_date.blank? || end_date.blank?
+
+    errors.add(:end_date, "must be after the start date") if end_date < start_date
+  end
+
+  def no_overlapping_membership_dates
+    return if start_date.blank? || end_date.blank? || person_id.blank?
+
+    overlapping = Membership.where(person_id: person_id)
+      .where.not(id: id)
+      .where("start_date < ? AND end_date > ?", end_date, start_date)
+    return unless overlapping.exists?
+
+    errors.add(:base, "This membership overlaps with an existing membership for this person")
+  end
+
   def one_active_membership_per_person
     return if autorenewal_cancelled_at.present? || person_id.blank?
 
     others = Membership.autorenewal_not_cancelled.where(person_id: person_id)
     others = others.where.not(id: id) if persisted?
+    others = others.where("start_date < ? AND end_date > ?", end_date, start_date) if start_date.present? && end_date.present?
     return unless others.exists?
 
     errors.add(:base, "This person already has a membership that is active")
