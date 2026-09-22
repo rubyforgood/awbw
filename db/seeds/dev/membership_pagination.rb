@@ -29,10 +29,7 @@ add_membership = ->(first_name, last_name, marker, start_date, &build) do
   end
   return if person.memberships.autorenewal_not_cancelled.exists?
 
-  membership = person.memberships.create!(
-    start_date: start_date,
-    end_date: start_date + Membership::INVOICE_PERIOD - 1.day
-  )
+  membership = person.memberships.create!
   build.call(membership) if build
   puts "  #{person.full_name}: #{last_name}"
   membership

@@ -12,7 +12,7 @@
     <div class="mb-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
       <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
         <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= @membership.cost_label %></span></span>
-        <span class="text-gray-600">Status: <span class="font-medium text-gray-800"><%= @membership.status_label %></span></span>
+        <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= @membership.auto_renewal_label %></span></span>
         <% if @membership.period_label.present? %>
           <span class="text-gray-600">Dates: <span class="font-medium text-gray-800"><%= @membership.period_label %></span></span>
         <% end %>

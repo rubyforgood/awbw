@@ -5,23 +5,17 @@ class MembershipDecorator < ApplicationDecorator
     "Locked at #{h.dollars_from_cents(cost_cents)}"
   end
 
-  def status_label
-    return "Active" unless autorenewal_cancelled?
+  def auto_renewal_label
+    return "enable" unless autorenewal_cancelled?
 
-    "Renewals stopped #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}"
+    "cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}"
   end
 
   def period_label
-    starts = membership_invoices.filter_map(&:start_date).sort
-    ends = membership_invoices.filter_map(&:end_date).sort
-    return if starts.empty?
+    return if start_date.blank? || end_date.blank?
 
-    start_str = starts.first.strftime("%b %-d, %Y")
-    if ends.empty? || ends.last >= Date.current
-      "#{start_str} – present"
-    else
-      "#{start_str} – #{ends.last.strftime("%b %-d, %Y")}"
-    end
+    end_str = end_date >= Date.current ? "present" : end_date.strftime("%b %-d, %Y")
+    "#{start_date.strftime("%b %-d, %Y")} – #{end_str}"
   end
 
   def cancelled_expires_on
