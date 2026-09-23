@@ -20,9 +20,9 @@ class InvoicesController < ApplicationController
     if @invoice.save
       redirect_to invoice_path(@invoice), notice: "Invoice created."
     else
-      flash.now[:alert] = error_sentence(@invoice)
+      flash.now[:alert] = @invoice.errors.full_messages.join(", ")
       @invoice.invoice_line_items.build if @invoice.invoice_line_items.empty?
-      render :new
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -42,9 +42,9 @@ class InvoicesController < ApplicationController
     if @invoice.update(invoice_params)
       redirect_to invoice_path(@invoice), notice: "Invoice updated."
     else
-      flash.now[:alert] = error_sentence(@invoice)
+      flash.now[:alert] = @invoice.errors.full_messages.join(", ")
       @invoice.invoice_line_items.build if @invoice.invoice_line_items.empty?
-      render :edit
+      render :edit, status: :unprocessable_content
     end
   end
 
