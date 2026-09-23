@@ -3,6 +3,8 @@ Rails.application.routes.draw do
   resources :rich_text_assets
   resources :invoices
 
+  get '/addresses/lookup', to: 'addresses#lookup'
+
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
     mount Blazer::Engine, at: "blazer"

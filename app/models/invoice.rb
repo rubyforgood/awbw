@@ -9,7 +9,6 @@ class Invoice < ApplicationRecord
   validates :number, uniqueness: true
 
   before_validation :generate_number, on: :create
-  before_validation :fill_from_client, on: [:create, :update]
   before_validation :infer_client_type, on: [:create, :update]
 
   def total_cents
@@ -22,11 +21,6 @@ class Invoice < ApplicationRecord
   end
 
   private
-
-  def fill_from_client
-    return unless client&.persisted?
-    self.bill_to_address ||= client.addresses.active.exists? ? client.addresses.active.first.street_address : nil
-  end
 
   def generate_number
     return if number.present?

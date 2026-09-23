@@ -10,10 +10,11 @@ class InvoicePresenter
     @invoice = invoice
   end
 
-  def bill_to_name = invoice.bill_to_name
+  def bill_to_name = client&.respond_to?(:full_name) ? client.full_name : client&.name
+  def client = invoice.client
   def bill_to_address_lines = invoice.bill_to_address.to_s.lines.map(&:strip).reject { |l| l.include?("@") }.presence || []
   def bill_to_email = invoice.bill_to_address.to_s.lines.grep(/@/).first
-  def attention = invoice.attention_person&.compound_search_label&.dig(:label)
+  def attention = invoice.attention_person&.full_name
   def line_items = invoice.invoice_line_items.order(:id)
   def total_cents = invoice.total_cents
   def number = invoice.number

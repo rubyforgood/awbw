@@ -216,6 +216,9 @@ application.register("toggle-user-icon", ToggleUserIconController)
 import RemoteSelectController from "./remote_select_controller"
 application.register("remote-select", RemoteSelectController)
 
+import InvoiceClientController from "./invoice_client_controller"
+application.register("invoice-client", InvoiceClientController)
+
 import MixedChartController from "./mixed_chart_controller"
 application.register("mixed-chart", MixedChartController)
 

@@ -17,7 +17,7 @@
           input_html: {
             class: "bg-white",
             data: {
-              controller: "remote-select",
+              controller: "remote-select invoice-client",
               remote_select_model_value: "person_or_organization"
             }
           },
@@ -52,7 +52,7 @@
           html5: true,
           label: "Invoice date",
           required: true,
-          input_html: { class: "bg-white" } %>
+          input_html: { class: "bg-white", value: Date.current } %>
 
     <%= f.input :number,
           label: "Invoice number",
