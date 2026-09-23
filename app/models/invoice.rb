@@ -3,7 +3,8 @@ class Invoice < ApplicationRecord
   belongs_to :client, polymorphic: true
   belongs_to :attention_person, class_name: "Person", optional: true
 
-  accepts_nested_attributes_for :invoice_line_items, allow_destroy: true
+  accepts_nested_attributes_for :invoice_line_items, allow_destroy: true,
+                                 reject_if: proc { |attrs| attrs["description"].blank? }
 
   validates :number, :date, :client_id, :client_type, :bill_to_address, presence: true
   validates :number, uniqueness: true
@@ -20,8 +21,11 @@ class Invoice < ApplicationRecord
 
   def self.next_number
     prefix = ENV["INVOICE_PREFIX"] || "INV"
-    count = Invoice.where("number LIKE ?", "#{prefix}-%").count + 1
-    "#{prefix}-#{format('%03d', count)}"
+    max = Invoice.where("number LIKE ?", "#{prefix}-%")
+                 .pluck(:number)
+                 .filter_map { |n| n[/\A#{Regexp.escape(prefix)}-(\d+)\z/, 1]&.to_i }
+                 .max || 0
+    "#{prefix}-#{format('%03d', max + 1)}"
   end
 
   def total_cents

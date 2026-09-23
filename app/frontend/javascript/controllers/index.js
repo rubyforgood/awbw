@@ -219,6 +219,9 @@ application.register("remote-select", RemoteSelectController)
 import InvoiceClientController from "./invoice_client_controller"
 application.register("invoice-client", InvoiceClientController)
 
+import LineItemsController from "./line_items_controller"
+application.register("line-items", LineItemsController)
+
 import MixedChartController from "./mixed_chart_controller"
 application.register("mixed-chart", MixedChartController)
 
