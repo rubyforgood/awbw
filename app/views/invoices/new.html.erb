@@ -54,7 +54,8 @@
 
     <%= f.input :number,
           label: "Invoice number",
-          required: true,
+          required: false,
+          hint: "Auto-assigned if left blank",
           input_html: { class: "bg-white" } %>
 
     <fieldset class="mt-6 border-t border-gray-200 pt-6">

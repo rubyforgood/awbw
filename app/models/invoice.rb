@@ -18,6 +18,12 @@ class Invoice < ApplicationRecord
     self.client = GlobalID::Locator.locate_signed(sgid) if sgid.present?
   end
 
+  def self.next_number
+    prefix = ENV["INVOICE_PREFIX"] || "INV"
+    count = Invoice.where("number LIKE ?", "#{prefix}-%").count + 1
+    "#{prefix}-#{format('%03d', count)}"
+  end
+
   def total_cents
     invoice_line_items.sum { |item| item.unit_price_cents * item.quantity }
   end
@@ -31,8 +37,6 @@ class Invoice < ApplicationRecord
 
   def generate_number
     return if number.present?
-    prefix = ENV["INVOICE_PREFIX"] || "INV"
-    count = Invoice.where("number LIKE ?", "#{prefix}-%").count + 1
-    self.number = "#{prefix}-#{format('%03d', count)}"
+    self.number = self.class.next_number
   end
 end

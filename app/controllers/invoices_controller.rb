@@ -8,7 +8,7 @@ class InvoicesController < ApplicationController
   end
 
   def new
-    @invoice = Invoice.new
+    @invoice = Invoice.new(number: Invoice.next_number)
     authorize! @invoice
     @invoice.invoice_line_items.build
   end
