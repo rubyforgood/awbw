@@ -13,7 +13,7 @@ RSpec.describe InvoicePresenter do
 
   describe "#bill_to_address_lines" do
     it "returns address lines" do
-      expect(presenter.bill_to_address_lines).to eq(["123 Main St", "Los Angeles, CA 90001"])
+      expect(presenter.bill_to_address_lines).to eq([ "123 Main St", "Los Angeles, CA 90001" ])
     end
   end
 

@@ -14,7 +14,7 @@ class CreateInvoices < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :invoices, [:client_id, :client_type], if_not_exists: true
+    add_index :invoices, [ :client_id, :client_type ], if_not_exists: true
     add_index :invoices, :number, unique: true, if_not_exists: true
   end
 end
