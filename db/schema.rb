@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_23_105534) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1268,6 +1268,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
     t.index ["type"], name: "index_images_on_type"
   end
 
+  create_table "invoice_line_items", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date"
+    t.text "description", null: false
+    t.bigint "invoice_id", null: false
+    t.integer "quantity", default: 1, null: false
+    t.integer "unit_price_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
+  end
+
+  create_table "invoices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "attention_person_id"
+    t.text "bill_to_address", null: false
+    t.integer "client_id", null: false
+    t.string "client_type", null: false
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.date "date", null: false
+    t.string "number", null: false
+    t.integer "total_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["attention_person_id"], name: "index_invoices_on_attention_person_id"
+    t.index ["client_id", "client_type"], name: "index_invoices_on_client_id_and_client_type"
+    t.index ["number"], name: "index_invoices_on_number", unique: true
+  end
+
   create_table "locations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "city"
     t.string "country"
@@ -1309,11 +1337,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
   end
 
   create_table "memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "cancelled_at"
+    t.datetime "autorenewal_cancelled_at"
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.datetime "end_date"
     t.bigint "person_id", null: false
+    t.datetime "start_date"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_memberships_on_created_by_id"
@@ -2626,6 +2656,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_000001) do
   add_foreign_key "forms", "form_builders"
   add_foreign_key "forms", "users", column: "created_by_id"
   add_foreign_key "forms", "users", column: "updated_by_id"
+  add_foreign_key "invoice_line_items", "invoices"
+  add_foreign_key "invoices", "people", column: "attention_person_id"
   add_foreign_key "locations", "users", column: "created_by_id"
   add_foreign_key "locations", "users", column: "updated_by_id"
   add_foreign_key "media_files", "users", column: "created_by_id"

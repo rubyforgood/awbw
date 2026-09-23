@@ -1,0 +1,103 @@
+<% content_for(:page_title, "Edit Invoice") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-3xl">
+  <div class="mb-6 flex flex-wrap items-center gap-2">
+    <%= link_to "← Invoices", invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to invoice_path(@invoice), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      View invoice <i class="fa-solid fa-arrow-right text-xs"></i>
+    <% end %>
+  </div>
+
+  <h1 class="text-primary font-display text-2xl font-semibold mb-6">Edit Invoice</h1>
+
+  <%= simple_form_for @invoice, url: invoice_path(@invoice) do |f| %>
+    <%= render "shared/errors", resource: f.object %>
+
+    <%= f.input :client_id,
+          collection: @invoice.client_id.present? ? [ [ @invoice.client&.compound_search_label&.dig(:label) || "", @invoice.client_id ] ] : [],
+          selected: @invoice.client_id,
+          required: true,
+          input_html: {
+            class: "bg-white",
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "person_or_organization"
+            }
+          },
+          prompt: "Search people and organizations",
+          label: "Client",
+          hint: "The person or organization being billed." %>
+
+    <%= f.hidden_field :client_type, value: @invoice.client_type %>
+
+    <%= f.input :bill_to_address,
+          as: :text,
+          label: "Address",
+          required: true,
+          input_html: { rows: 3, class: "bg-white" } %>
+
+    <%= f.input :attention_person_id,
+          collection: @invoice.attention_person_id.present? ? [ [ @invoice.attention_person&.compound_search_label&.dig(:label) || "", @invoice.attention_person_id ] ] : [],
+          selected: @invoice.attention_person_id,
+          required: false,
+          input_html: {
+            class: "bg-white",
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "person"
+            }
+          },
+          prompt: "Search a person for attention",
+          label: "Attention (optional)",
+          hint: "Optional person to receive this invoice." %>
+
+    <%= f.input :date,
+          as: :date,
+          html5: true,
+          label: "Invoice date",
+          required: true,
+          input_html: { class: "bg-white" } %>
+
+    <%= f.input :number,
+          label: "Invoice number",
+          required: true,
+          input_html: { class: "bg-white" } %>
+
+    <fieldset class="mt-6 border-t border-gray-200 pt-6">
+      <legend class="mb-3 text-sm font-medium text-gray-700">Line items</legend>
+
+      <%= f.simple_fields_for :invoice_line_items do |li| %>
+        <div class="space-y-3 rounded-lg border border-gray-200 p-4">
+          <%= li.input :description,
+                label: "Description",
+                required: true,
+                input_html: { class: "bg-white" } %>
+          <%= li.input :date,
+                as: :date,
+                html5: true,
+                label: "Date",
+                required: true,
+                input_html: { class: "bg-white" } %>
+          <div class="grid grid-cols-2 gap-4">
+            <%= li.input :quantity,
+                  label: "Quantity",
+                  required: true,
+                  input_html: { min: 1, class: "bg-white" } %>
+            <%= li.input :unit_price_cents,
+                  label: "Unit price ($)",
+                  required: true,
+                  input_html: { min: 0, step: 0.01, class: "bg-white" } %>
+          </div>
+        </div>
+      <% end %>
+    </fieldset>
+
+    <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
+      <div class="ml-auto flex items-center gap-3">
+        <%= link_to "Cancel", invoice_path(@invoice), class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, "Update Invoice", class: button_classes(:primary) %>
+      </div>
+    </div>
+  <% end %>
+</div>
