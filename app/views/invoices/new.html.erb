@@ -11,7 +11,7 @@
   <%= simple_form_for @invoice, url: invoices_path do |f| %>
     <%= render "shared/errors", resource: f.object %>
 
-    <%= f.input :client_id,
+    <%= f.input :client_sgid,
           collection: [],
           required: true,
           input_html: {
@@ -24,8 +24,6 @@
           prompt: "Search people and organizations",
           label: "Client",
           hint: "The person or organization being billed." %>
-
-    <%= f.hidden_field :client_type %>
 
     <%= f.input :bill_to_address,
           as: :text,

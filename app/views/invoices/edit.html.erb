@@ -14,9 +14,9 @@
   <%= simple_form_for @invoice, url: invoice_path(@invoice) do |f| %>
     <%= render "shared/errors", resource: f.object %>
 
-    <%= f.input :client_id,
-          collection: @invoice.client_id.present? ? [ [ @invoice.client&.compound_search_label&.dig(:label) || "", @invoice.client_id ] ] : [],
-          selected: @invoice.client_id,
+    <%= f.input :client_sgid,
+          collection: @invoice.client.present? ? [ [ @invoice.client.compound_search_label[:label] || "", @invoice.client_sgid ] ] : [],
+          selected: @invoice.client_sgid,
           required: true,
           input_html: {
             class: "bg-white",
@@ -28,8 +28,6 @@
           prompt: "Search people and organizations",
           label: "Client",
           hint: "The person or organization being billed." %>
-
-    <%= f.hidden_field :client_type, value: @invoice.client_type %>
 
     <%= f.input :bill_to_address,
           as: :text,

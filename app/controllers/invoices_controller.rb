@@ -15,12 +15,13 @@ class InvoicesController < ApplicationController
 
   def create
     @invoice = Invoice.new(invoice_params)
-    @invoice.client_type = client_type_from_id(@invoice.client_id)
     authorize! @invoice
 
     if @invoice.save
       redirect_to invoice_path(@invoice), notice: "Invoice created."
     else
+      flash.now[:alert] = error_sentence(@invoice)
+      @invoice.invoice_line_items.build if @invoice.invoice_line_items.empty?
       render :new
     end
   end
@@ -37,11 +38,12 @@ class InvoicesController < ApplicationController
 
   def update
     authorize! @invoice
-    params[:invoice][:client_type] = client_type_from_id(params[:invoice][:client_id])
 
     if @invoice.update(invoice_params)
       redirect_to invoice_path(@invoice), notice: "Invoice updated."
     else
+      flash.now[:alert] = error_sentence(@invoice)
+      @invoice.invoice_line_items.build if @invoice.invoice_line_items.empty?
       render :edit
     end
   end
@@ -60,25 +62,9 @@ class InvoicesController < ApplicationController
 
   def invoice_params
     params.require(:invoice).permit(
-      :number, :date, :client_id, :bill_to_address,
-      :attention_person_id, :client_type,
+      :number, :date, :client_sgid, :bill_to_address,
+      :attention_person_id,
       invoice_line_items_attributes: [ :id, :date, :description, :quantity, :unit_price_cents, :_destroy ]
     )
-  end
-
-  def client_type_from_id(client_id)
-    return unless client_id.present?
-    if Person.exists?(client_id)
-      "Person"
-    elsif Organization.exists?(client_id)
-      "Organization"
-    end
-  end
-
-  def client_label_data
-    return unless @invoice&.client&.persisted?
-    { label: @invoice.client.compound_search_label[:label], id: @invoice.client.id }
-  rescue
-    nil
   end
 end

@@ -9,7 +9,14 @@ class Invoice < ApplicationRecord
   validates :number, uniqueness: true
 
   before_validation :generate_number, on: :create
-  before_validation :infer_client_type, on: [:create, :update]
+
+  def client_sgid
+    client&.to_signed_global_id&.to_s
+  end
+
+  def client_sgid=(sgid)
+    self.client = GlobalID::Locator.locate_signed(sgid) if sgid.present?
+  end
 
   def total_cents
     invoice_line_items.sum { |item| item.unit_price_cents * item.quantity }
@@ -27,10 +34,5 @@ class Invoice < ApplicationRecord
     prefix = ENV["INVOICE_PREFIX"] || "INV"
     count = Invoice.where("number LIKE ?", "#{prefix}-%").count + 1
     self.number = "#{prefix}-#{format('%03d', count)}"
-  end
-
-  def infer_client_type
-    return unless client_id.present? && client_type.blank?
-    self.client_type = Person.exists?(client_id) ? "Person" : "Organization"
   end
 end
