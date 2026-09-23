@@ -1,21 +1,20 @@
 class InvoicesController < ApplicationController
-  before_action :authenticate_user!
   before_action :set_invoice, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize! Invoice
     @invoices = Invoice.all.order(date: :desc)
-    authorize! Invoice, to: :index?
   end
 
   def new
+    authorize! Invoice
     @invoice = Invoice.new(number: Invoice.next_number)
-    authorize! @invoice
     @invoice.invoice_line_items.build
   end
 
   def create
+    authorize! Invoice
     @invoice = Invoice.new(invoice_params)
-    authorize! @invoice
 
     if @invoice.save
       redirect_to invoice_path(@invoice), notice: "Invoice created."

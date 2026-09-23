@@ -3,12 +3,12 @@ class AddressesController < ApplicationController
   skip_verify_authorized
 
   def lookup
-    addressable = GlobalID::Locator.locate_signed(params[:addressable_id])
+    addressable = GlobalID::Locator.locate_signed(params[:addressable_sgid])
     return head :not_found unless addressable
 
     address = addressable.addresses.active.first
     if address
-      formatted = [address.street_address, "#{address.city}, #{[address.state, address.zip_code].compact.join(' ')}"].compact.join("\n")
+      formatted = [ address.street_address, "#{address.city}, #{[ address.state, address.zip_code ].compact.join(' ')}" ].compact.join("\n")
       render json: { address: formatted }
     else
       head :not_found

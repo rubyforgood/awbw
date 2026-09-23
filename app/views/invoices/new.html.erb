@@ -11,25 +11,24 @@
   <%= simple_form_for @invoice, url: invoices_path do |f| %>
     <%= render "shared/errors", resource: f.object %>
 
-    <%= f.input :client_sgid,
-          collection: [],
-          required: true,
-          input_html: {
-            class: "bg-white",
-            data: {
-              controller: "remote-select invoice-client",
-              remote_select_model_value: "person_or_organization"
-            }
-          },
-          prompt: "Search people and organizations",
-          label: "Client",
-          hint: "The person or organization being billed." %>
+    <div data-controller="invoice-client">
+      <%= f.input :client_sgid,
+            collection: [],
+            required: true,
+            input_html: {
+              class: "bg-white",
+              data: { controller: "remote-select", invoice_client_target: "clientSelect", remote_select_model_value: "person_or_organization" }
+            },
+            prompt: "Search people and organizations",
+            label: "Client",
+            hint: "The person or organization being billed." %>
 
-    <%= f.input :bill_to_address,
-          as: :text,
-          label: "Address",
-          required: true,
-          input_html: { rows: 3, class: "bg-white" } %>
+      <%= f.input :bill_to_address,
+            as: :text,
+            label: "Address",
+            required: true,
+            input_html: { rows: 3, class: "bg-white", data: { invoice_client_target: "billToAddress" } } %>
+    </div>
 
     <%= f.input :attention_person_id,
           collection: [],

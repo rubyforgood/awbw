@@ -1,28 +1,26 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
+  static targets = ["billToAddress", "clientSelect"]
+
   connect() {
-    this.element.addEventListener("change", this.handleChange);
+    this.clientSelectTarget.addEventListener("change", this.handleChange);
   }
 
   disconnect() {
-    this.element.removeEventListener("change", this.handleChange);
+    this.clientSelectTarget.removeEventListener("change", this.handleChange);
   }
 
   handleChange = async () => {
-    const clientId = this.element.value;
-    const form = this.element.form;
-    if (!form || !clientId) return;
+    const clientSgid = this.clientSelectTarget.value;
+    if (!clientSgid) return;
 
-    const addressUrl = `/addresses/lookup?addressable_id=${encodeURIComponent(clientId)}`;
+    const addressUrl = `/addresses/lookup?addressable_sgid=${encodeURIComponent(clientSgid)}`;
     try {
       const response = await fetch(addressUrl);
       if (!response.ok) return;
       const data = await response.json();
-      const addressTextarea = form.querySelector("[name$='[bill_to_address]'], [id$='_bill_to_address']");
-      if (addressTextarea) {
-        addressTextarea.value = data.address || "";
-      }
+      this.billToAddressTarget.value = data.address || "";
     } catch {
       // Silently fail
     }
