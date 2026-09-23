@@ -78,10 +78,10 @@
                   label: "Quantity",
                   required: true,
                   input_html: { min: 1, class: "bg-white" } %>
-            <%= li.input :unit_price_cents,
+            <%= li.input :unit_price_dollars,
                   label: "Unit price ($)",
                   required: true,
-                  input_html: { min: 0, step: 0.01, class: "bg-white" } %>
+                  input_html: { min: 0, step: 0.01, placeholder: "0.00", class: "bg-white", data: { controller: "currency-input", action: "currency-input#format" } } %>
           </div>
         </div>
       <% end %>
