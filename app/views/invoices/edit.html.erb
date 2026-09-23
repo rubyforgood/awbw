@@ -9,7 +9,7 @@
     <% end %>
   </div>
 
-  <h1 class="text-primary font-display text-2xl font-semibold mb-6">Edit Invoice</h1>
+  <h1 class="text-primary mb-6 font-display text-2xl font-semibold">Edit Invoice</h1>
 
   <%= simple_form_for @invoice, url: invoice_path(@invoice) do |f| %>
     <%= render "shared/errors", resource: f.object %>

@@ -6,7 +6,7 @@
     <%= link_to "← Invoices", invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
-  <h1 class="text-primary font-display text-2xl font-semibold mb-6">New Invoice</h1>
+  <h1 class="text-primary mb-6 font-display text-2xl font-semibold">New Invoice</h1>
 
   <%= simple_form_for @invoice, url: invoices_path do |f| %>
     <%= render "shared/errors", resource: f.object %>
