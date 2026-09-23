@@ -11,24 +11,6 @@ RSpec.describe Invoice do
     end
   end
 
-  describe "#generate_number" do
-    it "auto-generates a number with the ENV prefix" do
-      allow(ENV).to receive(:[]).with("INVOICE_PREFIX").and_return("TEST")
-      invoice = build(:invoice, number: nil)
-      invoice.send(:generate_number)
-
-      expect(invoice.number).to match(/\ATEST-\d{3}/)
-    end
-
-    it "defaults to INV prefix" do
-      allow(ENV).to receive(:[]).with("INVOICE_PREFIX").and_return(nil)
-      invoice = build(:invoice, number: nil)
-      invoice.send(:generate_number)
-
-      expect(invoice.number).to match(/\AINV-\d{3}/)
-    end
-  end
-
   describe "validations" do
     it "is valid with required fields" do
       invoice = build(:invoice)

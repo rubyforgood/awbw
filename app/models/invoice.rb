@@ -9,8 +9,6 @@ class Invoice < ApplicationRecord
   validates :number, :date, :client_id, :client_type, :bill_to_address, presence: true
   validates :number, uniqueness: true
 
-  before_validation :generate_number, on: :create
-
   def client_sgid
     client&.to_signed_global_id&.to_s
   end
@@ -35,12 +33,5 @@ class Invoice < ApplicationRecord
   def bill_to_name
     return unless client
     client.respond_to?(:full_name) ? client.full_name : client.name
-  end
-
-  private
-
-  def generate_number
-    return if number.present?
-    self.number = self.class.next_number
   end
 end
