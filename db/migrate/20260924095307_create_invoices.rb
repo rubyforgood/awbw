@@ -3,7 +3,7 @@ class CreateInvoices < ActiveRecord::Migration[8.1]
     create_table :invoices do |t|
       t.string :number, null: false
       t.date :date, null: false
-      t.references :client, polymorphic: true, null: false
+      t.references :invoicee, polymorphic: true, null: false
       t.text :bill_to_address, null: false
       t.references :attention_person, foreign_key: { to_table: :people }
       t.integer :total_cents, null: false, default: 0

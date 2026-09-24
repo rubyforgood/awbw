@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :invoice do
     sequence(:number) { |n| "#{ENV.fetch("INVOICE_PREFIX", "INV")}-#{format('%03d', n)}" }
     date { Date.current }
-    client { create(:person) }
+    invoicee { create(:person) }
     bill_to_address { "123 Main St\nLos Angeles, CA 90001" }
     total_cents { 150_000 }
 

@@ -1,20 +1,20 @@
 class Invoice < ApplicationRecord
   has_many :invoice_line_items, dependent: :destroy
-  belongs_to :client, polymorphic: true
+  belongs_to :invoicee, polymorphic: true
   belongs_to :attention_person, class_name: "Person", optional: true
 
   accepts_nested_attributes_for :invoice_line_items, allow_destroy: true,
                                  reject_if: proc { |attrs| attrs["description"].blank? }
 
-  validates :number, :date, :client_id, :client_type, :bill_to_address, presence: true
+  validates :number, :date, :invoicee_id, :invoicee_type, :bill_to_address, presence: true
   validates :number, uniqueness: true
 
-  def client_sgid
-    client&.to_signed_global_id&.to_s
+  def invoicee_sgid
+    invoicee&.to_signed_global_id&.to_s
   end
 
-  def client_sgid=(sgid)
-    self.client = GlobalID::Locator.locate_signed(sgid) if sgid.present?
+  def invoicee_sgid=(sgid)
+    self.invoicee = GlobalID::Locator.locate_signed(sgid) if sgid.present?
   end
 
   def self.next_number
@@ -31,7 +31,7 @@ class Invoice < ApplicationRecord
   end
 
   def bill_to_name
-    return unless client
-    client.respond_to?(:full_name) ? client.full_name : client.name
+    return unless invoicee
+    invoicee.respond_to?(:full_name) ? invoicee.full_name : invoicee.name
   end
 end

@@ -23,8 +23,8 @@ RSpec.describe Invoice do
       expect(invoice).not_to be_valid
     end
 
-    it "validates client_type is required" do
-      invoice = build(:invoice, client_type: "")
+    it "validates invoicee_type is required" do
+      invoice = build(:invoice, invoicee_type: "")
       expect(invoice).not_to be_valid
     end
   end

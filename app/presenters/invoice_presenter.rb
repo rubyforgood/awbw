@@ -10,8 +10,8 @@ class InvoicePresenter
     @invoice = invoice
   end
 
-  def bill_to_name = client&.respond_to?(:full_name) ? client.full_name : client&.name
-  def client = invoice.client
+  def bill_to_name = invoicee&.respond_to?(:full_name) ? invoicee.full_name : invoicee&.name
+  def invoicee = invoice.invoicee
   def bill_to_address_lines = invoice.bill_to_address.to_s.lines.map(&:strip).reject { |l| l.include?("@") }.presence || []
   def bill_to_email = invoice.bill_to_address.to_s.lines.grep(/@/).first
   def attention = invoice.attention_person&.full_name
@@ -19,7 +19,7 @@ class InvoicePresenter
   def total_cents = invoice.total_cents
   def number = invoice.number
   def date = invoice.date
-  def client_id = client&.id
+  def invoicee_id = invoicee&.id
   def reference = nil
   def payable_to_note = PAYABLE_TO_NOTE
 

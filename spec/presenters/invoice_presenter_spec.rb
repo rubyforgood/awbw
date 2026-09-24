@@ -2,11 +2,11 @@ require "rails_helper"
 
 RSpec.describe InvoicePresenter do
   let(:person) { create(:person, first_name: "Jane", last_name: "Doe") }
-  let(:invoice) { create(:invoice, bill_to_address: "123 Main St\nLos Angeles, CA 90001", attention_person: person, client: person) }
+  let(:invoice) { create(:invoice, bill_to_address: "123 Main St\nLos Angeles, CA 90001", attention_person: person, invoicee: person) }
   let(:presenter) { described_class.new(invoice) }
 
   describe "#bill_to_name" do
-    it "returns the client name" do
+    it "returns the invoicee name" do
       expect(presenter.bill_to_name).to eq("Jane Doe")
     end
   end

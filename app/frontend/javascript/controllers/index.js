@@ -216,8 +216,8 @@ application.register("toggle-user-icon", ToggleUserIconController)
 import RemoteSelectController from "./remote_select_controller"
 application.register("remote-select", RemoteSelectController)
 
-import InvoiceClientController from "./invoice_client_controller"
-application.register("invoice-client", InvoiceClientController)
+import InvoiceeController from "./invoicee_controller"
+application.register("invoicee", InvoiceeController)
 
 import LineItemsController from "./line_items_controller"
 application.register("line-items", LineItemsController)

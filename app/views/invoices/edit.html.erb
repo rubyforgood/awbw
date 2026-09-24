@@ -14,24 +14,24 @@
   <%= simple_form_for @invoice, url: invoice_path(@invoice) do |f| %>
     <%= render "shared/errors", resource: f.object %>
 
-    <div data-controller="invoice-client">
-      <%= f.input :client_sgid,
-            collection: @invoice.client.present? ? [ [ @invoice.client.compound_search_label[:label] || "", @invoice.client_sgid ] ] : [],
-            selected: @invoice.client_sgid,
+    <div data-controller="invoicee">
+      <%= f.input :invoicee_sgid,
+            collection: @invoice.invoicee.present? ? [ [ @invoice.invoicee.compound_search_label[:label] || "", @invoice.invoicee_sgid ] ] : [],
+            selected: @invoice.invoicee_sgid,
             required: true,
             input_html: {
               class: "bg-white",
-              data: { controller: "remote-select", invoice_client_target: "clientSelect", remote_select_model_value: "person_or_organization" }
+              data: { controller: "remote-select", invoicee_target: "invoiceeSelect", remote_select_model_value: "person_or_organization" }
             },
             prompt: "Search people and organizations",
-            label: "Client",
+            label: "Invoicee",
             hint: "The person or organization being billed." %>
 
       <%= f.input :bill_to_address,
             as: :text,
             label: "Address",
             required: true,
-            input_html: { rows: 3, class: "bg-white", data: { invoice_client_target: "billToAddress" } } %>
+            input_html: { rows: 3, class: "bg-white", data: { invoicee_target: "billToAddress" } } %>
     </div>
 
     <%= f.input :attention_person_id,

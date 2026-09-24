@@ -1,21 +1,21 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["billToAddress", "clientSelect"]
+  static targets = ["billToAddress", "invoiceeSelect"]
 
   connect() {
-    this.clientSelectTarget.addEventListener("change", this.handleChange);
+    this.invoiceeSelectTarget.addEventListener("change", this.handleChange);
   }
 
   disconnect() {
-    this.clientSelectTarget.removeEventListener("change", this.handleChange);
+    this.invoiceeSelectTarget.removeEventListener("change", this.handleChange);
   }
 
   handleChange = async () => {
-    const clientSgid = this.clientSelectTarget.value;
-    if (!clientSgid) return;
+    const invoiceeSgid = this.invoiceeSelectTarget.value;
+    if (!invoiceeSgid) return;
 
-    const addressUrl = `/addresses/lookup?addressable_sgid=${encodeURIComponent(clientSgid)}`;
+    const addressUrl = `/addresses/lookup?addressable_sgid=${encodeURIComponent(invoiceeSgid)}`;
     try {
       const response = await fetch(addressUrl);
       if (!response.ok) return;

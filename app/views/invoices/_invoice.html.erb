@@ -45,7 +45,7 @@
        [ "Invoice Number", invoice.number ],
        [ "Invoice Date", invoice.date&.strftime("%-d %b, %Y") ],
        [ "Reference", invoice.reference ],
-       [ "Client ID", invoice.client_id ]
+       [ "Client ID", invoice.invoicee_id ]
      ].each do |label, value| %>
       <div class="px-3 py-3">
         <p class="text-xs font-bold text-gray-600"><%= label %></p>
