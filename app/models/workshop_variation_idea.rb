@@ -26,6 +26,8 @@ class WorkshopVariationIdea < ApplicationRecord
   belongs_to :windows_type, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :nullify
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   has_many :workshop_variations, dependent: :nullify
 
   # Asset associations
