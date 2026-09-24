@@ -69,16 +69,9 @@ class NotificationsController < ApplicationController
     track_responded_change(responded_was)
     track_incoming_body_change(body_was)
 
-    if params[:combined].present?
-      render turbo_stream: turbo_stream.replace(
-        helpers.dom_id(@notification), partial: "comments_and_communications/communication_row", locals: { entry: @notification }
-      )
-    elsif request.format.turbo_stream?
-      render turbo_stream: turbo_stream.replace(
-        helpers.dom_id(@notification, :flag), partial: "notifications/flag_toggle", locals: { notification: @notification }
-      )
-    else
-      head :ok
+    respond_to do |format|
+      format.turbo_stream
+      format.any { head :ok }
     end
   end
 
