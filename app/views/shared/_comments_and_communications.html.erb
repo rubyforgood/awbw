@@ -28,13 +28,20 @@
 <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          id="comments-section"
          data-controller="paginated-fields edit-toggle"
-         data-paginated-fields-per-page-value="10">
+         data-paginated-fields-per-page-value="10"
+         data-paginated-fields-no-subject-label-value="<%= t("communications.no_subject") %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
       <i class="fa-solid fa-comments"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : t("communications.title") %></h2>
     <div class="ml-auto flex items-center gap-3">
+      <% if entries.size > 1 %>
+        <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
+          <%= check_box_tag "#{list_id}-group", "1", false, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", data: { action: "paginated-fields#toggleGrouping" } %>
+          <span class="text-xs text-gray-500"><%= t("communications.group_by_subject") %></span>
+        </label>
+      <% end %>
       <%# Carry the origin so the feed can show a back eyebrow to this record. %>
       <%# Both must be saved: a form can build an unsaved person inline (the new
           subscription form), and the eyebrow needs a real record to return to. %>
@@ -50,7 +57,7 @@
   </div>
 
   <div class="space-y-3 p-4">
-    <div id="<%= list_id %>" class="space-y-2">
+    <div id="<%= list_id %>" class="flex flex-col gap-2">
       <% entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
           <%= f.simple_fields_for :comments, entry do |cf| %>
@@ -61,7 +68,7 @@
             <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
           <% end %>
         <% else %>
-          <div data-paginated-fields-target="item">
+          <div data-paginated-fields-target="item" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
             <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only %>
           </div>
         <% end %>

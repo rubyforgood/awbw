@@ -8,7 +8,7 @@
 <% channel_default = Notification::MANUAL_CHANNELS.include?(f.object.channel) ? f.object.channel : "email" %>
 <% record = local_assigns[:record] %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
-<div class="nested-fields" data-paginated-fields-target="item">
+<div class="nested-fields" data-paginated-fields-target="item" data-subject="<%= f.object.email_subject %>" data-created-at="<%= (f.object.created_at || Time.current).to_i %>">
   <%# Record this communication against its parent (the "Record" column in the
       notifications index) — e.g. an event registration or a person. %>
   <% if record %>
