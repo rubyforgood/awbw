@@ -304,7 +304,13 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── FileMaker archive viewer (FmArchivePolicy: admin-only) ───
     "app/views/fm_archives/index.html.erb"               => "admin-only bg-blue-100",
-    "app/views/fm_archives/show.html.erb"                => "admin-only bg-blue-100"
+    "app/views/fm_archives/show.html.erb"                => "admin-only bg-blue-100",
+
+    # ─── invoice CRUD (InvoicePolicy: admin-only) ───
+    "app/views/invoices/index.html.erb"                  => "admin-only bg-blue-100",
+    "app/views/invoices/show.html.erb"                   => "admin-only bg-blue-100",
+    "app/views/invoices/new.html.erb"                    => "admin-only bg-blue-100",
+    "app/views/invoices/edit.html.erb"                   => "admin-only bg-blue-100"
   }.freeze
 
   EXPECTED_MAPPINGS.each do |view_path, expected_bg_class|
