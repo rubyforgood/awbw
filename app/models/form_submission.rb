@@ -1,4 +1,5 @@
 class FormSubmission < ApplicationRecord
+  include Communicable
   # Optional so a public form whose name/email questions are not required can
   # record an anonymous submission with no identity (see PublicFormSubmission).
   belongs_to :person, optional: true
@@ -14,8 +15,10 @@ class FormSubmission < ApplicationRecord
   # outlives the submission — matching how reports and workshop logs keep theirs.
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :quotes, through: :quotable_item_quotes
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
 
   accepts_nested_attributes_for :form_answers
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Raised when a file-upload answer's value isn't a usable upload (tampered/stale
   # signed id); callers rescue it into a form error rather than a 500.
@@ -388,6 +391,11 @@ class FormSubmission < ApplicationRecord
   # source via `quotable.title` and `polymorphic_path(quotable)`.
   def title
     "#{form&.display_name} submission ##{id}"
+  end
+
+  # A communication logged on a submission is addressed to whoever submitted it.
+  def communications_email
+    person&.preferred_email
   end
 
   private

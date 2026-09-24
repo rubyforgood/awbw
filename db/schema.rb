@@ -1394,6 +1394,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
     t.string "noticeable_type"
     t.integer "notification_type"
     t.integer "parent_notification_id"
+    t.bigint "person_id"
     t.string "recipient_email", null: false
     t.string "recipient_role", null: false
     t.boolean "responded", default: false, null: false
@@ -1405,6 +1406,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
     t.index ["kind"], name: "index_notifications_on_kind"
     t.index ["noticeable_type", "noticeable_id"], name: "index_notifications_on_noticeable_type_and_noticeable_id"
     t.index ["parent_notification_id"], name: "index_notifications_on_parent_notification_id"
+    t.index ["person_id"], name: "index_notifications_on_person_id"
     t.index ["root_notification_id"], name: "index_notifications_on_root_notification_id"
     t.index ["sender_id"], name: "index_notifications_on_sender_id"
     t.index ["updated_by_id"], name: "index_notifications_on_updated_by_id"
@@ -2670,6 +2672,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
   add_foreign_key "monthly_reports", "organizations"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
+  add_foreign_key "notifications", "people"
   add_foreign_key "notifications", "users", column: "created_by_id"
   add_foreign_key "notifications", "users", column: "sender_id"
   add_foreign_key "notifications", "users", column: "updated_by_id"

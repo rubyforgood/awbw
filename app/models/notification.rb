@@ -1,4 +1,5 @@
 class Notification < ApplicationRecord
+  belongs_to :person, optional: true
   belongs_to :sender, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -182,6 +183,10 @@ class Notification < ApplicationRecord
   before_validation :force_manual_log_channel, if: :manual_log?
   # A contact_us_fyi is always something a person sent us — stamp it incoming.
   before_validation :mark_incoming, on: :create, if: -> { kind == "contact_us_fyi" }
+  # Bind the communication to the person who received it, resolved from the
+  # address at creation so it survives that person later changing their email.
+  # Callers that already know the person set it directly; this only fills a blank.
+  before_validation :assign_person_from_recipient_email, on: :create, if: -> { person_id.blank? && recipient_email.present? }
   # A notification's audit stamps follow its sender (the staff member the
   # communication is from), not whoever's request created the row — a bulk send
   # runs in a background job with no Current.user, and a system send has no sender
@@ -394,5 +399,9 @@ class Notification < ApplicationRecord
 
   def mark_incoming
     self.direction = "incoming"
+  end
+
+  def assign_person_from_recipient_email
+    self.person = Person.find_by_any_email(recipient_email)
   end
 end

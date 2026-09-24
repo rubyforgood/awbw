@@ -1,13 +1,15 @@
 # Gathers every comment connected to a person into a single newest-first feed —
 # their own profile comments plus the comments left on the records that hang off
-# them: affiliations, event registrations, scholarships, CE registrations, the
-# stories and story ideas they're credited on, and their login account. Returns one
-# ActiveRecord::Relation of Comment so callers can filter, paginate, and preload
-# uniformly. Payments carry no comments, so they never appear here.
+# them: affiliations, event registrations, scholarships, CE registrations, form
+# submissions, staff tags, monthly reports, workshop ideas/logs/variations/variation
+# ideas, the stories and story ideas they're credited on, and their login account.
+# Returns one ActiveRecord::Relation of Comment so callers can filter, paginate,
+# and preload uniformly. Payments carry no comments, so they never appear here.
 class PersonCommentAggregator
   # commentable_type => class, in the order sources are surfaced. Kept as strings
-  # so the query never has to instantiate the classes.
-  SOURCE_TYPES = %w[ Person Affiliation EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription Story StoryIdea User ].freeze
+  # so the query never has to instantiate the classes. "Report" keys MonthlyReport
+  # comments — STI stores the base class name.
+  SOURCE_TYPES = %w[ Person Affiliation EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription FormSubmission StaffTagging Report WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea Story StoryIdea User ].freeze
 
   def initialize(person)
     @person = person
@@ -21,6 +23,13 @@ class PersonCommentAggregator
       scope_for("Scholarship", scholarship_ids),
       scope_for("ContinuingEducationRegistration", ce_registration_ids),
       scope_for("TopicSubscription", topic_subscription_ids),
+      scope_for("FormSubmission", form_submission_ids),
+      scope_for("StaffTagging", staff_tagging_ids),
+      scope_for("Report", monthly_report_ids),
+      scope_for("WorkshopIdea", workshop_idea_ids),
+      scope_for("WorkshopLog", workshop_log_ids),
+      scope_for("WorkshopVariation", workshop_variation_ids),
+      scope_for("WorkshopVariationIdea", workshop_variation_idea_ids),
       scope_for("Story", story_ids),
       scope_for("StoryIdea", story_idea_ids),
       scope_for("User", user_ids)
@@ -58,17 +67,44 @@ class PersonCommentAggregator
     person.topic_subscriptions.ids
   end
 
-  # Stories where this person is the credited author — mirrors Story#author_person:
-  # the explicit author, or the creating user's person when no explicit author is set.
+  def form_submission_ids
+    person.form_submissions.ids
+  end
+
+  def staff_tagging_ids
+    person.staff_taggings.ids
+  end
+
+  def monthly_report_ids
+    PersonCreditedRecords.monthly_reports(person).ids
+  end
+
+  def workshop_idea_ids
+    PersonCreditedRecords.workshop_ideas(person).ids
+  end
+
+  def workshop_log_ids
+    PersonCreditedRecords.workshop_logs(person).ids
+  end
+
+  def workshop_variation_ids
+    PersonCreditedRecords.workshop_variations(person).ids
+  end
+
+  def workshop_variation_idea_ids
+    PersonCreditedRecords.workshop_variation_ideas(person).ids
+  end
+
+  # Stories the person is credited on — the explicit author, or the creating
+  # user's person when no explicit author is set (AuthorCreditable#author_person).
+  # PeopleHelper#person_record_targets offers the same set as picker targets.
   def story_ids
-    Story.where(author_id: person.id)
-         .or(Story.where(author_id: nil, created_by_id: user_ids))
-         .ids
+    PersonCreditedRecords.stories(person).ids
   end
 
   # Story ideas carry no explicit author, so the creating user's person is the credit.
   def story_idea_ids
-    StoryIdea.where(created_by_id: user_ids).ids
+    PersonCreditedRecords.story_ideas(person).ids
   end
 
   def user_ids

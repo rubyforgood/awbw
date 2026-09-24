@@ -1,0 +1,10 @@
+<%# One payment method as an on/off checkbox: fixed label (hidden), checked
+    keeps/creates the join, unchecked destroys it. The hidden _destroy "1" paired
+    with the checkbox "0" inverts the checkbox to mean "included". %>
+<label class="flex items-center gap-2 text-sm text-gray-700">
+  <%= opt.hidden_field :option_name, value: label %>
+  <%= hidden_field_tag "#{opt.object_name}[_destroy]", "1" %>
+  <%= check_box_tag "#{opt.object_name}[_destroy]", "0", included,
+        class: "rounded border-gray-300 #{DomainTheme.text_class_for(:forms, intensity: 600)}" %>
+  <span><%= label %></span>
+</label>

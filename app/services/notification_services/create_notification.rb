@@ -6,6 +6,7 @@ module NotificationServices
       recipient_email:,
       kind:,
       notification_type:,
+      person: nil,
       custom_message: nil,
       custom_subject: nil,
       hide_event_card: false,
@@ -18,6 +19,7 @@ module NotificationServices
       # create the notification record
       notification = Notification.create!(
         noticeable: noticeable,
+        person: person,
         kind: kind.to_s,
         notification_type: notification_type,
         recipient_role: recipient_role.to_s,

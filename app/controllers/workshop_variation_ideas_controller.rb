@@ -45,6 +45,7 @@ class WorkshopVariationIdeasController < ApplicationController
     if @workshop_variation_idea.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation_idea,
+        person: @workshop_variation_idea.created_by&.person,
         kind: :idea_submitted,
         recipient_role: :person,
         recipient_email: @workshop_variation_idea.created_by.email,

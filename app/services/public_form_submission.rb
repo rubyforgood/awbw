@@ -164,6 +164,7 @@ class PublicFormSubmission
     if submission.person
       NotificationServices::CreateNotification.call(
         noticeable: submission,
+        person: submission.person,
         kind: :form_submission_confirmation,
         recipient_role: :person,
         recipient_email: submission.person.preferred_email,

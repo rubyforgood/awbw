@@ -30,6 +30,47 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Welcome aboard")
     end
 
+    it "groups entries by subject in the results frame when the toggle is on" do
+      create(:comment, commentable: person, topic: "Scholarship", body: "A note about it", created_by: admin)
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Scholarship",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+      # An unattached communication exercises the nil-noticeable path under grouping.
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Loose end",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id, group_by_subject: "1"),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comments_and_communications_results")
+      # The comment and communication that share "Scholarship" sit under one group header.
+      expect(response.body).to include("2 items")
+      expect(response.body).to include("A note about it")
+      expect(response.body).to include("Loose end")
+    end
+
+    it "orders grouped rows newest-first, and groups by their newest row" do
+      create(:comment, commentable: person, topic: "Profile", body: "Middle in profile", created_by: admin, created_at: Time.zone.parse("2026-08-07 13:35"))
+      create(:comment, commentable: person, topic: "Profile", body: "Oldest in profile", created_by: admin, created_at: Time.zone.parse("2021-09-19 17:00"))
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Profile", email_body_text: "Newest in profile",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0, created_at: Time.zone.parse("2026-09-20 19:13"))
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Alpha", email_body_text: "Newest overall",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0, created_at: Time.zone.parse("2026-09-25 09:00"))
+
+      get comments_and_communications_path(person_id: person.id, group_by_subject: "1"),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      body = response.body
+      # Groups by newest row: Alpha (9/25) leads Profile (9/20).
+      expect(body.index("Alpha")).to be < body.index("Profile")
+      # Within Profile: newest, middle, oldest, top to bottom.
+      newest = body.index("Newest in profile")
+      middle = body.index("Middle in profile")
+      oldest = body.index("Oldest in profile")
+      expect(newest).to be < middle
+      expect(middle).to be < oldest
+    end
+
     it "starts the comment body flush under its topic instead of truncating it" do
       create(:comment, commentable: person, topic: "Topic line", body: "A note", created_by: admin)
 
@@ -86,6 +127,84 @@ RSpec.describe "Comments and communications", type: :request do
       expect(labels).to include("Profile")
       expect(labels.any? { |label| label.start_with?("Registration ·") }).to be(true)
       expect(registration).to be_persisted
+    end
+
+    it "offers the person's form submissions, affiliations, and staff tags as targets" do
+      create(:form_submission, person: person)
+      create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"))
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, name: "VIP"))
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Form ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Affiliation ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Staff tag ·") }).to be(true)
+    end
+
+    it "offers the stories and story ideas the person is credited on" do
+      user = create(:user, person: person)
+      create(:story, author: person)
+      create(:story_idea, created_by: user)
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Story ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Story idea ·") }).to be(true)
+    end
+
+    it "offers the reports and workshop records the person is credited on" do
+      create(:monthly_report, author: person)
+      create(:workshop_idea, author: person)
+      create(:workshop_log, author: person)
+      create(:workshop_variation, author: person)
+      create(:workshop_variation_idea, author: person)
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Report ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop idea ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop log ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop variation ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop variation idea ·") }).to be(true)
+    end
+
+    it "files a note against a credited workshop log and surfaces it in the feed" do
+      log = create(:workshop_log, author: person)
+
+      expect {
+        post person_comments_path(person), params: {
+          for_person_id: person.id,
+          commentable_sgid: log.to_sgid.to_s,
+          comment: { body: "Followed up on this workshop log" }
+        }
+      }.to change(Comment, :count).by(1)
+
+      expect(Comment.order(:created_at).last.commentable).to eq(log)
+
+      get comments_and_communications_path(person_id: person.id),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      expect(response.body).to include("Followed up on this workshop log")
+    end
+
+    it "files a note against a form submission and surfaces it in the feed" do
+      submission = create(:form_submission, person: person)
+
+      expect {
+        post person_comments_path(person), params: {
+          for_person_id: person.id,
+          commentable_sgid: submission.to_sgid.to_s,
+          comment: { body: "Reviewed their intake form" }
+        }
+      }.to change(Comment, :count).by(1)
+
+      expect(Comment.order(:created_at).last.commentable).to eq(submission)
+
+      get comments_and_communications_path(person_id: person.id),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      expect(response.body).to include("Reviewed their intake form")
     end
 
     it "files a note against the picked record and returns to the person's feed" do

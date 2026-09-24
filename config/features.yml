@@ -42,6 +42,27 @@
     - "Use the cyan \"See one person…\" box by the title to jump to just one person's history."
     - "Keyword searches the text of both comments and communications; \"More filters\" narrows by date, sender, follow-up and more."
 
+- name: "Group comments & communications by subject"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    A new "Group by subject" toggle clusters items that share a subject line — a
+    comment's topic or an email's subject — instead of one flat list. Off by
+    default, on both the full feed and each record's section.
+  action_path: "/comments_and_communications"
+
+- name: "Turn payment methods on or off per form"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The Payment method question in the form builder now shows each method
+    (credit card now, credit card later, check) as a checkbox you can turn on
+    or off — so a form can drop "pay later" and offer only check and credit
+    card. The labels stay fixed because they're wired to payment processing.
+  action_path: "/forms"
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing

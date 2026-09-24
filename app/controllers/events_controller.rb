@@ -517,6 +517,7 @@ class EventsController < ApplicationController
     registrations.each do |event_registration|
       NotificationServices::CreateNotification.call(
         noticeable: event_registration,
+        person: event_registration.registrant,
         kind: "event_registration_reminder",
         recipient_role: :person,
         recipient_email: event_registration.registrant.preferred_email,
