@@ -6,7 +6,8 @@ class AddressesController < ApplicationController
     addressable = GlobalID::Locator.locate_signed(params[:addressable_sgid])
     return head :not_found unless addressable
 
-    address = addressable.addresses.active.first
+    address = addressable.addresses.active.find_by(primary: true) ||
+              addressable.addresses.active.order(:id).last
     if address
       formatted = [ address.street_address, "#{address.city}, #{[ address.state, address.zip_code ].compact.join(' ')}" ].compact.join("\n")
       render json: { address: formatted }
