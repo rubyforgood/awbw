@@ -1282,17 +1282,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
   create_table "invoices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "attention_person_id"
     t.text "bill_to_address", null: false
-    t.bigint "client_id", null: false
-    t.string "client_type", null: false
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date", null: false
+    t.bigint "invoicee_id", null: false
+    t.string "invoicee_type", null: false
     t.string "number", null: false
     t.integer "total_cents", default: 0, null: false
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.index ["attention_person_id"], name: "index_invoices_on_attention_person_id"
-    t.index ["client_type", "client_id"], name: "index_invoices_on_client"
+    t.index ["invoicee_type", "invoicee_id"], name: "index_invoices_on_invoicee"
     t.index ["number"], name: "index_invoices_on_number", unique: true
   end
 
