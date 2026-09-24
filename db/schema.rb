@@ -1337,13 +1337,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_105534) do
   end
 
   create_table "memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "autorenewal_cancelled_at"
+    t.datetime "cancelled_at"
     t.integer "cost_cents"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
-    t.datetime "end_date"
     t.bigint "person_id", null: false
-    t.datetime "start_date"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_memberships_on_created_by_id"
