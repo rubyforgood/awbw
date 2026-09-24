@@ -491,14 +491,29 @@ class Person < ApplicationRecord
     preferred_email
   end
 
-  # A person's own page shows their entire communication history — every
-  # notification to any of their addresses (user login, email, email_2). Every
-  # other record instead scopes to comms filed against itself (its `notifications`).
+  # A person's own page shows their entire communication history — communications
+  # bound to them by person_id (stamped at creation, so they survive an email
+  # change) plus, for legacy rows created before that binding, anything addressed
+  # to any of their current addresses (user login, email, email_2). Every other
+  # record instead scopes to comms filed against itself (its `notifications`).
   def communications_scope
     emails = [ user&.email, email, email_2 ].compact_blank.uniq
-    return Notification.none if emails.empty?
+    by_person = Notification.where(person_id: id)
+    return by_person if emails.empty?
 
-    emails.map { |address| Notification.email(address) }.reduce(:or)
+    emails.map { |address| Notification.email(address) }.reduce(by_person, :or)
+  end
+
+  # The person who owns an address, matched exactly across every place we store
+  # one (login email, email, email_2). Used to bind a communication to its
+  # recipient at creation.
+  def self.find_by_any_email(address)
+    return if address.blank?
+
+    normalized = address.strip.downcase
+    left_joins(:user)
+      .where("LOWER(people.email) = :e OR LOWER(people.email_2) = :e OR LOWER(users.email) = :e", e: normalized)
+      .first
   end
 
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2

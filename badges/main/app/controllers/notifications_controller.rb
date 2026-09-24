@@ -41,6 +41,7 @@ class NotificationsController < ApplicationController
 
     if @person
       @notification.noticeable = noticeable_target || @person
+      @notification.person = @person
       @notification.recipient_email = @person.communications_email.presence || "n/a"
     else
       @notification.errors.add(:base, "Select a person to log this communication against")
@@ -90,6 +91,7 @@ class NotificationsController < ApplicationController
     # individual action, not part of the original batch) reflects the resend itself.
     new_notification = NotificationServices::CreateNotification.call(
       noticeable: @notification.noticeable,
+      person: @notification.person,
       kind: @notification.kind,
       recipient_email: @notification.recipient_email,
       recipient_role: @notification.recipient_role,

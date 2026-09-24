@@ -48,6 +48,7 @@ class ContactUsController < ApplicationController
     submitter_email = user&.email || contact_us[:from]
     submitter_notification = NotificationServices::CreateNotification.call(
       noticeable: noticeable,
+      person: user&.person,
       recipient_role: :person,
       recipient_email: submitter_email,
       kind: "contact_us",

@@ -1196,6 +1196,7 @@ class EventRegistration < ApplicationRecord
 
     NotificationServices::CreateNotification.call(
       noticeable: self,
+      person: registrant,
       kind: "event_registration_cancelled",
       recipient_role: :person,
       recipient_email: email,

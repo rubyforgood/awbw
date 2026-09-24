@@ -45,6 +45,7 @@ class WorkshopLogsController < ApplicationController
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_log,
+        person: @workshop_log.created_by&.person,
         kind: :workshop_log_submitted,
         recipient_role: :person,
         recipient_email: @workshop_log.created_by.email,
