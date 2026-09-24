@@ -19,7 +19,7 @@ class InvoicePresenter
   def total_cents = invoice.total_cents
   def number = invoice.number
   def date = invoice.date
-  def client_id = invoice.client_id
+  def client_id = client&.id
   def reference = nil
   def payable_to_note = PAYABLE_TO_NOTE
 
