@@ -936,11 +936,41 @@ RSpec.describe Person, "scholarship index helpers" do
       expect(person.communications_scope).to contain_exactly(to_login, to_primary, to_secondary)
     end
 
+    it "still includes a communication after the person changes their email" do
+      person = create(:person, user: nil, email: "old@example.com", email_2: nil)
+      notification = create(:notification, recipient_email: "old@example.com")
+      expect(notification.person).to eq(person)
+
+      person.update!(email: "new@example.com")
+
+      expect(person.reload.communications_scope).to include(notification)
+    end
+
     it "returns none when the person has no addresses on file" do
       person = create(:person, user: nil, email: nil, email_2: nil)
       create(:notification, recipient_email: "someone@example.com")
 
       expect(person.communications_scope).to be_empty
+    end
+  end
+
+  describe ".find_by_any_email" do
+    it "matches on email, email_2, or the login email, case-insensitively" do
+      by_primary = create(:person, user: nil, email: "primary@example.com", email_2: nil)
+      by_secondary = create(:person, user: nil, email: "p2@example.com", email_2: "secondary@example.com")
+      by_login = create(:person)
+
+      expect(Person.find_by_any_email("PRIMARY@example.com")).to eq(by_primary)
+      expect(Person.find_by_any_email("secondary@example.com")).to eq(by_secondary)
+      expect(Person.find_by_any_email(by_login.user.email.upcase)).to eq(by_login)
+    end
+
+    it "returns nil for a blank or unknown address" do
+      create(:person, user: nil, email: "known@example.com", email_2: nil)
+
+      expect(Person.find_by_any_email("")).to be_nil
+      expect(Person.find_by_any_email(nil)).to be_nil
+      expect(Person.find_by_any_email("nobody@example.com")).to be_nil
     end
   end
 end

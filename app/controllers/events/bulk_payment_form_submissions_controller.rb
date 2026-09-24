@@ -82,6 +82,7 @@ module Events
       if payer_email.present?
         NotificationServices::CreateNotification.call(
           noticeable: @submission,
+          person: @submission.person,
           kind: :bulk_payment_confirmation,
           recipient_role: :person,
           recipient_email: payer_email,

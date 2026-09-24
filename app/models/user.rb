@@ -405,6 +405,7 @@ class User < ApplicationRecord
     _from, to = previous_changes["email"]
     NotificationServices::CreateNotification.call(
       noticeable: self,
+      person: person,
       recipient_role: :person,
       recipient_email: to,
       kind: :account_email_changed,

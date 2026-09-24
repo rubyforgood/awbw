@@ -92,6 +92,7 @@ class DeviseMailer < Devise::Mailer
 
     notification = NotificationServices::CreateNotification.call(
       noticeable: @record,
+      person: @record.try(:person),
       recipient_role: :person,
       recipient_email: recipient_email,
       kind: kind,

@@ -327,6 +327,7 @@ class PeopleController < ApplicationController
 
     NotificationServices::CreateNotification.call(
       noticeable: @person,
+      person: @person,
       kind: :form_link_request,
       recipient_role: :person,
       recipient_email: email,

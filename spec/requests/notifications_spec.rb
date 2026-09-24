@@ -215,6 +215,16 @@ RSpec.describe "Notifications", type: :request do
         expect(response).to redirect_to(notifications_path)
       end
 
+      it "binds the logged communication to the person even with no email on file" do
+        emailless = create(:person, user: nil, email: nil, email_2: nil)
+
+        post notifications_path, params: valid_params.merge(person_id: emailless.id)
+
+        notification = Notification.last
+        expect(notification.person).to eq(emailless)
+        expect(notification.recipient_email).to eq("n/a")
+      end
+
       it "defaults a logged communication to outgoing" do
         post notifications_path, params: valid_params
         expect(Notification.last.direction).to eq("outgoing")
