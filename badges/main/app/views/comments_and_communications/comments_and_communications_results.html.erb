@@ -3,29 +3,32 @@
     <h2 class="flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
       <i class="fa-solid fa-comments"></i>
       Results
-      <span class="font-normal text-gray-400 normal-case">· <%= @count_display %> comments &amp; communications</span>
+      <span class="font-normal text-gray-400 normal-case">· <%= @count_display %><%= " comments & communications" unless @groups %></span>
     </h2>
   </div>
 
+<% paged = @groups || @entries %>
   <div class="space-y-2">
-    <% if @entries.any? %>
-      <% @entries.each do |entry| %>
-        <% if entry.is_a?(Comment) %>
-          <%= render "comments_and_communications/comment_row", entry: entry %>
-        <% elsif entry.manual_log? %>
-          <%= render "comments_and_communications/communication_row", entry: entry %>
-        <% else %>
-          <%= render "comments_and_communications/communication_row_readonly", entry: entry %>
+    <% if @groups %>
+      <% if @groups.any? %>
+        <% @groups.each do |group| %>
+          <%= render "comments_and_communications/subject_group", group: group %>
         <% end %>
+      <% else %>
+        <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
+      <% end %>
+    <% elsif @entries.any? %>
+      <% @entries.each do |entry| %>
+        <%= render "comments_and_communications/entry_row", entry: entry %>
       <% end %>
     <% else %>
       <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
     <% end %>
   </div>
 
-  <% if @entries.total_pages > 1 %>
+  <% if paged.total_pages > 1 %>
     <div class="mt-4 flex justify-center">
-      <%= tailwind_paginate @entries, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :from, :to, :email_topic).permit! %>
+      <%= tailwind_paginate paged, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :from, :to, :email_topic, :group_by_subject).permit! %>
     </div>
   <% end %>
 <% end %>

@@ -208,4 +208,55 @@ RSpec.describe PersonCommentAndCommunicationAggregator do
       feed.paginate(1, 2)
     end
   end
+
+  describe "#grouped?" do
+    it "is off by default and on for a truthy toggle" do
+      expect(described_class.new(person).grouped?).to be(false)
+      expect(described_class.new(person, { group_by_subject: "1" }).grouped?).to be(true)
+      expect(described_class.new(person, { group_by_subject: "0" }).grouped?).to be(false)
+    end
+  end
+
+  describe "#grouped_paginate" do
+    it "clusters a comment's topic and a communication's subject into one group" do
+      comment = comment_on(person, topic: "Scholarship", body: "Note", created_at: 3.days.ago)
+      comm = communication("primary@example.com", email_subject: "Scholarship", created_at: 1.day.ago)
+      other = comment_on(person, topic: "Housing", body: "Note", created_at: 2.days.ago)
+      feed = described_class.new(person, { group_by_subject: "1" })
+
+      groups = feed.grouped_paginate(1, 20)
+
+      expect(feed.subject_group_count).to eq(2)
+      # Groups ordered by their newest entry; the Scholarship group leads (newest comm).
+      expect(groups.map(&:subject)).to eq([ "Scholarship", "Housing" ])
+      expect(groups.first.entries).to eq([ comm, comment ])
+      expect(groups.second.entries).to eq([ other ])
+    end
+
+    it "matches subjects case-insensitively and groups blank subjects together" do
+      upper = communication("primary@example.com", email_subject: "Award", created_at: 2.days.ago)
+      lower = comment_on(person, topic: "award", body: "Note", created_at: 1.day.ago)
+      blank_one = comment_on(person, topic: nil, body: "No topic", created_at: 4.days.ago)
+      blank_two = comment_on(person, topic: "", body: "Empty topic", created_at: 3.days.ago)
+      feed = described_class.new(person, { group_by_subject: "1" })
+
+      groups = feed.grouped_paginate(1, 20)
+
+      award = groups.find { |g| g.subject.to_s.casecmp?("award") }
+      no_subject = groups.find { |g| g.subject.blank? }
+      expect(award.entries).to contain_exactly(upper, lower)
+      expect(no_subject.entries).to contain_exactly(blank_one, blank_two)
+    end
+
+    it "paginates the groups" do
+      3.times { |i| comment_on(person, topic: "T#{i}", body: "Note", created_at: i.days.ago) }
+      feed = described_class.new(person, { group_by_subject: "1" })
+
+      page1 = feed.grouped_paginate(1, 2)
+      expect(page1.total_entries).to eq(3)
+      expect(page1.total_pages).to eq(2)
+      expect(page1.map(&:subject)).to eq([ "T0", "T1" ])
+      expect(feed.grouped_paginate(2, 2).map(&:subject)).to eq([ "T2" ])
+    end
+  end
 end
