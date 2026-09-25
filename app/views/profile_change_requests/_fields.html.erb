@@ -1,0 +1,65 @@
+<%# locals: (f:, request:) %>
+<%= f.hidden_field :field %>
+
+<% if request.current_value.present? %>
+  <div>
+    <span class="block text-sm font-medium text-gray-700">Current <%= request.field_label.downcase %></span>
+    <span class="font-medium text-gray-900"><%= request.current_value %></span>
+  </div>
+<% end %>
+
+<% if request.auto_appliable? %>
+  <%= f.input :requested_value,
+              label: "Change #{request.field_label.downcase} to",
+              input_html: { class: "w-full" } %>
+  <%= f.input :details,
+              as: :text,
+              label: "Anything else we should know? (optional)",
+              input_html: { rows: 3, class: "w-full" } %>
+<% else %>
+  <% affiliations = request.person.affiliations.includes(:organization).map { |a| [ "#{a.title.presence || Affiliation::FACILITATOR_TITLE} @ #{a.organization&.name}", a.id ] } %>
+  <% existing_row_categories = (ProfileChangeRequest::AFFILIATION_CHANGE_TYPES - [ ProfileChangeRequest::AFFILIATION_CHANGE_ADD ]).join(",") %>
+  <div data-controller="conditional-fields" class="space-y-4">
+    <%= f.input :requested_value,
+                collection: ProfileChangeRequest::AFFILIATION_CHANGE_TYPES,
+                include_blank: "Select what to change…",
+                label: "What should change?",
+                input_html: { class: "w-full", data: { conditional_fields_target: "source", action: "change->conditional-fields#toggle" } } %>
+
+    <div data-conditional-fields-target="field" data-show-when="<%= existing_row_categories %>" hidden>
+      <%= f.input :affiliation_id,
+                  collection: affiliations,
+                  include_blank: "Select an affiliation…",
+                  label: "Which affiliation?",
+                  input_html: { class: "w-full" } %>
+    </div>
+
+    <div data-conditional-fields-target="field"
+         data-show-when="<%= [ ProfileChangeRequest::AFFILIATION_CHANGE_ADD ].join %>" hidden>
+      <%= f.input :organization_id,
+                  include_blank: true,
+                  label: "Organization",
+                  prompt: "Search organizations…",
+                  input_html: { class: "w-full", data: { controller: "remote-select", remote_select_model_value: "organization" } } %>
+    </div>
+
+    <div data-conditional-fields-target="field"
+         data-show-when="<%= [ ProfileChangeRequest::AFFILIATION_CHANGE_TITLE, ProfileChangeRequest::AFFILIATION_CHANGE_ADD ].join(",") %>" hidden>
+      <%= f.input :proposed_title, label: "Title or role", input_html: { class: "w-full" } %>
+    </div>
+
+    <div data-conditional-fields-target="field"
+         data-show-when="<%= [ ProfileChangeRequest::AFFILIATION_CHANGE_DATES, ProfileChangeRequest::AFFILIATION_CHANGE_ADD ].join(",") %>"
+         class="flex flex-col gap-4 sm:flex-row" hidden>
+      <%= f.input :proposed_start_date, as: :date, html5: true, label: "Start date", input_html: { class: "w-full" } %>
+      <%= f.input :proposed_end_date, as: :date, html5: true, label: "End date", input_html: { class: "w-full" } %>
+    </div>
+
+    <div data-conditional-fields-target="field"
+         data-show-when="<%= [ ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION ].join %>" hidden>
+      <%= f.input :proposed_organization_name, label: "New organization name", input_html: { class: "w-full" } %>
+    </div>
+
+    <%= f.input :details, as: :text, label: "Additional details (required for \"Other\")", input_html: { rows: 4, class: "w-full" } %>
+  </div>
+<% end %>

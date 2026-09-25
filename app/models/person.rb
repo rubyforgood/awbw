@@ -11,6 +11,7 @@ class Person < ApplicationRecord
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
+  has_many :profile_change_requests, dependent: :destroy
   has_many :memberships, dependent: :destroy
   has_many :membership_invoices, through: :memberships
   has_many :communal_reports, through: :organizations, source: :reports
@@ -91,6 +92,13 @@ class Person < ApplicationRecord
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+
+  # Owner self-service profile editing is staged behind this flag so it can be
+  # trialed in staging before PersonPolicy#edit? flips from admin-only to
+  # admin-or-owner at profile launch. Default off; set OWNER_PROFILE_EDIT=true.
+  def self.owner_editing_enabled?
+    ENV.fetch("OWNER_PROFILE_EDIT", "false") == "true"
+  end
 
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
   # since a person still has to be listed somehow on the people index.

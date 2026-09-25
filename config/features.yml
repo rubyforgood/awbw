@@ -63,6 +63,33 @@
     card. The labels stay fixed because they're wired to payment processing.
   action_path: "/forms"
 
+- name: "Request a change to your profile's locked details"
+  area: people
+  display_status: user_facing
+  released_on: 2026-09-18
+  summary: >-
+    On your own profile, the details only AWBW staff can edit — your primary
+    email, organization name, and affiliation history — now have a "Request a
+    change" link right beside them. Send us what should change and staff review
+    it, so you can get a correction made without hunting for who to email.
+  pro_tips:
+    - >-
+      The form shows the current value and pre-fills what you're asking about —
+      just add the correction and send.
+  pr_number: 2543
+
+- name: "Review profile change requests in one place"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-18
+  summary: >-
+    A new "Changes requested" page (linked from the admin home) collects the
+    profile corrections facilitators ask for. Approve applies the change where it
+    can; otherwise update manually and mark it resolved, or decline. Pending
+    requests also show on the person's edit page.
+  action_path: "/profile_change_requests"
+  pr_number: 2543
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing

@@ -1,0 +1,50 @@
+<p style="margin-bottom: 6px;">
+  Profile change request
+</p>
+
+<h1 style="margin: 0;">
+  <strong><%= @person.full_name %></strong>
+</h1>
+
+<p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">
+  Requested by <%= @requester.full_name %> on
+  <%= @request.created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+</p>
+
+<hr style="margin: 24px 0;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+  <tr>
+    <td style="padding: 4px 0; color:#6b7280; width: 160px;">Field</td>
+    <td style="padding: 4px 0;"><strong><%= @request.field_label %></strong></td>
+  </tr>
+  <% if @request.current_value.present? %>
+    <tr>
+      <td style="padding: 4px 0; color:#6b7280;">Current value</td>
+      <td style="padding: 4px 0;"><%= @request.current_value %></td>
+    </tr>
+  <% end %>
+  <% if @request.requested_value.present? %>
+    <tr>
+      <td style="padding: 4px 0; color:#6b7280;">Requested value</td>
+      <td style="padding: 4px 0;"><strong><%= @request.requested_value %></strong></td>
+    </tr>
+  <% end %>
+  <% if @request.details.present? %>
+    <tr>
+      <td style="padding: 4px 0; color:#6b7280; vertical-align: top;">Details</td>
+      <td style="padding: 4px 0; white-space: pre-line;"><%= @request.details %></td>
+    </tr>
+  <% end %>
+</table>
+
+<p>
+  <a href="<%= profile_change_requests_url %>"
+     style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:bold;">
+    Review change requests
+  </a>
+  <a href="<%= edit_person_url(@person) %>"
+     style="display:inline-block;background:#e5e7eb;color:#111827;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:bold;">
+    Edit profile
+  </a>
+</p>

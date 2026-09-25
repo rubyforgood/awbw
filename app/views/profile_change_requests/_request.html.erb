@@ -1,0 +1,85 @@
+<% request = request.decorate unless request.respond_to?(:status_badge) %>
+<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" id="<%= dom_id(request.object) %>">
+  <div class="flex flex-wrap items-start justify-between gap-2">
+    <div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="font-semibold text-gray-800"><%= request.field_label %></span>
+        <%= request.status_badge %>
+        <% if request.resolution_note %>
+          <span class="text-xs text-gray-500"><%= request.resolution_note %></span>
+        <% end %>
+      </div>
+      <p class="mt-1 text-sm text-gray-500">
+        Requested by <%= request.requested_by.full_name %> on <%= request.requested_on %>
+      </p>
+    </div>
+  </div>
+
+  <dl class="mt-3 space-y-1 text-sm">
+    <% if request.affiliation_summary.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">Affiliation</dt>
+        <dd class="text-gray-800"><%= request.affiliation_summary %></dd>
+      </div>
+    <% end %>
+    <% if request.current_value.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">Current</dt>
+        <dd class="text-gray-800"><%= request.current_value %></dd>
+      </div>
+    <% end %>
+    <% if request.requested_value.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">Requested</dt>
+        <dd class="font-medium text-gray-900"><%= request.requested_value %></dd>
+      </div>
+    <% end %>
+    <% if request.proposed_change_summary.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">New value</dt>
+        <dd class="font-medium text-gray-900"><%= request.proposed_change_summary %></dd>
+      </div>
+    <% end %>
+    <% if request.details.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">Details</dt>
+        <dd class="whitespace-pre-line text-gray-800"><%= request.details %></dd>
+      </div>
+    <% end %>
+    <% if request.reviewer_note.present? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">Staff note</dt>
+        <dd class="whitespace-pre-line text-gray-800"><%= request.reviewer_note %></dd>
+      </div>
+    <% end %>
+  </dl>
+
+  <% if request.pending? && allowed_to?(:approve?, request.object) %>
+    <div class="mt-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <% if request.auto_appliable? %>
+          <%= button_to "Approve", approve_profile_change_request_path(request.object),
+                        class: button_classes(:primary, size: :sm),
+                        form: { data: { turbo_confirm: request.approve_confirm } } %>
+        <% end %>
+        <%= link_to "Update manually", request.manual_edit_path,
+                    class: button_classes(:secondary_outline, size: :sm),
+                    data: { turbo_frame: "_top" } %>
+      </div>
+
+      <%= form_with url: resolve_profile_change_request_path(request.object), method: :post, class: "space-y-2" do |form| %>
+        <%= form.text_area :reviewer_note, rows: 2,
+                           placeholder: "Reason or note (shared with the requester) — optional when resolving, please add one when declining",
+                           class: "w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-200" %>
+        <div class="flex flex-wrap gap-2">
+          <%= form.submit "Mark as resolved", class: button_classes(:secondary_outline, size: :sm) %>
+          <button type="submit"
+                  formaction="<%= decline_profile_change_request_path(request.object) %>"
+                  formmethod="post"
+                  class="<%= button_classes(:danger_outline, size: :sm) %>"
+                  data-turbo-confirm="Decline this request?">Decline</button>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
