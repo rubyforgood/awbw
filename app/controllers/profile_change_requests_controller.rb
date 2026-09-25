@@ -48,7 +48,7 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   def update
-    authorize! @request, to: :update?
+    authorize! @request
 
     if @request.update(profile_change_request_params)
       redirect_to edit_person_path(@request.person, anchor: "affiliations"), status: :see_other,
