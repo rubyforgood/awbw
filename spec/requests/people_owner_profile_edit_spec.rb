@@ -56,9 +56,11 @@ RSpec.describe "People with profiles enabled", type: :request do
 
     it "ignores admin-only fields a non-admin owner tries to submit" do
       original_code = person.filemaker_code
+      original_email = person.email
 
       patch person_path(person), params: { person: {
         bio: "New bio",
+        email: "hijacked@example.com",
         filemaker_code: "HACK-999",
         notes: "self-added note",
         staff_taggings_attributes: [ { staff_tag_id: create(:staff_tag).id } ],
@@ -67,6 +69,7 @@ RSpec.describe "People with profiles enabled", type: :request do
 
       person.reload
       expect(person.bio).to eq("New bio")
+      expect(person.email).to eq(original_email)
       expect(person.filemaker_code).to eq(original_code)
       expect(person.notes).not_to eq("self-added note")
       expect(person.staff_taggings).to be_empty

@@ -11,6 +11,7 @@ class PeopleController < ApplicationController
   # person_params strips these for non-admins. Add any new admin-only person_params
   # field here, since everything else is owner-editable by default.
   ADMIN_ONLY_PERSON_FIELDS = %i[
+    email email_type email_2 email_2_type
     filemaker_code blog_contributor notes member_since
     created_by_id updated_by_id
     staff_taggings_attributes affiliations_attributes comments_attributes
