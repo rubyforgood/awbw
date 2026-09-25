@@ -104,6 +104,7 @@ module AdminCardsHelper
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),
       custom_card(t("communications.title"), notifications_path, icon: "🔔", color: :sky, intensity: 100),
       custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :sky, intensity: 100),
+      custom_card("Invoices", invoices_path, icon: "🧾", color: :sky, intensity: 100),
       disabled_card("Affiliations", icon: "🤝"),
       disabled_card("Reports", icon: "📄"),
       disabled_card("Discounts", icon: "💲"),
