@@ -17,7 +17,7 @@
                  id: param,
                  multiple: true,
                  include_blank: false,
-                 class: "w-full",
+                 class: search_field_class(extra: "ts-flat"),
                  data: { searchable_checkbox_target: "select", placeholder: local_assigns[:placeholder] } %>
   <% if local_assigns[:hint].present? %>
     <p class="mt-1 text-xs text-gray-500"><%= local_assigns[:hint] %></p>
