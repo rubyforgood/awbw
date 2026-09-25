@@ -4,7 +4,10 @@ class CreateInvoices < ActiveRecord::Migration[8.1]
       t.string :number, null: false
       t.date :date, null: false
       t.references :invoicee, polymorphic: true, null: false
-      t.text :bill_to_address, null: false
+      t.text :bill_to_additional_info
+      t.references :bill_to_address, foreign_key: { to_table: :addresses }
+      t.boolean :hide_invoicee, null: false, default: false
+      t.boolean :hide_address, null: false, default: false
       t.references :attention_person, foreign_key: { to_table: :people }
       t.integer :total_cents, null: false, default: 0
       t.integer :created_by_id

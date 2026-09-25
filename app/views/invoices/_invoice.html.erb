@@ -16,18 +16,22 @@
   <h1 class="my-8 text-center text-3xl font-semibold tracking-wide">INVOICE</h1>
 
   <%# Bill-to %>
-  <div class="space-y-1">
-    <p class="text-sm font-bold">Invoice To:</p>
-    <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm leading-relaxed">
-      <p class="font-medium"><%= invoice.bill_to_name %></p>
-      <% invoice.bill_to_address_lines.each do |line| %>
-        <p><%= line %></p>
-      <% end %>
-      <% if invoice.bill_to_email.present? %>
-        <p class="text-gray-500"><%= invoice.bill_to_email %></p>
-      <% end %>
+  <% if invoice.show_bill_to? %>
+    <div class="space-y-1">
+      <p class="text-sm font-bold">Invoice To:</p>
+      <div class="rounded-lg border border-gray-300 px-4 py-3 text-sm leading-relaxed">
+        <% if invoice.bill_to_name.present? %>
+          <p class="font-medium"><%= invoice.bill_to_name %></p>
+        <% end %>
+        <% invoice.bill_to_address_lines.each do |line| %>
+          <p><%= line %></p>
+        <% end %>
+        <% if invoice.additional_info.present? %>
+          <p class="whitespace-pre-line"><%= invoice.additional_info %></p>
+        <% end %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <%# Attention %>
   <% if invoice.attention.present? %>

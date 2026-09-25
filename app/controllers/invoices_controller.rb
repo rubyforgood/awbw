@@ -61,7 +61,8 @@ class InvoicesController < ApplicationController
 
   def invoice_params
     params.require(:invoice).permit(
-      :number, :date, :invoicee_sgid, :bill_to_address,
+      :number, :date, :invoicee_sgid, :bill_to_address_id, :bill_to_additional_info,
+      :hide_invoicee, :hide_address,
       :attention_person_id,
       invoice_line_items_attributes: [ :id, :date, :description, :quantity, :unit_price_cents, :unit_price_dollars, :_destroy ]
     )

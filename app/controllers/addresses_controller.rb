@@ -2,19 +2,13 @@ class AddressesController < ApplicationController
   skip_before_action :preload_current_user_associations, raise: false
   skip_verify_authorized
 
-  def lookup
+  def options
     addressable = GlobalID::Locator.locate_signed(params[:addressable_sgid])
-    return head :not_found unless addressable
+    return render json: { addresses: [] } unless addressable&.respond_to?(:addresses)
 
-    address = addressable.addresses.active.find_by(primary: true) ||
-              addressable.addresses.active.order(:id).last
-    if address
-      formatted = [ address.street_address, "#{address.city}, #{[ address.state, address.zip_code ].compact.join(' ')}" ].compact.join("\n")
-      render json: { address: formatted }
-    else
-      head :not_found
-    end
+    addresses = addressable.addresses.active.order(id: :desc)
+    render json: { addresses: addresses.map { |address| { id: address.id, label: address.name } } }
   rescue => _e
-    head :bad_request
+    render json: { addresses: [] }
   end
 end

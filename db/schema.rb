@@ -1281,10 +1281,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
 
   create_table "invoices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "attention_person_id"
-    t.text "bill_to_address", null: false
+    t.text "bill_to_additional_info"
+    t.bigint "bill_to_address_id"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date", null: false
+    t.boolean "hide_address", default: false, null: false
+    t.boolean "hide_invoicee", default: false, null: false
     t.bigint "invoicee_id", null: false
     t.string "invoicee_type", null: false
     t.string "number", null: false
@@ -1292,6 +1295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.index ["attention_person_id"], name: "index_invoices_on_attention_person_id"
+    t.index ["bill_to_address_id"], name: "index_invoices_on_bill_to_address_id"
     t.index ["invoicee_type", "invoicee_id"], name: "index_invoices_on_invoicee"
     t.index ["number"], name: "index_invoices_on_number", unique: true
   end
@@ -2547,10 +2551,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
-  add_foreign_key "action_text_mentions", "action_text_rich_texts"
-  add_foreign_key "action_text_mentions", "users", column: "created_by_id"
-  add_foreign_key "action_text_mentions", "users", column: "updated_by_id"
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "addresses", "users", column: "created_by_id"
   add_foreign_key "addresses", "users", column: "updated_by_id"
@@ -2657,6 +2657,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
   add_foreign_key "forms", "users", column: "created_by_id"
   add_foreign_key "forms", "users", column: "updated_by_id"
   add_foreign_key "invoice_line_items", "invoices"
+  add_foreign_key "invoices", "addresses", column: "bill_to_address_id"
   add_foreign_key "invoices", "people", column: "attention_person_id"
   add_foreign_key "locations", "users", column: "created_by_id"
   add_foreign_key "locations", "users", column: "updated_by_id"

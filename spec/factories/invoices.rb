@@ -3,7 +3,7 @@ FactoryBot.define do
     sequence(:number) { |n| "#{ENV.fetch("INVOICE_PREFIX", "INV")}-#{format('%03d', n)}" }
     date { Date.current }
     invoicee { create(:person) }
-    bill_to_address { "123 Main St\nLos Angeles, CA 90001" }
+    bill_to_additional_info { "123 Main St\nLos Angeles, CA 90001" }
     total_cents { 150_000 }
 
     trait :with_line_items do
