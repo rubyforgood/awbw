@@ -38,7 +38,8 @@ class PersonInviter
       password_confirmation: password,
       person: @person,
       created_by: @sender,
-      updated_by: @sender
+      updated_by: @sender,
+      locked: true
     )
     user.skip_confirmation_notification!
     return unless user.save

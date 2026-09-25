@@ -181,6 +181,11 @@ RSpec.describe "/users", type: :request do
           post users_url, params: { user: valid_attributes }
           expect(response).to redirect_to(user_url(User.last))
         end
+
+        it "creates the account locked so it can't sign in until invited" do
+          post users_url, params: { user: valid_attributes }
+          expect(User.last.locked_at).to be_present
+        end
       end
 
       context "with invalid parameters" do

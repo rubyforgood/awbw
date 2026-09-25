@@ -20,6 +20,7 @@ class WelcomeController < ApplicationController
     if @user.update(password_params.merge(updated_by: current_user || @user))
       @user.track_auth_event("auth.password_first_set")
       @user.clear_welcome_instructions_token!
+      @user.unlock_access!
       @user.track_auth_event("auth.account_setup_completed")
 
       sign_in(@user)

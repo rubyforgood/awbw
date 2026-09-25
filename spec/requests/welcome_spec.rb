@@ -48,12 +48,23 @@ RSpec.describe "/users/welcome", type: :request do
       end
 
       it "clears invitation token" do
+        user.update_columns(welcome_instructions_sent_at: Time.current)
+
         patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
 
         user.reload
         expect(user.welcome_instructions_token).to be_nil
         expect(user.welcome_instructions_created_at).to be_nil
-        expect(user.welcome_instructions_sent_at).to be_nil
+        # Kept as the "was invited" audit trail, not part of the ephemeral token.
+        expect(user.welcome_instructions_sent_at).to be_present
+      end
+
+      it "unlocks the account so the invitee can sign in" do
+        user.update_columns(locked_at: Time.current)
+
+        patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
+
+        expect(user.reload.locked_at).to be_nil
       end
 
       it "credits the user themselves when no admin is signed in" do
