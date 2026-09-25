@@ -70,8 +70,8 @@ class TaggingSearchService
               end,
 
       # Organizations surface here only for viewers who may see the Organizations
-      # index (admins, or signed-in users once Organization.profiles_enabled?);
-      # otherwise the group is empty so no org card dead-ends at "not authorized".
+      # index (admins, or signed-in users outside production); otherwise the
+      # group is empty so no org card dead-ends at "not authorized".
       organizations: if allowed_to?(:index?, Organization)
                        authorized_scope(Organization.all)
                          .includes(:sectors)

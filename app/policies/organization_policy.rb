@@ -37,8 +37,10 @@ class OrganizationPolicy < ApplicationPolicy
 
   private
 
+  # Signed-in users can preview org profiles everywhere but production, where
+  # the feature stays off until launch. Admins have access regardless.
   def profiles_visible_to_users?
-    authenticated? && Organization.profiles_enabled?
+    authenticated? && !Rails.env.production?
   end
 
   def member?
