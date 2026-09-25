@@ -612,6 +612,32 @@ RSpec.describe Notification do
         expect(results).to include(notification_story, notification_user)
       end
     end
+
+    context "flagged" do
+      let!(:flagged) { create(:notification, :flagged, recipient_email: "flag@example.com") }
+      let!(:unflagged) { create(:notification, recipient_email: "plain@example.com") }
+
+      it "returns only flagged communications when flagged is '1'" do
+        results = Notification.search_by_params(flagged: "1")
+        expect(results).to include(flagged)
+        expect(results).not_to include(unflagged)
+      end
+
+      it "returns all when flagged is not '1'" do
+        results = Notification.search_by_params(flagged: "")
+        expect(results).to include(flagged, unflagged)
+      end
+    end
+  end
+
+  describe ".flagged" do
+    it "returns only flagged communications" do
+      flagged = create(:notification, :flagged)
+      unflagged = create(:notification)
+
+      expect(Notification.flagged).to include(flagged)
+      expect(Notification.flagged).not_to include(unflagged)
+    end
   end
 
   describe "#timeline_activity_name" do

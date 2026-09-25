@@ -20,7 +20,8 @@
                            class: "ml-auto flex shrink-0 items-center gap-3") %>
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
   <div data-edit-toggle-target="view">
-    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, leading: source_chip, trailing: trailing %>
+    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false,
+               leading: source_chip, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
   </div>
 
   <div data-edit-toggle-target="edit" class="hidden rounded-md border <%= communication_card_class %> px-3 py-2">

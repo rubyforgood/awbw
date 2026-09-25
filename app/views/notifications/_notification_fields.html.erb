@@ -22,7 +22,8 @@
   <% if f.object.persisted? %>
     <%= f.hidden_field :id %>
     <div data-edit-toggle-target="view">
-      <%= render "notifications/communication_line", notification: f.object, admin: true, mark_admin_only: mark_admin_only %>
+      <%= render "notifications/communication_line", notification: f.object, admin: true, mark_admin_only: mark_admin_only,
+                 flag: render("notifications/flag_indicator", notification: f.object) %>
     </div>
     <div class="hidden rounded-md border <%= DomainTheme.border_class_for(:notifications, intensity: 200) %> <%= DomainTheme.bg_class_for(:notifications, intensity: 50) %> p-3" data-edit-toggle-target="edit">
       <%= render "notifications/notification_form", f: f, channel_default: channel_default %>

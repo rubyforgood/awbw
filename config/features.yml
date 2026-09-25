@@ -63,6 +63,18 @@
     card. The labels stay fixed because they're wired to payment processing.
   action_path: "/forms"
 
+- name: "Flag communications for follow-up"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    Communications can now be flagged for follow-up just like comments. On the
+    Comments & communications feed, click the flag on any comment or
+    communication to toggle it — no need to open Edit first — and filter the
+    feed to just the flagged items.
+  action_path: "/comments_and_communications"
+  pr_number: 2549
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing
