@@ -28,6 +28,22 @@ RSpec.describe OrganizationPolicy, type: :policy do
 
       it { is_expected.not_to be_allowed_to(:index?) }
     end
+
+    context "when profiles are enabled" do
+      before { allow(Profiles).to receive(:enabled?).and_return(true) }
+
+      context "with a signed-in user" do
+        subject { policy_for(user: regular_user) }
+
+        it { is_expected.to be_allowed_to(:index?) }
+      end
+
+      context "with no user" do
+        subject { policy_for(user: nil) }
+
+        it { is_expected.not_to be_allowed_to(:index?) }
+      end
+    end
   end
 
   describe "#show?" do
@@ -47,6 +63,34 @@ RSpec.describe OrganizationPolicy, type: :policy do
       subject { policy_for(record: organization, user: nil) }
 
       it { is_expected.not_to be_allowed_to(:show?) }
+    end
+
+    context "when profiles are enabled" do
+      before { allow(Profiles).to receive(:enabled?).and_return(true) }
+
+      context "with a signed-in user and a published organization" do
+        subject { policy_for(record: organization, user: regular_user) }
+
+        before { allow(organization).to receive(:published?).and_return(true) }
+
+        it { is_expected.to be_allowed_to(:show?) }
+      end
+
+      context "with a signed-in user and an unpublished organization" do
+        subject { policy_for(record: organization, user: regular_user) }
+
+        before { allow(organization).to receive(:published?).and_return(false) }
+
+        it { is_expected.not_to be_allowed_to(:show?) }
+      end
+
+      context "with no user" do
+        subject { policy_for(record: organization, user: nil) }
+
+        before { allow(organization).to receive(:published?).and_return(true) }
+
+        it { is_expected.not_to be_allowed_to(:show?) }
+      end
     end
   end
 

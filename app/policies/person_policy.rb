@@ -2,11 +2,11 @@ class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
   def index?
-    admin?
+    admin? || (Profiles.enabled? && authenticated?)
   end
 
   def show?
-    admin? || owner?
+    admin? || owner? || (Profiles.enabled? && authenticated? && record.published?)
   end
 
   # Admin, or the profile's own person. The narrow rule for owner-only content
@@ -32,14 +32,14 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
-  # Admin-only for now; flips to `admin? || owner?` at profile launch, when the
-  # owner read-only affiliation view on the edit form goes live.
+  # A person edits their own profile once profiles are enabled; the controller
+  # strips admin-only fields from what a non-admin owner can submit.
   def edit?
-    admin?
+    admin? || (Profiles.enabled? && owner?)
   end
 
   def update?
-    admin?
+    admin? || (Profiles.enabled? && owner?)
   end
 
   def destroy?
