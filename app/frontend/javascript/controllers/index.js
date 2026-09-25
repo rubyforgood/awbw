@@ -219,8 +219,8 @@ application.register("remote-select", RemoteSelectController)
 import InvoiceeController from "./invoicee_controller"
 application.register("invoicee", InvoiceeController)
 
-import LineItemsController from "./line_items_controller"
-application.register("line-items", LineItemsController)
+import NestedItemsController from "./nested_items_controller"
+application.register("nested-items", NestedItemsController)
 
 import MixedChartController from "./mixed_chart_controller"
 application.register("mixed-chart", MixedChartController)
