@@ -169,6 +169,37 @@ RSpec.describe TaggingSearchService do
       end
     end
 
+    context "with organizations (Organizations-index-only)" do
+      let!(:admin) { create(:user, :admin) }
+      let!(:organization) { create(:organization, name: "Tagged Org") }
+
+      before { create(:sectorable_item, sector: sector, sectorable: organization) }
+
+      it "returns matching organizations for an admin" do
+        results = described_class.new(user: admin).call(
+          sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9
+        )
+
+        expect(results[:organizations].map(&:title)).to include("Tagged Org")
+      end
+
+      it "hides organizations from non-admins while profiles are disabled" do
+        results = described_class.new(user: user).call(
+          sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9
+        )
+
+        expect(results[:organizations]).to be_empty
+      end
+
+      it "hides organizations from guests" do
+        results = described_class.new(user: nil).call(
+          sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9
+        )
+
+        expect(results[:organizations]).to be_empty
+      end
+    end
+
     context "as a guest (nil user)" do
       it "returns only publicly visible results" do
         results = described_class.new(user: nil).call(
