@@ -10,6 +10,10 @@ FactoryBot.define do
       direction { "incoming" }
     end
 
+    trait :flagged do
+      flagged { true }
+    end
+
     trait :bulk do
       bulk { true }
     end
