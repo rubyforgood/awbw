@@ -2551,6 +2551,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
     t.index ["year", "month"], name: "index_workshops_on_year_and_month"
   end
 
+  add_foreign_key "action_text_mentions", "action_text_rich_texts"
+  add_foreign_key "action_text_mentions", "users", column: "created_by_id"
+  add_foreign_key "action_text_mentions", "users", column: "updated_by_id"
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "addresses", "users", column: "created_by_id"
   add_foreign_key "addresses", "users", column: "updated_by_id"
