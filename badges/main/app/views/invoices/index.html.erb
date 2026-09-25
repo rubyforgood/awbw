@@ -1,0 +1,37 @@
+<% content_for(:page_title, "Invoices") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <h1 class="text-primary font-display text-2xl font-semibold">Invoices</h1>
+    <%= link_to new_invoice_path, class: "inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90" do %>
+      <i class="fa-solid fa-plus text-xs"></i> New Invoice
+    <% end %>
+  </div>
+
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-300 text-xs font-bold text-gray-700">
+        <th class="py-2 pr-3 text-left">Number</th>
+        <th class="py-2 pr-3 text-left">Date</th>
+        <th class="py-2 pr-3 text-left">Bill To</th>
+        <th class="py-2 pr-3 text-right">Total</th>
+        <th class="py-2 pl-3 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @invoices.each do |invoice| %>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3"><%= link_to invoice.number, invoice_path(invoice) %></td>
+          <td class="py-2 pr-3"><%= invoice.date&.strftime("%-d %b, %Y") %></td>
+          <td class="py-2 pr-3"><%= invoice.bill_to_name %></td>
+          <td class="py-2 pr-3 text-right tabular-nums"><%= dollars_from_cents(invoice.total_cents) %></td>
+          <td class="py-2 pl-3 text-right">
+            <%= link_to "Edit", edit_invoice_path(invoice), class: "text-primary hover:underline" %>
+            <%= button_to "Delete", invoice_path(invoice), method: :delete, data: { turbo_confirm: "Delete this invoice?" }, class: "text-danger hover:underline bg-transparent border-none cursor-pointer" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

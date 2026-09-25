@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_20_234025) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1266,6 +1266,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_234025) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["owner_id"], name: "index_images_on_owner_id"
     t.index ["type"], name: "index_images_on_type"
+  end
+
+  create_table "invoice_line_items", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date"
+    t.text "description", null: false
+    t.bigint "invoice_id", null: false
+    t.integer "quantity", default: 1, null: false
+    t.integer "unit_price_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
+  end
+
+  create_table "invoices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "attention_person_id"
+    t.text "bill_to_additional_info"
+    t.bigint "bill_to_address_id"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.date "date", null: false
+    t.boolean "hide_address", default: false, null: false
+    t.boolean "hide_invoicee", default: false, null: false
+    t.bigint "invoicee_id", null: false
+    t.string "invoicee_type", null: false
+    t.string "number", null: false
+    t.integer "total_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["attention_person_id"], name: "index_invoices_on_attention_person_id"
+    t.index ["bill_to_address_id"], name: "index_invoices_on_bill_to_address_id"
+    t.index ["invoicee_type", "invoicee_id"], name: "index_invoices_on_invoicee"
+    t.index ["number"], name: "index_invoices_on_number", unique: true
   end
 
   create_table "locations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2628,6 +2660,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_234025) do
   add_foreign_key "forms", "form_builders"
   add_foreign_key "forms", "users", column: "created_by_id"
   add_foreign_key "forms", "users", column: "updated_by_id"
+  add_foreign_key "invoice_line_items", "invoices"
+  add_foreign_key "invoices", "addresses", column: "bill_to_address_id"
+  add_foreign_key "invoices", "people", column: "attention_person_id"
   add_foreign_key "locations", "users", column: "created_by_id"
   add_foreign_key "locations", "users", column: "updated_by_id"
   add_foreign_key "media_files", "users", column: "created_by_id"

@@ -1,0 +1,22 @@
+<fieldset class="mt-6 border-t border-gray-200 pt-6" data-controller="nested-items">
+   <legend class="mb-3 text-sm font-medium text-gray-700">Line items</legend>
+
+   <div id="invoice_line_items" data-nested-items-target="container" class="space-y-3">
+     <%= f.simple_fields_for :invoice_line_items do |li| %>
+       <%= render "invoice_line_item_fields", f: li %>
+     <% end %>
+   </div>
+
+   <template data-nested-items-target="template">
+     <%= f.simple_fields_for :invoice_line_items, InvoiceLineItem.new, child_index: "new_invoice_line_items" do |li| %>
+       <%= render "invoice_line_item_fields", f: li %>
+     <% end %>
+   </template>
+
+   <div class="mt-3">
+     <button type="button" data-action="nested-items#add" class="<%= button_classes(:secondary_outline) %>">
+       ➕ Add line item
+     </button>
+   </div>
+ </fieldset>
+

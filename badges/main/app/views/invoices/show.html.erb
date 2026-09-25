@@ -1,0 +1,15 @@
+<% content_for(:page_title, "Invoice #{@invoice.number}") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-3xl">
+  <div class="mb-6 flex flex-wrap items-center gap-2 print:hidden">
+    <%= link_to "← Invoices", invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "Edit", edit_invoice_path(@invoice), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <button onclick="window.print();"
+            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+      <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+    </button>
+  </div>
+
+  <%= render "invoice", invoice: @presenter %>
+</div>
