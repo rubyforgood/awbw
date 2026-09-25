@@ -53,7 +53,7 @@ RSpec.describe "/users/welcome", type: :request do
         user.reload
         expect(user.welcome_instructions_token).to be_nil
         expect(user.welcome_instructions_created_at).to be_nil
-        expect(user.welcome_instructions_sent_at).to be_nil
+        expect(user.welcome_instructions_sent_at).to be_present
       end
 
       it "credits the user themselves when no admin is signed in" do

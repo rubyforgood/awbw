@@ -979,7 +979,7 @@ RSpec.describe EventRegistration, type: :model do
       let!(:none_reg) { create(:event_registration, event: event, registrant: create(:person, user: nil)) }
       let!(:access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: Time.current))) }
       let!(:invited_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: Time.current))) }
-      let!(:no_access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: nil))) }
+      let!(:no_access_reg) { create(:event_registration, event: event, registrant: create(:person, user: create(:user, confirmed_at: nil, welcome_instructions_sent_at: nil, invited: false))) }
 
       it "maps 'none' to registrants without an account" do
         results = EventRegistration.account_status("none")
