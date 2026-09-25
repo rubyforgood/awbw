@@ -69,13 +69,20 @@ class TaggingSearchService
                 empty_page(number_of_items_per_page)
               end,
 
-      organizations: authorized_scope(Organization.all)
-                  .includes(:sectors)
-                  .sector_names_all(sector_names_all)
-                  .category_names_all(category_names_all)
-                  .order(:name)
-                  .paginate(page: pages[:organizations] || 1, per_page: number_of_items_per_page)
-                  .decorate,
+      # Organizations surface here only for viewers who may see the Organizations
+      # index (admins, or signed-in users once Organization.profiles_enabled?);
+      # otherwise the group is empty so no org card dead-ends at "not authorized".
+      organizations: if allowed_to?(:index?, Organization)
+                       authorized_scope(Organization.all)
+                         .includes(:sectors)
+                         .sector_names_all(sector_names_all)
+                         .category_names_all(category_names_all)
+                         .order(:name)
+                         .paginate(page: pages[:organizations] || 1, per_page: number_of_items_per_page)
+                         .decorate
+                     else
+                       empty_page(number_of_items_per_page)
+                     end,
 
       quotes: authorized_scope(Quote.all)
                 .includes(:sectors, :primary_asset, :gallery_assets)
