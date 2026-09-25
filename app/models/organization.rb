@@ -62,13 +62,6 @@ class Organization < ApplicationRecord
     find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
   end
 
-  # The launch switch for signed-in (non-public, non-admin) org profile viewing.
-  # Set ORGANIZATION_PROFILES_ENABLED on staging to preview; off in production
-  # until launch. Admins always have access regardless of this flag.
-  def self.profiles_enabled?
-    ActiveModel::Type::Boolean.new.cast(ENV["ORGANIZATION_PROFILES_ENABLED"])
-  end
-
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],

@@ -183,7 +183,8 @@ RSpec.describe TaggingSearchService do
         expect(results[:organizations].map(&:title)).to include("Tagged Org")
       end
 
-      it "hides organizations from non-admins while profiles are disabled" do
+      it "hides organizations from non-admins in production" do
+        allow(Rails.env).to receive(:production?).and_return(true)
         results = described_class.new(user: user).call(
           sector_names_all: "Youth", category_names_all: nil, pages: {}, number_of_items_per_page: 9
         )
