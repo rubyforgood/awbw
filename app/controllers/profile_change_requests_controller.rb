@@ -43,7 +43,7 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   def edit
-    authorize! @request, to: :update?
+    authorize! @request
     @person = @request.person
   end
 
