@@ -33,6 +33,7 @@
       <%= decorated.channel_icon %>
       <%# A regular outgoing message is the norm here — only the exceptions get a flag. %>
       <%= decorated.flag_badges %>
+      <%= decorated.event_chip %>
       <span class="font-semibold text-gray-900" title="<%= body.presence || subject %>"><%= subject %></span>
       <% if body.present? %>
         <% if body_admin_only && mark_admin_only %>

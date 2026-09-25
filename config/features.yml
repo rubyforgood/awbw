@@ -3508,3 +3508,15 @@
     record. One consistent word, and it no longer collides with the app's other
     histories (payment, participation, CE, communications).
   action_path: "/admin/activities/counts"
+
+- name: "Event tag on communications and comments about an event"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    Comments and communications tied to an event now show a small event tag
+    before the subject — the event's abbreviation (or its name and date) — so you
+    can tell at a glance which event a feed row is about.
+  pro_tips:
+    - "Click the tag to jump straight to that event registration."
+    - "It covers registration and reminder emails, hand-logged calls and notes attached to a registration, and comments on registrations, CE registrations, and scholarships."

@@ -27,6 +27,82 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
   end
 
+  describe "#event" do
+    it "resolves the event through an EventRegistration noticeable" do
+      event = build_stubbed(:event)
+      registration = build_stubbed(:event_registration, event: event)
+      notification = build_stubbed(:notification, noticeable: registration)
+
+      expect(notification.decorate.event).to eq(event)
+    end
+
+    it "is nil when the noticeable is not about an event" do
+      notification = build_stubbed(:notification, noticeable: build_stubbed(:person))
+
+      expect(notification.decorate.event).to be_nil
+    end
+
+    it "is nil when the noticeable was nullified" do
+      notification = build_stubbed(:notification, noticeable: nil)
+
+      expect(notification.decorate.event).to be_nil
+    end
+  end
+
+  describe "#event_registration" do
+    it "is the EventRegistration noticeable" do
+      registration = build_stubbed(:event_registration)
+      notification = build_stubbed(:notification, noticeable: registration)
+
+      expect(notification.decorate.event_registration).to eq(registration)
+    end
+
+    it "is nil for a noticeable that isn't a registration" do
+      notification = build_stubbed(:notification, noticeable: build_stubbed(:person))
+
+      expect(notification.decorate.event_registration).to be_nil
+    end
+  end
+
+  describe "#event_chip" do
+    it "shows the event abbreviation for an event communication" do
+      event = build_stubbed(:event, abbreviation: "TOS205", title: "Trauma of Separation 205")
+      registration = build_stubbed(:event_registration, event: event)
+      notification = build_stubbed(:notification, noticeable: registration)
+
+      chip = notification.decorate.event_chip
+
+      expect(chip).to include("TOS205")
+      expect(chip).to include("Trauma of Separation 205")
+    end
+
+    it "links to the registration's edit page when asked" do
+      registration = build_stubbed(:event_registration, event: build_stubbed(:event, abbreviation: "TOS205"))
+      notification = build_stubbed(:notification, noticeable: registration)
+
+      chip = notification.decorate.event_chip(linked: true)
+
+      expect(chip).to include("<a")
+      expect(chip).to include(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+    end
+
+    it "stays a plain span even when linked if there is no registration to link to" do
+      event = build_stubbed(:event, abbreviation: "TOS205")
+      notification = build_stubbed(:notification, noticeable: build_stubbed(:form_submission, event: event))
+
+      chip = notification.decorate.event_chip(linked: true)
+
+      expect(chip).to include("TOS205")
+      expect(chip).not_to include("<a")
+    end
+
+    it "is blank for a communication that isn't about an event" do
+      notification = build_stubbed(:notification, noticeable: build_stubbed(:person))
+
+      expect(notification.decorate.event_chip).to eq("")
+    end
+  end
+
   describe "#row_class" do
     it "tints the row amber for an email stuck pending past the grace period" do
       notification = build_stubbed(:notification, delivered_at: nil, error_at: nil, created_at: 2.hours.ago)
