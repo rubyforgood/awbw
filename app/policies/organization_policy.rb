@@ -2,11 +2,11 @@ class OrganizationPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   def index?
-    admin?
+    admin? || (profiles_enabled? && authenticated?)
   end
 
   def show?
-    admin?
+    admin? || (profiles_enabled? && authenticated? && record.published?)
   end
 
   def show_workshop_logs?
