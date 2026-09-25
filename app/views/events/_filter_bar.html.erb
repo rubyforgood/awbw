@@ -33,7 +33,7 @@
     <input type="checkbox" id="more-filters-toggle" class="sr-only"<%= " checked" if more_active %>>
   <% end %>
   <%= form_with url: url, method: :get,
-        data: { controller: "collection", turbo_frame: frame },
+        data: { controller: "collection searchable-checkbox", turbo_frame: frame },
         autocomplete: "off",
         class: "bg-white border border-gray-200 rounded-xl shadow-sm p-4" do %>
     <%= hidden %>
@@ -62,7 +62,8 @@
             <i class="fa-solid fa-chevron-down text-xs transition-transform group-has-[#more-filters-toggle:checked]:rotate-180"></i>
           </label>
         <% end %>
-        <%= render "shared/search_clear", url: clear_url %>
+        <%= render "shared/search_clear", url: clear_url,
+              action: "searchable-checkbox#clear collection#clearAndSubmit" %>
       </div>
     </div>
 

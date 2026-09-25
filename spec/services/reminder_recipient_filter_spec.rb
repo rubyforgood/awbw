@@ -257,6 +257,11 @@ RSpec.describe ReminderRecipientFilter do
         create(:topic_subscription, :unsubscribed, person: none.registrant, topic_subscription_type: topic)
         expect(matched({ topic_subscription: topic.id }, [ subscribed, other, none ])).to eq([ subscribed.id ].to_set)
       end
+
+      it "matches a subscription to any of several chosen topics" do
+        expect(matched({ topic_subscription: [ topic.id, other_topic.id ] }, [ subscribed, other, none ]))
+          .to eq([ subscribed.id, other.id ].to_set)
+      end
     end
 
     it "combines filters with AND" do

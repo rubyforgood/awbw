@@ -59,8 +59,8 @@ module TopicSubscriptionHelper
     filters << [ "Organization", params[:organization_name] ] if params[:organization_name].present?
 
     if params[:topic_subscription_type_id].present?
-      topic = TopicSubscriptionType.find_by(id: params[:topic_subscription_type_id])
-      filters << [ "Topic", topic&.name || "Unknown" ]
+      names = TopicSubscriptionType.where(id: params[:topic_subscription_type_id]).pluck(:name)
+      filters << [ "Topic", names.presence&.to_sentence || "Unknown" ]
     end
 
     # No status chip: the index's status param doesn't narrow this list (the

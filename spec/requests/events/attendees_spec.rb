@@ -577,6 +577,19 @@ RSpec.describe "Events attendees", type: :request do
           expect(response.body).not_to include("Uma Unsub")
         end
 
+        it "filters by several topic subscriptions at once" do
+          type_a = create(:topic_subscription_type)
+          type_b = create(:topic_subscription_type)
+          create(:topic_subscription, person: attendee, topic_subscription_type: type_a)
+          other = create(:person, first_name: "Bex", last_name: "Beam")
+          create(:event_registration, event: recent_training, registrant: other, status: "attended")
+          create(:topic_subscription, person: other, topic_subscription_type: type_b)
+
+          get attendees_events_url(topic_subscription: [ type_a.id, type_b.id ]), headers: frame_headers
+          expect(response.body).to include("Ada Lovelace")
+          expect(response.body).to include("Bex Beam")
+        end
+
         it "filters by a registration-level attribute (CE status) across events" do
           # Ada has a CE registration at the older training; the filter should surface
           # her on the cross-event index even though her recent-training reg has none.

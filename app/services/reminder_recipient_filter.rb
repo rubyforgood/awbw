@@ -19,8 +19,8 @@ class ReminderRecipientFilter
     submission_status comment_status org_status account_status state county
   ].freeze
   # Picker-only dropdowns that don't map to a shared roster scope. `topic_subscription`
-  # keeps registrants whose person holds an active subscription to the chosen topic
-  # subscription list; matched in memory against the registrant's topic_subscriptions.
+  # keeps registrants whose person holds an active subscription to any of the chosen
+  # topic subscription lists; matched in memory against the registrant's topic_subscriptions.
   PICKER_KEYS = %i[ topic_subscription ].freeze
   # Registration date-range filters shared with the roster. Backed by the
   # EventRegistration.registered_between scope (run once as a query), so the same
@@ -84,16 +84,16 @@ class ReminderRecipientFilter
     scope.pluck(:id).to_set
   end
 
-  # Keeps registrants whose person holds an active subscription to the chosen topic
-  # subscription list. With no topic set this is every registration, so it passes
-  # the other matches through unchanged.
+  # Keeps registrants whose person holds an active subscription to any of the chosen
+  # topic subscription lists. With no topic set this is every registration, so it
+  # passes the other matches through unchanged.
   def topic_matched_ids
-    return @event_registrations.map(&:id).to_set if @params[:topic_subscription].blank?
+    type_ids = Array(@params[:topic_subscription]).reject(&:blank?).map(&:to_i).to_set
+    return @event_registrations.map(&:id).to_set if type_ids.empty?
 
-    type_id = @params[:topic_subscription].to_i
     @event_registrations.select do |reg|
       reg.registrant.topic_subscriptions.any? do |sub|
-        sub.active? && sub.topic_subscription_type_id == type_id
+        sub.active? && type_ids.include?(sub.topic_subscription_type_id)
       end
     end.map(&:id).to_set
   end

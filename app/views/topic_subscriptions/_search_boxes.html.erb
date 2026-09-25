@@ -2,7 +2,7 @@
 <% label_class = search_label_class %>
 <div class="mb-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
   <%= form_with url: topic_subscriptions_path, method: :get,
-        data: { controller: "collection", turbo_frame: "topic_subscriptions_results" },
+        data: { controller: "collection searchable-checkbox", turbo_frame: "topic_subscriptions_results" },
         autocomplete: "off", class: "space-y-3" do |f| %>
     <div class="flex items-center gap-2 text-gray-600">
       <i class="fa-solid fa-filter text-xs"></i>
@@ -32,13 +32,10 @@
           <%= render "shared/search_submit" %>
         </div>
       </div>
-      <div class="min-w-[180px]">
-        <%= f.label :topic_subscription_type_id, "Topic", class: label_class %>
-        <%= f.select :topic_subscription_type_id,
-              options_from_collection_for_select(TopicSubscriptionType.active.ordered, :id, :name, params[:topic_subscription_type_id]),
-              { include_blank: "All topics" },
-              class: "#{field_class} search-select-placeholder", onchange: "this.form.requestSubmit()" %>
-      </div>
+      <%= render "events/filter_multiselect", param: :topic_subscription_type_id, label: "Topic",
+            options: TopicSubscriptionType.active.ordered.map { |t| [ t.name, t.id ] },
+            selected: Array(params[:topic_subscription_type_id]).map(&:to_i), placeholder: "All topics",
+            wrapper_class: "min-w-[220px]" %>
       <div class="min-w-[150px]">
         <%= f.label :comment_status, "Comments", class: label_class %>
         <%= f.select :comment_status,
@@ -56,7 +53,8 @@
       <%= hidden_field_tag :status, params[:status], id: nil if params[:status].present? %>
       <div>
         <label class="<%= label_class %>">&nbsp;</label>
-        <%= render "shared/search_clear", url: topic_subscriptions_path %>
+        <%= render "shared/search_clear", url: topic_subscriptions_path,
+              action: "searchable-checkbox#clear collection#clearAndSubmit" %>
       </div>
     </div>
   <% end %>
