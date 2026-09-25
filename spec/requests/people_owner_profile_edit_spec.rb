@@ -12,7 +12,11 @@ RSpec.describe "People with profiles enabled", type: :request do
     other
   end
 
-  before { allow(Profiles).to receive(:enabled?).and_return(true) }
+  around do |example|
+    ENV["PROFILES_ENABLED"] = "true"
+    example.run
+    ENV.delete("PROFILES_ENABLED")
+  end
 
   describe "viewing as a non-admin signed-in user" do
     before { sign_in create(:user) }

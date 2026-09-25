@@ -23,6 +23,13 @@ class ApplicationPolicy < ActionPolicy::Base
 
   def authenticated? = user.present?
 
+  # Staging toggle for the not-yet-launched public-profiles experience: opens
+  # people/organizations to signed-in users and lets a person edit their own
+  # profile. Off unless PROFILES_ENABLED is set, so production stays unchanged.
+  def profiles_enabled?
+    ActiveModel::Type::Boolean.new.cast(ENV["PROFILES_ENABLED"])
+  end
+
   def owner?
     return false unless user
     if record.respond_to?(:created_by_id)

@@ -30,7 +30,7 @@ RSpec.describe OrganizationPolicy, type: :policy do
     end
 
     context "when profiles are enabled" do
-      before { allow(Profiles).to receive(:enabled?).and_return(true) }
+      before { allow_any_instance_of(described_class).to receive(:profiles_enabled?).and_return(true) }
 
       context "with a signed-in user" do
         subject { policy_for(user: regular_user) }
@@ -66,7 +66,7 @@ RSpec.describe OrganizationPolicy, type: :policy do
     end
 
     context "when profiles are enabled" do
-      before { allow(Profiles).to receive(:enabled?).and_return(true) }
+      before { allow_any_instance_of(described_class).to receive(:profiles_enabled?).and_return(true) }
 
       context "with a signed-in user and a published organization" do
         subject { policy_for(record: organization, user: regular_user) }

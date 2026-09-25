@@ -6,30 +6,15 @@ class PeopleController < ApplicationController
   # not part of the public profile even after profile viewing opens up.
   PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs monthly_reports ].freeze
 
-  # What a non-admin owner may change about their own profile once profiles are
-  # enabled. Everything outside this — staff tags, filemaker code, notes,
-  # member_since, created_by, the user account (incl. super_user), affiliations,
-  # licenses — stays admin-only, so self-editing can't grant privileges or touch
-  # admin data. Allowlist, not denylist: a field added to person_params later is
-  # admin-only until it's added here on purpose.
-  OWNER_EDITABLE_FIELDS = %i[
-    avatar first_name legal_first_name last_name
-    email email_type email_2 email_2_type
-    street_address city state zip country mailing_address_type
-    best_time_to_call date_of_birth racial_ethnic_identity
-    bio shoutout_text display_name_preference anonymous_contributions
-    pronunciation pronouns profile_is_searchable
-    profile_show_pronouns profile_show_credentials profile_show_bio
-    profile_show_email profile_show_phone profile_show_member_since
-    profile_show_sectors profile_show_age_ranges profile_show_affiliations
-    profile_show_social_media profile_show_events_registered
-    profile_show_stories profile_show_story_ideas
-    profile_show_workshop_variations profile_show_workshop_variation_ideas
-    profile_show_workshops profile_show_workshop_ideas profile_show_workshop_logs
-    profile_show_monthly_reports profile_show_resources
-    linked_in_url facebook_url instagram_url youtube_url twitter_url
-    sectorable_items_attributes age_range_categorizable_items_attributes
-    addresses_attributes contact_methods_attributes
+  # Fields a non-admin owner may NOT change about their own profile once profiles
+  # are enabled — privilege- or admin-only data the self-edit form doesn't expose.
+  # person_params strips these for non-admins. Add any new admin-only person_params
+  # field here, since everything else is owner-editable by default.
+  ADMIN_ONLY_PERSON_FIELDS = %i[
+    filemaker_code blog_contributor notes member_since
+    created_by_id updated_by_id
+    staff_taggings_attributes affiliations_attributes comments_attributes
+    notifications_attributes professional_licenses_attributes user_attributes
   ].freeze
 
   def index
@@ -675,7 +660,7 @@ class PeopleController < ApplicationController
     permitted = permitted_person_params
     return permitted if current_user&.super_user?
 
-    permitted.slice(*OWNER_EDITABLE_FIELDS)
+    permitted.except(*ADMIN_ONLY_PERSON_FIELDS)
   end
 
   def permitted_person_params
