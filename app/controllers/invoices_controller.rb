@@ -27,17 +27,13 @@ class InvoicesController < ApplicationController
 
   def show
     @presenter = InvoicePresenter.new(@invoice)
-    authorize! @invoice
   end
 
   def edit
-    authorize! @invoice
     @invoice.invoice_line_items.build if @invoice.invoice_line_items.empty?
   end
 
   def update
-    authorize! @invoice
-
     if @invoice.update(invoice_params)
       redirect_to invoice_path(@invoice), notice: "Invoice updated."
     else
@@ -48,7 +44,6 @@ class InvoicesController < ApplicationController
   end
 
   def destroy
-    authorize! @invoice
     @invoice.destroy
     redirect_to invoices_path, notice: "Invoice deleted."
   end
@@ -57,6 +52,7 @@ class InvoicesController < ApplicationController
 
   def set_invoice
     @invoice = Invoice.find(params[:id])
+    authorize! @invoice
   end
 
   def invoice_params
