@@ -1391,6 +1391,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
     t.datetime "error_at"
     t.string "error_class"
     t.text "error_message"
+    t.boolean "flagged", default: false, null: false
     t.boolean "hide_event_card", default: false, null: false
     t.boolean "hide_ticket_button", default: false, null: false
     t.string "kind", null: false
