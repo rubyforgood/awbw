@@ -154,4 +154,28 @@ RSpec.describe EventRegistrationServices::BulkPayment do
       described_class.call(event: event, form: form, form_params: base_form_params)
     end
   end
+
+  describe "unreadable file upload" do
+    let(:upload_field) { create(:form_field, :file_upload, form: form) }
+
+    def call_with_forged_upload
+      described_class.call(
+        event: event,
+        form: form,
+        form_params: base_form_params(upload_field.id.to_s => "forged-signed-id")
+      )
+    end
+
+    it "returns a form error" do
+      result = call_with_forged_upload
+
+      expect(result.success?).to be false
+      expect(result.errors).to eq([ FormSubmission::UNREADABLE_UPLOAD_MESSAGE ])
+    end
+
+    it "saves nothing" do
+      upload_field
+      expect { call_with_forged_upload }.not_to change { [ Person.count, FormSubmission.count ] }
+    end
+  end
 end

@@ -46,6 +46,14 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
          params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: { org_field.id.to_s => answer } } }
   end
 
+  def payer_params
+    {
+      payer_first_name_field.id.to_s => "Jane",
+      payer_last_name_field.id.to_s => "Doe",
+      payer_email_field.id.to_s => "jane@example.com"
+    }
+  end
+
   describe "POST create with the honeypot tripped" do
     it "silently bounces a bot without recording a submission" do
       expect {
@@ -133,14 +141,6 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
       allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
     end
 
-    def payer_params
-      {
-        payer_first_name_field.id.to_s => "Jane",
-        payer_last_name_field.id.to_s => "Doe",
-        payer_email_field.id.to_s => "jane@example.com"
-      }
-    end
-
     it "redirects to Stripe Checkout when paying by credit card" do
       post event_bulk_payment_path(event),
            params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: payer_params.merge(
@@ -174,6 +174,23 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
       expect(response).to have_http_status(:redirect)
       expect(response.location).to match(%r{/bulk_payment/})
+    end
+  end
+
+  describe "POST create with an unreadable file upload" do
+    let!(:upload_field) { create(:form_field, :file_upload, form: form, required: false) }
+
+    it "re-renders the form with an error and records nothing" do
+      expect {
+        post event_bulk_payment_path(event),
+             params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: payer_params.merge(
+               org_field.id.to_s => "this answer has enough words for validation",
+               upload_field.id.to_s => "forged-signed-id"
+             ) } }
+      }.not_to change(FormSubmission, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include(ERB::Util.html_escape(FormSubmission::UNREADABLE_UPLOAD_MESSAGE))
     end
   end
 

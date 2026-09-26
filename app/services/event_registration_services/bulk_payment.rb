@@ -26,7 +26,7 @@ module EventRegistrationServices
         send_notifications(submission, person)
         Result.new(success?: true, form_submission: submission, errors: [])
       end
-    rescue ActiveRecord::RecordInvalid => e
+    rescue FormSubmission::UnreadableUpload, ActiveRecord::RecordInvalid => e
       Result.new(success?: false, form_submission: nil, errors: [ e.message ])
     end
 
