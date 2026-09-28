@@ -1,11 +1,3 @@
-GIT
-  remote: https://github.com/kivikakk/binding_of_caller.git
-  revision: c590ef401ab8311d9e6c2b55cb8a7fa4553c18ab
-  branch: push-yrnnzolypxun
-  specs:
-    binding_of_caller (1.0.1)
-      debug_inspector (>= 1.2.0)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -128,6 +120,8 @@ GEM
       rack (>= 0.9.0)
       rouge (>= 1.0.0)
     bigdecimal (4.1.2)
+    binding_of_caller (2.0.0)
+      debug_inspector (>= 1.2.0)
     blazer (3.5.0)
       activerecord (>= 7.2)
       csv
@@ -618,7 +612,6 @@ GEM
       io-console (~> 0.5)
     request_store (1.7.0)
       rack (>= 1.4)
-    resolv (0.8.0)
     responders (3.2.0)
       actionpack (>= 7.0)
       railties (>= 7.0)
@@ -781,7 +774,7 @@ DEPENDENCIES
   aws-sdk-s3
   bcrypt (~> 3.1, >= 3.1.22)
   better_errors
-  binding_of_caller!
+  binding_of_caller
   blazer
   bootsnap
   brakeman (~> 8.0.1)
@@ -823,7 +816,6 @@ DEPENDENCIES
   puma (~> 7.2, >= 7.2.1)
   rack-mini-profiler (~> 4.0)
   rails (~> 8.1.0)
-  resolv (>= 0.7.2)
   rspec-rails
   rubocop-rails-omakase
   search_cop
@@ -872,7 +864,7 @@ CHECKSUMS
   bcrypt (3.1.22) sha256=1f0072e88c2d705d94aff7f2c5cb02eb3f1ec4b8368671e19112527489f29032
   better_errors (2.10.1) sha256=f798f1bac93f3e775925b7fcb24cffbcf0bb62ee2210f5350f161a6b75fc0a73
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
-  binding_of_caller (1.0.1)
+  binding_of_caller (2.0.0) sha256=e53eebf8428a85587aede7b43a83e7419eb85b8b690938a96aa330d03052d517
   blazer (3.5.0) sha256=734b883b843fbd6d5c9db7a09ec267a068f504908f2d01b94fce151bd00ad4e2
   bootsnap (1.22.0) sha256=5820c9d42c2efef095bee6565484bdc511f1223bf950140449c9385ae775793e
   brakeman (8.0.6) sha256=759cc69341115e6c2dcd47b6fd8649a0b9bd540e3585ac8a0a94e31c66fee386
@@ -1069,7 +1061,6 @@ CHECKSUMS
   regexp_parser (2.11.3) sha256=ca13f381a173b7a93450e53459075c9b76a10433caadcb2f1180f2c741fc55a4
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
   request_store (1.7.0) sha256=e1b75d5346a315f452242a68c937ef8e48b215b9453a77a6c0acdca2934c88cb
-  resolv (0.8.0) sha256=733a3483c1510942dae9c60c873fa7153b63d5830eba230827775a50703d90d0
   responders (3.2.0) sha256=89c2d6ac0ae16f6458a11524cae4a8efdceba1a3baea164d28ee9046bd3df55a
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   rouge (4.7.0) sha256=dba5896715c0325c362e895460a6d350803dbf6427454f49a47500f3193ea739

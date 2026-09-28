@@ -51,7 +51,6 @@ gem "premailer-rails" # applies any style tag classes to html elements for bette
 
 gem "bcrypt", "~> 3.1", ">= 3.1.22"
 gem "json", ">= 2.6", "< 3" # or simply: gem "json", "~> 2.7"
-gem "resolv", ">= 0.7.2"
 gem "ostruct"
 gem "simple_form"
 gem "country_select"
@@ -78,11 +77,7 @@ end
 
 group :development, :test do
   gem "better_errors"
-  # gem "binding_of_caller"  # Temporarily commented - doesn't support Ruby 4.0
-  # FIXME: Workaround for Ruby 4.0+
-  # https://github.com/banister/binding_of_caller/pull/90
-  gem "binding_of_caller", github: "kivikakk/binding_of_caller", branch: "push-yrnnzolypxun"
-
+  gem "binding_of_caller"
   gem "brakeman", "~> 8.0.1", require: false
   gem "bundler-audit", require: false
   gem "capybara", "~> 3.36"
