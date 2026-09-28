@@ -1,4 +1,4 @@
-FROM ruby:4.0.1-slim AS base
+FROM ruby:4.0.7-slim AS base
 
 # Set working directory
 WORKDIR /app
