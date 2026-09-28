@@ -618,6 +618,7 @@ GEM
       io-console (~> 0.5)
     request_store (1.7.0)
       rack (>= 1.4)
+    resolv (0.8.0)
     responders (3.2.0)
       actionpack (>= 7.0)
       railties (>= 7.0)
@@ -822,6 +823,7 @@ DEPENDENCIES
   puma (~> 7.2, >= 7.2.1)
   rack-mini-profiler (~> 4.0)
   rails (~> 8.1.0)
+  resolv (>= 0.7.2)
   rspec-rails
   rubocop-rails-omakase
   search_cop
@@ -1067,6 +1069,7 @@ CHECKSUMS
   regexp_parser (2.11.3) sha256=ca13f381a173b7a93450e53459075c9b76a10433caadcb2f1180f2c741fc55a4
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
   request_store (1.7.0) sha256=e1b75d5346a315f452242a68c937ef8e48b215b9453a77a6c0acdca2934c88cb
+  resolv (0.8.0) sha256=733a3483c1510942dae9c60c873fa7153b63d5830eba230827775a50703d90d0
   responders (3.2.0) sha256=89c2d6ac0ae16f6458a11524cae4a8efdceba1a3baea164d28ee9046bd3df55a
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   rouge (4.7.0) sha256=dba5896715c0325c362e895460a6d350803dbf6427454f49a47500f3193ea739
@@ -1127,7 +1130,7 @@ CHECKSUMS
   zeitwerk (2.8.2) sha256=7212a61311083c604184b1ea2574b9aa05cd14f855a0841c06985cabe9181d12
 
 RUBY VERSION
-  ruby 4.0.1
+  ruby 4.0.7
 
 BUNDLED WITH
   4.0.3
