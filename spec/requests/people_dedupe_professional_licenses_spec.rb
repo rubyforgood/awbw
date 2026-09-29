@@ -390,7 +390,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       expect(keep.pay_charges.count).to eq(1)
     end
 
-    it "keeps both people's Pay customers on the survivor when each had one" do
+    it "keeps both people's Pay customers and charges on the survivor, with the redundant one soft-deleted" do
       keep = create(:person)
       delete_rec = create(:person)
       keep_customer = customer_with_charge(keep, processor_id: "cus_keep")
@@ -402,9 +402,11 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       expect(response.body).to include("merged successfully")
       expect(keep.reload.pay_customers).to contain_exactly(keep_customer, delete_customer)
       expect(keep.pay_charges.count).to eq(2)
+      expect(keep.pay_customers.active).to contain_exactly(keep_customer)
+      expect(delete_customer.reload.deleted_at).to be_present
     end
 
-    it "leaves the survivor with a single default customer (its own) when both were default" do
+    it "leaves the survivor with a single active default customer (its own) when both were default" do
       keep = create(:person)
       delete_rec = create(:person)
       keep_customer = customer_with_charge(keep, processor_id: "cus_keep", default: true)
@@ -416,6 +418,26 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       expect(response.body).to include("merged successfully")
       expect(keep.reload.pay_customers.active.where(default: true)).to contain_exactly(keep_customer)
       expect(delete_customer.reload.default).to be false
+      expect(delete_customer.deleted_at).to be_present
+    end
+
+    it "keeps the subscription-bearing customer active and default over the survivor's own empty one" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      keep_customer = customer_with_charge(keep, processor_id: "cus_keep", default: true)
+      delete_customer = Pay::Customer.create!(owner: delete_rec, processor: "fake",
+        processor_id: "cus_sub", default: true)
+      Pay::Subscription.create!(customer: delete_customer, name: "default", processor_id: "sub_1",
+        processor_plan: "membership", status: "active", quantity: 1)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.payment_processor).to eq(delete_customer.reload)
+      expect(delete_customer.default).to be true
+      expect(delete_customer.deleted_at).to be_nil
+      expect(keep_customer.reload.deleted_at).to be_present
     end
   end
 

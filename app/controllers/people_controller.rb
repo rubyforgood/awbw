@@ -370,12 +370,20 @@ class PeopleController < ApplicationController
         date_of_birth pronouns filemaker_code member_since notes
       ],
       # Merging two people who each have a login leaves the kept person with both
-      # (users.person_id has no unique constraint); both logins still sign in to
-      # the one record. Surface it so the admin isn't surprised — it doesn't block.
+      # (users.person_id has no unique constraint); both logins still sign in to the
+      # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
         next [] unless keep.user && delete.user
 
         [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
+      },
+      # Block the merge when both people carry an active pay subscription: the merge
+      # keeps both live (soft-deleting one would strand its billing), so the kept person
+      # would be billed twice. The admin must cancel one before merging.
+      merge_blocks: ->(keep, delete) {
+        next [] unless active_pay_subscription?(keep) && active_pay_subscription?(delete)
+
+        [ "Both people have an active pay subscription. Cancel one before merging so the kept person isn't billed twice." ]
       },
       # Before the merge moves the deleted person's taggings onto the keeper (where
       # they become indistinguishable), capture which primary sector + age range to
@@ -395,8 +403,9 @@ class PeopleController < ApplicationController
       #     loser's payments, so the person isn't billed twice for a single enrollment);
       #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest,
       #     leaving the single primary Person's single-primary validations require);
-      #   * two default Pay customers (keep the survivor's own, demote the rest, so
-      #     `payment_processor` isn't ambiguous).
+      #   * two live Pay customers (keep one default — the subscription-bearing one,
+      #     else the survivor's own — and soft-delete the redundant sibling so
+      #     `payment_processor` isn't ambiguous and a later checkout can't flip it).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
@@ -410,6 +419,10 @@ class PeopleController < ApplicationController
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
       }
     }
+  end
+
+  def active_pay_subscription?(person)
+    person.pay_customers.active.any? { |customer| customer.subscriptions.active_uncanceled.exists? }
   end
 
   # Showing anonymous content to anyone but the person and admins would tie an
