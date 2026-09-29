@@ -42,10 +42,10 @@
     <%# Subject and body share one column so the body starts flush with the subject. %>
     <% if truncate_body %>
       <div class="flex min-w-0 flex-1 items-start gap-1 text-sm">
+        <%= decorated.event_chip %>
         <%= decorated.channel_chip %>
         <span class="line-clamp-2 min-w-0 flex-1">
           <%= decorated.flag_badges %>
-          <%= decorated.event_chip %>
           <span class="font-semibold text-gray-900"><%= subject %></span>
           <% if body.present? %><span class="<%= body_class %>" title="<%= body %>"><%= body %></span><% end %>
         </span>
@@ -53,9 +53,11 @@
     <% else %>
       <div class="min-w-0 flex-1 text-sm">
         <span>
+          <%# A leading source chip already links to the record here, so the event
+              chip stays a plain span to avoid a second link to the same place. %>
+          <%= decorated.event_chip %>
           <%= leading || decorated.channel_chip %>
           <%= decorated.flag_badges %>
-          <%= decorated.event_chip(linked: true) %>
           <% if !admin %>
             <span class="font-semibold text-gray-900"><%= subject %></span>
           <% else %>
