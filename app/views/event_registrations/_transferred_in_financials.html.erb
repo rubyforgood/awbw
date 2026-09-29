@@ -10,6 +10,7 @@
 <% source_cost_cents = source.event.cost_cents.to_i %>
 <% source_paid_cents = source.allocations_sum %>
 <% source_due_cents = [ source_cost_cents - source_paid_cents, 0 ].max %>
+<% source_over_cents = [ source_paid_cents - source_cost_cents, 0 ].max %>
 <section class="overflow-hidden rounded-xl border-2 border-teal-200 bg-teal-50/40 shadow-sm">
   <div class="flex items-center gap-3 border-b border-teal-200 bg-teal-50 px-4 py-3">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-700">
@@ -46,7 +47,11 @@
         <dl class="space-y-1 text-sm">
           <div class="flex justify-between"><dt class="text-gray-500">Cost</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source_cost_cents) %></dd></div>
           <div class="flex justify-between"><dt class="text-gray-500">Allocated</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source_paid_cents) %></dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="font-semibold tabular-nums <%= source_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source_due_cents) %></dd></div>
+          <% if source_over_cents.positive? %>
+            <div class="flex justify-between"><dt class="text-gray-500">Over-allocated</dt><dd class="font-semibold text-red-700 tabular-nums"><%= dollars_from_cents(source_over_cents) %> over</dd></div>
+          <% else %>
+            <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="font-semibold tabular-nums <%= source_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source_due_cents) %></dd></div>
+          <% end %>
         </dl>
       <% else %>
         <p class="text-sm text-gray-500">Free event — no payment.</p>
@@ -108,7 +113,11 @@
         <dl class="space-y-1 text-sm">
           <div class="flex justify-between"><dt class="text-gray-500">Cost</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source.ce_amount_owed_cents) %></dd></div>
           <div class="flex justify-between"><dt class="text-gray-500">Paid</dt><dd class="text-gray-900 tabular-nums"><%= dollars_from_cents(source.ce_amount_paid_cents) %></dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="font-semibold tabular-nums <%= source.ce_amount_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source.ce_amount_due_cents) %></dd></div>
+          <% if source.ce_over_allocation_cents.positive? %>
+            <div class="flex justify-between"><dt class="text-gray-500">Over-allocated</dt><dd class="font-semibold text-red-700 tabular-nums"><%= dollars_from_cents(source.ce_over_allocation_cents) %> over</dd></div>
+          <% else %>
+            <div class="flex justify-between"><dt class="text-gray-500">Due</dt><dd class="font-semibold tabular-nums <%= source.ce_amount_due_cents.positive? ? "text-amber-700" : "text-gray-500" %>"><%= dollars_from_cents(source.ce_amount_due_cents) %></dd></div>
+          <% end %>
         </dl>
       <% end %>
     </div>

@@ -31,11 +31,15 @@
           <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount allocated</dt>
           <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
         </div>
+        <% over_allocated = due_cents < 0 %>
         <% amount_due = due_cents > 0 %>
-        <div class="rounded-lg border px-4 py-3 <%= amount_due ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-gray-50" %>">
-          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">Amount due</dt>
-          <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">
-            <% if amount_due %>
+        <div class="rounded-lg border px-4 py-3 <%= over_allocated ? "border-red-300 bg-red-50" : amount_due ? "border-amber-300 bg-amber-50" : "border-gray-300 bg-gray-50" %>">
+          <dt class="text-xs font-medium uppercase tracking-wide text-gray-400"><%= over_allocated ? "Over-allocated" : "Amount due" %></dt>
+          <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= over_allocated ? "text-red-700" : amount_due ? "text-amber-700" : "text-gray-500" %>">
+            <% if over_allocated %>
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <%= dollars_from_cents(-due_cents) %> over
+            <% elsif amount_due %>
               <i class="fa-solid fa-circle-exclamation"></i>
               <%= dollars_from_cents(due_cents) %>
             <% else %>

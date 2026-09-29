@@ -940,6 +940,12 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.sum { |c| c.remaining_cost }
   end
 
+  # CE overage across this registration's CE registrations — cents allocated beyond
+  # cost, summed. Positive when a CE payment needs reconciling; 0 otherwise.
+  def ce_over_allocation_cents
+    continuing_education_registrations.sum { |c| c.over_allocation_cents }
+  end
+
   # CE cash collected across this registration's CE registrations (payments only,
   # excluding discounts) — the CE analogue of payments_sum, for revenue reporting.
   def ce_amount_paid_cents
