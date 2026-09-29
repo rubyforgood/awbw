@@ -1507,6 +1507,30 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "over-allocated payment badge" do
+      let(:event) { create(:event, cost_cents: 1_000) }
+
+      it "flags an over-allocated registration in the payment column" do
+        create(:allocation, allocatable: registration, amount: 1_000,
+          source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+        event.update_columns(cost_cents: 600)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Check payments")
+        expect(response.body).to include("$4 over-allocated")
+      end
+
+      it "does not flag a normally-paid registration" do
+        create(:allocation, allocatable: registration, amount: 1_000,
+          source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+
+        get registrants_event_path(event)
+
+        expect(response.body).not_to include("Check payments")
+      end
+    end
+
     context "Ticket forms columns" do
       it "shows a completion column per form callout and links the submitter to their responses" do
         form = create(:form, name: "Feedback")
