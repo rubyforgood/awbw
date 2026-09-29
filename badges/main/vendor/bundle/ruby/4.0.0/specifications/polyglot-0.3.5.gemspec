@@ -18,5 +18,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "2.2.2".freeze
   s.summary = "Augment 'require' to load non-Ruby file types".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

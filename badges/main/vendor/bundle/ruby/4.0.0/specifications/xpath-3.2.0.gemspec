@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "2.7.7".freeze
   s.summary = "Generate XPath expressions from Ruby".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

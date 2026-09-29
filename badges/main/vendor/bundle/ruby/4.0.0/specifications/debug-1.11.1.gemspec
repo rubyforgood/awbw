@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.6.2".freeze
   s.summary = "Debugging functionality for Ruby".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

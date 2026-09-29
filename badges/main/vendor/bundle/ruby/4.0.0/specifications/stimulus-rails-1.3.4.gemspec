@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.5.17".freeze
   s.summary = "A modest JavaScript framework for the HTML you already have.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

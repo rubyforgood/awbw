@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.6.7".freeze
   s.summary = "Manipulate images with minimal use of memory via ImageMagick".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.6.7".freeze
   s.summary = "AWS SDK for Ruby - KMS".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

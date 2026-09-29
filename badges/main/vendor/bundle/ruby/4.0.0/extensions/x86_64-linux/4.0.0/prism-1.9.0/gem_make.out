@@ -1,19 +1,19 @@
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-/opt/hostedtoolcache/Ruby/4.0.1/x64/bin/ruby extconf.rb
+/opt/hostedtoolcache/Ruby/4.0.7/x64/bin/ruby extconf.rb
 checking for prism.h in /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/include... yes
 checking for prism/extension.h in /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext... yes
 checking for whether -fvisibility=hidden is accepted as CFLAGS... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-zohrig sitelibdir\=./.gem.20260515-2266-zohrig clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260928-2087-wy5iuq sitelibdir\=./.gem.20260928-2087-wy5iuq clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-zohrig sitelibdir\=./.gem.20260515-2266-zohrig
-compiling api_pack.c
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260928-2087-wy5iuq sitelibdir\=./.gem.20260928-2087-wy5iuq
 compiling api_node.c
-compiling ./../../src/diagnostic.c
+compiling api_pack.c
 compiling extension.c
+compiling ./../../src/diagnostic.c
 compiling ./../../src/encoding.c
 compiling ./../../src/node.c
 compiling ./../../src/options.c
@@ -37,8 +37,8 @@ compiling ./../../src/util/pm_strpbrk.c
 linking shared-object prism/prism.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-zohrig sitelibdir\=./.gem.20260515-2266-zohrig install
-/usr/bin/install -c -m 0755 prism.so ./.gem.20260515-2266-zohrig/prism
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260928-2087-wy5iuq sitelibdir\=./.gem.20260928-2087-wy5iuq install
+/usr/bin/install -c -m 0755 prism.so ./.gem.20260928-2087-wy5iuq/prism
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/prism-1.9.0/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20260515-2266-zohrig sitelibdir\=./.gem.20260515-2266-zohrig clean
+make DESTDIR\= sitearchdir\=./.gem.20260928-2087-wy5iuq sitelibdir\=./.gem.20260928-2087-wy5iuq clean

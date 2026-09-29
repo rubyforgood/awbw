@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.7.1".freeze
   s.summary = "factory_bot provides a framework and DSL for defining and using model instance factories.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

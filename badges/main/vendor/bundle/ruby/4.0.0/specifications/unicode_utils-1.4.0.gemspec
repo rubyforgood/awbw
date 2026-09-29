@@ -18,5 +18,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "1.8.11".freeze
   s.summary = "additional Unicode aware functions for Ruby 1.9".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

@@ -20,5 +20,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.6.9".freeze
   s.summary = "Domain name parser based on the Public Suffix List.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

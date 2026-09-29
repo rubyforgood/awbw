@@ -21,5 +21,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.4.10".freeze
   s.summary = "A Ruby wrapper for the MRI 2.0 debug_inspector API".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

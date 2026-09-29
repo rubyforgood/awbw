@@ -280,4 +280,27 @@ RSpec.describe EventRegistrationDecorator, type: :decorator do
       it { is_expected.to eq(4) }
     end
   end
+
+  describe "#overpayment_badge" do
+    it "returns a warning badge when more is allocated than the registration costs" do
+      reg = create(:event_registration, event: create(:event, cost_cents: 1_000))
+      create(:allocation, allocatable: reg, amount: 1_000,
+        source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+      reg.event.update_columns(cost_cents: 600)
+
+      badge = reg.decorate.overpayment_badge
+
+      expect(badge.label).to eq("Check payments")
+      expect(badge.icon).to eq("fa-solid fa-triangle-exclamation")
+      expect(badge.classes).to include("amber")
+    end
+
+    it "returns nil when the registration is not over-allocated" do
+      reg = create(:event_registration, event: create(:event, cost_cents: 1_000))
+      create(:allocation, allocatable: reg, amount: 1_000,
+        source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+
+      expect(reg.decorate.overpayment_badge).to be_nil
+    end
+  end
 end

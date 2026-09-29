@@ -18,5 +18,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.2.22".freeze
   s.summary = "JMESPath - Ruby Edition".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

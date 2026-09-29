@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.6.2".freeze
   s.summary = "High-level wrapper for processing images for the web with ImageMagick or libvips.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

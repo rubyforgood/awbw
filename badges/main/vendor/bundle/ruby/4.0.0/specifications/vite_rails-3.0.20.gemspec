@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.2.32".freeze
   s.summary = "Use Vite in Rails and bring joy to your JavaScript experience".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

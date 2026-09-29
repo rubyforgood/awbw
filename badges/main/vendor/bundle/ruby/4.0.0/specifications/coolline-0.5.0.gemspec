@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "2.2.2".freeze
   s.summary = "Sounds like readline, smells like readline, but isn't readline".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

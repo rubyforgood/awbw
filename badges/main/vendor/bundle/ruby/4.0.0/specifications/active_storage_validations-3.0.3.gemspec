@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.5.16".freeze
   s.summary = "Validations for Active Storage".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

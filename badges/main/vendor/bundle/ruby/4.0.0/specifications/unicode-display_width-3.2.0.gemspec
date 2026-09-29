@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.5.21".freeze
   s.summary = "Determines the monospace display width of a string in Ruby.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

@@ -19,5 +19,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "2.7.6".freeze
   s.summary = "Pagination plugin for web frameworks and other apps".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

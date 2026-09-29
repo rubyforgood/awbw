@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "4.0.1"
+ruby "4.0.7"
 
 gem "rails", "~> 8.1.0"
 gem "bootsnap", require: false
@@ -77,11 +77,7 @@ end
 
 group :development, :test do
   gem "better_errors"
-  # gem "binding_of_caller"  # Temporarily commented - doesn't support Ruby 4.0.1
-  # FIXME: Workaround for Ruby 4.0+
-  # https://github.com/banister/binding_of_caller/pull/90
-  gem "binding_of_caller", github: "kivikakk/binding_of_caller", branch: "push-yrnnzolypxun"
-
+  gem "binding_of_caller"
   gem "brakeman", "~> 8.0.1", require: false
   gem "bundler-audit", require: false
   gem "capybara", "~> 3.36"

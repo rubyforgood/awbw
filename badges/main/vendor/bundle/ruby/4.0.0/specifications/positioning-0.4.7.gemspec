@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.7.1".freeze
   s.summary = "Simple positioning for Active Record models.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

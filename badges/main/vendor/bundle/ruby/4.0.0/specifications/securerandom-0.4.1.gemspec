@@ -19,5 +19,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.5.11".freeze
   s.summary = "Interface for secure random number generator.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

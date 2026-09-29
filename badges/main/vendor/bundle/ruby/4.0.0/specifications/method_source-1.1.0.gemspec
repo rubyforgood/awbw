@@ -17,5 +17,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.5.3".freeze
   s.summary = "retrieve the sourcecode for a method".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

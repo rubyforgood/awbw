@@ -20,5 +20,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.7.2".freeze
   s.summary = "New IO for Ruby".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

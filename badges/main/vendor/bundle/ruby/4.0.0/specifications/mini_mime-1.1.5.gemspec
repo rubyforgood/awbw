@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.4.6".freeze
   s.summary = "A minimal mime type library".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

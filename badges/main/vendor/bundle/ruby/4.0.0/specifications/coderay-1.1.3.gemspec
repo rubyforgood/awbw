@@ -21,5 +21,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.0.6".freeze
   s.summary = "Fast syntax highlighting for selected languages.".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

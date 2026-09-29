@@ -1,18 +1,18 @@
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-/opt/hostedtoolcache/Ruby/4.0.1/x64/bin/ruby extconf.rb
+/opt/hostedtoolcache/Ruby/4.0.7/x64/bin/ruby extconf.rb
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-p9y45s sitelibdir\=./.gem.20260515-2266-p9y45s clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260928-2087-ftgus4 sitelibdir\=./.gem.20260928-2087-ftgus4 clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-p9y45s sitelibdir\=./.gem.20260515-2266-p9y45s
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260928-2087-ftgus4 sitelibdir\=./.gem.20260928-2087-ftgus4
 compiling debug_inspector.c
 linking shared-object debug_inspector.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20260515-2266-p9y45s sitelibdir\=./.gem.20260515-2266-p9y45s install
-/usr/bin/install -c -m 0755 debug_inspector.so ./.gem.20260515-2266-p9y45s
+make -j4 DESTDIR\= sitearchdir\=./.gem.20260928-2087-ftgus4 sitelibdir\=./.gem.20260928-2087-ftgus4 install
+/usr/bin/install -c -m 0755 debug_inspector.so ./.gem.20260928-2087-ftgus4
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make DESTDIR\= sitearchdir\=./.gem.20260515-2266-p9y45s sitelibdir\=./.gem.20260515-2266-p9y45s clean
+make DESTDIR\= sitearchdir\=./.gem.20260928-2087-ftgus4 sitelibdir\=./.gem.20260928-2087-ftgus4 clean

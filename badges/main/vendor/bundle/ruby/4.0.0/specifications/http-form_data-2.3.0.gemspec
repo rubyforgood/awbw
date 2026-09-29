@@ -16,5 +16,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "2.7.6.2".freeze
   s.summary = "http-form_data-2.3.0".freeze
 
-  s.installed_by_version = "4.0.3".freeze
+  s.installed_by_version = "4.0.20".freeze
 end
