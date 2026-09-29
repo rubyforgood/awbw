@@ -27,6 +27,16 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Over-allocated payments flagged in red"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-09-29
+  summary: >-
+    When a registration or CE record has more money allocated than it costs, the
+    amount-due totals now turn red and read "$X over" instead of quietly showing
+    "Paid" — so an overpayment that needs reconciling is easy to spot.
+  action_path: "/event_registrations"
+
 - name: "Clearer comments & communications feed"
   area: communications
   display_status: admin_facing
