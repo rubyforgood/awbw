@@ -101,8 +101,8 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     before { allow(workshop).to receive(:author).and_return(person) }
 
-    it "links to the person edit page when the viewer can edit people" do
-      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(true)
+    it "links to the person edit page when the viewer is an admin" do
+      allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(true)
 
       html = helper.credited_author_edit_button(workshop)
       expect(html).to include("<a")
@@ -110,8 +110,8 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(html).to include("Ada Lovelace")
     end
 
-    it "falls back to the profile byline when the viewer cannot edit people" do
-      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(false)
+    it "falls back to the profile byline when the viewer is not an admin" do
+      allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(false)
       allow(person).to receive(:profile_is_searchable).and_return(true)
 
       html = helper.credited_author_edit_button(workshop)

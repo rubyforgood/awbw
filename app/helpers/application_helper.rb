@@ -23,10 +23,11 @@ module ApplicationHelper
   # straight to editing the person. Falls back to the plain byline (a profile
   # link for anyone else, including an owner who can edit their own profile), and
   # honors the credit preference: an anonymous credit has no person, so it stays
-  # plain text.
+  # plain text. Gated on manage? (admin-only) rather than edit?, which an owner
+  # now also passes.
   def credited_author_edit_button(record)
     person = record.author_credit_person
-    return credited_author_link(record) unless person && current_user&.super_user?
+    return credited_author_link(record) unless person && allowed_to?(:manage?, person)
 
     person_edit_button(person,
                        display_name: record.author_credit,
