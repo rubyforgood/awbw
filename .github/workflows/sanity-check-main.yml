@@ -54,6 +54,11 @@ jobs:
         env:
           RAILS_ENV: test
           COVERAGE: "true"
+          # SimpleCov has to start before the app boots, and on Ruby >= 4.0.7
+          # InstructionSequence#to_binary refuses to serialize anything compiled
+          # under coverage. Bootsnap's compile cache hits that in its load-time
+          # probe, so turn the cache off for this coverage-only run.
+          DISABLE_BOOTSNAP_COMPILE_CACHE: "true"
         run: bundle exec rspec
 
       - name: Generate coverage badge
