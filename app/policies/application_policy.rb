@@ -23,13 +23,6 @@ class ApplicationPolicy < ActionPolicy::Base
 
   def authenticated? = user.present?
 
-  # Signed-in users can preview the not-yet-launched profiles experience
-  # everywhere but production, where it stays off until launch. Admins always
-  # have access; the public never does.
-  def profiles_visible_to_users?
-    authenticated? && !Rails.env.production?
-  end
-
   def owner?
     return false unless user
     if record.respond_to?(:created_by_id)

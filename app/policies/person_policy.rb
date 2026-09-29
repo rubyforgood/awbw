@@ -64,6 +64,14 @@ class PersonPolicy < ApplicationPolicy
 
   private
 
+  # Signed-in users can preview the not-yet-launched profiles experience
+  # everywhere but production, where it stays off until launch. Admins always
+  # have access; the public never does. (Mirrors OrganizationPolicy's copy in
+  # #2563 — fold both into ApplicationPolicy once both land.)
+  def profiles_visible_to_users?
+    authenticated? && !Rails.env.production?
+  end
+
   def owner?
     return false unless authenticated?
     record.user == user
