@@ -82,6 +82,7 @@
     </div>
   </div>
   <% if allowed_to?(:index?, MembershipInvoice) %>
+    <%= render "people/multiple_memberships_warning", person: @person %>
     <%= render "people/membership", person: @person, membership: @membership %>
   <% end %>
 <% end %>

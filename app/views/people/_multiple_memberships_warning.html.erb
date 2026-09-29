@@ -1,0 +1,16 @@
+<% if person.decorate.multiple_memberships? %>
+  <div class="admin-only mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+    <div class="flex items-start gap-3">
+      <div class="flex-shrink-0 pt-0.5">
+        <i class="fa-solid fa-triangle-exclamation text-yellow-600"></i>
+      </div>
+      <div class="flex-1">
+        <h3 class="text-sm font-medium text-yellow-800">Multiple memberships</h3>
+        <p class="mt-1 text-sm text-yellow-700">
+          This person has <%= pluralize(person.decorate.uncancelled_membership_count, "active membership") %>. A person should have only one — the extras are usually a leftover from a merge.
+          <%= link_to "Review memberships", person_memberships_path(person), class: "underline hover:text-yellow-900" %>
+        </p>
+      </div>
+    </div>
+  </div>
+<% end %>

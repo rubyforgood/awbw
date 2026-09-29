@@ -21,7 +21,8 @@
           </thead>
           <tbody class="divide-y divide-gray-300">
             <% @people.each do |person| %>
-              <% cache [ person, current_user.super_user?, current_user.person_id == person.id ] do %>
+              <% multiple_memberships = @multiple_membership_person_ids.include?(person.id) %>
+              <% cache [ person, current_user.super_user?, current_user.person_id == person.id, multiple_memberships ] do %>
               <tr class="transition-colors duration-150 <%= person.published? ? "hover:bg-gray-100" : "admin-only bg-blue-100 hover:bg-blue-200" %>">
                 <td class="px-4 py-2">
                   <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
@@ -32,6 +33,12 @@
                     <% if show_email && person.preferred_email.present? %>
                       <div class="text-xs text-gray-500"><!--email_off--><%= person.preferred_email %><!--email_on--></div>
                     <% end %>
+                  <% end %>
+                  <% if multiple_memberships && allowed_to?(:manage?, Person) %>
+                    <div class="admin-only text-2xs mt-1 inline-flex items-center gap-1 rounded bg-yellow-100 px-1.5 py-0.5 font-medium text-yellow-700"
+                         title="This person has more than one membership — likely a duplicate to consolidate">
+                      <i class="fa-solid fa-triangle-exclamation"></i> Multiple memberships
+                    </div>
                   <% end %>
                 </td>
                 <td class="px-4 py-2 text-center text-sm text-gray-800">
