@@ -23,6 +23,8 @@ class PeopleController < ApplicationController
                            .order(:first_name, :last_name)
       @count_display = filtered.count
       @people = filtered.paginate(page: params[:page], per_page: per_page)
+      @multiple_membership_person_ids = Membership.not_cancelled.where(person_id: @people.map(&:id))
+        .group(:person_id).count.select { |_id, count| count > 1 }.keys.to_set
 
       render :people_results
     else
@@ -401,6 +403,8 @@ class PeopleController < ApplicationController
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
+        @keeper_primary_address_signature = PersonServices::ReconcileAddresses.primary_signature(keep, delete)
+        @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (fold blank-number
@@ -412,7 +416,9 @@ class PeopleController < ApplicationController
       #     leaving the single primary Person's single-primary validations require);
       #   * two live Pay customers (keep one default — the subscription-bearing one,
       #     else the survivor's own — and soft-delete the redundant sibling so
-      #     `payment_processor` isn't ambiguous and a later checkout can't flip it).
+      #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
+      #   * duplicate addresses / contact methods (fold identical ones into one,
+      #     keeping a single primary — the survivor's own, else the deleted person's).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
@@ -421,6 +427,10 @@ class PeopleController < ApplicationController
           primary_age_category_id: @keeper_primary_age_category_id).call
         PersonServices::ReconcileDefaultPayCustomer.new(keep,
           preferred_customer_id: @keeper_default_pay_customer_id).call
+        PersonServices::ReconcileAddresses.new(keep,
+          primary_signature: @keeper_primary_address_signature).call
+        PersonServices::ReconcileContactMethods.new(keep,
+          primary_signatures: @keeper_primary_contact_signatures).call
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence

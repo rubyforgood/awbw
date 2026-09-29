@@ -4044,3 +4044,21 @@
   pro_tips:
     - "Pick \"Admins\" under \"Created by\" to see every entry an admin logged."
     - "Set it back to \"Any\" (or click Clear filters) to see everything again."
+
+- name: "Merges tidy up duplicate addresses and phone numbers"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two people now folds identical addresses and phone numbers into one
+    instead of leaving the kept person with duplicates, and keeps a single primary.
+  description: >-
+    When two people share the same address or phone number, the merge now keeps
+    just one copy and moves anything attached to the duplicate (like a phone tied
+    to an address) onto the survivor. It also settles a single primary — the kept
+    person's own if they had one, otherwise the other person's — so you never end
+    up with two "primary" addresses or phones. Addresses or phones that genuinely
+    differ are all kept.
+  pro_tips:
+    - "A person with more than one membership is now flagged on their profile, edit page, and the people list — a heads-up to consolidate, since a person should have just one."

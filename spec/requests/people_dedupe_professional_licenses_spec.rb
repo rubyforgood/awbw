@@ -456,4 +456,79 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       expect(keep.professional_licenses.first.continuing_education_registrations.count).to eq(1)
     end
   end
+
+  describe "addresses" do
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+
+    def person_address(person, primary: false, **overrides)
+      attrs = {
+        street_address: "1 Main St", city: "Springfield", state: "CA", zip_code: "90001",
+        country: "USA", county: "LA", district: nil, address_type: "work", locality: "LA City"
+      }.merge(overrides)
+      create(:address, addressable: person, primary: primary, **attrs)
+    end
+
+    it "folds identical addresses into one on the survivor" do
+      person_address(keep)
+      person_address(delete_rec)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.addresses.count).to eq(1)
+    end
+
+    it "keeps addresses that differ in any detail" do
+      person_address(keep)
+      person_address(delete_rec, street_address: "2 Other St")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      expect(keep.reload.addresses.count).to eq(2)
+    end
+
+    it "keeps the survivor's primary and demotes the incoming address" do
+      keep_address = person_address(keep, primary: true)
+      person_address(delete_rec, street_address: "2 Other St", primary: true)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      primaries = keep.reload.addresses.where(primary: true)
+      expect(primaries.count).to eq(1)
+      expect(primaries.first.id).to eq(keep_address.id)
+    end
+
+    it "moves a folded address's contact method onto the surviving address" do
+      keep_address = person_address(keep)
+      dupe_address = person_address(delete_rec)
+      method = create(:contact_method, contactable: delete_rec, address: dupe_address)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      expect(method.reload.address_id).to eq(keep_address.id)
+    end
+  end
+
+  describe "contact methods" do
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+
+    it "folds identical contact methods and keeps one primary per kind" do
+      keep_method = create(:contact_method, contactable: keep, value: "555-1000", kind: "phone", primary: true)
+      create(:contact_method, contactable: delete_rec, value: "555-1000", kind: "phone")
+      create(:contact_method, contactable: delete_rec, value: "555-2000", kind: "phone", primary: true)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      methods = keep.reload.contact_methods
+      expect(methods.pluck(:value)).to contain_exactly("555-1000", "555-2000")
+      primaries = methods.where(primary: true)
+      expect(primaries.count).to eq(1)
+      expect(primaries.first.id).to eq(keep_method.id)
+    end
+  end
 end
