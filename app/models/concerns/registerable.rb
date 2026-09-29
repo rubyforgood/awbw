@@ -58,4 +58,16 @@ module Registerable
   def partially_paid?
     !paid_in_full? && payments_sum.to_i.positive?
   end
+
+  # True when more has been allocated (payments, scholarships, discounts) than the
+  # record costs — an overage an admin needs to reconcile. A merge folding two paid
+  # records onto one, or a $0 cost still carrying a payment, can produce it.
+  def over_allocated?
+    allocations_sum > cost_cents.to_i
+  end
+
+  # Cents allocated beyond the cost — 0 unless over-allocated.
+  def over_allocation_cents
+    [ allocations_sum - cost_cents.to_i, 0 ].max
+  end
 end

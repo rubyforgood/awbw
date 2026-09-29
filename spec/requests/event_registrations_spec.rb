@@ -223,6 +223,30 @@ RSpec.describe "EventRegistrations", type: :request do
         end
       end
 
+      context "over-allocation icon" do
+        it "flags an over-allocated registration with a warning icon and the amount" do
+          existing_registration.event.update!(cost_cents: 1_000)
+          create(:allocation, allocatable: existing_registration, amount: 1_000,
+            source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+          existing_registration.event.update_columns(cost_cents: 600)
+
+          get event_registrations_path
+
+          expect(response.body).to include("fa-solid fa-triangle-exclamation")
+          expect(response.body).to include("$4 over-allocated")
+        end
+
+        it "does not flag a normally-allocated registration" do
+          existing_registration.event.update!(cost_cents: 1_000)
+          create(:allocation, allocatable: existing_registration, amount: 1_000,
+            source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+
+          get event_registrations_path
+
+          expect(response.body).not_to include("fa-solid fa-triangle-exclamation")
+        end
+      end
+
       it "paginates results" do
         additional = create_list(:event_registration, 3)
 
@@ -439,6 +463,19 @@ RSpec.describe "EventRegistrations", type: :request do
         expect(response.body).to include("Expected payment method")
         expect(response.body).to include("name=\"event_registration[expected_payment_method]\"")
         expect(response.body).to include("<option selected=\"selected\" value=\"Check\">Check</option>")
+      end
+
+      it "flags an over-allocated registration in red on the payments card" do
+        existing_registration.event.update!(cost_cents: 1_000)
+        create(:allocation, allocatable: existing_registration, amount: 1_000,
+          source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+        existing_registration.event.update_columns(cost_cents: 600)
+
+        get edit_event_registration_path(existing_registration)
+
+        expect(response.body).to include("Over-allocated")
+        expect(response.body).to include("$4 over")
+        expect(response.body).to include("text-red-700")
       end
 
       it "renders each linked-organization chip as a new-tab link to the org profile" do
