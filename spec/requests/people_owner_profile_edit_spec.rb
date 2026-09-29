@@ -1,8 +1,8 @@
 require "rails_helper"
 
-# The staging profiles toggle (PROFILES_ENABLED / Profiles.enabled?) opens people
-# and organizations to any signed-in user (never the public) and lets a person
-# edit their own profile. These specs exercise the flag-on path.
+# Profiles open people to any signed-in user (never the public) and let a person
+# edit their own profile everywhere but production (PersonPolicy#profiles_visible_to_users?).
+# The test env is non-production, so these run with profiles on.
 RSpec.describe "People with profiles enabled", type: :request do
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
@@ -10,12 +10,6 @@ RSpec.describe "People with profiles enabled", type: :request do
     other = create(:person, profile_is_searchable: true)
     create(:affiliation, person: other, organization: create(:organization))
     other
-  end
-
-  around do |example|
-    ENV["PROFILES_ENABLED"] = "true"
-    example.run
-    ENV.delete("PROFILES_ENABLED")
   end
 
   describe "viewing as a non-admin signed-in user" do

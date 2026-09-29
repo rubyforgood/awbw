@@ -10,12 +10,14 @@ class PeopleController < ApplicationController
   # are enabled — privilege- or admin-only data the self-edit form doesn't expose.
   # person_params strips these for non-admins. Add any new admin-only person_params
   # field here, since everything else is owner-editable by default.
+  # (professional_licenses_attributes stays owner-editable: reject_locked_license_changes!
+  # is the per-license backstop that blocks CE-tied ones.)
   ADMIN_ONLY_PERSON_FIELDS = %i[
     email email_type email_2 email_2_type
     filemaker_code blog_contributor notes member_since
     created_by_id updated_by_id
     staff_taggings_attributes affiliations_attributes comments_attributes
-    notifications_attributes professional_licenses_attributes user_attributes
+    notifications_attributes user_attributes
   ].freeze
 
   def index

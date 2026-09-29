@@ -16,9 +16,9 @@ RSpec.describe "People authorization", type: :request do
     context "as a regular user" do
       before { sign_in regular_user }
 
-      it "redirects to root" do
+      it "renders successfully outside production" do
         get people_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -98,8 +98,8 @@ RSpec.describe "People authorization", type: :request do
         get person_path(regular_user.person)
       end
 
-      it "does not show the Edit link" do
-        expect(response.body).not_to include(edit_person_path(regular_user.person))
+      it "shows the Edit link outside production" do
+        expect(response.body).to include(edit_person_path(regular_user.person))
       end
 
       it "shows the Submitted content section" do
@@ -112,9 +112,9 @@ RSpec.describe "People authorization", type: :request do
     context "as the owner" do
       before { sign_in regular_user }
 
-      it "redirects to root" do
+      it "renders successfully outside production" do
         get edit_person_path(regular_user.person)
-        expect(response).to redirect_to(root_path)
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -142,9 +142,9 @@ RSpec.describe "People authorization", type: :request do
     context "as the owner" do
       before { sign_in regular_user }
 
-      it "redirects to root" do
+      it "updates the person outside production" do
         patch person_path(regular_user.person), params: { person: { first_name: "Changed" } }
-        expect(response).to redirect_to(root_path)
+        expect(regular_user.person.reload.first_name).to eq("Changed")
       end
     end
 

@@ -23,11 +23,11 @@ class ApplicationPolicy < ActionPolicy::Base
 
   def authenticated? = user.present?
 
-  # Staging toggle for the not-yet-launched public-profiles experience: opens
-  # people/organizations to signed-in users and lets a person edit their own
-  # profile. Off unless PROFILES_ENABLED is set, so production stays unchanged.
-  def profiles_enabled?
-    ActiveModel::Type::Boolean.new.cast(ENV["PROFILES_ENABLED"])
+  # Signed-in users can preview the not-yet-launched profiles experience
+  # everywhere but production, where it stays off until launch. Admins always
+  # have access; the public never does.
+  def profiles_visible_to_users?
+    authenticated? && !Rails.env.production?
   end
 
   def owner?
