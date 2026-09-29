@@ -34,7 +34,9 @@
   summary: >-
     When a registration or CE record has more money allocated than it costs, the
     amount-due totals now turn red and read "$X over" instead of quietly showing
-    "Paid" — so an overpayment that needs reconciling is easy to spot.
+    "Paid" — so an overpayment that needs reconciling is easy to spot. A warning
+    icon now marks over-allocated registrations in the registrations index and the
+    event registrants roster too.
   action_path: "/event_registrations"
 
 - name: "Clearer comments & communications feed"
