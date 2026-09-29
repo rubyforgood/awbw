@@ -37,6 +37,20 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       expect(response.body).to include(edit_profile_change_request_path(request))
       expect(response.body).not_to include("field=primary_email")
     end
+
+    it "flags a specific affiliation that has a pending request, linking to it" do
+      request = create(:profile_change_request, person: person, field: "affiliation",
+                       affiliation: affiliation, requested_value: "Title or role",
+                       proposed_title: "Lead Facilitator", details: nil)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("Change requested")
+      expect(response.body).to include(edit_profile_change_request_path(request))
+      # The "Request an affiliation change" link still shows so other affiliations
+      # can be flagged too.
+      expect(response.body).to include("field=affiliation")
+    end
   end
 
   describe "PATCH update" do
