@@ -400,6 +400,20 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(keep.reload.filemaker_code).to eq("FM-100, FM-273")
       end
+
+      it "reassigns the duplicate's invoices instead of blocking the merge" do
+        invoice = create(:invoice, invoicee: delete_rec)
+
+        post dedupe_perform_organizations_path, params: {
+          organization_to_delete_id: delete_rec.id,
+          organization_to_keep_id: keep.id
+        }
+
+        expect(response).to redirect_to(organizations_path)
+        follow_redirect!
+        expect(response.body).to include("merged successfully")
+        expect(invoice.reload.invoicee).to eq(keep)
+      end
     end
   end
 
@@ -475,6 +489,23 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(Person.exists?(dupe.id)).to be false
         expect(keep.reload.notes).to eq("Canonical record")
       end
+
+      # invoicee is polymorphic, so it carries no DB foreign key for the schema scan to
+      # find — without Person's `has_many :invoices, as: :invoicee` the safeguard sees an
+      # unhandled reference and refuses the merge outright.
+      it "reassigns the duplicate's invoices instead of blocking the merge" do
+        invoice = create(:invoice, invoicee: delete_rec)
+
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id
+        }
+
+        expect(response).to redirect_to(people_path)
+        follow_redirect!
+        expect(response.body).to include("merged successfully")
+        expect(invoice.reload.invoicee).to eq(keep)
+      end
     end
 
     describe "when both people have a linked login" do
@@ -505,6 +536,59 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(Person.exists?(delete_rec.id)).to be false
         expect(keep_user.reload.person_id).to eq(keep.id)
         expect(delete_user.reload.person_id).to eq(keep.id)
+      end
+    end
+
+    describe "when both people have an active pay subscription" do
+      let!(:keep) { create(:person, first_name: "Sub", last_name: "One", user: nil) }
+      let!(:delete_rec) { create(:person, first_name: "Sub", last_name: "Two", user: nil) }
+
+      def active_subscription_for(person)
+        customer = Pay::Customer.create!(owner: person, processor: "fake",
+          processor_id: "cus_#{SecureRandom.hex(4)}", default: true)
+        Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_#{SecureRandom.hex(4)}",
+          processor_plan: "membership", status: "active", quantity: 1)
+      end
+
+      before do
+        active_subscription_for(keep)
+        active_subscription_for(delete_rec)
+      end
+
+      it "blocks the merge on the preview and disables the button" do
+        get dedupe_preview_people_path(
+          person_to_keep_id: keep.id,
+          person_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("Merge blocked")
+        expect(response.body).to include("Both people have an active pay subscription")
+        expect(response.body).to include("Merge disabled")
+      end
+
+      it "refuses to perform the merge" do
+        expect {
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id
+          }
+        }.not_to change(Person, :count)
+
+        expect(response).to redirect_to(dedupe_index_people_path)
+        follow_redirect!
+        expect(response.body).to include("Both people have an active pay subscription")
+      end
+
+      it "does not block when the other subscription is canceled but riding out its grace period" do
+        delete_rec.pay_customers.each { |customer| customer.subscriptions.update_all(ends_at: 1.month.from_now) }
+
+        get dedupe_preview_people_path(
+          person_to_keep_id: keep.id,
+          person_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).not_to include("Merge blocked")
+        expect(response.body).not_to include("Cancel one before merging")
       end
     end
   end
