@@ -3,10 +3,16 @@
 # supply `event` (the Event, or nil) and `event_chip_record` (the attached
 # record a registration is resolved from).
 module EventChippable
-  # The EventRegistration the chip links to, walking a CE registration or a
-  # scholarship's allocation down to one. nil when none is resolvable.
+  # The EventRegistration the chip links to. A scholarship is unwrapped once to
+  # its allocated record (an event registration or a CE registration); nothing
+  # nests deeper than that. nil when none is resolvable.
   def event_registration
-    resolve_event_registration(event_chip_record)
+    record = event_chip_record
+    record = record.allocation&.allocatable if record.is_a?(Scholarship)
+    case record
+    when EventRegistration then record
+    when ContinuingEducationRegistration then record.event_registration
+    end
   end
 
   # Compact chip naming the event: the abbreviation, or the title with its date.
@@ -24,16 +30,6 @@ module EventChippable
                 data: { turbo_frame: "_top" }, class: "#{chip_class} hover:underline", **options)
     else
       h.content_tag(:span, label, { class: chip_class, title: event.title }.merge(options))
-    end
-  end
-
-  private
-
-  def resolve_event_registration(record)
-    case record
-    when EventRegistration then record
-    when ContinuingEducationRegistration then record.event_registration
-    when Scholarship then resolve_event_registration(record.allocation&.allocatable)
     end
   end
 end
