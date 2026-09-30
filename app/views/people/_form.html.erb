@@ -260,10 +260,7 @@
           <span class="text-sm text-gray-500 flex-1 min-w-0"><%= person_record.decorate.staff_tags_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
         </summary>
         <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
-          <div class="flex items-baseline justify-between">
-            <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
-            <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
-          </div>
+          <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
           <div class="flex flex-wrap content-start items-center gap-2 pt-1">
             <%= f.simple_fields_for :staff_taggings, person_record.staff_taggings do |sfi| %>
               <%= render "people/staff_tag_item_fields", f: sfi %>
@@ -277,6 +274,7 @@
                                           locals: { collection: (@staff_tags_collection || [])
                                             .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
                                         class: button_classes(:secondary_outline) %>
+            <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
           </div>
         </div>
       </details>
@@ -293,10 +291,7 @@
           <span class="text-sm text-gray-500 flex-1 min-w-0"><%= person_record.decorate.topic_subscriptions_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
         </summary>
         <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
-          <div class="flex items-baseline justify-between">
-            <p class="text-xs text-gray-500">Newsletters and interest lists. Managed on the subscriptions page.</p>
-            <%= link_to "Manage subscriptions", topic_subscriptions_path(person_id: person_record.id), class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
-          </div>
+          <p class="text-xs text-gray-500">Newsletters and interest lists. Managed on the subscriptions page.</p>
           <div class="flex flex-wrap content-start items-center gap-2 pt-1">
             <% active_subscriptions.each do |subscription| %>
               <%= link_to edit_topic_subscription_path(subscription), target: "_blank", rel: "noopener",
@@ -309,6 +304,7 @@
               <span class="text-sm text-gray-500">No active subscriptions.</span>
             <% end %>
             <%= link_to new_topic_subscription_path(person_id: person_record.id), target: "_blank", rel: "noopener", class: button_classes(:secondary_outline) do %>➕ Add subscription<% end %>
+            <%= link_to "Manage subscriptions", topic_subscriptions_path(person_id: person_record.id), class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
           </div>
         </div>
       </details>
