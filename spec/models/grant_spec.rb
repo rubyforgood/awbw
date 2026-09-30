@@ -283,4 +283,20 @@ RSpec.describe Grant, type: :model do
       expect(Grant.selectable_for(scholarship).count(grant)).to eq(1)
     end
   end
+
+  describe "#communications_email" do
+    it "uses an organization funder's email" do
+      org = create(:organization, email: "grants@acme.org")
+      grant = create(:grant, funder: org)
+
+      expect(grant.communications_email).to eq("grants@acme.org")
+    end
+
+    it "uses a person funder's preferred email" do
+      person = create(:person)
+      grant = create(:grant, :donated_by_person, funder: person)
+
+      expect(grant.communications_email).to eq(person.preferred_email)
+    end
+  end
 end

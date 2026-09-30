@@ -513,6 +513,17 @@
     from the staff tag's people list) with the combined "Comments & communications" section, so
     you can record why someone carries a tag and log calls or emails about it.
 
+- name: "Comments & communications on grants"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-30
+  summary: >-
+    A grant's edit page now has the same combined "Comments & communications" section as
+    scholarships and people, so you can record notes about a grant and log calls or emails
+    with its funder right on the grant.
+  pro_tips:
+    - "A logged communication is addressed to the grant's funder, so you never type the email."
+
 - name: "Comments & communications on every record that had comments"
   area: communications
   display_status: admin_facing
