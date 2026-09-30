@@ -60,7 +60,11 @@ class Organization < ApplicationRecord
   # (unfunded), not external funding, in reports. Not memoized: the record can be
   # created mid-process (seeds, tests).
   def self.awbw
-    find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
+    find_by(name: awbw_name)
+  end
+
+  def self.awbw_name
+    ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds")
   end
 
   # Validations

@@ -19,8 +19,7 @@ RSpec.describe InvoiceIssuer do
     it "falls back to REPLY_TO_EMAIL when ORGANIZATION_INVOICE_EMAIL is unset" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_EMAIL").and_return(nil)
-      allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("REPLY_TO_EMAIL", anything).and_return("programs@env.org")
+      allow(ENV).to receive(:[]).with("REPLY_TO_EMAIL").and_return("programs@env.org")
       expect(issuer.email).to eq("programs@env.org")
     end
 

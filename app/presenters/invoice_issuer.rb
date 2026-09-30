@@ -1,12 +1,11 @@
 # Single source of truth for the organization that issues invoices and receipts:
 # its name, address, email, and the "make checks payable to" note. Reads from the
 # AWBW Organization record when a field is set (so admins can edit it in-app),
-# falling back to the deployment's ENV configuration and then to these defaults,
-# so a header field is never blank on a financial document.
+# falling back to the deployment's ENV configuration when it's blank. Only the
+# address carries a built-in default, because ORGANIZATION_ADDRESS is newer than
+# the deployments that read the other two vars.
 class InvoiceIssuer
-  DEFAULT_NAME = "A Window Between Worlds".freeze
   DEFAULT_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  DEFAULT_EMAIL = "programs@awbw.org".freeze
 
   def self.current
     new(Organization.awbw)
@@ -17,7 +16,7 @@ class InvoiceIssuer
   end
 
   def name
-    @organization&.name.presence || ENV.fetch("ORGANIZATION_NAME", DEFAULT_NAME)
+    @organization&.name.presence || Organization.awbw_name
   end
 
   def address_lines
@@ -27,7 +26,7 @@ class InvoiceIssuer
   def email
     @organization&.email.presence ||
       ENV["ORGANIZATION_INVOICE_EMAIL"].presence ||
-      ENV.fetch("REPLY_TO_EMAIL", DEFAULT_EMAIL)
+      ENV["REPLY_TO_EMAIL"].presence
   end
 
   def payable_to_note
