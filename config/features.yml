@@ -59,6 +59,51 @@
     so an overpayment that needs reconciling is easy to spot.
   action_path: "/event_registrations"
 
+- name: "Form subtitles keep their formatting"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-09-25
+  pr_number: 2560
+  action_path: "/forms"
+  summary: >-
+    Form subtitles that contain bullet lists, headings, or paragraphs now render
+    as written on both the live form and the builder preview, instead of losing
+    their bullets and heading sizes.
+
+- name: "Create and manage standalone invoices"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-09-25
+  pr_number: 2558
+  action_path: "/invoices"
+  summary: >-
+    Admins can now create, edit, and delete one-off invoices right in the portal
+    — each with its own billed-to details and any number of line items — from a
+    new Invoices page, for charges that don't come from an event registration.
+
+- name: "Log a note or communication against any of a person's records"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-23
+  pr_number: 2555
+  action_path: "/comments_and_communications"
+  summary: >-
+    The "Log it against" picker in the comment and communication composer now
+    offers every record a person is tied to — form submissions, affiliations,
+    staff tags, reports, and the workshops and stories they're credited on — not
+    just a handful, so a note can hang off whatever it's actually about.
+
+- name: "Communications stay attached after an email change"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-23
+  pr_number: 2547
+  action_path: "/comments_and_communications"
+  summary: >-
+    A person's message history now stays linked to them even after they change
+    their email address, so messages sent to a former address keep showing in
+    their comments & communications feed instead of dropping off.
+
 - name: "Clearer comments & communications feed"
   area: communications
   display_status: admin_facing
@@ -107,6 +152,50 @@
   action_path: "/comments_and_communications"
   pr_number: 2549
 
+- name: "Invoice opens are tracked in analytics"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-18
+  pr_number: 2540
+  action_path: "/admin/activities/events"
+  summary: >-
+    Opening a registrant or bulk-payment invoice now records a view in Ahoy
+    analytics, so admins can see invoice activity in the Activity feed. Printing
+    or downloading the PDF happens in the browser and isn't tracked.
+
+- name: "Saving no longer creates duplicate records"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-09-18
+  pr_number: 2536
+  summary: >-
+    Creating community news, a story, event, workshop, resource, or video
+    recording now advances to the saved record instead of leaving you on the
+    form — so an extra click no longer saves a second, duplicate copy.
+
+- name: "School-district chart reads the registration's affiliation"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-14
+  pr_number: 2534
+  action_path: "/events"
+  summary: >-
+    The registrant "School districts" breakdown now comes from the organization
+    each person registered under (their affiliation) instead of their home
+    address — a school district describes where someone facilitates, not where
+    they live. The address "District" field is now labeled "School district".
+
+- name: "Reach the registration deduper from the admin home"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-09-14
+  pr_number: 2537
+  action_path: "/event_registrations/dedupe_index"
+  summary: >-
+    The admin home Dedupers section now has a "Dedupe event registrations" card,
+    so admins can jump straight to the registration deduper alongside the people,
+    organizations, categories, and sectors dedupers.
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing
@@ -126,6 +215,18 @@
     image-based newsletter) with no typed text — it's no longer rejected as
     blank. A truly empty body is still required to have content.
   action_path: "/community_news/new"
+
+- name: "Browse the legacy FileMaker archive"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-10
+  pr_number: 2532
+  action_path: "/fm_archives"
+  summary: >-
+    Admins can browse the data migrated from AWBW's old FileMaker system in a
+    read-only archive — rolodex, organizations, events, payments, participants,
+    invoices, campaigns, committees, donors, and more — so historical records
+    stay reachable without opening FileMaker.
 
 - name: "Activities feed defaults to admins in, interactions hidden"
   area: reporting
