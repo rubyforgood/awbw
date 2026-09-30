@@ -401,4 +401,25 @@ RSpec.describe OrganizationDecorator do
       expect(summary).to include("Housing")
     end
   end
+
+  describe "#active_affiliations_summary" do
+    it "is nil with no active affiliations" do
+      expect(create(:organization).decorate.active_affiliations_summary).to be_nil
+    end
+
+    it "counts active affiliations of any role and lists their people (sorted, unique)" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person, first_name: "Grace", last_name: "Hopper"), title: "Facilitator")
+      create(:affiliation, organization: org, person: create(:person, first_name: "Ada", last_name: "Lovelace"), title: "Staff")
+
+      summary = org.reload.decorate.active_affiliations_summary
+      expect(summary).to eq("2 active: Ada Lovelace, Grace Hopper")
+    end
+
+    it "excludes ended affiliations" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), end_date: 1.day.ago)
+      expect(org.reload.decorate.active_affiliations_summary).to be_nil
+    end
+  end
 end
