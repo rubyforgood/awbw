@@ -3,8 +3,7 @@
 // — a comment icon pointing at #comments-section, the affiliation editor
 // returning to #affiliations — and a fragment never reaches the server, so the
 // section has to be expanded here or the link lands on a closed summary.
-const openSectionFromHash = () => {
-  const id = window.location.hash.slice(1);
+const expandSection = (id) => {
   if (!id) return;
 
   const target = document.getElementById(id);
@@ -26,5 +25,16 @@ const openSectionFromHash = () => {
   requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
 };
 
-addEventListener("turbo:load", openSectionFromHash);
-addEventListener("hashchange", openSectionFromHash);
+const expandFromHash = () => expandSection(window.location.hash.slice(1));
+
+addEventListener("turbo:load", expandFromHash);
+addEventListener("hashchange", expandFromHash);
+
+// A same-page anchor click fires no hashchange when it re-targets the fragment
+// already in the URL, so a section collapsed again after the first click would
+// stay shut on every click after it (the workshop form's age-range comment chips
+// all point at #comments-section).
+addEventListener("click", (event) => {
+  const link = event.target.closest?.("a[href^='#']");
+  if (link) expandSection(link.getAttribute("href").slice(1));
+});
