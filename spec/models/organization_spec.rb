@@ -458,17 +458,50 @@ RSpec.describe Organization, "scholarship index helpers" do
   end
 
   describe ".awbw" do
-    it "finds the org named by ORGANIZATION_NAME" do
-      awbw = create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
-      create(:organization, name: "Some Partner Org")
+    it "finds the flagged organization, whatever it is named" do
+      flagged = create(:organization, name: "Renamed Since Launch", system_org: true)
+      create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
 
-      expect(Organization.awbw).to eq(awbw)
+      expect(Organization.awbw).to eq(flagged)
     end
 
-    it "is nil when no organization matches" do
+    it "falls back to the org named by ORGANIZATION_NAME when none is flagged" do
+      named = create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
+      create(:organization, name: "Some Partner Org")
+
+      expect(Organization.awbw).to eq(named)
+    end
+
+    it "is nil when nothing is flagged and no name matches" do
       create(:organization, name: "Some Partner Org")
 
       expect(Organization.awbw).to be_nil
+    end
+  end
+
+  describe "system_org flag" do
+    it "stores nil rather than false, so unflagged orgs don't collide on the unique index" do
+      first = create(:organization, system_org: false)
+      second = create(:organization, system_org: false)
+
+      expect(first.reload.system_org).to be_nil
+      expect(second.reload.system_org).to be_nil
+    end
+
+    it "demotes the previously flagged organization when a new one is flagged" do
+      previous = create(:organization, system_org: true)
+      current = create(:organization, system_org: true)
+
+      expect(current.reload.system_org).to be(true)
+      expect(previous.reload.system_org).to be_nil
+    end
+
+    it "leaves the flag alone when an unrelated attribute is saved" do
+      flagged = create(:organization, system_org: true)
+
+      flagged.update!(notes: "touched")
+
+      expect(flagged.reload.system_org).to be(true)
     end
   end
 

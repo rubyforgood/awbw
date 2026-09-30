@@ -43,7 +43,7 @@ class EventInvoice
       date: registration.created_at.to_date,
       client_id: organization&.id || registrant.id,
       bill_to_name: organization&.name.presence || registrant.full_name,
-      bill_to_address_lines: address_lines_for(addressable),
+      bill_to_address_lines: Address.display_lines_for(addressable),
       bill_to_email: organization&.email.presence || registrant.preferred_email,
       attention: registrant.full_name,
       line_items: [
@@ -170,17 +170,4 @@ class EventInvoice
   def issuer_address_lines = issuer.address_lines
   def issuer_email = issuer.email
   def payable_to_note = issuer.payable_to_note
-
-  def self.address_lines_for(addressable)
-    return [] unless addressable.respond_to?(:addresses)
-
-    address = addressable.addresses.active.first
-    return [] unless address
-
-    city_line = [ address.city.presence,
-                  [ address.state.presence, address.zip_code.presence ].compact.join(" ").presence ]
-      .compact.join(", ")
-    [ address.street_address.presence, city_line.presence ].compact
-  end
-  private_class_method :address_lines_for
 end

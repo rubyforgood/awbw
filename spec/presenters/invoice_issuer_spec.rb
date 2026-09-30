@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe InvoiceIssuer do
-  describe "falling back to ENV when no organization data is set" do
+  describe "falling back to configuration when no organization is flagged" do
     subject(:issuer) { described_class.new(nil) }
 
     it "reads the name from ORGANIZATION_NAME" do
@@ -10,17 +10,10 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.name).to eq("Env Org")
     end
 
-    it "reads the email from INFO_EMAIL" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return("billing@env.org")
-      expect(issuer.email).to eq("billing@env.org")
-    end
-
-    it "falls back to REPLY_TO_EMAIL when INFO_EMAIL is unset" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return(nil)
-      allow(ENV).to receive(:[]).with("REPLY_TO_EMAIL").and_return("programs@env.org")
-      expect(issuer.email).to eq("programs@env.org")
+    it "builds the payable-to note from the resolved name" do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("ORGANIZATION_NAME", anything).and_return("Env Org")
+      expect(issuer.payable_to_note).to eq("Please make checks payable to Env Org")
     end
 
     it "splits ORGANIZATION_ADDRESS on '|' into display lines" do
@@ -36,15 +29,17 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.address_lines).to eq([ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ])
     end
 
-    it "builds the payable-to note from the resolved name" do
-      allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("ORGANIZATION_NAME", anything).and_return("Env Org")
-      expect(issuer.payable_to_note).to eq("Please make checks payable to Env Org")
+    it "has no remittance address to offer" do
+      expect(issuer.remittance_address_lines).to eq([])
+    end
+
+    it "has no tax id to offer" do
+      expect(issuer.tax_id).to be_nil
     end
   end
 
-  describe "reading from the organization when fields are set" do
-    let(:organization) { create(:organization, name: "Test Org", email: "billing@test.org") }
+  describe "reading from the flagged organization" do
+    let(:organization) { create(:organization, name: "Test Org", tax_id: "12-3456789") }
     subject(:issuer) { described_class.new(organization) }
 
     before do
@@ -57,43 +52,64 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.name).to eq("Test Org")
     end
 
-    it "uses the organization email" do
-      expect(issuer.email).to eq("billing@test.org")
+    it "uses the organization tax id" do
+      expect(issuer.tax_id).to eq("12-3456789")
     end
 
-    it "builds address lines from the active address" do
+    it "builds header address lines from its address" do
       expect(issuer.address_lines).to eq([ "123 Main St", "Springfield, IL 62704" ])
+    end
+
+    it "prefers an address flagged for invoices" do
+      create(:address, addressable: organization, invoice_address: true,
+                       street_address: "9 Billing Rd", city: "Shelbyville",
+                       state: "IL", zip_code: "62565")
+
+      expect(issuer.address_lines).to eq([ "9 Billing Rd", "Shelbyville, IL 62565" ])
     end
 
     it "builds the payable-to note from the organization name" do
       expect(issuer.payable_to_note).to eq("Please make checks payable to Test Org")
     end
-  end
 
-  describe "partial data falls back per field" do
-    let(:organization) { create(:organization, name: "Test Org", email: "") }
-    subject(:issuer) { described_class.new(organization) }
+    it "offers the remittance address only once one is flagged" do
+      expect(issuer.remittance_address_lines).to eq([])
 
-    it "falls back to ENV for a blank email" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return("fallback@env.org")
-      expect(issuer.email).to eq("fallback@env.org")
+      create(:address, addressable: organization, remittance_address: true,
+                       street_address: "9 Checks Ln", city: "La Canada",
+                       state: "CA", zip_code: "91011")
+
+      expect(described_class.new(organization.reload).remittance_address_lines)
+        .to eq([ "9 Checks Ln", "La Canada, CA 91011" ])
     end
 
-    it "falls back to ENV when the organization has no address" do
+    it "falls back to ENV for the address when the organization has none" do
+      organization.addresses.destroy_all
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("ORGANIZATION_ADDRESS").and_return("1 Fallback Way|Elsewhere, CA 90000")
-      expect(issuer.address_lines).to eq([ "1 Fallback Way", "Elsewhere, CA 90000" ])
+
+      expect(described_class.new(organization.reload).address_lines)
+        .to eq([ "1 Fallback Way", "Elsewhere, CA 90000" ])
+    end
+  end
+
+  describe "#email" do
+    it "comes from configuration, not the organization record" do
+      organization = create(:organization, email: "org-record@test.org")
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return("info@example.test")
+
+      expect(described_class.new(organization).email).to eq("info@example.test")
     end
   end
 
   describe ".current" do
-    # Asserts on email, not name: the ENV name fallback is the same string the AWBW
-    # record is found by, so a name assertion passes even without the record.
-    it "reads from the AWBW organization" do
-      create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"),
-                            email: "awbw-record@test.org")
-      expect(described_class.current.email).to eq("awbw-record@test.org")
+    # Asserts on tax_id, not name: the ENV name fallback would match a found record's
+    # name anyway, so only a record-only field proves the lookup ran.
+    it "reads the flagged organization" do
+      create(:organization, name: "Renamed Since Launch", system_org: true, tax_id: "99-9999999")
+
+      expect(described_class.current.tax_id).to eq("99-9999999")
     end
   end
 end
