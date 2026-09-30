@@ -17,9 +17,11 @@ RSpec.describe "people/new", type: :view do
   end
 
   it "has a form with the person fields" do
-    expect(rendered).to have_field('First name')
-    expect(rendered).to have_field('Last name')
-    expect(rendered).to have_field('Pronouns')
+    # Name fields collapse to a summary by default, so they're present but not
+    # visible until the section is expanded.
+    expect(rendered).to have_field('First name', visible: :all)
+    expect(rendered).to have_field('Last name', visible: :all)
+    expect(rendered).to have_field('Pronouns', visible: :all)
   end
 
   it "has a link back to the index page" do
