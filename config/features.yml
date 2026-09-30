@@ -4045,7 +4045,7 @@
   description: >-
     Every section — name, emails, phones, addresses, sectors, age ranges, staff
     tags, affiliations, licenses, workshop settings, profile display preferences,
-    and comments & communications — shows its current value on the header line:
+    comments & communications, and membership — shows its current value on the header line:
     the sectors you've tagged (with the primary starred and a sector leader
     crowned), the addresses on file, how many comments and communications there
     are, and which profile fields are hidden. Click a header to expand it.
@@ -4054,3 +4054,4 @@
   pro_tips:
     - "Links that point at a section — a comment icon, or returning from the affiliation editor — open it for you and scroll to it."
     - "Nothing is hidden from a save: collapsed fields are still part of the form, so a collapsed section keeps its values."
+    - "Membership now sits with the rest of the person's record instead of at the very bottom of the page."
