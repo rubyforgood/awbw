@@ -175,6 +175,22 @@ RSpec.describe PersonDecorator do
       person = create(:person, profile_show_member_since: false)
       expect(person.decorate.profile_display_summary).to eq("Hide facilitator since")
     end
+
+    it "names hidden age ranges" do
+      person = create(:person, profile_show_age_ranges: false)
+      expect(person.decorate.profile_display_summary).to eq("Hide age ranges")
+    end
+
+    it "ignores the monthly-reports toggle when the person has no reports" do
+      person = create(:person, profile_show_monthly_reports: false)
+      expect(person.decorate.profile_display_summary).to eq("All shown")
+    end
+
+    it "names hidden monthly reports once the person has reports" do
+      person = create(:person, profile_show_monthly_reports: false)
+      create(:monthly_report, author: person)
+      expect(person.decorate.profile_display_summary).to eq("Hide monthly reports")
+    end
   end
 
   describe "#social_media_summary" do

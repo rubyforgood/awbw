@@ -84,6 +84,8 @@ class PersonDecorator < ApplicationDecorator
     profile_show_bio: "bio",
     profile_show_affiliations: "affiliations",
     profile_show_sectors: "sectors",
+    profile_show_age_ranges: "age ranges",
+    profile_show_monthly_reports: "monthly reports",
     profile_show_workshops: "workshops",
     profile_show_workshop_variations: "workshop variations",
     profile_show_stories: "stories",
@@ -97,9 +99,13 @@ class PersonDecorator < ApplicationDecorator
 
   # One-line summary of the profile display preferences for the collapsed form
   # section. Most people show everything, so it names only what's hidden
-  # ("Hide phone and bio") and says "All shown" when nothing is hidden.
+  # ("Hide phone and bio") and says "All shown" when nothing is hidden. Skips the
+  # monthly-reports toggle unless the person has reports, matching the checkbox
+  # the form renders.
   def profile_display_summary
-    hidden = PROFILE_DISPLAY_LABELS.reject { |attr, _| object.public_send(attr) }.values
+    labels = PROFILE_DISPLAY_LABELS
+    labels = labels.except(:profile_show_monthly_reports) unless object.any_monthly_reports?
+    hidden = labels.reject { |attr, _| object.public_send(attr) }.values
     hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
   end
 

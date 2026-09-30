@@ -263,6 +263,7 @@ class OrganizationDecorator < ApplicationDecorator
     profile_show_website: "website",
     profile_show_description: "description",
     profile_show_sectors: "sectors",
+    profile_show_age_ranges: "age ranges",
     profile_show_workshops: "workshops",
     profile_show_stories: "stories",
     profile_show_events_registered: "events hosted",

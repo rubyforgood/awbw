@@ -14,6 +14,7 @@ RSpec.describe "Affiliation Active/Inactive tabs", type: :system do
                          start_date: 4.years.ago.to_date, end_date: 1.year.ago.to_date)
     sign_in admin
     visit edit_person_path(person)
+    expand_section("affiliations")
   end
 
   def row_for(name)
@@ -41,6 +42,7 @@ RSpec.describe "Affiliation Active/Inactive tabs", type: :system do
     affiliation = person.affiliations.find_by(organization: current_org)
     affiliation.comments.create!(body: "Why this ended")
     visit edit_person_path(person)
+    expand_section("affiliations")
 
     link = find(".fa-comment").find(:xpath, "..")
     expect(link[:href]).to end_with("#comments-section")
