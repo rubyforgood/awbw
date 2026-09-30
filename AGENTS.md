@@ -256,7 +256,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
-- `InvoiceIssuer` (presenter) — Single source of truth for the issuing org's invoice/receipt header (name, address, email, payable-to note); reads from `Organization.awbw`, falling back to `ORGANIZATION_NAME`/`ORGANIZATION_INVOICE_ADDRESS`/`ORGANIZATION_INVOICE_EMAIL` (email in turn falls back to `REPLY_TO_EMAIL`), shared by `EventInvoice`, `EventReceipt`, and `InvoicePresenter`
+- `InvoiceIssuer` (presenter) — Single source of truth for the issuing org's invoice/receipt header (name, address, email, payable-to note); reads from `Organization.awbw`, falling back to `ORGANIZATION_NAME`/`ORGANIZATION_ADDRESS`/`ORGANIZATION_INVOICE_EMAIL` (email in turn falls back to `REPLY_TO_EMAIL`), shared by `EventInvoice`, `EventReceipt`, and `InvoicePresenter`
 
 ### Event Registrations
 

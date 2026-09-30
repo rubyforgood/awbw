@@ -31,10 +31,10 @@ class InvoiceIssuer
 
   private
 
-  # ORGANIZATION_INVOICE_ADDRESS holds the display lines separated by "|" (a comma
-  # can't be the delimiter — the city/state/zip line contains one).
+  # ORGANIZATION_ADDRESS holds the display lines separated by "|" (a comma can't be
+  # the delimiter — the city/state/zip line contains one).
   def env_address_lines
-    ENV["ORGANIZATION_INVOICE_ADDRESS"].to_s.split("|").map(&:strip).reject(&:blank?)
+    ENV["ORGANIZATION_ADDRESS"].to_s.split("|").map(&:strip).reject(&:blank?)
   end
 
   def organization_address_lines

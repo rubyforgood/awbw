@@ -24,9 +24,9 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.email).to eq("programs@env.org")
     end
 
-    it "splits ORGANIZATION_INVOICE_ADDRESS on '|' into display lines" do
+    it "splits ORGANIZATION_ADDRESS on '|' into display lines" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_ADDRESS")
+      allow(ENV).to receive(:[]).with("ORGANIZATION_ADDRESS")
         .and_return("100 Main St|Anytown, CA 90001")
       expect(issuer.address_lines).to eq([ "100 Main St", "Anytown, CA 90001" ])
     end
@@ -77,7 +77,7 @@ RSpec.describe InvoiceIssuer do
 
     it "falls back to ENV when the organization has no address" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_ADDRESS").and_return("1 Fallback Way|Elsewhere, CA 90000")
+      allow(ENV).to receive(:[]).with("ORGANIZATION_ADDRESS").and_return("1 Fallback Way|Elsewhere, CA 90000")
       expect(issuer.address_lines).to eq([ "1 Fallback Way", "Elsewhere, CA 90000" ])
     end
   end
