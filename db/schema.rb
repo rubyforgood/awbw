@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_30_114101) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -238,21 +238,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
     t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"
   end
 
-  create_table "attachments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.integer "created_by_id"
-    t.string "file_content_type"
-    t.string "file_file_name"
-    t.integer "file_file_size"
-    t.datetime "file_updated_at", precision: nil
-    t.integer "owner_id"
-    t.string "owner_type"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "updated_by_id"
-    t.index ["created_by_id"], name: "index_attachments_on_created_by_id"
-    t.index ["updated_by_id"], name: "index_attachments_on_updated_by_id"
-  end
-
   create_table "banners", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.text "content", size: :medium
     t.datetime "created_at", precision: nil, null: false
@@ -383,22 +368,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_category_types_on_created_by_id"
     t.index ["updated_by_id"], name: "index_category_types_on_updated_by_id"
-  end
-
-  create_table "ckeditor_assets", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "actual_url"
-    t.integer "assetable_id"
-    t.string "assetable_type", limit: 30
-    t.datetime "created_at", precision: nil, null: false
-    t.string "data_content_type"
-    t.string "data_file_name", null: false
-    t.integer "data_file_size"
-    t.integer "height"
-    t.string "type", limit: 30
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "width"
-    t.index ["assetable_type", "assetable_id"], name: "idx_ckeditor_assetable"
-    t.index ["assetable_type", "type", "assetable_id"], name: "idx_ckeditor_assetable_type"
   end
 
   create_table "comments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1254,21 +1223,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
     t.index ["updated_by_id"], name: "index_grants_on_updated_by_id"
   end
 
-  create_table "images", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.string "file_content_type"
-    t.string "file_file_name"
-    t.integer "file_file_size"
-    t.datetime "file_updated_at", precision: nil
-    t.integer "owner_id"
-    t.string "owner_type"
-    t.integer "report_id"
-    t.string "type", default: "Images::GalleryImage", null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.index ["owner_id"], name: "index_images_on_owner_id"
-    t.index ["type"], name: "index_images_on_type"
-  end
-
   create_table "invoice_line_items", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "date"
@@ -1311,19 +1265,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
     t.integer "updated_by_id"
     t.index ["created_by_id"], name: "index_locations_on_created_by_id"
     t.index ["updated_by_id"], name: "index_locations_on_updated_by_id"
-  end
-
-  create_table "media_files", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "created_by_id"
-    t.string "file_content_type"
-    t.string "file_file_name"
-    t.integer "file_file_size"
-    t.datetime "file_updated_at", precision: nil
-    t.integer "report_id"
-    t.integer "updated_by_id"
-    t.integer "workshop_log_id"
-    t.index ["created_by_id"], name: "index_media_files_on_created_by_id"
-    t.index ["updated_by_id"], name: "index_media_files_on_updated_by_id"
   end
 
   create_table "membership_invoices", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

@@ -179,12 +179,12 @@ class ReportsController < ApplicationController
       date: @date
     )
 
-    @report.media_files.build
+    @report.gallery_assets.build
   end
 
   def build_new_report
     @report = current_user.reports.build(report_params)
-    @report.image = Image.new(file: params[:image]) unless params[:image].blank?
+    @report.image.attach(params[:image]) if params[:image].present?
 
     quotes = []
     quotes_params.each { |q|
@@ -234,15 +234,10 @@ class ReportsController < ApplicationController
   def report_params
     params[:report].delete(:form_file) if params[:report][:form_file].blank?
 
-    params[:report][:media_files_attributes].each do |k, v|
-      params[:report][:media_files_attributes].delete(k) if params[:report][:media_files_attributes][k][:file].blank?
-    end
-
     params.require(:report).permit(
       :image, :form_file, :type, :organization_id, :date, :workshop_name, :owner_id, :workshop_id,
       :owner_type, :windows_type_id, report_form_field_answers_attributes:
       [ :form_field_id, :answer_option_id, :answer, :_create ],
-      media_files_attributes: [ :file ],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
