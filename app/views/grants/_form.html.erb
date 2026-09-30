@@ -22,21 +22,25 @@
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
-        <% funder_org = @grant.funder if @grant.funder.is_a?(Organization) %>
-        <%= f.input :funder_organization_id,
-                    collection: funder_org ? [ [ funder_org.name, funder_org.id ] ] : [],
-                    selected: funder_org&.id,
+        <% funder_label_data = @grant.funder&.compound_search_label %>
+        <%= f.input :funder_sgid,
+                    collection: funder_label_data ? [ [ funder_label_data[:label], funder_label_data[:id] ] ] : [],
+                    selected: funder_label_data&.dig(:id),
                     required: true,
                     input_html: {
                       class: "bg-white",
                       data: {
                         controller: "remote-select",
-                        remote_select_model_value: "organization"
+                        remote_select_model_value: "person_or_organization"
                       }
                     },
-                    prompt: "Search organizations",
+                    prompt: "Search organizations and people",
                     label: "Funder",
-                    hint: "The organization funding the grant." %>
+                    hint: "The organization or person funding the grant." %>
+        <%= f.input :funder_display_name,
+                    label: "Funder display name",
+                    hint: "Optional — how the funder shows on scholarship tickets (e.g. a foundation or family fund). Leave blank to use the linked funder's name.",
+                    input_html: { class: "mt-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm" } %>
       </div>
       <div class="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div>
