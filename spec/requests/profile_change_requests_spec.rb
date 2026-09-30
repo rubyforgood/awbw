@@ -107,6 +107,18 @@ RSpec.describe "Profile change requests", type: :request do
       expect(person.affiliations.exists?(organization: org, title: "Facilitator")).to be(true)
     end
 
+    it "responds to a turbo_stream request by replacing the row and flash" do
+      request = create(:profile_change_request, person: person)
+
+      post resolve_profile_change_request_path(request),
+           headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(response.body).to include("turbo-stream")
+      expect(response.body).to include("profile_change_request_#{request.id}")
+      expect(response.body).to include("flash_now")
+    end
+
     it "marks a request resolved manually" do
       request = create(:profile_change_request, person: person)
 

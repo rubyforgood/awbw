@@ -2,7 +2,7 @@ class ProfileChangeRequestsController < ApplicationController
   before_action :set_request, only: [ :edit, :update, :approve, :decline, :resolve ]
 
   def index
-    authorize! ProfileChangeRequest, to: :index?
+    authorize! ProfileChangeRequest
     @status = ProfileChangeRequest::STATUSES.include?(params[:status]) ? params[:status] : "pending"
     return unless turbo_frame_request?
 
@@ -16,7 +16,7 @@ class ProfileChangeRequestsController < ApplicationController
   def new
     @person = Person.find(params[:person_id])
     @request = @person.profile_change_requests.new(field: requested_field, requested_by: current_user)
-    authorize! @request, to: :new?
+    authorize! @request
 
     # Affiliation requests target a specific affiliation chosen on the form, so we
     # can't resolve "the" existing one here — only the single-target fields dedupe.
@@ -30,7 +30,7 @@ class ProfileChangeRequestsController < ApplicationController
     @person = Person.find(params[:person_id])
     @request = @person.profile_change_requests.new(profile_change_request_params)
     @request.requested_by = current_user
-    authorize! @request, to: :create?
+    authorize! @request
 
     if @request.save
       notify_admins_and_submitter(@request)
@@ -43,12 +43,12 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   def edit
-    authorize! @request, to: :update?
+    authorize! @request
     @person = @request.person
   end
 
   def update
-    authorize! @request, to: :update?
+    authorize! @request
 
     if @request.update(profile_change_request_params)
       redirect_to edit_person_path(@request.person, anchor: "affiliations"), status: :see_other,
@@ -60,11 +60,11 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   def approve
-    authorize! @request, to: :approve?
+    authorize! @request
     result = ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user)
 
     unless result.applied
-      redirect_back fallback_location: profile_change_requests_path,
+      redirect_back_or_to profile_change_requests_path,
                     alert: "Couldn't apply automatically: #{result.message} Use \"Update manually\", then mark it resolved."
       return
     end
@@ -75,14 +75,14 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   def resolve
-    authorize! @request, to: :resolve?
+    authorize! @request
     @request.resolve!(method: "manual", reviewer: current_user, note: review_note)
     notify_reviewed(@request)
     respond_with_updated_row("Marked as resolved.")
   end
 
   def decline
-    authorize! @request, to: :decline?
+    authorize! @request
     @request.decline!(reviewer: current_user, note: review_note)
     notify_reviewed(@request)
     respond_with_updated_row("Request declined.")
@@ -112,13 +112,10 @@ class ProfileChangeRequestsController < ApplicationController
   def respond_with_updated_row(notice)
     respond_to do |format|
       format.turbo_stream do
-        render turbo_stream: turbo_stream.replace(
-          ActionView::RecordIdentifier.dom_id(@request),
-          partial: "profile_change_requests/request",
-          locals: { request: @request }
-        )
+        flash.now[:notice] = notice
+        render "profile_change_requests/update_request"
       end
-      format.html { redirect_back fallback_location: profile_change_requests_path, notice: notice }
+      format.html { redirect_back_or_to profile_change_requests_path, notice: notice }
     end
   end
 
