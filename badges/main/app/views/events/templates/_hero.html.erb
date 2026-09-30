@@ -10,7 +10,7 @@
             pretitle_class: "mb-3 text-sm font-semibold uppercase tracking-widest text-brand-yellow-400",
             heading_class: "font-display text-4xl font-semibold leading-tight sm:text-5xl" %>
       <div class="mt-6"><%= render "events/show/details", event: event, variant: "chips_navy", align: "start" %></div>
-      <div class="mt-7"><%= render "events/show/actions", event: event, sample: sample %></div>
+      <div class="mt-7"><%= render "events/show/actions", event: event, sample: sample, dark: true %></div>
     </div>
 
     <% if event.rhino_header.present? %>
