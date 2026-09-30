@@ -30,7 +30,10 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
-      record_news_subscription(person) if person
+      if person
+        record_news_subscription(person)
+        PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params)
+      end
 
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
@@ -124,10 +127,11 @@ class PublicFormSubmission
     email = field_value("primary_email")&.strip&.downcase
     return nil if email.blank? || first_name.blank? || last_name.blank?
 
+    # The rest of the profile (pronouns, secondary email, and so on) is filled by
+    # CaptureFromSubmission, which runs for both new and existing people.
     find_matching_person(last_name: last_name, email: email) || Person.create!(
       first_name: first_name,
       last_name: last_name,
-      pronouns: field_value("pronouns")&.strip,
       email: email,
       email_type: field_value("primary_email_type")&.downcase
     )

@@ -26,17 +26,20 @@ module SectorsTaggable
     sectorable_items.sort_by { |item| item.sector&.name.to_s.downcase }
   end
 
-  # Additively tag sectors as primary/additional without disturbing other
-  # taggings — used by registration, where a respondent names a single primary
-  # sector (the dropdown) plus any number of additional sectors (the checkboxes).
-  # Mirrors AgeGroupTaggable#tag_age_groups, but upholds the single-primary rule:
-  # at most one id is promoted, and any prior primary the respondent didn't
-  # re-select is demoted first. A sector listed as both primary and additional is
-  # treated as primary.
-  def tag_sectors(primary_ids:, additional_ids:)
+  # Tag sectors as primary/additional, upholding the single-primary rule: at most
+  # one id is promoted, and any prior primary the caller didn't re-select is
+  # demoted first. A sector listed as both primary and additional is treated as
+  # primary.
+  #
+  # `replace: true` treats the submitted set as the whole truth — sectors not in
+  # it are removed first, so a re-submission overwrites the record's sectors with
+  # the latest selection. The default is additive (leaves unrelated taggings
+  # alone), for callers like the org mirror that aggregate across many members.
+  def tag_sectors(primary_ids:, additional_ids:, replace: false)
     primary = sanitize_sector_ids(primary_ids).first(1)
     additional = sanitize_sector_ids(additional_ids) - primary
 
+    remove_sectors_outside(primary + additional) if replace
     demote_unselected_primary_sectors(primary) if primary.any?
     upsert_sector_items(primary, is_primary: true)
     upsert_sector_items(additional, is_primary: false)
@@ -44,6 +47,14 @@ module SectorsTaggable
   end
 
   private
+
+  # Drop any tagged sector not in the submitted set, so a replace-mode re-submission
+  # overwrites the record's sectors with the latest selection.
+  def remove_sectors_outside(sector_ids)
+    scope = sectorable_items
+    scope = scope.where.not(sector_id: sector_ids) if sector_ids.any?
+    scope.destroy_all
+  end
 
   # Demote any currently-primary sector that isn't the newly selected primary, so
   # promoting the new pick never leaves two primaries behind.

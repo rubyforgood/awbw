@@ -33,6 +33,9 @@ class PublicFormsController < ApplicationController
 
     Current.source = "public_form"
     result = PublicFormSubmission.call(form: @form, form_params: form_params)
+    # Stamp the submission onto the buffered lifecycle events so its writes surface
+    # on the "What this submission changed" page (flushed in ApplicationController).
+    Current.form_submission_id = result.form_submission&.id
 
     if result.success?
       redirect_to thank_you_public_form_path(@form.slug), notice: "Thank you — your response has been submitted!"
