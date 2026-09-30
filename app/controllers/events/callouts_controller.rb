@@ -590,14 +590,10 @@ module Events
       cards + payment_document_resources.map { |link| payment_resource_card(link, slug) }
     end
 
-    # A payment-callout linked resource as a card. The W-9 only applies once an
-    # actual payment is on file, so it renders locked (naming what unlocks it)
-    # until then; every other document links straight through.
+    # A payment-callout linked resource as a card. AWBW's W-9 is available up front
+    # so payers can register us as a vendor before cutting a check; every document
+    # links straight through.
     def payment_resource_card(link, slug)
-      if link.resource&.title == "W-9" && !@event_registration.w9_available?
-        return locked_document_card(title: link.resource.title, icon: "fa-solid fa-file-pdf",
-          subtitle: "Available once your payment is received")
-      end
       link.decorate.to_card(registrant_slug: slug, return_to: "payment",
                             icon: "fa-solid fa-file-pdf", color: "gray")
     end
