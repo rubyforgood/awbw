@@ -24,7 +24,7 @@
               <i class="<%= icon %>"></i>
             <% end %>
           <% end %>
-          <%= link_to "mailto:#{Organization.awbw_email}", aria: { label: "Email" },
+          <%= link_to "mailto:#{Organization.info_email}", aria: { label: "Email" },
                       class: "hover:bg-brand-navy-800 flex size-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors" do %>
             <i class="fa-solid fa-envelope"></i>
           <% end %>
@@ -58,7 +58,7 @@
       <div>
         <h3 class="text-brand-yellow-400 mb-4 text-xs font-bold tracking-widest uppercase">Get in touch</h3>
         <ul class="space-y-2 text-sm text-white/80">
-          <li><%= mail_to Organization.awbw_email, Organization.awbw_email, class: "hover:text-white" %></li>
+          <li><%= mail_to Organization.info_email, Organization.info_email, class: "hover:text-white" %></li>
           <li><%= link_to "(310) 396-0317", "tel:+13103960317", class: "hover:text-white" %></li>
           <li class="pt-1 text-white/70">1029 1/2 W 24th Street<br>Los Angeles, CA 90007</li>
         </ul>

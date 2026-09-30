@@ -24,7 +24,7 @@ class InvoiceIssuer
   end
 
   def email
-    @organization&.email.presence || Organization.awbw_email
+    @organization&.email.presence || Organization.info_email
   end
 
   def payable_to_note
