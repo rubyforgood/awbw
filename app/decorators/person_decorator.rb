@@ -158,6 +158,15 @@ class PersonDecorator < ApplicationDecorator
     }, ", ")
   end
 
+  # One-line summary of the person's active topic subscriptions (by topic name)
+  # for the collapsed form section. "None" when they aren't subscribed to any.
+  def topic_subscriptions_summary
+    names = object.topic_subscriptions.select(&:active?).filter_map(&:topic_label).uniq
+    return "None" if names.empty?
+
+    h.safe_join(names.map { |name| h.content_tag(:span, name, class: "whitespace-nowrap") }, ", ")
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= begin
       facilitator_affiliations = affiliations.facilitators

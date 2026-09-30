@@ -233,39 +233,73 @@
     <% end %>
   </div>
 
-  <!-- Staff tags (internal, admin-only) -->
-  <% if allowed_to?(:manage?, StaffTag) %>
-    <% staff_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-    <%# Collapses to a one-line summary of the applied tags — like Sectors and Age
-        ranges above. Open on a new person or when there are errors. %>
-    <% staff_tags_open = !staff_owner.persisted? || staff_owner.errors.any? %>
-    <details class="form-group group"<%= " open".html_safe if staff_tags_open %>>
-      <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-        <span class="font-semibold shrink-0">Staff tags:</span>
-        <span class="text-sm text-gray-500 flex-1 min-w-0"><%= staff_owner.decorate.staff_tags_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
-      </summary>
-      <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
-        <div class="flex items-baseline justify-between">
-          <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
-          <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
-        </div>
-        <div class="flex flex-wrap content-start items-center gap-2 pt-1">
-          <%= f.simple_fields_for :staff_taggings, staff_owner.staff_taggings do |sfi| %>
-            <%= render "people/staff_tag_item_fields", f: sfi %>
-          <% end %>
+  <!-- Staff tags + Topic subscriptions (internal, admin-only; split width) -->
+  <% person_record = f.object.respond_to?(:object) ? f.object.object : f.object %>
+  <div class="flex flex-wrap gap-4 items-start">
+    <% if allowed_to?(:manage?, StaffTag) %>
+      <%# Collapses to a one-line summary of the applied tags — like Sectors and
+          Age ranges above. Open on a new person or when there are errors. %>
+      <% staff_tags_open = !person_record.persisted? || person_record.errors.any? %>
+      <details class="form-group flex flex-col flex-1 min-w-[20rem] group"<%= " open".html_safe if staff_tags_open %>>
+        <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+          <span class="font-semibold shrink-0">Staff tags:</span>
+          <span class="text-sm text-gray-500 flex-1 min-w-0"><%= person_record.decorate.staff_tags_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
+        </summary>
+        <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
+          <div class="flex items-baseline justify-between">
+            <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
+            <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
+          </div>
+          <div class="flex flex-wrap content-start items-center gap-2 pt-1">
+            <%= f.simple_fields_for :staff_taggings, person_record.staff_taggings do |sfi| %>
+              <%= render "people/staff_tag_item_fields", f: sfi %>
+            <% end %>
 
-          <%= link_to_add_association "➕ Add staff tag",
-                                      f,
-                                      :staff_taggings,
-                                      partial: "people/staff_tag_item_fields",
-                                      render_options: {
-                                        locals: { collection: (@staff_tags_collection || [])
-                                          .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
-                                      class: button_classes(:secondary_outline) %>
+            <%= link_to_add_association "➕ Add staff tag",
+                                        f,
+                                        :staff_taggings,
+                                        partial: "people/staff_tag_item_fields",
+                                        render_options: {
+                                          locals: { collection: (@staff_tags_collection || [])
+                                            .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
+                                        class: button_classes(:secondary_outline) %>
+          </div>
         </div>
-      </div>
-    </details>
-  <% end %>
+      </details>
+    <% end %>
+
+    <% if person_record.persisted? && allowed_to?(:index?, with: TopicSubscriptionPolicy) %>
+      <%# Read-only: subscriptions have their own editor (subscribe/unsubscribe
+          state, validations), so this collapses to the current topics and links
+          out to manage them. %>
+      <% active_subscriptions = person_record.topic_subscriptions.select(&:active?) %>
+      <details class="form-group flex flex-col flex-1 min-w-[20rem] group">
+        <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+          <span class="font-semibold shrink-0">Topic subscriptions:</span>
+          <span class="text-sm text-gray-500 flex-1 min-w-0"><%= person_record.decorate.topic_subscriptions_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
+        </summary>
+        <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
+          <div class="flex items-baseline justify-between">
+            <p class="text-xs text-gray-500">Newsletters and interest lists. Managed on the subscriptions page.</p>
+            <%= link_to "Manage subscriptions", topic_subscriptions_path(person_id: person_record.id), class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
+          </div>
+          <div class="flex flex-wrap content-start items-center gap-2 pt-1">
+            <% active_subscriptions.each do |subscription| %>
+              <%= link_to edit_topic_subscription_path(subscription), target: "_blank", rel: "noopener",
+                          class: "inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 transition hover:border-gray-400" do %>
+                <%= subscription.topic_label %>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-300"></i>
+              <% end %>
+            <% end %>
+            <% if active_subscriptions.none? %>
+              <span class="text-sm text-gray-500">No active subscriptions.</span>
+            <% end %>
+            <%= link_to new_topic_subscription_path(person_id: person_record.id), target: "_blank", rel: "noopener", class: button_classes(:secondary_outline) do %>➕ Add subscription<% end %>
+          </div>
+        </div>
+      </details>
+    <% end %>
+  </div>
 
   <!-- Profile-specific Categories (other than age ranges) -->
   <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
@@ -308,14 +342,14 @@
   <details id="affiliations" class="form-group scroll-mt-4 group/section" open>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Affiliations</span>
-      <% affiliation_count = person.affiliations.reject(&:marked_for_destruction?).size %>
-      <% if affiliation_count.positive? %>
-        <span class="text-sm text-gray-500"><%= pluralize(affiliation_count, "affiliation") %></span>
+      <% facilitator_since = decorated.facilitator_since_summary %>
+      <% if facilitator_since %>
+        <span class="text-sm text-gray-500"><%= facilitator_since %></span>
       <% end %>
-      <% if decorated.facilitator_since_summary %>
-        <span class="text-sm text-gray-500"><%= decorated.facilitator_since_summary %></span>
+      <% active_affiliations = person.affiliations.reject(&:marked_for_destruction?).count(&:active?) %>
+      <% if active_affiliations.positive? %>
+        <span class="text-sm text-gray-500"><%= "· " if facilitator_since %>(<%= pluralize(active_affiliations, "active affiliation") %>)</span>
       <% end %>
-      <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
     </summary>
 
