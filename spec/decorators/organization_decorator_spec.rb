@@ -402,24 +402,37 @@ RSpec.describe OrganizationDecorator do
     end
   end
 
-  describe "#active_affiliations_summary" do
-    it "is nil with no active affiliations" do
-      expect(create(:organization).decorate.active_affiliations_summary).to be_nil
+  describe "#active_facilitator_affiliations_summary" do
+    it "is nil with no active facilitator affiliations" do
+      expect(create(:organization).decorate.active_facilitator_affiliations_summary).to be_nil
     end
 
-    it "counts active affiliations of any role and lists their people (sorted, unique)" do
+    it "counts active facilitator affiliations and lists their people, excluding job roles" do
       org = create(:organization)
       create(:affiliation, organization: org, person: create(:person, first_name: "Grace", last_name: "Hopper"), title: "Facilitator")
-      create(:affiliation, organization: org, person: create(:person, first_name: "Ada", last_name: "Lovelace"), title: "Staff")
+      create(:affiliation, organization: org, person: create(:person, first_name: "Ada", last_name: "Lovelace"), title: "Program Coordinator")
 
-      summary = org.reload.decorate.active_affiliations_summary
-      expect(summary).to eq("2 active: Ada Lovelace, Grace Hopper")
+      summary = org.reload.decorate.active_facilitator_affiliations_summary
+      expect(summary).to eq("1 active: Grace Hopper")
     end
 
-    it "excludes ended affiliations" do
+    it "excludes ended facilitator affiliations" do
       org = create(:organization)
-      create(:affiliation, organization: org, person: create(:person), end_date: 1.day.ago)
-      expect(org.reload.decorate.active_affiliations_summary).to be_nil
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", end_date: 1.day.ago)
+      expect(org.reload.decorate.active_facilitator_affiliations_summary).to be_nil
+    end
+  end
+
+  describe "#facilitator_since_summary" do
+    it "is nil when the org has never had a facilitator" do
+      expect(create(:organization).decorate.facilitator_since_summary).to be_nil
+    end
+
+    it "leads with 'Facilitators since' and the earliest facilitation start" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+
+      expect(org.reload.decorate.facilitator_since_summary).to eq("Facilitators since Aug 2015")
     end
   end
 end

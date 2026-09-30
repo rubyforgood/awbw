@@ -283,28 +283,28 @@ RSpec.describe PersonDecorator do
     end
   end
 
-  describe "#active_affiliations_summary" do
-    it "is nil with no active affiliations" do
-      expect(create(:person).decorate.active_affiliations_summary).to be_nil
+  describe "#active_facilitator_affiliations_summary" do
+    it "is nil with no active facilitator affiliations" do
+      expect(create(:person).decorate.active_facilitator_affiliations_summary).to be_nil
     end
 
-    it "counts active affiliations of any role and lists their orgs (sorted, unique)" do
+    it "counts active facilitator affiliations and lists their orgs, excluding job roles" do
       person = create(:person)
       center = create(:organization, name: "1736 Family Center")
       awbw = create(:organization, name: "AWBW")
       justworks = create(:organization, name: "Justworks")
       create(:affiliation, person: person, organization: center, title: "Facilitator")
       create(:affiliation, person: person, organization: awbw, title: "Facilitator")
-      create(:affiliation, person: person, organization: justworks, title: "Staff")
+      create(:affiliation, person: person, organization: justworks, title: "Program Coordinator")
 
-      expect(person.reload.decorate.active_affiliations_summary)
-        .to eq("3 active: 1736 Family Center, AWBW, Justworks")
+      expect(person.reload.decorate.active_facilitator_affiliations_summary)
+        .to eq("2 active: 1736 Family Center, AWBW")
     end
 
-    it "excludes ended affiliations" do
+    it "excludes ended facilitator affiliations" do
       person = create(:person)
-      create(:affiliation, person: person, organization: create(:organization, name: "Past Org"), end_date: 1.day.ago)
-      expect(person.reload.decorate.active_affiliations_summary).to be_nil
+      create(:affiliation, person: person, organization: create(:organization, name: "Past Org"), title: "Facilitator", end_date: 1.day.ago)
+      expect(person.reload.decorate.active_facilitator_affiliations_summary).to be_nil
     end
   end
 end
