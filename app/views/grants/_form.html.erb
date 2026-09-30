@@ -189,6 +189,9 @@
         <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
       </div>
     </div>
+
+    <%= render "shared/comments_and_communications", f: f,
+               view_all_person: (f.object.funder if f.object.funder.is_a?(Person)) %>
   </div>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">

@@ -1,9 +1,13 @@
 class Grant < ApplicationRecord
   include TagFilterable
+  include Communicable
 
   belongs_to :funder, polymorphic: true, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
+
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   has_many :scholarships, dependent: :restrict_with_error
 
@@ -116,6 +120,12 @@ class Grant < ApplicationRecord
   # the linked funder record is an individual contact.
   def funder_name
     funder_display_name.presence || funder&.try(:full_name) || funder&.try(:name) || funder&.to_s
+  end
+
+  # Address a logged communication is "to" — the funder (a Person has a
+  # preferred_email; an Organization has a plain email).
+  def communications_email
+    funder&.try(:preferred_email) || funder&.try(:email)
   end
 
   # Display label for dropdowns: the grant name with its funder in parens

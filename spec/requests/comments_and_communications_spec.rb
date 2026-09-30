@@ -154,6 +154,15 @@ RSpec.describe "Comments and communications", type: :request do
       expect(labels.any? { |label| label.start_with?("Story idea ·") }).to be(true)
     end
 
+    it "offers the grants the person funds as targets" do
+      create(:grant, :donated_by_person, funder: person, name: "Legacy Circle Fund")
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels).to include("Grant · Legacy Circle Fund")
+    end
+
     it "offers the reports and workshop records the person is credited on" do
       create(:monthly_report, author: person)
       create(:workshop_idea, author: person)

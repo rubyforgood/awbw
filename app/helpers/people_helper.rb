@@ -2,10 +2,11 @@ module PeopleHelper
   # Records a new comment or communication can be filed against from a person's
   # aggregated pages: their own profile, their login account, and each of their
   # registrations, scholarships, CE registrations, subscriptions, form
-  # submissions, affiliations, staff tags, and the reports, workshop
+  # submissions, affiliations, staff tags, the reports, workshop
   # ideas/logs/variations/variation ideas, stories, and story ideas they're
-  # credited on. Kept in step with the sources PersonCommentAggregator gathers, so
-  # anything filed here also shows in the feed. Each entry carries a signed
+  # credited on, and the grants they fund. Kept in step with the sources
+  # PersonCommentAggregator gathers, so anything filed here also shows in the
+  # feed. Each entry carries a signed
   # GlobalID the composer submits, so the controller can resolve (and trust) the
   # target without threading a route per record.
   def person_record_targets(person)
@@ -28,6 +29,7 @@ module PeopleHelper
     records.concat(PersonCreditedRecords.workshop_variation_ideas(person).order(created_at: :desc))
     records.concat(PersonCreditedRecords.stories(person).order(created_at: :desc))
     records.concat(PersonCreditedRecords.story_ideas(person).order(created_at: :desc))
+    records.concat(person.grants.includes(:funder).order(created_at: :desc))
 
     records.map { |record| { label: commentable_label(record), sgid: record.to_sgid.to_s } }
   end
