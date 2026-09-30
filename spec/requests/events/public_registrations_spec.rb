@@ -250,6 +250,25 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Minimum of 5 words.")
     end
 
+    it "renders a section subtitle's list markup in a div, never inside a <p> (invalid nesting)" do
+      create(:form_field, form: form, answer_type: :group_header, name: "Supplies",
+             subtitle: "<ul><li>Bring glue</li></ul>")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("<li>Bring glue</li>")
+      expect(response.body).not_to match(%r{<p[^>]*rich-label[^>]*>\s*<ul})
+    end
+
+    it "strips block markup from a section-header name that the heading can't hold" do
+      create(:form_field, form: form, answer_type: :group_header, name: "<ul><li>Stripped</li></ul>Supplies")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Supplies")
+      expect(response.body).not_to include("<li>Stripped</li>")
+    end
+
     # A double-click used to fire two POSTs and create duplicate people and
     # registrations — worst on paid events, which opt out of Turbo (turbo: false)
     # and so lose even Turbo's own submitter disabling.
