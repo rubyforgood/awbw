@@ -4,7 +4,7 @@ module ImageHelper
 
     # All possible attachment names used across your models
     attachment_candidates = [ "primary_asset", "avatar", "photo", "banner", "hero_image",
-                             "gallery_assets", "images", "attachments", "media_files" ]
+                             "gallery_assets" ]
 
     attachment_candidates.each do |name|
       next unless record.respond_to?(name)

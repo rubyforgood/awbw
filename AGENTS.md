@@ -547,10 +547,12 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (13 files):
+Located in `lib/tasks/` (16 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
+- `fm_import.rake` — Import FileMaker CSVs from FM Archive Resources into archive tables (`fm:*`)
+- `media_files.rake` — Convert report media_files into GalleryAssets and report pre-drop status (`media_files:migrate_to_gallery_assets`, `media_files:status`)
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
 - `convert_age_ranges.rake` — Age range data conversion
 - `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
