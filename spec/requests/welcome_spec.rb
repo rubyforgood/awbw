@@ -5,6 +5,7 @@ RSpec.describe "/users/welcome", type: :request do
 
   before do
     user.set_welcome_instructions_token!
+    user.update!(welcome_instructions_sent_at: Time.current)
   end
 
   describe "GET /show" do
@@ -47,13 +48,13 @@ RSpec.describe "/users/welcome", type: :request do
         expect(user.reload.valid_password?("NewPassword123!")).to be true
       end
 
-      it "clears invitation token" do
+      it "clears the invitation token but keeps the invited record" do
         patch user_welcome_update_url(user.welcome_instructions_token), params: valid_params
 
         user.reload
         expect(user.welcome_instructions_token).to be_nil
         expect(user.welcome_instructions_created_at).to be_nil
-        expect(user.welcome_instructions_sent_at).to be_nil
+        expect(user.welcome_instructions_sent_at).to be_present
       end
 
       it "credits the user themselves when no admin is signed in" do

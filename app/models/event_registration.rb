@@ -463,7 +463,7 @@ class EventRegistration < ApplicationRecord
     # a NOT IN list makes the whole comparison return no rows.
     with_user = User.where.not(person_id: nil).select(:person_id)
     has_access = User.has_access.where.not(person_id: nil).select(:person_id)
-    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    invited = User.invited.where.not(person_id: nil).select(:person_id)
     case value
     when "none" then where.not(registrant_id: with_user)
     when "has_access" then where(registrant_id: has_access)
@@ -1044,7 +1044,7 @@ class EventRegistration < ApplicationRecord
     account = registrant&.user
     return "none" if account.nil?
     return "has_access" if account.has_access?
-    return "invited" if account.welcome_instructions_sent_at.present?
+    return "invited" if account.invited?
     "no_access"
   end
 
