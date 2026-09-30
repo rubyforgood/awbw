@@ -80,11 +80,18 @@ module ButtonHelper
   # Outline sibling of the brand CTA for a secondary action beside the solid
   # Register button: transparent with a gold border that fills on hover. Shares
   # the brand look so the pair reads as a family while the page keeps a single
-  # dominant call to action.
+  # dominant call to action. The `on_dark` variant carries a gold label (the
+  # navy one would vanish on a navy template) that flips to navy as the fill
+  # goes gold on hover.
   BRAND_CTA_OUTLINE = "inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-yellow-400 bg-transparent font-bold text-brand-navy-900 transition hover:bg-brand-yellow-400 active:translate-y-0.5".freeze
+  BRAND_CTA_OUTLINE_ON_DARK = "inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-yellow-400 bg-transparent font-bold text-brand-yellow-400 transition hover:bg-brand-yellow-400 hover:text-brand-navy-900 active:translate-y-0.5".freeze
 
-  def brand_cta_classes(register: false, outline: false, extra: nil)
-    base = outline ? BRAND_CTA_OUTLINE : BRAND_CTA
+  def brand_cta_classes(register: false, outline: false, on_dark: false, extra: nil)
+    base = if outline
+      on_dark ? BRAND_CTA_OUTLINE_ON_DARK : BRAND_CTA_OUTLINE
+    else
+      BRAND_CTA
+    end
     [ base, (BRAND_CTA_REGISTER if register), extra ].compact.join(" ")
   end
 end

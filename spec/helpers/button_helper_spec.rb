@@ -103,5 +103,12 @@ RSpec.describe ButtonHelper, type: :helper do
       expect(result).to include("border-2", "border-brand-yellow-400", "bg-transparent")
       expect(result).not_to include("shadow-brand-cta")
     end
+
+    it "carries a gold label on dark templates that flips to navy on hover" do
+      result = helper.brand_cta_classes(outline: true, on_dark: true)
+
+      expect(result).to include("text-brand-yellow-400", "hover:text-brand-navy-900")
+      expect(helper.brand_cta_classes(outline: true)).to include("text-brand-navy-900")
+    end
   end
 end
