@@ -3636,6 +3636,16 @@
     portal. Internal staff communications (logged calls, emails, texts, and
     other hand-recorded comms) stay private to staff.
 
+- name: "Communications history stays with a person after they change their email"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-24
+  pr_number: 2547
+  summary: >-
+    A person's communications feed now stays tied to them even when their email
+    address changes, so their history no longer drops the messages that were sent
+    to a former address.
+
 - name: "Activity buttons for a person's timeline"
   area: people
   display_status: admin_facing
