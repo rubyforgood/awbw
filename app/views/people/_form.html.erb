@@ -17,67 +17,60 @@
     <%= hidden_field_tag :link_org_return_to, params[:link_org_return_to] if params[:link_org_return_to].present? %>
   <% end %>
 
-  <div class="flex flex-col items-start gap-8 md:flex-row">
-    <div class="w-full md:w-5/6">
-      <div class="space-y-6">
-        <div class="flex flex-col gap-4 md:flex-row md:flex-wrap"><%= f.input :first_name, wrapper_html: { class: "w-full md:w-40" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-40" }, input_html: { class: "w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-40" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "How to say the name", wrapper_html: { class: "w-full md:w-44" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-32" }, input_html: { class: "w-full" } %></div>
+  <div class="space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start"><%= f.input :first_name, wrapper_html: { class: "w-full md:w-44" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-44" }, input_html: { class: "w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-44" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "e.g. Oom-BEAR-toh", wrapper_html: { class: "w-full md:w-48" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-36" }, input_html: { class: "w-full" } %><div class="w-full md:ml-auto md:w-auto"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div></div>
 
-        <div class="emails">
-          <h3 class="mb-2 font-semibold text-gray-700">Emails</h3>
+    <div class="emails">
+      <h3 class="mb-2 font-semibold text-gray-700">Emails</h3>
 
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-            <div class="flex flex-col gap-4 md:flex-row">
-              <% if f.object.user %>
-                <div>
-                  <label class="mb-1 block text-md font-medium text-gray-700">Primary email</label>
-                  <span class="font-medium text-gray-900"><%= f.object.user&.email %></span>
-                  <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
-                    <% pending_label = capture do %>Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation<% end %>
-                    <%= render "shared/badge",
-                          label: pending_label,
-                          classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
-                          icon: "fa-solid fa-triangle-exclamation text-yellow-500",
-                          extra: "mt-1",
-                          title: "Only the person and admins can see this pending change; it is hidden from other profile visitors." %>
-                  <% end %>
-
-                  <p class="mt-1 text-sm text-gray-500">
-                    Only
-                    <% if allowed_to?(:edit?, f.object.user) %>
-                      <%= link_to "editable by admins",
-                                  edit_user_path(f.object.user),
-                                  class: "underline" %>
-                    <% else %>
-                      editable by admins
-                    <% end %>
-                  </p>
-                </div>
-              <% else %>
-                <%= f.input :email, label: "Primary email" %>
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row">
+          <% if f.object.user %>
+            <div>
+              <label class="mb-1 block text-md font-medium text-gray-700">Primary email</label>
+              <span class="font-medium text-gray-900"><%= f.object.user&.email %></span>
+              <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
+                <% pending_label = capture do %>Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation<% end %>
+                <%= render "shared/badge",
+                      label: pending_label,
+                      classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
+                      icon: "fa-solid fa-triangle-exclamation text-yellow-500",
+                      extra: "mt-1",
+                      title: "Only the person and admins can see this pending change; it is hidden from other profile visitors." %>
               <% end %>
 
-              <%= f.input :email_type,
-                          label: "Primary email type",
-                          as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                          selected: f.object.email_type || f.object.user&.email_type,
-                          include_blank: true %>
-
-              <%= f.input :email_2, label: "Secondary email" %>
-
-              <%= f.input :email_2_type,
-                          label: "Secondary email type",
-                          as: :select,
-                          collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                          include_blank: true %>
+              <p class="mt-1 text-sm text-gray-500">
+                Only
+                <% if allowed_to?(:edit?, f.object.user) %>
+                  <%= link_to "editable by admins",
+                              edit_user_path(f.object.user),
+                              class: "underline" %>
+                <% else %>
+                  editable by admins
+                <% end %>
+              </p>
             </div>
-          </div>
+          <% else %>
+            <%= f.input :email, label: "Primary email" %>
+          <% end %>
+
+          <%= f.input :email_type,
+                      label: "Primary email type",
+                      as: :select,
+                      collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                      selected: f.object.email_type || f.object.user&.email_type,
+                      include_blank: true %>
+
+          <%= f.input :email_2, label: "Secondary email" %>
+
+          <%= f.input :email_2_type,
+                      label: "Secondary email type",
+                      as: :select,
+                      collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                      include_blank: true %>
         </div>
       </div>
     </div>
-
-    <!-- Avatar -->
-    <div class="flex w-full flex-col items-center gap-4 md:w-1/6"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
   </div>
 
   <div class="phones scroll-mt-4" id="phones">
