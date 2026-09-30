@@ -27,6 +27,22 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Standalone forms fill in profiles too"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-30
+  action_path: "/forms"
+  pr_number: 2588
+  summary: >-
+    Contact and profile smart fields (secondary email, phone, mailing address,
+    pronouns, name pronunciation, sectors) now save onto the person from a standalone
+    form — a collab or agreement — the same way they do on an event registration, not
+    just when the form creates a brand-new person but also when it updates someone
+    already on file. The latest answer wins.
+  pro_tips:
+    - The changes land on the person's "What this submission changed" audit, so you can
+      see exactly what a submission updated.
+
 - name: "W-9 available before paying"
   area: payments
   display_status: public_facing

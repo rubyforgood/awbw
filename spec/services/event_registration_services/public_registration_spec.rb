@@ -623,6 +623,22 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(Person.where(email: "rae@example.com").count).to eq(1)
     end
 
+    it "updates the returning registrant's contact details with the latest answers" do
+      existing = create(:person, first_name: "Rae", last_name: "Fox", email: "rae@example.com",
+                                 pronouns: "he/him", email_2: "old@example.com")
+
+      described_class.call(event: event, registration_form: form, form_params: params.merge(
+        field_id("pronouns") => "they/them",
+        field_id("secondary_email") => "rae2@example.com",
+        field_id("secondary_email_type") => "Personal"
+      ))
+
+      existing.reload
+      expect(existing.pronouns).to eq("they/them")
+      expect(existing.email_2).to eq("rae2@example.com")
+      expect(existing.email_2_type).to eq("personal")
+    end
+
     it "keeps a single event registration but appends a second form submission" do
       described_class.call(event: event, registration_form: form, form_params: params)
       described_class.call(event: event, registration_form: form, form_params: params)
@@ -698,7 +714,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
     end
 
-    it "demotes a prior primary that the registrant did not re-select as primary" do
+    it "overwrites the person's sectors with the latest selection, dropping ones not re-submitted" do
       person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
       person.sectorable_items.create!(sector: additional_sector, is_primary: true)
 
@@ -712,7 +728,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       person.reload
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
-      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
+      expect(person.sectorable_items.find_by(sector: additional_sector)).to be_nil
     end
   end
 

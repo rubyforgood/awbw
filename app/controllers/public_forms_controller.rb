@@ -33,8 +33,9 @@ class PublicFormsController < ApplicationController
 
     Current.source = "public_form"
     result = PublicFormSubmission.call(form: @form, form_params: form_params)
-    # Stamp the submission onto the buffered lifecycle events so its writes surface
-    # on the "What this submission changed" page (flushed in ApplicationController).
+    # The person writes fire before the submission row exists, so they can't carry
+    # its id yet. Setting it here lets the end-of-request Ahoy flush stamp it onto
+    # each persisted lifecycle event, so "What this submission changed" can find them.
     Current.form_submission_id = result.form_submission&.id
 
     if result.success?
