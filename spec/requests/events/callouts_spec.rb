@@ -262,6 +262,20 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
     end
 
+    it "orders the documents invoice, then W-9, then receipt last" do
+      callout = create(:registration_ticket_callout, event:, builtin_key: "payment")
+      w9 = create(:resource, title: "W-9")
+      create(:registration_ticket_callout_resource, registration_ticket_callout: callout,
+             resource: w9, subtitle: "AWBW's W-9 tax form for your records")
+
+      get registration_payment_path(registration.slug)
+
+      expect(response.body.index("Itemized invoice for this registration"))
+        .to be < response.body.index("W-9 tax form for your records")
+      expect(response.body.index("W-9 tax form for your records"))
+        .to be < response.body.index("Available once your payment is received in full")
+    end
+
     it "keeps the W-9 dormant on a free event (linked, but no document renders)" do
       free_event = create(:event, cost_cents: 0)
       callout = create(:registration_ticket_callout, event: free_event, builtin_key: "payment")
