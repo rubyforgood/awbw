@@ -31,6 +31,28 @@ RSpec.describe "Deep links into a collapsed form section", type: :system do
     expect(page).to have_text("Zeta Test Center", wait: 10)
   end
 
+  it "reopens the section on every same-page anchor click, not just the first" do
+    workshop = create(:workshop)
+    age_type = create(:category_type, :published, name: "AgeRange")
+    create(:category, :published, category_type: age_type, name: "Teens (13-17)")
+    create(:comment, commentable: workshop, body: "[AGE_RANGE_DATA] Teens", created_by: admin)
+
+    visit edit_workshop_path(workshop)
+    click_button "Tags"
+
+    chip = first("a[href='#comments-section']")
+    chip.click
+    expect(page).to have_css("#comments-section[open]")
+
+    # Collapsing by hand leaves the fragment in the URL, so the next click fires
+    # no hashchange — the click handler is what reopens it.
+    find("#comments-section > summary").click
+    expect(page).to have_no_css("#comments-section[open]")
+
+    first("a[href='#comments-section']").click
+    expect(page).to have_css("#comments-section[open]")
+  end
+
   it "leaves a section collapsed when no fragment asks for it" do
     create(:comment, commentable: person, topic: "Facilitator affiliation",
                      body: "Confirmed by phone.", created_by: admin)
