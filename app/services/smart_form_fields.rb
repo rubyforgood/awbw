@@ -109,7 +109,10 @@ class SmartFormFields
       title: "Sector and age group tagging",
       summary: "These answers are record ids, not text: the options come from Sector and Age range " \
                "records rather than from options typed into the form editor. The tags are applied to " \
-               "the registrant and to their linked organization.",
+               "the registrant and to their linked organization. Submitting both a primary and an " \
+               "additional selection overwrites the person's tags with the latest; submitting only a " \
+               "primary reassigns it and leaves their other tags in place. An organization's tags " \
+               "accumulate across its members rather than being overwritten.",
       fields: [
         [ "primary_sector", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
         [ "additional_sectors", "Additional sectors", "Tags the person and organization with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],

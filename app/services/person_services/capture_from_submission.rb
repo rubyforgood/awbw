@@ -129,14 +129,19 @@ module PersonServices
       primary_age_ids = collect_ids(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
       additional_age_ids = collect_ids(FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS)
 
+      # Only a primary answer → reassign the primary but keep the rest (additive).
+      # Both primary and additional → the submission is the whole picture, so
+      # overwrite the person's set. The org mirror always stays additive (orgs
+      # aggregate their members' tags).
       if primary_sector_ids.any? || additional_sector_ids.any?
         SectorTagging.apply(person: @person, organizations: @organizations,
                             primary_ids: primary_sector_ids, additional_ids: additional_sector_ids,
-                            replace_person: true)
+                            replace_person: primary_sector_ids.any? && additional_sector_ids.any?)
       end
 
       if primary_age_ids.any? || additional_age_ids.any?
-        @person.tag_age_groups(primary_ids: primary_age_ids, additional_ids: additional_age_ids)
+        @person.tag_age_groups(primary_ids: primary_age_ids, additional_ids: additional_age_ids,
+                               replace: primary_age_ids.any? && additional_age_ids.any?)
         @organizations.each { |org| org.tag_age_groups(primary_ids: primary_age_ids, additional_ids: additional_age_ids) }
       end
     end
