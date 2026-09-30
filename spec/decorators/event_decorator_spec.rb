@@ -243,6 +243,21 @@ RSpec.describe EventDecorator do
       event = build(:event, cost_cents: 150_000).decorate
       expect(event.labelled_cost).to eq("Cost: $1,500")
     end
+
+    it "shows the net cost when a discount is applied" do
+      event = build(:event, cost_cents: 10_000).decorate
+      expect(event.labelled_cost(discount_cents: 2500)).to eq("Cost: $75")
+    end
+
+    it "shows $0 when the discount covers the whole cost" do
+      event = build(:event, cost_cents: 10_000).decorate
+      expect(event.labelled_cost(discount_cents: 10_000)).to eq("Cost: $0")
+    end
+
+    it "floors the net cost at $0 when the discount exceeds the cost" do
+      event = build(:event, cost_cents: 5_000).decorate
+      expect(event.labelled_cost(discount_cents: 10_000)).to eq("Cost: $0")
+    end
   end
 
   describe "#calendar_links" do

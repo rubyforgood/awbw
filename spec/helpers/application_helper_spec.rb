@@ -328,6 +328,22 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#event_fee_label" do
+    it "returns the formatted cost, Free when zero, and nil when unset" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 150_000))).to eq("$1,500")
+      expect(helper.event_fee_label(build(:event, cost_cents: 0))).to eq("Free")
+      expect(helper.event_fee_label(build(:event, cost_cents: nil))).to be_nil
+    end
+
+    it "shows the net cost when a discount is applied" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 10_000), discount_cents: 2500)).to eq("$75")
+    end
+
+    it "shows $0 when the discount covers the whole cost" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 10_000), discount_cents: 10_000)).to eq("$0")
+    end
+  end
+
   describe "#form_header_html" do
     it "fills the {{event_month_year}} token from the event's start date" do
       form = build(:form, header: "Register for our {{event_month_year}} training.")
