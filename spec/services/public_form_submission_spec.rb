@@ -171,6 +171,50 @@ RSpec.describe PublicFormSubmission do
     end
   end
 
+  describe "organization capture (parity with the event registration form)" do
+    let!(:org) { create(:organization, name: "Helping Hands") }
+    let!(:org_name_field)     { create(:form_field, form: form, name: "Organization", field_identifier: "organization_name") }
+    let!(:org_position_field) { create(:form_field, form: form, name: "Position", field_identifier: "organization_position") }
+    let!(:org_website_field)  { create(:form_field, form: form, name: "Website", field_identifier: "organization_website") }
+    let!(:org_type_field)     { create(:form_field, form: form, name: "Type", field_identifier: "organization_type") }
+    let!(:org_city_field)     { create(:form_field, form: form, name: "Org city", field_identifier: "organization_city") }
+    let!(:org_state_field)    { create(:form_field, form: form, name: "Org state", field_identifier: "organization_state") }
+
+    def org_params(overrides = {})
+      params_for.merge(
+        org_name_field.id.to_s => "Helping Hands",
+        org_position_field.id.to_s => "Counselor",
+        org_website_field.id.to_s => "https://helpinghands.org",
+        org_type_field.id.to_s => "Nonprofit",
+        org_city_field.id.to_s => "Austin",
+        org_state_field.id.to_s => "TX"
+      ).merge(overrides)
+    end
+
+    it "matches the org by name, syncs its profile and address, adds a job affiliation, and links it to the submission" do
+      result = described_class.call(form: form, form_params: org_params)
+      org.reload
+
+      expect(org.website_url).to eq("https://helpinghands.org")
+      expect(org.organization_type).to eq("Nonprofit")
+      expect(org.addresses.find_by(city: "Austin")).to be_present
+      expect(result.person.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Counselor")
+      expect(result.form_submission.reload.linked_organizations).to include(org)
+    end
+
+    it "never creates an organization from an unmatched name — it's left for an admin" do
+      expect {
+        described_class.call(form: form, form_params: org_params(org_name_field.id.to_s => "Ghost Org"))
+      }.not_to change(Organization, :count)
+    end
+
+    it "does not mint a facilitator affiliation (no training on a standalone form)" do
+      result = described_class.call(form: form, form_params: org_params)
+
+      expect(result.person.affiliations.where(organization: org).pluck(:title)).not_to include("Facilitator")
+    end
+  end
+
   it "sends a confirmation to the submitter and an FYI to admin" do
     expect { described_class.call(form: form, form_params: params_for) }
       .to change { Notification.where(kind: "form_submission_confirmation").count }.by(1)
