@@ -193,14 +193,15 @@ module Events
     def redirect_to_stripe_checkout(registration)
       person = registration.registrant
       amount = registration.remaining_cost
+      metadata = stripe_metadata(event_registration_id: registration.id, event_id: @event.id)
 
       person.set_payment_processor :stripe
 
       checkout_session = person.payment_processor.checkout(
         mode: "payment",
-        metadata: { event_registration_id: registration.id, event_id: @event.id },
+        metadata: metadata,
         payment_intent_data: {
-          metadata: { event_registration_id: registration.id, event_id: @event.id },
+          metadata: metadata,
           description: "Training Fee: #{@event.title}"
         },
         line_items: [ {

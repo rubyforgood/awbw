@@ -178,12 +178,13 @@ class PeopleController < ApplicationController
     amount = params[:amount].to_i
     amount = (amount * 100).to_i # Convert dollars to cents
     amount = 1000 if amount < 1000 # Minimum $10.00
+    metadata = stripe_metadata(person_id: @person.id)
 
     @checkout_session = @person.payment_processor.checkout(
       mode: "payment",
-      metadata: { person_id: @person.id },
+      metadata: metadata,
       payment_intent_data: {
-        metadata: { person_id: @person.id }
+        metadata: metadata
       },
       line_items: [ {
         price_data: {

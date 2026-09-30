@@ -15,7 +15,7 @@ class MembershipCheckoutsController < ApplicationController
   private
 
   def checkout_session(person, membership, invoice)
-    metadata = { membership_id: membership.id }
+    metadata = stripe_metadata(membership_id: membership.id)
 
     person.payment_processor.checkout(
       mode: "subscription",
