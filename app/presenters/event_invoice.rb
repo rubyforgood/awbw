@@ -3,11 +3,6 @@
 # organization's bulk-payment FormSubmission. Both resolve to the same shape
 # (bill-to, attention, line items, total) so one view renders both.
 class EventInvoice
-  ISSUER_NAME = "A Window Between Worlds".freeze
-  ISSUER_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  ISSUER_EMAIL = "info@awbw.org".freeze
-  PAYABLE_TO_NOTE = "Please make checks payable to A Window Between Worlds".freeze
-
   LineItem = Struct.new(:date, :description, :quantity, :unit_price_cents, :details, keyword_init: true) do
     def amount_cents
       unit_price_cents.to_i * quantity.to_i
@@ -170,10 +165,11 @@ class EventInvoice
     [ total_cents - amount_applied_cents, 0 ].max
   end
 
-  def issuer_name = ISSUER_NAME
-  def issuer_address_lines = ISSUER_ADDRESS_LINES
-  def issuer_email = ISSUER_EMAIL
-  def payable_to_note = PAYABLE_TO_NOTE
+  def issuer = @issuer ||= InvoiceIssuer.current
+  def issuer_name = issuer.name
+  def issuer_address_lines = issuer.address_lines
+  def issuer_email = issuer.email
+  def payable_to_note = issuer.payable_to_note
 
   def self.address_lines_for(addressable)
     return [] unless addressable.respond_to?(:addresses)

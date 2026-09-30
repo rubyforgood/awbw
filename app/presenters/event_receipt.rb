@@ -4,9 +4,6 @@
 # that always reconciles to $0 due — a receipt is only generated once the
 # registration is paid in full (see EventRegistration#receipt_available?).
 class EventReceipt
-  ISSUER_NAME = "A Window Between Worlds".freeze
-  ISSUER_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  ISSUER_EMAIL = "info@awbw.org".freeze
   THANK_YOU_NOTE = "Payment received in full — thank you. Please retain this receipt for your records.".freeze
 
   LineItem = Struct.new(:date, :description, :quantity, :unit_price_cents, keyword_init: true) do
@@ -94,9 +91,10 @@ class EventReceipt
     balance_cents.to_i.zero?
   end
 
-  def issuer_name = ISSUER_NAME
-  def issuer_address_lines = ISSUER_ADDRESS_LINES
-  def issuer_email = ISSUER_EMAIL
+  def issuer = @issuer ||= InvoiceIssuer.current
+  def issuer_name = issuer.name
+  def issuer_address_lines = issuer.address_lines
+  def issuer_email = issuer.email
   def thank_you_note = THANK_YOU_NOTE
 
   def self.address_lines_for(addressable)

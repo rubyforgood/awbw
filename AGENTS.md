@@ -61,7 +61,7 @@ This codebase (Rails 8.1)
 | `app/views/` | ERB templates | ~824 files |
 | `app/decorators/` | Draper decorators for view logic | ~50 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
-| `app/presenters/` | Presentation objects | 6 files |
+| `app/presenters/` | Presentation objects | 8 files |
 | `app/helpers/` | View helpers | ~47 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
@@ -256,6 +256,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
+- `InvoiceIssuer` (presenter) — Single source of truth for the issuing org's invoice/receipt header (name, address, email, payable-to note); reads from `Organization.awbw` with constant fallbacks, shared by `EventInvoice`, `EventReceipt`, and `InvoicePresenter`
 
 ### Event Registrations
 
