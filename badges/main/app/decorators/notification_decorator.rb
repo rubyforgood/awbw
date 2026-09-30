@@ -1,4 +1,6 @@
 class NotificationDecorator < ApplicationDecorator
+  include ::EventChippable
+
   # Solid Font Awesome icon per communication channel, shown before the subject
   # in the communications box. "autoemail" (system email) reuses the envelope;
   # "text" uses a mobile handset to stay distinct from the "phone" call icon.
@@ -205,6 +207,15 @@ class NotificationDecorator < ApplicationDecorator
     "#{DomainTheme.bg_class_for(:notifications)} border-gray-200"
   end
 
+  # The Event a communication is about, resolved through its polymorphic
+  # noticeable — an EventRegistration or an event-bearing FormSubmission
+  # (bulk-payment kinds). nil for communications with no event, or when the
+  # noticeable was nullified.
+  def event
+    target = object.noticeable
+    target.event if target.respond_to?(:event)
+  end
+
   def channel_icon(**options)
     icon_class = CHANNEL_ICONS[channel]
     return "" if icon_class.blank?
@@ -223,6 +234,11 @@ class NotificationDecorator < ApplicationDecorator
   end
 
   private
+
+  # Root record the shared event chip resolves a registration/event from.
+  def event_chip_record
+    object.noticeable
+  end
 
   # Links the value to the person's edit page when we have one, to a mailto when
   # we only have their email, otherwise a plain span. The edit link keeps the
