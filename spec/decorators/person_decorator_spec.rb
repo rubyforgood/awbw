@@ -247,6 +247,26 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#topic_subscriptions_summary" do
+    it "is 'None' with no subscriptions" do
+      expect(create(:person).decorate.topic_subscriptions_summary).to eq("None")
+    end
+
+    it "lists the active topic names and omits unsubscribed ones" do
+      person = create(:person)
+      news = create(:topic_subscription_type, name: "News")
+      events = create(:topic_subscription_type, name: "Events")
+      retired = create(:topic_subscription_type, name: "Retired")
+      create(:topic_subscription, person: person, topic_subscription_type: news)
+      create(:topic_subscription, person: person, topic_subscription_type: events)
+      create(:topic_subscription, :unsubscribed, person: person, topic_subscription_type: retired)
+
+      summary = person.reload.decorate.topic_subscriptions_summary
+      expect(summary).to include("News", "Events")
+      expect(summary).not_to include("Retired")
+    end
+  end
+
   describe "#facilitator_since_summary" do
     it "is nil when the person has never been a facilitator" do
       person = create(:person)
