@@ -270,6 +270,7 @@ RSpec.describe "Event registration edit page", type: :system do
 
       notification = Notification.find_by!(email_subject: "Event registration confirmed")
 
+      expand_section("comments-section")
       within("#comments-section") do
         expect(page).to have_text("Event registration confirmed")
         # The whole row links through to the communication's detail page.
@@ -282,6 +283,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
+      expand_section("comments-section")
       within("#comments-section") do
         click_on "Add communication"
         # Wait for cocoon to insert the field and the paginated-fields controller
@@ -306,6 +308,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
+      expand_section("comments-section")
       within("#comments-section") do
         click_on "Add communication"
         # Wait for cocoon to insert the field and the paginated-fields controller
@@ -338,6 +341,7 @@ RSpec.describe "Event registration edit page", type: :system do
       sign_in(admin)
       visit edit_event_registration_path(registration)
 
+      expand_section("comments-section")
       within("#comments-section") do
         click_on "Add comment"
       end

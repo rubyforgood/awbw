@@ -19,6 +19,7 @@ RSpec.describe "Comments & communications group-by-subject toggle", type: :syste
 
     sign_in admin
     visit edit_person_path(person)
+    expand_section("comments-section")
 
     within "#comments-section" do
       expect(page).to have_content("Comments & communications")
