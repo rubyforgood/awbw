@@ -259,7 +259,7 @@
           <span class="text-sm text-gray-500 flex-1 min-w-0"><%= person_record.decorate.staff_tags_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
         </summary>
         <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
-          <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
+          <p class="text-xs text-gray-500">Admin-only designations.</p>
           <div class="flex flex-wrap content-start items-center gap-2 pt-1">
             <%= f.simple_fields_for :staff_taggings, person_record.staff_taggings do |sfi| %>
               <%= render "people/staff_tag_item_fields", f: sfi %>
@@ -290,7 +290,7 @@
           <span class="text-sm text-gray-500 flex-1 min-w-0"><%= person_record.decorate.topic_subscriptions_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
         </summary>
         <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
-          <p class="text-xs text-gray-500">Newsletters and interest lists. Managed on the subscriptions page.</p>
+          <p class="text-xs text-gray-500">Admin-only newsletter, interest, and outreach lists.</p>
           <div class="flex flex-wrap content-start items-center gap-2 pt-1">
             <% active_subscriptions.each do |subscription| %>
               <%= link_to edit_topic_subscription_path(subscription), target: "_blank", rel: "noopener",
