@@ -36,6 +36,7 @@ RSpec.describe "Affiliation status badges", type: :system do
                          start_date: 1.year.ago.to_date, end_date: nil)
 
     visit edit_person_path(person)
+    expand_section("affiliations")
     row = find(".nested-fields", wait: 10)
 
     # Active as rendered — neither badge showing.

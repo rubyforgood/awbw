@@ -362,6 +362,11 @@ RSpec.describe OrganizationDecorator do
       organization = create(:organization, profile_show_events_registered: false)
       expect(organization.decorate.profile_display_summary).to eq("Hide events hosted")
     end
+
+    it "names hidden age ranges" do
+      organization = create(:organization, profile_show_age_ranges: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide age ranges")
+    end
   end
 
   describe "#background_summary" do

@@ -13,14 +13,16 @@ RSpec.describe "Affiliation status badges on the person edit form", type: :reque
 
   before { sign_in admin }
 
-  # Each row's title paired with which of its two badges rendered visible.
+  # Each row's title paired with which of its two badges rendered visible. The
+  # Affiliations section renders as a collapsed <details>, so query with
+  # `visible: :all` and read the badge's own `hidden` class instead.
   def shown_badges_by_title
-    Capybara.string(response.body).all(".nested-fields").to_h do |row|
+    Capybara.string(response.body).all(".nested-fields", visible: :all).to_h do |row|
       shown = %w[ inactiveBadge upcomingBadge ].select do |target|
-        badge = row.first("[data-inactive-toggle-target='#{target}']", minimum: 0)
+        badge = row.first("[data-inactive-toggle-target='#{target}']", minimum: 0, visible: :all)
         badge && !badge[:class].split.include?("hidden")
       end
-      [ row.first("input[name*='title']")[:value], shown ]
+      [ row.first("input[name*='title']", visible: :all)[:value], shown ]
     end
   end
 

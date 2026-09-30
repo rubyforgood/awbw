@@ -17,6 +17,7 @@ RSpec.describe "Facilitator affiliation change warning", type: :system do
   def visit_and_wait(path)
     visit path
     expect(page).to have_css("[data-affiliation-facilitator-warning-ready]", wait: 10)
+    expand_section("affiliations")
   end
 
   def set_date_input(input, value)

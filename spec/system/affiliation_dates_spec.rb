@@ -16,6 +16,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
   def visit_and_wait(path)
     visit path
     expect(page).to have_css("[data-affiliation-dates-ready]", wait: 10)
+    expand_section("affiliations")
   end
 
   def set_date_input(input, value)
@@ -143,6 +144,7 @@ RSpec.describe "Affiliation dates auto-update", type: :system do
 
     accept_confirm { click_button "Delete" }
 
+    expand_section("affiliations")
     expect(page).to have_text("Affiliated since Jun 2022", wait: 10)
   end
 

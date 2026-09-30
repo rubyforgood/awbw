@@ -18,6 +18,7 @@ RSpec.describe "Organization program status live update", type: :system do
   def visit_and_wait(path)
     visit path
     expect(page).to have_css("[data-affiliation-dates-ready]", wait: 10)
+    expand_section("affiliations")
   end
 
   def set_date_input(input, value)
