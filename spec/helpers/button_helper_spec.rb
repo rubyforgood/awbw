@@ -96,5 +96,12 @@ RSpec.describe ButtonHelper, type: :helper do
     it "appends extra classes" do
       expect(helper.brand_cta_classes(extra: "px-10 py-3")).to include("px-10", "py-3")
     end
+
+    it "renders a gold outline sibling that omits the solid fill" do
+      result = helper.brand_cta_classes(outline: true)
+
+      expect(result).to include("border-2", "border-brand-yellow-400", "bg-transparent")
+      expect(result).not_to include("shadow-brand-cta")
+    end
   end
 end
