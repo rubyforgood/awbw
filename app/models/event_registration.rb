@@ -794,13 +794,6 @@ class EventRegistration < ApplicationRecord
     invoice_available? && remaining_cost.zero? && payment_received?
   end
 
-  # AWBW's own W-9 is only useful to a payer who actually paid us, so it's gated on
-  # a paid event AND an actual payment being on file (cash, check, or card). A
-  # balance cleared purely by scholarship or discount doesn't unlock it.
-  def w9_available?
-    invoice_available? && payment_received?
-  end
-
   # Cost source for the Registerable payment interface: the event's price.
   def cost_cents
     event.cost_cents

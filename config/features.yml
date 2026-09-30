@@ -27,6 +27,16 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "W-9 available before paying"
+  area: payments
+  display_status: public_facing
+  released_on: 2026-09-30
+  action_path: "/registration/sample"
+  summary: >-
+    AWBW's W-9 is now downloadable from the payment callout right away, before any
+    payment is made — so payers who need it to set AWBW up as a vendor can grab it
+    before they cut a check.
+
 - name: "Over-allocated payments flagged in red"
   area: payments
   display_status: admin_facing
