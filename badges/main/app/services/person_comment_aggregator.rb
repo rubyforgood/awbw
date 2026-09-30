@@ -2,14 +2,15 @@
 # their own profile comments plus the comments left on the records that hang off
 # them: affiliations, event registrations, scholarships, CE registrations, form
 # submissions, staff tags, monthly reports, workshop ideas/logs/variations/variation
-# ideas, the stories and story ideas they're credited on, and their login account.
-# Returns one ActiveRecord::Relation of Comment so callers can filter, paginate,
-# and preload uniformly. Payments carry no comments, so they never appear here.
+# ideas, the stories and story ideas they're credited on, the grants they fund, and
+# their login account. Returns one ActiveRecord::Relation of Comment so callers can
+# filter, paginate, and preload uniformly. Payments carry no comments, so they never
+# appear here.
 class PersonCommentAggregator
   # commentable_type => class, in the order sources are surfaced. Kept as strings
   # so the query never has to instantiate the classes. "Report" keys MonthlyReport
   # comments — STI stores the base class name.
-  SOURCE_TYPES = %w[ Person Affiliation EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription FormSubmission StaffTagging Report WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea Story StoryIdea User ].freeze
+  SOURCE_TYPES = %w[ Person Affiliation EventRegistration Scholarship ContinuingEducationRegistration TopicSubscription FormSubmission StaffTagging Report WorkshopIdea WorkshopLog WorkshopVariation WorkshopVariationIdea Story StoryIdea Grant User ].freeze
 
   def initialize(person)
     @person = person
@@ -32,6 +33,7 @@ class PersonCommentAggregator
       scope_for("WorkshopVariationIdea", workshop_variation_idea_ids),
       scope_for("Story", story_ids),
       scope_for("StoryIdea", story_idea_ids),
+      scope_for("Grant", grant_ids),
       scope_for("User", user_ids)
     ]
     scopes.reduce { |combined, scope| combined.or(scope) }
@@ -105,6 +107,12 @@ class PersonCommentAggregator
   # Story ideas carry no explicit author, so the creating user's person is the credit.
   def story_idea_ids
     PersonCreditedRecords.story_ideas(person).ids
+  end
+
+  # Grants the person funds. A scholarship recipient isn't a grant's funder, so
+  # their scholarship's comments stay on the scholarship, not here.
+  def grant_ids
+    person.grants.ids
   end
 
   def user_ids

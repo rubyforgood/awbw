@@ -79,6 +79,7 @@ class Notification < ApplicationRecord
     ContinuingEducationRegistration
     EventRegistration
     FormSubmission
+    Grant
     Person
     Report
     Scholarship

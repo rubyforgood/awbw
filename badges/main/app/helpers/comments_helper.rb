@@ -22,6 +22,7 @@ module CommentsHelper
     when WorkshopLog then "Workshop log · #{record.title}"
     when WorkshopVariationIdea then "Workshop variation idea · #{record.title}"
     when WorkshopVariation then "Workshop variation · #{record.title}"
+    when Grant then "Grant · #{record.name}"
     else record.class.name.underscore.humanize
     end
   end
@@ -47,6 +48,7 @@ module CommentsHelper
     when WorkshopLog then edit_workshop_log_path(record)
     when WorkshopVariationIdea then edit_workshop_variation_idea_path(record)
     when WorkshopVariation then edit_workshop_variation_path(record)
+    when Grant then edit_grant_path(record)
     end
   end
 
@@ -70,6 +72,7 @@ module CommentsHelper
     when WorkshopLog then :workshop_logs
     when WorkshopVariationIdea then :workshop_variation_ideas
     when WorkshopVariation then :workshop_variations
+    when Grant then :grants
     else :comments
     end
   end
