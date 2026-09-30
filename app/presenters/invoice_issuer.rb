@@ -24,9 +24,7 @@ class InvoiceIssuer
   end
 
   def email
-    @organization&.email.presence ||
-      ENV["ORGANIZATION_INVOICE_EMAIL"].presence ||
-      ENV["REPLY_TO_EMAIL"].presence
+    @organization&.email.presence || Organization.awbw_email
   end
 
   def payable_to_note

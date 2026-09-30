@@ -10,15 +10,15 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.name).to eq("Env Org")
     end
 
-    it "reads the email from ORGANIZATION_INVOICE_EMAIL" do
+    it "reads the email from INFO_EMAIL" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_EMAIL").and_return("billing@env.org")
+      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return("billing@env.org")
       expect(issuer.email).to eq("billing@env.org")
     end
 
-    it "falls back to REPLY_TO_EMAIL when ORGANIZATION_INVOICE_EMAIL is unset" do
+    it "falls back to REPLY_TO_EMAIL when INFO_EMAIL is unset" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_EMAIL").and_return(nil)
+      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return(nil)
       allow(ENV).to receive(:[]).with("REPLY_TO_EMAIL").and_return("programs@env.org")
       expect(issuer.email).to eq("programs@env.org")
     end
@@ -76,7 +76,7 @@ RSpec.describe InvoiceIssuer do
 
     it "falls back to ENV for a blank email" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_EMAIL").and_return("fallback@env.org")
+      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return("fallback@env.org")
       expect(issuer.email).to eq("fallback@env.org")
     end
 

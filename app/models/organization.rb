@@ -67,6 +67,10 @@ class Organization < ApplicationRecord
     ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds")
   end
 
+  def self.awbw_email
+    ENV["INFO_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
+  end
+
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],
