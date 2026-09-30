@@ -3573,3 +3573,14 @@
   pro_tips:
     - "If both people have a live subscription, the merge is blocked on purpose — cancel one in Stripe first, or the kept person would be billed twice. The preview tells you before you commit."
     - "A subscription that's already canceled and just running out its paid period doesn't block anything."
+
+- name: "Event pages have one clear button to click"
+  area: registration
+  display_status: public_facing
+  released_on: 2026-09-30
+  pr_number: 2571
+  summary: >-
+    On event pages the "Register" and "Pay for Other(s)" buttons are now a
+    matched pair — Register stands out as the one button to click, and Pay for
+    Others sits beside it in the same style but lighter, so it's easy to find
+    without competing for attention.
