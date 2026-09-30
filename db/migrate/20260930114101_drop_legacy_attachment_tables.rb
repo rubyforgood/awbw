@@ -67,6 +67,11 @@ class DropLegacyAttachmentTables < ActiveRecord::Migration[8.1]
       t.index [ :created_by_id ], name: "index_media_files_on_created_by_id"
       t.index [ :updated_by_id ], name: "index_media_files_on_updated_by_id"
     end
+
+    add_foreign_key "attachments", "users", column: "created_by_id"
+    add_foreign_key "attachments", "users", column: "updated_by_id"
+    add_foreign_key "media_files", "users", column: "created_by_id"
+    add_foreign_key "media_files", "users", column: "updated_by_id"
   end
 
   # Refuse to drop media_files until every report-scoped row's upload has been
