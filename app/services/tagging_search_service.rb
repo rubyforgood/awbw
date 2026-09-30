@@ -69,9 +69,6 @@ class TaggingSearchService
                 empty_page(number_of_items_per_page)
               end,
 
-      # OrganizationPolicy's scope already resolves to none for viewers who can't
-      # see orgs (published-only for the signed-in preview, all for admins), so
-      # authorized_scope alone keeps cards that would dead-end out of the results.
       organizations: authorized_scope(Organization.all)
                   .includes(:sectors)
                   .sector_names_all(sector_names_all)
