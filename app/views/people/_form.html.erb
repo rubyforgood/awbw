@@ -239,27 +239,35 @@
   <!-- Staff tags (internal, admin-only) -->
   <% if allowed_to?(:manage?, StaffTag) %>
     <% staff_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-    <div class="form-group admin-only space-y-2 rounded-lg bg-blue-100 p-4">
-      <div class="flex items-baseline justify-between">
-        <h3 class="font-semibold text-gray-700">Staff tags</h3>
-        <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
-      </div>
-      <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
-      <div class="flex flex-wrap content-start items-center gap-2 pt-1">
-        <%= f.simple_fields_for :staff_taggings, staff_owner.staff_taggings do |sfi| %>
-          <%= render "people/staff_tag_item_fields", f: sfi %>
-        <% end %>
+    <%# Collapses to a one-line summary of the applied tags — like Sectors and Age
+        ranges above. Open on a new person or when there are errors. %>
+    <% staff_tags_open = !staff_owner.persisted? || staff_owner.errors.any? %>
+    <details class="form-group group"<%= " open".html_safe if staff_tags_open %>>
+      <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+        <span class="font-semibold shrink-0">Staff tags:</span>
+        <span class="text-sm text-gray-500 flex-1 min-w-0"><%= staff_owner.decorate.staff_tags_summary %> <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i></span>
+      </summary>
+      <div class="admin-only space-y-2 rounded-lg bg-blue-100 p-4 mt-2">
+        <div class="flex items-baseline justify-between">
+          <p class="text-xs text-gray-500">Internal only — pipelines, rosters, and outreach lists. Never shown publicly.</p>
+          <%= link_to "Manage tags", staff_tags_path, class: "text-sm #{eyebrow_link_class}", target: "_blank", rel: "noopener" %>
+        </div>
+        <div class="flex flex-wrap content-start items-center gap-2 pt-1">
+          <%= f.simple_fields_for :staff_taggings, staff_owner.staff_taggings do |sfi| %>
+            <%= render "people/staff_tag_item_fields", f: sfi %>
+          <% end %>
 
-        <%= link_to_add_association "➕ Add staff tag",
-                                    f,
-                                    :staff_taggings,
-                                    partial: "people/staff_tag_item_fields",
-                                    render_options: {
-                                      locals: { collection: (@staff_tags_collection || [])
-                                        .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
-                                    class: button_classes(:secondary_outline) %>
+          <%= link_to_add_association "➕ Add staff tag",
+                                      f,
+                                      :staff_taggings,
+                                      partial: "people/staff_tag_item_fields",
+                                      render_options: {
+                                        locals: { collection: (@staff_tags_collection || [])
+                                          .reject { |_, id| (@current_staff_tag_ids || []).include?(id) } } },
+                                      class: button_classes(:secondary_outline) %>
+        </div>
       </div>
-    </div>
+    </details>
   <% end %>
 
   <!-- Profile-specific Categories (other than age ranges) -->
@@ -306,6 +314,9 @@
       <% affiliation_count = person.affiliations.reject(&:marked_for_destruction?).size %>
       <% if affiliation_count.positive? %>
         <span class="text-sm text-gray-500"><%= pluralize(affiliation_count, "affiliation") %></span>
+      <% end %>
+      <% if decorated.facilitator_since_summary %>
+        <span class="text-sm text-gray-500"><%= decorated.facilitator_since_summary %></span>
       <% end %>
       <span class="text-sm font-normal text-gray-500">(only editable by admins)</span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
