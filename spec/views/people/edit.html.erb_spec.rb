@@ -18,9 +18,11 @@ RSpec.describe "people/edit", type: :view do
   end
 
   it "has a form with the person fields" do
-    expect(rendered).to have_field('First name', with: person.first_name)
-    expect(rendered).to have_field('Last name', with: person.last_name)
-    expect(rendered).to have_field('Pronouns', with: person.pronouns)
+    # Name fields collapse to a summary by default, so they're present but not
+    # visible until the section is expanded.
+    expect(rendered).to have_field('First name', with: person.first_name, visible: :all)
+    expect(rendered).to have_field('Last name', with: person.last_name, visible: :all)
+    expect(rendered).to have_field('Pronouns', with: person.pronouns, visible: :all)
     # Profile display preferences collapse to a summary by default, so the
     # toggle is present but not visible until the section is expanded.
     expect(rendered).to have_checked_field('person_profile_show_pronouns', visible: :all) if person.profile_show_pronouns
