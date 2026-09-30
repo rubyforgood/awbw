@@ -1,4 +1,5 @@
 class CommentDecorator < ApplicationDecorator
+  include ::EventChippable
   delegate_all
 
   # Human-readable label for the record this comment was left on, used as the
@@ -30,5 +31,18 @@ class CommentDecorator < ApplicationDecorator
     content = h.safe_join([ h.content_tag(:i, "", class: "fa-solid fa-comment", "aria-hidden": "true"), "Com't" ], " ")
     chip_class = "inline-flex min-w-18 shrink-0 items-center justify-center gap-1 rounded #{DomainTheme.bg_class_for(:comments, intensity: 100)} px-1.5 py-0.5 text-xs font-medium #{DomainTheme.text_class_for(:comments, intensity: 800)}"
     h.content_tag(:span, content, { class: chip_class, title: "Comment" }.merge(options))
+  end
+
+  # The Event this comment is about, resolved through its commentable (an event
+  # registration, CE registration, or scholarship). nil for non-event comments.
+  def event
+    event_registration&.event
+  end
+
+  private
+
+  # Root record the shared event chip resolves a registration/event from.
+  def event_chip_record
+    commentable
   end
 end
