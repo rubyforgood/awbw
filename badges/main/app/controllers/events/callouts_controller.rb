@@ -630,22 +630,19 @@ module Events
     def redirect_to_ce_stripe_checkout(ce_registration)
       person = @event_registration.registrant
       amount = ce_registration.remaining_cost
+      metadata = stripe_metadata(
+        ce_registration_id: ce_registration.id,
+        event_registration_id: @event_registration.id,
+        event_id: @event.id
+      )
 
       person.set_payment_processor :stripe
 
       checkout_session = person.payment_processor.checkout(
         mode: "payment",
-        metadata: {
-          ce_registration_id: ce_registration.id,
-          event_registration_id: @event_registration.id,
-          event_id: @event.id
-        },
+        metadata: metadata,
         payment_intent_data: {
-          metadata: {
-            ce_registration_id: ce_registration.id,
-            event_registration_id: @event_registration.id,
-            event_id: @event.id
-          },
+          metadata: metadata,
           description: "CE Hours: #{@event.title}"
         },
         line_items: [ {

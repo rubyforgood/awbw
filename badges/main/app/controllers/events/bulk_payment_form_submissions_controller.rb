@@ -150,17 +150,15 @@ module Events
       person = submission.person
       unit_amount = @event.cost_cents
 
-      attendees_field = @form.form_fields.find_by(field_identifier: "number_of_attendees")
-      qty = attendees_field ? @form_params[attendees_field.id.to_s].to_i : 1
+      count_field = @form.form_fields.find_by(field_identifier: "number_of_attendees")
+      qty = count_field ? @form_params[count_field.id.to_s].to_i : 1
       qty = 1 if qty < 1
 
-      metadata = { form_submission_id: submission.id, event_id: @event.id }
-
-      attendees_field = @form.form_fields.find_by(field_identifier: "bulk_payment_attendees")
-      if attendees_field
-        attendees_json = @form_params[attendees_field.id.to_s]
-        metadata[:attendees] = attendees_json if attendees_json.present?
-      end
+      metadata = stripe_metadata(
+        form_submission_id: submission.id,
+        event_id: @event.id,
+        number_of_attendees: qty
+      )
 
       person.set_payment_processor :stripe
 

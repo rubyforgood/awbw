@@ -185,6 +185,7 @@ module Events
 
       metadata = { event_registration_id: registration.id, event_id: @event.id }
       metadata[:form_submission_id] = submission.id if submission
+      metadata = stripe_metadata(metadata)
 
       person.set_payment_processor :stripe
 

@@ -126,9 +126,22 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
     let(:admin) { create(:user, :admin, :with_person) }
     let(:event) { create(:event, cost_cents: 15_00) }
     let(:fake_session) { double(url: "https://checkout.stripe.com/test") }
+    let(:checkout_args) { {} }
+    let!(:count_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             field_identifier: "number_of_attendees", name: "Number of attendees", required: false)
+    end
+    let!(:attendees_field) do
+      create(:form_field, form: form, answer_type: :free_form_input_one_line,
+             field_identifier: "bulk_payment_attendees", name: "Attendees", required: false)
+    end
 
     before do
-      fake_processor = double(checkout: fake_session)
+      fake_processor = double
+      allow(fake_processor).to receive(:checkout) do |args|
+        checkout_args.merge!(args)
+        fake_session
+      end
       allow_any_instance_of(Person).to receive(:set_payment_processor)
       allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
     end
@@ -150,6 +163,34 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
 
       expect(response).to redirect_to("https://checkout.stripe.com/test")
       expect(response.status).to eq(303)
+    end
+
+    # The attendee list is unbounded and Stripe caps a metadata value at 500
+    # characters, so it must never ride along in the checkout metadata — the
+    # webhook re-derives it from the submission.
+    it "keeps the attendee list out of the Stripe metadata and sends the count" do
+      attendees = 12.times.map do |i|
+        { "first_name" => "Person#{i}", "last_name" => "Attendee", "email" => "person#{i}@example.com" }
+      end
+      expect(attendees.to_json.length).to be > 500
+
+      post event_bulk_payment_path(event),
+           params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: payer_params.merge(
+             org_field.id.to_s => "this answer has enough words for validation",
+             payment_method_field.id.to_s => "Credit card (now)",
+             count_field.id.to_s => "12",
+             attendees_field.id.to_s => attendees.to_json
+           ) } }
+
+      expect(response).to redirect_to("https://checkout.stripe.com/test")
+
+      metadata = checkout_args[:metadata]
+      expect(metadata).not_to have_key(:attendees)
+      expect(metadata).to include(
+        form_submission_id: FormSubmission.bulk_payment.last.id,
+        event_id: event.id,
+        number_of_attendees: 12
+      )
     end
 
     it "does not redirect when payment method is not credit card" do
