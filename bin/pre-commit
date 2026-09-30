@@ -19,10 +19,10 @@ if [ -n "$staged_files" ]; then
   fi
 fi
 
-# Check for secrets/env files (allow .env.example)
-if echo "$staged_files" | grep '\.env$\|\.env\.\|master\.key' | grep -qv '\.env\.example$'; then
+# Check for secrets/env files (the checked-in placeholder samples are fine)
+if echo "$staged_files" | grep '\.env$\|\.env\.\|master\.key' | grep -qvE '\.env\.(example|sample)$'; then
   echo "ERROR: Potentially sensitive files staged for commit:"
-  echo "$staged_files" | grep '\.env$\|\.env\.\|master\.key' | grep -v '\.env\.example$'
+  echo "$staged_files" | grep '\.env$\|\.env\.\|master\.key' | grep -vE '\.env\.(example|sample)$'
   echo "Remove them from staging before committing."
   exit 1
 fi
