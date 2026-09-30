@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe ScholarshipMailer, type: :mailer do
-  before { stub_email_config }
-
   describe "#additional_support_requested_fyi" do
     let(:event) { create(:event, cost_cents: 10_000, title: "Healing Circle Training") }
     let(:registration) { create(:event_registration, event:) }

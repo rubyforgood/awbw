@@ -3,8 +3,6 @@ require 'rails_helper'
 RSpec.describe ContactUsMailer do
   describe '#hello' do
     it 'sends to the program email' do
-      stub_email_config
-
       contact_params = {
         subject: 'Test Subject',
         from: 'test@example.com',
@@ -23,8 +21,6 @@ RSpec.describe ContactUsMailer do
     end
 
     it 'works when q is nil' do
-      stub_email_config
-
       contact_params = {
         subject: 'Test Subject',
         from: 'test@example.com',

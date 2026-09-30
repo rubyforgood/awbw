@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
-  before { stub_email_config }
-
   describe "#bulk_payment_confirmation_fyi" do
     let(:event) { create(:event) }
     let(:form) do

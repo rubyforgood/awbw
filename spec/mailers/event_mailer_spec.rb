@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe EventMailer, type: :mailer do
-  before { stub_email_config }
-
   describe "#event_registration_confirmation" do
     let(:event_registration) { create(:event_registration) }
     let(:mail) { described_class.event_registration_confirmation(event_registration) }

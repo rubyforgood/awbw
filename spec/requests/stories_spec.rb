@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "/stories", type: :request do
-  before { stub_email_config }
-
   let(:admin)        { create(:user, :admin) }
   let(:regular_user) { create(:user) }
 
