@@ -342,16 +342,17 @@
   <!-- Organization Affiliations -->
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
-  <details id="affiliations" class="form-group scroll-mt-4 group/section" open>
+  <% affiliations_open = !person.persisted? || person.errors.any? %>
+  <details id="affiliations" class="form-group scroll-mt-4 group/section"<%= " open".html_safe if affiliations_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Affiliations</span>
       <% facilitator_since = decorated.facilitator_since_summary %>
       <% if facilitator_since %>
         <span class="text-sm text-gray-500"><%= facilitator_since %></span>
       <% end %>
-      <% active_affiliations = person.affiliations.reject(&:marked_for_destruction?).count(&:active?) %>
-      <% if active_affiliations.positive? %>
-        <span class="text-sm text-gray-500"><%= "· " if facilitator_since %>(<%= pluralize(active_affiliations, "active affiliation") %>)</span>
+      <% active_summary = decorated.active_affiliations_summary %>
+      <% if active_summary %>
+        <span class="text-sm text-gray-500"><%= "· " if facilitator_since %><%= active_summary %></span>
       <% end %>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
     </summary>

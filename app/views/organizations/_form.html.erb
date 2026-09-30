@@ -325,12 +325,13 @@
     </div>
   </details>
 
-  <details id="affiliations" class="form-group mb-8 scroll-mt-20 group/section" open>
+  <% affiliations_open = !f.object.persisted? || f.object.errors.any? %>
+  <details id="affiliations" class="form-group mb-8 scroll-mt-20 group/section"<%= " open".html_safe if affiliations_open %>>
     <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Affiliations</span>
-      <% affiliation_count = f.object.affiliations.reject(&:marked_for_destruction?).size %>
-      <% if affiliation_count.positive? %>
-        <span class="text-sm text-gray-500"><%= pluralize(affiliation_count, "affiliation") %></span>
+      <% active_summary = f.object.decorate.active_affiliations_summary %>
+      <% if active_summary %>
+        <span class="text-sm text-gray-500"><%= active_summary %></span>
       <% end %>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
     </summary>
