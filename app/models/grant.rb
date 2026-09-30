@@ -100,14 +100,16 @@ class Grant < ApplicationRecord
     self.amount_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  # Resolve the polymorphic funder from a signed global id, mirroring the
-  # GlobalID pattern used for scholarship allocatables.
-  def funder_sgid
-    funder&.to_signed_global_id&.to_s
+  # A grant is funded by an organization — the form picks one through the org
+  # search (a numeric id). This reads/writes the polymorphic `funder` as an
+  # Organization; the column stays polymorphic so legacy person-funded grants
+  # remain representable without a data migration.
+  def funder_organization_id
+    funder_id if funder.is_a?(Organization)
   end
 
-  def funder_sgid=(sgid)
-    self.funder = GlobalID::Locator.locate_signed(sgid) if sgid.present?
+  def funder_organization_id=(id)
+    self.funder = Organization.find_by(id:) if id.present?
   end
 
   # Human-readable name of the grant's funder (an Organization or Person).
@@ -161,11 +163,11 @@ class Grant < ApplicationRecord
 
   private
 
-  # The funder is chosen through the virtual funder_sgid field, so attach the
-  # "no funder picked" error there — that's the input the form renders, so the
-  # error shows inline on the field, not just in the summary.
+  # The funder is chosen through the virtual funder_organization_id field, so
+  # attach the "no funder picked" error there — that's the input the form
+  # renders, so the error shows inline on the field, not just in the summary.
   def funder_present
-    errors.add(:funder_sgid, "must be selected") if funder.blank?
+    errors.add(:funder_organization_id, "must be selected") if funder.blank?
   end
 
   def assign_pending_associations

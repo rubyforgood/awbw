@@ -22,21 +22,21 @@
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
-        <% funder_label_data = @grant.funder&.compound_search_label %>
-        <%= f.input :funder_sgid,
-                    collection: funder_label_data ? [ [ funder_label_data[:label], funder_label_data[:id] ] ] : [],
-                    selected: funder_label_data&.dig(:id),
+        <% funder_org = @grant.funder if @grant.funder.is_a?(Organization) %>
+        <%= f.input :funder_organization_id,
+                    collection: funder_org ? [ [ funder_org.name, funder_org.id ] ] : [],
+                    selected: funder_org&.id,
                     required: true,
                     input_html: {
                       class: "bg-white",
                       data: {
                         controller: "remote-select",
-                        remote_select_model_value: "person_or_organization"
+                        remote_select_model_value: "organization"
                       }
                     },
-                    prompt: "Search organizations and people",
+                    prompt: "Search organizations",
                     label: "Funder",
-                    hint: "The organization or person funding the grant." %>
+                    hint: "The organization funding the grant." %>
       </div>
       <div class="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div>

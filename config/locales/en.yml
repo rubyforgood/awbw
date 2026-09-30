@@ -56,7 +56,7 @@ en:
       community_news:
         rhino_body: "Body / Description"
       grant:
-        funder_sgid: "Funder"
+        funder_organization_id: "Funder"
       workshop_variation:
         rhino_body: "Details"
       workshop_variation_idea:

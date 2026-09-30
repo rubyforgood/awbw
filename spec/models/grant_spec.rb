@@ -73,11 +73,11 @@ RSpec.describe Grant, type: :model do
       expect(build(:grant, :donated_by_person)).to be_valid
     end
 
-    it "attaches the missing-funder error to funder_sgid so the form field shows it" do
+    it "attaches the missing-funder error to funder_organization_id so the form field shows it" do
       grant = build(:grant, funder: nil)
 
       expect(grant).not_to be_valid
-      expect(grant.errors[:funder_sgid]).to include("must be selected")
+      expect(grant.errors[:funder_organization_id]).to include("must be selected")
       expect(grant.errors.full_messages).to include("Funder must be selected")
     end
 
@@ -125,13 +125,18 @@ RSpec.describe Grant, type: :model do
     end
   end
 
-  describe "#funder_sgid" do
-    it "round-trips a funder through a signed global id" do
+  describe "#funder_organization_id" do
+    it "sets the polymorphic funder from an organization id" do
       organization = create(:organization)
       grant = build(:grant)
-      grant.funder_sgid = organization.to_signed_global_id.to_s
+      grant.funder_organization_id = organization.id
       expect(grant.funder).to eq(organization)
-      expect(GlobalID::Locator.locate_signed(grant.funder_sgid)).to eq(organization)
+      expect(grant.funder_organization_id).to eq(organization.id)
+    end
+
+    it "reads nil for a legacy person funder" do
+      grant = build(:grant, :donated_by_person)
+      expect(grant.funder_organization_id).to be_nil
     end
   end
 

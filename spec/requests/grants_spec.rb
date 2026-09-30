@@ -8,7 +8,7 @@ RSpec.describe "/grants", type: :request do
     {
       name: "Healing Arts Grant",
       amount_dollars: "5000",
-      funder_sgid: organization.to_signed_global_id.to_s,
+      funder_organization_id: organization.id,
       funds_allocation_deadline: "2026-12-31",
       eligibility_criteria: "Must be a facilitator",
       tasks: "Submit application"
@@ -16,7 +16,7 @@ RSpec.describe "/grants", type: :request do
   end
 
   let(:invalid_attributes) do
-    { name: "", amount_dollars: "1000", funder_sgid: "" }
+    { name: "", amount_dollars: "1000", funder_organization_id: "" }
   end
 
   describe "authorization" do
@@ -291,8 +291,8 @@ RSpec.describe "/grants", type: :request do
         it "surfaces the missing-funder error on the funder field, not just the summary" do
           post grants_url, params: { grant: invalid_attributes }
 
-          # simple_form wraps the funder_sgid input with the error class when the
-          # attribute has an error, so the message renders inline on the field.
+          # simple_form wraps the funder_organization_id input with the error class
+          # when the attribute has an error, so the message renders inline on the field.
           expect(response.body).to include("Funder must be selected")
           expect(response.body).to include("must be selected")
         end
