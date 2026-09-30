@@ -139,7 +139,6 @@ class StoriesController < ApplicationController
                             .references(:users)
                             .order(:created_at)
     @windows_types = WindowsType.all
-    @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @categories_grouped =
       Category
         .includes(:category_type)

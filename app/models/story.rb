@@ -1,6 +1,6 @@
 class Story < ApplicationRecord
   include AuthorCreditable
-  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Communicable
 
   has_rich_text :rhino_body
@@ -83,6 +83,18 @@ class Story < ApplicationRecord
 
   # Credited-author name search (explicit author + creator fallback) comes from
   # AuthorCreditable#by_credited_person_name, OR-ed into full-text results below.
+
+  # Remote-select typeahead (workshop form's "connect a story" picker)
+  remote_searchable_by :title
+
+  def self.remote_search(query)
+    super.includes(:windows_type)
+  end
+
+  def remote_search_label
+    label = windows_type ? "#{title} (#{windows_type.short_name})" : title
+    { id: id, label: label }
+  end
 
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable

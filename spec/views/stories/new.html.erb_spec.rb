@@ -10,7 +10,6 @@ RSpec.describe "stories/new", type: :view do
     assign(:sectors, [])
     assign(:categories_grouped, [])
     assign(:story_ideas, [])
-    assign(:workshops, [])
     allow(view).to receive(:current_user).and_return(user)
     allow(view).to receive(:allowed_to?).and_return(false)
   end
@@ -55,7 +54,6 @@ RSpec.describe "stories/new", type: :view do
       assign(:story_idea, story_idea)
       assign(:story_ideas, StoryIdea.where(id: story_idea.id))
       assign(:windows_types, WindowsType.where(id: story_idea.windows_type_id))
-      assign(:workshops, Workshop.where(id: story_idea.workshop_id))
     end
 
     it "pre-fills windows_type_id from story idea" do

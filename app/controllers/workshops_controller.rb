@@ -167,7 +167,6 @@ class WorkshopsController < ApplicationController
 
     @sectors = Sector.published.order(:name)
     @age_range_comments = @workshop.persisted? ? @workshop.comments.where("body LIKE ?", "%[AGE_RANGE_DATA]%") : []
-    @stories_for_select = authorized_scope(Story.order(:title))
 
     @workshop.story_workshops.build if @workshop.story_workshops.blank?
     @workshop.build_primary_asset if @workshop.primary_asset.blank?
