@@ -1,4 +1,4 @@
-# Stripe caps each metadata value at 500 characters 
+# Stripe caps each metadata value at 500 characters
 module StripeMetadata
   extend ActiveSupport::Concern
 
