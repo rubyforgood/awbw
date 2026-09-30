@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe EventMailer, type: :mailer do
+  before { stub_email_config }
+
   describe "#event_registration_confirmation" do
     let(:event_registration) { create(:event_registration) }
     let(:mail) { described_class.event_registration_confirmation(event_registration) }
@@ -391,7 +393,7 @@ RSpec.describe EventMailer, type: :mailer do
     end
 
     it "is sent to the admin reply-to address" do
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it "summarizes the count and event in the subject" do
@@ -458,6 +460,44 @@ RSpec.describe EventMailer, type: :mailer do
         expect(mail.html_part.body.encoded).to include("View ticket")
         expect(mail.text_part.body.encoded).to include("View ticket")
       end
+    end
+  end
+
+  # Every event email sends from the unattended mailbox but points replies at the
+  # staffed one. The two addresses used to come from the same env var, so setting
+  # it collapsed them and the no-reply intent disappeared.
+  describe "sender and reply-to addresses" do
+    let(:event_registration) { create(:event_registration) }
+
+    def expect_no_reply_sender(mail)
+      expect(mail.from).to eq([ EmailConfigHelpers::NO_REPLY_EMAIL ])
+      expect(mail.reply_to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
+    end
+
+    it "splits them on a registration confirmation" do
+      expect_no_reply_sender(described_class.event_registration_confirmation(event_registration))
+    end
+
+    it "splits them on a registration reminder" do
+      expect_no_reply_sender(described_class.event_registration_reminder(event_registration))
+    end
+
+    it "splits them on a registration cancellation" do
+      expect_no_reply_sender(described_class.event_registration_cancelled(event_registration))
+    end
+
+    it "splits them on the admin reminder FYI, which is also addressed to the staffed mailbox" do
+      mail = described_class.event_registration_reminder_fyi(event_registration.event, [ "Alex <alex@example.org>" ])
+
+      expect_no_reply_sender(mail)
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
+    end
+
+    it "keeps the no-reply sender when only REPLY_TO_EMAIL is configured" do
+      stub_email_config(programs: nil, no_reply: EmailConfigHelpers::NO_REPLY_EMAIL)
+      allow(ENV).to receive(:[]).with("REPLY_TO_EMAIL").and_return(EmailConfigHelpers::PROGRAMS_EMAIL)
+
+      expect_no_reply_sender(described_class.event_registration_confirmation(event_registration))
     end
   end
 end

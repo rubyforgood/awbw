@@ -13,7 +13,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 1,
         kind: "event_registration_confirmation_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
 
     NotificationMailer.event_registration_confirmation_fyi(notification)
@@ -45,7 +45,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 1,
         kind: "event_registration_cancelled_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
 
     NotificationMailer.event_registration_cancelled_fyi(notification)
@@ -61,7 +61,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 0,
         kind: "bulk_payment_confirmation_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
 
     NotificationMailer.bulk_payment_confirmation_fyi(notification)
@@ -93,7 +93,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 0,
         kind: "form_submission_confirmation_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
 
     NotificationMailer.form_submission_confirmation_fyi(notification)
@@ -127,7 +127,7 @@ class NotificationMailerPreview < ActionMailer::Preview
       notification_type: 0,
       kind: "form_submission_confirmation_fyi",
       recipient_role: "admin",
-      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+      recipient_email: programs_email
     )
 
     NotificationMailer.form_submission_confirmation_fyi(notification)
@@ -155,7 +155,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 0,
         kind: "idea_submitted_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
     NotificationMailer.idea_submitted_fyi(notification)
   end
@@ -182,7 +182,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 0,
         kind: "story_promoted_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
     NotificationMailer.story_promoted_fyi(notification)
   end
@@ -194,7 +194,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 0,
         kind: "report_submitted_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
 
     NotificationMailer.report_submitted_fyi(notification)
@@ -207,7 +207,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 1,
         kind: "reset_password_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
     NotificationMailer.reset_password_fyi(notification)
   end
@@ -234,13 +234,19 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 0,
         kind: "workshop_log_submitted_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
 
     NotificationMailer.workshop_log_submitted_fyi(notification)
   end
 
   private
+
+  # Placeholder keeps previews working on a checkout with no PROGRAMS_EMAIL set;
+  # recipient_email is required.
+  def programs_email
+    Organization.programs_email.presence || "programs@example.com"
+  end
 
   def find_valid_notification(kind)
     Notification.where(kind: kind).order(id: :desc).find_each.find(&:noticeable)

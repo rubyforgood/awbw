@@ -55,7 +55,7 @@ class StoryIdeasController < ApplicationController
           noticeable: @story_idea,
           kind: :idea_submitted_fyi,
           recipient_role: :admin,
-          recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+          recipient_email: Organization.programs_email,
           notification_type: 0)
         success = true
       end

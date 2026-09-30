@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe EventRegistrationServices::ProcessConfirmation do
+  before { stub_email_config }
+
   let(:admin) { create(:user, :with_person, super_user: true) }
   let(:event) { create(:event) }
 
@@ -182,7 +184,7 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
           noticeable: registration,
           kind: "event_registration_confirmation_fyi",
           recipient_role: :admin,
-          recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+          recipient_email: EmailConfigHelpers::PROGRAMS_EMAIL,
           notification_type: 0
         )
 

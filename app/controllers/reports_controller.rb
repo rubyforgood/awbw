@@ -110,7 +110,7 @@ class ReportsController < ApplicationController
       noticeable: @report,
       kind: :report_submitted_fyi,
       recipient_role: :admin,
-      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      recipient_email: Organization.programs_email,
       notification_type: 0)
 
     if params[:sectorable_items] or params[:form_builder_id] == "7"
