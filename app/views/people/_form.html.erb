@@ -310,39 +310,12 @@
     <% end %>
   </div>
 
-  <!-- Profile-specific Categories (other than age ranges) -->
+  <!-- Profile-specific Categories (other than age ranges) — rendered in the
+       Background row below. A row-height spacer holds this slot so the sections
+       below keep their position. -->
   <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
   <% if other_category_types.present? %>
-    <div class="form-group space-y-4">
-      <% other_category_types.each do |type, cats| %>
-<%# Collapsed to a one-line summary of the current selections so the long
-            option grid doesn't have to be scrolled past every edit. %>
-        <% selected_names = cats.select { |category| (@selected_category_ids || @person.category_ids).include?(category.id) }.map(&:name) %>
-        <details class="group">
-          <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-            <span class="font-semibold"><%= type.display_label %>:</span>
-            <span class="text-sm text-gray-500"><%= selected_names.any? ? selected_names.to_sentence : "None selected" %></span>
-            <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
-          </summary>
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
-            <div class="flex flex-wrap gap-3">
-              <% cats.each do |category| %>
-                <%= render "shared/category_checkbox", param_key: "person", category: category,
-                           checked: (@selected_category_ids || @person.category_ids).include?(category.id),
-                           is_age: false,
-                           primary_checked: false %>
-              <% end %>
-            </div>
-          </div>
-        </details>
-      <% end %>
-      <% workshop_other = @person.other_workshop_setting_responses %>
-      <% if workshop_other.any? %>
-        <div class="flex flex-wrap gap-2">
-          <%= render "people/other_responses", responses: workshop_other %>
-        </div>
-      <% end %>
-    </div>
+    <div class="form-group h-10"></div>
   <% end %>
 
   <!-- Organization Affiliations -->
@@ -489,26 +462,27 @@
     </div>
   </details>
 
-  <!-- PERSON FIELDS -->
-  <%# Collapsible like the sections above. Stays open on a new person or when the
-      form has errors so nothing hides behind the summary. %>
+  <!-- PERSON FIELDS (Background) + Workshop Settings — two halves of one row -->
+  <%# Background (bio + shout-out) takes the left half, stacked so they fit the
+      narrower column; Workshop Settings fills the right half. Both collapsible;
+      open on a new person or when there are errors. %>
   <% background_open = !f.object.persisted? || f.object.errors.any? %>
-  <details class="form-group group"<%= " open".html_safe if background_open %>>
-    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
-      <span class="font-semibold">Background</span>
-      <% if f.object.bio.present? %>
-        <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Bio present</span>
-      <% end %>
-      <% if f.object.shoutout_text.present? %>
-        <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Shout-out present</span>
-      <% end %>
-      <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
-    </summary>
+  <div class="flex flex-col gap-4 md:flex-row items-start">
+    <details class="form-group group md:flex-1 md:min-w-0"<%= " open".html_safe if background_open %>>
+      <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+        <span class="font-semibold">Background</span>
+        <% if f.object.bio.present? %>
+          <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Bio present</span>
+        <% end %>
+        <% if f.object.shoutout_text.present? %>
+          <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Shout-out present</span>
+        <% end %>
+        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+      </summary>
 
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
-      <%# Bio and Shout-out share one row, each half width. %>
-      <div class="flex flex-col sm:flex-row gap-6 items-start">
-        <div class="w-full sm:w-1/2 space-y-4">
+      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
+        <%# Bio and Shout-out stack within the half-width column. %>
+        <div class="space-y-4">
           <%= f.input :bio,
                       wrapper_html: { class: "w-full" },
                       as: :text,
@@ -519,9 +493,7 @@
                             focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                       },
                       hint: "Maximum 250 characters" %>
-        </div>
 
-        <div class="w-full sm:w-1/2 space-y-4">
           <%= f.input :shoutout_text,
                       label: "Shout-out",
                       wrapper_html: { class: "w-full" },
@@ -535,8 +507,41 @@
                       hint: "Shown on an event's scholarship recipients page if designated for a shout-out" %>
         </div>
       </div>
-    </div>
-  </details>
+    </details>
+
+    <!-- Workshop Settings (right half) -->
+    <% if other_category_types.present? %>
+      <div class="form-group space-y-4 md:flex-1 md:min-w-0">
+        <% other_category_types.each do |type, cats| %>
+          <%# Collapsed to a one-line summary of the current selections. %>
+          <% selected_names = cats.select { |category| (@selected_category_ids || @person.category_ids).include?(category.id) }.map(&:name) %>
+          <details class="group">
+            <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+              <span class="font-semibold"><%= type.display_label %>:</span>
+              <span class="text-sm text-gray-500"><%= selected_names.any? ? selected_names.to_sentence : "None selected" %></span>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+            </summary>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mt-2">
+              <div class="flex flex-wrap gap-3">
+                <% cats.each do |category| %>
+                  <%= render "shared/category_checkbox", param_key: "person", category: category,
+                             checked: (@selected_category_ids || @person.category_ids).include?(category.id),
+                             is_age: false,
+                             primary_checked: false %>
+                <% end %>
+              </div>
+            </div>
+          </details>
+        <% end %>
+        <% workshop_other = @person.other_workshop_setting_responses %>
+        <% if workshop_other.any? %>
+          <div class="flex flex-wrap gap-2">
+            <%= render "people/other_responses", responses: workshop_other %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 
 <%# Collapsible — collapses to a count of licenses on file. Open on a new person
       or when there are errors so an invalid license stays visible. %>
@@ -566,8 +571,11 @@
       when there are errors. %>
   <% extras_open = !f.object.persisted? || f.object.errors.any? %>
   <details class="form-group group"<%= " open".html_safe if extras_open %>>
-    <summary class="flex items-baseline gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
       <span class="font-semibold">Extras</span>
+      <% if f.object.user %>
+        <span class="text-sm text-gray-500"><%= f.object.user.time_zone.presence || "Pacific Time (US & Canada)" %></span>
+      <% end %>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
   <div class="flex flex-col lg:flex-row gap-6 items-stretch mt-2">
