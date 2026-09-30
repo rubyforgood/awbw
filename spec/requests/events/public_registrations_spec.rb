@@ -481,12 +481,12 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       create(:form_field, form: form, answer_type: :group_header,
              name: %(Visit <a href="https://awbw.org">our site</a>))
       create(:form_field, form: form, answer_type: :free_form_input_one_line,
-             name: "<h2>About you</h2>", required: false)
+             name: "<em>About you</em>", required: false)
 
       get new_event_public_registration_path(event)
 
       expect(response.body).to include(%(<a href="https://awbw.org">our site</a>))
-      expect(response.body).to include("<h2>About you</h2>")
+      expect(response.body).to include("<em>About you</em>")
       expect(response.body).to include("rich-label")
     end
 
