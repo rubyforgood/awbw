@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1248,6 +1248,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_095307) do
     t.text "tasks"
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id"
+    t.string "funder_display_name"
     t.index ["created_by_id"], name: "index_grants_on_created_by_id"
     t.index ["funder_type", "funder_id"], name: "index_grants_on_funder"
     t.index ["updated_by_id"], name: "index_grants_on_updated_by_id"

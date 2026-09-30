@@ -135,6 +135,19 @@ RSpec.describe Grant, type: :model do
     end
   end
 
+  describe "#funder_name" do
+    it "uses the linked funder's name when no display name is set" do
+      organization = create(:organization, name: "Acme Foundation")
+      expect(build(:grant, funder: organization).funder_name).to eq("Acme Foundation")
+    end
+
+    it "prefers the funder display name when present" do
+      person = create(:person, first_name: "Jane", last_name: "Doe")
+      grant = build(:grant, funder: person, funder_display_name: "The Doe Family Fund")
+      expect(grant.funder_name).to eq("The Doe Family Fund")
+    end
+  end
+
   describe "list accessors" do
     let(:grant) { build(:grant, eligibility_criteria: "One\n\n  Two  \n", tasks: "A\nB") }
 
