@@ -1,5 +1,5 @@
 class NotificationMailer < ApplicationMailer
-  default to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+  default to: -> { Organization.programs_email }
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze

@@ -12,7 +12,7 @@ RSpec.describe NotificationMailer, "#callout_form_submitted_fyi" do
 
     mail = described_class.callout_form_submitted_fyi(submission)
 
-    expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+    expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     expect(mail.subject).to include("New").and include("Day 1 Survey").and include("Ada Lovelace")
     expect(mail.body.encoded).to include("What stood out?").and include("The breakout rooms")
   end

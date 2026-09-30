@@ -10,8 +10,8 @@ class DeviseMailer < Devise::Mailer
   after_action :create_notification_record, unless: :preview?
   after_action :track_devise_email_event, unless: :preview?
 
-  default from: ApplicationMailer.sender
-  default reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+  default from: -> { ApplicationMailer.sender }
+  default reply_to: -> { Organization.programs_email }
 
   def reset_password_instructions(record, token, opts = {})
     @record = record
@@ -118,7 +118,7 @@ class DeviseMailer < Devise::Mailer
       NotificationServices::CreateNotification.call(
         noticeable: @record,
         recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        recipient_email: Organization.programs_email,
         kind: "reset_password_fyi",
         notification_type: 1,
         deliver: true

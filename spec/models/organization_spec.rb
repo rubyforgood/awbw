@@ -472,6 +472,42 @@ RSpec.describe Organization, "scholarship index helpers" do
     end
   end
 
+  describe "configured mailboxes" do
+    def stub_env(values)
+      allow(ENV).to receive(:[]).and_call_original
+      values.each { |key, value| allow(ENV).to receive(:[]).with(key).and_return(value) }
+    end
+
+    it "prefers the dedicated vars over REPLY_TO_EMAIL" do
+      stub_env("PROGRAMS_EMAIL" => "programs@example.test",
+               "NO_REPLY_EMAIL" => "no-reply@example.test",
+               "REPLY_TO_EMAIL" => "legacy@example.test")
+
+      expect(Organization.programs_email).to eq("programs@example.test")
+      expect(Organization.no_reply_email).to eq("no-reply@example.test")
+    end
+
+    it "falls back to REPLY_TO_EMAIL so deployments keep working before the new vars are set" do
+      stub_env("PROGRAMS_EMAIL" => nil, "NO_REPLY_EMAIL" => nil, "REPLY_TO_EMAIL" => "legacy@example.test")
+
+      expect(Organization.programs_email).to eq("legacy@example.test")
+      expect(Organization.no_reply_email).to eq("legacy@example.test")
+    end
+
+    it "treats a blank var as unset rather than sending from an empty address" do
+      stub_env("PROGRAMS_EMAIL" => "", "REPLY_TO_EMAIL" => "legacy@example.test")
+
+      expect(Organization.programs_email).to eq("legacy@example.test")
+    end
+
+    it "is nil when nothing is configured, so no hard-coded address leaks out" do
+      stub_env("PROGRAMS_EMAIL" => nil, "NO_REPLY_EMAIL" => nil, "REPLY_TO_EMAIL" => nil)
+
+      expect(Organization.programs_email).to be_nil
+      expect(Organization.no_reply_email).to be_nil
+    end
+  end
+
   describe "FileMaker codes" do
     it "parses a trimmed, de-duplicated list from the column" do
       org = build(:organization, filemaker_code: " FM1 , FM2,FM1 ")

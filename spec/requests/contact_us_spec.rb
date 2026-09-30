@@ -200,7 +200,7 @@ RSpec.describe "ContactUs", type: :request do
         notification = Notification.find_by(kind: "contact_us_fyi")
         expect(notification).to be_present
         expect(notification.recipient_role).to eq("admin")
-        expect(notification.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+        expect(notification.recipient_email).to eq(EmailConfigHelpers::PROGRAMS_EMAIL)
       end
 
       it "silently drops a bot that posts a scraped form without our decoy field" do
