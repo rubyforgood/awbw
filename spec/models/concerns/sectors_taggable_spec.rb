@@ -59,6 +59,16 @@ RSpec.describe SectorsTaggable do
 
       expect(person.sectorable_items.find_by(sector: health).is_primary).to be true
     end
+
+    it "with replace: true, drops sectors not in the submitted set (overwrite with latest)" do
+      person.sectorable_items.create!(sector: education, is_primary: true)
+      person.sectorable_items.create!(sector: housing, is_primary: false)
+
+      person.tag_sectors(primary_ids: [ health.id ], additional_ids: [], replace: true)
+
+      expect(person.sectors).to contain_exactly(health)
+      expect(person.sectorable_items.find_by(sector: health).is_primary).to be true
+    end
   end
 
   describe "ordering" do
