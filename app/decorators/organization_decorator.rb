@@ -127,6 +127,17 @@ class OrganizationDecorator < ApplicationDecorator
     AffiliationPeriods.label(facilitations(affiliations), precision: :month) || ""
   end
 
+  # Count of active affiliations (any role — facilitator and job alike) plus the
+  # people they're with, for the collapsed affiliations summary, e.g.
+  # "3 active: Ada Lovelace, Grace Hopper". Nil when none are active.
+  def active_affiliations_summary
+    active = object.affiliations.reject(&:marked_for_destruction?).select(&:active?)
+    return nil if active.empty?
+
+    names = active.filter_map { |affiliation| affiliation.person&.name }.uniq.sort
+    names.any? ? "#{active.size} active: #{names.join(", ")}" : "#{active.size} active"
+  end
+
   def program_since_date
     @program_since_date ||= facilitations.filter_map(&:start_date).min
   end

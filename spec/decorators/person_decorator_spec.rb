@@ -282,4 +282,29 @@ RSpec.describe PersonDecorator do
       expect(summary).to include("Facilitator since", "Oct 2019")
     end
   end
+
+  describe "#active_affiliations_summary" do
+    it "is nil with no active affiliations" do
+      expect(create(:person).decorate.active_affiliations_summary).to be_nil
+    end
+
+    it "counts active affiliations of any role and lists their orgs (sorted, unique)" do
+      person = create(:person)
+      center = create(:organization, name: "1736 Family Center")
+      awbw = create(:organization, name: "AWBW")
+      justworks = create(:organization, name: "Justworks")
+      create(:affiliation, person: person, organization: center, title: "Facilitator")
+      create(:affiliation, person: person, organization: awbw, title: "Facilitator")
+      create(:affiliation, person: person, organization: justworks, title: "Staff")
+
+      expect(person.reload.decorate.active_affiliations_summary)
+        .to eq("3 active: 1736 Family Center, AWBW, Justworks")
+    end
+
+    it "excludes ended affiliations" do
+      person = create(:person)
+      create(:affiliation, person: person, organization: create(:organization, name: "Past Org"), end_date: 1.day.ago)
+      expect(person.reload.decorate.active_affiliations_summary).to be_nil
+    end
+  end
 end
