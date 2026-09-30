@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe DeviseMailer, type: :mailer do
-  before { stub_email_config }
-
   let(:user) { create(:user, email: "user@example.com") }
   let(:token) { "fake-token-123" }
 

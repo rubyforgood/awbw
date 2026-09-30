@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, "#callout_form_submitted_fyi" do
-  before { stub_email_config }
-
   it "notifies staff with the form name, registrant, and answers" do
     person = create(:person, first_name: "Ada", last_name: "Lovelace")
     event = create(:event, title: "Spring Training")

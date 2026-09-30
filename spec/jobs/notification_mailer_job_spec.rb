@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailerJob, type: :job do
-  before { stub_email_config }
-
   describe "#perform" do
     let(:notification) { create(:notification, kind: "reset_password_fyi") }
 

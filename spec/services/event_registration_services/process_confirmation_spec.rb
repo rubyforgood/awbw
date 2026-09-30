@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe EventRegistrationServices::ProcessConfirmation do
-  before { stub_email_config }
-
   let(:admin) { create(:user, :with_person, super_user: true) }
   let(:event) { create(:event) }
 

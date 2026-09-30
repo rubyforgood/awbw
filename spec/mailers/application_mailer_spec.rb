@@ -2,8 +2,6 @@ require 'rails_helper'
 
 RSpec.describe ApplicationMailer do
   it 'wraps the configured programs mailbox in the AWBW Programs display name' do
-    stub_email_config
-
     expect(described_class.sender).to eq(%("#{ApplicationMailer::FROM_NAME}" <#{EmailConfigHelpers::PROGRAMS_EMAIL}>))
   end
 

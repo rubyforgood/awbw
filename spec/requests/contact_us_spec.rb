@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "ContactUs", type: :request do
-  before { stub_email_config }
-
   let(:user) { create(:user, :with_person) }
   let(:valid_params) do
     {
