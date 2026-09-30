@@ -1,4 +1,8 @@
 class ProfileChangeRequestPolicy < ApplicationPolicy
+  # `edit` and `update` share the same rule, so `authorize! @request` in either
+  # action infers the right check without passing `to:`.
+  alias_rule :edit?, to: :update?
+
   def index?
     admin?
   end
