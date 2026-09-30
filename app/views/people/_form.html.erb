@@ -27,7 +27,7 @@
         <details class="form-group group"<%= " open".html_safe if name_open %>>
           <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-2">
             <span class="font-semibold shrink-0">Name:</span>
-            <span class="text-sm text-gray-500"><%= display_name || "New person" %><% if f.object.pronouns.present? %> (<%= f.object.pronouns %>)<% end %></span>
+            <span class="text-sm text-gray-500"><%= display_name || "New person" %><% if f.object.pronunciation.present? %> “<%= f.object.pronunciation %>”<% end %><% if f.object.pronouns.present? %> (<%= f.object.pronouns %>)<% end %></span>
             <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
           </summary>
           <%# 2-up on mobile, all five on one row on md+. %>
