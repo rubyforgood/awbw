@@ -27,6 +27,20 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Log a note or communication against any of a person's records"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-30
+  pr_number: 2555
+  action_path: "/comments_and_communications?person_id=1"
+  summary: >-
+    The "Log it against" picker on a person's comments & communications feed now
+    lists every record they're tied to — form submissions, affiliations, staff
+    tags, reports, workshops, and credited stories — not just registrations and
+    scholarships, so a note or call can hang off the right record.
+  pro_tips:
+    - "Whatever you file here also shows in the feed and under the \"Attached to\" filter for that record type."
+
 - name: "Email addresses respect the people filter"
   area: people
   display_status: admin_facing
