@@ -38,6 +38,17 @@ RSpec.describe "Person profile membership section", type: :request do
       expect(response.body).to include("Standard (#{standard_cost})")
     end
 
+    it "keeps showing the membership when the save fails and the form re-renders" do
+      membership = create(:membership, person: person, cost_cents: 1_500)
+      membership_invoice_for(membership: membership)
+
+      patch person_path(person), params: { person: { first_name: "" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Locked at $15")
+      expect(response.body).not_to include("No membership yet.")
+    end
+
     it "shows a locked cost when the membership has one" do
       membership = create(:membership, person: person, cost_cents: 1_500)
       membership_invoice_for(membership: membership)

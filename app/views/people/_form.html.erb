@@ -523,6 +523,13 @@
     <%# Combined comments & communications — comment bodies/controls are admin-only
         and communication subjects are visible to the person (gated in the partial). %>
     <%= render "shared/comments_and_communications", f: f, view_all_person: @person, comms_title: t("communications.portal_title") %>
+
+    <%# Read-only, but it sits with the rest of the record rather than stranded
+        below the save button. %>
+    <% if allowed_to?(:index?, MembershipInvoice) %>
+      <%= render "people/multiple_memberships_warning", person: @person %>
+      <%= render "people/membership", person: @person, membership: @membership %>
+    <% end %>
   <% end %>
 
   <% if params[:admin] && allowed_to?(:manage?, Person) %>
