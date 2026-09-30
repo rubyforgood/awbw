@@ -1801,3 +1801,20 @@ puts "Creating yearly on-demand facilitator trainings…"
   end
   event.update!(public_registration_enabled: true) unless event.public_registration_enabled?
 end
+
+# Heal block, run at the end of create so every paid event added above is covered
+# (past/demo trainings and test events too): turn on the payment callout for all
+# paid events, and the scholarship callout on paid facilitator trainings, so the
+# demo tickets surface them without an admin publishing each by hand.
+# BuiltinCallouts.seed materializes any missing built-ins first (all hidden); we
+# then publish the two. Idempotent: only flips a still-hidden row, so admin
+# show/hide choices survive a re-seed.
+Event.where("cost_cents > ?", 0).find_each do |paid_event|
+  BuiltinCallouts.seed(paid_event)
+  payment = paid_event.registration_ticket_callouts.find_by(builtin_key: "payment")
+  payment.update!(hidden: false) if payment&.hidden?
+
+  next unless paid_event.facilitator_training?
+  scholarship_callout = paid_event.registration_ticket_callouts.find_by(builtin_key: "scholarship")
+  scholarship_callout.update!(hidden: false) if scholarship_callout&.hidden?
+end
