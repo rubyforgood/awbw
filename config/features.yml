@@ -37,6 +37,17 @@
     payment is made — so payers who need it to set AWBW up as a vendor can grab it
     before they cut a check.
 
+- name: "Grant funder is the funding organization"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-09-30
+  summary: >-
+    When adding grant info you now pick the funding organization instead of a
+    single person, so the scholarship ticket callout names the org (a foundation
+    or company) — a more accurate picture, since a funder is usually more than
+    one named individual.
+  action_path: "/grants"
+
 - name: "Over-allocated payments flagged in red"
   area: payments
   display_status: admin_facing
