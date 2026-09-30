@@ -217,11 +217,12 @@ class PersonDecorator < ApplicationDecorator
     h.safe_join([ "Facilitator since ", facilitator_since_range ])
   end
 
-  # Count of active affiliations (any role — facilitator and job alike) plus the
-  # organizations they're with, for the collapsed affiliations summary, e.g.
-  # "3 active: 1736 Family Center, AWBW". Nil when none are active.
-  def active_affiliations_summary
-    active = affiliations.reject(&:marked_for_destruction?).select(&:active?)
+  # Count of active facilitator affiliations plus the organizations they're with,
+  # for the collapsed affiliations summary, e.g. "2 active: 1736 Family Center,
+  # AWBW". Job/other roles are excluded to match the facilitator framing. Nil when
+  # there's no active facilitator affiliation.
+  def active_facilitator_affiliations_summary
+    active = affiliations.reject(&:marked_for_destruction?).select { |affiliation| affiliation.facilitator? && affiliation.active? }
     return nil if active.empty?
 
     names = active.filter_map { |affiliation| affiliation.organization&.name }.uniq.sort
