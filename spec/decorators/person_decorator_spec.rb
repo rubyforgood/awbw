@@ -223,4 +223,43 @@ RSpec.describe PersonDecorator do
       expect(summary).not_to include("fa-crown")
     end
   end
+
+  describe "#staff_tags_summary" do
+    it "is 'None' with no staff tags" do
+      expect(create(:person).decorate.staff_tags_summary).to eq("None")
+    end
+
+    it "lists the tag names, comma-separated" do
+      person = create(:person)
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, name: "Onboarding"))
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, name: "Newsletter"))
+
+      summary = person.reload.decorate.staff_tags_summary
+      expect(summary).to include("Onboarding", "Newsletter")
+    end
+
+    it "marks an unpublished tag" do
+      person = create(:person)
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, :unpublished, name: "Retired"))
+
+      summary = person.reload.decorate.staff_tags_summary
+      expect(summary).to include("Retired", "(unpublished)")
+    end
+  end
+
+  describe "#facilitator_since_summary" do
+    it "is nil when the person has never been a facilitator" do
+      person = create(:person)
+      create(:affiliation, person: person, title: "Board Member", start_date: Date.new(2015, 1, 1))
+      expect(person.decorate.facilitator_since_summary).to be_nil
+    end
+
+    it "leads with 'Facilitator since' and the earliest facilitator start" do
+      person = create(:person)
+      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2019, 10, 2))
+
+      summary = person.decorate.facilitator_since_summary
+      expect(summary).to include("Facilitator since", "Oct 2019")
+    end
+  end
 end

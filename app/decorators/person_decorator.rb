@@ -141,6 +141,23 @@ class PersonDecorator < ApplicationDecorator
     }, ", ")
   end
 
+  # One-line summary of the person's staff tags for the collapsed form section.
+  # An unpublished tag keeps a muted "(unpublished)" note, mirroring the editor.
+  # HTML-safe.
+  def staff_tags_summary
+    tags = object.staff_taggings.reject(&:marked_for_destruction?).filter_map(&:staff_tag)
+    return "None" if tags.empty?
+
+    h.safe_join(tags.map { |tag|
+      inner = if tag.published?
+        tag.name
+      else
+        h.safe_join([ tag.name, h.content_tag(:span, "(unpublished)", class: "text-xs text-gray-400") ], " ")
+      end
+      h.content_tag(:span, inner, class: "whitespace-nowrap")
+    }, ", ")
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= begin
       facilitator_affiliations = affiliations.facilitators
@@ -180,6 +197,15 @@ class PersonDecorator < ApplicationDecorator
 
   def facilitator_since_range
     date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
+  end
+
+  # "Facilitator since <range>" for the collapsed affiliations summary. Nil when
+  # the person has never held a facilitator affiliation, so the summary doesn't
+  # show an unrelated membership date under a facilitator heading. HTML-safe.
+  def facilitator_since_summary
+    return nil if facilitator_since_year.nil?
+
+    h.safe_join([ "Facilitator since ", facilitator_since_range ])
   end
 
   # A grey secondary line under "Facilitator since", shown only when the earliest
