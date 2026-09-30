@@ -25,7 +25,9 @@ namespace :media_files do
         created_by_id: row["created_by_id"],
         updated_by_id: row["updated_by_id"]
       )
-      attachment.update!(record_type: "Asset", record_id: asset.id)
+      # update_columns to skip the touch callback, which would constantize the
+      # old "MediaFile" record_type after that model has been removed.
+      attachment.update_columns(record_type: "Asset", record_id: asset.id)
       migrated += 1
     end
 
