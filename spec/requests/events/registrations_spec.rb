@@ -356,24 +356,13 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(registration_invoice_path(registration.slug, return_to: "payment"))
     end
 
-    it "links the W-9 to its resource page once a payment is on file, returning to payment" do
+    it "links the W-9 to its resource page before any payment, returning to payment" do
       w9 = create(:resource, title: "W-9", kind: "Form")
       BuiltinCallouts.seed(event)
-      payment = create(:payment, type: "CashPayment", amount_cents: event.cost_cents, amount_cents_remaining: nil)
-      create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
 
       get registration_payment_path(registration.slug)
       expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
       expect(response.body).not_to include("/documents/awbw-w9.pdf")
-    end
-
-    it "locks the W-9 (no link) until a payment is on file" do
-      w9 = create(:resource, title: "W-9", kind: "Form")
-      BuiltinCallouts.seed(event)
-
-      get registration_payment_path(registration.slug)
-      expect(response.body).not_to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
-      expect(response.body).to include("Available once your payment is received")
     end
 
     it "shows a locked receipt card until an actual payment settles the balance" do
