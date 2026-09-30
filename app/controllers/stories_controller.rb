@@ -11,6 +11,7 @@ class StoriesController < ApplicationController
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(Story.with_author_credit
                                          .includes(:windows_type, :organization, :workshop,
+                                                   { story_workshops: :workshop },
                                                    :bookmarks, :primary_asset,
                                                    :story_idea, created_by: :person))
       filtered = base_scope.search_by_params(params)
@@ -47,6 +48,9 @@ class StoriesController < ApplicationController
       @story = Story.new
     end
     authorize! @story
+    if params[:workshop_id].present? && @story.story_workshops.empty?
+      @story.story_workshops.build(workshop_id: params[:workshop_id])
+    end
     @story.decorate
     set_form_variables
   end
@@ -154,6 +158,7 @@ class StoriesController < ApplicationController
       @preselected_sector_ids = @story_idea.sector_ids
       @preselected_category_ids = @story_idea.category_ids
     end
+    @story.story_workshops.build if @story.story_workshops.blank?
     @story.build_primary_asset if @story.primary_asset.blank?
     @story.gallery_assets.build
   end
@@ -193,8 +198,12 @@ class StoriesController < ApplicationController
       scope.left_joins(:windows_type)
            .reorder(WindowsType.arel_table[:short_name].public_send(dir))
     when "workshop"
-      scope.left_joins(:workshop)
-           .reorder(Workshop.arel_table[:title].public_send(dir))
+      workshop_title = <<~SQL.squish
+        (SELECT MIN(w.title) FROM stories_workshops sw
+         JOIN workshops w ON w.id = sw.workshop_id
+         WHERE sw.story_id = stories.id)
+      SQL
+      scope.reorder(Arel.sql("#{workshop_title} #{dir == :asc ? 'ASC' : 'DESC'}"))
     when "author"
       scope.order_by_author(direction)
     when "organization"
@@ -209,11 +218,12 @@ class StoriesController < ApplicationController
   def story_params
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
-      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
+      :windows_type_id, :organization_id,
       :author_id, :co_author_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
       :author_credit_preference, :co_author_credit_preference,
       category_ids: [],
       sector_ids: [],
+      story_workshops_attributes: [ :id, :workshop_id, :external_workshop_title, :position, :_destroy ],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
@@ -228,10 +238,18 @@ class StoriesController < ApplicationController
       organization_id: idea.organization.id,
       workshop_id: idea.workshop_id,
       external_workshop_title: idea.external_workshop_title,
+      story_workshops_attributes: story_workshops_attributes_from(idea),
       windows_type_id: idea.windows_type_id,
       youtube_url: idea.youtube_url,
       author_id: idea.created_by&.person_id,
       author_credit_preference: idea.author_credit_preference
     }
+  end
+
+  def story_workshops_attributes_from(idea)
+    rows = []
+    rows << { workshop_id: idea.workshop_id } if idea.workshop_id.present?
+    rows << { external_workshop_title: idea.external_workshop_title } if idea.external_workshop_title.present?
+    rows
   end
 end

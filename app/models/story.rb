@@ -17,7 +17,11 @@ class Story < ApplicationRecord
   belongs_to :author, class_name: "Person", optional: true
   belongs_to :co_author, class_name: "Person", optional: true
   belongs_to :story_idea, optional: true
+  # Kept as a legacy safety copy alongside story_workshops during the multi-step
+  # import; the join is the source of truth for display and editing.
   belongs_to :workshop, optional: true
+  has_many :story_workshops, -> { order(:position) }, inverse_of: :story, dependent: :destroy
+  has_many :workshops, through: :story_workshops
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
@@ -55,6 +59,8 @@ class Story < ApplicationRecord
   validate :co_author_differs_from_author
 
   # Nested attributes
+  accepts_nested_attributes_for :story_workshops, allow_destroy: true,
+    reject_if: ->(attrs) { attrs[:workshop_id].blank? && attrs[:external_workshop_title].blank? }
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }

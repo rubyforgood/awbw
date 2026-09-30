@@ -306,6 +306,32 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
+    describe "GET /new from a workshop page" do
+      it "pre-selects the workshop passed in the workshop_id param" do
+        workshop = create(:workshop, title: "Origin Workshop")
+
+        get new_story_url(workshop_id: workshop.id)
+
+        expect(response).to have_http_status(:ok)
+        selected = Nokogiri::HTML(response.body)
+          .at("select[name='story[story_workshops_attributes][0][workshop_id]'] option[selected]")
+        expect(selected&.[]("value")).to eq(workshop.id.to_s)
+      end
+    end
+
+    describe "GET /new promoting from a story idea" do
+      it "copies the idea's workshop and external title into the new story form" do
+        workshop = create(:workshop, title: "Promoted Workshop")
+        idea = create(:story_idea, workshop: workshop, external_workshop_title: "Unlisted Session")
+
+        get new_story_url(story_idea_id: idea.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Promoted Workshop")
+        expect(response.body).to include("Unlisted Session")
+      end
+    end
+
     describe "comments and communications on the edit page" do
       it "renders the combined comments and communications section" do
         get edit_story_url(published_story)

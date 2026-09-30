@@ -17,6 +17,8 @@ RSpec.describe Workshop do
     it { should have_many(:workshop_logs).dependent(:restrict_with_error) }
     it { should have_many(:bookmarks).dependent(:destroy) } # As bookmarkable
     it { should have_many(:workshop_variations).dependent(:restrict_with_error) }
+    it { should have_many(:story_workshops).dependent(:destroy) }
+    it { should have_many(:stories).through(:story_workshops) }
     it { should have_many(:categorizable_items).dependent(:destroy) } # As categorizable
     it { should have_many(:categories).through(:categorizable_items) }
     it { should have_many(:category_types).through(:categories) }

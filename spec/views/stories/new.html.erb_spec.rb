@@ -10,6 +10,7 @@ RSpec.describe "stories/new", type: :view do
     assign(:sectors, [])
     assign(:categories_grouped, [])
     assign(:story_ideas, [])
+    assign(:workshops, [])
     allow(view).to receive(:current_user).and_return(user)
     allow(view).to receive(:allowed_to?).and_return(false)
   end
@@ -22,7 +23,6 @@ RSpec.describe "stories/new", type: :view do
     assert_select "form[action=?][method=?]", stories_path, "post" do
       assert_select "select[name=?]", "story[windows_type_id]"
       assert_select "select[name=?]", "story[organization_id]"
-      assert_select "select[name=?]", "story[workshop_id]"
       assert_select "input[name=?][type=?]", "story[rhino_body]", "hidden"
       assert_select "textarea[name=?]", "story[youtube_url]"
       assert_select "select[name=?]", "story[author_id]"
@@ -43,10 +43,10 @@ RSpec.describe "stories/new", type: :view do
       Story.new(
         rhino_body: story_idea.body,
         organization_id: story_idea.organization_id,
-        workshop_id: story_idea.workshop_id,
         windows_type_id: story_idea.windows_type_id,
         youtube_url: story_idea.youtube_url,
-        story_idea_id: story_idea.id
+        story_idea_id: story_idea.id,
+        story_workshops_attributes: [ { workshop_id: story_idea.workshop_id } ]
       )
     end
 
@@ -55,6 +55,7 @@ RSpec.describe "stories/new", type: :view do
       assign(:story_idea, story_idea)
       assign(:story_ideas, StoryIdea.where(id: story_idea.id))
       assign(:windows_types, WindowsType.where(id: story_idea.windows_type_id))
+      assign(:workshops, Workshop.where(id: story_idea.workshop_id))
     end
 
     it "pre-fills windows_type_id from story idea" do
@@ -71,7 +72,7 @@ RSpec.describe "stories/new", type: :view do
       render
 
       assert_select "form[action=?]", stories_path do
-        assert_select "select[name=?]", "story[workshop_id]" do
+        assert_select "select[name=?]", "story[story_workshops_attributes][0][workshop_id]" do
           assert_select "option[selected][value=?]", story_idea.workshop_id.to_s
         end
       end

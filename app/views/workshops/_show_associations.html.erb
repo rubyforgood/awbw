@@ -96,4 +96,27 @@
       </section>
     </div>
   <% end %>
+  <% if @workshop_stories.any? %>
+    <div id="workshop-stories" class="mb-3 flex-1 rounded-lg bg-white p-6 shadow-md">
+      <section id="workshopStories">
+        <div class="stories-header mb-1 flex items-start justify-between">
+          <div class="pr-6">
+            <h2 class="mb-2 text-lg font-semibold">Stories that use this workshop</h2>
+          </div>
+          <% if allowed_to?(:new?, Story) && @workshop.persisted? %>
+            <%= link_to "New story",
+                        new_story_path(workshop_id: @workshop.id, windows_type_id: @workshop.windows_type_id),
+                        data: { turbo_frame: "_top" },
+                        class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
+          <% end %>
+        </div>
+        <hr class="mb-4 border-gray-300">
+        <div class="stories-list grid grid-cols-1 gap-4">
+          <% @workshop_stories.each do |story| %>
+            <%= render "stories/story_card", story: story.decorate %>
+          <% end %>
+        </div>
+      </section>
+    </div>
+  <% end %>
 </div>

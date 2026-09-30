@@ -52,6 +52,38 @@ RSpec.describe "/workshops", type: :request do
     end
   end
 
+  # --- STORIES THAT USE THIS WORKSHOP ----------------------------------------
+  describe "GET /show stories section" do
+    let(:user) { create(:user) }
+    let(:workshop) { create(:workshop, published: true) }
+    let(:frame_headers) { { "Turbo-Frame" => "show_lazy" } }
+
+    before { sign_in user }
+
+    it "lists published stories linked to the workshop and omits unrelated ones" do
+      linked = create(:story, :published, workshop: workshop, title: "Linked story")
+      unrelated = create(:story, :published, title: "Unrelated story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("show_lazy")
+      expect(response.body).to include("Stories that use this workshop")
+      expect(response.body).to include(linked.title)
+      expect(response.body).not_to include(unrelated.title)
+    end
+
+    it "renders without error for a linked story missing its image and organization" do
+      create(:story, :published, workshop: workshop, organization: nil, title: "Imageless story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("show_lazy")
+      expect(response.body).to include("Imageless story")
+    end
+  end
+
   # --- SECTOR FILTER LABELS --------------------------------------------------
   describe "sector filter dropdown labels" do
     let(:admin) { create(:user, :admin) }

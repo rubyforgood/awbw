@@ -30,9 +30,9 @@
           <% if story.respond_to?(:organization_name) && story.organization_name.present? %>
             <span class="font-medium"><%= story.organization_name %></span>
             <% if story.respond_to?(:organization_locality) && story.organization_locality.present? %>, <%= story.organization_locality %><% end %>
-            <% if story.respond_to?(:workshop) && story.workshop&.title.present? %> · <span>Workshop: <%= story.workshop.title %></span><% end %>
-          <% elsif story.respond_to?(:workshop) && story.workshop&.title.present? %>
-            <span>Workshop: <%= story.workshop.title %></span>
+            <% if story.respond_to?(:workshop_title) && story.workshop_title.present? %> · <span>Workshop: <%= story.workshop_title %></span><% end %>
+          <% elsif story.respond_to?(:workshop_title) && story.workshop_title.present? %>
+            <span>Workshop: <%= story.workshop_title %></span>
           <% end %>
         </p>
       <% end %>

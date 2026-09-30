@@ -138,6 +138,9 @@ class WorkshopsController < ApplicationController
     @workshop_variations = authorized_scope(@workshop.workshop_variations)
                              .includes(:windows_type, :created_by, primary_asset: [ :file_attachment ])
                              .order(created_at: :desc)
+    @workshop_stories = authorized_scope(@workshop.stories)
+                          .includes(:windows_type, primary_asset: [ :file_attachment ])
+                          .order(created_at: :desc)
     @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
     @mentioners = authorized_scope_mentions(@workshop.mentioner_records_grouped)
     @mentionees = authorized_scope_mentions(@workshop.mentionee_records_grouped)
@@ -164,7 +167,9 @@ class WorkshopsController < ApplicationController
 
     @sectors = Sector.published.order(:name)
     @age_range_comments = @workshop.persisted? ? @workshop.comments.where("body LIKE ?", "%[AGE_RANGE_DATA]%") : []
+    @stories_for_select = authorized_scope(Story.order(:title))
 
+    @workshop.story_workshops.build if @workshop.story_workshops.blank?
     @workshop.build_primary_asset if @workshop.primary_asset.blank?
     @workshop.gallery_assets.build
   end
@@ -267,6 +272,7 @@ class WorkshopsController < ApplicationController
       workshop_series_children_attributes: [ :id, :workshop_child_id, :workshop_parent_id, :theme_name,
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],
+      story_workshops_attributes: [ :id, :story_id, :external_workshop_title, :position, :_destroy ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
     )
