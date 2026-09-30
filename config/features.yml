@@ -3531,3 +3531,24 @@
     record. One consistent word, and it no longer collides with the app's other
     histories (payment, participation, CE, communications).
   action_path: "/admin/activities/counts"
+
+- name: "Merges keep billing records and block a double-subscription merge"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  pr_number: 2531
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two people now carries their Stripe billing onto the kept person and
+    settles it on one active payment record, and invoices follow the merge instead
+    of stopping it.
+  description: >-
+    Payment history from both people — customers, charges, and subscriptions —
+    moves to the kept person. One payment record stays active (the one carrying a
+    live subscription, so membership autopay keeps working); the redundant one is
+    hidden rather than deleted, so its charge history is still on file. Invoices
+    addressed to either person or organization now move to the kept record; before
+    this they blocked the merge entirely.
+  pro_tips:
+    - "If both people have a live subscription, the merge is blocked on purpose — cancel one in Stripe first, or the kept person would be billed twice. The preview tells you before you commit."
+    - "A subscription that's already canceled and just running out its paid period doesn't block anything."

@@ -45,6 +45,7 @@ module Dedupable
     @attachment_plan = deduper.attachment_plan(@record_to_keep, @record_to_delete)
     @unhandled_references = deduper.unhandled_references(@record_to_delete)
     @merge_notes = Array(config[:merge_notes]&.call(@record_to_keep, @record_to_delete))
+    @merge_blocks = Array(config[:merge_blocks]&.call(@record_to_keep, @record_to_delete))
     @dedupe = build_dedupe_vars(config)
 
     render "dedupes/preview"
@@ -85,6 +86,11 @@ module Dedupable
       tables = unhandled.map { |ref| ref[:table] }.uniq.join(", ")
       return redirect_to url_for(action: :dedupe_index),
         alert: "Can't merge: #{tables} still reference this #{mc.model_name.human.downcase} and the deduper doesn't reassign them. A developer needs to teach ModelDeduper about them before merging."
+    end
+
+    blocks = Array(config[:merge_blocks]&.call(record_to_keep, record_to_delete))
+    if blocks.any?
+      return redirect_to url_for(action: :dedupe_index), alert: "Can't merge: #{blocks.join(' ')}"
     end
 
     keep_param_key = "#{mn}_to_keep"
@@ -150,6 +156,9 @@ module Dedupable
   #                       attachments) so the preview shows them side by side for comparison (optional)
   #   merge_notes:        Lambda(keep, delete) returning an array of informational (non-blocking)
   #                       strings to surface on the preview (e.g. "both people have a login") (optional)
+  #   merge_blocks:       Lambda(keep, delete) returning an array of reasons this particular merge is
+  #                       unsafe (e.g. both people carry an active pay subscription). Any reason disables
+  #                       the preview's merge button and refuses the POST (optional)
   #   record_extras:      Lambda(record) returning extra detail string for index listing (optional)
   #   back_path:          Override the index eyebrow's return path (e.g. when the deduper was
   #                       opened from an event's registrants page, not the model index) (optional)

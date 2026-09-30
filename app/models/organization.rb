@@ -15,6 +15,7 @@ class Organization < ApplicationRecord
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
+  has_many :invoices, as: :invoicee, dependent: :restrict_with_error
   has_many :affiliations, dependent: :restrict_with_error, inverse_of: :organization
   has_many :event_registration_organizations, dependent: :restrict_with_error
   has_many :event_registrations, through: :event_registration_organizations
