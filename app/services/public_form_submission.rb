@@ -30,12 +30,15 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
+      submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
+
       if person
         record_news_subscription(person)
-        PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params)
+        organization = capture_organization(submission)
+        PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params,
+                                                   organizations: [ organization ].compact)
       end
 
-      submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
@@ -110,6 +113,24 @@ class PublicFormSubmission
     Date.iso8601(value.to_s)
   rescue ArgumentError, TypeError
     nil
+  end
+
+  # Link + fill the submitted organization the same way the event registration form
+  # does — matched by exact name, its profile/type/address synced and a job
+  # affiliation created (no facilitator affiliation: that comes from a training,
+  # which a standalone form has none). Skipped on a close-program form, whose
+  # submission ends affiliations at the org rather than creating them
+  # (process_close_program handles that).
+  def capture_organization(submission)
+    return if @form.role == "close_program"
+
+    organization = OrganizationServices::CaptureFromSubmission.call(
+      person: submission.person,
+      form: @form,
+      form_params: @form_params
+    ).organization
+    submission.link_organization!(organization.id) if organization
+    organization
   end
 
   def field_value(identifier)

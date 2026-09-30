@@ -45,6 +45,7 @@ RSpec.describe SmartFormFields do
       sources = %w[
         app/services/event_registration_services/public_registration.rb
         app/services/person_services/capture_from_submission.rb
+        app/services/organization_services/capture_from_submission.rb
         app/services/public_form_submission.rb
       ].map { |path| Rails.root.join(path).read }.join("\n")
       read_identifiers = sources.scan(/field_value\("([a-z0-9_]+)"\)/).flatten.uniq

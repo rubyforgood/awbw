@@ -76,16 +76,19 @@ module EventRegistrationServices
         existing = @event.event_registrations.find_by(registrant: person)
         event_registration = existing || create_event_registration(person)
 
-        organization = find_organization if field_value(ORGANIZATION_NAME_IDENTIFIER).present?
-        if organization
-          profile_changes = sync_organization_profile(organization).changes
-          address_result = create_organization_address(organization)
-          # find_organization only ever finds, so this org already existed and the
-          # registrant just changed it — connect_organization records what, and to
-          # what value, for the admin linking page's persistent note.
-          @organization_autofill = profile_changes + address_result.changes
-          create_affiliation(person, organization, address_result.address, event_registration)
-        end
+        # find_organization only ever finds, so a matched org already existed and the
+        # registrant just changed it — @organization_autofill records what, and to
+        # what value, for connect_organization's admin-linking-page note below.
+        org_result = OrganizationServices::CaptureFromSubmission.call(
+          person: person,
+          form: @registration_form,
+          form_params: @form_params,
+          facilitator_training: @event.facilitator_training,
+          training_date: @event.start_date,
+          event_registration: event_registration
+        )
+        organization = org_result.organization
+        @organization_autofill = org_result.autofill
 
         PersonServices::CaptureFromSubmission.call(
           person: person,
@@ -216,14 +219,6 @@ module EventRegistrationServices
         .first
     end
 
-    def sync_organization_profile(organization)
-      OrganizationServices::SyncProfile.call(
-        organization: organization,
-        website: field_value("organization_website"),
-        organization_type: field_value("organization_type")
-      )
-    end
-
     def record_news_subscription(person)
       return unless communication_consent_given?
 
@@ -239,13 +234,6 @@ module EventRegistrationServices
     # e.g. "2026-06-23 Facilitator Training registration".
     def news_subscription_source
       [ @event.start_date&.to_date&.iso8601, "#{@event.title} registration" ].compact.join(" ")
-    end
-
-    def find_organization
-      name = field_value(ORGANIZATION_NAME_IDENTIFIER)&.strip
-      return nil if name.blank?
-
-      Organization.find_by(name: name)
     end
 
     # Connect only the one organization the registrant submitted on this form —
@@ -264,30 +252,6 @@ module EventRegistrationServices
       link.record_autofill(@organization_autofill.to_a)
       link
     end
-
-    def create_affiliation(person, organization, organization_address = nil, event_registration = nil)
-      AffiliationServices::CreateFromRegistration.call(
-        person: person,
-        organization: organization,
-        job_title: field_value(ORGANIZATION_POSITION_IDENTIFIER),
-        training_date: @event.start_date,
-        organization_address: organization_address,
-        facilitator_training: @event.facilitator_training,
-        event_registration: event_registration
-      )
-    end
-
-    def create_organization_address(organization)
-      OrganizationServices::UpsertAddress.call(
-        organization: organization,
-        street_address: field_value("organization_street"),
-        city: field_value("organization_city"),
-        state: field_value("organization_state"),
-        zip_code: field_value("organization_zip"),
-        country: field_value("organization_country")
-      )
-    end
-
 
     def create_event_registration(person)
       registration = @event.event_registrations.create!(

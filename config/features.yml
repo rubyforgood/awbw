@@ -117,10 +117,11 @@
   pr_number: 2588
   summary: >-
     Contact and profile smart fields (secondary email, phone, mailing address,
-    pronouns, name pronunciation, sectors) now save onto the person from a standalone
-    form — a collab or agreement — the same way they do on an event registration, not
-    just when the form creates a brand-new person but also when it updates someone
-    already on file. The latest answer wins.
+    pronouns, name pronunciation, sectors) — and the registrant's organization
+    (matched by name, with its website, type, and address) — now save from a
+    standalone form, like a collab or agreement, the same way they do on an event
+    registration, not just when the form creates a brand-new person but also when it
+    updates someone already on file. The latest answer wins.
   pro_tips:
     - The changes land on the person's "What this submission changed" audit, so you can
       see exactly what a submission updated.
