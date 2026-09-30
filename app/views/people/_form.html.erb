@@ -31,7 +31,7 @@
             <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
           </summary>
           <%# 2-up on mobile, 4-across on md+. %>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name" %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronunciation, hint: "How to say the name" %><%= f.input :pronouns %></div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name" %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronunciation, hint: "e.g. Oom-BEAR-toh" %><%= f.input :pronouns %></div>
         </details>
 
         <%# Emails and Phones sit parallel (50/50). Each collapses to the value(s)
