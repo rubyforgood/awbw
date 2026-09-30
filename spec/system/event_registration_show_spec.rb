@@ -126,6 +126,21 @@ RSpec.describe "Event registration show page", type: :system do
         href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
     end
 
+    it "hides an attended-gated callout until the registration is marked attended" do
+      gated_callout = create(:registration_ticket_callout, :attended_gated, event: event, title: "Certificate of completion")
+
+      sign_in(user)
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_no_link("Certificate of completion")
+
+      registration.update!(status: "attended")
+      visit registration_ticket_path(registration.slug)
+
+      expect(page).to have_link("Certificate of completion",
+        href: event_registration_ticket_callout_path(event, gated_callout, reg: registration.slug))
+    end
+
     it "shows both payment- and CE-payment-gated callouts on a transferred-in ticket when the source paid" do
       origin_event = create(:event, :published, cost_cents: 10_000, ce_hours_offered: 6, ce_hours_cost_cents: 15_000)
       source = create(:event_registration, event: origin_event, registrant: user.person, status: "transferred_out")
