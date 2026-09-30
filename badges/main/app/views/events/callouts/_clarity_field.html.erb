@@ -10,11 +10,11 @@
   <% next unless resource %>
   <% prefill = submission&.form_answers&.find_by(form_field: nil, question_name_when_answered: field.per_resource_question(resource))&.submitted_answer %>
   <fieldset class="mb-7">
-    <legend class="rich-label mb-1.5 text-sm font-semibold text-gray-700"><%= form_label_html(field.name) %> <strong><%= resource.title %></strong></legend>
+    <legend class="rich-label mb-1.5 text-sm font-semibold text-gray-700"><%= form_label_inline_html(field.name) %> <strong><%= resource.title %></strong></legend>
     <%# Two fan-out questions can share a prompt and differ only by subtitle (the
         clarity pair's "Part One" / "Part Two"), so the subtitle has to show. %>
     <% if field.subtitle.present? %>
-      <p class="rich-label mb-1.5 text-xs text-gray-500"><%= form_label_html(field.subtitle) %></p>
+      <div class="rich-label mb-1.5 text-xs text-gray-500"><%= form_label_html(field.subtitle) %></div>
     <% end %>
     <%# Card-style radios, matching the shared form-field partial so every question
         reads the same. %>

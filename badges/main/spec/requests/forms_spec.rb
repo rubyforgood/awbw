@@ -606,6 +606,27 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("Include your <em>area code</em>")
     end
 
+    it "renders a subtitle's list markup in a div wrapper, never inside a <p> (invalid nesting)" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :group_header, name: "Materials",
+             subtitle: "<ul><li>Bring glue</li></ul>")
+
+      get form_path(form)
+
+      expect(response.body).to include("<li>Bring glue</li>")
+      expect(response.body).not_to match(%r{<p[^>]*rich-label[^>]*>\s*<ul})
+    end
+
+    it "strips block markup from a section-header name, which can't hold it inside the <h3>" do
+      form = create(:form, :standalone)
+      create(:form_field, form: form, answer_type: :group_header, name: "<ul><li>Stripped</li></ul>Contact info")
+
+      get form_path(form)
+
+      expect(response.body).to include("Contact info")
+      expect(response.body).not_to include("<li>Stripped</li>")
+    end
+
     it "renders the form header HTML under the title" do
       form = create(:form, :standalone, header: %(<strong>Welcome</strong> — <a href="https://awbw.org">learn more</a>))
 

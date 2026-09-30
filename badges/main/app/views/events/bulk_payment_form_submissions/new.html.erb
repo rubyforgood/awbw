@@ -90,7 +90,7 @@
             <% if field.group_header? %>
               <div class="pt-7 pb-4 md:col-span-12">
                 <h3 class="rich-label flex items-center gap-2.5 text-lg font-bold text-purple-900">
-                  <span class="<%= form_section_bar_class %>"></span><%= form_label_html(field.name) %>
+                  <span class="<%= form_section_bar_class %>"></span><%= form_label_inline_html(field.name) %>
                 </h3>
               </div>
             <% elsif payer_fields.include?(field.field_identifier) %>
@@ -105,11 +105,11 @@
               <div class="<%= field.grid_span_class %>">
                 <div class="mb-5">
                   <label class="rich-label mb-1.5 block text-sm font-semibold text-gray-700" for="<%= field_id %>">
-                    <%= form_label_html(field.name) %>
+                    <%= form_label_inline_html(field.name) %>
                     <% if field.required %><span class="text-red-500">*</span><% end %>
                   </label>
                   <% if field.subtitle.present? %>
-                    <p class="rich-label mb-1.5 text-xs text-gray-500"><%= form_label_html(field.subtitle) %></p>
+                    <div class="rich-label mb-1.5 text-xs text-gray-500"><%= form_label_html(field.subtitle) %></div>
                   <% end %>
                   <%
                     html_type = case field.field_identifier
@@ -129,7 +129,7 @@
                          <%= "required" if field.required %>
                          <%= raw(extra_attrs.join(" ")) %>>
                   <% if field.hint_text.present? %>
-                    <p class="rich-label mt-1.5 text-xs text-gray-500"><%= form_label_html(field.hint_text) %></p>
+                    <div class="rich-label mt-1.5 text-xs text-gray-500"><%= form_label_html(field.hint_text) %></div>
                   <% end %>
                   <% if field.free_form_text? && field.min_words.to_i.positive? %>
                     <p class="mt-1.5 text-left text-xs text-gray-500">Minimum of <%= field.min_words %> <%= "word".pluralize(field.min_words) %>.</p>
@@ -153,7 +153,7 @@
               <div class="<%= field.grid_span_class %>">
                 <div class="mb-5">
                   <label class="rich-label mb-1.5 block text-sm font-semibold text-gray-700">
-                    <%= form_label_html(field.name) %>
+                    <%= form_label_inline_html(field.name) %>
                     <% if field.required %><span class="text-red-500">*</span><% end %>
                   </label>
                   <div class="mt-1 flex flex-wrap gap-2">
