@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_30_114037) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -236,21 +236,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
     t.index ["owner_type"], name: "index_assets_on_owner_type"
     t.index ["type"], name: "index_assets_on_type"
     t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"
-  end
-
-  create_table "attachments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.integer "created_by_id"
-    t.string "file_content_type"
-    t.string "file_file_name"
-    t.integer "file_file_size"
-    t.datetime "file_updated_at", precision: nil
-    t.integer "owner_id"
-    t.string "owner_type"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "updated_by_id"
-    t.index ["created_by_id"], name: "index_attachments_on_created_by_id"
-    t.index ["updated_by_id"], name: "index_attachments_on_updated_by_id"
   end
 
   create_table "banners", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1252,21 +1237,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
     t.index ["created_by_id"], name: "index_grants_on_created_by_id"
     t.index ["funder_type", "funder_id"], name: "index_grants_on_funder"
     t.index ["updated_by_id"], name: "index_grants_on_updated_by_id"
-  end
-
-  create_table "images", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.string "file_content_type"
-    t.string "file_file_name"
-    t.integer "file_file_size"
-    t.datetime "file_updated_at", precision: nil
-    t.integer "owner_id"
-    t.string "owner_type"
-    t.integer "report_id"
-    t.string "type", default: "Images::GalleryImage", null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.index ["owner_id"], name: "index_images_on_owner_id"
-    t.index ["type"], name: "index_images_on_type"
   end
 
   create_table "invoice_line_items", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2574,8 +2544,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
   add_foreign_key "answer_options", "users", column: "updated_by_id"
   add_foreign_key "assets", "users", column: "created_by_id"
   add_foreign_key "assets", "users", column: "updated_by_id"
-  add_foreign_key "attachments", "users", column: "created_by_id"
-  add_foreign_key "attachments", "users", column: "updated_by_id"
   add_foreign_key "banners", "users", column: "created_by_id"
   add_foreign_key "banners", "users", column: "updated_by_id"
   add_foreign_key "blazer_audits", "blazer_queries", column: "query_id"
