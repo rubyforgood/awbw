@@ -646,4 +646,14 @@ RSpec.describe Notification do
       expect(build(:notification, :incoming).timeline_activity_name).to eq("communication.received")
     end
   end
+
+  describe "#portal_sent?" do
+    it "is true for an autoemail the portal sent" do
+      expect(build(:notification, channel: "autoemail")).to be_portal_sent
+    end
+
+    it "is false for a hand-logged communication" do
+      expect(build(:notification, channel: "phone")).not_to be_portal_sent
+    end
+  end
 end

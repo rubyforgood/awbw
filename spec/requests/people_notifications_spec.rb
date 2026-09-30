@@ -166,4 +166,27 @@ RSpec.describe "Person notifications", type: :request do
       expect(section.css("i.fa-flag.fa-regular")).to be_present
     end
   end
+
+  describe "admin-only locks in the combined section" do
+    def locked_rows
+      Capybara.string(response.body)
+        .all(".nested-fields, [data-paginated-fields-target='item']", visible: :all)
+        .select { |row| row.first(".fa-lock", minimum: 0, visible: :all) }
+    end
+
+    it "locks a comment and a hand-logged communication, but not a portal autoemail" do
+      create(:comment, commentable: person, body: "Internal note", created_by: admin)
+      create(:notification, noticeable: person, recipient_email: person.preferred_email,
+                            channel: "phone", kind: "manual_log", email_subject: "Left a voicemail")
+      create(:notification, noticeable: person, recipient_email: person.preferred_email,
+                            channel: "autoemail", email_subject: "Welcome to the portal")
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("Admin-facing only")
+      texts = locked_rows.map(&:text)
+      expect(texts.join(" ")).to include("Internal note", "Left a voicemail")
+      expect(texts.join(" ")).not_to include("Welcome to the portal")
+    end
+  end
 end

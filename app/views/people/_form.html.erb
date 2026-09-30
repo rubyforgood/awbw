@@ -1,4 +1,7 @@
-<%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
+<%# flex/gap rather than space-y: the leading hidden inputs count as siblings for
+    space-y's selector, so it margined the first visible row down and that margin
+    collapsed out through the form as a gap above the card's first line. %>
+<%= simple_form_for @person, html: { multipart: true, class: "flex flex-col gap-8",
                                           data: { controller: "dirty-form affiliation-dates affiliation-facilitator-warning",
                                                   affiliation_dates_member_since_value: @person.member_since&.strftime("%Y-%m-%d") || "" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
