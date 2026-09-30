@@ -20,7 +20,9 @@ class InvoiceIssuer
   end
 
   def email
-    @organization&.email.presence || ENV.fetch("ORGANIZATION_EMAIL", "info@awbw.org")
+    @organization&.email.presence ||
+      ENV["ORGANIZATION_INVOICE_EMAIL"].presence ||
+      ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
   end
 
   def payable_to_note
@@ -29,11 +31,10 @@ class InvoiceIssuer
 
   private
 
-  # ORGANIZATION_ADDRESS holds the display lines separated by "|" (a comma can't
-  # be the delimiter — the city/state/zip line contains one).
+  # ORGANIZATION_INVOICE_ADDRESS holds the display lines separated by "|" (a comma
+  # can't be the delimiter — the city/state/zip line contains one).
   def env_address_lines
-    ENV.fetch("ORGANIZATION_ADDRESS", "1029 1/2 W 24th St|Los Angeles, CA 90007")
-      .split("|").map(&:strip).reject(&:blank?)
+    ENV["ORGANIZATION_INVOICE_ADDRESS"].to_s.split("|").map(&:strip).reject(&:blank?)
   end
 
   def organization_address_lines

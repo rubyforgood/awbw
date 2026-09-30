@@ -10,15 +10,23 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.name).to eq("Env Org")
     end
 
-    it "reads the email from ORGANIZATION_EMAIL" do
-      allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("ORGANIZATION_EMAIL", anything).and_return("billing@env.org")
+    it "reads the email from ORGANIZATION_INVOICE_EMAIL" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_EMAIL").and_return("billing@env.org")
       expect(issuer.email).to eq("billing@env.org")
     end
 
-    it "splits ORGANIZATION_ADDRESS on '|' into display lines" do
+    it "falls back to REPLY_TO_EMAIL when ORGANIZATION_INVOICE_EMAIL is unset" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_EMAIL").and_return(nil)
       allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("ORGANIZATION_ADDRESS", anything)
+      allow(ENV).to receive(:fetch).with("REPLY_TO_EMAIL", anything).and_return("programs@env.org")
+      expect(issuer.email).to eq("programs@env.org")
+    end
+
+    it "splits ORGANIZATION_INVOICE_ADDRESS on '|' into display lines" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_ADDRESS")
         .and_return("100 Main St|Anytown, CA 90001")
       expect(issuer.address_lines).to eq([ "100 Main St", "Anytown, CA 90001" ])
     end
@@ -62,14 +70,14 @@ RSpec.describe InvoiceIssuer do
     subject(:issuer) { described_class.new(organization) }
 
     it "falls back to ENV for a blank email" do
-      allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("ORGANIZATION_EMAIL", anything).and_return("fallback@env.org")
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_EMAIL").and_return("fallback@env.org")
       expect(issuer.email).to eq("fallback@env.org")
     end
 
     it "falls back to ENV when the organization has no address" do
-      allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("ORGANIZATION_ADDRESS", anything).and_return("1 Fallback Way|Elsewhere, CA 90000")
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ORGANIZATION_INVOICE_ADDRESS").and_return("1 Fallback Way|Elsewhere, CA 90000")
       expect(issuer.address_lines).to eq([ "1 Fallback Way", "Elsewhere, CA 90000" ])
     end
   end
