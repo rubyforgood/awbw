@@ -159,7 +159,7 @@ class FormSubmission < ApplicationRecord
   scope :account_status, ->(value) {
     with_user = User.where.not(person_id: nil).select(:person_id)
     has_access = User.has_access.where.not(person_id: nil).select(:person_id)
-    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    invited = User.invited.where.not(person_id: nil).select(:person_id)
     case value
     when "none" then where.not(person_id: with_user)
     when "has_access" then where(person_id: has_access)
