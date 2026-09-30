@@ -96,11 +96,11 @@ class Person < ApplicationRecord
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
   validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
 
-  # Owner self-service profile editing is staged behind this flag so it can be
-  # trialed in staging before PersonPolicy#edit? flips from admin-only to
-  # admin-or-owner at profile launch. Default off; set OWNER_PROFILE_EDIT=true.
+  # Owner self-service profile editing is on everywhere but production, so it can
+  # be trialed in dev/staging before PersonPolicy#edit? opens to owners in
+  # production at profile launch. Mirrors Membership.enabled?.
   def self.owner_editing_enabled?
-    ENV.fetch("OWNER_PROFILE_EDIT", "false") == "true"
+    !Rails.env.production?
   end
 
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
