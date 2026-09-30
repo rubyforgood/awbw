@@ -1,4 +1,6 @@
-<%= tag.div id: "duplicate_people_warning" do %>
+<%# Always in the DOM as the create turbo-stream's replace target, but hidden
+    when there is nothing to warn about so it takes no row in the form. %>
+<%= tag.div id: "duplicate_people_warning", hidden: @duplicates.blank? do %>
   <% if @duplicates.present? %>
     <div class="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4"
          data-controller="scroll-to-top">
