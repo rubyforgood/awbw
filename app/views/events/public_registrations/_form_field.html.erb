@@ -11,7 +11,7 @@
 <div class="mb-7">
   <div class="flex flex-wrap items-center gap-2 mb-1.5">
     <label class="rich-label text-sm font-semibold text-gray-700" for="<%= param_scope %>_form_fields_<%= field.id %>">
-      <%= form_label_html(label || field.name) %>
+      <%= form_label_inline_html(label || field.name) %>
       <% if required %>
         <span class="text-red-500">*</span>
       <% end %>
@@ -245,7 +245,7 @@
   <% end %>
 
   <% if field.hint_text.present? %>
-    <p class="rich-label mt-1.5 text-xs text-gray-500"><%= form_label_html(field.hint_text) %></p>
+    <div class="rich-label mt-1.5 text-xs text-gray-500"><%= form_label_html(field.hint_text) %></div>
   <% end %>
 
   <% if field.free_form_text? && field.min_words.to_i.positive? %>
