@@ -714,7 +714,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
     end
 
-    it "overwrites the person's sectors with the latest selection, dropping ones not re-submitted" do
+    it "reassigns the primary but keeps other sectors when only a primary is submitted" do
       person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
       person.sectorable_items.create!(sector: additional_sector, is_primary: true)
 
@@ -728,7 +728,25 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       person.reload
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
-      expect(person.sectorable_items.find_by(sector: additional_sector)).to be_nil
+      expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
+    end
+
+    it "overwrites the person's sectors when both a primary and additional set are submitted" do
+      stale = create(:sector, name: "Housing")
+      person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
+      person.sectorable_items.create!(sector: stale, is_primary: false)
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_sector") => primary_sector.id.to_s,
+          field_id("additional_sectors") => [ additional_sector.id.to_s ]
+        )
+      )
+
+      person.reload
+      expect(person.sectors).to contain_exactly(primary_sector, additional_sector)
     end
   end
 
@@ -749,6 +767,42 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       expect(result.success?).to be true
       person = result.event_registration.registrant
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "reassigns the primary but keeps other age groups when only a primary is submitted" do
+      person = create(:person, first_name: "Al", last_name: "Ng", email: "al@example.com")
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
+          field_id("primary_age_group") => [ young.id.to_s ]
+        )
+      )
+
+      person.reload
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "overwrites the person's age groups when both a primary and additional set are submitted" do
+      older = create(:category, :published, category_type: age_type, name: "18+")
+      person = create(:person, first_name: "Al", last_name: "Ng", email: "al@example.com")
+      person.tag_age_groups(primary_ids: [ older.id ], additional_ids: [])
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
+          field_id("primary_age_group") => [ young.id.to_s ],
+          field_id("additional_age_groups") => [ teen.id.to_s ]
+        )
+      )
+
+      person.reload
       expect(person.primary_age_groups).to contain_exactly(young)
       expect(person.additional_age_groups).to contain_exactly(teen)
     end

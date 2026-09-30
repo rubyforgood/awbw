@@ -115,19 +115,23 @@ class PublicFormSubmission
     nil
   end
 
+  # Roles whose whole purpose is a facilitator's standing with the org, so their
+  # submission mints/edits the Facilitator affiliation alongside the job one — even
+  # without a training event. Other standalone forms get the job affiliation only.
+  FACILITATOR_AFFILIATION_ROLES = %w[new_job reinstatement].freeze
+
   # Link + fill the submitted organization the same way the event registration form
-  # does — matched by exact name, its profile/type/address synced and a job
-  # affiliation created (no facilitator affiliation: that comes from a training,
-  # which a standalone form has none). Skipped on a close-program form, whose
-  # submission ends affiliations at the org rather than creating them
-  # (process_close_program handles that).
+  # does — matched by exact name, its profile/type/address synced and the person's
+  # affiliation(s) created. Skipped on a close-program form, whose submission ends
+  # affiliations at the org rather than creating them (process_close_program).
   def capture_organization(submission)
     return if @form.role == "close_program"
 
     organization = OrganizationServices::CaptureFromSubmission.call(
       person: submission.person,
       form: @form,
-      form_params: @form_params
+      form_params: @form_params,
+      facilitator_training: @form.role.in?(FACILITATOR_AFFILIATION_ROLES)
     ).organization
     submission.link_organization!(organization.id) if organization
     organization

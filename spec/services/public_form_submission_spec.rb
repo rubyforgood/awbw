@@ -208,10 +208,19 @@ RSpec.describe PublicFormSubmission do
       }.not_to change(Organization, :count)
     end
 
-    it "does not mint a facilitator affiliation (no training on a standalone form)" do
+    it "does not mint a facilitator affiliation on an ordinary standalone form" do
       result = described_class.call(form: form, form_params: org_params)
 
       expect(result.person.affiliations.where(organization: org).pluck(:title)).not_to include("Facilitator")
+    end
+
+    it "mints both a job and a facilitator affiliation on a new-job agreement form" do
+      form.update!(role: "new_job")
+
+      result = described_class.call(form: form, form_params: org_params)
+
+      expect(result.person.affiliations.where(organization: org).pluck(:title))
+        .to contain_exactly("Counselor", "Facilitator")
     end
   end
 
