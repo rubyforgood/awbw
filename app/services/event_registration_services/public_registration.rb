@@ -68,11 +68,7 @@ module EventRegistrationServices
     def call
       ActiveRecord::Base.transaction do
         person = find_or_create_person
-        sync_person_profile(person)
         record_news_subscription(person)
-
-        create_mailing_address(person) if field_value("mailing_city").present?
-        create_phone_contact(person) if field_value("phone").present?
 
         # Resolve the registration before creating affiliations so each one can record
         # which registration created it. Capture `existing` first — the find_by must
@@ -91,7 +87,12 @@ module EventRegistrationServices
           create_affiliation(person, organization, address_result.address, event_registration)
         end
 
-        assign_tags(person, organization)
+        PersonServices::CaptureFromSubmission.call(
+          person: person,
+          form: @registration_form,
+          form_params: @form_params,
+          organizations: [ organization ].compact
+        )
 
         if existing
           existing.update!(scholarship_requested: true) if @scholarship_requested
@@ -182,15 +183,14 @@ module EventRegistrationServices
       person = find_matching_person(last_name: last_name, email: email)
       return person if person
 
+      # The rest of the profile (pronouns, secondary email, and so on) is filled by
+      # CaptureFromSubmission, which runs for both new and existing people.
       Person.create!(
         first_name: first_name,
         legal_first_name: names[:legal_first_name],
         last_name: last_name,
-        pronouns: field_value("pronouns")&.strip,
         email: email,
-        email_type: email_type,
-        email_2: field_value("secondary_email")&.strip,
-        email_2_type: field_value("secondary_email_type")&.downcase,
+        email_type: email_type
       )
     end
 
@@ -216,31 +216,12 @@ module EventRegistrationServices
         .first
     end
 
-    # Populate the structured columns that the registration form collects but that
-    # we historically stored only as form answers. A non-blank submitted value
-    # overwrites whatever was on file: the latest registration is treated as the
-    # freshest source of truth, and the prior value is preserved in the audit trail
-    # — every model includes AhoyTrackable, whose after_update logs an Ahoy::Event
-    # capturing the change. A blank answer never clobbers existing data.
-    def sync_person_profile(person)
-      apply_value(person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
-      PersonServices::SyncSharingPreferences.call(person: person, form: @registration_form, form_params: @form_params)
-    end
-
     def sync_organization_profile(organization)
       OrganizationServices::SyncProfile.call(
         organization: organization,
         website: field_value("organization_website"),
         organization_type: field_value("organization_type")
       )
-    end
-
-    # Write value onto attribute when a non-blank value was submitted, overwriting
-    # any existing value. A no-op when the value is unchanged (update! records no
-    # change, so no spurious audit event).
-    def apply_value(record, attribute, value)
-      return if value.blank?
-      record.update!(attribute => value.strip)
     end
 
     def record_news_subscription(person)
@@ -258,66 +239,6 @@ module EventRegistrationServices
     # e.g. "2026-06-23 Facilitator Training registration".
     def news_subscription_source
       [ @event.start_date&.to_date&.iso8601, "#{@event.title} registration" ].compact.join(" ")
-    end
-
-    def create_mailing_address(person)
-      new_city = field_value("mailing_city")&.strip
-      new_state = field_value("mailing_state")&.strip
-
-      existing = person.addresses.find_by(
-        "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
-        new_city&.downcase, new_state&.downcase.to_s
-      )
-
-      if existing
-        existing.update!(
-          street_address: field_value("mailing_street"),
-          zip_code: field_value("mailing_zip"),
-          primary: true,
-          inactive: false
-        )
-        apply_value(existing, :country, field_value("mailing_country"))
-        return existing
-      end
-
-      person.addresses.where(primary: true).update_all(primary: false, inactive: true)
-
-      person.addresses.create!(
-        street_address: field_value("mailing_street"),
-        city: new_city,
-        state: new_state,
-        zip_code: field_value("mailing_zip"),
-        country: field_value("mailing_country")&.strip,
-        locality: "Unknown",
-        address_type: field_value("mailing_address_type")&.downcase || "unknown",
-        primary: true
-      )
-    end
-
-    def create_phone_contact(person)
-      phone_value = field_value("phone")&.strip
-      phone_type = field_value("phone_type")&.downcase
-      contact_type = phone_type == "work" ? "work" : "personal"
-
-      existing = person.contact_methods.find_by(kind: :phone, value: phone_value)
-
-      if existing
-        existing.update!(
-          contact_type: contact_type,
-          primary: true,
-          inactive: false
-        )
-        return existing
-      end
-
-      person.contact_methods.where(kind: :phone, primary: true).update_all(primary: false, inactive: true)
-
-      person.contact_methods.create!(
-        kind: :phone,
-        value: phone_value,
-        contact_type: contact_type,
-        primary: true
-      )
     end
 
     def find_organization
@@ -367,34 +288,6 @@ module EventRegistrationServices
       )
     end
 
-    def assign_tags(person, organization)
-      primary_sector_ids = collect_ids_across(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
-      additional_sectors_ids = collect_ids_across(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
-      primary_age_ids = collect_ids_across(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
-      additional_age_ids = collect_ids_across(FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS)
-
-      if primary_sector_ids.any? || additional_sectors_ids.any?
-        SectorTagging.apply(person: person, organizations: [ organization ],
-                            primary_ids: primary_sector_ids, additional_ids: additional_sectors_ids)
-      end
-
-      if primary_age_ids.any? || additional_age_ids.any?
-        person.tag_age_groups(primary_ids: primary_age_ids, additional_ids: additional_age_ids)
-        organization&.tag_age_groups(primary_ids: primary_age_ids, additional_ids: additional_age_ids)
-      end
-    end
-
-    def collect_ids_across(identifiers)
-      identifiers.flat_map { |id| collect_ids_from_checkboxes(id) }
-    end
-
-    def collect_ids_from_checkboxes(identifier)
-      field = @registration_form.form_fields.find_by(field_identifier: identifier)
-      return [] unless field
-
-      value = @form_params[field.id.to_s]
-      Array(value).reject(&:blank?).map(&:to_i)
-    end
 
     def create_event_registration(person)
       registration = @event.event_registrations.create!(
