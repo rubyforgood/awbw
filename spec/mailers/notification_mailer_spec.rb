@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
+  before { stub_email_config }
+
   describe "#bulk_payment_confirmation_fyi" do
     let(:event) { create(:event) }
     let(:form) do
@@ -343,7 +345,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     let(:notification) do
       create(:notification, kind: "story_promoted_fyi", noticeable: story,
              recipient_role: "admin",
-             recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+             recipient_email: EmailConfigHelpers::PROGRAMS_EMAIL)
     end
 
     it "renders without raising" do
@@ -351,7 +353,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
 
     it "goes to the admin mailbox" do
-      expect(described_class.story_promoted_fyi(notification).to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(described_class.story_promoted_fyi(notification).to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it "names the story in the subject" do
@@ -370,9 +372,9 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(mail.subject).to include("AWBW Portal:")
       expect(mail.subject).to include("password reset")
       expect(mail.subject).to include(notification.noticeable.full_name)
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
-      expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
-      expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
+      expect(mail.from).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
+      expect(mail.reply_to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it "renders the body" do

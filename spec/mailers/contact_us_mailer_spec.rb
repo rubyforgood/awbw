@@ -3,6 +3,8 @@ require 'rails_helper'
 RSpec.describe ContactUsMailer do
   describe '#hello' do
     it 'sends to the program email' do
+      stub_email_config
+
       contact_params = {
         subject: 'Test Subject',
         from: 'test@example.com',
@@ -15,12 +17,14 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
       expect(mail.subject).to eq('AWBW Portal: [FYI] New contact form submission from John Doe: Test Subject')
       expect(mail.from).to eq([ 'test@example.com' ])
     end
 
     it 'works when q is nil' do
+      stub_email_config
+
       contact_params = {
         subject: 'Test Subject',
         from: 'test@example.com',
@@ -33,7 +37,7 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it 'renders the email content correctly for non-logged in user' do
