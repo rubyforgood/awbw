@@ -38,7 +38,7 @@
         <% if scholarship.grant&.funder_name.present? %>
           <p class="text-xs text-gray-500">
             Funder:
-            <% if scholarship.grant.funder %>
+            <% if scholarship.grant.funder && scholarship.grant.funder_display_name.blank? %>
               <%= link_to scholarship.grant.funder_name, polymorphic_path(scholarship.grant.funder),
                           class: "font-medium text-gray-700 hover:underline" %>
             <% else %>

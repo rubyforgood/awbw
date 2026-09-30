@@ -37,6 +37,17 @@
     payment is made — so payers who need it to set AWBW up as a vendor can grab it
     before they cut a check.
 
+- name: "Funder display name on grants"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-09-30
+  summary: >-
+    Grants now have an optional "Funder display name" — set it to how the funder
+    should read on scholarship tickets (e.g. a foundation or family fund) instead
+    of one named individual. The linked funder still tracks the real contact; the
+    display name is just the public label.
+  action_path: "/grants"
+
 - name: "Over-allocated payments flagged in red"
   area: payments
   display_status: admin_facing
