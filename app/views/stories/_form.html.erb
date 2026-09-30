@@ -75,6 +75,13 @@
     <p class="mb-3 text-sm text-gray-500">
       Link each workshop in the curriculum, or type a name for one that isn't listed.
     </p>
+    <% legacy_workshop = f.object.persisted? ? f.object.decorate.legacy_workshop_reference : nil %>
+    <% if legacy_workshop.present? %>
+      <div class="mb-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
+        <span class="block text-xs font-medium text-gray-500">Previously linked (read-only)</span>
+        <span class="text-sm text-gray-800"><%= legacy_workshop %></span>
+      </div>
+    <% end %>
     <div id="story-workshops-fields">
       <%= f.fields_for :story_workshops do |story_workshop| %>
         <%= render "story_workshop_fields", f: story_workshop %>

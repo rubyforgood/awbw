@@ -26,6 +26,12 @@ class StoryDecorator < ApplicationDecorator
     [ workshop, external_workshop_title.presence ].compact.size
   end
 
+  # Read-only display of the legacy single-workshop columns kept as a safety net
+  # during the join-table migration; the form surfaces it so nothing silently hides.
+  def legacy_workshop_reference
+    direct_workshop_title
+  end
+
   private
 
   def direct_workshop_title

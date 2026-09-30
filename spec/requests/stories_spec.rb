@@ -332,6 +332,26 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
+    describe "legacy workshop on the edit page" do
+      it "surfaces the legacy direct workshop read-only when present" do
+        legacy_workshop = create(:workshop, title: "Legacy Direct Workshop")
+        story = create(:story, :published, workshop: legacy_workshop)
+
+        get edit_story_url(story)
+
+        expect(response.body).to include("Previously linked (read-only)")
+        expect(response.body).to include("Legacy Direct Workshop")
+      end
+
+      it "omits the read-only legacy block when there is no direct workshop data" do
+        story = create(:story, :published, workshop: nil, external_workshop_title: nil)
+
+        get edit_story_url(story)
+
+        expect(response.body).not_to include("Previously linked (read-only)")
+      end
+    end
+
     describe "comments and communications on the edit page" do
       it "renders the combined comments and communications section" do
         get edit_story_url(published_story)
