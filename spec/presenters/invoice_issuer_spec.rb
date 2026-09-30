@@ -31,6 +31,12 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.address_lines).to eq([ "100 Main St", "Anytown, CA 90001" ])
     end
 
+    it "degrades to the built-in address lines when ORGANIZATION_ADDRESS is unset" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ORGANIZATION_ADDRESS").and_return(nil)
+      expect(issuer.address_lines).to eq([ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ])
+    end
+
     it "builds the payable-to note from the resolved name" do
       allow(ENV).to receive(:fetch).and_call_original
       allow(ENV).to receive(:fetch).with("ORGANIZATION_NAME", anything).and_return("Env Org")
@@ -83,9 +89,12 @@ RSpec.describe InvoiceIssuer do
   end
 
   describe ".current" do
+    # Asserts on email, not name: the ENV name fallback is the same string the AWBW
+    # record is found by, so a name assertion passes even without the record.
     it "reads from the AWBW organization" do
-      awbw = create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
-      expect(described_class.current.name).to eq(awbw.name)
+      create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"),
+                            email: "awbw-record@test.org")
+      expect(described_class.current.email).to eq("awbw-record@test.org")
     end
   end
 end
