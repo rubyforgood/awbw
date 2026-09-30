@@ -722,6 +722,12 @@
         Only admins reach the profile, so the section skips the blue admin-only wash
         and renders on a plain white card. %>
     <%= render "shared/comments_and_communications", f: f, view_all_person: @person %>
+
+    <%# Read-only, but it sits with the rest of the record rather than stranded
+        below the save button — same as the topic subscriptions section above. %>
+    <% if allowed_to?(:index?, MembershipInvoice) %>
+      <%= render "people/membership", person: @person, membership: @membership %>
+    <% end %>
   <% end %>
 
   <div class="action-buttons mt-8 flex justify-center gap-3">

@@ -456,6 +456,9 @@ class PeopleController < ApplicationController
 
   def set_form_variables
     set_user
+    # Also needed on the update failure re-render, which reaches the form without
+    # going through #edit.
+    @membership ||= membership_for(@person) if @person.persisted?
     # @person.build_user if @person.user.blank? # Build a fresh one if missing
     if @person.persisted? && @person.errors.empty?
       affiliations = @person.affiliations
