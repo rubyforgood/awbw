@@ -18,7 +18,7 @@
   <% end %>
 
   <div class="flex flex-col items-start gap-8 md:flex-row">
-    <div class="w-full md:w-5/6">
+    <div class="w-full md:flex-1 md:min-w-0">
       <div class="space-y-6">
 <%# Name fields collapse to the person's name — they rarely change after the
             first save. Open on a new person or when there are errors. %>
@@ -30,8 +30,8 @@
             <span class="text-sm text-gray-500"><%= display_name || "New person" %><% if f.object.pronouns.present? %> (<%= f.object.pronouns %>)<% end %></span>
             <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
           </summary>
-          <%# 2-up on mobile, 4-across on md+. %>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name" %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronunciation, hint: "e.g. Oom-BEAR-toh" %><%= f.input :pronouns %></div>
+          <%# 2-up on mobile, all five on one row on md+. %>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-2"><%= f.input :first_name, input_html: { value: f.object.first_name || @user&.first_name } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name" %><%= f.input :last_name, input_html: { value: f.object.last_name || @user&.last_name } %><%= f.input :pronunciation, hint: "e.g. Oom-BEAR-toh" %><%= f.input :pronouns %></div>
         </details>
 
         <%# Emails and Phones sit parallel (50/50). Each collapses to the value(s)
@@ -162,7 +162,7 @@
     </div>
 
     <!-- Avatar -->
-<div class="w-full md:w-1/4 flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
+<div class="w-full md:w-auto md:shrink-0 flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div>
   </div>
 
   <!-- Sectors + Age ranges (split width; both wrap their chips) -->
