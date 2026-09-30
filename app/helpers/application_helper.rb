@@ -48,6 +48,13 @@ module ApplicationHelper
   FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font details summary].freeze
   FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face open].freeze
 
+  # Phrasing-only subset for a field/section *name*, which renders inside a
+  # <label>, <legend>, heading, <span>, or <strong> — elements whose content
+  # model forbids block tags. A <ul>/<ol>/<p>/<h*> there is invalid HTML and the
+  # browser hoists it out, breaking the layout, so those are dropped here; inline
+  # formatting, links, and font styling stay.
+  FORM_LABEL_INLINE_TAGS = %w[br a span strong b em i u font].freeze
+
   # Tint a section-header icon (the rounded square in a card header) with its
   # domain theme colour only when that section actually holds data, falling back
   # to a muted grey otherwise. Lets the registration edit cards signal at a glance
@@ -72,6 +79,12 @@ module ApplicationHelper
   # unsafe properties/values), so admin-authored markup can't inject XSS.
   def form_label_html(text)
     sanitize(text.to_s, tags: FORM_LABEL_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
+  end
+
+  # Like form_label_html but for a name rendered in a phrasing-only context (a
+  # <label>, <legend>, heading, <span>, or <strong>) where block tags are invalid.
+  def form_label_inline_html(text)
+    sanitize(text.to_s, tags: FORM_LABEL_INLINE_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
   end
 
   # Render an admin-authored custom message included in a reminder email with the

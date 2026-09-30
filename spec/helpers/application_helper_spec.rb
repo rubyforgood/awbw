@@ -306,6 +306,28 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#form_label_inline_html" do
+    it "preserves inline formatting and link tags" do
+      input = %(Visit <a href="https://example.com">our site</a><br>line two <strong>bold</strong>)
+      expect(helper.form_label_inline_html(input)).to eq(input)
+    end
+
+    it "strips block tags but keeps their text" do
+      expect(helper.form_label_inline_html("<ul><li>one</li><li>two</li></ul>")).to eq("onetwo")
+      expect(helper.form_label_inline_html("<h2>Section</h2>")).to eq("Section")
+      expect(helper.form_label_inline_html("<p>para</p>")).to eq("para")
+    end
+
+    it "keeps font styling and scrubs dangerous schemes" do
+      expect(helper.form_label_inline_html(%(<font size="5">x</font>))).to eq(%(<font size="5">x</font>))
+      expect(helper.form_label_inline_html(%(<a href="javascript:alert(1)">x</a>))).not_to include("javascript:")
+    end
+
+    it "returns an html_safe string" do
+      expect(helper.form_label_inline_html("<br>")).to be_html_safe
+    end
+  end
+
   describe "#form_header_html" do
     it "fills the {{event_month_year}} token from the event's start date" do
       form = build(:form, header: "Register for our {{event_month_year}} training.")
