@@ -69,20 +69,16 @@ class TaggingSearchService
                 empty_page(number_of_items_per_page)
               end,
 
-      # Organizations surface here only for viewers who may see the Organizations
-      # index (admins, or signed-in users outside production); otherwise the
-      # group is empty so no org card dead-ends at "not authorized".
-      organizations: if allowed_to?(:index?, Organization)
-                       authorized_scope(Organization.all)
-                         .includes(:sectors)
-                         .sector_names_all(sector_names_all)
-                         .category_names_all(category_names_all)
-                         .order(:name)
-                         .paginate(page: pages[:organizations] || 1, per_page: number_of_items_per_page)
-                         .decorate
-                     else
-                       empty_page(number_of_items_per_page)
-                     end,
+      # OrganizationPolicy's scope already resolves to none for viewers who can't
+      # see orgs (published-only for the signed-in preview, all for admins), so
+      # authorized_scope alone keeps cards that would dead-end out of the results.
+      organizations: authorized_scope(Organization.all)
+                  .includes(:sectors)
+                  .sector_names_all(sector_names_all)
+                  .category_names_all(category_names_all)
+                  .order(:name)
+                  .paginate(page: pages[:organizations] || 1, per_page: number_of_items_per_page)
+                  .decorate,
 
       quotes: authorized_scope(Quote.all)
                 .includes(:sectors, :primary_asset, :gallery_assets)
