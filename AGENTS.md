@@ -61,7 +61,7 @@ This codebase (Rails 8.1)
 | `app/views/` | ERB templates | ~824 files |
 | `app/decorators/` | Draper decorators for view logic | ~50 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
-| `app/presenters/` | Presentation objects | 6 files |
+| `app/presenters/` | Presentation objects | 8 files |
 | `app/helpers/` | View helpers | ~47 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
@@ -227,6 +227,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `RegistrantAttendanceSheet` — The registrant-facing counterpart to `EventAttendanceReport`: one registrant's training days, their decorated sessions on each, day/overall totals, and the state the CE callout's sign-in/out controls read (`signed_in?`, `open_entry`, `forgotten_entry`, `window_open?`). Built once per registration and rendered once per paid `ContinuingEducationRegistration` — the times are shared across licences (one person, one room, one set of hours), only the sheet's licence header differs
 - `EventAttendanceEntriesUpdate` — Applies a batch of submitted sign-in/out rows to one `EventRegistration`'s `event_attendance_time_entries` (add/correct/remove through nested attributes) and stamps `created_by`/`updated_by` with the editing admin — `editor: nil` for the registrant's own edits, which stay unattributed. Shared by the CE edit form (`ContinuingEducationRegistrationsController#update`, datetime rows across every day), the attendance report's inline per-day editor (`EventRegistrationsController#update_attendance`) and the registrant's own per-day editor (`Events::CalloutsController#update_ce_attendance`)
 - `AttendanceDayRows` — Parses one training day's submitted `attendance[entries][i][in|out|id|_destroy]` rows into attendance-entry attributes, binding each clock time to that day. Shared by the admin report's per-day editor and the registrant's own editor on the CE callout (both render `events/_attendance_day_form`); `.date_from` resolves the day param, nil when unparseable
+- `AppMailbox` — The app's contact mailboxes, read from ENV (`INFO_EMAIL`, falling back to `REPLY_TO_EMAIL`). Deliberately not stored on an organization record: these are the app's own identity rather than one organization's attribute, and a sending address is tied to the domain's SPF/DKIM records. Used by the contact page, the story-share footer, and `InvoiceIssuer`
 - `AttendanceTimeFormatter` — Renders an attendance time as a clock time ("9:02 AM") and a minutes count as "6h 51m", so the report, callout, decorator, and flash notices all read the same. `EventAttendanceHelper` is the view-side front door; decorators and other callers without a dependable view context call it directly (same split as `MoneyFormatter`/`dollars_from_cents`)
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
 - `WorkshopSearchService` — Complex filtering, sorting, pagination with ActionPolicy
@@ -256,6 +257,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
+- `InvoiceIssuer` (presenter) — Single source of truth for the issuing org's invoice/receipt header (name, address, email, tax id, payable-to note), shared by `EventInvoice`, `EventReceipt`, and `InvoicePresenter`. Reads the admin-flagged `Organization.awbw` record for name, tax id, and addresses (via `Address.display_lines_for`), then falls back to `ORGANIZATION_NAME` / `ORGANIZATION_ADDRESS`; the email comes from `AppMailbox.info`. Only the header address carries a built-in default (`DEFAULT_ADDRESS_LINES`), since no deployment sets `ORGANIZATION_ADDRESS` yet. `#remittance_address_lines` is empty unless an address is flagged, so check instructions never silently retarget
 
 ### Event Registrations
 

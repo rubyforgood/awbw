@@ -1,0 +1,34 @@
+class AddSystemOrgFlagAndAddressRoles < ActiveRecord::Migration[8.1]
+  # The role flags are nullable and only ever store `true`. MySQL has no partial
+  # indexes, but it allows unlimited NULLs in a unique index, so a plain unique
+  # index on the nullable column enforces "at most one" at the database level.
+  def up
+    add_column :organizations, :system_org, :boolean unless column_exists?(:organizations, :system_org)
+    add_column :organizations, :tax_id, :string unless column_exists?(:organizations, :tax_id)
+    add_index :organizations, :system_org, unique: true unless index_exists?(:organizations, :system_org)
+
+    add_column :addresses, :invoice_address, :boolean unless column_exists?(:addresses, :invoice_address)
+    add_column :addresses, :remittance_address, :boolean unless column_exists?(:addresses, :remittance_address)
+
+    unless index_exists?(:addresses, [ :addressable_type, :addressable_id, :invoice_address ])
+      add_index :addresses, [ :addressable_type, :addressable_id, :invoice_address ],
+                unique: true, name: "index_addresses_on_addressable_and_invoice_role"
+    end
+
+    unless index_exists?(:addresses, [ :addressable_type, :addressable_id, :remittance_address ])
+      add_index :addresses, [ :addressable_type, :addressable_id, :remittance_address ],
+                unique: true, name: "index_addresses_on_addressable_and_remittance_role"
+    end
+  end
+
+  def down
+    remove_index :addresses, name: "index_addresses_on_addressable_and_remittance_role" if index_exists?(:addresses, [ :addressable_type, :addressable_id, :remittance_address ])
+    remove_index :addresses, name: "index_addresses_on_addressable_and_invoice_role" if index_exists?(:addresses, [ :addressable_type, :addressable_id, :invoice_address ])
+    remove_column :addresses, :remittance_address, if_exists: true
+    remove_column :addresses, :invoice_address, if_exists: true
+
+    remove_index :organizations, :system_org if index_exists?(:organizations, :system_org)
+    remove_column :organizations, :tax_id, if_exists: true
+    remove_column :organizations, :system_org, if_exists: true
+  end
+end

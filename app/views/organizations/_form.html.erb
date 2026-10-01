@@ -194,6 +194,15 @@
         <%= f.input :high_profile,
                     label: "High profile",
                     hint: "Shows a #{high_profile_gem} next to the org on dashboards and reports".html_safe %>
+        <%= f.input :tax_id,
+                    label: "Tax ID (EIN)",
+                    hint: "Shown in the site footer",
+                    input_html: {
+                      class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    } %>
+        <%= f.input :system_org,
+                    label: "This organization runs the portal",
+                    hint: "Supplies the invoice and receipt header, and marks grants it funds as subsidy rather than external funding. Only one organization can hold this." %>
       </div>
     <% end %>
 

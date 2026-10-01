@@ -135,10 +135,13 @@ RSpec.describe "ContactUs", type: :request do
 
   describe "portal variant" do
     it "renders portal contact info and chrome when accessed from the story share" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return("hello@example.test")
+
       get contact_us_path(from: "story_share")
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("info@awbw.org")
+      expect(response.body).to include("hello@example.test")
       expect(response.body).to include("1029 1/2 W 24th Street")
       # Rendered inside the story_shares layout (the get-involved band)
       expect(response.body).to include("There's a place for you at AWBW")

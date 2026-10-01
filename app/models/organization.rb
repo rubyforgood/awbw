@@ -56,11 +56,18 @@ class Organization < ApplicationRecord
   ORGANIZATION_TYPE_OTHER = "Other"
   ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
 
-  # The organization that runs this app. A grant it self-funds counts as subsidy
-  # (unfunded), not external funding, in reports. Not memoized: the record can be
-  # created mid-process (seeds, tests).
+  # The organization that runs this app, flagged by an admin. A grant it self-funds
+  # counts as subsidy (unfunded), not external funding, in reports. Not memoized:
+  # the record can be created mid-process (seeds, tests). The name match is the
+  # fallback for deployments where nobody has ticked the box yet.
+  # One query, not a flag lookup then a name lookup: this runs inside query-count
+  # budgets (EventRevenueFigures, EventScholarshipFigures). Ordering by
+  # `system_org IS NULL` puts the flagged row ahead of a name match.
   def self.awbw
-    find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
+    where(system_org: true)
+      .or(where(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds")))
+      .order(Arel.sql("system_org IS NULL"))
+      .first
   end
 
   # Validations
@@ -71,10 +78,17 @@ class Organization < ApplicationRecord
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
   validates :organization_type_other, length: { maximum: 255 }
+  validates :tax_id, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
   validate :parent_is_not_self_or_descendant, if: :parent_id_changed?
+
+  # system_org stores true or NULL, never false: the unique index enforces a single
+  # flagged row, and an unchecked box writing false would collide with every other
+  # unflagged organization.
+  before_save :normalize_system_org
+  before_save :demote_previous_system_org, if: -> { system_org && will_save_change_to_system_org? }
 
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
@@ -403,5 +417,16 @@ class Organization < ApplicationRecord
     sectorable_items
       .group_by(&:sector_id)
       .each_value { |dupes| dupes.drop(1).each(&:destroy) }
+  end
+
+  def normalize_system_org
+    self.system_org = nil unless system_org
+  end
+
+  # update_all so the demotion skips validations and callbacks on a record the admin
+  # isn't editing, and lands before this row's insert trips the unique index.
+  def demote_previous_system_org
+    Organization.where(system_org: true).where.not(id: id)
+                .update_all(system_org: nil, updated_at: Time.current)
   end
 end

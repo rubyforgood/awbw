@@ -4,9 +4,6 @@
 # that always reconciles to $0 due — a receipt is only generated once the
 # registration is paid in full (see EventRegistration#receipt_available?).
 class EventReceipt
-  ISSUER_NAME = "A Window Between Worlds".freeze
-  ISSUER_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  ISSUER_EMAIL = "info@awbw.org".freeze
   THANK_YOU_NOTE = "Payment received in full — thank you. Please retain this receipt for your records.".freeze
 
   LineItem = Struct.new(:date, :description, :quantity, :unit_price_cents, keyword_init: true) do
@@ -42,7 +39,7 @@ class EventReceipt
       date: (allocations.last&.created_at || registration.created_at).to_date,
       client_id: organization&.id || registrant.id,
       bill_to_name: organization&.name.presence || registrant.full_name,
-      bill_to_address_lines: address_lines_for(addressable),
+      bill_to_address_lines: Address.display_lines_for(addressable),
       bill_to_email: organization&.email.presence || registrant.preferred_email,
       attention: registrant.full_name,
       line_items: [
@@ -94,21 +91,9 @@ class EventReceipt
     balance_cents.to_i.zero?
   end
 
-  def issuer_name = ISSUER_NAME
-  def issuer_address_lines = ISSUER_ADDRESS_LINES
-  def issuer_email = ISSUER_EMAIL
+  def issuer = @issuer ||= InvoiceIssuer.current
+  def issuer_name = issuer.name
+  def issuer_address_lines = issuer.address_lines
+  def issuer_email = issuer.email
   def thank_you_note = THANK_YOU_NOTE
-
-  def self.address_lines_for(addressable)
-    return [] unless addressable.respond_to?(:addresses)
-
-    address = addressable.addresses.active.first
-    return [] unless address
-
-    city_line = [ address.city.presence,
-                  [ address.state.presence, address.zip_code.presence ].compact.join(" ").presence ]
-      .compact.join(", ")
-    [ address.street_address.presence, city_line.presence ].compact
-  end
-  private_class_method :address_lines_for
 end
