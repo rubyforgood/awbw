@@ -38,6 +38,16 @@
     page cards now name their author(s).
   action_path: "/stories"
 
+- name: "Download a CSV template for the stories import"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-01
+  action_path: "/stories/import/new"
+  summary: >-
+    The stories import page now offers a downloadable CSV template — a header-only
+    file listing every column the import reads, so you can see the expected format
+    before uploading.
+
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
 - name: "W-9 available before paying"
