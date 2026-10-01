@@ -226,8 +226,9 @@ module ApplicationHelper
   end
 
   # Registration fee as plain text ("$1,500" or "Free"), or nil when no cost is set.
-  def event_fee_label(event)
+  def event_fee_label(event, discount_cents: 0)
     return unless event && event.cost_cents.present?
+    return dollars_from_cents([ event.cost_cents - discount_cents.to_i, 0 ].max) if discount_cents.to_i.positive?
     event.cost_cents.zero? ? "Free" : dollars_from_cents(event.cost_cents)
   end
 
