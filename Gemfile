@@ -78,7 +78,7 @@ end
 group :development, :test do
   gem "better_errors"
   gem "binding_of_caller"
-  gem "brakeman", "~> 8.0.1", require: false
+  gem "brakeman", "~> 8.1", require: false
   gem "bundler-audit", require: false
   gem "capybara", "~> 3.36"
   gem "dotenv-rails"
