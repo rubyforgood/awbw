@@ -19,7 +19,6 @@ class Report < ApplicationRecord
   has_one_attached :image # old paperclip -- TODO convert these to MainImage records
   has_one_attached :form_file # old paperclip -- TODO convert these to GalleryImage records
   # Asset associations
-  has_many :media_files, dependent: :destroy # TODO - convert to GalleryImages
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },
           as: :owner, class_name: "PrimaryAsset", dependent: :destroy
   has_many :gallery_assets, -> { where(type: "GalleryAsset") },
@@ -36,7 +35,6 @@ class Report < ApplicationRecord
   has_many :sectors, through: :sectorable_items, dependent: :destroy
 
   # Nested attributes
-  accepts_nested_attributes_for :media_files, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :all_quotable_item_quotes, allow_destroy: true, reject_if: :all_blank
@@ -115,9 +113,9 @@ class Report < ApplicationRecord
     # self.quotes.build( quotes_params )
     # self.report_form_field_answers.build( log_fields )
 
-    unless image.blank?
-      self.image.destroy if self.image
-      self.image = Image.new(file: image)
+    if image.present?
+      self.image.purge if self.image.attached?
+      self.image.attach(image)
     end
 
     save
@@ -166,7 +164,7 @@ class Report < ApplicationRecord
 
   def set_has_attachment
     self.has_attachment = image.attached? || form_file&.attached? ||
-      media_files.any? { |media_file| media_file.file.attached? }
+      gallery_assets.any? { |asset| asset.file.attached? }
   end
 
   def set_windows_type

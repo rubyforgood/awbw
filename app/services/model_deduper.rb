@@ -114,7 +114,7 @@ class ModelDeduper
 
   # Framework internals that purge with the record and aren't worth surfacing.
   IGNORED_REFERENCE_TABLES = %w[
-    action_text_rich_texts action_text_mentions ckeditor_assets
+    action_text_rich_texts action_text_mentions
     active_storage_blobs active_storage_variant_records ahoy_visits
   ].freeze
 

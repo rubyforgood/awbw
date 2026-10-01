@@ -16,9 +16,9 @@ RSpec.describe Report do
     it { should have_many(:notifications).dependent(:nullify) }
     it { should have_many(:sectorable_items).dependent(:destroy) }
     it { should have_many(:sectors).through(:sectorable_items).dependent(:destroy) }
-    it { should have_many(:media_files).dependent(:destroy) }
+    it { should have_many(:gallery_assets).dependent(:destroy) }
 
-    it { should accept_nested_attributes_for(:media_files) }
+    it { should accept_nested_attributes_for(:gallery_assets) }
     it { should accept_nested_attributes_for(:report_form_field_answers) }
     it { should accept_nested_attributes_for(:quotable_item_quotes) }
   end

@@ -5,7 +5,6 @@ Rails.application.routes.draw do
 
   get "/addresses/options", to: "addresses#options"
 
-  # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
     mount Blazer::Engine, at: "blazer"
   end

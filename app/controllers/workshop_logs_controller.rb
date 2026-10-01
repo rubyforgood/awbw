@@ -157,9 +157,6 @@ class WorkshopLogsController < ApplicationController
       qiq.quotable = @workshop_log
     end
 
-    # @sectors = Sector.published.map{ |si| [ si.id, si.name ] }
-    # @files = MediaFile.where(["workshop_log_id = ?", @workshop_log.id])
-
     @windows_type_id = params[:windows_type_id].presence || @workshop_log.windows_type_id ||
       WindowsType.where(short_name: "Combined").last.id
     form = FormBuilder.where(windows_type_id: @windows_type_id)
