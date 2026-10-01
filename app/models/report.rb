@@ -115,10 +115,7 @@ class Report < ApplicationRecord
     # self.quotes.build( quotes_params )
     # self.report_form_field_answers.build( log_fields )
 
-    unless image.blank?
-      self.image.destroy if self.image
-      self.image = Image.new(file: image)
-    end
+    self.image = image if image.present?
 
     save
   end
