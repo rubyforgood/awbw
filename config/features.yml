@@ -43,6 +43,7 @@
   display_status: admin_facing
   released_on: 2026-10-01
   action_path: "/stories/import/new"
+  pr_number: 2591
   summary: >-
     The stories import page now offers a downloadable CSV template — a header-only
     file listing every column the import reads, so you can see the expected format
