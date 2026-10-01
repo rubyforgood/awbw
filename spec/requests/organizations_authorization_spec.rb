@@ -18,7 +18,13 @@ RSpec.describe "Organizations authorization", type: :request do
     context "as a regular user" do
       before { sign_in regular_user }
 
-      it "redirects to root" do
+      it "renders the preview outside production" do
+        get organizations_path
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "redirects to root in production" do
+        allow(Rails.env).to receive(:production?).and_return(true)
         get organizations_path
         expect(response).to redirect_to(root_path)
       end
@@ -45,9 +51,24 @@ RSpec.describe "Organizations authorization", type: :request do
     context "as a regular user" do
       before { sign_in regular_user }
 
-      it "redirects to root" do
+      it "redirects to root for an unpublished organization" do
         get organization_path(organization)
         expect(response).to redirect_to(root_path)
+      end
+
+      context "with a published organization" do
+        before { create(:affiliation, organization: organization) }
+
+        it "renders the preview outside production" do
+          get organization_path(organization)
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "redirects to root in production" do
+          allow(Rails.env).to receive(:production?).and_return(true)
+          get organization_path(organization)
+          expect(response).to redirect_to(root_path)
+        end
       end
     end
 

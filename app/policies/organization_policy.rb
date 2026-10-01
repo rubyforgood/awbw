@@ -2,11 +2,11 @@ class OrganizationPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
   #
   def index?
-    admin?
+    admin? || profiles_visible_to_users?
   end
 
   def show?
-    admin?
+    admin? || (profiles_visible_to_users? && record.published?)
   end
 
   def show_workshop_logs?
@@ -23,6 +23,7 @@ class OrganizationPolicy < ApplicationPolicy
 
   relation_scope do |relation|
     next relation if admin?
+    next relation.none unless profiles_visible_to_users?
     relation.published
   end
 
@@ -35,6 +36,12 @@ class OrganizationPolicy < ApplicationPolicy
   end
 
   private
+
+  # Signed-in users can preview org profiles everywhere but production, where
+  # the feature stays off until launch. Admins have access regardless.
+  def profiles_visible_to_users?
+    authenticated? && !Rails.env.production?
+  end
 
   def member?
     @member ||= begin
