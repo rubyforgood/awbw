@@ -101,8 +101,8 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     before { allow(workshop).to receive(:author).and_return(person) }
 
-    it "links to the person edit page when the viewer can edit people" do
-      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(true)
+    it "links to the person edit page when the viewer is an admin" do
+      allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(true)
 
       html = helper.credited_author_edit_button(workshop)
       expect(html).to include("<a")
@@ -110,8 +110,8 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(html).to include("Ada Lovelace")
     end
 
-    it "falls back to the profile byline when the viewer cannot edit people" do
-      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(false)
+    it "falls back to the profile byline when the viewer is not an admin" do
+      allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(false)
       allow(person).to receive(:profile_is_searchable).and_return(true)
 
       html = helper.credited_author_edit_button(workshop)
@@ -325,6 +325,22 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     it "returns an html_safe string" do
       expect(helper.form_label_inline_html("<br>")).to be_html_safe
+    end
+  end
+
+  describe "#event_fee_label" do
+    it "returns the formatted cost, Free when zero, and nil when unset" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 150_000))).to eq("$1,500")
+      expect(helper.event_fee_label(build(:event, cost_cents: 0))).to eq("Free")
+      expect(helper.event_fee_label(build(:event, cost_cents: nil))).to be_nil
+    end
+
+    it "shows the net cost when a discount is applied" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 10_000), discount_cents: 2500)).to eq("$75")
+    end
+
+    it "shows $0 when the discount covers the whole cost" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 10_000), discount_cents: 10_000)).to eq("$0")
     end
   end
 

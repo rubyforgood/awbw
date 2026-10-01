@@ -5,6 +5,7 @@ module Events
     before_action :noindex!, only: [ :new, :create, :show ]
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
+    before_action :set_discount, only: [ :new, :create ]
 
     def new
       authorize! :public_registration, to: :new?
@@ -15,7 +16,6 @@ module Events
         return
       end
 
-      @discount_code = params[:discount_code] if @event.discount_code? && params[:discount_code].present?
       @form_fields = visible_form_fields
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
@@ -148,12 +148,20 @@ module Events
 
     private
 
+    def set_discount
+      @discount_code = params[:discount_code] if @event.discount_code? && params[:discount_code].present?
+      @discount_cents = valid_discount_code? ? @event.discount_amount_cents : 0
+    end
+
     def apply_discount_code(registration)
-      code = params[:discount_code].to_s.strip
-      return unless @event.discount_code? && code.casecmp?(@event.discount_code)
+      return unless valid_discount_code?
 
       discount = Discount.create!(amount_cents: @event.discount_amount_cents)
       Allocation.create!(source: discount, allocatable: registration, amount: @event.discount_amount_cents)
+    end
+
+    def valid_discount_code?
+      @event.discount_code? && params[:discount_code].to_s.strip.casecmp?(@event.discount_code)
     end
 
     # A file input can't be repopulated, so a form re-rendered after a validation

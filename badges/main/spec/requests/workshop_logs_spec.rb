@@ -55,7 +55,21 @@ RSpec.describe "/workshop_logs", type: :request do
   end
 
   describe "GET /show" do
-    it "renders the organization as plain text and the creator as a link (non-admin)" do
+    it "links the organization when the viewer can see it and the creator as a link (non-admin, non-production)" do
+      person = create(:person, user: user)
+      create(:affiliation, person: person, organization: organization)
+      workshop_log = create(:workshop_log, created_by: user, organization: organization,
+                            workshop: workshop, windows_type: windows_type, workshop_held_on: 1.day.ago)
+
+      get workshop_log_path(workshop_log)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_link(organization.name, href: organization_path(organization))
+      expect(page).to have_link(user.name, href: person_path(person))
+    end
+
+    it "renders the organization as plain text in production (non-admin)" do
+      allow(Rails.env).to receive(:production?).and_return(true)
       person = create(:person, user: user)
       create(:affiliation, person: person, organization: organization)
       workshop_log = create(:workshop_log, created_by: user, organization: organization,
