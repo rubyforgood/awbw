@@ -20,12 +20,14 @@ module ApplicationHelper
 
   # The credited author as an admin edit-person card, for the workshop log /
   # monthly report / variation idea show pages where an admin wants to jump
-  # straight to editing the person. Falls back to the plain byline for viewers
-  # who can't edit people, and honors the credit preference: an anonymous credit
-  # has no person, so it stays plain text.
+  # straight to editing the person. Falls back to the plain byline (a profile
+  # link for anyone else, including an owner who can edit their own profile), and
+  # honors the credit preference: an anonymous credit has no person, so it stays
+  # plain text. Gated on manage? (admin-only) rather than edit?, which an owner
+  # now also passes.
   def credited_author_edit_button(record)
     person = record.author_credit_person
-    return credited_author_link(record) unless person && allowed_to?(:edit?, person)
+    return credited_author_link(record) unless person && allowed_to?(:manage?, person)
 
     person_edit_button(person,
                        display_name: record.author_credit,

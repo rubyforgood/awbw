@@ -13,6 +13,10 @@ RSpec.describe PersonPolicy, type: :policy do
     described_class.new(record, user: user)
   end
 
+  def in_production
+    allow(Rails.env).to receive(:production?).and_return(true)
+  end
+
   describe "#own_membership?" do
     subject { policy_for(record: owned_person, user: user) }
 
@@ -53,7 +57,12 @@ RSpec.describe PersonPolicy, type: :policy do
     context "with regular user" do
       subject { policy_for(user: regular_user) }
 
-      it { is_expected.not_to be_allowed_to(:index?) }
+      it { is_expected.to be_allowed_to(:index?) }
+
+      it "is denied in production" do
+        in_production
+        is_expected.not_to be_allowed_to(:index?)
+      end
     end
 
     context "with no user" do
@@ -76,13 +85,20 @@ RSpec.describe PersonPolicy, type: :policy do
       it { is_expected.to be_allowed_to(:show?) }
     end
 
-    context "with regular user and searchable person" do
+    context "with regular user and a published person" do
       subject { policy_for(record: searchable_person, user: regular_user) }
 
-      it { is_expected.not_to be_allowed_to(:show?) }
+      before { allow(searchable_person).to receive(:published?).and_return(true) }
+
+      it { is_expected.to be_allowed_to(:show?) }
+
+      it "is denied in production" do
+        in_production
+        is_expected.not_to be_allowed_to(:show?)
+      end
     end
 
-    context "with regular user and non-searchable person" do
+    context "with regular user and an unpublished person" do
       subject { policy_for(record: non_searchable_person, user: regular_user) }
 
       it { is_expected.not_to be_allowed_to(:show?) }
@@ -90,6 +106,8 @@ RSpec.describe PersonPolicy, type: :policy do
 
     context "with no user" do
       subject { policy_for(record: searchable_person, user: nil) }
+
+      before { allow(searchable_person).to receive(:published?).and_return(true) }
 
       it { is_expected.not_to be_allowed_to(:show?) }
     end
@@ -183,13 +201,21 @@ RSpec.describe PersonPolicy, type: :policy do
     context "with owner" do
       subject { policy_for(record: owned_person, user: owner_user) }
 
-      it { is_expected.not_to be_allowed_to(:edit?) }
+      it { is_expected.to be_allowed_to(:edit?) }
+      it { is_expected.to be_allowed_to(:update?) }
+
+      it "is denied in production" do
+        in_production
+        is_expected.not_to be_allowed_to(:edit?)
+        is_expected.not_to be_allowed_to(:update?)
+      end
     end
 
     context "with regular user who is not the owner" do
       subject { policy_for(record: searchable_person, user: regular_user) }
 
       it { is_expected.not_to be_allowed_to(:edit?) }
+      it { is_expected.not_to be_allowed_to(:update?) }
     end
   end
 
