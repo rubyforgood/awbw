@@ -35,6 +35,7 @@ RSpec.describe "Story imports", type: :request do
 
       expect(response).to be_successful
       expect(response.body).to include("Import stories from CSV")
+      expect(response.body).to include(template_story_import_path(format: :csv))
     end
 
     it "redirects non-admins" do
@@ -48,6 +49,28 @@ RSpec.describe "Story imports", type: :request do
       get new_story_import_path
 
       expect(response).to redirect_to(new_user_session_path)
+    end
+  end
+
+  describe "GET /stories/import/template" do
+    it "downloads a header-only CSV template for admins" do
+      sign_in admin
+      get template_story_import_path(format: :csv)
+
+      expect(response).to be_successful
+      expect(response.media_type).to eq("text/csv")
+      expect(response.headers["Content-Disposition"]).to include("stories-import-template.csv")
+
+      rows = CSV.parse(response.body)
+      expect(rows.size).to eq(1)
+      expect(rows.first).to include("Title", "facilitator_name", "Categories", "Image URL")
+    end
+
+    it "is forbidden for non-admins" do
+      sign_in regular_user
+      get template_story_import_path(format: :csv)
+
+      expect(response).to redirect_to(root_path)
     end
   end
 

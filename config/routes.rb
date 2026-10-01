@@ -396,6 +396,7 @@ Rails.application.routes.draw do
   resources :story_ideas
   resource :story_import, only: %i[new create], path: "stories/import",
                           controller: "story_imports" do
+    get :template
     post :confirm
   end
   resources :stories
