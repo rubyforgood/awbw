@@ -127,7 +127,13 @@ RSpec.describe "MembershipInvoices", type: :request do
 
       get membership_invoices_path, headers: { "Turbo-Frame" => "membership_invoices_results" }
 
-      expect(response.body).to include(allocations_path(allocatable_sgid: invoice.to_sgid.to_s))
+      # The page renders in the viewer's zone (ApplicationController#set_time_zone_from_user),
+      # and GlobalID signs a 1-month expiry into the sgid — so sign the expectation in the same
+      # zone or the DST-crossing month can land on a different instant.
+      expected = Time.use_zone(admin.time_zone) do
+        allocations_path(allocatable_sgid: invoice.to_sgid.to_s)
+      end
+      expect(response.body).to include(expected)
     end
   end
 

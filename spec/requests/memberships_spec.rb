@@ -287,7 +287,13 @@ RSpec.describe "Memberships", type: :request do
 
       get person_memberships_path(person)
 
-      expect(response.body).to include(allocations_path(allocatable_sgid: invoice.to_sgid.to_s))
+      # The page renders in the viewer's zone (ApplicationController#set_time_zone_from_user),
+      # and GlobalID signs a 1-month expiry into the sgid — so sign the expectation in the same
+      # zone or the DST-crossing month can land on a different instant.
+      expected = Time.use_zone(admin.time_zone) do
+        allocations_path(allocatable_sgid: invoice.to_sgid.to_s)
+      end
+      expect(response.body).to include(expected)
     end
 
     it "is not a link on the edit-page card, which stays read-only" do
