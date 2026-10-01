@@ -13,6 +13,14 @@
     connected, published story for rows that were public on WordPress. You'll see a
     preview of exactly what will be created before anything is saved.
   </p>
+  <p class="mb-6 text-sm text-gray-600">
+    Not sure of the format?
+    <%= link_to template_story_import_path(format: :csv),
+                class: "#{DomainTheme.text_class_for(:stories)} underline", data: { turbo: false } do %>
+      <i class="fa-solid fa-file-csv"></i> Download the CSV template
+    <% end %>
+    — a header-only file with every column the import reads.
+  </p>
 
   <div class="rounded bg-white p-6">
     <%= form_with url: story_import_path, method: :post, multipart: true do |f| %>

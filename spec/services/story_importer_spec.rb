@@ -38,7 +38,7 @@ RSpec.describe StoryImporter do
       "Title" => "A story of healing",
       "Content" => "<p>Once upon a time.</p>",
       "Status" => "publish",
-      "organization_name" => "A Greater Hope",
+      "organization_name" => "Example Family Services",
       "story_workshop_name" => "Adult Windows Workshop",
       "Tags" => "Adults",
       "Categories" => "Domestic Violence",
@@ -85,12 +85,12 @@ RSpec.describe StoryImporter do
     end
 
     it "creates a Story-only and keeps the name as a comment when the author can't resolve" do
-      import([ base_row("facilitator_name" => "Teena", "facilitator_last_name" => "") ])
+      import([ base_row("facilitator_name" => "Marguerite", "facilitator_last_name" => "") ])
 
       story = Story.sole
       expect(StoryIdea.count).to eq(0)
       expect(story.author).to be_nil
-      expect(story.comments.pluck(:body)).to include(a_string_matching(/Teena/))
+      expect(story.comments.pluck(:body)).to include(a_string_matching(/Marguerite/))
     end
 
     it "updates an existing story's metadata but keeps its body, without duplicating it" do
@@ -103,7 +103,7 @@ RSpec.describe StoryImporter do
       existing.reload
       expect(existing.rhino_body.to_plain_text).to eq("Original body kept.")
       expect(existing.published).to be(true)
-      expect(existing.organization.name).to eq("A Greater Hope")
+      expect(existing.organization.name).to eq("Example Family Services")
       expect(result.stories_updated).to eq(1)
       expect(result.stories_created).to eq(0)
     end
@@ -155,8 +155,8 @@ RSpec.describe StoryImporter do
     end
 
     it "links a story to an existing workshop on an exact title match" do
-      workshop = create(:workshop, title: "Anger Volcano")
-      import([ base_row("story_workshop_name" => "Anger Volcano") ])
+      workshop = create(:workshop, title: "Sample Anger Workshop")
+      import([ base_row("story_workshop_name" => "Sample Anger Workshop") ])
 
       expect(Story.sole.workshop).to eq(workshop)
       expect(Story.sole.workshops).to eq([ workshop ])
@@ -202,7 +202,7 @@ RSpec.describe StoryImporter do
       import([ base_row ])
 
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
-      org = Organization.find_by("LOWER(name) = ?", "a greater hope")
+      org = Organization.find_by("LOWER(name) = ?", "example family services")
       expect(Affiliation.where(person: author, organization: org, title: "Facilitator")).to exist
     end
 
@@ -272,10 +272,10 @@ RSpec.describe StoryImporter do
   end
 
   describe "grant linking" do
-    let!(:grant) { create(:grant, name: "Cathy Salser Legacy Scholarship") }
+    let!(:grant) { create(:grant, name: "Sample Legacy Scholarship") }
 
     it "links the author to the grant through a scholarship" do
-      import([ base_row("Tags" => "Adults|Cathy scholarship") ])
+      import([ base_row("Tags" => "Adults|Noor scholarship") ])
 
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
       expect(Story.sole.author).to eq(author)
@@ -283,8 +283,8 @@ RSpec.describe StoryImporter do
     end
 
     it "warns and skips the link when the author has no last name" do
-      result = import([ base_row("Tags" => "Cathy scholarship",
-                                 "facilitator_name" => "Teena", "facilitator_last_name" => "") ])
+      result = import([ base_row("Tags" => "Noor scholarship",
+                                 "facilitator_name" => "Marguerite", "facilitator_last_name" => "") ])
 
       expect(result.warnings).to include(a_string_matching(/author unresolved/))
       expect(Scholarship.count).to eq(0)

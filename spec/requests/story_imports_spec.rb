@@ -35,6 +35,7 @@ RSpec.describe "Story imports", type: :request do
 
       expect(response).to be_successful
       expect(response.body).to include("Import stories from CSV")
+      expect(response.body).to include(template_story_import_path(format: :csv))
     end
 
     it "redirects non-admins" do
@@ -51,6 +52,28 @@ RSpec.describe "Story imports", type: :request do
     end
   end
 
+  describe "GET /stories/import/template" do
+    it "downloads a header-only CSV template for admins" do
+      sign_in admin
+      get template_story_import_path(format: :csv)
+
+      expect(response).to be_successful
+      expect(response.media_type).to eq("text/csv")
+      expect(response.headers["Content-Disposition"]).to include("stories-import-template.csv")
+
+      rows = CSV.parse(response.body)
+      expect(rows.size).to eq(1)
+      expect(rows.first).to include("Title", "facilitator_name", "Categories", "Image URL")
+    end
+
+    it "is forbidden for non-admins" do
+      sign_in regular_user
+      get template_story_import_path(format: :csv)
+
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
   describe "POST /stories/import (preview)" do
     before { sign_in admin }
 
@@ -64,7 +87,7 @@ RSpec.describe "Story imports", type: :request do
       expect(response.body).to include("Preview import")
       expect(response.body).to include("Connected stories")
       expect(response.body).to include("Row-by-row")
-      expect(response.body).to include("A Step in the Right Direction")
+      expect(response.body).to include("Painting Through the Storm")
     end
 
     it "stashes the file as a blob so it can be confirmed" do
@@ -116,15 +139,15 @@ RSpec.describe "Story imports", type: :request do
     it "tags stories with the sector their WordPress category maps to" do
       post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
 
-      expect(Story.find_by(title: "A Step in the Right Direction").sectors.pluck(:name)).to include("Domestic Violence")
-      expect(Story.find_by(title: "Being Your True Self").sectors.pluck(:name)).to include("LGBTQIA+")
+      expect(Story.find_by(title: "Painting Through the Storm").sectors.pluck(:name)).to include("Domestic Violence")
+      expect(Story.find_by(title: "Finding My Own Voice").sectors.pluck(:name)).to include("LGBTQIA+")
     end
 
     it "keeps a single-name facilitator as a comment on the story" do
       post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
 
-      story = Story.find_by(title: "A Step in the Right Direction")
-      expect(story.comments.pluck(:body)).to include(a_string_matching(/Ashley/))
+      story = Story.find_by(title: "Painting Through the Storm")
+      expect(story.comments.pluck(:body)).to include(a_string_matching(/Robin/))
     end
 
     it "records the importing admin as the creator" do
