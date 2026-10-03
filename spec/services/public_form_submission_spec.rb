@@ -102,6 +102,128 @@ RSpec.describe PublicFormSubmission do
     expect(FormSubmission.last.person).to eq(existing)
   end
 
+  describe "person profile & contact capture (parity with the event registration form)" do
+    let!(:pronouns_field)      { create(:form_field, form: form, name: "Pronouns", field_identifier: "pronouns") }
+    let!(:pronunciation_field) { create(:form_field, form: form, name: "Name pronunciation", field_identifier: "pronunciation") }
+    let!(:nickname_field)      { create(:form_field, form: form, name: "Nickname", field_identifier: "nickname") }
+    let!(:email_type_field)    { create(:form_field, form: form, name: "Email type", field_identifier: "primary_email_type") }
+    let!(:email_2_field)       { create(:form_field, form: form, name: "Secondary email", field_identifier: "secondary_email") }
+    let!(:email_2_type_field)  { create(:form_field, form: form, name: "Secondary email type", field_identifier: "secondary_email_type") }
+    let!(:phone_field)         { create(:form_field, form: form, name: "Phone", field_identifier: "phone") }
+    let!(:phone_type_field)    { create(:form_field, form: form, name: "Phone type", field_identifier: "phone_type") }
+    let!(:street_field)        { create(:form_field, form: form, name: "Street", field_identifier: "mailing_street") }
+    let!(:city_field)          { create(:form_field, form: form, name: "City", field_identifier: "mailing_city") }
+    let!(:state_field)         { create(:form_field, form: form, name: "State", field_identifier: "mailing_state") }
+    let!(:zip_field)           { create(:form_field, form: form, name: "Zip", field_identifier: "mailing_zip") }
+    let!(:racial_field)        { create(:form_field, form: form, name: "Identity", field_identifier: "racial_ethnic_identity") }
+
+    def contact_params(overrides = {})
+      params_for.merge(
+        pronouns_field.id.to_s => "they/them",
+        pronunciation_field.id.to_s => "SAM ree-VEH-ra",
+        email_type_field.id.to_s => "Work",
+        email_2_field.id.to_s => "sam2@example.com",
+        email_2_type_field.id.to_s => "Work",
+        phone_field.id.to_s => "555-1212",
+        phone_type_field.id.to_s => "Work",
+        street_field.id.to_s => "1 Main St",
+        city_field.id.to_s => "Austin",
+        state_field.id.to_s => "TX",
+        zip_field.id.to_s => "78701",
+        racial_field.id.to_s => "Prefer to self-describe"
+      ).merge(overrides)
+    end
+
+    it "captures profile and contact fields onto a newly created person" do
+      person = described_class.call(form: form, form_params: contact_params).person
+
+      expect(person.pronouns).to eq("they/them")
+      expect(person.pronunciation).to eq("SAM ree-VEH-ra")
+      expect(person.email_type).to eq("work")
+      expect(person.email_2).to eq("sam2@example.com")
+      expect(person.email_2_type).to eq("work")
+      expect(person.racial_ethnic_identity).to eq("Prefer to self-describe")
+      expect(person.phone_number).to eq("555-1212")
+
+      address = person.addresses.find_by(primary: true)
+      expect(address.city).to eq("Austin")
+      expect(address.street_address).to eq("1 Main St")
+    end
+
+    it "overwrites the same fields on an existing matched person, but never on a blank answer" do
+      existing = create(:person, first_name: "Sam", last_name: "Rivera", email: "sam@example.com",
+                         pronouns: "she/her", email_2: "old@example.com", racial_ethnic_identity: "Kept")
+
+      described_class.call(form: form, form_params: contact_params(racial_field.id.to_s => ""))
+      existing.reload
+
+      expect(existing.pronouns).to eq("they/them")
+      expect(existing.email_2).to eq("sam2@example.com")
+      expect(existing.phone_number).to eq("555-1212")
+      expect(existing.racial_ethnic_identity).to eq("Kept")
+    end
+
+    it "treats a nickname as the first name and moves the legal name aside" do
+      person = described_class.call(form: form, form_params: contact_params(nickname_field.id.to_s => "Sammy")).person
+
+      expect(person.first_name).to eq("Sammy")
+      expect(person.legal_first_name).to eq("Sam")
+    end
+  end
+
+  describe "organization capture (parity with the event registration form)" do
+    let!(:org) { create(:organization, name: "Helping Hands") }
+    let!(:org_name_field)     { create(:form_field, form: form, name: "Organization", field_identifier: "organization_name") }
+    let!(:org_position_field) { create(:form_field, form: form, name: "Position", field_identifier: "organization_position") }
+    let!(:org_website_field)  { create(:form_field, form: form, name: "Website", field_identifier: "organization_website") }
+    let!(:org_type_field)     { create(:form_field, form: form, name: "Type", field_identifier: "organization_type") }
+    let!(:org_city_field)     { create(:form_field, form: form, name: "Org city", field_identifier: "organization_city") }
+    let!(:org_state_field)    { create(:form_field, form: form, name: "Org state", field_identifier: "organization_state") }
+
+    def org_params(overrides = {})
+      params_for.merge(
+        org_name_field.id.to_s => "Helping Hands",
+        org_position_field.id.to_s => "Counselor",
+        org_website_field.id.to_s => "https://helpinghands.org",
+        org_type_field.id.to_s => "Nonprofit",
+        org_city_field.id.to_s => "Austin",
+        org_state_field.id.to_s => "TX"
+      ).merge(overrides)
+    end
+
+    it "matches the org by name, syncs its profile and address, adds a job affiliation, and links it to the submission" do
+      result = described_class.call(form: form, form_params: org_params)
+      org.reload
+
+      expect(org.website_url).to eq("https://helpinghands.org")
+      expect(org.organization_type).to eq("Nonprofit")
+      expect(org.addresses.find_by(city: "Austin")).to be_present
+      expect(result.person.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Counselor")
+      expect(result.form_submission.reload.linked_organizations).to include(org)
+    end
+
+    it "never creates an organization from an unmatched name — it's left for an admin" do
+      expect {
+        described_class.call(form: form, form_params: org_params(org_name_field.id.to_s => "Ghost Org"))
+      }.not_to change(Organization, :count)
+    end
+
+    it "does not mint a facilitator affiliation on an ordinary standalone form" do
+      result = described_class.call(form: form, form_params: org_params)
+
+      expect(result.person.affiliations.where(organization: org).pluck(:title)).not_to include("Facilitator")
+    end
+
+    it "mints both a job and a facilitator affiliation on a new-job agreement form" do
+      form.update!(role: "new_job")
+
+      result = described_class.call(form: form, form_params: org_params)
+
+      expect(result.person.affiliations.where(organization: org).pluck(:title))
+        .to contain_exactly("Counselor", "Facilitator")
+    end
+  end
+
   it "sends a confirmation to the submitter and an FYI to admin" do
     expect { described_class.call(form: form, form_params: params_for) }
       .to change { Notification.where(kind: "form_submission_confirmation").count }.by(1)

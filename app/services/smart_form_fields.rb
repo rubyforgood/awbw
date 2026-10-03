@@ -35,7 +35,8 @@ class SmartFormFields
         [ "first_name", "First name", "Sets the person's first name. Part of the duplicate-match key. If a nickname is also answered, this becomes the legal first name instead." ],
         [ "last_name", "Last name", "Sets the person's last name. Part of the duplicate-match key — matching is skipped entirely when this is blank." ],
         [ "nickname", "Preferred nickname", "Becomes the person's first name, and the answer to First name moves to legal first name. Also accepted when matching a returning registrant, so someone who registered under their legal name is still recognized." ],
-        [ "pronouns", "Pronouns", "Sets the person's pronouns when the person record is first created." ],
+        [ "pronouns", "Pronouns", "Sets the person's pronouns." ],
+        [ "pronunciation", "Name pronunciation", "Sets the admin-only note on the person's profile for how to say their name." ],
         [ "primary_email", "Email", "Sets the person's email, lowercased. Part of the duplicate-match key." ],
         [ "primary_email_type", "Primary email type", "Sets whether the primary email is a work or personal address." ],
         [ "secondary_email", "Secondary email", "Sets the person's second email address." ],
@@ -108,7 +109,10 @@ class SmartFormFields
       title: "Sector and age group tagging",
       summary: "These answers are record ids, not text: the options come from Sector and Age range " \
                "records rather than from options typed into the form editor. The tags are applied to " \
-               "the registrant and to their linked organization.",
+               "the registrant and to their linked organization. Submitting both a primary and an " \
+               "additional selection overwrites the person's tags with the latest; submitting only a " \
+               "primary reassigns it and leaves their other tags in place. An organization's tags " \
+               "accumulate across its members rather than being overwritten.",
       fields: [
         [ "primary_sector", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
         [ "additional_sectors", "Additional sectors", "Tags the person and organization with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],

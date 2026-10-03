@@ -30,9 +30,15 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
-      record_news_subscription(person) if person
-
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
+
+      if person
+        record_news_subscription(person)
+        organization = capture_organization(submission)
+        PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params,
+                                                   organizations: [ organization ].compact)
+      end
+
       save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
@@ -109,6 +115,28 @@ class PublicFormSubmission
     nil
   end
 
+  # Roles whose whole purpose is a facilitator's standing with the org, so their
+  # submission mints/edits the Facilitator affiliation alongside the job one — even
+  # without a training event. Other standalone forms get the job affiliation only.
+  FACILITATOR_AFFILIATION_ROLES = %w[new_job reinstatement].freeze
+
+  # Link + fill the submitted organization the same way the event registration form
+  # does — matched by exact name, its profile/type/address synced and the person's
+  # affiliation(s) created. Skipped on a close-program form, whose submission ends
+  # affiliations at the org rather than creating them (process_close_program).
+  def capture_organization(submission)
+    return if @form.role == "close_program"
+
+    organization = OrganizationServices::CaptureFromSubmission.call(
+      person: submission.person,
+      form: @form,
+      form_params: @form_params,
+      facilitator_training: @form.role.in?(FACILITATOR_AFFILIATION_ROLES)
+    ).organization
+    submission.link_organization!(organization.id) if organization
+    organization
+  end
+
   def field_value(identifier)
     field = @form.form_fields.find_by(field_identifier: identifier)
     return nil unless field
@@ -124,10 +152,11 @@ class PublicFormSubmission
     email = field_value("primary_email")&.strip&.downcase
     return nil if email.blank? || first_name.blank? || last_name.blank?
 
+    # The rest of the profile (pronouns, secondary email, and so on) is filled by
+    # CaptureFromSubmission, which runs for both new and existing people.
     find_matching_person(last_name: last_name, email: email) || Person.create!(
       first_name: first_name,
       last_name: last_name,
-      pronouns: field_value("pronouns")&.strip,
       email: email,
       email_type: field_value("primary_email_type")&.downcase
     )

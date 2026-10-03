@@ -33,6 +33,10 @@ class PublicFormsController < ApplicationController
 
     Current.source = "public_form"
     result = PublicFormSubmission.call(form: @form, form_params: form_params)
+    # The person writes fire before the submission row exists, so they can't carry
+    # its id yet. Setting it here lets the end-of-request Ahoy flush stamp it onto
+    # each persisted lifecycle event, so "What this submission changed" can find them.
+    Current.form_submission_id = result.form_submission&.id
 
     if result.success?
       redirect_to thank_you_public_form_path(@form.slug), notice: "Thank you — your response has been submitted!"

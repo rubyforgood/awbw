@@ -39,19 +39,41 @@ module AgeGroupTaggable
     categorizable_items.reset
   end
 
-  # Additively tag AgeRange categories as primary/additional without disturbing
-  # other taggings — used by registration, where a respondent may add to age
-  # groups recorded on a prior submission. A category named in both lists is
-  # treated as primary.
-  def tag_age_groups(primary_ids:, additional_ids:)
+  # Tag AgeRange categories as primary/additional. A category named in both lists
+  # is treated as primary; when a primary is given, any prior primary the caller
+  # didn't re-select is demoted (reassigned).
+  #
+  # `replace: true` treats the submitted set as the whole truth — AgeRange tags not
+  # in it are removed first, so a re-submission overwrites the record's age groups
+  # with the latest selection. The default is additive (leaves prior taggings in
+  # place), for callers like the org mirror that aggregate across many members.
+  def tag_age_groups(primary_ids:, additional_ids:, replace: false)
     primary = sanitize_age_ids(primary_ids)
     additional = sanitize_age_ids(additional_ids) - primary
+
+    remove_age_items_outside(primary + additional) if replace
+    demote_unselected_primary_age_groups(primary) if primary.any?
     upsert_age_items(primary, is_primary: true)
     upsert_age_items(additional, is_primary: false)
     categorizable_items.reset
   end
 
   private
+
+  # Drop any tagged AgeRange category not in the submitted set, so a replace-mode
+  # re-submission overwrites the record's age groups with the latest selection.
+  def remove_age_items_outside(category_ids)
+    scope = age_range_items_relation
+    scope = scope.where.not(category_id: category_ids) if category_ids.any?
+    scope.destroy_all
+  end
+
+  # Demote any currently-primary AgeRange category the caller didn't re-select as
+  # primary, so the submitted primary set reassigns which age groups are primary.
+  def demote_unselected_primary_age_groups(primary_ids)
+    age_range_items_relation.where(is_primary: true).where.not(category_id: primary_ids)
+      .update_all(is_primary: false)
+  end
 
   def age_range_categories(primary:)
     categorizable_items
