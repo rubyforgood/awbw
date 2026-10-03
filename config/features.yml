@@ -25,6 +25,19 @@
 #                   expand this in the WYSIWYG with screenshots.
 #   external_url:   Optional link to a full process doc (e.g. a Google/Word doc).
 
+# ── 2026-10 ─────────────────────────────────────────────────────────────────
+
+- name: "Credit two authors on a story"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-03
+  summary: >-
+    A story can now credit a second author alongside the first, and bylines include
+    each author's credentials — "Mae Beale, LMFT, MSW and Cathy S." Name search and
+    the author filter find either one, the story shows on both profiles, and home
+    page cards now name their author(s).
+  action_path: "/stories"
+
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
 - name: "W-9 available before paying"

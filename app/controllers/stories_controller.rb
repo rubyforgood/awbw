@@ -9,8 +9,9 @@ class StoriesController < ApplicationController
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop,
-                                                   :author, :bookmarks, :primary_asset,
+      base_scope = authorized_scope(Story.with_author_credit
+                                         .includes(:windows_type, :organization, :workshop,
+                                                   :bookmarks, :primary_asset,
                                                    :story_idea, created_by: :person))
       filtered = base_scope.search_by_params(params)
       sortable = %w[title updated_at created_at windows_type workshop author organization]
@@ -209,7 +210,8 @@ class StoriesController < ApplicationController
     params.require(:story).permit(
       :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
-      :author_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
+      :author_id, :co_author_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
+      :author_credit_preference, :co_author_credit_preference,
       category_ids: [],
       sector_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],

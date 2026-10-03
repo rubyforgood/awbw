@@ -4,7 +4,7 @@ class WorkshopIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(WorkshopIdea.includes(:workshops))
+    base_scope = authorized_scope(WorkshopIdea.with_author_credit.includes(:workshops))
     filtered = base_scope.search(params.slice(:title, :author_name))
     filtered = filtered.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     @workshop_ideas_count = filtered.size

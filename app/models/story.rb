@@ -15,6 +15,7 @@ class Story < ApplicationRecord
   belongs_to :spotlighted_facilitator, class_name: "Person",
              foreign_key: "spotlighted_facilitator_id", optional: true
   belongs_to :author, class_name: "Person", optional: true
+  belongs_to :co_author, class_name: "Person", optional: true
   belongs_to :story_idea, optional: true
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -44,6 +45,14 @@ class Story < ApplicationRecord
   validates :external_workshop_title, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
+  normalizes :co_author_credit_preference, with: ->(value) { value.presence }
+  validates :co_author_credit_preference, inclusion: { in: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
+  # A blank author_id means "nobody named an author" everywhere it's read — the
+  # profile listing credits the submitter instead, and the divergences page offers
+  # the story up for assignment. A second author has to sit behind a first.
+  validates :author_id, presence: { message: "is required when a second author is credited" },
+            if: -> { co_author_id.present? }
+  validate :co_author_differs_from_author
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
@@ -78,6 +87,22 @@ class Story < ApplicationRecord
     ActiveModel::Type::Boolean.new.cast(value) ?
       where.not(spotlighted_facilitator_id: nil) :
       where(spotlighted_facilitator_id: nil)
+  }
+
+  # A story credits either author, so both the author chip filter and the person
+  # profile listing match on author_id or co_author_id.
+  scope :authored_by, ->(person_id) {
+    where("stories.author_id = :id OR stories.co_author_id = :id", id: person_id) if person_id.present?
+  }
+
+  scope :credited_to_person, ->(person) {
+    if person
+      where(author_id: person.id)
+        .or(where(co_author_id: person.id))
+        .or(where(author_id: nil, created_by_id: User.where(person_id: person.id).select(:id)))
+    else
+      none
+    end
   }
 
   def self.search_by_params(params)
@@ -174,5 +199,14 @@ class Story < ApplicationRecord
     end
 
     save!
+  end
+
+  private
+
+  def co_author_differs_from_author
+    return if co_author_id.blank? || author_id.blank?
+    return if co_author_id != author_id
+
+    errors.add(:co_author_id, "must be different from the first author")
   end
 end

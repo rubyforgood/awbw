@@ -62,6 +62,23 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.credited_author_link(workshop)).to eq("AWBW Staff")
     end
 
+    it "renders each author's credited name, joined by the shared separator" do
+      create(:professional_license, person: person, kind: "LMFT")
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      co_author = create(:person, first_name: "Cathy", last_name: "Smith",
+                                  display_name_preference: "first_name_last_initial")
+      allow(co_author).to receive(:profile_is_searchable).and_return(false)
+      story = create(:story, author_credit_preference: "full_name")
+      allow(story).to receive(:author).and_return(person)
+      allow(story).to receive(:co_author).and_return(co_author)
+
+      html = helper.credited_author_link(story)
+      expect(html).to include("Ada Lovelace, LMFT")
+      expect(html).to include("Cathy S.")
+      expect(html).to include(AuthorCreditable::CREDIT_SEPARATOR)
+      expect(Nokogiri::HTML.fragment(html).css("a").length).to eq(1)
+    end
+
     it "renders a legacy free-text author as plain text with no link" do
       workshop = create(:workshop, author: nil, full_name: "Jane Legacy",
                                    created_by: create(:user, person: nil))

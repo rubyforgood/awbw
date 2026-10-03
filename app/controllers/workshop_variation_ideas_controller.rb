@@ -5,7 +5,7 @@ class WorkshopVariationIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = WorkshopVariationIdea.includes(:workshop, :created_by, :updated_by)
+    base_scope = WorkshopVariationIdea.with_author_credit.includes(:workshop, :updated_by)
     filtered = base_scope.search_by_params(params)
     @workshop_variation_ideas_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
     @workshop_variation_ideas = filtered.order(created_at: :desc)

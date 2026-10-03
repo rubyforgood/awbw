@@ -5,17 +5,20 @@ module ApplicationHelper
     "text-gray-500 hover:text-gray-700"
   end
 
-  # Byline for an AuthorCreditable record. Links to the credited author's person
-  # profile when the credit resolves to a searchable person; otherwise renders
-  # plain text. The text always honors the credit preference (author_credit), so
-  # anonymous and legacy free-text credits never link to a profile.
+  # Byline for an AuthorCreditable record. Links each credited author to their person
+  # profile when it's searchable; a non-searchable author renders as plain text. The
+  # names and the separator come from the record (`credited_name_for_person`,
+  # `CREDIT_SEPARATOR`), so this matches the plain-text credit everywhere else. Falls
+  # back to the plain author_credit label when the credit resolves to nobody linkable
+  # (anonymous, legacy free-text, or unattributed), so those never link to a profile.
   def credited_author_link(record, **link_options)
-    person = record.author_credit_person
-    if person&.profile_is_searchable
-      link_to record.author_credit, person_path(person), **link_options
-    else
-      record.author_credit
-    end
+    people = record.credited_author_people
+    return record.author_credit if people.empty?
+
+    safe_join(people.map { |person|
+      name = record.credited_name_for_person(person)
+      person.profile_is_searchable ? link_to(name, person_path(person), **link_options) : name
+    }, AuthorCreditable::CREDIT_SEPARATOR)
   end
 
   # The credited author as an admin edit-person card, for the workshop log /
