@@ -63,7 +63,7 @@ RSpec.describe Workshop do
       workshop.assign_attributes(story_workshops_attributes: [ { story_id: story.id }, { story_id: story.id } ])
 
       expect(workshop).not_to be_valid
-      expect(workshop.errors[:base]).to include("has the same story linked more than once")
+      expect(workshop.errors.full_messages.join).to include("is already linked to this story")
     end
 
     it 'allows removing a row and re-adding the same story in one save' do

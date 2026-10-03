@@ -2068,7 +2068,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["story_id", "position"], name: "index_stories_workshops_on_story_id_and_position"
-    t.index ["story_id", "workshop_id"], name: "index_stories_workshops_on_story_id_and_workshop_id", unique: true
+    t.index ["story_id", "workshop_id", "external_workshop_title"], name: "index_stories_workshops_on_story_workshop_and_title", unique: true
     t.index ["story_id"], name: "index_stories_workshops_on_story_id"
     t.index ["workshop_id"], name: "index_stories_workshops_on_workshop_id"
   end

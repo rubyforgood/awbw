@@ -377,7 +377,18 @@ RSpec.describe Story, type: :model do
                                                            { workshop_id: workshop.id } ])
 
       expect(story).not_to be_valid
-      expect(story.errors[:base]).to include("has the same workshop linked more than once")
+      expect(story.errors.full_messages.join).to include("is already linked to this story")
+    end
+
+    it "accepts the same workshop twice when the titles differ" do
+      story.assign_attributes(story_workshops_attributes: [
+        { workshop_id: workshop.id },
+        { workshop_id: workshop.id, external_workshop_title: "Teen variant" }
+      ])
+
+      expect(story).to be_valid
+      expect { story.save! }.not_to raise_error
+      expect(story.reload.story_workshops.map(&:external_workshop_title)).to contain_exactly(nil, "Teen variant")
     end
 
     it "allows removing a row and re-adding the same workshop in one save" do

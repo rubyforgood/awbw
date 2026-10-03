@@ -57,7 +57,6 @@ class Story < ApplicationRecord
   validates :author_id, presence: { message: "is required when a second author is credited" },
             if: -> { co_author_id.present? }
   validate :co_author_differs_from_author
-  validate :story_workshops_must_be_distinct
 
   # Nested attributes
   accepts_nested_attributes_for :story_workshops, allow_destroy: true,
@@ -227,14 +226,5 @@ class Story < ApplicationRecord
     return if co_author_id != author_id
 
     errors.add(:co_author_id, "must be different from the first author")
-  end
-
-  # Guards the stories_workshops unique index. Rows flagged for removal are
-  # deleted before the new ones are inserted, so they aren't a conflict.
-  def story_workshops_must_be_distinct
-    workshop_ids = story_workshops.reject(&:marked_for_destruction?).filter_map(&:workshop_id)
-    return if workshop_ids.uniq.size == workshop_ids.size
-
-    errors.add(:base, "has the same workshop linked more than once")
   end
 end

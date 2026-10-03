@@ -386,8 +386,20 @@ RSpec.describe "/stories", type: :request do
         } } }
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(response.body).to include("has the same workshop linked more than once")
+        expect(response.body).to include("is already linked to this story")
         expect(story.reload.story_workshops).to be_empty
+      end
+
+      it "accepts the same workshop twice under different titles" do
+        story = create(:story, :published, workshop: nil)
+
+        patch story_url(story), params: { story: { story_workshops_attributes: {
+          "0" => { workshop_id: workshop.id },
+          "1" => { workshop_id: workshop.id, external_workshop_title: "Teen variant" }
+        } } }
+
+        expect(response).to have_http_status(:see_other)
+        expect(story.reload.story_workshops.count).to eq(2)
       end
     end
 
