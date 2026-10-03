@@ -260,6 +260,26 @@
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
+      <% story_co_author = f.object.co_author %>
+      <%= f.input :co_author_id,
+                  collection: story_co_author.present? ? [[ story_co_author.remote_search_label[:label], story_co_author.id ]] : [],
+                  prompt: "Select a second author",
+                  selected: story_co_author&.id,
+                  hint: "Optional. Credits a second author alongside the first.",
+                  label: (f.object.co_author ? (
+                    link_to "Second author",
+                            person_path(f.object.co_author),
+                            class: "hover:underline") : "Second author").html_safe,
+                  label_html: { class: "block font-medium mb-1 text-gray-700" },
+                  input_html: {
+                    data: { controller: "remote-select",
+                            remote_select_model_value: "person" }
+                  } %>
+      <%= render "shared/author_credit_field", f: f,
+                 attribute: :co_author_credit_preference, label: "Second author credit preference" %>
+    </div>
+
+    <div class="flex-1 mb-4 md:mb-0">
       <%= f.input :spotlighted_facilitator_id,
                   collection: f.object.spotlighted_facilitator.present? ? [[ f.object.spotlighted_facilitator.remote_search_label[:label], f.object.spotlighted_facilitator_id ]] : [],
                   prompt: "Select a facilitator",

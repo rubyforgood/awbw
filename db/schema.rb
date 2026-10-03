@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2045,7 +2045,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
     t.integer "windows_type_id", null: false
     t.integer "workshop_id"
     t.string "youtube_url"
+    t.bigint "co_author_id"
+    t.string "co_author_credit_preference"
     t.index ["author_id"], name: "index_stories_on_author_id"
+    t.index ["co_author_id"], name: "index_stories_on_co_author_id"
     t.index ["created_by_id"], name: "index_stories_on_created_by_id"
     t.index ["organization_id"], name: "index_stories_on_organization_id"
     t.index ["published"], name: "index_stories_on_published"
@@ -2759,6 +2762,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_102647) do
   add_foreign_key "staff_taggings", "staff_tags"
   add_foreign_key "stories", "organizations"
   add_foreign_key "stories", "people", column: "author_id"
+  add_foreign_key "stories", "people", column: "co_author_id"
   add_foreign_key "stories", "people", column: "spotlighted_facilitator_id"
   add_foreign_key "stories", "story_ideas"
   add_foreign_key "stories", "users", column: "created_by_id"

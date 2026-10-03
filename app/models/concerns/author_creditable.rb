@@ -11,6 +11,7 @@ module AuthorCreditable
 
   # Join aliases for the people a record credits, in display precedence order.
   CREDITED_AUTHOR_ALIAS = "credited_author".freeze
+  CREDITED_CO_AUTHOR_ALIAS = "credited_co_author".freeze
   CREATOR_PERSON_ALIAS = "creator_person".freeze
 
   # The generic credit AWBW puts on content with no named credit. Content AWBW produces
@@ -52,6 +53,7 @@ module AuthorCreditable
     class_attribute :creator_credited, instance_writer: false, default: false
 
     before_create :snapshot_author_credit_preference
+    before_create :snapshot_co_author_credit_preference
     # Blank means "follow the profile"; nil keeps it off the divergence worklist.
     normalizes :author_credit_preference, with: ->(value) { value.presence }
     validates :author_credit_preference, inclusion: { in: AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
@@ -98,6 +100,51 @@ module AuthorCreditable
     author if respond_to?(:author)
   end
 
+  # The optional second credited person, on models that carry a co_author column
+  # (today only Story). Nil everywhere else, so every author-credit path below folds
+  # back to the single-author behavior.
+  def second_author_person
+    co_author if respond_to?(:co_author)
+  end
+
+  def second_author_credit_preference
+    co_author_credit_preference if respond_to?(:co_author_credit_preference)
+  end
+
+  # The explicitly-credited people paired with the preference recorded for each, in
+  # display precedence order. A record names one author by default; a co_author model
+  # can name two, each carrying its own credit preference.
+  def credited_author_entries
+    entries = []
+    entries << [ primary_author_person, author_credit_preference ] if primary_author_person
+    entries << [ second_author_person, second_author_credit_preference ] if second_author_person
+    entries.uniq { |person, _preference| person.id }
+  end
+
+  # The credited people a byline links to, in display order, dropping anyone whose
+  # credit is suppressed (anonymous). Empty when the credit resolves to a generic
+  # label, a legacy name, or nobody — callers then render author_credit as plain text.
+  def credited_author_people
+    entries = credited_author_entries
+    if entries.any?
+      entries.reject { |person, preference| credit_anonymous?(person, preference) }.map(&:first)
+    else
+      creator = creator_credit_person
+      creator && !credit_anonymous?(creator) ? [ creator ] : []
+    end
+  end
+
+  # Whether this record hides the given person's credit — their own profile opts out,
+  # or the preference recorded for them on this record is anonymous.
+  def credit_anonymous_for?(person)
+    return false unless person
+
+    entry = credited_author_entries.find { |candidate, _preference| candidate.id == person.id }
+    return credit_anonymous?(person, entry.last) if entry
+
+    credit_anonymous?(person) if creator_credit_person&.id == person.id
+  end
+
   # The creator's person, on models where the submitter is the author
   # (`credits_creator`). Rows that predate the author column carry no author_id, so
   # the account that entered them is their only authorship signal.
@@ -111,9 +158,15 @@ module AuthorCreditable
   end
 
   def author_credit
-    person = primary_author_person
-    # credit_for suppresses an anonymous author to the facilitator label.
-    return credit_for(person) if person
+    entries = credited_author_entries
+    if entries.any?
+      visible = entries.reject { |person, preference| credit_anonymous?(person, preference) }
+      # Named authors join into one byline ("Jane Doe & John Roe"); an anonymous
+      # co-author drops out so only the named one shows.
+      return visible.map { |person, preference| credit_for(person, preference) }.join(" & ") if visible.any?
+      # Every named author opted out, so the credit falls to the generic label.
+      return anonymous_author_label
+    end
     # Anonymous suppresses a legacy name too; with no person behind it, nothing is left.
     return legacy_author_name_text if legacy_author_name_text.present? && author_credit_preference != ANONYMOUS
     # Nobody named the author, so the submitter is it (see `credits_creator`).
@@ -130,9 +183,10 @@ module AuthorCreditable
     person && !credit_anonymous?(person) ? person : nil
   end
 
-  # A one-way latch: either side can set it, neither can strip it from the other.
-  def credit_anonymous?(person)
-    person.anonymous_contributions? || author_credit_preference == ANONYMOUS
+  # A one-way latch: either side can set it, neither can strip it from the other. The
+  # preference defaults to the record's own, but a co-author passes its own value.
+  def credit_anonymous?(person, preference = author_credit_preference)
+    person.anonymous_contributions? || preference == ANONYMOUS
   end
 
   # Only an explicit author has a governing profile. A legacy name follows nobody's,
@@ -171,8 +225,15 @@ module AuthorCreditable
     self.author_credit_preference = person.effective_author_credit_preference if person
   end
 
-  private def credit_for(person)
-    return anonymous_author_label if credit_anonymous?(person)
+  def snapshot_co_author_credit_preference
+    return unless respond_to?(:co_author_credit_preference)
+    return if co_author_credit_preference.present?
+
+    self.co_author_credit_preference = co_author.effective_author_credit_preference if co_author
+  end
+
+  private def credit_for(person, preference = author_credit_preference)
+    return anonymous_author_label if credit_anonymous?(person, preference)
     person.name.presence || anonymous_author_label
   end
 
@@ -228,6 +289,7 @@ module AuthorCreditable
     def credited_person_aliases
       aliases = []
       aliases << CREDITED_AUTHOR_ALIAS if explicit_author?
+      aliases << CREDITED_CO_AUTHOR_ALIAS if second_author?
       aliases << CREATOR_PERSON_ALIAS if creator_credited
       aliases
     end
@@ -238,6 +300,10 @@ module AuthorCreditable
         joins << "LEFT OUTER JOIN people #{CREDITED_AUTHOR_ALIAS} " \
                  "ON #{CREDITED_AUTHOR_ALIAS}.id = #{table_name}.author_id"
       end
+      if second_author?
+        joins << "LEFT OUTER JOIN people #{CREDITED_CO_AUTHOR_ALIAS} " \
+                 "ON #{CREDITED_CO_AUTHOR_ALIAS}.id = #{table_name}.co_author_id"
+      end
       if creator_credited
         joins << "LEFT OUTER JOIN users creator_account ON creator_account.id = #{table_name}.created_by_id"
         joins << "LEFT OUTER JOIN people #{CREATOR_PERSON_ALIAS} ON #{CREATOR_PERSON_ALIAS}.id = creator_account.person_id"
@@ -247,6 +313,10 @@ module AuthorCreditable
 
     def explicit_author?
       column_names.include?("author_id")
+    end
+
+    def second_author?
+      column_names.include?("co_author_id")
     end
 
     # Arel keeps interpolated SQL out of the ORDER BY. Same precedence as
@@ -279,9 +349,11 @@ module AuthorCreditable
 
       # The creator only stands in for an author nobody named, matching what displays.
       outranked = sql_alias == CREATOR_PERSON_ALIAS ? "#{no_person_author_sql} AND " : ""
+      # Each author honors the preference recorded against it; the co-author has its own.
+      preference_column = sql_alias == CREDITED_CO_AUTHOR_ALIAS ? "co_author_credit_preference" : "author_credit_preference"
 
       "(#{outranked}#{sql_alias}.anonymous_contributions = FALSE AND " \
-        "#{not_anonymous_sql} AND (#{by_preference.join(' OR ')}))"
+        "#{not_anonymous_sql(preference_column)} AND (#{by_preference.join(' OR ')}))"
     end
 
     # A legacy name only displays when no person author outranks it, so it's only
@@ -295,9 +367,9 @@ module AuthorCreditable
       explicit_author? ? "#{table_name}.author_id IS NULL" : "TRUE"
     end
 
-    def not_anonymous_sql
-      "(#{table_name}.author_credit_preference IS NULL OR " \
-        "#{table_name}.author_credit_preference <> '#{AuthorCreditable::ANONYMOUS}')"
+    def not_anonymous_sql(preference_column = "author_credit_preference")
+      "(#{table_name}.#{preference_column} IS NULL OR " \
+        "#{table_name}.#{preference_column} <> '#{AuthorCreditable::ANONYMOUS}')"
     end
 
     def name_like(expression)
