@@ -1,7 +1,7 @@
 require "csv"
 
 class StoryImportsController < ApplicationController
-  # Admin-only flow for importing stories from a WordPress Posts Export CSV.
+  # Admin-only flow for importing stories from the curated stories spreadsheet.
   #
   #   new     → upload form
   #   create  → dry-run preview of what would be created (nothing written)
@@ -11,17 +11,6 @@ class StoryImportsController < ApplicationController
   # and confirm steps (it is too large for the cookie session). The blob is
   # purged once the import runs.
 
-  # Every column the importer reads by header name (StoryImporter), so staff can
-  # download a header-only CSV that matches the WordPress Posts Export shape.
-  TEMPLATE_HEADERS = [
-    "ID", "Title", "Content", "Excerpt", "Status", "Date",
-    "facilitator_name", "facilitator_last_name", "facilitator_email", "showhide_the_name",
-    "organization_name", "story_workshop_name", "story_youtube_url",
-    "Categories", "User Categories", "Tags", "who_is_your_story_about",
-    "Image URL", "Image Alt Text", "Image Title",
-    *StoryImporter::FEATURED_FLAGS
-  ].freeze
-
   def new
     authorize! Story, to: :import?
   end
@@ -29,7 +18,7 @@ class StoryImportsController < ApplicationController
   def template
     authorize! Story, to: :import?
 
-    csv = CSV.generate { |out| out << TEMPLATE_HEADERS }
+    csv = CSV.generate { |out| out << StoryImporter::TEMPLATE_HEADERS }
     send_data csv, filename: "stories-import-template.csv",
                    type: "text/csv", disposition: "attachment"
   end
