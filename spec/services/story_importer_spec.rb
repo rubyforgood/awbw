@@ -170,6 +170,52 @@ RSpec.describe StoryImporter do
     end
   end
 
+  describe "second author" do
+    def co_author_row(overrides = {})
+      base_row({
+        "co_facilitator_name" => "Cathy",
+        "co_facilitator_last_name" => "Smith",
+        "co_facilitator_email" => "cathy@example.org",
+        "co_name_display" => "first name only"
+      }.merge(overrides))
+    end
+
+    it "credits a second author with its own profile preference" do
+      import([ co_author_row ])
+
+      co_author = Person.find_by(first_name: "Cathy", last_name: "Smith")
+      expect(Story.sole.co_author).to eq(co_author)
+      expect(co_author.display_name_preference).to eq("first_name_only")
+    end
+
+    it "leaves the co-author's story credit NULL for a consistent author" do
+      import([ co_author_row ])
+
+      expect(Story.sole.co_author_credit_preference).to be_nil
+    end
+
+    it "flags the co-author anonymous from its own column" do
+      import([ co_author_row("co_anonymous" => "anonymous") ])
+
+      expect(Person.find_by(first_name: "Cathy", last_name: "Smith").anonymous_contributions).to be(true)
+    end
+
+    it "does not set a co-author equal to the first author" do
+      import([ co_author_row("co_facilitator_name" => "Jamie", "co_facilitator_last_name" => "Rivera",
+                             "co_facilitator_email" => "") ])
+
+      expect(Story.sole.co_author).to be_nil
+    end
+
+    it "keeps a second author with no first author as a comment" do
+      import([ co_author_row("facilitator_name" => "", "facilitator_last_name" => "") ])
+
+      expect(Story.sole.author).to be_nil
+      expect(Story.sole.co_author).to be_nil
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Cathy Smith/))
+    end
+  end
+
   describe "workshop" do
     it "links a story to an existing workshop on an exact title match (ignoring the prefix)" do
       workshop = create(:workshop, title: "Anger Volcano")
