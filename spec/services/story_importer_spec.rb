@@ -120,7 +120,8 @@ RSpec.describe StoryImporter do
       expect(author).to be_present
       expect(author.anonymous_contributions).to be(true)
       expect(Story.sole.author).to eq(author)
-      expect(Story.sole.author_credit_preference).to eq("anonymous")
+      # Credit is NULL on the story; anonymity comes from the profile.
+      expect(Story.sole.author_credit_preference).to be_nil
     end
 
     it "credits no author for a nameless AWBW row" do
@@ -144,10 +145,11 @@ RSpec.describe StoryImporter do
       expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").anonymous_contributions).to be(true)
     end
 
-    it "lets a single consistent author's story follow the profile" do
+    it "leaves the story credit NULL (follows the profile) for a single consistent author" do
       import([ base_row("name_display" => "first name only") ])
 
-      expect(Story.sole.author_credit_preference).to eq("first_name_only")
+      expect(Story.sole.author_credit_preference).to be_nil
+      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("first_name_only")
     end
 
     it "captures per-story credit when one author's rows disagree" do
