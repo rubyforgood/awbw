@@ -39,6 +39,12 @@ RSpec.describe "/story_share", type: :request do
     ))
   end
 
+  # Published + publicly visible, but funder-only — never belongs on the Story
+  # Share showcase, for any audience.
+  let!(:funder_only_story) do
+    create(:story, :published, :publicly_visible, :funder_only, title: "Funder Only #{SecureRandom.hex(4)}")
+  end
+
   # ==========================================================
   # ADMIN
   # ==========================================================
@@ -50,12 +56,22 @@ RSpec.describe "/story_share", type: :request do
         get story_shares_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "never lists funder-only stories, even for admins" do
+        get story_shares_path(query: "Funder")
+        expect(response.body).not_to include(funder_only_story.title)
+      end
     end
 
     describe "GET /show" do
       it "can view any story" do
         get story_share_path(private_story)
         expect(response).to have_http_status(:ok)
+      end
+
+      it "cannot view a funder-only story on the showcase" do
+        get story_share_path(funder_only_story)
+        expect(response).not_to have_http_status(:ok)
       end
     end
   end
