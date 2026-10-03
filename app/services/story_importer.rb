@@ -156,18 +156,22 @@ class StoryImporter
     # (incl. anonymity) at build time rather than drifting from it.
     sync_author_profile(author, row)
 
+    credit = story_credit(row, author)
+
     # Every importable row becomes a Story with a StoryIdea promoted into it. A
     # StoryIdea requires an organization, so an org-less row is Story-only.
     idea = nil
     if preview.creates_idea
-      idea = build_idea(row, title:, organization:, windows_type:, author:, content:, workshop:, external_title:)
+      idea = build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:, credit:)
       return unless persist(idea)
+      nullify_blank_credit(idea, credit)
       apply_tags(idea, tags)
       @result.ideas_created += 1
     end
 
-    story = build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:)
+    story = build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:, credit:)
     return unless persist(story)
+    nullify_blank_credit(story, credit)
     apply_tags(story, tags)
     finalize_story(row, story, idea, author, organization, tags)
     @result.stories_created += 1
@@ -237,7 +241,7 @@ class StoryImporter
     create_facilitator_affiliation(author, organization)
   end
 
-  def build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:)
+  def build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:, credit:)
     featured = featured?(row)
     published = published?(row)
     story = Story.new(
@@ -250,7 +254,7 @@ class StoryImporter
       workshop: workshop,
       external_workshop_title: external_title,
       youtube_url: youtube_url(row),
-      author_credit_preference: story_credit(row, author),
+      author_credit_preference: credit,
       permission_given: true,
       published: published,
       publicly_visible: published,
@@ -263,7 +267,7 @@ class StoryImporter
     story
   end
 
-  def build_idea(row, title:, organization:, windows_type:, author:, content:, workshop:, external_title:)
+  def build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:, credit:)
     idea = StoryIdea.new(
       title: title,
       rhino_body: content,
@@ -272,7 +276,7 @@ class StoryImporter
       workshop: workshop,
       external_workshop_title: external_title,
       youtube_url: youtube_url(row),
-      author_credit_preference: story_credit(row, author),
+      author_credit_preference: credit,
       permission_given: true,
       created_by: @import_user,
       updated_by: @import_user
@@ -281,13 +285,21 @@ class StoryImporter
     idea
   end
 
-  # The story's own credit preference stays blank (it snapshots the author's
-  # profile, which is synced before the story is built) unless the same author has
-  # stories with conflicting credits in this import — then the per-story answer is
-  # captured so the divergence from the profile is visible.
+  # The story's own credit preference is left NULL (it follows the author's live
+  # profile) unless the same author has stories with conflicting credits in this
+  # import — then the per-story answer is captured so the divergence from the
+  # profile is visible.
   def story_credit(row, author)
     return unless conflicting_author?(author_key(row))
     author_credit(row)
+  end
+
+  # On create the model snapshots the author's profile preference onto a blank
+  # credit; undo that so a non-conflicting story persists NULL (follow the profile)
+  # rather than a frozen snapshot. A NULL credit is never flagged as diverged.
+  def nullify_blank_credit(record, credit)
+    return if @dry_run || credit.present? || record.author_credit_preference.blank?
+    record.update_columns(author_credit_preference: nil)
   end
 
   # Grants connect to a story only through the author's Scholarship. Without a
