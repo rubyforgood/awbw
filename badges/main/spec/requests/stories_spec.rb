@@ -270,6 +270,16 @@ RSpec.describe "/stories", type: :request do
         expect(Story.last.author).to eq(facilitator)
       end
 
+      it "assigns a second author alongside the first" do
+        author = create(:person)
+        co_author = create(:person)
+        post stories_url, params: { story: base_attributes.merge(author_id: author.id, co_author_id: co_author.id) }
+
+        story = Story.last
+        expect(story.author).to eq(author)
+        expect(story.co_author).to eq(co_author)
+      end
+
       context "when promoting a story idea into a story" do
         let(:submitter) { create(:user, email: "submitter@example.com") }
         let(:story_idea) { create(:story_idea, created_by: submitter) }

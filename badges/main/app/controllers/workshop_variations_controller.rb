@@ -5,8 +5,8 @@ class WorkshopVariationsController < ApplicationController
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = WorkshopVariation.includes(:workshop, :author, :windows_type,
-                                              :workshop_variation_idea, created_by: :person)
+      base_scope = WorkshopVariation.with_author_credit
+                                    .includes(:workshop, :windows_type, :workshop_variation_idea)
                                     .joins(:workshop).where(workshops: { published: true })
       filtered = base_scope.search_by_params(params)
       @sort = %w[name author updated_at created_at].include?(params[:sort]) ? params[:sort] : "created_at"

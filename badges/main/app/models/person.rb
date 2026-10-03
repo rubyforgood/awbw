@@ -28,6 +28,8 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   has_many :stories_as_author, inverse_of: :author, class_name: "Story", foreign_key: :author_id,
            dependent: :restrict_with_error
+  has_many :stories_as_co_author, inverse_of: :co_author, class_name: "Story", foreign_key: :co_author_id,
+           dependent: :restrict_with_error
   has_many :workshop_variations_as_author, inverse_of: :author, class_name: "WorkshopVariation",
            foreign_key: :author_id, dependent: :restrict_with_error
   has_many :workshops_as_author, inverse_of: :author, class_name: "Workshop", foreign_key: :author_id,
@@ -402,6 +404,18 @@ class Person < ApplicationRecord
   # credentials field). Nil when no licensed types are on file.
   def license_credentials
     professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
+  end
+
+  # The credentials suffix anywhere this person is named, respecting their opt-out.
+  def visible_credentials
+    license_credentials if profile_show_credentials?
+  end
+
+  # How this person reads wherever they're credited: the profile's name format plus
+  # any credentials they show, e.g. "Mae Beale, LMFT, MSW".
+  def name_with_credentials
+    return nil if name.blank?
+    [ name, visible_credentials ].compact_blank.join(", ")
   end
 
   # Monthly reports are deprecated. Only surface the profile section and its

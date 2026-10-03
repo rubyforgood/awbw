@@ -12,6 +12,9 @@
     <div class="flex-1 pr-12">
       <!-- <-- This prevents text going under bookmark -->
       <h3 class="text-lg leading-tight font-semibold text-gray-900"><%= story.title %></h3>
+      <%# The whole card is one link, so the byline stays plain text — a profile
+          link here would nest an anchor inside it. %>
+      <p class="mt-1 text-sm text-gray-500"><%= story.author_credit %></p>
       <p class="line-clamp-3 mt-1 text-sm text-gray-600"><%= story.rhino_body&.plain_text_body&.truncate(250) %></p>
     </div>
     <!-- RIGHT: IMAGE -->

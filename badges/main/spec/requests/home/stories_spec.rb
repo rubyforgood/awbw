@@ -1,0 +1,36 @@
+require "rails_helper"
+
+RSpec.describe "/home/stories", type: :request do
+  let(:user) { create(:user) }
+
+  before { sign_in user }
+
+  describe "GET /home/stories" do
+    it "credits both authors on the card, with credentials" do
+      author = create(:person, first_name: "Mae", last_name: "Beale", display_name_preference: "full_name")
+      create(:professional_license, person: author, kind: "LMFT")
+      create(:professional_license, person: author, kind: "MSW")
+      co_author = create(:person, first_name: "Cathy", last_name: "Smith",
+                                  display_name_preference: "first_name_last_initial")
+      create(:story, :published, :featured, title: "A Shared Story", author: author, co_author: co_author,
+                                            author_credit_preference: "full_name",
+                                            co_author_credit_preference: "first_name_last_initial")
+
+      get home_stories_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("A Shared Story")
+      expect(response.body).to include("Mae Beale, LMFT, MSW and Cathy S.")
+    end
+
+    it "falls back to the generic label when the author opts out" do
+      author = create(:person, anonymous_contributions: true)
+      create(:story, :published, :featured, title: "An Anonymous Story", author: author)
+
+      get home_stories_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("AWBW Facilitator")
+    end
+  end
+end
