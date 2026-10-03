@@ -285,7 +285,7 @@ module AuthorCreditable
     # Explicit LEFT JOIN aliases, because SearchCop can't join `people` twice —
     # callers OR this into full-text results via an id subquery.
     def by_credited_person_name(query)
-      sanitized = query.to_s.strip.gsub(/\s+/, "")
+      sanitized = normalized_name_query(query)
       return none if sanitized.blank?
 
       clauses = credited_person_aliases.map { |a| credited_person_match_sql(a) }
@@ -397,8 +397,14 @@ module AuthorCreditable
         "#{table_name}.#{preference_column} <> '#{AuthorCreditable::ANONYMOUS}')"
     end
 
+    # An initialled credit displays as "Cathy S.", so both sides drop spaces and
+    # periods — otherwise the name as shown can't be pasted back into the search box.
     def name_like(expression)
-      "LOWER(REPLACE(#{expression}, ' ', '')) LIKE :name"
+      "LOWER(REPLACE(REPLACE(#{expression}, ' ', ''), '.', '')) LIKE :name"
+    end
+
+    def normalized_name_query(query)
+      query.to_s.strip.gsub(/[\s.]+/, "")
     end
   end
 end

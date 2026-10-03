@@ -139,6 +139,13 @@ RSpec.describe Story, type: :model do
         expect(Story.by_credited_person_name("Hopper")).to include(story)
       end
 
+      # The credit renders "Grace H." — pasting that back into the search box has to
+      # find it, so the period can't be a mismatch.
+      it "finds the story by the initialled name as it displays" do
+        second_author.update!(display_name_preference: "first_name_last_initial")
+        expect(Story.by_credited_person_name("Grace H.")).to include(story)
+      end
+
       it "matches nothing by the co-author name when they are anonymous" do
         story.update!(co_author_credit_preference: "anonymous")
         expect(Story.by_credited_person_name("Hopper")).not_to include(story)
