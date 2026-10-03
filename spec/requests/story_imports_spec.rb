@@ -120,15 +120,15 @@ RSpec.describe "Story imports", type: :request do
   describe "POST /stories/import/confirm" do
     before { sign_in admin }
 
-    # The fixture has 4 importable rows (1 blank-title row is skipped); 3 of them
-    # are flagged as a story idea in import_action, so 3 StoryIdeas are created.
-    it "creates a Story for every importable row" do
+    # The fixture has 4 importable rows (1 blank-title row is skipped); each has an
+    # organization, so every one gets a Story and a promoted StoryIdea.
+    it "creates a Story and an idea for every importable row" do
       expect {
         post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
-      }.to change(Story, :count).by(4).and change(StoryIdea, :count).by(3)
+      }.to change(Story, :count).by(4).and change(StoryIdea, :count).by(4)
 
       expect(response).to redirect_to(stories_path)
-      expect(flash[:notice]).to match(/3 story ideas and 4 connected stories/)
+      expect(flash[:notice]).to match(/4 story ideas and 4 connected stories/)
     end
 
     it "tags stories with the sectors named in the sheet" do
