@@ -403,6 +403,14 @@ RSpec.describe Story, type: :model do
       expect(story.reload.story_workshops.sole.external_workshop_title).to eq("Retyped")
     end
 
+    it "rejects the same workshop submitted twice before the story is saved" do
+      unsaved = Story.new(story_workshops_attributes: [ { workshop_id: workshop.id },
+                                                        { workshop_id: workshop.id } ])
+
+      expect(unsaved).not_to be_valid
+      expect(unsaved.errors.full_messages.join).to include("is already linked to this story")
+    end
+
     it "allows several rows with no workshop of their own" do
       story.assign_attributes(story_workshops_attributes: [ { external_workshop_title: "One" },
                                                            { external_workshop_title: "Two" } ])

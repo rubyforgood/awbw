@@ -1,6 +1,12 @@
 <%= simple_form_for(@story, html: { multipart: true }) do |f| %>
   <%= render 'shared/errors', resource: @story if @story.errors.any? %>
 
+  <%# Carries the origin forward so a rejected save re-renders with its back link intact. %>
+  <% if params[:return_to].present? %>
+    <%= hidden_field_tag :return_to, params[:return_to] %>
+    <%= hidden_field_tag :workshop_id, params[:workshop_id] if params[:workshop_id].present? %>
+  <% end %>
+
   <% story_idea = @story_idea || f.object.story_idea %>
   <% selected_sector_ids = @preselected_sector_ids || @story.sector_ids %>
   <% selected_category_ids = @preselected_category_ids || @story.category_ids %>

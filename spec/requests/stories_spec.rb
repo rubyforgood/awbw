@@ -191,6 +191,26 @@ RSpec.describe "/stories", type: :request do
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
+        it "sorts by workshop using a link's typed-in title when it has no workshop" do
+          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
+          story_a.update!(workshop: nil)
+          story_z.update!(workshop: nil)
+          story_a.story_workshops.create!(external_workshop_title: "Zeppelin Session")
+          story_z.story_workshops.create!(external_workshop_title: "Aardvark Session")
+
+          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+        end
+
+        it "sorts by workshop using the legacy external title when there are no links" do
+          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
+          story_a.update!(workshop: nil, external_workshop_title: "Zeppelin Session")
+          story_z.update!(workshop: nil, external_workshop_title: "Aardvark Session")
+
+          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+        end
+
         it "sorts by workshop for stories that only have the legacy workshop column" do
           [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
 
@@ -324,6 +344,35 @@ RSpec.describe "/stories", type: :request do
           .at("select[name='story[story_workshops_attributes][0][workshop_id]'] option[selected]")
         expect(selected&.[]("value")).to eq(workshop.id.to_s)
       end
+
+      it "offers a back link to the originating workshop" do
+        workshop = create(:workshop)
+
+        get new_story_url(workshop_id: workshop.id, return_to: "workshop")
+
+        expect(response.body).to include(workshop_path(workshop, anchor: "workshopStories"))
+      end
+
+      it "keeps the back link after a rejected save" do
+        workshop = create(:workshop)
+
+        post stories_url, params: { return_to: "workshop", workshop_id: workshop.id,
+                                    story: { title: "" } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include(workshop_path(workshop, anchor: "workshopStories"))
+      end
+
+      it "pre-selects the windows audience passed in the windows_type_id param" do
+        workshop = create(:workshop)
+
+        get new_story_url(workshop_id: workshop.id, windows_type_id: workshop.windows_type_id)
+
+        expect(response).to have_http_status(:ok)
+        selected = Nokogiri::HTML(response.body)
+          .at("select[name='story[windows_type_id]'] option[selected]")
+        expect(selected&.[]("value")).to eq(workshop.windows_type_id.to_s)
+      end
     end
 
     describe "GET /new promoting from a story idea" do
@@ -375,6 +424,20 @@ RSpec.describe "/stories", type: :request do
         row = story.reload.story_workshops.sole
         expect(row.workshop).to eq(workshop)
         expect(row.external_workshop_title).to eq("Retyped")
+      end
+
+      it "reports an error when a new story is created with the same workshop twice" do
+        expect {
+          post stories_url, params: { story: base_attributes.except(:workshop_id).merge(
+            story_workshops_attributes: {
+              "0" => { workshop_id: workshop.id },
+              "1" => { workshop_id: workshop.id }
+            }
+          ) }
+        }.not_to change(Story, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("is already linked to this story")
       end
 
       it "reports an error when the same workshop is added twice" do

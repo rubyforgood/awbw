@@ -197,14 +197,17 @@ class StoriesController < ApplicationController
       scope.left_joins(:windows_type)
            .reorder(WindowsType.arel_table[:short_name].public_send(dir))
     when "workshop"
-      # Falls back to the legacy stories.workshop_id so un-migrated stories sort
-      # by the title the column actually displays.
+      # Sorts on the same text the column displays: a link's typed-in title wins
+      # over its workshop's, and un-migrated stories fall back to the legacy
+      # stories.workshop_id / stories.external_workshop_title pair.
       workshop_title = <<~SQL.squish
         COALESCE(
-          (SELECT MIN(w.title) FROM stories_workshops sw
-           JOIN workshops w ON w.id = sw.workshop_id
+          (SELECT MIN(COALESCE(sw.external_workshop_title, w.title))
+           FROM stories_workshops sw
+           LEFT JOIN workshops w ON w.id = sw.workshop_id
            WHERE sw.story_id = stories.id),
-          workshops.title
+          workshops.title,
+          stories.external_workshop_title
         )
       SQL
       scope.left_joins(:workshop)

@@ -138,8 +138,10 @@ class WorkshopsController < ApplicationController
     @workshop_variations = authorized_scope(@workshop.workshop_variations)
                              .includes(:windows_type, :created_by, primary_asset: [ :file_attachment ])
                              .order(created_at: :desc)
-    @workshop_stories = authorized_scope(@workshop.stories.with_author_credit)
-                          .includes(:windows_type, primary_asset: [ :file_attachment ])
+    @workshop_stories = authorized_scope(@workshop.stories.distinct.with_author_credit)
+                          .includes(:windows_type, :rich_text_rhino_body,
+                                    primary_asset: [ :file_attachment ],
+                                    gallery_assets: [ :file_attachment ])
                           .order(created_at: :desc)
     @sectors = @workshop.sectorable_items.map { |item| item.sector if item.sector.published? }.compact if @workshop.sectorable_items.any?
     @mentioners = authorized_scope_mentions(@workshop.mentioner_records_grouped)

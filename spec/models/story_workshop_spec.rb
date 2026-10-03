@@ -78,5 +78,12 @@ RSpec.describe StoryWorkshop do
     it "allows a second row with a different title" do
       expect(story.story_workshops.build(workshop: nil, external_workshop_title: "Another")).to be_valid
     end
+
+    it "allows a workshop still being created to reuse that title" do
+      fresh = build(:workshop)
+      fresh.story_workshops.build(story_id: story.id, external_workshop_title: "Unlisted")
+
+      expect(fresh).to be_valid
+    end
   end
 end

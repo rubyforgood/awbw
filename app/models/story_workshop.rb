@@ -24,7 +24,6 @@ class StoryWorkshop < ApplicationRecord
   end
 
   def link_not_already_present
-    return if story_id.blank?
     return unless duplicated_among_submitted_rows? || duplicated_in_database?
 
     errors.add(workshop_id.present? ? :workshop_id : :external_workshop_title,
@@ -36,8 +35,12 @@ class StoryWorkshop < ApplicationRecord
   end
 
   # Rows flagged for removal are deleted before this one is written, so a link
-  # they still hold isn't a conflict.
+  # they still hold isn't a conflict. An unsaved parent on either side has no id
+  # yet, so no stored row can hold this link — only the rows beside it can.
   def duplicated_in_database?
+    return false if story_id.blank?
+    return false if workshop.present? && workshop_id.blank?
+
     scope = StoryWorkshop.where(story_id: story_id, workshop_id: workshop_id,
                                 external_workshop_title: external_workshop_title)
     scope = scope.where.not(id: id) if persisted?

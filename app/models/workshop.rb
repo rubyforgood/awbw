@@ -54,7 +54,7 @@ class Workshop < ApplicationRecord
            foreign_key: "workshop_child_id",
            dependent: :destroy
   has_many :workshop_variations, dependent: :restrict_with_error
-  has_many :story_workshops, dependent: :destroy
+  has_many :story_workshops, inverse_of: :workshop, dependent: :destroy
   accepts_nested_attributes_for :story_workshops, allow_destroy: true,
     reject_if: ->(attrs) { attrs[:story_id].blank? }
 

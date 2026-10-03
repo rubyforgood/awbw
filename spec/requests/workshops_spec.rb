@@ -73,6 +73,25 @@ RSpec.describe "/workshops", type: :request do
       expect(response.body).not_to include(unrelated.title)
     end
 
+    it "points the new-story link back at this workshop" do
+      sign_in create(:user, :admin)
+      create(:story, :published, workshop: workshop)
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).to include("return_to=workshop")
+    end
+
+    it "lists a story once when it links the workshop under two titles" do
+      story = create(:story, :published, workshop: nil, title: "Repeat story")
+      story.story_workshops.create!(workshop: workshop)
+      story.story_workshops.create!(workshop: workshop, external_workshop_title: "Teen variant")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body.scan(story.title).size).to eq(1)
+    end
+
     it "credits the story's author on the card" do
       author = create(:person, first_name: "Cathy", last_name: "Stern")
       create(:story, :published, workshop: workshop, author: author, title: "Credited story")
