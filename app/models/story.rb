@@ -100,6 +100,11 @@ class Story < ApplicationRecord
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   scope :by_year, ->(year) { where(created_at: Date.new(year.to_i)..Date.new(year.to_i).end_of_year) }
   scope :story_name, ->(story_name) { story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
+  # Funder-only stories are scholarship deliverables shared solely with the
+  # funder — kept out of every general-audience listing (see StoryPolicy,
+  # StorySharePolicy, HomePolicy). Admins and the author still see them.
+  scope :not_funder_only, -> { where(funder_only: false) }
+
   scope :facilitator_spotlights, ->(value = nil) {
     return where.not(spotlighted_facilitator_id: nil) if value.blank?
     ActiveModel::Type::Boolean.new.cast(value) ?
