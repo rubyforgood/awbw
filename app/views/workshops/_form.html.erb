@@ -423,6 +423,54 @@
         </div>
       </div>
 
+      <div class="stories-section" data-controller="dropdown">
+        <div>
+          <button
+            type="button"
+            id="stories_button"
+            class="flex w-full cursor-pointer items-center justify-between rounded-md bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"stories":"hidden"}, {"stories_arrow":"rotate-180"}, {"stories_button":"rounded-md rounded-t-md"}]'
+          >
+            Stories
+            <svg
+              id="stories_arrow"
+              class="h-6 w-6 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          </button>
+
+          <div
+            id="stories"
+            class="<%= "hidden" unless f.object.story_workshops.any?(&:persisted?) %> rounded-b-md border border-gray-300 p-4"
+          >
+            <p class="mb-2 text-sm text-gray-600">
+              Connect the stories that use this workshop. They appear on the workshop page and link back here.
+            </p>
+
+            <div id="workshop-stories-fields">
+              <%= f.fields_for :story_workshops do |story_workshop| %>
+                <%= render "workshop_story_fields", f: story_workshop %>
+              <% end %>
+            </div>
+
+            <div class="mt-2">
+              <%= link_to_add_association "Add a story", f, :story_workshops, partial: "workshop_story_fields",
+                    data: { association_insertion_node: "#workshop-stories-fields", association_insertion_method: "append" },
+                    class: "text-blue-600 hover:underline" %>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="images-section" data-controller="dropdown">
         <button
           type="button"

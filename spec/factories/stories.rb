@@ -8,6 +8,15 @@ FactoryBot.define do
     sequence(:title) { |n| "Story #{n}" }
     rhino_body { "<p>My Body</p>" }
 
+    after(:create) do |story, _evaluator|
+      if story.story_workshops.empty?
+        story.story_workshops.create!(workshop: story.workshop) if story.workshop
+        if story.external_workshop_title.present?
+          story.story_workshops.create!(external_workshop_title: story.external_workshop_title)
+        end
+      end
+    end
+
     trait :featured do
       featured { true }
     end

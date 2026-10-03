@@ -367,4 +367,55 @@ RSpec.describe Story, type: :model do
       expect(Story.search_by_params(query: "Watercolor")).to contain_exactly(match)
     end
   end
+
+  describe "linked workshops" do
+    let(:story) { create(:story, workshop: nil) }
+    let(:workshop) { create(:workshop) }
+
+    it "rejects the same workshop submitted twice in one save" do
+      story.assign_attributes(story_workshops_attributes: [ { workshop_id: workshop.id },
+                                                           { workshop_id: workshop.id } ])
+
+      expect(story).not_to be_valid
+      expect(story.errors.full_messages.join).to include("is already linked to this story")
+    end
+
+    it "accepts the same workshop twice when the titles differ" do
+      story.assign_attributes(story_workshops_attributes: [
+        { workshop_id: workshop.id },
+        { workshop_id: workshop.id, external_workshop_title: "Teen variant" }
+      ])
+
+      expect(story).to be_valid
+      expect { story.save! }.not_to raise_error
+      expect(story.reload.story_workshops.map(&:external_workshop_title)).to contain_exactly(nil, "Teen variant")
+    end
+
+    it "allows removing a row and re-adding the same workshop in one save" do
+      existing = story.story_workshops.create!(workshop: workshop)
+      story.assign_attributes(story_workshops_attributes: [
+        { id: existing.id, _destroy: "1" },
+        { workshop_id: workshop.id, external_workshop_title: "Retyped" }
+      ])
+
+      expect(story).to be_valid
+      expect { story.save! }.not_to raise_error
+      expect(story.reload.story_workshops.sole.external_workshop_title).to eq("Retyped")
+    end
+
+    it "rejects the same workshop submitted twice before the story is saved" do
+      unsaved = Story.new(story_workshops_attributes: [ { workshop_id: workshop.id },
+                                                        { workshop_id: workshop.id } ])
+
+      expect(unsaved).not_to be_valid
+      expect(unsaved.errors.full_messages.join).to include("is already linked to this story")
+    end
+
+    it "allows several rows with no workshop of their own" do
+      story.assign_attributes(story_workshops_attributes: [ { external_workshop_title: "One" },
+                                                           { external_workshop_title: "Two" } ])
+
+      expect(story).to be_valid
+    end
+  end
 end

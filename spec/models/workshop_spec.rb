@@ -17,6 +17,8 @@ RSpec.describe Workshop do
     it { should have_many(:workshop_logs).dependent(:restrict_with_error) }
     it { should have_many(:bookmarks).dependent(:destroy) } # As bookmarkable
     it { should have_many(:workshop_variations).dependent(:restrict_with_error) }
+    it { should have_many(:story_workshops).dependent(:destroy) }
+    it { should have_many(:stories).through(:story_workshops) }
     it { should have_many(:categorizable_items).dependent(:destroy) } # As categorizable
     it { should have_many(:categories).through(:categorizable_items) }
     it { should have_many(:category_types).through(:categories) }
@@ -50,6 +52,28 @@ RSpec.describe Workshop do
       before { allow(subject).to receive(:legacy).and_return(false) }
       # it { should_not validate_presence_of(:month) }
       # it { should_not validate_presence_of(:year) }
+    end
+  end
+
+  describe 'linked stories' do
+    let(:workshop) { create(:workshop) }
+    let(:story) { create(:story, workshop: nil) }
+
+    it 'rejects the same story submitted twice in one save' do
+      workshop.assign_attributes(story_workshops_attributes: [ { story_id: story.id }, { story_id: story.id } ])
+
+      expect(workshop).not_to be_valid
+      expect(workshop.errors.full_messages.join).to include("is already linked to this story")
+    end
+
+    it 'allows removing a row and re-adding the same story in one save' do
+      existing = workshop.story_workshops.create!(story: story)
+      workshop.assign_attributes(story_workshops_attributes: [ { id: existing.id, _destroy: "1" },
+                                                              { story_id: story.id } ])
+
+      expect(workshop).to be_valid
+      expect { workshop.save! }.not_to raise_error
+      expect(workshop.reload.stories).to eq([ story ])
     end
   end
 
