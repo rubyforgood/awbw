@@ -23,9 +23,8 @@ RSpec.describe StoryImporter do
     file.path
   end
 
-  # A non-AWBW facilitator by default (full name, no existing super_user), and an
-  # import_action that mentions a story idea, so a base row yields both a StoryIdea
-  # and its connected Story.
+  # A non-AWBW facilitator with an organization, so a base row yields a Story and
+  # a StoryIdea promoted into it.
   def base_row(overrides = {})
     {
       "wp_id" => "1",
@@ -48,23 +47,8 @@ RSpec.describe StoryImporter do
     described_class.new(csv_path: csv_file(rows), import_user: import_user, **opts).call
   end
 
-  # An existing AWBW staff person (has a super_user account) matching a facilitator.
-  def awbw_staff(first, last)
-    person = create(:person, first_name: first, last_name: last)
-    person.user.update!(super_user: true)
-    person
-  end
-
   describe "record creation" do
-    it "creates a Story for every row (published from the published column)" do
-      import([ base_row, base_row("wp_id" => "2", "title" => "Draft one", "published" => "no") ])
-
-      expect(Story.count).to eq(2)
-      expect(Story.find_by(title: "A story of healing").published).to be(true)
-      expect(Story.find_by(title: "Draft one").published).to be(false)
-    end
-
-    it "also creates a StoryIdea promoted into the story when import_action mentions one" do
+    it "creates a Story and a promoted StoryIdea for every importable row" do
       import([ base_row ])
 
       story = Story.sole
@@ -72,66 +56,28 @@ RSpec.describe StoryImporter do
       expect(story.author).to eq(Person.find_by(first_name: "Jamie", last_name: "Rivera"))
     end
 
-    it "creates only a Story when import_action is just a published story" do
-      import([ base_row("import_action" => "Published story") ])
+    it "is Story-only when the organization is blank (an idea requires an org)" do
+      import([ base_row("organization_name" => "") ])
 
       expect(Story.count).to eq(1)
       expect(StoryIdea.count).to eq(0)
+      expect(Story.sole.organization).to be_nil
     end
 
-    it "falls back to the author when import_action is blank" do
-      awbw_staff("Nora", "Staff")
-      import([
-        base_row("import_action" => "", "wp_id" => "1", "title" => "By a facilitator"),
-        base_row("import_action" => "", "wp_id" => "2", "title" => "By staff",
-                 "facilitator_name" => "Nora", "facilitator_last_name" => "Staff")
-      ])
-
-      expect(Story.find_by(title: "By a facilitator").story_idea).to be_present
-      expect(Story.find_by(title: "By staff").story_idea).to be_nil
-    end
-
-    it "creates a Story-only and keeps the name as a comment when the author can't resolve" do
-      import([ base_row("import_action" => "Published story",
-                        "facilitator_name" => "Teena", "facilitator_last_name" => "") ])
+    it "credits no author and keeps the name as a comment when the author can't resolve" do
+      import([ base_row("facilitator_name" => "Teena", "facilitator_last_name" => "") ])
 
       story = Story.sole
-      expect(StoryIdea.count).to eq(0)
       expect(story.author).to be_nil
       expect(story.comments.pluck(:body)).to include(a_string_matching(/Teena/))
     end
 
-    it "updates an existing story's metadata but keeps its body, without duplicating it" do
-      existing = create(:story, title: "A story of healing", published: false,
-                                rhino_body: "<p>Original body kept.</p>")
-
-      result = import([ base_row ])
-
-      expect(Story.where(title: "A story of healing").count).to eq(1)
-      existing.reload
-      expect(existing.rhino_body.to_plain_text).to eq("Original body kept.")
-      expect(existing.published).to be(true)
-      expect(existing.organization.name).to eq("A Greater Hope")
-      expect(result.stories_updated).to eq(1)
-      expect(result.stories_created).to eq(0)
-    end
-
-    it "links the imported workshop to an existing story without creating an idea" do
-      create(:story, title: "A story of healing", workshop: nil)
-
-      expect { import([ base_row ]) }.not_to change(StoryIdea, :count)
-
-      story = Story.find_by(title: "A story of healing")
-      expect(story.story_workshops.map(&:external_workshop_title)).to include("Adult Windows Workshop")
-    end
-
-    it "marks the row as an update in the preview rather than skipping it" do
+    it "renames a duplicate title to [COPY N] instead of skipping" do
       create(:story, title: "A story of healing")
+      import([ base_row ])
 
-      result = import([ base_row ], dry_run: true)
-
-      expect(result.previews.sole.skipped_reason).to be_nil
-      expect(result.previews.sole.updates_story).to be(true)
+      expect(Story.count).to eq(2)
+      expect(Story.find_by(title: "[COPY 1] A story of healing")).to be_present
     end
 
     it "skips rows with a blank title" do
@@ -148,55 +94,94 @@ RSpec.describe StoryImporter do
       expect(result.previews.sole.skipped_reason).to eq("duplicate")
       expect(Story.count).to eq(0)
     end
+
+    it "skips a row whose window type does not match exactly" do
+      result = import([ base_row("window_type" => "Martians") ])
+
+      expect(result.skipped).to include(a_string_matching(/unknown window type/))
+      expect(Story.count).to eq(0)
+    end
   end
 
-  describe "field handling" do
-    it "sets author_credit_preference from the anonymous column" do
-      import([ base_row("anonymous" => "anonymous") ])
+  describe "title" do
+    it "strips HTML from the title" do
+      import([ base_row("title" => "<b>Bold</b> Hope") ])
 
+      expect(Story.sole.title).to eq("Bold Hope")
+    end
+  end
+
+  describe "AWBW rows" do
+    it "resolves the mis-filed facilitator and flags their profile anonymous" do
+      import([ base_row("facilitator_name" => "AWBW", "facilitator_last_name" => "Eydie Pasciel",
+                        "facilitator_email" => "eydie@example.org") ])
+
+      author = Person.find_by(first_name: "Eydie", last_name: "Pasciel")
+      expect(author).to be_present
+      expect(author.anonymous_contributions).to be(true)
+      expect(Story.sole.author).to eq(author)
       expect(Story.sole.author_credit_preference).to eq("anonymous")
     end
 
-    it "sets author_credit_preference from name_display" do
+    it "credits no author for a nameless AWBW row" do
+      import([ base_row("facilitator_name" => "AWBW", "facilitator_last_name" => "",
+                        "facilitator_email" => "none") ])
+
+      expect(Story.sole.author).to be_nil
+    end
+  end
+
+  describe "author credit" do
+    it "sets the author's profile display preference from name_display" do
+      import([ base_row("name_display" => "first name only") ])
+
+      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("first_name_only")
+    end
+
+    it "flags the author's profile anonymous for an anonymous credit" do
+      import([ base_row("anonymous" => "anonymous") ])
+
+      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").anonymous_contributions).to be(true)
+    end
+
+    it "lets a single consistent author's story follow the profile" do
       import([ base_row("name_display" => "first name only") ])
 
       expect(Story.sole.author_credit_preference).to eq("first_name_only")
     end
 
-    it "preserves the publish date as created_at" do
-      import([ base_row("published_date" => "2021-07-11 10:07:53") ])
+    it "captures per-story credit when one author's rows disagree" do
+      import([
+        base_row("wp_id" => "1", "title" => "Conflict A", "name_display" => "full name"),
+        base_row("wp_id" => "2", "title" => "Conflict B", "name_display" => "first name only")
+      ])
 
-      expect(Story.sole.created_at.to_date).to eq(Date.new(2021, 7, 11))
-      expect(StoryIdea.sole.created_at.to_date).to eq(Date.new(2021, 7, 11))
+      expect(Story.find_by(title: "Conflict A").author_credit_preference).to eq("full_name")
+      expect(Story.find_by(title: "Conflict B").author_credit_preference).to eq("first_name_only")
     end
 
-    it "converts raw-newline paragraphs into HTML" do
-      import([ base_row("content" => "Line one.\r\n\r\nLine two.") ])
+    it "honors a non-default profile preference already set on the person" do
+      create(:person, first_name: "Jamie", last_name: "Rivera", display_name_preference: "last_name_only")
+      import([ base_row("name_display" => "first name only") ])
 
-      expect(Story.sole.rhino_body.to_plain_text).to match(/Line one\..*\n.*Line two/m)
+      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("last_name_only")
     end
+  end
 
+  describe "workshop" do
     it "links a story to an existing workshop on an exact title match (ignoring the prefix)" do
       workshop = create(:workshop, title: "Anger Volcano")
       import([ base_row("workshop" => "Matched workshop: Anger Volcano") ])
 
       expect(Story.sole.workshop).to eq(workshop)
-      expect(Story.sole.workshops).to eq([ workshop ])
       expect(Story.sole.external_workshop_title).to be_blank
     end
 
-    it "keeps the free-text workshop title when there is no exact match" do
+    it "keeps the free-text workshop title (minus the prefix) when there is no match" do
       import([ base_row("workshop" => "External title: Some Unlisted Workshop") ])
 
       expect(Story.sole.workshop).to be_nil
       expect(Story.sole.external_workshop_title).to eq("Some Unlisted Workshop")
-      expect(Story.sole.story_workshops.sole.external_workshop_title).to eq("Some Unlisted Workshop")
-    end
-
-    it "marks the story featured when the featured column is yes" do
-      import([ base_row("featured" => "yes") ])
-
-      expect(Story.sole.featured).to be(true)
     end
   end
 
@@ -211,33 +196,10 @@ RSpec.describe StoryImporter do
     end
 
     it "creates no organization when the name is SKIP" do
-      import([ base_row("import_action" => "Published story", "organization_name" => "SKIP") ])
+      import([ base_row("organization_name" => "SKIP") ])
 
       expect(Organization.count).to eq(0)
       expect(Story.sole.organization).to be_nil
-    end
-  end
-
-  describe "author profile side effects" do
-    it "creates a facilitator affiliation for a non-AWBW author" do
-      import([ base_row ])
-
-      author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
-      org = Organization.find_by("LOWER(name) = ?", "a greater hope")
-      expect(Affiliation.where(person: author, organization: org, title: "Facilitator")).to exist
-    end
-
-    it "syncs display_name_preference from the credit when it is still the default" do
-      import([ base_row("name_display" => "first name only") ])
-
-      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("first_name_only")
-    end
-
-    it "honors a non-default profile preference already set on the person" do
-      create(:person, first_name: "Jamie", last_name: "Rivera", display_name_preference: "last_name_only")
-      import([ base_row("name_display" => "first name only") ])
-
-      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("last_name_only")
     end
   end
 
@@ -253,13 +215,6 @@ RSpec.describe StoryImporter do
       expect(Story.find_by(title: "Mixed ages").windows_type).to eq(combined_wt)
       expect(Story.find_by(title: "Only grown").windows_type).to eq(adult_wt)
     end
-
-    it "warns and defaults to Adult for an unknown window type" do
-      result = import([ base_row("window_type" => "Martians") ])
-
-      expect(result.warnings).to include(a_string_matching(/unknown window type/))
-      expect(Story.sole.windows_type).to eq(adult_wt)
-    end
   end
 
   describe "tagging from the resolved columns" do
@@ -273,10 +228,10 @@ RSpec.describe StoryImporter do
       expect(Story.sole.sectors).to include(sector)
     end
 
-    it "warns when a sector name does not exist" do
-      result = import([ base_row("sectors" => "Imaginary Sector") ])
+    it "keeps an unknown sector as a comment on the story" do
+      import([ base_row("sectors" => "Imaginary Sector") ])
 
-      expect(result.warnings).to include(a_string_matching(/no Sector match/))
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported sector not in portal: Imaginary Sector/))
     end
 
     it "tags categories by Type: Name from the categories column" do
@@ -287,39 +242,69 @@ RSpec.describe StoryImporter do
       expect(Story.sole.categories).to include(adults, grief)
     end
 
-    it "warns when a category does not exist" do
-      result = import([ base_row("categories" => "AgeRange: Nope") ])
+    it "keeps an unknown category as a comment on the story" do
+      import([ base_row("categories" => "AgeRange: Nope") ])
 
-      expect(result.warnings).to include(a_string_matching(/no Category match/))
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported category not in portal: AgeRange: Nope/))
     end
   end
 
-  describe "grant linking" do
+  describe "grants" do
     let!(:grant) { create(:grant, name: "Cathy Salser Legacy Scholarship") }
 
-    it "links the author to the grant through a scholarship" do
+    it "creates the author's scholarship for a grant" do
       import([ base_row("grants" => "Cathy Salser Legacy Scholarship") ])
 
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
-      expect(Story.sole.author).to eq(author)
       expect(Scholarship.where(recipient: author, grant: grant)).to exist
     end
 
-    it "warns and skips the link when the author has no last name" do
-      result = import([ base_row("grants" => "Cathy Salser Legacy Scholarship",
-                                 "facilitator_name" => "Teena", "facilitator_last_name" => "") ])
+    it "keeps the grant as a comment when there is no author to link" do
+      import([ base_row("grants" => "Cathy Salser Legacy Scholarship",
+                        "facilitator_name" => "Teena", "facilitator_last_name" => "") ])
 
-      expect(result.warnings).to include(a_string_matching(/author unresolved/))
       expect(Scholarship.count).to eq(0)
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/no author to link/))
+    end
+
+    it "keeps an unknown grant as a comment on the story" do
+      import([ base_row("grants" => "Imaginary Grant") ])
+
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported grant not in portal: Imaginary Grant/))
     end
   end
 
-  describe "anonymous contributions" do
-    it "flags the author's profile as anonymous for an anonymous credit" do
-      import([ base_row("anonymous" => "anonymous") ])
+  describe "side effects" do
+    it "creates a facilitator affiliation for a non-AWBW author" do
+      import([ base_row ])
 
       author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
-      expect(author.anonymous_contributions).to be(true)
+      org = Organization.find_by("LOWER(name) = ?", "a greater hope")
+      expect(Affiliation.where(person: author, organization: org, title: "Facilitator")).to exist
+    end
+
+    it "keeps the WordPress id as a comment on the story" do
+      import([ base_row("wp_id" => "12958") ])
+
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/WordPress ID: 12958/))
+    end
+
+    it "preserves the publish date as created_at" do
+      import([ base_row("published_date" => "2021-07-11 10:07:53") ])
+
+      expect(Story.sole.created_at.to_date).to eq(Date.new(2021, 7, 11))
+    end
+
+    it "converts raw-newline paragraphs into HTML" do
+      import([ base_row("content" => "Line one.\r\n\r\nLine two.") ])
+
+      expect(Story.sole.rhino_body.to_plain_text).to match(/Line one\..*\n.*Line two/m)
+    end
+
+    it "marks the story featured when the featured column is yes" do
+      import([ base_row("featured" => "yes") ])
+
+      expect(Story.sole.featured).to be(true)
     end
   end
 
@@ -358,16 +343,17 @@ RSpec.describe StoryImporter do
   describe "image import" do
     let(:image_row) do
       base_row(
-        "image_urls" => "https://ex.com/cover.jpg|https://ex.com/two.jpg| ",
-        "image_alt_titles" => "Healing hands"
+        "image_urls" => "https://ex.com/cover.jpg|https://ex.com/two.jpg",
+        "image_alt_titles" => "Cover alt|Second alt"
       )
     end
 
-    it "enqueues a StoryAssetImportJob for the story with the row's image URLs" do
+    it "enqueues a StoryAssetImportJob with the URLs and parallel titles" do
       import([ image_row ])
 
       expect(StoryAssetImportJob).to have_been_enqueued
-        .with(Story.sole, [ "https://ex.com/cover.jpg", "https://ex.com/two.jpg" ], title: "Healing hands")
+        .with(Story.sole, [ "https://ex.com/cover.jpg", "https://ex.com/two.jpg" ],
+              titles: [ "Cover alt", "Second alt" ])
     end
 
     it "counts the queued images in the result" do
