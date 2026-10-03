@@ -255,6 +255,13 @@ class StoriesController < ApplicationController
   end
 
   def story_workshops_attributes_from(idea)
+    return direct_story_workshops_attributes_from(idea) if idea.story_idea_workshops.empty?
+    idea.story_idea_workshops.map do |siw|
+      { workshop_id: siw.workshop_id, external_workshop_title: siw.external_workshop_title, position: siw.position }
+    end
+  end
+
+  def direct_story_workshops_attributes_from(idea)
     rows = []
     rows << { workshop_id: idea.workshop_id } if idea.workshop_id.present?
     rows << { external_workshop_title: idea.external_workshop_title } if idea.external_workshop_title.present?

@@ -25,7 +25,7 @@ RSpec.describe "story_ideas/edit", type: :view do
       assert_select "form[action=?][method=?]", story_idea_path(story_idea), "post" do
         assert_select "select[name=?]", "story_idea[windows_type_id]"
         assert_select "select[name=?]", "story_idea[organization_id]"
-        assert_select "select[name=?]", "story_idea[workshop_id]"
+        assert_select "select[name=?]", "story_idea[story_idea_workshops_attributes][0][workshop_id]"
         assert_select "input[name=?][type=?]", "story_idea[rhino_body]", "hidden"
         assert_select "textarea[name=?]", "story_idea[youtube_url]"
       end

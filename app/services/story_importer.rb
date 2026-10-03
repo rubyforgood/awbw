@@ -318,6 +318,7 @@ class StoryImporter
       windows_type: windows_type,
       workshop: workshop,
       external_workshop_title: external_title,
+      story_idea_workshops_attributes: story_workshops_attributes(workshop, external_title),
       youtube_url: youtube_url(row),
       author_credit_preference: author_credit(row),
       permission_given: true,

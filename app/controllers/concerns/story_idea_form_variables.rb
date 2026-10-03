@@ -32,6 +32,7 @@ module StoryIdeaFormVariables
           .select { |type, _| type.nil? || type.published? }
           .sort_by { |type, _| [ type&.story_specific? ? 0 : 1, type&.name.to_s.downcase ] }
     end
+    @story_idea.story_idea_workshops.build if @story_idea.story_idea_workshops.blank?
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
     @story_idea.gallery_assets.build
   end

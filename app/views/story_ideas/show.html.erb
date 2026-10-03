@@ -50,11 +50,27 @@
           <% end %>
         </div>
         <div>
-          <span class="font-semibold text-gray-700">Workshop:</span>
-          <% if @story_idea.workshop && allowed_to?(:show?, @story_idea.workshop) %>
-            <%= link_to @story_idea.workshop.title, workshop_path(@story_idea.workshop),
-                        data: { turbo_frame: "_top" },
-                        class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}" %>
+          <% workshop_chip = ->(workshop) {
+               link_to workshop.title, workshop_path(workshop),
+                       data: { turbo_frame: "_top" },
+                       class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:workshops, intensity: 100)} #{DomainTheme.text_class_for(:workshops)} #{DomainTheme.bg_class_for(:workshops, intensity: 100, hover: true)}"
+             } %>
+          <% idea_workshop_refs = @story_idea.story_idea_workshops.to_a %>
+          <% idea_workshop_count = idea_workshop_refs.any? ? idea_workshop_refs.size : [ @story_idea.workshop, @story_idea.external_workshop_title.presence ].compact.size %>
+          <span class="font-semibold text-gray-700"><%= idea_workshop_count > 1 ? "Workshops" : "Workshop" %>:</span>
+          <% if idea_workshop_refs.any? %>
+            <% idea_workshop_refs.each_with_index do |siw, i| %>
+              <%= " / ".html_safe if i.positive? %>
+              <% if siw.workshop && allowed_to?(:show?, siw.workshop) %>
+                <% if siw.external_workshop_title.present? %><%= siw.external_workshop_title %> (from the <% end %>
+                <%= workshop_chip.call(siw.workshop) %>
+                <% if siw.external_workshop_title.present? %>)<% end %>
+              <% else %>
+                <%= siw.external_workshop_title.presence || siw.workshop&.title %>
+              <% end %>
+            <% end %>
+          <% elsif @story_idea.workshop && allowed_to?(:show?, @story_idea.workshop) %>
+            <%= workshop_chip.call(@story_idea.workshop) %>
             <% if @story_idea.external_workshop_title.present? %>
               / <%= @story_idea.external_workshop_title %>
             <% end %>
