@@ -16,8 +16,8 @@ class WorkshopsController < ApplicationController
 
       track_index_intent(Workshop, search_service.workshops, params)
 
-      @workshops = authorized_scope(search_service.workshops
-                                                  .includes(:categories, :windows_type, :bookmarks, :author,
+      @workshops = authorized_scope(search_service.workshops.with_author_credit
+                                                  .includes(:categories, :windows_type, :bookmarks,
                                                             created_by: [ :person ], primary_asset: [ :file_attachment ]))
                                                   .paginate(page: params[:page], per_page: params[:per_page] || 12)
 

@@ -7,7 +7,8 @@ class MonthlyReportsController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(MonthlyReport.includes(:author, :windows_type, :organization, created_by: :person))
+      base_scope = authorized_scope(MonthlyReport.with_author_credit
+                                                 .includes(:windows_type, :organization))
       filtered = base_scope.search(params)
       @monthly_reports_unpaginated = filtered
       @monthly_reports = filtered.paginate(page: params[:page], per_page: per_page)

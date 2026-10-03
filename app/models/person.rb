@@ -406,6 +406,18 @@ class Person < ApplicationRecord
     professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
   end
 
+  # The credentials suffix anywhere this person is named, respecting their opt-out.
+  def visible_credentials
+    license_credentials if profile_show_credentials?
+  end
+
+  # How this person reads wherever they're credited: the profile's name format plus
+  # any credentials they show, e.g. "Mae Beale, LMFT, MSW".
+  def name_with_credentials
+    return nil if name.blank?
+    [ name, visible_credentials ].compact_blank.join(", ")
+  end
+
   # Monthly reports are deprecated. Only surface the profile section and its
   # visibility toggle for people who already have some (explicit author, or the
   # legacy fallback to their user's creations) — newer users never see it.

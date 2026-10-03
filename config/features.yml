@@ -32,10 +32,10 @@
   display_status: admin_facing
   released_on: 2026-10-03
   summary: >-
-    A story can now credit a second author alongside the first. The byline reads
-    "Author one & Author two", author-name search and the author filter find either
-    one, and the story appears on both people's profiles. Each author keeps their
-    own credit preference.
+    A story can now credit a second author alongside the first, and bylines include
+    each author's credentials — "Mae Beale, LMFT, MSW and Cathy S." Name search and
+    the author filter find either one, the story shows on both profiles, and home
+    page cards now name their author(s).
   action_path: "/stories"
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────

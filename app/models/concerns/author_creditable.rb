@@ -9,6 +9,10 @@ module AuthorCreditable
 
   ANONYMOUS = "anonymous"
 
+  # How a byline reads when a record credits more than one person. The plain-text
+  # credit and the linked byline both join on this, so the wording changes once.
+  CREDIT_SEPARATOR = " and ".freeze
+
   # Join aliases for the people a record credits, in display precedence order.
   CREDITED_AUTHOR_ALIAS = "credited_author".freeze
   CREDITED_CO_AUTHOR_ALIAS = "credited_co_author".freeze
@@ -161,9 +165,11 @@ module AuthorCreditable
     entries = credited_author_entries
     if entries.any?
       visible = entries.reject { |person, preference| credit_anonymous?(person, preference) }
-      # Named authors join into one byline ("Jane Doe & John Roe"); an anonymous
-      # co-author drops out so only the named one shows.
-      return visible.map { |person, preference| credit_for(person, preference) }.join(" & ") if visible.any?
+      # Named authors join into one byline; an anonymous co-author drops out so only
+      # the named one shows.
+      if visible.any?
+        return visible.map { |person, preference| credited_name_for(person, preference) }.join(CREDIT_SEPARATOR)
+      end
       # Every named author opted out, so the credit falls to the generic label.
       return anonymous_author_label
     end
@@ -171,7 +177,7 @@ module AuthorCreditable
     return legacy_author_name_text if legacy_author_name_text.present? && author_credit_preference != ANONYMOUS
     # Nobody named the author, so the submitter is it (see `credits_creator`).
     creator = creator_credit_person
-    return credit_for(creator) if creator
+    return credited_name_for(creator) if creator
     # No author at all, so it reads as the org's own content.
     missing_author_label
   end
@@ -232,9 +238,18 @@ module AuthorCreditable
     self.co_author_credit_preference = co_author.effective_author_credit_preference if co_author
   end
 
-  private def credit_for(person, preference = author_credit_preference)
+  # The one place a credited person's name is rendered. Both the plain-text credit
+  # and the linked byline go through it, so name format and credentials change once.
+  def credited_name_for(person, preference = author_credit_preference)
     return anonymous_author_label if credit_anonymous?(person, preference)
-    person.name.presence || anonymous_author_label
+    person.name_with_credentials.presence || anonymous_author_label
+  end
+
+  # The same name, looked up by person — for callers holding one of the credited
+  # people rather than the entry pair.
+  def credited_name_for_person(person)
+    entry = credited_author_entries.find { |candidate, _preference| candidate.id == person.id }
+    credited_name_for(person, entry ? entry.last : author_credit_preference)
   end
 
   class_methods do
@@ -255,6 +270,16 @@ module AuthorCreditable
     # Fully-qualified legacy name columns, e.g. "resources.legacy_author_name".
     def legacy_author_name_columns
       []
+    end
+
+    # Everything a byline reads, for lists that render one per row. Changing what a
+    # credit shows is one edit here rather than one per index.
+    def with_author_credit
+      preloads = []
+      preloads << { author: :professional_licenses } if explicit_author?
+      preloads << { co_author: :professional_licenses } if second_author?
+      preloads << { created_by: { person: :professional_licenses } } if creator_credited
+      preloads.any? ? includes(*preloads) : all
     end
 
     # Explicit LEFT JOIN aliases, because SearchCop can't join `people` twice —

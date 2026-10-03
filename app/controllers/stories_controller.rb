@@ -9,8 +9,9 @@ class StoriesController < ApplicationController
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop,
-                                                   :author, :co_author, :bookmarks, :primary_asset,
+      base_scope = authorized_scope(Story.with_author_credit
+                                         .includes(:windows_type, :organization, :workshop,
+                                                   :bookmarks, :primary_asset,
                                                    :story_idea, created_by: :person))
       filtered = base_scope.search_by_params(params)
       sortable = %w[title updated_at created_at windows_type workshop author organization]

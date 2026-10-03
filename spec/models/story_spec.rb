@@ -43,7 +43,20 @@ RSpec.describe Story, type: :model do
 
     describe "#author_credit" do
       it "joins both named authors" do
-        expect(two_author_story.author_credit).to eq("Ada Lovelace & Grace Hopper")
+        expect(two_author_story.author_credit).to eq("Ada Lovelace and Grace Hopper")
+      end
+
+      it "appends each author's visible credentials" do
+        create(:professional_license, person: first_author, kind: "LMFT")
+        create(:professional_license, person: first_author, kind: "MSW")
+        second_author.update!(display_name_preference: "first_name_last_initial")
+        expect(two_author_story.author_credit).to eq("Ada Lovelace, LMFT, MSW and Grace H.")
+      end
+
+      it "omits credentials the author hides on their profile" do
+        create(:professional_license, person: first_author, kind: "LMFT")
+        first_author.update!(profile_show_credentials: false)
+        expect(two_author_story.author_credit).to eq("Ada Lovelace and Grace Hopper")
       end
 
       it "drops the anonymous co-author and shows only the first author" do
@@ -65,7 +78,7 @@ RSpec.describe Story, type: :model do
         second_author.update!(display_name_preference: "first_name_only")
         story = create(:story, author: first_author, co_author: second_author,
                                author_credit_preference: nil, co_author_credit_preference: nil)
-        expect(story.author_credit).to eq("Ada Lovelace & Grace")
+        expect(story.author_credit).to eq("Ada Lovelace and Grace")
       end
     end
 
