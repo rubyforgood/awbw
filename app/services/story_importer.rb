@@ -2,21 +2,32 @@
 
 require "csv"
 
-# Imports stories from a WordPress "Posts Export" CSV (stories.awbw.org).
+# Imports stories from the curated stories spreadsheet — the columns this
+# importer's own dry-run preview produces, reviewed and edited by staff and then
+# re-uploaded.
 #
-# EVERY row becomes a Story (published per the WordPress Status). A story whose
-# author is a non-AWBW person (a facilitator, not an admin/super_user) also gets
-# a StoryIdea — the submission record — promoted into it, mirroring the in-app
-# idea→story flow; AWBW-authored or author-less rows are Story-only.
+# EVERY row becomes a Story (published per the "published" column). A row whose
+# "import_action" mentions a story idea also gets a StoryIdea — the submission
+# record — promoted into it, mirroring the in-app idea→story flow.
 #
-# The author comes from the facilitator name; when it can't form a Person (a
-# single name, or "AWBW"), the name is kept as a Comment instead. An anonymous
-# credit flags the author's anonymous_contributions profile setting. Content is
-# run through wpautop so the export's raw-newline paragraphs survive as HTML, and
-# the original publish Date is preserved as created_at.
+# The taxonomy is trusted as written: the sheet already carries resolved portal
+# "sectors", "categories" (as "Type: Name") and "window_type" values, so they are
+# looked up by name rather than translated. The author comes from the facilitator
+# name columns; when they can't form a Person (a single name), the name is kept as
+# a Comment instead. An anonymous credit flags the author's anonymous_contributions
+# profile setting. Content is run through wpautop so raw-newline paragraphs survive
+# as HTML, and the publish date is preserved as created_at.
 class StoryImporter
+  # Columns the importer reads, in a natural order, for the downloadable template.
+  TEMPLATE_HEADERS = %w[
+    row_source row_number title import_action wp_id content published published_date
+    organization_name organization_status facilitator_name facilitator_last_name
+    facilitator_email author_note name_display anonymous workshop sectors window_type
+    categories grants image_count image_urls image_alt_titles youtube_url featured
+  ].freeze
+
   Result = Struct.new(
-    :rows_processed, :ideas_created, :stories_created, :stories_updated, :images_enqueued, :skipped, :warnings, :previews,
+    :rows_processed, :ideas_created, :stories_created, :images_enqueued, :skipped, :warnings, :previews,
     keyword_init: true
   ) do
     def summary
@@ -24,7 +35,6 @@ class StoryImporter
         "rows processed: #{rows_processed}",
         "story ideas created: #{ideas_created}",
         "connected stories created: #{stories_created}",
-        "stories updated: #{stories_updated}",
         "images queued: #{images_enqueued}",
         "skipped: #{skipped.size}",
         "warnings: #{warnings.size}"
@@ -38,42 +48,12 @@ class StoryImporter
   RowPreview = Struct.new(
     :wp_id, :title, :will_publish, :skipped_reason,
     :organization, :organization_new, :author_label, :author_new, :author_updated,
-    :creates_story, :creates_idea, :updates_story, :workshop_label, :sectors, :categories, :images, :comment, :warnings,
+    :creates_story, :creates_idea, :workshop_label, :sectors, :categories, :images, :comment, :warnings,
     keyword_init: true
   )
 
-  # WordPress "publish" status means the post was live and public.
-  PUBLISHED_WP_STATUS = "publish"
-
-  # WordPress export value → portal taxonomy tags. Sourced from the AWBW "Story
-  # Share to Portal Migration" mapping and kept in a data file so staff can
-  # maintain it without touching Ruby. Keys are the human-readable WordPress
-  # spelling; lookups are case-insensitive. See the YAML header for the shape.
-  SECTOR_MAP_PATH = Rails.root.join("config/story_import_sector_mapping.yml").freeze
-  TRANSLATIONS = YAML.load_file(SECTOR_MAP_PATH)
-    .fetch("translations")
-    .transform_keys(&:downcase)
-    .freeze
-
-  # Columns whose values we translate into portal tags. Categories / User
-  # Categories carry Sector + topic tags; Tags and who_is_your_story_about carry
-  # the audience (age range + story population). Values are split on "|" or ","
-  # and de-duplicated case-insensitively across all columns.
-  TRANSLATION_COLUMNS = [ "Categories", "User Categories", "Tags", "who_is_your_story_about" ].freeze
-
-  # Audience "Tags" that mark the story's author as a recipient of a named Grant's
-  # scholarship (story → author → scholarship → grant).
-  GRANT_BY_TAG = YAML.load_file(SECTOR_MAP_PATH)
-    .fetch("grant_tags", {})
-    .transform_keys(&:downcase)
-    .freeze
-
-  # WordPress organization_name → how to resolve the Organization. "" keeps the
-  # name, "Other Name" is a spelling variant to map, "SKIP" means no org/affiliation.
-  ORG_MAP_PATH = Rails.root.join("config/story_import_organization_mapping.yml").freeze
-  ORG_BY_NAME = (YAML.load_file(ORG_MAP_PATH)["organization_mapping"] || {})
-    .transform_keys(&:downcase)
-    .freeze
+  # An import_action value the preview flagged as skipped (e.g. "Skipped — blank title").
+  SKIP_ACTION = "Skipped"
 
   # Story author_credit_preference → the author's profile display_name_preference.
   # "anonymous" has no profile equivalent, so it is left off (never synced).
@@ -85,24 +65,15 @@ class StoryImporter
   # Resolved tags for one row, applied to both the idea and its connected story.
   RowTags = Struct.new(:sectors, :categories, keyword_init: true)
 
-  # WordPress "showhide_the_name" → our author_credit_preference enum.
-  AUTHOR_CREDIT_BY_SHOWHIDE = {
-    "display_full_name" => "full_name",
-    "display_first_name" => "first_name_only",
-    "hide_full_name" => "anonymous"
+  # Sheet "name_display" → our author_credit_preference. An "anonymous" value in
+  # the separate "anonymous" column overrides this.
+  AUTHOR_CREDIT_BY_DISPLAY = {
+    "full name" => "full_name",
+    "first name only" => "first_name_only"
   }.freeze
   DEFAULT_AUTHOR_CREDIT = "full_name"
 
-  # WordPress audience "Tags" → our WindowsType short_name.
-  CHILD_AUDIENCE = %w[children teens].freeze
-  COMBINED_AUDIENCE = %w[families].freeze
   DEFAULT_WINDOWS_TYPE = "Adult"
-
-  # Flags across the various WordPress "featured" custom fields.
-  FEATURED_FLAGS = %w[
-    home_top_featured_story home_bottom_featured_story
-    new_home_top_featured new_home_bottom_featured mark_as_featured
-  ].freeze
 
   def initialize(csv_path:, import_user:, organization_status: nil, dry_run: false, logger: nil)
     @csv_path = csv_path
@@ -111,7 +82,7 @@ class StoryImporter
     @dry_run = dry_run
     @logger = logger || Rails.logger
     @result = Result.new(
-      rows_processed: 0, ideas_created: 0, stories_created: 0, stories_updated: 0, images_enqueued: 0,
+      rows_processed: 0, ideas_created: 0, stories_created: 0, images_enqueued: 0,
       skipped: [], warnings: [], previews: []
     )
     @organization_cache = {}
@@ -141,7 +112,7 @@ class StoryImporter
   def import_row(row)
     warnings_before = @result.warnings.size
     preview = RowPreview.new(
-      wp_id: wp_id(row), title: clean(row["Title"]), will_publish: published?(row),
+      wp_id: wp_id(row), title: clean(row["title"]), will_publish: published?(row),
       sectors: [], categories: [], images: 0, warnings: []
     )
     @result.previews << preview
@@ -152,7 +123,17 @@ class StoryImporter
       preview.skipped_reason = "blank title"
       return
     end
-    existing_story = Story.where("LOWER(title) = ?", title.downcase).first
+    if skipped_action?(row)
+      reason = skip_reason(row)
+      record_skip(row, reason)
+      preview.skipped_reason = reason
+      return
+    end
+    if Story.where("LOWER(title) = ?", title.downcase).exists?
+      record_skip(row, "story already exists for title #{title.inspect}")
+      preview.skipped_reason = "story already exists"
+      return
+    end
 
     organization = resolve_organization(row)
     windows_type = windows_type_for(row)
@@ -162,22 +143,8 @@ class StoryImporter
     workshop, external_title = workshop_for(row)
     describe_row(preview, row, organization, author, tags, workshop, external_title, warnings_before)
 
-    # A title already in the portal is refreshed, not duplicated: its metadata is
-    # updated from the row but its body (and created_at/by) are left as they are.
-    if existing_story
-      preview.creates_story = false
-      preview.creates_idea = false
-      preview.updates_story = true
-      return if @dry_run
-
-      update_existing_story(existing_story, row, organization:, windows_type:, author:, workshop:, external_title:)
-      apply_tags(existing_story, tags)
-      @result.stories_updated += 1
-      return
-    end
-
-    # Every new row becomes a Story. A non-AWBW author's story also gets a StoryIdea
-    # (the submission record) promoted into it; AWBW-authored rows are Story-only.
+    # Every row becomes a Story. A row flagged as a story idea (or, absent a flag,
+    # a non-AWBW author's story) also gets a StoryIdea promoted into it.
     idea = nil
     if preview.creates_idea
       idea = build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:)
@@ -195,10 +162,10 @@ class StoryImporter
     import_images(row, story, preview)
   end
 
-  # Story images come from the WordPress "Image URL" column (pipe-separated; the
-  # first is the featured image → PrimaryAsset, the rest → GalleryAssets).
-  # Downloading them inline would blow the import request's timeout, so we defer
-  # to a background job — counted in the preview but only enqueued on a real run.
+  # Story images come from the "image_urls" column (pipe-separated; the first is
+  # the featured image → PrimaryAsset, the rest → GalleryAssets). Downloading them
+  # inline would blow the import request's timeout, so we defer to a background job
+  # — counted in the preview but only enqueued on a real run.
   def import_images(row, story, preview)
     urls = image_urls(row)
     preview.images = urls.size
@@ -209,11 +176,11 @@ class StoryImporter
   end
 
   def image_urls(row)
-    clean(row["Image URL"]).split("|").map(&:strip).reject(&:blank?).uniq
+    clean(row["image_urls"]).split("|").map(&:strip).reject(&:blank?).uniq
   end
 
   def image_title(row)
-    clean(row["Image Alt Text"]).presence || clean(row["Image Title"]).presence
+    clean(row["image_alt_titles"]).split("|").map(&:strip).find(&:present?)
   end
 
   # Fill the preview with what the row resolved to (matched vs new records + the
@@ -225,7 +192,7 @@ class StoryImporter
     preview.author_new = author&.new_record? || false
     preview.author_updated = author&.persisted? && DISPLAY_PREF_BY_CREDIT.key?(author_credit(row))
     preview.creates_story = true
-    preview.creates_idea = from_non_awbw?(author) && organization.present?
+    preview.creates_idea = creates_idea?(row, author, organization)
     preview.workshop_label =
       if workshop then "Matched workshop: #{workshop.title}"
       elsif external_title.present? then "External title: #{external_title}"
@@ -253,7 +220,7 @@ class StoryImporter
   end
 
   def build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:)
-    featured = FEATURED_FLAGS.any? { |flag| truthy?(row[flag]) }
+    featured = featured?(row)
     published = published?(row)
     story = Story.new(
       story_idea: idea,
@@ -264,7 +231,6 @@ class StoryImporter
       author: author&.persisted? ? author : nil,
       workshop: workshop,
       external_workshop_title: external_title,
-      story_workshops_attributes: story_workshops_attributes(workshop, external_title),
       youtube_url: youtube_url(row),
       author_credit_preference: author_credit(row),
       permission_given: true,
@@ -279,48 +245,12 @@ class StoryImporter
     story
   end
 
-  # Refresh an existing story's metadata from the row. The body (rhino_body) and
-  # the original authorship stamps (created_at/created_by) are deliberately left
-  # untouched; an unresolved author keeps the story's current one.
-  def update_existing_story(story, row, organization:, windows_type:, author:, workshop:, external_title:)
-    featured = FEATURED_FLAGS.any? { |flag| truthy?(row[flag]) }
-    published = published?(row)
-    story.assign_attributes(
-      organization: organization,
-      windows_type: windows_type,
-      author: author&.persisted? ? author : story.author,
-      workshop: workshop,
-      external_workshop_title: external_title,
-      youtube_url: youtube_url(row),
-      author_credit_preference: author_credit(row),
-      published: published,
-      publicly_visible: published,
-      featured: featured,
-      publicly_featured: featured,
-      updated_by: @import_user
-    )
-    persist(story)
-    add_workshop_link(story, workshop, external_title)
-  end
-
-  # Add the row's workshop link to the join if it isn't already there, leaving any
-  # other (e.g. manually curated) links in place.
-  def add_workshop_link(story, workshop, external_title)
-    link =
-      if workshop then { workshop_id: workshop.id, external_workshop_title: nil }
-      elsif external_title.present? then { workshop_id: nil, external_workshop_title: external_title }
-      end
-    return unless link
-
-    story.story_workshops.find_or_create_by!(link)
-  end
-
-  # Connect a grant-tagged story to its Grant through the author's Scholarship
+  # Connect a grant-named story to its Grant through the author's Scholarship
   # (story → author → scholarship → grant). Needs a resolved author (a Person).
   def link_grant_scholarship(row, story, author)
     grant_names = grant_names_for(row)
     return if grant_names.empty?
-    return record_warning(row, "grant tag present but author unresolved (needs first + last name)") unless author&.persisted?
+    return record_warning(row, "grant present but author unresolved (needs first + last name)") unless author&.persisted?
 
     grant_names.each do |grant_name|
       grant = Grant.where("LOWER(name) = ?", grant_name.downcase).first
@@ -330,13 +260,13 @@ class StoryImporter
   end
 
   def grant_names_for(row)
-    clean(row["Tags"]).split(/[|,]/).map(&:strip).filter_map { |tag| GRANT_BY_TAG[tag.downcase] }
+    clean(row["grants"]).split("|").map(&:strip).reject(&:blank?)
   end
 
   # Find or build the story's author Person from the facilitator name. A Person
   # requires both names, so a single-name facilitator (e.g. "Teena") can't resolve.
   # On a dry run an unseen author is returned unsaved so the preview reflects
-  # whether a StoryIdea would also be created (non-AWBW authors only).
+  # whether a StoryIdea would also be created.
   def resolve_author(row)
     first = clean(row["facilitator_name"])
     last = clean(row["facilitator_last_name"])
@@ -357,6 +287,14 @@ class StoryImporter
     author.present? && !author.user&.super_user?
   end
 
+  # Whether the row also creates a StoryIdea. The reviewed sheet says so in
+  # import_action; absent that, fall back to the resolved author + organization.
+  def creates_idea?(row, author, organization)
+    action = clean(row["import_action"])
+    return action.downcase.include?("story idea") if action.present?
+    from_non_awbw?(author) && organization.present?
+  end
+
   def build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:)
     idea = StoryIdea.new(
       title: title,
@@ -365,7 +303,6 @@ class StoryImporter
       windows_type: windows_type,
       workshop: workshop,
       external_workshop_title: external_title,
-      story_idea_workshops_attributes: story_workshops_attributes(workshop, external_title),
       youtube_url: youtube_url(row),
       author_credit_preference: author_credit(row),
       permission_given: true,
@@ -376,44 +313,41 @@ class StoryImporter
     idea
   end
 
-  # Resolve the Organization via the mapping file: "SKIP" → none; a variant name
-  # → the mapped org; otherwise the WordPress name as-is. Blank → "Unknown".
+  # "SKIP" → no org/affiliation; blank → "Unknown organization"; otherwise the
+  # name as written (found or created).
   def resolve_organization(row)
     raw = clean(row["organization_name"])
     return find_or_create_organization("Unknown organization") if raw.blank?
-
-    mapped = ORG_BY_NAME[raw.downcase]
-    return nil if mapped == "SKIP"
-    find_or_create_organization(mapped.presence || raw)
+    return nil if raw.casecmp?("SKIP")
+    find_or_create_organization(raw)
   end
 
   # Exact-title match links the story to an existing Workshop; otherwise the
   # free-text title is kept as external_workshop_title. Returns [ workshop, title ].
   def workshop_for(row)
-    title = clean(row["story_workshop_name"])
+    title = workshop_title(row)
     return [ nil, nil ] if title.blank?
 
     workshop = Workshop.where("LOWER(title) = ?", title.downcase).first
     workshop ? [ workshop, nil ] : [ nil, title ]
   end
 
-  def story_workshops_attributes(workshop, external_title)
-    rows = []
-    rows << { workshop_id: workshop.id } if workshop
-    rows << { external_workshop_title: external_title } if external_title.present?
-    rows
+  # The sheet prefixes the workshop with how it resolved ("External title: …" /
+  # "Matched workshop: …"); the title itself is what follows.
+  def workshop_title(row)
+    clean(row["workshop"]).sub(/\A(External title|Matched workshop):\s*/i, "")
   end
 
   def original_created_at(row)
-    date = clean(row["Date"])
+    date = clean(row["published_date"])
     return if date.blank?
     Time.zone.parse(date)
   rescue ArgumentError
     nil
   end
 
-  # Preserve a facilitator name that couldn't become an author (single name,
-  # "AWBW") as a Comment on the story (and its idea) so it isn't lost.
+  # Preserve a facilitator name that couldn't become an author (single name)
+  # as a Comment on the story (and its idea) so it isn't lost.
   def comment_facilitator(row, story, idea, author)
     return if author
     name = facilitator_display(row)
@@ -454,47 +388,41 @@ class StoryImporter
     [ clean(row["facilitator_name"]), clean(row["facilitator_last_name"]) ].compact_blank.join(" ")
   end
 
-  # Translate a row's WordPress values (Categories, User Categories, audience
-  # Tags) into portal Sectors and Categories via the mapping file. Unmatched
-  # values are surfaced as warnings (never invented), once per row — including on
-  # a dry run so the preview reflects real tagging coverage.
+  # Look up the row's resolved Sectors and Categories by name. Unmatched values
+  # are surfaced as warnings (never invented), including on a dry run so the
+  # preview reflects real tagging coverage.
   def resolve_tags(row)
-    sectors = []
-    categories = []
-    translation_sources(row).each do |source|
-      targets = TRANSLATIONS[source.downcase]
-      if targets.nil?
-        record_warning(row, "no translation for #{source.inspect}")
-        next
-      end
-      targets.each { |target| resolve_target(row, source, target, sectors, categories) }
-    end
+    sectors = sector_names(row).filter_map { |name| find_sector(row, name) }
+    categories = category_specs(row).filter_map { |type, name| find_category(row, type, name) }
     RowTags.new(sectors: sectors.uniq, categories: categories.uniq)
   end
 
-  def resolve_target(row, source, target, sectors, categories)
-    if (name = target["sector"])
-      sector = Sector.where("LOWER(name) = ?", name.downcase).first
-      sector ? sectors << sector : record_warning(row, "no Sector match for #{source.inspect} → #{name.inspect}")
-    elsif (name = target["category"])
-      category = category_named(name, target["type"])
-      category ? categories << category : record_warning(row, "no Category match for #{source.inspect} → #{name.inspect} (#{target['type']})")
+  def sector_names(row)
+    clean(row["sectors"]).split("|").map(&:strip).reject(&:blank?)
+  end
+
+  def find_sector(row, name)
+    Sector.where("LOWER(name) = ?", name.downcase).first ||
+      record_warning(row, "no Sector match for #{name.inspect}")
+  end
+
+  # Categories are written as "Type: Name" (e.g. "AgeRange: Children").
+  def category_specs(row)
+    clean(row["categories"]).split("|").map(&:strip).reject(&:blank?).map do |token|
+      type, name = token.split(":", 2).map(&:strip)
+      name ? [ type, name ] : [ nil, type ]
     end
+  end
+
+  def find_category(row, type, name)
+    category_named(name, type) ||
+      record_warning(row, "no Category match for #{name.inspect} (#{type})")
   end
 
   def category_named(name, type)
     scope = Category.where("LOWER(categories.name) = ?", name.downcase)
     scope = scope.joins(:category_type).where(category_types: { name: type }) if type.present?
     scope.first
-  end
-
-  # Distinct WordPress source values across the translation columns, de-duplicated
-  # case-insensitively (Categories and User Categories overlap heavily).
-  def translation_sources(row)
-    TRANSLATION_COLUMNS
-      .flat_map { |column| clean(row[column]).split(/[|,]/).map(&:strip) }
-      .reject(&:blank?)
-      .uniq(&:downcase)
   end
 
   # Persist tags only for a saved record on a real run; a dry run resolves and
@@ -517,26 +445,21 @@ class StoryImporter
   end
 
   def windows_type_for(row)
-    audiences = clean(row["Tags"]).to_s.downcase.split(/[|,]/).map(&:strip)
-    short_name =
-      if audiences.intersect?(COMBINED_AUDIENCE) ||
-         (audiences.intersect?(CHILD_AUDIENCE) && (audiences - CHILD_AUDIENCE).any?)
-        "Combined"
-      elsif audiences.intersect?(CHILD_AUDIENCE)
-        "Children"
-      else
-        DEFAULT_WINDOWS_TYPE
-      end
-    @windows_type_cache[short_name] ||= WindowsType.find_by!(short_name: short_name)
+    name = clean(row["window_type"]).presence || DEFAULT_WINDOWS_TYPE
+    @windows_type_cache[name] ||= WindowsType.find_by(short_name: name) || default_windows_type(row, name)
+  end
+
+  def default_windows_type(row, name)
+    record_warning(row, "unknown window type #{name.inspect}, using #{DEFAULT_WINDOWS_TYPE}")
+    @windows_type_cache[DEFAULT_WINDOWS_TYPE] ||= WindowsType.find_by!(short_name: DEFAULT_WINDOWS_TYPE)
   end
 
   def body_html(row, title)
-    wpautop(clean_html(row["Content"])).presence ||
-      wpautop(clean_html(row["Excerpt"])).presence ||
+    wpautop(clean_html(row["content"])).presence ||
       "<p>#{ERB::Util.html_escape(title)}</p>"
   end
 
-  # The export's editor content uses raw newlines (\r\n) for paragraph breaks
+  # The sheet's editor content uses raw newlines (\r\n) for paragraph breaks
   # rather than <p>/<br>, which HTML collapses. Mimic WordPress's wpautop: blank
   # lines become paragraphs and remaining single newlines become <br>. Content
   # that already carries <p> tags is left untouched.
@@ -549,15 +472,28 @@ class StoryImporter
   end
 
   def youtube_url(row)
-    (clean(row["story_youtube_url"]).presence || clean(row["story_youtube_ur"]).presence)
+    clean(row["youtube_url"]).presence
   end
 
   def author_credit(row)
-    AUTHOR_CREDIT_BY_SHOWHIDE[clean(row["showhide_the_name"])] || DEFAULT_AUTHOR_CREDIT
+    return "anonymous" if clean(row["anonymous"]).casecmp?("anonymous")
+    AUTHOR_CREDIT_BY_DISPLAY[clean(row["name_display"]).downcase] || DEFAULT_AUTHOR_CREDIT
   end
 
   def published?(row)
-    clean(row["Status"]).casecmp?(PUBLISHED_WP_STATUS)
+    clean(row["published"]).casecmp?("yes")
+  end
+
+  def featured?(row)
+    truthy?(row["featured"])
+  end
+
+  def skipped_action?(row)
+    clean(row["import_action"]).start_with?(SKIP_ACTION)
+  end
+
+  def skip_reason(row)
+    clean(row["import_action"]).sub(/\ASkipped\s*[—–-]\s*/, "").presence || "flagged skipped"
   end
 
   def persist(record)
@@ -574,14 +510,14 @@ class StoryImporter
   end
 
   def wp_id(row)
-    clean(row["ID"]).presence || "?"
+    clean(row["wp_id"]).presence || "?"
   end
 
   def truthy?(value)
     %w[1 true yes].include?(clean(value).to_s.downcase)
   end
 
-  # WordPress export encodes entities (e.g. &amp;) even in plain-text columns.
+  # Values may carry HTML entities (e.g. &amp;) even in plain-text columns.
   def clean(value)
     CGI.unescapeHTML(value.to_s).strip
   end
@@ -592,12 +528,12 @@ class StoryImporter
   end
 
   def record_skip(row, reason)
-    @result.skipped << "row #{wp_id(row)} (#{clean(row['Title'])}): #{reason}"
+    @result.skipped << "row #{wp_id(row)} (#{clean(row['title'])}): #{reason}"
     nil
   end
 
   def record_warning(row, reason)
-    @result.warnings << "row #{wp_id(row)} (#{clean(row['Title'])}): #{reason}"
+    @result.warnings << "row #{wp_id(row)} (#{clean(row['title'])}): #{reason}"
     nil
   end
 end
