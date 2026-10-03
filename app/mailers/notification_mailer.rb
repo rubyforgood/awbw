@@ -1,4 +1,6 @@
 class NotificationMailer < ApplicationMailer
+  helper EventHelper
+
   default to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze

@@ -9,6 +9,6 @@ From: <%= @person.full_name %>
 
 <% @answers.each do |answer| %>
 <%= strip_tags(answer.question_name_when_answered.presence || answer.form_field&.name) %>
-<%= answer.submitted_answer.presence || "—" %>
+<%= resolve_answer_text(answer.form_field, answer.submitted_answer).presence || "—" %>
 
 <% end %>
