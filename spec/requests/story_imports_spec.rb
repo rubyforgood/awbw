@@ -4,18 +4,14 @@ RSpec.describe "Story imports", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:regular_user) { create(:user) }
 
-  # Reference data the importer needs to resolve the fixture's real rows.
+  # Reference data the importer needs to resolve the fixture's rows.
   before do
     create(:windows_type, :adult)
     create(:windows_type, :children)
     create(:windows_type, :combined)
     create(:organization_status, name: "Pending")
-    # Sectors the fixture's categories map onto (see config/story_import_sector_mapping.yml).
-    [
-      "Self-Care/Personal Growth", "Domestic Violence", "Incarceration", "LGBTQIA+",
-      "Substance Use/Recovery", "Community Engagement", "Racial/Social Justice",
-      "Child Abuse/Neglect", "Mental Health", "Foster Care/Adoption"
-    ].each { |name| create(:sector, name: name) }
+    # Sectors the fixture names directly in its "sectors" column.
+    [ "Self-Care/Personal Growth", "Domestic Violence", "LGBTQIA+" ].each { |name| create(:sector, name: name) }
   end
 
   let(:csv) { fixture_file_upload("spec/fixtures/files/stories_import.csv", "text/csv") }
@@ -35,6 +31,7 @@ RSpec.describe "Story imports", type: :request do
 
       expect(response).to be_successful
       expect(response.body).to include("Import stories from CSV")
+      expect(response.body).to include(template_story_import_path(format: :csv))
     end
 
     it "redirects non-admins" do
@@ -48,6 +45,28 @@ RSpec.describe "Story imports", type: :request do
       get new_story_import_path
 
       expect(response).to redirect_to(new_user_session_path)
+    end
+  end
+
+  describe "GET /stories/import/template" do
+    it "downloads a header-only CSV template for admins" do
+      sign_in admin
+      get template_story_import_path(format: :csv)
+
+      expect(response).to be_successful
+      expect(response.media_type).to eq("text/csv")
+      expect(response.headers["Content-Disposition"]).to include("stories-import-template.csv")
+
+      rows = CSV.parse(response.body)
+      expect(rows.size).to eq(1)
+      expect(rows.first).to include("title", "facilitator_name", "categories", "image_urls")
+    end
+
+    it "is forbidden for non-admins" do
+      sign_in regular_user
+      get template_story_import_path(format: :csv)
+
+      expect(response).to redirect_to(root_path)
     end
   end
 
@@ -101,19 +120,18 @@ RSpec.describe "Story imports", type: :request do
   describe "POST /stories/import/confirm" do
     before { sign_in admin }
 
-    # Every fixture row has a single-name facilitator (no last name), so each
-    # becomes a Story-only record (a StoryIdea is created only for a resolvable,
-    # non-AWBW author). The facilitator name is preserved as a comment.
-    it "creates a Story for every row" do
+    # The fixture has 4 importable rows (1 blank-title row is skipped); each has an
+    # organization, so every one gets a Story and a promoted StoryIdea.
+    it "creates a Story and an idea for every importable row" do
       expect {
         post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
-      }.to change(Story, :count).by(10).and change(StoryIdea, :count).by(0)
+      }.to change(Story, :count).by(4).and change(StoryIdea, :count).by(4)
 
       expect(response).to redirect_to(stories_path)
-      expect(flash[:notice]).to match(/0 story ideas and 10 connected stories/)
+      expect(flash[:notice]).to match(/4 story ideas and 4 connected stories/)
     end
 
-    it "tags stories with the sector their WordPress category maps to" do
+    it "tags stories with the sectors named in the sheet" do
       post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
 
       expect(Story.find_by(title: "A Step in the Right Direction").sectors.pluck(:name)).to include("Domestic Violence")
