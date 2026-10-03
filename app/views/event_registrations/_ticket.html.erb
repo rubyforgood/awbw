@@ -132,6 +132,7 @@
         <% next if event_registration.transferred_out? && !callout.financial_record? %>
         <% next if callout.payment_access_gated && !payment_access && !(preview && show_all) %>
         <% next if callout.ce_payment_access_gated && !event_registration.ce_paid_in_full? && !(preview && show_all) %>
+        <% next if callout.attended_gated && !event_registration.attended? && !(preview && show_all) %>
         <% if callout.behavioral_builtin? %>
           <% card = builtin_cards.card_for(callout) %>
           <% if card %>

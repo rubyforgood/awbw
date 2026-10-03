@@ -1824,6 +1824,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
+    t.boolean "attended_gated", default: false, null: false
     t.index ["created_by_id"], name: "index_registration_ticket_callouts_on_created_by_id"
     t.index ["event_id", "builtin_key"], name: "index_registration_ticket_callouts_on_event_id_and_builtin_key", unique: true
     t.index ["event_id", "position"], name: "index_registration_ticket_callouts_on_event_id_and_position"
