@@ -253,6 +253,7 @@ class StoryImporter
       author: author&.persisted? ? author : nil,
       workshop: workshop,
       external_workshop_title: external_title,
+      story_workshops_attributes: story_workshops_attributes(workshop, external_title),
       youtube_url: youtube_url(row),
       author_credit_preference: author_credit(row),
       permission_given: true,
@@ -346,6 +347,13 @@ class StoryImporter
 
     workshop = Workshop.where("LOWER(title) = ?", title.downcase).first
     workshop ? [ workshop, nil ] : [ nil, title ]
+  end
+
+  def story_workshops_attributes(workshop, external_title)
+    rows = []
+    rows << { workshop_id: workshop.id } if workshop
+    rows << { external_workshop_title: external_title } if external_title.present?
+    rows
   end
 
   def original_created_at(row)

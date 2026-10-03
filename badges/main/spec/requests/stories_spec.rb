@@ -191,6 +191,33 @@ RSpec.describe "/stories", type: :request do
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
+        it "sorts by workshop using a link's typed-in title when it has no workshop" do
+          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
+          story_a.update!(workshop: nil)
+          story_z.update!(workshop: nil)
+          story_a.story_workshops.create!(external_workshop_title: "Zeppelin Session")
+          story_z.story_workshops.create!(external_workshop_title: "Aardvark Session")
+
+          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+        end
+
+        it "sorts by workshop using the legacy external title when there are no links" do
+          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
+          story_a.update!(workshop: nil, external_workshop_title: "Zeppelin Session")
+          story_z.update!(workshop: nil, external_workshop_title: "Aardvark Session")
+
+          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+        end
+
+        it "sorts by workshop for stories that only have the legacy workshop column" do
+          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
+
+          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
+        end
+
         it "sorts by author asc" do
           get stories_url, params: { sort: "author", direction: "asc" }, headers: turbo_headers
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
@@ -303,6 +330,139 @@ RSpec.describe "/stories", type: :request do
         expect {
           post stories_url, params: { story: base_attributes }
         }.not_to change(Notification, :count)
+      end
+    end
+
+    describe "GET /new from a workshop page" do
+      it "pre-selects the workshop passed in the workshop_id param" do
+        workshop = create(:workshop, title: "Origin Workshop")
+
+        get new_story_url(workshop_id: workshop.id)
+
+        expect(response).to have_http_status(:ok)
+        selected = Nokogiri::HTML(response.body)
+          .at("select[name='story[story_workshops_attributes][0][workshop_id]'] option[selected]")
+        expect(selected&.[]("value")).to eq(workshop.id.to_s)
+      end
+
+      it "offers a back link to the originating workshop" do
+        workshop = create(:workshop)
+
+        get new_story_url(workshop_id: workshop.id, return_to: "workshop")
+
+        expect(response.body).to include(workshop_path(workshop, anchor: "workshopStories"))
+      end
+
+      it "keeps the back link after a rejected save" do
+        workshop = create(:workshop)
+
+        post stories_url, params: { return_to: "workshop", workshop_id: workshop.id,
+                                    story: { title: "" } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include(workshop_path(workshop, anchor: "workshopStories"))
+      end
+
+      it "pre-selects the windows audience passed in the windows_type_id param" do
+        workshop = create(:workshop)
+
+        get new_story_url(workshop_id: workshop.id, windows_type_id: workshop.windows_type_id)
+
+        expect(response).to have_http_status(:ok)
+        selected = Nokogiri::HTML(response.body)
+          .at("select[name='story[windows_type_id]'] option[selected]")
+        expect(selected&.[]("value")).to eq(workshop.windows_type_id.to_s)
+      end
+    end
+
+    describe "GET /new promoting from a story idea" do
+      it "copies the idea's workshop and external title into the new story form" do
+        workshop = create(:workshop, title: "Promoted Workshop")
+        idea = create(:story_idea, workshop: workshop, external_workshop_title: "Unlisted Session")
+
+        get new_story_url(story_idea_id: idea.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Promoted Workshop")
+        expect(response.body).to include("Unlisted Session")
+      end
+    end
+
+    describe "legacy workshop on the edit page" do
+      it "surfaces the legacy direct workshop read-only when present" do
+        legacy_workshop = create(:workshop, title: "Legacy Direct Workshop")
+        story = create(:story, :published, workshop: legacy_workshop)
+
+        get edit_story_url(story)
+
+        expect(response.body).to include("Previously linked (read-only)")
+        expect(response.body).to include("Legacy Direct Workshop")
+      end
+
+      it "omits the read-only legacy block when there is no direct workshop data" do
+        story = create(:story, :published, workshop: nil, external_workshop_title: nil)
+
+        get edit_story_url(story)
+
+        expect(response.body).not_to include("Previously linked (read-only)")
+      end
+    end
+
+    describe "PATCH /update linked workshops" do
+      let(:workshop) { create(:workshop, title: "Anger Volcano") }
+
+      it "accepts removing a workshop row and re-adding the same workshop" do
+        story = create(:story, :published, workshop: nil)
+        existing = story.story_workshops.create!(workshop: workshop)
+
+        patch story_url(story), params: { story: { story_workshops_attributes: {
+          "0" => { id: existing.id, workshop_id: workshop.id, _destroy: "1" },
+          "1" => { workshop_id: workshop.id, external_workshop_title: "Retyped" }
+        } } }
+
+        expect(response).to have_http_status(:see_other)
+        row = story.reload.story_workshops.sole
+        expect(row.workshop).to eq(workshop)
+        expect(row.external_workshop_title).to eq("Retyped")
+      end
+
+      it "reports an error when a new story is created with the same workshop twice" do
+        expect {
+          post stories_url, params: { story: base_attributes.except(:workshop_id).merge(
+            story_workshops_attributes: {
+              "0" => { workshop_id: workshop.id },
+              "1" => { workshop_id: workshop.id }
+            }
+          ) }
+        }.not_to change(Story, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("is already linked to this story")
+      end
+
+      it "reports an error when the same workshop is added twice" do
+        story = create(:story, :published, workshop: nil)
+
+        patch story_url(story), params: { story: { story_workshops_attributes: {
+          "0" => { workshop_id: workshop.id },
+          "1" => { workshop_id: workshop.id }
+        } } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("is already linked to this story")
+        expect(story.reload.story_workshops).to be_empty
+      end
+
+      it "accepts the same workshop twice under different titles" do
+        story = create(:story, :published, workshop: nil)
+
+        patch story_url(story), params: { story: { story_workshops_attributes: {
+          "0" => { workshop_id: workshop.id },
+          "1" => { workshop_id: workshop.id, external_workshop_title: "Teen variant" }
+        } } }
+
+        expect(response).to have_http_status(:see_other)
+        expect(story.reload.story_workshops.count).to eq(2)
       end
     end
 

@@ -428,6 +428,15 @@ RSpec.describe NotificationMailer, type: :mailer do
         expect(mail.subject).to include("Dana Volunteer")
         expect(mail.body.encoded).to include("I care about the mission.")
       end
+
+      it "shows sector names instead of the stored ids" do
+        sector = create(:sector, name: "Domestic violence")
+        field = create(:form_field, form: form, name: "Primary sector", field_identifier: "primary_sector")
+        submission.persist_answer(field, sector.id.to_s)
+
+        expect(mail.body.encoded).to include("Domestic violence")
+        expect(mail.body.encoded).not_to match(/>\s*#{sector.id}\s*</)
+      end
     end
   end
 end

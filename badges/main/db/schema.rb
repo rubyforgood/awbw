@@ -2060,6 +2060,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
     t.index ["workshop_id"], name: "index_stories_on_workshop_id"
   end
 
+  create_table "stories_workshops", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "story_id", null: false
+    t.integer "workshop_id"
+    t.string "external_workshop_title"
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["story_id", "position"], name: "index_stories_workshops_on_story_id_and_position"
+    t.index ["story_id", "workshop_id", "external_workshop_title"], name: "index_stories_workshops_on_story_workshop_and_title", unique: true
+    t.index ["story_id"], name: "index_stories_workshops_on_story_id"
+    t.index ["workshop_id"], name: "index_stories_workshops_on_workshop_id"
+  end
+
   create_table "story_ideas", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "author_credit_preference"
     t.bigint "author_id"
@@ -2770,6 +2783,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
   add_foreign_key "stories", "users", column: "updated_by_id"
   add_foreign_key "stories", "windows_types"
   add_foreign_key "stories", "workshops"
+  add_foreign_key "stories_workshops", "stories"
+  add_foreign_key "stories_workshops", "workshops"
   add_foreign_key "story_ideas", "organizations"
   add_foreign_key "story_ideas", "people", column: "author_id"
   add_foreign_key "story_ideas", "users", column: "created_by_id"

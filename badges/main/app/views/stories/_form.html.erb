@@ -1,6 +1,12 @@
 <%= simple_form_for(@story, html: { multipart: true }) do |f| %>
   <%= render 'shared/errors', resource: @story if @story.errors.any? %>
 
+  <%# Carries the origin forward so a rejected save re-renders with its back link intact. %>
+  <% if params[:return_to].present? %>
+    <%= hidden_field_tag :return_to, params[:return_to] %>
+    <%= hidden_field_tag :workshop_id, params[:workshop_id] if params[:workshop_id].present? %>
+  <% end %>
+
   <% story_idea = @story_idea || f.object.story_idea %>
   <% selected_sector_ids = @preselected_sector_ids || @story.sector_ids %>
   <% selected_category_ids = @preselected_category_ids || @story.category_ids %>
@@ -52,27 +58,6 @@
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
-      <%= f.input :workshop_id,
-                  collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id ]] : [],
-                  include_blank: true,
-                  input_html: {
-                    class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
-                    data: {
-                      controller: "remote-select",
-                      remote_select_model_value: "workshop"
-                    }
-                  },
-                  prompt: "Type to search workshops…",
-                  label: "Workshop",
-                  label_html: { class: "block font-medium mb-1 text-gray-700" } %>
-
-      <%= f.input :external_workshop_title,
-                  as: :text,
-                  label: "Workshop title (if different or unlisted)",
-                  input_html: { rows: 1 } %>
-    </div>
-
-    <div class="flex-1 mb-4 md:mb-0">
       <% default_org = default_organization_for_form(f.object) %>
       <%= f.input :organization_id,
                   collection: default_org ? [[ default_org.name, default_org.id ]] : [],
@@ -89,6 +74,30 @@
                   label: "Organization",
                   label_html: { class: "block font-medium mb-1 text-gray-700" } %>
     </div>
+  </div>
+
+  <div class="my-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+    <label class="block text-base font-semibold text-gray-800">Workshops</label>
+    <p class="mb-3 text-sm text-gray-500">
+      Link each workshop in the curriculum, or type a name for one that isn't listed.
+    </p>
+    <% legacy_workshop = f.object.persisted? ? f.object.decorate.legacy_workshop_reference : nil %>
+    <% if legacy_workshop.present? %>
+      <div class="mb-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
+        <span class="block text-xs font-medium text-gray-500">Previously linked (read-only)</span>
+        <span class="text-sm text-gray-800"><%= legacy_workshop %></span>
+      </div>
+    <% end %>
+    <div id="story-workshops-fields">
+      <%= f.fields_for :story_workshops do |story_workshop| %>
+        <%= render "story_workshop_fields", f: story_workshop %>
+      <% end %>
+    </div>
+    <%= link_to_add_association "Add workshop", f, :story_workshops,
+                                partial: "story_workshop_fields",
+                                data: { association_insertion_node: "#story-workshops-fields",
+                                        association_insertion_method: "append" },
+                                class: button_classes(:secondary_outline) %>
   </div>
 
   <div class="form-group <%= 'has-error' if f.object.errors[:rhino_body].present? %>">

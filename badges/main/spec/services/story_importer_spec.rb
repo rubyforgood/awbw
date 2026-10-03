@@ -134,6 +134,7 @@ RSpec.describe StoryImporter do
       import([ base_row("story_workshop_name" => "Anger Volcano") ])
 
       expect(Story.sole.workshop).to eq(workshop)
+      expect(Story.sole.workshops).to eq([ workshop ])
       expect(Story.sole.external_workshop_title).to be_blank
     end
 
@@ -142,6 +143,7 @@ RSpec.describe StoryImporter do
 
       expect(Story.sole.workshop).to be_nil
       expect(Story.sole.external_workshop_title).to eq("Some Unlisted Workshop")
+      expect(Story.sole.story_workshops.sole.external_workshop_title).to eq("Some Unlisted Workshop")
     end
 
     it "marks the story featured when a featured flag is set" do

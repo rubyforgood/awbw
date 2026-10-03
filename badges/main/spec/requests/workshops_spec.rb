@@ -52,6 +52,89 @@ RSpec.describe "/workshops", type: :request do
     end
   end
 
+  # --- STORIES THAT USE THIS WORKSHOP ----------------------------------------
+  describe "GET /show stories section" do
+    let(:user) { create(:user) }
+    let(:workshop) { create(:workshop, published: true) }
+    let(:frame_headers) { { "Turbo-Frame" => "show_lazy" } }
+
+    before { sign_in user }
+
+    it "lists published stories linked to the workshop and omits unrelated ones" do
+      linked = create(:story, :published, workshop: workshop, title: "Linked story")
+      unrelated = create(:story, :published, title: "Unrelated story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("show_lazy")
+      expect(response.body).to include("Stories that use this workshop")
+      expect(response.body).to include(linked.title)
+      expect(response.body).not_to include(unrelated.title)
+    end
+
+    it "points the new-story link back at this workshop" do
+      sign_in create(:user, :admin)
+      create(:story, :published, workshop: workshop)
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).to include("return_to=workshop")
+    end
+
+    it "lists a story once when it links the workshop under two titles" do
+      story = create(:story, :published, workshop: nil, title: "Repeat story")
+      story.story_workshops.create!(workshop: workshop)
+      story.story_workshops.create!(workshop: workshop, external_workshop_title: "Teen variant")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body.scan(story.title).size).to eq(1)
+    end
+
+    it "credits the story's author on the card" do
+      author = create(:person, first_name: "Cathy", last_name: "Stern")
+      create(:story, :published, workshop: workshop, author: author, title: "Credited story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).to include("Cathy")
+    end
+
+    it "renders without error for a linked story missing its image and organization" do
+      create(:story, :published, workshop: workshop, organization: nil, title: "Imageless story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("show_lazy")
+      expect(response.body).to include("Imageless story")
+    end
+  end
+
+  describe "GET /edit stories panel" do
+    let(:admin) { create(:user, :admin) }
+    let(:workshop) { create(:workshop) }
+
+    before { sign_in admin }
+
+    it "starts collapsed when no stories are linked" do
+      get edit_workshop_url(workshop)
+
+      panel = Nokogiri::HTML(response.body).at("#stories")
+      expect(panel["class"]).to include("hidden")
+    end
+
+    it "starts expanded when a story is already linked" do
+      create(:story_workshop, workshop: workshop)
+
+      get edit_workshop_url(workshop)
+
+      panel = Nokogiri::HTML(response.body).at("#stories")
+      expect(panel["class"]).not_to include("hidden")
+    end
+  end
+
   # --- SECTOR FILTER LABELS --------------------------------------------------
   describe "sector filter dropdown labels" do
     let(:admin) { create(:user, :admin) }
