@@ -359,6 +359,38 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
+    describe "PATCH /update linked workshops" do
+      let(:workshop) { create(:workshop, title: "Anger Volcano") }
+
+      it "accepts removing a workshop row and re-adding the same workshop" do
+        story = create(:story, :published, workshop: nil)
+        existing = story.story_workshops.create!(workshop: workshop)
+
+        patch story_url(story), params: { story: { story_workshops_attributes: {
+          "0" => { id: existing.id, workshop_id: workshop.id, _destroy: "1" },
+          "1" => { workshop_id: workshop.id, external_workshop_title: "Retyped" }
+        } } }
+
+        expect(response).to have_http_status(:see_other)
+        row = story.reload.story_workshops.sole
+        expect(row.workshop).to eq(workshop)
+        expect(row.external_workshop_title).to eq("Retyped")
+      end
+
+      it "reports an error when the same workshop is added twice" do
+        story = create(:story, :published, workshop: nil)
+
+        patch story_url(story), params: { story: { story_workshops_attributes: {
+          "0" => { workshop_id: workshop.id },
+          "1" => { workshop_id: workshop.id }
+        } } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("has the same workshop linked more than once")
+        expect(story.reload.story_workshops).to be_empty
+      end
+    end
+
     describe "comments and communications on the edit page" do
       it "renders the combined comments and communications section" do
         get edit_story_url(published_story)

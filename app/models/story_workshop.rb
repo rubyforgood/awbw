@@ -5,7 +5,6 @@ class StoryWorkshop < ApplicationRecord
   belongs_to :workshop, optional: true
 
   validates :external_workshop_title, length: { maximum: 255 }
-  validates :workshop_id, uniqueness: { scope: :story_id }, allow_nil: true
   validate :workshop_or_external_title_present
 
   private

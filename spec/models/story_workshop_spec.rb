@@ -18,13 +18,25 @@ RSpec.describe StoryWorkshop do
     it "is invalid with neither a workshop nor a title" do
       expect(build(:story_workshop, workshop: nil, external_workshop_title: nil)).not_to be_valid
     end
+  end
 
-    it "rejects the same workshop linked to a story twice" do
+  # Duplicates are rejected by Story/Workshop (which can tell a removed row from
+  # a kept one) and backstopped by the unique index, not per-row.
+  describe "duplicate links" do
+    it "lets the unique index reject the same workshop linked to a story twice" do
       story = create(:story, workshop: nil)
       workshop = create(:workshop)
       create(:story_workshop, story: story, workshop: workshop)
 
-      expect(build(:story_workshop, story: story, workshop: workshop)).not_to be_valid
+      expect { create(:story_workshop, story: story, workshop: workshop) }
+        .to raise_error(ActiveRecord::RecordNotUnique)
+    end
+
+    it "allows several external-title rows with no workshop" do
+      story = create(:story, workshop: nil)
+      create(:story_workshop, story: story, workshop: nil, external_workshop_title: "One")
+
+      expect(build(:story_workshop, story: story, workshop: nil, external_workshop_title: "Two")).to be_valid
     end
   end
 end

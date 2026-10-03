@@ -229,8 +229,8 @@ class Story < ApplicationRecord
     errors.add(:co_author_id, "must be different from the first author")
   end
 
-  # The unique index can't be reached by the per-row uniqueness check when both
-  # rows are new, so compare the submitted rows before they hit the database.
+  # Guards the stories_workshops unique index. Rows flagged for removal are
+  # deleted before the new ones are inserted, so they aren't a conflict.
   def story_workshops_must_be_distinct
     workshop_ids = story_workshops.reject(&:marked_for_destruction?).filter_map(&:workshop_id)
     return if workshop_ids.uniq.size == workshop_ids.size

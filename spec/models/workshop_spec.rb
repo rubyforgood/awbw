@@ -65,6 +65,16 @@ RSpec.describe Workshop do
       expect(workshop).not_to be_valid
       expect(workshop.errors[:base]).to include("has the same story linked more than once")
     end
+
+    it 'allows removing a row and re-adding the same story in one save' do
+      existing = workshop.story_workshops.create!(story: story)
+      workshop.assign_attributes(story_workshops_attributes: [ { id: existing.id, _destroy: "1" },
+                                                              { story_id: story.id } ])
+
+      expect(workshop).to be_valid
+      expect { workshop.save! }.not_to raise_error
+      expect(workshop.reload.stories).to eq([ story ])
+    end
   end
 
   it 'is valid with valid attributes' do

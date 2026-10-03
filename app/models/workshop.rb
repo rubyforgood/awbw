@@ -368,8 +368,8 @@ class Workshop < ApplicationRecord
 
   private
 
-  # The unique index can't be reached by the per-row uniqueness check when both
-  # rows are new, so compare the submitted rows before they hit the database.
+  # Guards the stories_workshops unique index. Rows flagged for removal are
+  # deleted before the new ones are inserted, so they aren't a conflict.
   def story_workshops_must_be_distinct
     story_ids = story_workshops.reject(&:marked_for_destruction?).filter_map(&:story_id)
     return if story_ids.uniq.size == story_ids.size
