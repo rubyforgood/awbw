@@ -21,10 +21,22 @@ class StoryImporter
   TEMPLATE_HEADERS = %w[
     row_source row_number title import_action wp_id content published published_date
     organization_name organization_status facilitator_name facilitator_last_name
-    facilitator_email author_note name_display anonymous workshop sectors window_type
-    categories grants professional_licenses image_count image_urls image_alt_titles
-    youtube_url featured
+    facilitator_email author_note name_display anonymous
+    co_facilitator_name co_facilitator_last_name co_facilitator_email co_name_display co_anonymous
+    workshop sectors window_type categories grants professional_licenses
+    image_count image_urls image_alt_titles youtube_url featured
   ].freeze
+
+  # The spreadsheet columns for each credited author. A story can carry a first
+  # author and an optional second (co-author), each with its own name/credit.
+  AUTHOR_COLUMNS = {
+    name: "facilitator_name", last: "facilitator_last_name", email: "facilitator_email",
+    display: "name_display", anonymous: "anonymous"
+  }.freeze
+  CO_AUTHOR_COLUMNS = {
+    name: "co_facilitator_name", last: "co_facilitator_last_name", email: "co_facilitator_email",
+    display: "co_name_display", anonymous: "co_anonymous"
+  }.freeze
 
   Result = Struct.new(
     :rows_processed, :ideas_created, :stories_created, :images_enqueued, :skipped, :warnings, :previews,
@@ -147,17 +159,20 @@ class StoryImporter
     preview.title = title
 
     organization = resolve_organization(row)
-    author = resolve_author(row)
+    author = resolve_person(row, AUTHOR_COLUMNS)
+    co_author = resolve_co_author(row, author)
     tags = resolve_tags(row)
     content = body_html(row, title)
     workshop, external_title = workshop_for(row)
-    describe_row(preview, row, organization, author, tags, workshop, external_title, warnings_before)
+    describe_row(preview, row, organization, author, co_author, tags, workshop, external_title, warnings_before)
 
-    # Sync the profile first so each record snapshots the author's resolved credit
+    # Sync each profile first so the records snapshot the authors' resolved credit
     # (incl. anonymity) at build time rather than drifting from it.
-    sync_author_profile(author, row)
+    sync_author_profile(author, row, AUTHOR_COLUMNS)
+    sync_author_profile(co_author, row, CO_AUTHOR_COLUMNS)
 
-    credit = story_credit(row, author)
+    credit = story_credit(row, AUTHOR_COLUMNS)
+    co_credit = story_credit(row, CO_AUTHOR_COLUMNS)
 
     # Every importable row becomes a Story with a StoryIdea promoted into it. A
     # StoryIdea requires an organization, so an org-less row is Story-only.
@@ -165,16 +180,17 @@ class StoryImporter
     if preview.creates_idea
       idea = build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:, credit:)
       return unless persist(idea)
-      nullify_blank_credit(idea, credit)
+      nullify_blank_credit(idea, :author_credit_preference, credit)
       apply_tags(idea, tags)
       @result.ideas_created += 1
     end
 
-    story = build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:, credit:)
+    story = build_story(row, idea:, title:, organization:, windows_type:, author:, co_author:, content:, workshop:, external_title:, credit:, co_credit:)
     return unless persist(story)
-    nullify_blank_credit(story, credit)
+    nullify_blank_credit(story, :author_credit_preference, credit)
+    nullify_blank_credit(story, :co_author_credit_preference, co_credit)
     apply_tags(story, tags)
-    finalize_story(row, story, idea, author, organization, tags)
+    finalize_story(row, story, idea, author, co_author, organization, tags)
     @result.stories_created += 1
 
     import_images(row, story, preview)
@@ -207,12 +223,12 @@ class StoryImporter
 
   # Fill the preview with what the row resolved to (matched vs new records + the
   # tags it would create), for the interstitial.
-  def describe_row(preview, row, organization, author, tags, workshop, external_title, warnings_before)
+  def describe_row(preview, row, organization, author, co_author, tags, workshop, external_title, warnings_before)
     preview.organization = organization&.name
     preview.organization_new = organization&.new_record? || false
-    preview.author_label = author_label(row, author)
+    preview.author_label = author_label(row, author, co_author)
     preview.author_new = author&.new_record? || false
-    preview.author_updated = author&.persisted? && DISPLAY_PREF_BY_CREDIT.key?(author_credit(row))
+    preview.author_updated = author&.persisted? && DISPLAY_PREF_BY_CREDIT.key?(credit_for(row, AUTHOR_COLUMNS))
     preview.creates_story = true
     preview.creates_idea = organization.present?
     preview.workshop_label =
@@ -221,29 +237,36 @@ class StoryImporter
       end
     preview.sectors = tags.sectors.map(&:name)
     preview.categories = tags.categories.map { |c| "#{c.category_type.name}: #{c.decorate.display_name}" }
-    preview.comment = author ? nil : facilitator_display(row).presence
+    preview.comment = author ? nil : person_display(row, AUTHOR_COLUMNS).presence
     preview.warnings = @result.warnings.drop(warnings_before).map { |w| w.sub(/\Arow \S+ \(.*?\): /, "") }
   end
 
-  def author_label(row, author)
+  def author_label(row, author, co_author)
+    label = single_author_label(row, author, AUTHOR_COLUMNS)
+    return label unless co_author
+    "#{label} + #{co_author.first_name} #{co_author.last_name}"
+  end
+
+  def single_author_label(row, author, cols)
     return "#{author.first_name} #{author.last_name}" if author
-    name = facilitator_display(row)
+    name = person_display(row, cols)
     name.present? ? "#{name} (unmatched → comment)" : "none (assumed AWBW)"
   end
 
   # Post-save side effects for a persisted story (skipped on a dry run).
-  def finalize_story(row, story, idea, author, organization, tags)
+  def finalize_story(row, story, idea, author, co_author, organization, tags)
     return if @dry_run
 
-    comment_facilitator(row, story, idea, author)
+    comment_authors(row, story, idea, author, co_author)
     comment_wp_id(row, story, idea)
     comment_missing_tags(story, tags)
     apply_grants(row, story, author)
     apply_professional_licenses(row, story, author)
     create_facilitator_affiliation(author, organization)
+    create_facilitator_affiliation(co_author, organization)
   end
 
-  def build_story(row, idea:, title:, organization:, windows_type:, author:, content:, workshop:, external_title:, credit:)
+  def build_story(row, idea:, title:, organization:, windows_type:, author:, co_author:, content:, workshop:, external_title:, credit:, co_credit:)
     featured = featured?(row)
     published = published?(row)
     story = Story.new(
@@ -253,10 +276,12 @@ class StoryImporter
       organization: organization,
       windows_type: windows_type,
       author: author&.persisted? ? author : nil,
+      co_author: co_author&.persisted? ? co_author : nil,
       workshop: workshop,
       external_workshop_title: external_title,
       youtube_url: youtube_url(row),
       author_credit_preference: credit,
+      co_author_credit_preference: co_credit,
       permission_given: true,
       published: published,
       publicly_visible: published,
@@ -287,21 +312,21 @@ class StoryImporter
     idea
   end
 
-  # The story's own credit preference is left NULL (it follows the author's live
-  # profile) unless the same author has stories with conflicting credits in this
-  # import — then the per-story answer is captured so the divergence from the
-  # profile is visible.
-  def story_credit(row, author)
-    return unless conflicting_author?(author_key(row))
-    author_credit(row)
+  # A story's credit preference is left NULL (it follows the author's live profile)
+  # unless the same person has stories with conflicting credits in this import —
+  # then the per-story answer is captured so the divergence from the profile is
+  # visible. Works for either author via its column set.
+  def story_credit(row, cols)
+    return unless conflicting_author?(author_key(row, cols))
+    credit_for(row, cols)
   end
 
   # On create the model snapshots the author's profile preference onto a blank
   # credit; undo that so a non-conflicting story persists NULL (follow the profile)
   # rather than a frozen snapshot. A NULL credit is never flagged as diverged.
-  def nullify_blank_credit(record, credit)
-    return if @dry_run || credit.present? || record.author_credit_preference.blank?
-    record.update_columns(author_credit_preference: nil)
+  def nullify_blank_credit(record, column, credit)
+    return if @dry_run || credit.present? || record[column].blank?
+    record.update_columns(column => nil)
   end
 
   # Grants connect to a story only through the author's Scholarship. Without a
@@ -354,13 +379,23 @@ class StoryImporter
   # Person requires both names, so a single-name facilitator (e.g. "Teena") or a
   # nameless AWBW row (blank last name) resolves to no author. On a dry run an
   # unseen author is returned unsaved so the preview reflects the new Person.
-  def resolve_author(row)
-    first = clean(row["facilitator_name"])
-    last = clean(row["facilitator_last_name"])
+  def resolve_person(row, cols)
+    first = clean(row[cols[:name]])
+    last = clean(row[cols[:last]])
     first, last = split_name(last) if awbw?(first)
     return if first.blank? || last.blank?
 
-    find_or_build_person(first, last, facilitator_email(row))
+    find_or_build_person(first, last, person_email(row, cols))
+  end
+
+  # The second author only sticks when there's a first author to sit behind (the
+  # model requires one) and the two are different people.
+  def resolve_co_author(row, author)
+    co_author = resolve_person(row, CO_AUTHOR_COLUMNS)
+    return unless co_author && author
+    return if author_key(row, AUTHOR_COLUMNS) == author_key(row, CO_AUTHOR_COLUMNS)
+
+    co_author
   end
 
   def find_or_build_person(first, last, email)
@@ -372,8 +407,8 @@ class StoryImporter
     @dry_run ? Person.new(attrs) : Person.create!(attrs)
   end
 
-  def facilitator_email(row)
-    email = clean(row["facilitator_email"]).presence
+  def person_email(row, cols)
+    email = clean(row[cols[:email]]).presence
     email unless email&.casecmp?("none")
   end
 
@@ -417,14 +452,23 @@ class StoryImporter
     nil
   end
 
-  # Preserve a facilitator name that couldn't become an author (single name, AWBW)
-  # as a Comment on the story (and its idea) so it isn't lost.
-  def comment_facilitator(row, story, idea, author)
-    return if author
-    name = facilitator_display(row)
+  # Preserve a facilitator name that couldn't become a credited author (single
+  # name, AWBW, or a second author with no first) as a Comment on the story (and
+  # its idea) so it isn't lost.
+  def comment_authors(row, story, idea, author, co_author)
+    comment_unresolved_author(row, story, idea, AUTHOR_COLUMNS) unless author
+    comment_unresolved_author(row, story, idea, CO_AUTHOR_COLUMNS) if co_author.nil? && person_named?(row, CO_AUTHOR_COLUMNS)
+  end
+
+  def comment_unresolved_author(row, story, idea, cols)
+    name = person_display(row, cols)
     return if name.blank?
 
     [ story, idea ].compact.each { |record| comment(record, "Imported facilitator: #{name}") }
+  end
+
+  def person_named?(row, cols)
+    clean(row[cols[:name]]).present? || clean(row[cols[:last]]).present?
   end
 
   # Stories carry no WordPress id column, so the source id is kept as a Comment.
@@ -460,22 +504,23 @@ class StoryImporter
   # anonymous_contributions and leaves the display preference at its full_name
   # default; otherwise the display preference is synced, but only when it is still
   # the default (full_name) — a deliberate choice is honored.
-  def sync_author_profile(author, row)
+  def sync_author_profile(author, row, cols)
     return unless author&.persisted?
 
-    if author_credit(row) == "anonymous"
+    credit = credit_for(row, cols)
+    if credit == "anonymous"
       author.update!(anonymous_contributions: true) unless author.anonymous_contributions?
       return
     end
 
-    pref = DISPLAY_PREF_BY_CREDIT[author_credit(row)]
+    pref = DISPLAY_PREF_BY_CREDIT[credit]
     return if pref.nil? || (author.display_name_preference.present? && author.display_name_preference != "full_name")
 
     author.update!(display_name_preference: pref)
   end
 
-  def facilitator_display(row)
-    [ clean(row["facilitator_name"]), clean(row["facilitator_last_name"]) ].compact_blank.join(" ")
+  def person_display(row, cols)
+    [ clean(row[cols[:name]]), clean(row[cols[:last]]) ].compact_blank.join(" ")
   end
 
   # Look up the row's resolved Sectors and Categories by name, keeping the names
@@ -567,10 +612,10 @@ class StoryImporter
     clean(row["youtube_url"]).presence
   end
 
-  def author_credit(row)
-    return "anonymous" if awbw?(clean(row["facilitator_name"]))
-    return "anonymous" if clean(row["anonymous"]).casecmp?("anonymous")
-    AUTHOR_CREDIT_BY_DISPLAY[clean(row["name_display"]).downcase] || DEFAULT_AUTHOR_CREDIT
+  def credit_for(row, cols)
+    return "anonymous" if awbw?(clean(row[cols[:name]]))
+    return "anonymous" if clean(row[cols[:anonymous]]).casecmp?("anonymous")
+    AUTHOR_CREDIT_BY_DISPLAY[clean(row[cols[:display]]).downcase] || DEFAULT_AUTHOR_CREDIT
   end
 
   def published?(row)
@@ -615,25 +660,28 @@ class StoryImporter
     Story.where("LOWER(title) = ?", title.downcase).exists?
   end
 
-  # Pre-pass: group importable rows by author and collect each author's distinct
-  # credit answers, so story_credit knows which authors disagree across stories.
+  # Pre-pass: group importable rows by credited person (across both author roles)
+  # and collect each person's distinct credit answers, so story_credit knows who
+  # disagrees across stories.
   def scan_conflicting_authors
     values = Hash.new { |hash, key| hash[key] = Set.new }
     CSV.foreach(@csv_path, headers: true, encoding: "bom|utf-8") do |row|
       next if title_text(row).blank? || skipped_action?(row)
-      key = author_key(row)
-      values[key] << author_credit(row) if key
+      [ AUTHOR_COLUMNS, CO_AUTHOR_COLUMNS ].each do |cols|
+        key = author_key(row, cols)
+        values[key] << credit_for(row, cols) if key
+      end
     end
     values.select { |_, answers| answers.size > 1 }.keys.to_set
   end
 
-  def author_key(row)
-    first = clean(row["facilitator_name"])
-    last = clean(row["facilitator_last_name"])
+  def author_key(row, cols)
+    first = clean(row[cols[:name]])
+    last = clean(row[cols[:last]])
     first, last = split_name(last) if awbw?(first)
     return if first.blank? || last.blank?
 
-    facilitator_email(row)&.downcase || "#{first.downcase}|#{last.downcase}"
+    person_email(row, cols)&.downcase || "#{first.downcase}|#{last.downcase}"
   end
 
   def conflicting_author?(key)
