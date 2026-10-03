@@ -73,6 +73,15 @@ RSpec.describe "/workshops", type: :request do
       expect(response.body).not_to include(unrelated.title)
     end
 
+    it "credits the story's author on the card" do
+      author = create(:person, first_name: "Cathy", last_name: "Stern")
+      create(:story, :published, workshop: workshop, author: author, title: "Credited story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).to include("Cathy")
+    end
+
     it "renders without error for a linked story missing its image and organization" do
       create(:story, :published, workshop: workshop, organization: nil, title: "Imageless story")
 
