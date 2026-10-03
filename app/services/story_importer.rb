@@ -22,7 +22,8 @@ class StoryImporter
     row_source row_number title import_action wp_id content published published_date
     organization_name organization_status facilitator_name facilitator_last_name
     facilitator_email author_note name_display anonymous workshop sectors window_type
-    categories grants image_count image_urls image_alt_titles youtube_url featured
+    categories grants professional_licenses image_count image_urls image_alt_titles
+    youtube_url featured
   ].freeze
 
   Result = Struct.new(
@@ -238,6 +239,7 @@ class StoryImporter
     comment_wp_id(row, story, idea)
     comment_missing_tags(story, tags)
     apply_grants(row, story, author)
+    apply_professional_licenses(row, story, author)
     create_facilitator_affiliation(author, organization)
   end
 
@@ -320,6 +322,30 @@ class StoryImporter
 
   def grant_names_for(row)
     clean(row["grants"]).split("|").map(&:strip).reject(&:blank?)
+  end
+
+  # Professional licenses belong to the author Person. The comma-separated column
+  # lists license kinds (credentials); each is found or created for the author.
+  # Without an author to attach them to, the kinds are kept as a comment instead.
+  def apply_professional_licenses(row, story, author)
+    kinds = license_kinds(row)
+    return if kinds.empty?
+
+    unless author&.persisted?
+      comment(story, "Imported professional license(s) (no author to attach): #{kinds.join(', ')}")
+      return
+    end
+
+    kinds.each do |kind|
+      ProfessionalLicense.find_or_create_by!(person: author, kind: kind, number: nil) do |license|
+        license.created_by = @import_user
+        license.updated_by = @import_user
+      end
+    end
+  end
+
+  def license_kinds(row)
+    clean(row["professional_licenses"]).split(",").map(&:strip).reject(&:blank?)
   end
 
   # Find or build the story's author Person from the facilitator name. For "AWBW"
