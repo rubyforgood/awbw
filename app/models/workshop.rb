@@ -139,6 +139,7 @@ class Workshop < ApplicationRecord
   validates :full_name, length: { maximum: 255 }
   # validates_presence_of :month, :year, if: Proc.new { |workshop| workshop.legacy }
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }
+  validate :story_workshops_must_be_distinct
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
@@ -366,6 +367,15 @@ class Workshop < ApplicationRecord
   end
 
   private
+
+  # The unique index can't be reached by the per-row uniqueness check when both
+  # rows are new, so compare the submitted rows before they hit the database.
+  def story_workshops_must_be_distinct
+    story_ids = story_workshops.reject(&:marked_for_destruction?).filter_map(&:story_id)
+    return if story_ids.uniq.size == story_ids.size
+
+    errors.add(:base, "has the same story linked more than once")
+  end
 
   def assign_pending_associations
     # Only run this on initial save, not on subsequent updates

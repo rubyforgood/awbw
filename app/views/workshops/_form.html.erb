@@ -450,7 +450,7 @@
 
           <div
             id="stories"
-            class="<%= "hidden" unless f.object.story_workshops.any? %> rounded-b-md border border-gray-300 p-4"
+            class="<%= "hidden" unless f.object.story_workshops.any?(&:persisted?) %> rounded-b-md border border-gray-300 p-4"
           >
             <p class="mb-2 text-sm text-gray-600">
               Connect the stories that use this workshop. They appear on the workshop page and link back here.

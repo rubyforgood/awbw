@@ -20,7 +20,7 @@ class Story < ApplicationRecord
   # Kept as a legacy safety copy alongside story_workshops during the multi-step
   # import; the join is the source of truth for display and editing.
   belongs_to :workshop, optional: true
-  has_many :story_workshops, -> { order(:position) }, inverse_of: :story, dependent: :destroy
+  has_many :story_workshops, -> { order(:position, :id) }, inverse_of: :story, dependent: :destroy
   has_many :workshops, through: :story_workshops
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -57,6 +57,7 @@ class Story < ApplicationRecord
   validates :author_id, presence: { message: "is required when a second author is credited" },
             if: -> { co_author_id.present? }
   validate :co_author_differs_from_author
+  validate :story_workshops_must_be_distinct
 
   # Nested attributes
   accepts_nested_attributes_for :story_workshops, allow_destroy: true,
@@ -226,5 +227,14 @@ class Story < ApplicationRecord
     return if co_author_id != author_id
 
     errors.add(:co_author_id, "must be different from the first author")
+  end
+
+  # The unique index can't be reached by the per-row uniqueness check when both
+  # rows are new, so compare the submitted rows before they hit the database.
+  def story_workshops_must_be_distinct
+    workshop_ids = story_workshops.reject(&:marked_for_destruction?).filter_map(&:workshop_id)
+    return if workshop_ids.uniq.size == workshop_ids.size
+
+    errors.add(:base, "has the same workshop linked more than once")
   end
 end

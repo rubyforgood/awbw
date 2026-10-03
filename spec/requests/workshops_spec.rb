@@ -84,6 +84,29 @@ RSpec.describe "/workshops", type: :request do
     end
   end
 
+  describe "GET /edit stories panel" do
+    let(:admin) { create(:user, :admin) }
+    let(:workshop) { create(:workshop) }
+
+    before { sign_in admin }
+
+    it "starts collapsed when no stories are linked" do
+      get edit_workshop_url(workshop)
+
+      panel = Nokogiri::HTML(response.body).at("#stories")
+      expect(panel["class"]).to include("hidden")
+    end
+
+    it "starts expanded when a story is already linked" do
+      create(:story_workshop, workshop: workshop)
+
+      get edit_workshop_url(workshop)
+
+      panel = Nokogiri::HTML(response.body).at("#stories")
+      expect(panel["class"]).not_to include("hidden")
+    end
+  end
+
   # --- SECTOR FILTER LABELS --------------------------------------------------
   describe "sector filter dropdown labels" do
     let(:admin) { create(:user, :admin) }

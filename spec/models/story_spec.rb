@@ -367,4 +367,24 @@ RSpec.describe Story, type: :model do
       expect(Story.search_by_params(query: "Watercolor")).to contain_exactly(match)
     end
   end
+
+  describe "linked workshops" do
+    let(:story) { create(:story, workshop: nil) }
+    let(:workshop) { create(:workshop) }
+
+    it "rejects the same workshop submitted twice in one save" do
+      story.assign_attributes(story_workshops_attributes: [ { workshop_id: workshop.id },
+                                                           { workshop_id: workshop.id } ])
+
+      expect(story).not_to be_valid
+      expect(story.errors[:base]).to include("has the same workshop linked more than once")
+    end
+
+    it "allows several rows with no workshop of their own" do
+      story.assign_attributes(story_workshops_attributes: [ { external_workshop_title: "One" },
+                                                           { external_workshop_title: "Two" } ])
+
+      expect(story).to be_valid
+    end
+  end
 end

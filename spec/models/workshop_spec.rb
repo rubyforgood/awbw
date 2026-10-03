@@ -55,6 +55,18 @@ RSpec.describe Workshop do
     end
   end
 
+  describe 'linked stories' do
+    let(:workshop) { create(:workshop) }
+    let(:story) { create(:story, workshop: nil) }
+
+    it 'rejects the same story submitted twice in one save' do
+      workshop.assign_attributes(story_workshops_attributes: [ { story_id: story.id }, { story_id: story.id } ])
+
+      expect(workshop).not_to be_valid
+      expect(workshop.errors[:base]).to include("has the same story linked more than once")
+    end
+  end
+
   it 'is valid with valid attributes' do
     # Note: Factory needs associations uncommented for create
     # expect(build(:workshop)).to be_valid

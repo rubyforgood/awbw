@@ -197,12 +197,18 @@ class StoriesController < ApplicationController
       scope.left_joins(:windows_type)
            .reorder(WindowsType.arel_table[:short_name].public_send(dir))
     when "workshop"
+      # Falls back to the legacy stories.workshop_id so un-migrated stories sort
+      # by the title the column actually displays.
       workshop_title = <<~SQL.squish
-        (SELECT MIN(w.title) FROM stories_workshops sw
-         JOIN workshops w ON w.id = sw.workshop_id
-         WHERE sw.story_id = stories.id)
+        COALESCE(
+          (SELECT MIN(w.title) FROM stories_workshops sw
+           JOIN workshops w ON w.id = sw.workshop_id
+           WHERE sw.story_id = stories.id),
+          workshops.title
+        )
       SQL
-      scope.reorder(Arel.sql("#{workshop_title} #{dir == :asc ? 'ASC' : 'DESC'}"))
+      scope.left_joins(:workshop)
+           .reorder(Arel.sql("#{workshop_title} #{dir == :asc ? "ASC" : "DESC"}"))
     when "author"
       scope.order_by_author(direction)
     when "organization"

@@ -191,6 +191,13 @@ RSpec.describe "/stories", type: :request do
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
+        it "sorts by workshop for stories that only have the legacy workshop column" do
+          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
+
+          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
+        end
+
         it "sorts by author asc" do
           get stories_url, params: { sort: "author", direction: "asc" }, headers: turbo_headers
           expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])

@@ -351,7 +351,7 @@ class StoryImporter
 
   def story_workshops_attributes(workshop, external_title)
     rows = []
-    rows << { workshop: workshop } if workshop
+    rows << { workshop_id: workshop.id } if workshop
     rows << { external_workshop_title: external_title } if external_title.present?
     rows
   end
