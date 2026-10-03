@@ -40,6 +40,17 @@
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
 
+- name: "Show a ticket callout only after someone attends"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-09-30
+  action_path: "/registration/sample"
+  summary: >-
+    Ticket callouts can now be gated on attendance — check "Only show if marked
+    attended" and the callout stays hidden until the registrant's status is
+    Attended, joining the existing payment and CE-payment gates. Useful for
+    post-event material like a certificate, evaluation, or thank-you.
+
 - name: "W-9 available before paying"
   area: payments
   display_status: public_facing
