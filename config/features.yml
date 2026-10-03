@@ -34,8 +34,8 @@
   summary: >-
     A story can now credit a second author alongside the first. The byline reads
     "Author one & Author two", author-name search and the author filter find either
-    one, and the story shows up on both people's profiles. Each author keeps their
-    own credit preference, so one can stay anonymous while the other is named.
+    one, and the story appears on both people's profiles. Each author keeps their
+    own credit preference.
   action_path: "/stories"
 
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
