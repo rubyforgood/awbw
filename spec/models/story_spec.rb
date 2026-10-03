@@ -95,6 +95,15 @@ RSpec.describe Story, type: :model do
         expect(story.errors[:co_author_id]).to be_present
       end
 
+      # Every author_id-is-null fallback (the profile listing's creator credit, the
+      # divergences page's creator and unattributed sections) would treat a story
+      # with only a second author as having no author at all.
+      it "rejects a second author with no first author" do
+        story = build(:story, author: nil, co_author: second_author)
+        expect(story).not_to be_valid
+        expect(story.errors[:author_id]).to be_present
+      end
+
       it "rejects an invalid co-author credit preference" do
         story = build(:story, author: first_author, co_author: second_author, co_author_credit_preference: "sideways")
         expect(story).not_to be_valid

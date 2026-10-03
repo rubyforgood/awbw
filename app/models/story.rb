@@ -47,6 +47,11 @@ class Story < ApplicationRecord
   validates :youtube_url, length: { maximum: 255 }
   normalizes :co_author_credit_preference, with: ->(value) { value.presence }
   validates :co_author_credit_preference, inclusion: { in: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
+  # A blank author_id means "nobody named an author" everywhere it's read — the
+  # profile listing credits the submitter instead, and the divergences page offers
+  # the story up for assignment. A second author has to sit behind a first.
+  validates :author_id, presence: { message: "is required when a second author is credited" },
+            if: -> { co_author_id.present? }
   validate :co_author_differs_from_author
 
   # Nested attributes
