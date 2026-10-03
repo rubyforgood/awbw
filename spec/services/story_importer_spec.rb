@@ -276,6 +276,23 @@ RSpec.describe StoryImporter do
     end
   end
 
+  describe "professional licenses" do
+    it "attaches comma-separated licenses to the author" do
+      import([ base_row("professional_licenses" => "LCSW, LMFT") ])
+
+      author = Person.find_by(first_name: "Jamie", last_name: "Rivera")
+      expect(author.professional_licenses.pluck(:kind)).to contain_exactly("LCSW", "LMFT")
+    end
+
+    it "keeps the licenses as a comment when there is no author" do
+      import([ base_row("professional_licenses" => "LCSW",
+                        "facilitator_name" => "Teena", "facilitator_last_name" => "") ])
+
+      expect(ProfessionalLicense.count).to eq(0)
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/no author to attach.*LCSW/))
+    end
+  end
+
   describe "side effects" do
     it "creates a facilitator affiliation for a non-AWBW author" do
       import([ base_row ])
