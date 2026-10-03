@@ -13,7 +13,7 @@
 <% leading = local_assigns[:leading] %>
 <% trailing = local_assigns[:trailing] %>
 <% decorated = notification.decorate %>
-<% body_admin_only = notification.channel != "autoemail" %>
+<% body_admin_only = !notification.portal_sent? %>
 <% show_body = admin || !body_admin_only %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
 <% body = notification.email_body_text.to_s if show_body %>
@@ -70,6 +70,7 @@
         <% end %>
       </div>
     <% end %>
+    <% if body_admin_only %><%= render "shared/admin_only_lock" %><% end %>
     <%= trailing %>
   </div>
 <% end %>

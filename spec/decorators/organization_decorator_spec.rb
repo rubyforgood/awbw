@@ -347,4 +347,97 @@ RSpec.describe OrganizationDecorator do
       expect(organization.decorate.organization_type_option).to eq("")
     end
   end
+
+  describe "#profile_display_summary" do
+    it "says everything is shown when no toggle is hidden" do
+      expect(create(:organization).decorate.profile_display_summary).to eq("All shown")
+    end
+
+    it "names only the hidden items, prefixed with Hide" do
+      organization = create(:organization, profile_show_phone: false, profile_show_website: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide phone and website")
+    end
+
+    it "uses the checkbox wording for a hidden item" do
+      organization = create(:organization, profile_show_events_registered: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide events hosted")
+    end
+
+    it "names hidden age ranges" do
+      organization = create(:organization, profile_show_age_ranges: false)
+      expect(organization.decorate.profile_display_summary).to eq("Hide age ranges")
+    end
+  end
+
+  describe "#background_summary" do
+    it "leads with the organization type" do
+      org = create(:organization, organization_type: "501c3/nonprofit")
+      expect(org.decorate.background_summary).to include("501c3/nonprofit")
+    end
+
+    it "shows the specify-text for an 'Other' type" do
+      org = create(:organization, organization_type: Organization::ORGANIZATION_TYPE_OTHER, organization_type_other: "Co-op")
+      expect(org.decorate.background_summary).to include("Co-op")
+    end
+
+    it "adds a pill for each filled optional field and omits blank ones" do
+      org = create(:organization, organization_type: "501c3/nonprofit", email: "hi@example.org",
+                   description: "About us", website_url: "", mission_vision_values: "")
+      summary = org.decorate.background_summary
+      expect(summary).to include("Email", "Description")
+      expect(summary).not_to include("Website", "Mission/vision/values")
+    end
+  end
+
+  describe "#sectors_summary" do
+    it "is 'None selected' with no sectors" do
+      expect(create(:organization).decorate.sectors_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary, crowns and labels the leader" do
+      org = create(:organization)
+      health = create(:sector, name: "Health/Medical")
+      housing = create(:sector, name: "Housing")
+      create(:sectorable_item, sectorable: org, sector: health, is_primary: true, is_leader: true)
+      create(:sectorable_item, sectorable: org, sector: housing)
+
+      summary = org.reload.decorate.sectors_summary
+      expect(summary).to include("fa-star", "fa-crown", "<strong>Health/Medical</strong>", "(sector leader)")
+      expect(summary).to include("Housing")
+    end
+  end
+
+  describe "#active_facilitator_affiliations_summary" do
+    it "is nil with no active facilitator affiliations" do
+      expect(create(:organization).decorate.active_facilitator_affiliations_summary).to be_nil
+    end
+
+    it "counts active facilitator affiliations and lists their people, excluding job roles" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person, first_name: "Grace", last_name: "Hopper"), title: "Facilitator")
+      create(:affiliation, organization: org, person: create(:person, first_name: "Ada", last_name: "Lovelace"), title: "Program Coordinator")
+
+      summary = org.reload.decorate.active_facilitator_affiliations_summary
+      expect(summary).to eq("1 active: Grace Hopper")
+    end
+
+    it "excludes ended facilitator affiliations" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", end_date: 1.day.ago)
+      expect(org.reload.decorate.active_facilitator_affiliations_summary).to be_nil
+    end
+  end
+
+  describe "#facilitator_since_summary" do
+    it "is nil when the org has never had a facilitator" do
+      expect(create(:organization).decorate.facilitator_since_summary).to be_nil
+    end
+
+    it "leads with 'Facilitators since' and the earliest facilitation start" do
+      org = create(:organization)
+      create(:affiliation, organization: org, person: create(:person), title: "Facilitator", start_date: Date.new(2015, 8, 1))
+
+      expect(org.reload.decorate.facilitator_since_summary).to eq("Facilitators since Aug 2015")
+    end
+  end
 end

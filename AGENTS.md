@@ -497,6 +497,7 @@ bundle exec parallel_rspec spec/                        # run the whole suite in
 - `spec/support/shared_examples/featureable.rb` — Shared tests for featured content
 - `spec/support/shared_examples/mentioner.rb` — Shared tests for @mention functionality
 - `spec/support/system_helpers/asset_upload_helpers.rb` — Upload/delete helpers for system tests
+- `spec/support/system_helpers/collapsible_section_helpers.rb` — Opens a collapsed `<details>` form section so its fields are visible to Capybara
 
 ### Factory Traits
 

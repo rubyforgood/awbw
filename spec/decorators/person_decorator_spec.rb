@@ -160,4 +160,167 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.full_name_with_display_name).to eq("Mariana Lopez (Mariana L.)")
     end
   end
+
+  describe "#profile_display_summary" do
+    it "says everything is shown when no toggle is hidden" do
+      expect(create(:person).decorate.profile_display_summary).to eq("All shown")
+    end
+
+    it "names only the hidden items, prefixed with Hide" do
+      person = create(:person, profile_show_phone: false, profile_show_bio: false)
+      expect(person.decorate.profile_display_summary).to eq("Hide phone and bio")
+    end
+
+    it "uses the checkbox wording for a hidden item" do
+      person = create(:person, profile_show_member_since: false)
+      expect(person.decorate.profile_display_summary).to eq("Hide facilitator since")
+    end
+
+    it "names hidden age ranges" do
+      person = create(:person, profile_show_age_ranges: false)
+      expect(person.decorate.profile_display_summary).to eq("Hide age ranges")
+    end
+
+    it "ignores the monthly-reports toggle when the person has no reports" do
+      person = create(:person, profile_show_monthly_reports: false)
+      expect(person.decorate.profile_display_summary).to eq("All shown")
+    end
+
+    it "names hidden monthly reports once the person has reports" do
+      person = create(:person, profile_show_monthly_reports: false)
+      create(:monthly_report, author: person)
+      expect(person.decorate.profile_display_summary).to eq("Hide monthly reports")
+    end
+  end
+
+  describe "#social_media_summary" do
+    it "is 'None' with no links" do
+      expect(create(:person).decorate.social_media_summary).to eq("None")
+    end
+
+    it "shows a pill for each platform with a URL on file" do
+      person = create(:person, linked_in_url: "https://linkedin.com/in/x", youtube_url: "https://youtu.be/x")
+      summary = person.decorate.social_media_summary
+      expect(summary).to include("LinkedIn", "YouTube")
+      expect(summary).not_to include("Facebook", "Instagram", "Twitter")
+    end
+  end
+
+  describe "#sectors_summary" do
+    it "is 'None selected' with no sectors" do
+      expect(create(:person).decorate.sectors_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary, crowns and labels the leader" do
+      person = create(:person)
+      health = create(:sector, name: "Health/Medical")
+      create(:sectorable_item, sectorable: person, sector: health, is_primary: true, is_leader: true)
+
+      summary = person.reload.decorate.sectors_summary
+      expect(summary).to include("fa-star", "fa-crown", "<strong>Health/Medical</strong>", "(sector leader)")
+    end
+  end
+
+  describe "#age_ranges_summary" do
+    it "is 'None selected' with no age ranges" do
+      expect(create(:person).decorate.age_ranges_summary).to eq("None selected")
+    end
+
+    it "bolds and stars the primary age range (no crown)" do
+      person = create(:person)
+      age_type = create(:category_type, :published, name: "AgeRange")
+      kids = create(:category, :published, category_type: age_type, name: "Children (0-12)")
+      teens = create(:category, :published, category_type: age_type, name: "Teens (13-17)")
+      create(:categorizable_item, categorizable: person, category: kids, is_primary: true)
+      create(:categorizable_item, categorizable: person, category: teens)
+
+      summary = person.reload.decorate.age_ranges_summary
+      expect(summary).to include("fa-star", "<strong>Children (0-12)</strong>", "Teens (13-17)")
+      expect(summary).not_to include("fa-crown")
+    end
+  end
+
+  describe "#staff_tags_summary" do
+    it "is 'None' with no staff tags" do
+      expect(create(:person).decorate.staff_tags_summary).to eq("None")
+    end
+
+    it "lists the tag names, comma-separated" do
+      person = create(:person)
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, name: "Onboarding"))
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, name: "Newsletter"))
+
+      summary = person.reload.decorate.staff_tags_summary
+      expect(summary).to include("Onboarding", "Newsletter")
+    end
+
+    it "marks an unpublished tag" do
+      person = create(:person)
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, :unpublished, name: "Retired"))
+
+      summary = person.reload.decorate.staff_tags_summary
+      expect(summary).to include("Retired", "(unpublished)")
+    end
+  end
+
+  describe "#topic_subscriptions_summary" do
+    it "is 'None' with no subscriptions" do
+      expect(create(:person).decorate.topic_subscriptions_summary).to eq("None")
+    end
+
+    it "lists the active topic names and omits unsubscribed ones" do
+      person = create(:person)
+      news = create(:topic_subscription_type, name: "News")
+      events = create(:topic_subscription_type, name: "Events")
+      retired = create(:topic_subscription_type, name: "Retired")
+      create(:topic_subscription, person: person, topic_subscription_type: news)
+      create(:topic_subscription, person: person, topic_subscription_type: events)
+      create(:topic_subscription, :unsubscribed, person: person, topic_subscription_type: retired)
+
+      summary = person.reload.decorate.topic_subscriptions_summary
+      expect(summary).to include("News", "Events")
+      expect(summary).not_to include("Retired")
+    end
+  end
+
+  describe "#facilitator_since_summary" do
+    it "is nil when the person has never been a facilitator" do
+      person = create(:person)
+      create(:affiliation, person: person, title: "Board Member", start_date: Date.new(2015, 1, 1))
+      expect(person.decorate.facilitator_since_summary).to be_nil
+    end
+
+    it "leads with 'Facilitator since' and the earliest facilitator start" do
+      person = create(:person)
+      create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2019, 10, 2))
+
+      summary = person.decorate.facilitator_since_summary
+      expect(summary).to include("Facilitator since", "Oct 2019")
+    end
+  end
+
+  describe "#active_facilitator_affiliations_summary" do
+    it "is nil with no active facilitator affiliations" do
+      expect(create(:person).decorate.active_facilitator_affiliations_summary).to be_nil
+    end
+
+    it "counts active facilitator affiliations and lists their orgs, excluding job roles" do
+      person = create(:person)
+      center = create(:organization, name: "1736 Family Center")
+      awbw = create(:organization, name: "AWBW")
+      justworks = create(:organization, name: "Justworks")
+      create(:affiliation, person: person, organization: center, title: "Facilitator")
+      create(:affiliation, person: person, organization: awbw, title: "Facilitator")
+      create(:affiliation, person: person, organization: justworks, title: "Program Coordinator")
+
+      expect(person.reload.decorate.active_facilitator_affiliations_summary)
+        .to eq("2 active: 1736 Family Center, AWBW")
+    end
+
+    it "excludes ended facilitator affiliations" do
+      person = create(:person)
+      create(:affiliation, person: person, organization: create(:organization, name: "Past Org"), title: "Facilitator", end_date: 1.day.ago)
+      expect(person.reload.decorate.active_facilitator_affiliations_summary).to be_nil
+    end
+  end
 end

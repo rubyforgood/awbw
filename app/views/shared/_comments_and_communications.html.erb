@@ -24,39 +24,53 @@
 <% new_comments = can_manage_comments ? record.comments.select(&:new_record?) : [] %>
 
 <% entries = (comments + notifications).sort_by { |r| r.created_at || Time.current }.reverse %>
+<% none_label = can_manage_comments ? t("communications.section_none") : t("communications.section_none_comms_only") %>
 
-<section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+<%# Collapses to a count of what's on file, like the other form sections. Stays
+    open when the save failed or an unsaved comment/communication is pending, so
+    the entry being written is never hidden behind the summary. %>
+<% counts = [] %>
+<% counts << t("communications.section_summary_comments", count: comments.size) if comments.any? %>
+<% counts << t("communications.section_summary_communications", count: notifications.size) if notifications.any? %>
+<% section_open = record.errors.any? || new_comments.any? || new_notifications.any? %>
+
+<details class="group scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          id="comments-section"
          data-controller="paginated-fields edit-toggle"
          data-paginated-fields-per-page-value="10"
-         data-paginated-fields-no-subject-label-value="<%= t("communications.no_subject") %>">
-  <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+         data-paginated-fields-no-subject-label-value="<%= t("communications.no_subject") %>"<%= " open".html_safe if section_open %>>
+  <summary class="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
       <i class="fa-solid fa-comments"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : t("communications.title") %></h2>
-    <div class="ml-auto flex items-center gap-3">
-      <% if entries.size > 1 %>
-        <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
-          <%= check_box_tag "#{list_id}-group", "1", false, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", data: { action: "paginated-fields#toggleGrouping" } %>
-          <span class="text-xs text-gray-500"><%= t("communications.group_by_subject") %></span>
-        </label>
-      <% end %>
-      <%# Carry the origin so the feed can show a back eyebrow to this record. %>
-      <%# Both must be saved: a form can build an unsaved person inline (the new
-          subscription form), and the eyebrow needs a real record to return to. %>
-      <% if view_all_person&.persisted? && record.persisted? && can_manage_comments && admin %>
-        <%= link_to comments_and_communications_path(person_id: view_all_person.id, return_to_type: record_type, return_to_id: record.id),
-                    class: "inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline",
-                    target: "_blank", rel: "noopener" do %>
-          <%= t("communications.section_title") %>
-          <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-        <% end %>
-      <% end %>
-    </div>
-  </div>
+    <span class="text-sm text-gray-500"><%= counts.any? ? counts.to_sentence : none_label %></span>
+    <i class="fa-solid fa-chevron-down ml-auto text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+  </summary>
 
-  <div class="space-y-3 p-4">
+  <div class="space-y-3 border-t border-gray-100 p-4">
+    <% if entries.size > 1 || (view_all_person&.persisted? && record.persisted? && can_manage_comments && admin) %>
+      <div class="flex items-center justify-end gap-3">
+        <% if entries.size > 1 %>
+          <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
+            <%= check_box_tag "#{list_id}-group", "1", false, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", data: { action: "paginated-fields#toggleGrouping" } %>
+            <span class="text-xs text-gray-500"><%= t("communications.group_by_subject") %></span>
+          </label>
+        <% end %>
+        <%# Carry the origin so the feed can show a back eyebrow to this record. %>
+        <%# Both must be saved: a form can build an unsaved person inline (the new
+            subscription form), and the eyebrow needs a real record to return to. %>
+        <% if view_all_person&.persisted? && record.persisted? && can_manage_comments && admin %>
+          <%= link_to comments_and_communications_path(person_id: view_all_person.id, return_to_type: record_type, return_to_id: record.id),
+                      class: "inline-flex items-center gap-1.5 text-xs font-medium #{eyebrow_link_class} hover:underline",
+                      target: "_blank", rel: "noopener" do %>
+            <%= t("communications.section_title") %>
+            <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
     <div id="<%= list_id %>" class="flex flex-col gap-2">
       <% entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
@@ -90,7 +104,7 @@
     <div data-paginated-fields-target="nav"></div>
 
     <% if entries.empty? && new_comments.empty? && new_notifications.empty? %>
-      <p class="text-sm text-gray-400"><%= can_manage_comments ? t("communications.section_none") : t("communications.section_none_comms_only") %></p>
+      <p class="text-sm text-gray-400"><%= none_label %></p>
     <% end %>
 
     <% if can_manage_comments || admin %>
@@ -130,4 +144,4 @@
       </div>
     <% end %>
   </div>
-</section>
+</details>

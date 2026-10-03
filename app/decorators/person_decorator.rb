@@ -71,6 +71,108 @@ class PersonDecorator < ApplicationDecorator
     @badges ||= compute_badges
   end
 
+  # Profile display toggles in form order, mapped to the noun used on each
+  # checkbox ("Show email" => "email"). Drives the collapsed form section's
+  # one-line summary.
+  PROFILE_DISPLAY_LABELS = {
+    profile_show_credentials: "credentials",
+    profile_show_pronouns: "pronouns",
+    profile_show_email: "email",
+    profile_show_phone: "phone",
+    profile_show_social_media: "social media",
+    profile_show_member_since: "facilitator since",
+    profile_show_bio: "bio",
+    profile_show_affiliations: "affiliations",
+    profile_show_sectors: "sectors",
+    profile_show_age_ranges: "age ranges",
+    profile_show_monthly_reports: "monthly reports",
+    profile_show_workshops: "workshops",
+    profile_show_workshop_variations: "workshop variations",
+    profile_show_stories: "stories",
+    profile_show_resources: "resources",
+    profile_show_events_registered: "registrations",
+    profile_show_story_ideas: "story ideas",
+    profile_show_workshop_ideas: "workshop ideas",
+    profile_show_workshop_variation_ideas: "variation ideas",
+    profile_show_workshop_logs: "workshop logs"
+  }.freeze
+
+  # One-line summary of the profile display preferences for the collapsed form
+  # section. Most people show everything, so it names only what's hidden
+  # ("Hide phone and bio") and says "All shown" when nothing is hidden. Skips the
+  # monthly-reports toggle unless the person has reports, matching the checkbox
+  # the form renders.
+  def profile_display_summary
+    labels = PROFILE_DISPLAY_LABELS
+    labels = labels.except(:profile_show_monthly_reports) unless object.any_monthly_reports?
+    hidden = labels.reject { |attr, _| object.public_send(attr) }.values
+    hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
+  end
+
+  # Social-media URL fields mapped to the platform label shown as a pill in the
+  # collapsed section summary when the field is filled in.
+  SOCIAL_MEDIA_LABELS = {
+    linked_in_url: "LinkedIn",
+    facebook_url: "Facebook",
+    instagram_url: "Instagram",
+    youtube_url: "YouTube",
+    twitter_url: "Twitter"
+  }.freeze
+
+  # One-line summary of the social-media links for the collapsed form section: a
+  # grey pill for each platform with a URL on file, or "None". HTML-safe.
+  def social_media_summary
+    present = SOCIAL_MEDIA_LABELS.select { |attr, _| object.public_send(attr).present? }.values
+    return "None" if present.empty?
+
+    h.safe_join(present.map { |label|
+      h.content_tag(:span, label, class: "text-xs font-normal px-2 py-0.5 rounded-full bg-gray-100 text-gray-600")
+    }, " ")
+  end
+
+  # One-line summary of the tagged age ranges for a collapsed form section. The
+  # primary age group is bold with a ⭐ (age ranges have no leader flag). HTML-safe.
+  def age_ranges_summary
+    items = object.age_range_items_ordered
+    return "None selected" if items.empty?
+
+    h.safe_join(items.map { |item|
+      name = item.category&.name.to_s
+      inner = if item.is_primary?
+        h.safe_join([ h.content_tag(:i, "", class: "fa-solid fa-star text-amber-400"), h.content_tag(:strong, name) ], " ")
+      else
+        name
+      end
+      h.content_tag(:span, inner, class: "whitespace-nowrap")
+    }, ", ")
+  end
+
+  # One-line summary of the person's staff tags for the collapsed form section.
+  # An unpublished tag keeps a muted "(unpublished)" note, mirroring the editor.
+  # HTML-safe.
+  def staff_tags_summary
+    tags = object.staff_taggings.reject(&:marked_for_destruction?).filter_map(&:staff_tag)
+    return "None" if tags.empty?
+
+    h.safe_join(tags.map { |tag|
+      inner = if tag.published?
+        tag.name
+      else
+        h.safe_join([ tag.name, h.content_tag(:span, "(unpublished)", class: "text-xs text-gray-400") ], " ")
+      end
+      h.content_tag(:span, inner, class: "whitespace-nowrap")
+    }, ", ")
+  end
+
+  # One-line summary of the person's active topic subscriptions (by topic name)
+  # for the collapsed form section. "None" when they aren't subscribed to any.
+  def topic_subscriptions_summary
+    names = object.topic_subscriptions.select(&:active?).filter_map(&:topic_label).uniq
+    return "None" if names.empty?
+
+    h.safe_join(names.map { |name| h.content_tag(:span, name, class: "whitespace-nowrap") }, ", ")
+  end
+
   def facilitator_since_date
     @facilitator_since_date ||= begin
       facilitator_affiliations = affiliations.facilitators
@@ -110,6 +212,27 @@ class PersonDecorator < ApplicationDecorator
 
   def facilitator_since_range
     date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
+  end
+
+  # "Facilitator since <range>" for the collapsed affiliations summary. Nil when
+  # the person has never held a facilitator affiliation, so the summary doesn't
+  # show an unrelated membership date under a facilitator heading. HTML-safe.
+  def facilitator_since_summary
+    return nil if facilitator_since_year.nil?
+
+    h.safe_join([ "Facilitator since ", facilitator_since_range ])
+  end
+
+  # Count of active facilitator affiliations plus the organizations they're with,
+  # for the collapsed affiliations summary, e.g. "2 active: 1736 Family Center,
+  # AWBW". Job/other roles are excluded to match the facilitator framing. Nil when
+  # there's no active facilitator affiliation.
+  def active_facilitator_affiliations_summary
+    active = affiliations.reject(&:marked_for_destruction?).select { |affiliation| affiliation.facilitator? && affiliation.active? }
+    return nil if active.empty?
+
+    names = active.filter_map { |affiliation| affiliation.organization&.name }.uniq.sort
+    names.any? ? "#{active.size} active: #{names.join(", ")}" : "#{active.size} active"
   end
 
   # A grey secondary line under "Facilitator since", shown only when the earliest

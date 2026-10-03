@@ -154,6 +154,12 @@ class Notification < ApplicationRecord
   # a non-admin (the person) may see about themselves.
   scope :portal_sent, -> { where(channel: "autoemail") }
 
+  # Row-level twin of the portal_sent scope: true when the person may see this
+  # communication about themselves, false for a hand-logged staff record.
+  def portal_sent?
+    channel == "autoemail"
+  end
+
   # The portal launched on this date. Any undelivered email created before it is
   # pre-launch data (imported/legacy) whose delivery job is long gone — it will
   # never send, so we retire it from the "pending" treatment (see #archived?)

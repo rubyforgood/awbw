@@ -237,7 +237,7 @@ RSpec.describe "/organizations", type: :request do
 
       get edit_organization_url(organization)
 
-      chip = Capybara.string(response.body).all("span", text: /SKP101/).first
+      chip = Capybara.string(response.body).all("span", text: /SKP101/, visible: :all).first
       expect(chip.native.text).to match(/No show .* SKP101/)
       expect(chip[:class]).to include("text-red-700")
     end
