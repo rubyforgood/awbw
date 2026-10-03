@@ -328,6 +328,16 @@ RSpec.describe Story, type: :model do
     end
   end
 
+  describe ".not_funder_only" do
+    it "excludes funder-only stories and keeps the rest" do
+      regular = create(:story)
+      funder_only = create(:story, :funder_only)
+
+      expect(Story.not_funder_only).to include(regular)
+      expect(Story.not_funder_only).not_to include(funder_only)
+    end
+  end
+
   describe "#to_param" do
     it "is the id followed by the title slugged with hyphens, stripping bad URL characters" do
       story = create(:story, title: "My Great Story! #2 (2026)")

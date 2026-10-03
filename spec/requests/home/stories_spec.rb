@@ -23,6 +23,15 @@ RSpec.describe "/home/stories", type: :request do
       expect(response.body).to include("Mae Beale, LMFT, MSW and Cathy S.")
     end
 
+    it "never features a funder-only story on the home feed" do
+      create(:story, :published, :featured, :funder_only, title: "Funder Feed Story")
+
+      get home_stories_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Funder Feed Story")
+    end
+
     it "falls back to the generic label when the author opts out" do
       author = create(:person, anonymous_contributions: true)
       create(:story, :published, :featured, title: "An Anonymous Story", author: author)

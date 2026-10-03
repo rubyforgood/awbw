@@ -18,6 +18,10 @@ FactoryBot.define do
       end
     end
 
+    trait :funder_only do
+      funder_only { true }
+    end
+
     trait :with_story do
       after(:create) do |story_idea|
         create(:story,

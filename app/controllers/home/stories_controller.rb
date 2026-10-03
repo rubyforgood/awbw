@@ -4,7 +4,7 @@ module Home
 
     def index
       authorize! :home
-      @stories = authorized_scope(Story.published.with_author_credit
+      @stories = authorized_scope(Story.published.not_funder_only.with_author_credit
                       .order(:title), with: HomePolicy)
                       .decorate
 

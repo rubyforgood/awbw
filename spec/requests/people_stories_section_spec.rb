@@ -58,4 +58,38 @@ RSpec.describe "Person profile stories section", type: :request do
     expect(response.body).to include("Spotlight Story")
     expect(response.body).not_to include("Credited as Anonymous")
   end
+
+  it "shows an admin a funder-only authored story, flagged with the chip" do
+    create(:story, :published, :funder_only, title: "Funder Authored Story", author: person)
+
+    get_stories_section
+
+    expect(response.body).to include("Funder Authored Story")
+    expect(response.body).to include("Funder-only")
+  end
+
+  context "as the profile owner" do
+    before { sign_in owner_user }
+
+    it "shows the owner their own funder-only authored story" do
+      create(:story, :published, :funder_only, title: "My Funder Story", author: person)
+
+      get_stories_section
+
+      expect(response.body).to include("My Funder Story")
+    end
+  end
+
+  context "as a different, non-admin viewer" do
+    before { sign_in create(:user) }
+
+    it "hides the person's funder-only authored story" do
+      create(:story, :published, :publicly_visible, :funder_only,
+             title: "Hidden Funder Story", author: person)
+
+      get_stories_section
+
+      expect(response.body).not_to include("Hidden Funder Story")
+    end
+  end
 end
