@@ -9,6 +9,7 @@ RSpec.describe "people/index", type: :view do
   before(:each) do
     assign(:people, paginated([ person, person_2 ]))
     assign(:count_display, 2)
+    assign(:multiple_membership_person_ids, Set.new)
     allow(view).to receive(:current_user).and_return(admin)
   end
 
