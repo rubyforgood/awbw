@@ -42,6 +42,8 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   has_many :story_ideas_as_co_author, inverse_of: :co_author, class_name: "StoryIdea", foreign_key: :co_author_id,
            dependent: :restrict_with_error
+  has_many :story_ideas_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "StoryIdea",
+           foreign_key: :spotlighted_facilitator_id, dependent: :restrict_with_error
   has_many :workshop_ideas_as_author, inverse_of: :author, class_name: "WorkshopIdea", foreign_key: :author_id,
            dependent: :restrict_with_error
   has_many :workshop_variation_ideas_as_author, inverse_of: :author, class_name: "WorkshopVariationIdea",

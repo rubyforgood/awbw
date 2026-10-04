@@ -321,6 +321,24 @@
                      attribute: :co_author_credit_preference, label: "Second author credit preference",
                      hint: "The second author's profile decides what renders." %>
         </div>
+
+        <div class="flex-1 mb-4 md:mb-0">
+          <% idea_spotlight = f.object.spotlighted_facilitator %>
+          <%= f.input :spotlighted_facilitator_id,
+                      collection: idea_spotlight.present? ? [[ idea_spotlight.remote_search_label[:label], idea_spotlight.id ]] : [],
+                      prompt: "Select a facilitator",
+                      selected: idea_spotlight&.id,
+                      hint: "Optional. Carries over when the idea is promoted to a story.",
+                      label: (idea_spotlight ? (
+                        link_to "Spotlighted facilitator",
+                                person_path(idea_spotlight),
+                                class: "hover:underline") : "Spotlighted facilitator").html_safe,
+                      label_html: { class: "block font-medium mb-1 text-gray-700" },
+                      input_html: {
+                        data: { controller: "remote-select",
+                                remote_select_model_value: "person" }
+                      } %>
+        </div>
       </div>
     <% end %>
 

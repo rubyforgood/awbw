@@ -49,9 +49,19 @@
   display_status: admin_facing
   released_on: 2026-10-04
   summary: >-
-    Story ideas can now credit a second author, matching stories. Admins set the
-    second author and their credit preference on the idea's edit page, and both
-    carry over when the idea is promoted to a story.
+    Story ideas can now credit a second author and a second-author credit
+    preference, matching stories. Admins set them on the idea's edit page, and both
+    — along with the first author — carry over when the idea is promoted to a story.
+  action_path: "/story_ideas"
+
+- name: "Spotlight a facilitator on a story idea"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-04
+  summary: >-
+    Story ideas now carry a spotlighted facilitator, matching stories. Admins set
+    it on the idea's edit page, and it carries over when the idea is promoted to a
+    story.
   action_path: "/story_ideas"
 
 - name: "Credit two authors on a story"

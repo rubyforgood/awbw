@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_04_131714) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_04_155233) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2092,10 +2092,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_131714) do
     t.string "youtube_url"
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
+    t.bigint "spotlighted_facilitator_id"
     t.index ["author_id"], name: "index_story_ideas_on_author_id"
     t.index ["co_author_id"], name: "index_story_ideas_on_co_author_id"
     t.index ["created_by_id"], name: "index_story_ideas_on_created_by_id"
     t.index ["organization_id"], name: "index_story_ideas_on_organization_id"
+    t.index ["spotlighted_facilitator_id"], name: "index_story_ideas_on_spotlighted_facilitator_id"
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_story_ideas_on_windows_type_id"
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"

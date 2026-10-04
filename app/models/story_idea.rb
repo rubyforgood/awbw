@@ -22,6 +22,10 @@ class StoryIdea < ApplicationRecord
 
   belongs_to :author, class_name: "Person", inverse_of: :story_ideas_as_author, optional: true
   belongs_to :co_author, class_name: "Person", inverse_of: :story_ideas_as_co_author, optional: true
+  # Spotlight is not an author credit, so it ignores the credit preference entirely.
+  belongs_to :spotlighted_facilitator, class_name: "Person",
+             foreign_key: "spotlighted_facilitator_id",
+             inverse_of: :story_ideas_as_spotlighted_facilitator, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :organization
