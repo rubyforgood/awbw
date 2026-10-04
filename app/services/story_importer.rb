@@ -10,8 +10,9 @@ require "set"
 # EVERY importable row becomes a Story; a StoryIdea (the submission record) is
 # promoted into it only when the "status" column says "story idea" (and an
 # organization exists for it to belong to). The "status" column also sets the
-# publish state ("Published story" vs "Draft story"); "import_action" only
-# decides whether a row is skipped.
+# publish state ("Published story" vs "Draft story"). A "Skipped — reason" flag
+# in either "import_action" or "status" drops the row. Column headers may be the
+# curated sheet's human labels (see COLUMN_ALIASES) or the snake_case keys.
 #
 # The taxonomy is trusted as written: the sheet already carries resolved portal
 # "sectors", "categories" (as "Type: Name") and "window_type" values, so they are
@@ -28,6 +29,47 @@ class StoryImporter
     workshop sectors window_type categories grants professional_licenses
     image_count image_urls image_alt_titles youtube_url featured
   ].freeze
+
+  # The curated review sheet carries human-readable column labels; map each to
+  # the snake_case key the importer reads so a sheet exported with either naming
+  # imports identically. Matched case-insensitively on the trimmed label;
+  # snake_case headers (and anything unlisted) pass through unchanged.
+  COLUMN_ALIASES = {
+    "title" => "title",
+    "status" => "status",
+    "wp id" => "wp_id",
+    "content" => "content",
+    "published" => "published",
+    "publish date" => "published_date",
+    "organization" => "organization_name",
+    "org status" => "organization_status",
+    "first name" => "facilitator_name",
+    "last name" => "facilitator_last_name",
+    "author email" => "facilitator_email",
+    "author note" => "author_note",
+    "name display" => "name_display",
+    "anonymous credit?" => "anonymous",
+    "coauthor first name" => "co_facilitator_name",
+    "coauthor last name" => "co_facilitator_last_name",
+    "coauthor email" => "co_facilitator_email",
+    "coauthor name display" => "co_name_display",
+    "workshop" => "workshop",
+    "sectors" => "sectors",
+    "window type" => "window_type",
+    "categories" => "categories",
+    "grant(s)" => "grants",
+    "professional licenses" => "professional_licenses",
+    "professional license(s)" => "professional_licenses",
+    "images" => "image_count",
+    "image urls" => "image_urls",
+    "image alt/title" => "image_alt_titles",
+    "youtube" => "youtube_url",
+    "featured" => "featured"
+  }.freeze
+
+  HEADER_CONVERTER = lambda do |header|
+    COLUMN_ALIASES.fetch(header.to_s.strip.downcase.gsub(/\s+/, " "), header)
+  end
 
   # The spreadsheet columns for each credited author. A story can carry a first
   # author and an optional second (co-author), each with its own name/credit.
@@ -113,7 +155,7 @@ class StoryImporter
     raise ArgumentError, "no OrganizationStatus available" if @organization_status.nil?
 
     @conflicting_authors = scan_conflicting_authors
-    CSV.foreach(@csv_path, headers: true, encoding: "bom|utf-8") do |row|
+    CSV.foreach(@csv_path, headers: true, header_converters: HEADER_CONVERTER, encoding: "bom|utf-8") do |row|
       @result.rows_processed += 1
       begin
         import_row(row)
@@ -130,6 +172,8 @@ class StoryImporter
   attr_reader :result
 
   def import_row(row)
+    return record_skip(row, "duplicate header row") if header_echo?(row)
+
     warnings_before = @result.warnings.size
     raw_title = title_text(row)
     preview = RowPreview.new(
@@ -163,6 +207,9 @@ class StoryImporter
     preview.title = title
 
     organization = resolve_organization(row)
+    if status_text(row).include?("story idea") && organization.nil?
+      record_warning(row, "status requests a story idea but the row has no organization — imported as story only")
+    end
     author = resolve_person(row, AUTHOR_COLUMNS)
     co_author = resolve_co_author(row, author)
     tags = resolve_tags(row)
@@ -651,13 +698,18 @@ class StoryImporter
     clean(row["published"]).casecmp?("yes")
   end
 
-  # A StoryIdea requires an organization, so a "story idea" status is still
-  # Story-only without one.
-  def creates_story_idea?(row, organization)
-    return false if organization.nil?
+  # The status column decides whether a StoryIdea is wanted ("… + story idea").
+  # A blank status falls back to the legacy rule (an idea whenever an org exists).
+  def story_idea_requested?(row)
     status = status_text(row)
     return status.include?("story idea") if status.present?
     true
+  end
+
+  # A StoryIdea additionally requires an organization (model-level), so a
+  # requested idea is still Story-only without one (a warning is recorded).
+  def creates_story_idea?(row, organization)
+    organization.present? && story_idea_requested?(row)
   end
 
   def featured?(row)
@@ -665,11 +717,28 @@ class StoryImporter
   end
 
   def skipped_action?(row)
-    clean(row["import_action"]).start_with?(SKIP_ACTION)
+    skip_flag(row).present?
   end
 
   def skip_reason(row)
-    clean(row["import_action"]).sub(/\ASkipped\s*[—–-]\s*/, "").presence || "flagged skipped"
+    skip_flag(row).sub(/\ASkipped\s*[—–-]\s*/, "").presence || "flagged skipped"
+  end
+
+  # The skip flag can live in import_action or in the status column ("Skipped —
+  # reason"); import_action wins when both carry one.
+  def skip_flag(row)
+    [ clean(row["import_action"]), clean(row["status"]) ].find { |value| value.start_with?(SKIP_ACTION) }.to_s
+  end
+
+  # A re-uploaded sheet can keep a second header row (the human column labels)
+  # beneath the snake_case headers; skip it so it never becomes a story. It's
+  # recognized when several cells restate their own column's label.
+  def header_echo?(row)
+    matches = COLUMN_ALIASES.count do |label, key|
+      value = row[key]
+      value.present? && value.to_s.strip.downcase.gsub(/\s+/, " ") == label
+    end
+    matches >= 3
   end
 
   def awbw?(first_name)
@@ -703,8 +772,8 @@ class StoryImporter
   # disagrees across stories.
   def scan_conflicting_authors
     values = Hash.new { |hash, key| hash[key] = Set.new }
-    CSV.foreach(@csv_path, headers: true, encoding: "bom|utf-8") do |row|
-      next if title_text(row).blank? || skipped_action?(row)
+    CSV.foreach(@csv_path, headers: true, header_converters: HEADER_CONVERTER, encoding: "bom|utf-8") do |row|
+      next if header_echo?(row) || title_text(row).blank? || skipped_action?(row)
       [ AUTHOR_COLUMNS, CO_AUTHOR_COLUMNS ].each do |cols|
         key = author_key(row, cols)
         values[key] << credit_for(row, cols) if key
