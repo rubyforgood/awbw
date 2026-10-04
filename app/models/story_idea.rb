@@ -25,7 +25,11 @@ class StoryIdea < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
   belongs_to :organization
   belongs_to :windows_type
+  # Kept as a legacy safety copy alongside story_idea_workshops during the
+  # multi-step import; the join is the source of truth for display and editing.
   belongs_to :workshop, optional: true
+  has_many :story_idea_workshops, -> { order(:position, :id) }, inverse_of: :story_idea, dependent: :destroy
+  has_many :workshops, through: :story_idea_workshops
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
@@ -53,6 +57,8 @@ class StoryIdea < ApplicationRecord
   validates :youtube_url, length: { maximum: 255 }
 
   # Nested attributes
+  accepts_nested_attributes_for :story_idea_workshops, allow_destroy: true,
+    reject_if: ->(attrs) { attrs[:workshop_id].blank? && attrs[:external_workshop_title].blank? }
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
@@ -72,7 +78,8 @@ class StoryIdea < ApplicationRecord
   end
 
   def workshop_title
-    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
+    return direct_workshop_title if story_idea_workshops.empty?
+    story_idea_workshops.map { |siw| story_idea_workshop_label(siw) }.compact_blank.presence&.join(" / ")
   end
 
   def organization_name
@@ -85,5 +92,18 @@ class StoryIdea < ApplicationRecord
 
   def organization_description
     organization&.organization_description
+  end
+
+  private
+
+  def direct_workshop_title
+    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
+  end
+
+  def story_idea_workshop_label(story_idea_workshop)
+    workshop_title = story_idea_workshop.workshop&.title
+    external_title = story_idea_workshop.external_workshop_title.presence
+    return "#{external_title} (from the #{workshop_title})" if external_title && workshop_title
+    external_title || workshop_title
   end
 end

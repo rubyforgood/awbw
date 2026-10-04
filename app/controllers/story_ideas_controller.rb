@@ -129,6 +129,7 @@ class StoryIdeasController < ApplicationController
       :created_by_id, :updated_by_id,
       category_ids: [],
       sector_ids: [],
+      story_idea_workshops_attributes: [ :id, :workshop_id, :external_workshop_title, :position, :_destroy ],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],

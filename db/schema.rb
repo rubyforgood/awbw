@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_215538) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2096,6 +2096,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
     t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
   end
 
+  create_table "story_ideas_workshops", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "story_idea_id", null: false
+    t.integer "workshop_id"
+    t.string "external_workshop_title"
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["story_idea_id", "position"], name: "index_story_ideas_workshops_on_story_idea_id_and_position"
+    t.index ["story_idea_id", "workshop_id", "external_workshop_title"], name: "index_story_ideas_workshops_on_idea_workshop_and_title", unique: true
+    t.index ["story_idea_id"], name: "index_story_ideas_workshops_on_story_idea_id"
+    t.index ["workshop_id"], name: "index_story_ideas_workshops_on_workshop_id"
+  end
+
   create_table "topic_subscription_types", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "archived_at"
     t.datetime "created_at", null: false
@@ -2791,6 +2804,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_031410) do
   add_foreign_key "story_ideas", "users", column: "updated_by_id"
   add_foreign_key "story_ideas", "windows_types"
   add_foreign_key "story_ideas", "workshops"
+  add_foreign_key "story_ideas_workshops", "story_ideas"
+  add_foreign_key "story_ideas_workshops", "workshops"
   add_foreign_key "topic_subscriptions", "events", column: "interested_event_id"
   add_foreign_key "topic_subscriptions", "organizations"
   add_foreign_key "topic_subscriptions", "people"
