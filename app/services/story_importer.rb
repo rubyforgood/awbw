@@ -16,7 +16,7 @@ require "csv"
 # the original publish Date is preserved as created_at.
 class StoryImporter
   Result = Struct.new(
-    :rows_processed, :ideas_created, :stories_created, :images_enqueued, :skipped, :warnings, :previews,
+    :rows_processed, :ideas_created, :stories_created, :stories_updated, :images_enqueued, :skipped, :warnings, :previews,
     keyword_init: true
   ) do
     def summary
@@ -24,6 +24,7 @@ class StoryImporter
         "rows processed: #{rows_processed}",
         "story ideas created: #{ideas_created}",
         "connected stories created: #{stories_created}",
+        "stories updated: #{stories_updated}",
         "images queued: #{images_enqueued}",
         "skipped: #{skipped.size}",
         "warnings: #{warnings.size}"
@@ -37,7 +38,7 @@ class StoryImporter
   RowPreview = Struct.new(
     :wp_id, :title, :will_publish, :skipped_reason,
     :organization, :organization_new, :author_label, :author_new, :author_updated,
-    :creates_story, :creates_idea, :workshop_label, :sectors, :categories, :images, :comment, :warnings,
+    :creates_story, :creates_idea, :updates_story, :workshop_label, :sectors, :categories, :images, :comment, :warnings,
     keyword_init: true
   )
 
@@ -110,7 +111,7 @@ class StoryImporter
     @dry_run = dry_run
     @logger = logger || Rails.logger
     @result = Result.new(
-      rows_processed: 0, ideas_created: 0, stories_created: 0, images_enqueued: 0,
+      rows_processed: 0, ideas_created: 0, stories_created: 0, stories_updated: 0, images_enqueued: 0,
       skipped: [], warnings: [], previews: []
     )
     @organization_cache = {}
@@ -151,11 +152,7 @@ class StoryImporter
       preview.skipped_reason = "blank title"
       return
     end
-    if Story.where("LOWER(title) = ?", title.downcase).exists?
-      record_skip(row, "story already exists for title #{title.inspect}")
-      preview.skipped_reason = "story already exists"
-      return
-    end
+    existing_story = Story.where("LOWER(title) = ?", title.downcase).first
 
     organization = resolve_organization(row)
     windows_type = windows_type_for(row)
@@ -165,7 +162,21 @@ class StoryImporter
     workshop, external_title = workshop_for(row)
     describe_row(preview, row, organization, author, tags, workshop, external_title, warnings_before)
 
-    # Every row becomes a Story. A non-AWBW author's story also gets a StoryIdea
+    # A title already in the portal is refreshed, not duplicated: its metadata is
+    # updated from the row but its body (and created_at/by) are left as they are.
+    if existing_story
+      preview.creates_story = false
+      preview.creates_idea = false
+      preview.updates_story = true
+      return if @dry_run
+
+      update_existing_story(existing_story, row, organization:, windows_type:, author:, workshop:, external_title:)
+      apply_tags(existing_story, tags)
+      @result.stories_updated += 1
+      return
+    end
+
+    # Every new row becomes a Story. A non-AWBW author's story also gets a StoryIdea
     # (the submission record) promoted into it; AWBW-authored rows are Story-only.
     idea = nil
     if preview.creates_idea
@@ -266,6 +277,42 @@ class StoryImporter
     )
     story.created_at = original_created_at(row) || story.created_at
     story
+  end
+
+  # Refresh an existing story's metadata from the row. The body (rhino_body) and
+  # the original authorship stamps (created_at/created_by) are deliberately left
+  # untouched; an unresolved author keeps the story's current one.
+  def update_existing_story(story, row, organization:, windows_type:, author:, workshop:, external_title:)
+    featured = FEATURED_FLAGS.any? { |flag| truthy?(row[flag]) }
+    published = published?(row)
+    story.assign_attributes(
+      organization: organization,
+      windows_type: windows_type,
+      author: author&.persisted? ? author : story.author,
+      workshop: workshop,
+      external_workshop_title: external_title,
+      youtube_url: youtube_url(row),
+      author_credit_preference: author_credit(row),
+      published: published,
+      publicly_visible: published,
+      featured: featured,
+      publicly_featured: featured,
+      updated_by: @import_user
+    )
+    persist(story)
+    add_workshop_link(story, workshop, external_title)
+  end
+
+  # Add the row's workshop link to the join if it isn't already there, leaving any
+  # other (e.g. manually curated) links in place.
+  def add_workshop_link(story, workshop, external_title)
+    link =
+      if workshop then { workshop_id: workshop.id, external_workshop_title: nil }
+      elsif external_title.present? then { workshop_id: nil, external_workshop_title: external_title }
+      end
+    return unless link
+
+    story.story_workshops.find_or_create_by!(link)
   end
 
   # Connect a grant-tagged story to its Grant through the author's Scholarship

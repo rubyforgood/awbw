@@ -93,12 +93,37 @@ RSpec.describe StoryImporter do
       expect(story.comments.pluck(:body)).to include(a_string_matching(/Teena/))
     end
 
-    it "skips a row whose title already exists" do
-      create(:story, title: "A story of healing")
+    it "updates an existing story's metadata but keeps its body, without duplicating it" do
+      existing = create(:story, title: "A story of healing", published: false,
+                                rhino_body: "<p>Original body kept.</p>")
+
       result = import([ base_row ])
 
-      expect(result.skipped).to include(a_string_matching(/already exists/))
       expect(Story.where(title: "A story of healing").count).to eq(1)
+      existing.reload
+      expect(existing.rhino_body.to_plain_text).to eq("Original body kept.")
+      expect(existing.published).to be(true)
+      expect(existing.organization.name).to eq("A Greater Hope")
+      expect(result.stories_updated).to eq(1)
+      expect(result.stories_created).to eq(0)
+    end
+
+    it "links the imported workshop to an existing story without creating an idea" do
+      create(:story, title: "A story of healing", workshop: nil)
+
+      expect { import([ base_row ]) }.not_to change(StoryIdea, :count)
+
+      story = Story.find_by(title: "A story of healing")
+      expect(story.story_workshops.map(&:external_workshop_title)).to include("Adult Windows Workshop")
+    end
+
+    it "marks the row as an update in the preview rather than skipping it" do
+      create(:story, title: "A story of healing")
+
+      result = import([ base_row ], dry_run: true)
+
+      expect(result.previews.sole.skipped_reason).to be_nil
+      expect(result.previews.sole.updates_story).to be(true)
     end
 
     it "skips rows with a blank title" do
