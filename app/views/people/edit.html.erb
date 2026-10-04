@@ -57,6 +57,22 @@
       </div>
     <% end %>
   </div>
+  <% if allowed_to?(:index?, ProfileChangeRequest) %>
+    <% pending_requests = @person.profile_change_requests.pending.newest_first %>
+    <% if pending_requests.any? %>
+      <div class="admin-only border-primary/10 rounded-2xl border bg-blue-50 p-6 shadow-sm">
+        <div class="mb-3 font-semibold text-gray-700">
+          Pending change requests
+          <%= link_to "View all", profile_change_requests_path, class: "ms-2 text-sm #{eyebrow_link_class}" %>
+        </div>
+        <div class="space-y-3">
+          <% pending_requests.each do |request| %>
+            <%= render "profile_change_requests/request", request: request %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
   <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
     <div class="mb-2 font-semibold text-gray-700">
       Associated records

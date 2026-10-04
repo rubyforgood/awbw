@@ -1,0 +1,13 @@
+<%# locals: (person:, field:, label: "Request a change") %>
+<%# Affiliation requests target a specific affiliation, so several can be open at
+    once — only the single-target fields show a "one already pending" state here. %>
+<% pending = person.profile_change_requests.pending.find_by(field: field) unless field == "affiliation" %>
+<% if pending %>
+  <span class="text-amber-700">Change requested — pending review.</span>
+  <%= link_to "View your request", edit_profile_change_request_path(pending),
+              class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>
+<% else %>
+  <%= link_to local_assigns.fetch(:label, "Request a change"),
+              new_profile_change_request_path(person_id: person, field: field),
+              class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>
+<% end %>
