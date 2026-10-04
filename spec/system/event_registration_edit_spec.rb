@@ -297,6 +297,10 @@ RSpec.describe "Event registration edit page", type: :system do
       # for the save round-trip to finish before checking the database.
       expect(page).to have_field("Subject", with: "Called about parking")
       click_on "Save changes"
+      # Settle on the redirect before reading the page: current_path resolves no
+      # DOM node, so it waits out the Turbo swap that a text query can catch
+      # mid-render.
+      expect(page).to have_current_path(registrants_event_path(event, highlight: registration.id))
       expect(page).to have_text("successfully updated")
 
       notification = registration.notifications.find_by(email_subject: "Called about parking")
@@ -326,6 +330,10 @@ RSpec.describe "Event registration edit page", type: :system do
       end
 
       click_on "Save changes"
+      # Settle on the redirect before reading the page: current_path resolves no
+      # DOM node, so it waits out the Turbo swap that a text query can catch
+      # mid-render.
+      expect(page).to have_current_path(registrants_event_path(event, highlight: registration.id))
       expect(page).to have_text("successfully updated")
 
       notification = registration.notifications.find_by(email_subject: "They emailed us")
