@@ -149,8 +149,10 @@
   summary: >-
     Set a "carousel order" number on a story to hand-pick the Story Share home
     carousel (lowest leads); blank falls back to featured, then newest. Story Share
-    landing, sector, and audience pages now lead with featured, then newest stories.
+    pages now lead with featured, then newest stories, and the home story list is
+    newest-first.
   action_path: "/story_share"
+  pr_number: 2600
 
 - name: "Credit two authors on a story"
   area: stories
