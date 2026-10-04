@@ -1,9 +1,9 @@
 require "rails_helper"
 
-# Owner self-service profile editing is staged behind Person.owner_editing_enabled?.
-# When it's on, an owner can edit their own profile but only *request* changes to
-# the admin-only fields (primary email, affiliations), and the controller strips
-# those from a crafted submission.
+# Owner self-service profile editing is on outside production (PersonPolicy's
+# profiles_visible_to_users?). An owner can edit their own profile but only
+# *request* changes to the admin-only fields (primary email, affiliations), which
+# the policy's params_filter strips from a crafted submission.
 RSpec.describe "Owner change requests on the person edit form", type: :request do
   let(:owner_user) { create(:user, :with_person, email: "owner@example.com") }
   let(:person) { owner_user.person }
@@ -14,7 +14,6 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
 
   before do
     sign_in owner_user
-    allow(Person).to receive(:owner_editing_enabled?).and_return(true)
   end
 
   describe "the edit form" do
