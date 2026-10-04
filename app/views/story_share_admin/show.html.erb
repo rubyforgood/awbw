@@ -9,13 +9,17 @@
   <p class="mb-8 text-gray-600">
     Choose which sectors and audience categories appear in the Story Share portal's nav menus,
     and drag to reorder them. The top nav shows the first six sectors; the second nav shows the
-    audience categories in this order.
+    audience categories in this order. Use <span class="font-medium">On home</span> to pick which
+    sectors and audiences also get a full section on the portal home — they appear in this same order.
   </p>
 
   <%= render "menu_section",
              title: "Top nav — sectors",
              type: "sector",
              records: @sectors,
+             fixed_leading: [ { label: "Home", dot: "bg-brand-navy-900" } ],
+             fixed_trailing: [ { label: "Facilitator Spotlights", dot: "bg-brand-magenta-700" },
+                               { label: "Additional Focus Areas", dot: "bg-brand-orange-600" } ],
              empty: "No sectors are featured yet. Add one below." %>
 
   <%= render "menu_section",

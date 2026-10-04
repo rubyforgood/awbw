@@ -137,6 +137,86 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # LANDING PAGE — audience (age-group) sections
+  # ==========================================================
+  describe "landing-page audience sections" do
+    let!(:age_range) { create(:category_type, name: "AgeRange") }
+
+    def tag_story(category, title)
+      story = create(:story, :published, :publicly_visible, title: title)
+      story.categorizable_items.create!(category: category)
+      story
+    end
+
+    it "renders a section for each featured audience toggled on, in nav order" do
+      children = create(:category, :published, name: "Children", category_type: age_range, story_share_position: 1)
+      adults   = create(:category, :published, name: "Adults", category_type: age_range, story_share_position: 2)
+      tag_story(children, "A kids workshop story")
+      tag_story(adults, "An adult survivor story")
+
+      get story_shares_path
+
+      expect(response.body).to include("A kids workshop story")
+      expect(response.body).to include("More Children stories...")
+      expect(response.body).to include("category_names_all=Children")
+      expect(response.body).to include("An adult survivor story")
+      expect(response.body).to include("More Adults stories...")
+      expect(response.body.index("More Children stories...")).to be < response.body.index("More Adults stories...")
+    end
+
+    it "omits a featured audience whose home-section toggle is off" do
+      adults = create(:category, :published, name: "Adults", category_type: age_range,
+                                             story_share_position: 1, story_share_home_section: false)
+      tag_story(adults, "An adult survivor story")
+
+      get story_shares_path
+
+      expect(response.body).not_to include("More Adults stories...")
+    end
+
+    it "omits an audience that is not featured in the nav even when toggled on" do
+      children = create(:category, :published, name: "Children", category_type: age_range,
+                                               story_share_position: nil, story_share_home_section: true)
+      tag_story(children, "A kids workshop story")
+
+      get story_shares_path
+
+      expect(response.body).not_to include("More Children stories...")
+    end
+  end
+
+  # ==========================================================
+  # LANDING PAGE — sector sections
+  # ==========================================================
+  describe "landing-page sector sections" do
+    def tag_sector_story(sector, title)
+      story = create(:story, :published, :publicly_visible, title: title)
+      story.sectorable_items.create!(sector: sector)
+      story
+    end
+
+    it "renders a section for a featured sector toggled on" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      tag_sector_story(sector, "A story about housing")
+
+      get story_shares_path
+
+      expect(response.body).to include("A story about housing")
+      expect(response.body).to include("More Homelessness stories...")
+    end
+
+    it "omits a featured sector whose home-section toggle is off" do
+      sector = create(:sector, :published, name: "Homelessness",
+                                           story_share_position: 1, story_share_home_section: false)
+      tag_sector_story(sector, "A story about housing")
+
+      get story_shares_path
+
+      expect(response.body).not_to include("More Homelessness stories...")
+    end
+  end
+
+  # ==========================================================
   # BROWSING / FILTERING (public)
   # ==========================================================
   describe "browsing filtered results" do

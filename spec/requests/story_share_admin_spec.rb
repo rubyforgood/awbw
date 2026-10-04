@@ -11,6 +11,15 @@ RSpec.describe "StoryShareAdmin", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "lists the fixed top-nav items without controls" do
+      sign_in admin
+      get story_share_admin_path
+      expect(response.body).to include("Home")
+      expect(response.body).to include("Facilitator Spotlights")
+      expect(response.body).to include("Additional Focus Areas")
+      expect(response.body).to include("Always shown")
+    end
+
     it "does not render for non-admins" do
       sign_in regular_user
       get story_share_admin_path
@@ -98,6 +107,55 @@ RSpec.describe "StoryShareAdmin", type: :request do
 
       expect(a.reload.story_share_position).to be_nil
       expect(b.reload.story_share_position).to eq(1)
+    end
+  end
+
+  describe "PUT /story_share/admin/toggle_home_section" do
+    before { sign_in admin }
+
+    it "turns a category's home section off, then back on" do
+      category = create(:category, :published, story_share_position: 1)
+      expect(category.story_share_home_section).to be(true)
+
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
+      expect(category.reload.story_share_home_section).to be(false)
+      expect(response).to redirect_to(story_share_admin_path)
+
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
+      expect(category.reload.story_share_home_section).to be(true)
+    end
+
+    it "toggles a sector's home section" do
+      sector = create(:sector, :published, story_share_position: 1)
+      put story_share_admin_toggle_home_section_path(type: "sector", id: sector.id)
+      expect(sector.reload.story_share_home_section).to be(false)
+    end
+
+    it "sets an explicit value from the dropdown idempotently" do
+      category = create(:category, :published, story_share_position: 1)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id), params: { on_home: false }
+      expect(category.reload.story_share_home_section).to be(false)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id), params: { on_home: false }
+      expect(category.reload.story_share_home_section).to be(false)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id), params: { on_home: true }
+      expect(category.reload.story_share_home_section).to be(true)
+    end
+
+    it "records an Ahoy event for the toggle" do
+      category = create(:category, :published, story_share_position: 1)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "update.story_share_home_section",
+              hash_including(resource_type: "Category", resource_id: category.id,
+                             changes: { story_share_home_section: false }))
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
+    end
+
+    it "forbids non-admins" do
+      sign_out admin
+      sign_in regular_user
+      category = create(:category, :published, story_share_position: 1)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
+      expect(category.reload.story_share_home_section).to be(true)
     end
   end
 

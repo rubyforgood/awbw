@@ -5,7 +5,7 @@ class StoryShareAdminController < ApplicationController
   # story_share_position on sectors (top row) and audience categories (second
   # row). story_share_position is a plain integer (NOT the positioned gem), so
   # reordering renumbers it manually here.
-  before_action :set_klass, only: [ :reorder, :add, :remove ]
+  before_action :set_klass, only: [ :reorder, :add, :remove, :toggle_home_section ]
 
   def show
     authorize! :story_share_admin, to: :show?
@@ -54,6 +54,19 @@ class StoryShareAdminController < ApplicationController
     renumber(@klass.story_share_featured.to_a)
     track_menu_change("destroy.story_share_menu", record)
     redirect_to story_share_admin_path, notice: "Removed from the Story Share menu."
+  end
+
+  # Toggles whether a featured sector/audience also gets a full section on the
+  # Story Share home (ordered by its existing nav position).
+  def toggle_home_section
+    authorize! :story_share_admin, to: :reorder?
+    record = @klass.find(params[:id])
+    new_value = params.key?(:on_home) ? ActiveModel::Type::Boolean.new.cast(params[:on_home]) : !record.story_share_home_section
+    record.update_columns(story_share_home_section: new_value)
+    track_menu_change("update.story_share_home_section", record,
+                      changes: { story_share_home_section: record.story_share_home_section })
+    redirect_to story_share_admin_path,
+                notice: "#{record.name} #{record.story_share_home_section ? "now shows" : "no longer shows"} on the Story Share home."
   end
 
   private
