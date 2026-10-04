@@ -44,6 +44,16 @@
     - "A sector or audience can stay in the nav without getting a home box — just set its \"On home\" dropdown to \"Not on home\"."
     - "Home sections follow the nav order, so drag to reorder once and both update."
 
+- name: "Credit a second author on a story idea"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-04
+  summary: >-
+    Story ideas can now credit a second author, matching stories. Admins set the
+    second author and their credit preference on the idea's edit page, and both
+    carry over when the idea is promoted to a story.
+  action_path: "/story_ideas"
+
 - name: "Credit two authors on a story"
   area: stories
   display_status: admin_facing

@@ -21,6 +21,7 @@ class StoryIdea < ApplicationRecord
   has_rich_text :rhino_body
 
   belongs_to :author, class_name: "Person", inverse_of: :story_ideas_as_author, optional: true
+  belongs_to :co_author, class_name: "Person", inverse_of: :story_ideas_as_co_author, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :organization
@@ -55,6 +56,25 @@ class StoryIdea < ApplicationRecord
   validates :rhino_body, presence: true
   validates :external_workshop_title, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
+  normalizes :co_author_credit_preference, with: ->(value) { value.presence }
+  validates :co_author_credit_preference, inclusion: { in: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
+  # A second author has to sit behind a first.
+  validates :author_id, presence: { message: "is required when a second author is credited" },
+            if: -> { co_author_id.present? }
+  validate :co_author_differs_from_author
+
+  # A story idea credits either author, so both the author chip filter and the
+  # person profile listing match on author_id or co_author_id.
+  scope :authored_by, ->(person_id) {
+    where("story_ideas.author_id = :id OR story_ideas.co_author_id = :id", id: person_id) if person_id.present?
+  }
+
+  scope :credited_to_person, ->(person) {
+    return none if person.blank?
+    where(author_id: person.id)
+      .or(where(co_author_id: person.id))
+      .or(where(author_id: nil, created_by_id: User.where(person_id: person.id).select(:id)))
+  }
 
   # Nested attributes
   accepts_nested_attributes_for :story_idea_workshops, allow_destroy: true,
@@ -105,5 +125,12 @@ class StoryIdea < ApplicationRecord
     external_title = story_idea_workshop.external_workshop_title.presence
     return "#{external_title} (from the #{workshop_title})" if external_title && workshop_title
     external_title || workshop_title
+  end
+
+  def co_author_differs_from_author
+    return if co_author_id.blank? || author_id.blank?
+    return if co_author_id != author_id
+
+    errors.add(:co_author_id, "must be different from the first author")
   end
 end

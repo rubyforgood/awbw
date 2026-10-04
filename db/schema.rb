@@ -2090,7 +2090,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_131714) do
     t.integer "windows_type_id", null: false
     t.integer "workshop_id"
     t.string "youtube_url"
+    t.bigint "co_author_id"
+    t.string "co_author_credit_preference"
     t.index ["author_id"], name: "index_story_ideas_on_author_id"
+    t.index ["co_author_id"], name: "index_story_ideas_on_co_author_id"
     t.index ["created_by_id"], name: "index_story_ideas_on_created_by_id"
     t.index ["organization_id"], name: "index_story_ideas_on_organization_id"
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
