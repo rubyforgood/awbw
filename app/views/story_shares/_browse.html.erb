@@ -60,6 +60,8 @@
         <% row_stories = @stories.drop(8) %>
       <% end %>
 
+      <div id="stories" class="scroll-mt-8"></div>
+
       <!-- 3-up featured grid -->
       <% if grid_stories.any? %>
         <div class="mb-16 grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -76,7 +78,7 @@
         <% end %>
       </div>
 
-      <div class="pagination mt-10"><%= tailwind_paginate @stories %></div>
+      <div class="pagination mt-10"><%= tailwind_paginate @stories, anchor: "stories" %></div>
     <% else %>
       <div class="py-20 text-center text-gray-600">
         No stories found.
