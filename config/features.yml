@@ -27,6 +27,19 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "Share a story only with its scholarship funder"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-03
+  summary: >-
+    Training-scholarship recipients submitting a required story can now mark it
+    "Funder-only" — it's shared solely with the funder who paid for the training and
+    never appears on Story Share, in search, or on the home page. Staff and the author
+    still see it, flagged with a "Funder-only" chip, and the stories list has a
+    matching filter.
+  action_path: "/stories"
+  pr_number: 2596
+
 - name: "Credit two authors on a story"
   area: stories
   display_status: admin_facing

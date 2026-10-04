@@ -184,6 +184,16 @@ RSpec.describe "/story_ideas", type: :request do
         expect(StoryIdea.last.created_by).to eq(regular_user)
       end
 
+      it "persists funder_only when the submitter checks the box" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(funder_only: "1") }
+        expect(StoryIdea.last).to be_funder_only
+      end
+
+      it "defaults funder_only to false when the box is left unchecked" do
+        post story_ideas_url, params: { story_idea: valid_attributes }
+        expect(StoryIdea.last).not_to be_funder_only
+      end
+
       it "creates admin and submitter notifications and enqueues mailer jobs" do
         clear_enqueued_jobs
 

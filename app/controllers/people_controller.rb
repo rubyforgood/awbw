@@ -77,8 +77,13 @@ class PeopleController < ApplicationController
       when "stories"
         # Author (or legacy creator) plus stories they were spotlighted in. The
         # spotlight is a separate credit from authorship, so anonymity doesn't apply.
-        story_ids = visible_authored_content(Story.credited_to_person(@person)).pluck(:id) +
-          @person.stories_as_spotlighted_facilitator.pluck(:id)
+        authored = visible_authored_content(Story.credited_to_person(@person))
+        spotlighted = @person.stories_as_spotlighted_facilitator
+        unless viewing_own_or_admin?
+          authored = authored.not_funder_only
+          spotlighted = spotlighted.not_funder_only
+        end
+        story_ids = authored.pluck(:id) + spotlighted.pluck(:id)
         @stories = Story.with_author_credit.where(id: story_ids)
                         .order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }

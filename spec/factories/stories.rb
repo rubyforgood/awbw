@@ -36,5 +36,9 @@ FactoryBot.define do
     trait :publicly_featured do
       publicly_featured { true }
     end
+
+    trait :funder_only do
+      funder_only { true }
+    end
   end
 end
