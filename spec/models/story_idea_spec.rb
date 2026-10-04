@@ -3,6 +3,20 @@ require "rails_helper"
 RSpec.describe StoryIdea, type: :model do
   it_behaves_like "author_creditable", factory: :story_idea, org_credited: false, credits_creator: true
 
+  it "is valid without an organization" do
+    idea = create(:story_idea, organization: nil)
+    expect(idea).to be_valid
+    expect(idea.organization).to be_nil
+  end
+
+  it "requires an organization when organization_required is set" do
+    idea = create(:story_idea)
+    idea.organization = nil
+    idea.organization_required = true
+    expect(idea).not_to be_valid
+    expect(idea.errors[:organization_id]).to be_present
+  end
+
   describe "a second author" do
     let(:first_author) { create(:person, first_name: "Ada", last_name: "Lovelace", display_name_preference: "full_name") }
     let(:second_author) { create(:person, first_name: "Grace", last_name: "Hopper", display_name_preference: "full_name") }

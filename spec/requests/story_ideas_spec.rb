@@ -146,6 +146,13 @@ RSpec.describe "/story_ideas", type: :request do
         story_idea = StoryIdea.order(:id).last
         expect(story_idea).to be_present
       end
+
+      it "creates a StoryIdea without an organization" do
+        expect {
+          post story_ideas_url, params: { story_idea: valid_attributes.except(:organization_id) }
+        }.to change(StoryIdea, :count).by(1)
+        expect(StoryIdea.order(:id).last.organization).to be_nil
+      end
     end
   end
 
@@ -182,6 +189,13 @@ RSpec.describe "/story_ideas", type: :request do
       it "assigns current_user as owner" do
         post story_ideas_url, params: { story_idea: valid_attributes }
         expect(StoryIdea.last.created_by).to eq(regular_user)
+      end
+
+      it "requires an organization" do
+        expect {
+          post story_ideas_url, params: { story_idea: valid_attributes.except(:organization_id) }
+        }.not_to change(StoryIdea, :count)
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
       it "creates admin and submitter notifications and enqueues mailer jobs" do
