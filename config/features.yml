@@ -27,6 +27,16 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "Children and Adults sections on the Story Share home"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-10-04
+  summary: >-
+    The Story Share landing page now has Children and Adults columns alongside the
+    featured focus areas and Facilitator Spotlights — six browsable sections in all —
+    so visitors can jump straight to stories about the age group they care about.
+  action_path: "/story_share"
+
 - name: "Credit two authors on a story"
   area: stories
   display_status: admin_facing

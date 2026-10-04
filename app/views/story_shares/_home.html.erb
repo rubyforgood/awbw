@@ -99,6 +99,14 @@
                    theme: story_share_slot_theme(index),
                    more_path: story_shares_path(sector_names_all: sector.name) %>
       <% end %>
+      <%# Age-group sections continue the slot palette, skipping the purple Spotlight slot. %>
+      <% @stories_by_audience.each_with_index do |(name, stories), index| %>
+        <%= render "sector_section",
+                   title: name,
+                   stories: stories,
+                   theme: story_share_slot_theme(@featured_sectors.size + 1 + index),
+                   more_path: story_shares_path(category_names_all: name) %>
+      <% end %>
       <%= render "sector_section",
                  title: "Facilitator Spotlights",
                  stories: @spotlight_stories,

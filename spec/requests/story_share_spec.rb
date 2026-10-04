@@ -137,6 +137,36 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # LANDING PAGE — audience (age-group) sections
+  # ==========================================================
+  describe "landing-page audience sections" do
+    let!(:age_range) { create(:category_type, name: "AgeRange") }
+
+    it "renders a Children section with its stories and a browse-more link" do
+      children = create(:category, :published, name: "Children", category_type: age_range)
+      child_story = create(:story, :published, :publicly_visible, title: "A kids workshop story")
+      child_story.categorizable_items.create!(category: children)
+
+      get story_shares_path
+
+      expect(response.body).to include("A kids workshop story")
+      expect(response.body).to include("More Children stories...")
+      expect(response.body).to include("category_names_all=Children")
+    end
+
+    it "renders an Adults section with its stories" do
+      adults = create(:category, :published, name: "Adults", category_type: age_range)
+      adult_story = create(:story, :published, :publicly_visible, title: "An adult survivor story")
+      adult_story.categorizable_items.create!(category: adults)
+
+      get story_shares_path
+
+      expect(response.body).to include("An adult survivor story")
+      expect(response.body).to include("More Adults stories...")
+    end
+  end
+
+  # ==========================================================
   # BROWSING / FILTERING (public)
   # ==========================================================
   describe "browsing filtered results" do
