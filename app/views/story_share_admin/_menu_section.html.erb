@@ -30,12 +30,25 @@
               <i class="fa-solid fa-grip-vertical cursor-move text-gray-400 hover:text-gray-600" data-sortable-handle=""></i>
               <span class="flex-1 text-gray-800"><%= record.name %></span>
               <% on_home = record.story_share_home_section %>
-              <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
-                            method: :put,
-                            class: "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium #{on_home ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}" do %>
-                <i class="fa-solid <%= on_home ? "fa-check" : "fa-plus" %>"></i>
-                <%= on_home ? "On home" : "Add to home" %>
-              <% end %>
+              <details class="relative">
+                <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium [&::-webkit-details-marker]:hidden <%= on_home ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200" %>">
+                  <i class="fa-solid <%= on_home ? "fa-check" : "fa-plus" %>"></i>
+                  <%= on_home ? "On home" : "Add to home" %>
+                  <i class="fa-solid fa-chevron-down text-xs"></i>
+                </summary>
+                <div class="absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+                  <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
+                                method: :put, params: { on_home: true },
+                                class: "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 #{on_home ? "font-semibold text-green-800" : "text-gray-700"}" do %>
+                    <i class="fa-solid fa-check w-4 <%= on_home ? "" : "invisible" %>"></i> On home
+                  <% end %>
+                  <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
+                                method: :put, params: { on_home: false },
+                                class: "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 #{on_home ? "text-gray-700" : "font-semibold text-gray-900"}" do %>
+                    <i class="fa-solid fa-check w-4 <%= on_home ? "invisible" : "" %>"></i> Not on home
+                  <% end %>
+                </div>
+              </details>
               <%= button_to "Remove", story_share_admin_remove_path(type: type, id: record.id),
                             method: :delete,
                             form: { data: { turbo_confirm: "Remove “#{record.name}” from the menu?" } },

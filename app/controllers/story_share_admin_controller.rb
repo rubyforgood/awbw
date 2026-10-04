@@ -61,7 +61,8 @@ class StoryShareAdminController < ApplicationController
   def toggle_home_section
     authorize! :story_share_admin, to: :reorder?
     record = @klass.find(params[:id])
-    record.update_columns(story_share_home_section: !record.story_share_home_section)
+    new_value = params.key?(:on_home) ? ActiveModel::Type::Boolean.new.cast(params[:on_home]) : !record.story_share_home_section
+    record.update_columns(story_share_home_section: new_value)
     track_menu_change("update.story_share_home_section", record,
                       changes: { story_share_home_section: record.story_share_home_section })
     redirect_to story_share_admin_path,

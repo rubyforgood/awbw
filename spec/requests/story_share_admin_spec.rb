@@ -131,6 +131,16 @@ RSpec.describe "StoryShareAdmin", type: :request do
       expect(sector.reload.story_share_home_section).to be(false)
     end
 
+    it "sets an explicit value from the dropdown idempotently" do
+      category = create(:category, :published, story_share_position: 1)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id), params: { on_home: false }
+      expect(category.reload.story_share_home_section).to be(false)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id), params: { on_home: false }
+      expect(category.reload.story_share_home_section).to be(false)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id), params: { on_home: true }
+      expect(category.reload.story_share_home_section).to be(true)
+    end
+
     it "records an Ahoy event for the toggle" do
       category = create(:category, :published, story_share_position: 1)
       expect(Analytics::AhoyTracker).to receive(:track_event)
