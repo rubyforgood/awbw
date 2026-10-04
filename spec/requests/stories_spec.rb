@@ -386,6 +386,24 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include("Promoted Workshop")
         expect(response.body).to include("Unlisted Session")
       end
+
+      it "carries the idea's author, second author, and spotlighted facilitator into the new story form" do
+        first = create(:person, first_name: "Ada", last_name: "Lovelace")
+        second = create(:person, first_name: "Grace", last_name: "Hopper")
+        spotlight = create(:person, first_name: "Katherine", last_name: "Johnson")
+        idea = create(:story_idea, author: first, co_author: second,
+                                   co_author_credit_preference: "first_name_only",
+                                   spotlighted_facilitator: spotlight)
+
+        get new_story_url(story_idea_id: idea.id)
+
+        expect(response).to have_http_status(:ok)
+        page = Capybara.string(response.body)
+        expect(page).to have_select("story[author_id]", selected: first.remote_search_label[:label])
+        expect(page).to have_select("story[co_author_id]", selected: second.remote_search_label[:label])
+        expect(page).to have_select("story[spotlighted_facilitator_id]", selected: spotlight.remote_search_label[:label])
+        expect(page).to have_select("story[co_author_credit_preference]", selected: "First name only")
+      end
     end
 
     describe "legacy workshop on the edit page" do

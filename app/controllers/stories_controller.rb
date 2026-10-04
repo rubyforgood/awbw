@@ -249,8 +249,11 @@ class StoriesController < ApplicationController
       story_workshops_attributes: story_workshops_attributes_from(idea),
       windows_type_id: idea.windows_type_id,
       youtube_url: idea.youtube_url,
-      author_id: idea.created_by&.person_id,
-      author_credit_preference: idea.author_credit_preference
+      author_id: idea.author_id || idea.created_by&.person_id,
+      author_credit_preference: idea.author_credit_preference,
+      co_author_id: idea.co_author_id,
+      co_author_credit_preference: idea.co_author_credit_preference,
+      spotlighted_facilitator_id: idea.spotlighted_facilitator_id
     }
   end
 
