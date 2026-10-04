@@ -59,41 +59,6 @@
                       onchange: select_caret_onchange
                     } %>
       </div>
-      <div class="mb-4 flex-1 md:mb-0">
-        <%= f.input :workshop_id,
-          collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
-          include_blank: true,
-          required: true,
-          input_html: {
-            class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "workshop"
-            }
-          },
-          prompt: "Type to search workshops…",
-          label: "Workshop",
-          wrapper_html: { class: "mb-0" },
-          label_html: { class: "block font-medium mb-1 text-gray-700 #{ 'readonly' if promoted_to_story }" } %>
-
-        <%# Native <details> reveals the optional custom-title field on click — no JS.
-            Sits right under the field like a hint. Auto-opens when a title is
-            already set so it isn't hidden on edit. %>
-        <details class="group mt-1"<%= " open".html_safe if f.object.external_workshop_title.present? %>>
-          <summary class="text-sm text-purple-700 hover:underline cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-            Enter custom title
-          </summary>
-          <%= f.input :external_workshop_title,
-                      as: :text,
-                      label: "Workshop title (if different or unlisted)",
-                      wrapper_html: { class: "mt-2" },
-                      label_html: { class: "block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1" },
-                      input_html: {
-                        rows: 1,
-                        class: ("readonly" if promoted_to_story)
-                      } %>
-        </details>
-      </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% default_org = default_organization_for_form(f.object) %>
         <% if @organizations.size == 1 %>
@@ -118,6 +83,34 @@
                       label_html: { class: "block font-medium mb-1 text-gray-700" } %>
         <% end %>
       </div>
+    </div>
+
+    <div class="my-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <label class="block text-base font-semibold text-gray-800">Workshops</label>
+      <p class="mb-3 text-sm text-gray-500">
+        Link each workshop in the curriculum, or type a name for one that isn't listed.
+      </p>
+      <% legacy_workshop = f.object.persisted? ? f.object.decorate.legacy_workshop_reference : nil %>
+      <% if legacy_workshop.present? %>
+        <div class="mb-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
+          <span class="block text-xs font-medium text-gray-500">Previously linked (read-only)</span>
+          <span class="text-sm text-gray-800"><%= legacy_workshop %></span>
+        </div>
+      <% end %>
+      <% if promoted_to_story %>
+        <p class="text-sm text-gray-700"><%= story_idea.workshop_title.presence || "—" %></p>
+      <% else %>
+        <div id="story-idea-workshops-fields">
+          <%= f.fields_for :story_idea_workshops do |story_idea_workshop| %>
+            <%= render "story_ideas/story_idea_workshop_fields", f: story_idea_workshop %>
+          <% end %>
+        </div>
+        <%= link_to_add_association "Add workshop", f, :story_idea_workshops,
+                                    partial: "story_ideas/story_idea_workshop_fields",
+                                    data: { association_insertion_node: "#story-idea-workshops-fields",
+                                            association_insertion_method: "append" },
+                                    class: button_classes(:secondary_outline) %>
+      <% end %>
     </div>
 
     <% if promoted_to_story %>

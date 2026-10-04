@@ -9,6 +9,15 @@ FactoryBot.define do
     association :created_by, factory: :user
     association :updated_by, factory: :user
 
+    after(:create) do |story_idea, _evaluator|
+      if story_idea.story_idea_workshops.empty?
+        story_idea.story_idea_workshops.create!(workshop: story_idea.workshop) if story_idea.workshop
+        if story_idea.external_workshop_title.present?
+          story_idea.story_idea_workshops.create!(external_workshop_title: story_idea.external_workshop_title)
+        end
+      end
+    end
+
     trait :with_story do
       after(:create) do |story_idea|
         create(:story,
