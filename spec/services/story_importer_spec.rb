@@ -103,6 +103,50 @@ RSpec.describe StoryImporter do
     end
   end
 
+  describe "status column" do
+    it "promotes a StoryIdea only when the status says story idea" do
+      import([ base_row("status" => "Published story + story idea") ])
+
+      expect(StoryIdea.count).to eq(1)
+      expect(Story.sole.story_idea).to eq(StoryIdea.sole)
+    end
+
+    it "is Story-only when the status is a story without a story idea" do
+      import([ base_row("status" => "Published story") ])
+
+      expect(Story.count).to eq(1)
+      expect(StoryIdea.count).to eq(0)
+      expect(Story.sole.story_idea).to be_nil
+    end
+
+    it "publishes a Published story" do
+      import([ base_row("status" => "Published story") ])
+
+      expect(Story.sole).to have_attributes(published: true, publicly_visible: true)
+    end
+
+    it "leaves a Draft story unpublished but still a story" do
+      import([ base_row("status" => "Draft story + story idea") ])
+
+      story = Story.sole
+      expect(story).to have_attributes(published: false, publicly_visible: false)
+      expect(story.story_idea).to eq(StoryIdea.sole)
+    end
+
+    it "stays Story-only for a story-idea status without an organization" do
+      import([ base_row("status" => "Published story + story idea", "organization_name" => "") ])
+
+      expect(Story.count).to eq(1)
+      expect(StoryIdea.count).to eq(0)
+    end
+
+    it "falls back to the published column when status is blank" do
+      import([ base_row("status" => "", "published" => "no") ])
+
+      expect(Story.sole.published).to be(false)
+    end
+  end
+
   describe "title" do
     it "strips HTML from the title" do
       import([ base_row("title" => "<b>Bold</b> Hope") ])
@@ -137,6 +181,12 @@ RSpec.describe StoryImporter do
       import([ base_row("name_display" => "first name only") ])
 
       expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("first_name_only")
+    end
+
+    it "maps a first name + last initial name_display to the matching preference" do
+      import([ base_row("name_display" => "first name + last initial") ])
+
+      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("first_name_last_initial")
     end
 
     it "flags the author's profile anonymous for an anonymous credit" do
@@ -188,6 +238,14 @@ RSpec.describe StoryImporter do
       expect(co_author.display_name_preference).to eq("first_name_only")
     end
 
+    it "credits both authors on the promoted story idea too" do
+      import([ co_author_row ])
+
+      idea = StoryIdea.sole
+      expect(idea.author).to eq(Person.find_by(first_name: "Jamie", last_name: "Rivera"))
+      expect(idea.co_author).to eq(Person.find_by(first_name: "Cathy", last_name: "Smith"))
+    end
+
     it "leaves the co-author's story credit NULL for a consistent author" do
       import([ co_author_row ])
 
@@ -217,19 +275,19 @@ RSpec.describe StoryImporter do
   end
 
   describe "workshop" do
-    it "links a story to an existing workshop on an exact title match (ignoring the prefix)" do
+    it "links a story (and its idea) to an existing workshop via the join on an exact match" do
       workshop = create(:workshop, title: "Anger Volcano")
       import([ base_row("workshop" => "Matched workshop: Anger Volcano") ])
 
-      expect(Story.sole.workshop).to eq(workshop)
-      expect(Story.sole.external_workshop_title).to be_blank
+      expect(Story.sole.workshops).to contain_exactly(workshop)
+      expect(StoryIdea.sole.workshops).to contain_exactly(workshop)
     end
 
-    it "keeps the free-text workshop title (minus the prefix) when there is no match" do
+    it "keeps the free-text workshop title (minus the prefix) on the join when there is no match" do
       import([ base_row("workshop" => "External title: Some Unlisted Workshop") ])
 
-      expect(Story.sole.workshop).to be_nil
-      expect(Story.sole.external_workshop_title).to eq("Some Unlisted Workshop")
+      expect(Story.sole.workshops).to be_empty
+      expect(Story.sole.story_workshops.map(&:external_workshop_title)).to contain_exactly("Some Unlisted Workshop")
     end
   end
 

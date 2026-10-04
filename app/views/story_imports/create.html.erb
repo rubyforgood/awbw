@@ -18,7 +18,6 @@
          [ "Rows read", @result.rows_processed ],
          [ "Story ideas", @result.ideas_created ],
          [ "Connected stories", @result.stories_created ],
-         [ "Updated stories", @result.stories_updated ],
          [ "Rows skipped", @result.skipped.size ]
        ].each do |label, value| %>
       <div class="border-primary/10 rounded-2xl border bg-white p-4 text-center">
@@ -43,8 +42,6 @@
           <span class="font-medium text-gray-900"><%= p.title.presence || "(untitled)" %></span>
           <% if p.skipped_reason %>
             <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">Skipped — <%= p.skipped_reason %></span>
-          <% elsif p.updates_story %>
-            <span class="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">Updates existing story</span>
           <% else %>
             <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium <%= p.will_publish ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800" %>">
               <%= p.will_publish ? "Published story" : "Draft story" %><%= " + story idea" if p.creates_idea %>
@@ -144,11 +141,11 @@
       <%= f.hidden_field :signed_id, value: @blob.signed_id %>
       <p class="mb-3 text-sm text-gray-600">
         This will create <%= pluralize(@result.ideas_created, "story idea") %>
-        and <%= pluralize(@result.stories_created, "connected story") %><%= ", and update #{pluralize(@result.stories_updated, "existing story")}" if @result.stories_updated.positive? %>.
+        and <%= pluralize(@result.stories_created, "connected story") %>.
       </p>
       <div class="flex items-center gap-2">
         <%= f.submit "Confirm import", class: button_classes(:primary_outline, extra: "bg-blue-100"),
-                     data: { turbo_confirm: "Create #{@result.ideas_created} story ideas and #{@result.stories_created} stories#{", update #{@result.stories_updated}" if @result.stories_updated.positive?}?" } %>
+                     data: { turbo_confirm: "Create #{@result.ideas_created} story ideas and #{@result.stories_created} stories?" } %>
         <%= link_to "Cancel", stories_path, class: button_classes(:secondary_outline) %>
       </div>
     <% end %>

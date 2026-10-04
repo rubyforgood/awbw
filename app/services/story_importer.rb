@@ -7,9 +7,11 @@ require "set"
 # importer's own dry-run preview produces, reviewed and edited by staff and then
 # re-uploaded.
 #
-# EVERY importable row becomes a Story AND a StoryIdea promoted into it (the
-# submission record). Publish state comes from the "published" column;
-# "import_action" only decides whether a row is skipped.
+# EVERY importable row becomes a Story; a StoryIdea (the submission record) is
+# promoted into it only when the "status" column says "story idea" (and an
+# organization exists for it to belong to). The "status" column also sets the
+# publish state ("Published story" vs "Draft story"); "import_action" only
+# decides whether a row is skipped.
 #
 # The taxonomy is trusted as written: the sheet already carries resolved portal
 # "sectors", "categories" (as "Type: Name") and "window_type" values, so they are
@@ -19,7 +21,7 @@ require "set"
 class StoryImporter
   # Columns the importer reads, in a natural order, for the downloadable template.
   TEMPLATE_HEADERS = %w[
-    row_source row_number title import_action wp_id content published published_date
+    row_source row_number title import_action status wp_id content published published_date
     organization_name organization_status facilitator_name facilitator_last_name
     facilitator_email author_note name_display anonymous
     co_facilitator_name co_facilitator_last_name co_facilitator_email co_name_display co_anonymous
@@ -74,7 +76,8 @@ class StoryImporter
   # "anonymous" has no profile equivalent, so it is left off (never synced).
   DISPLAY_PREF_BY_CREDIT = {
     "full_name" => "full_name",
-    "first_name_only" => "first_name_only"
+    "first_name_only" => "first_name_only",
+    "first_name_last_initial" => "first_name_last_initial"
   }.freeze
 
   # Resolved tags for one row, applied to both the idea and its connected story,
@@ -85,7 +88,8 @@ class StoryImporter
   # the separate "anonymous" column overrides this.
   AUTHOR_CREDIT_BY_DISPLAY = {
     "full name" => "full_name",
-    "first name only" => "first_name_only"
+    "first name only" => "first_name_only",
+    "first name + last initial" => "first_name_last_initial"
   }.freeze
   DEFAULT_AUTHOR_CREDIT = "full_name"
 
@@ -178,9 +182,10 @@ class StoryImporter
     # StoryIdea requires an organization, so an org-less row is Story-only.
     idea = nil
     if preview.creates_idea
-      idea = build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:, credit:)
+      idea = build_idea(row, title:, organization:, windows_type:, author:, co_author:, content:, workshop:, external_title:, credit:, co_credit:)
       return unless persist(idea)
       nullify_blank_credit(idea, :author_credit_preference, credit)
+      nullify_blank_credit(idea, :co_author_credit_preference, co_credit)
       apply_tags(idea, tags)
       @result.ideas_created += 1
     end
@@ -230,7 +235,7 @@ class StoryImporter
     preview.author_new = author&.new_record? || false
     preview.author_updated = author&.persisted? && DISPLAY_PREF_BY_CREDIT.key?(credit_for(row, AUTHOR_COLUMNS))
     preview.creates_story = true
-    preview.creates_idea = organization.present?
+    preview.creates_idea = creates_story_idea?(row, organization)
     preview.workshop_label =
       if workshop then "Matched workshop: #{workshop.title}"
       elsif external_title.present? then "External title: #{external_title}"
@@ -279,6 +284,7 @@ class StoryImporter
       co_author: co_author&.persisted? ? co_author : nil,
       workshop: workshop,
       external_workshop_title: external_title,
+      story_workshops_attributes: workshop_link_attrs(workshop, external_title),
       youtube_url: youtube_url(row),
       author_credit_preference: credit,
       co_author_credit_preference: co_credit,
@@ -294,22 +300,34 @@ class StoryImporter
     story
   end
 
-  def build_idea(row, title:, organization:, windows_type:, content:, workshop:, external_title:, credit:)
+  def build_idea(row, title:, organization:, windows_type:, author:, co_author:, content:, workshop:, external_title:, credit:, co_credit:)
     idea = StoryIdea.new(
       title: title,
       rhino_body: content,
       organization: organization,
       windows_type: windows_type,
+      author: author&.persisted? ? author : nil,
+      co_author: co_author&.persisted? ? co_author : nil,
       workshop: workshop,
       external_workshop_title: external_title,
+      story_idea_workshops_attributes: workshop_link_attrs(workshop, external_title),
       youtube_url: youtube_url(row),
       author_credit_preference: credit,
+      co_author_credit_preference: co_credit,
       permission_given: true,
       created_by: @import_user,
       updated_by: @import_user
     )
     idea.created_at = original_created_at(row) || idea.created_at
     idea
+  end
+
+  # A workshop link on the join (story_workshops / story_idea_workshops): the
+  # matched Workshop, else the free-text external title. Empty when neither.
+  def workshop_link_attrs(workshop, external_title)
+    return [ { workshop_id: workshop.id } ] if workshop
+    return [ { external_workshop_title: external_title } ] if external_title.present?
+    []
   end
 
   # A story's credit preference is left NULL (it follows the author's live profile)
@@ -618,8 +636,28 @@ class StoryImporter
     AUTHOR_CREDIT_BY_DISPLAY[clean(row[cols[:display]]).downcase] || DEFAULT_AUTHOR_CREDIT
   end
 
+  # The "status" column round-trips this importer's own preview label
+  # ("Published story" / "Draft story", each optionally "+ story idea"). On
+  # re-upload it is authoritative: "Published"/"Draft" sets the publish state and
+  # "story idea" decides whether a StoryIdea is promoted into the story. It falls
+  # back to the "published" column / org-presence only when status is blank.
+  def status_text(row)
+    clean(row["status"]).downcase
+  end
+
   def published?(row)
+    status = status_text(row)
+    return status.start_with?("published") if status.present?
     clean(row["published"]).casecmp?("yes")
+  end
+
+  # A StoryIdea requires an organization, so a "story idea" status is still
+  # Story-only without one.
+  def creates_story_idea?(row, organization)
+    return false if organization.nil?
+    status = status_text(row)
+    return status.include?("story idea") if status.present?
+    true
   end
 
   def featured?(row)
