@@ -82,6 +82,7 @@
               <p class="mt-1 mb-2 text-xs text-gray-500">
                 <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
               </p>
+              <%= render "tag_chips", story: story, compact: true %>
               <%= link_to story_share_path(story), class: "block rounded-xl overflow-hidden bg-brand-navy-50" do %>
                 <%= image_tag story.display_image, loading: "lazy", alt: story.title,
                               class: "w-full aspect-[4/3] object-cover" %>
