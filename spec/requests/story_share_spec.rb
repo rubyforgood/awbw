@@ -196,9 +196,9 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).not_to include("A published-only secret")
     end
 
-    it "anchors pagination links to the stories section so they skip the top hero" do
+    it "anchors pagination links to the first story's title so they skip the top hero" do
       3.times { |i| create(:story, :published, :publicly_visible, title: "DV story #{i}").tap { |s| tag_sector(s, "Domestic Violence") } }
-      get story_shares_path(sector_names_all: "Domestic Violence", number_of_items_per_page: 1)
+      get story_shares_path(sector_names_all: "Domestic Violence", number_of_items_per_page: 2)
       expect(response.body).to include('id="stories"')
       expect(response.body).to match(/href="[^"]*page=2[^"]*#stories"/)
     end

@@ -60,21 +60,22 @@
         <% row_stories = @stories.drop(8) %>
       <% end %>
 
-      <div id="stories" class="scroll-mt-8"></div>
-
+      <%# Pagination anchors to the first story's title (#stories) so paging
+          lands on the results, not the hero. Falls to the first row when the
+          grid is empty (short pages). %>
       <!-- 3-up featured grid -->
       <% if grid_stories.any? %>
         <div class="mb-16 grid grid-cols-1 gap-8 md:grid-cols-3">
-          <% grid_stories.each do |story| %>
-            <%= render "browse_card", story: story %>
+          <% grid_stories.each_with_index do |story, i| %>
+            <%= render "browse_card", story: story, anchor_id: (i.zero? ? "stories" : nil) %>
           <% end %>
         </div>
       <% end %>
 
       <!-- Remaining stories as rows -->
       <div class="space-y-16">
-        <% row_stories.each do |story| %>
-          <%= render "browse_row", story: story %>
+        <% row_stories.each_with_index do |story, i| %>
+          <%= render "browse_row", story: story, anchor_id: (grid_stories.empty? && i.zero? ? "stories" : nil) %>
         <% end %>
       </div>
 
