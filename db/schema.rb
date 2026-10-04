@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_04_131002) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_04_131714) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1988,6 +1988,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_131002) do
     t.integer "story_share_position"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
+    t.boolean "story_share_home_section", default: true, null: false
     t.index ["created_by_id"], name: "index_sectors_on_created_by_id"
     t.index ["story_share_position"], name: "index_sectors_on_story_share_position"
     t.index ["updated_by_id"], name: "index_sectors_on_updated_by_id"

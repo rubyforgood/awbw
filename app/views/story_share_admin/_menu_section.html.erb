@@ -20,14 +20,12 @@
         <li class="flex items-center gap-3 px-4 py-3 <%= swatch_classes %>" data-sortable-id="<%= record.id %>">
           <i class="fa-solid fa-grip-vertical cursor-move text-gray-400 hover:text-gray-600" data-sortable-handle=""></i>
           <span class="flex-1 text-gray-800"><%= record.name %></span>
-          <% if type == "category" %>
-            <% on_home = record.story_share_home_section %>
-            <%= button_to story_share_admin_toggle_home_section_path(id: record.id),
-                          method: :put,
-                          class: "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium #{on_home ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}" do %>
-              <i class="fa-solid <%= on_home ? "fa-check" : "fa-plus" %>"></i>
-              <%= on_home ? "On home" : "Add to home" %>
-            <% end %>
+          <% on_home = record.story_share_home_section %>
+          <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
+                        method: :put,
+                        class: "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium #{on_home ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}" do %>
+            <i class="fa-solid <%= on_home ? "fa-check" : "fa-plus" %>"></i>
+            <%= on_home ? "On home" : "Add to home" %>
           <% end %>
           <%= button_to "Remove", story_share_admin_remove_path(type: type, id: record.id),
                         method: :delete,

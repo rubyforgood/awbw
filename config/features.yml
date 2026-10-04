@@ -33,10 +33,10 @@
   released_on: 2026-10-04
   summary: >-
     The Story Share landing page now has audience columns (Children, Adults, …)
-    alongside the featured focus areas and Facilitator Spotlights, so visitors can jump
-    straight to stories about the age group they care about. Admins pick which audiences
-    appear with the new "On home" toggle on the Story Share admin page; they show in the
-    same order as the nav.
+    alongside the focus areas and Facilitator Spotlights, so visitors can jump straight
+    to stories about the age group they care about. Admins pick which sectors and
+    audiences get a home section with the new "On home" toggle on the Story Share admin
+    page; they show in the same order as the nav.
   action_path: "/story_share"
 
 - name: "Credit two authors on a story"

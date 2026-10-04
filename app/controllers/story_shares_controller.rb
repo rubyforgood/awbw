@@ -58,8 +58,8 @@ class StorySharesController < ApplicationController
   end
 
   def load_home
-    @featured_sectors = Sector.story_share_featured.limit(FEATURED_SECTOR_LIMIT).to_a
-    @stories_by_sector = @featured_sectors.index_with do |sector|
+    @home_sectors = Sector.story_share_home_sections.limit(FEATURED_SECTOR_LIMIT).to_a
+    @stories_by_sector = @home_sectors.index_with do |sector|
       section_stories(portal_scope.sector_names_all(sector.name))
     end
     @stories_by_audience = Category.story_share_home_sections.index_with do |category|

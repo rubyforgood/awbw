@@ -104,7 +104,7 @@
         <%= render "sector_section",
                    title: category.name,
                    stories: stories,
-                   theme: story_share_slot_theme(@featured_sectors.size + 1 + index),
+                   theme: story_share_slot_theme(@stories_by_sector.size + 1 + index),
                    more_path: story_shares_path(category_names_all: category.name) %>
       <% end %>
       <%= render "sector_section",

@@ -186,6 +186,37 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # LANDING PAGE — sector sections
+  # ==========================================================
+  describe "landing-page sector sections" do
+    def tag_sector_story(sector, title)
+      story = create(:story, :published, :publicly_visible, title: title)
+      story.sectorable_items.create!(sector: sector)
+      story
+    end
+
+    it "renders a section for a featured sector toggled on" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      tag_sector_story(sector, "A story about housing")
+
+      get story_shares_path
+
+      expect(response.body).to include("A story about housing")
+      expect(response.body).to include("More Homelessness stories...")
+    end
+
+    it "omits a featured sector whose home-section toggle is off" do
+      sector = create(:sector, :published, name: "Homelessness",
+                                           story_share_position: 1, story_share_home_section: false)
+      tag_sector_story(sector, "A story about housing")
+
+      get story_shares_path
+
+      expect(response.body).not_to include("More Homelessness stories...")
+    end
+  end
+
+  # ==========================================================
   # BROWSING / FILTERING (public)
   # ==========================================================
   describe "browsing filtered results" do

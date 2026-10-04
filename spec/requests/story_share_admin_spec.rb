@@ -108,12 +108,18 @@ RSpec.describe "StoryShareAdmin", type: :request do
       category = create(:category, :published, story_share_position: 1)
       expect(category.story_share_home_section).to be(true)
 
-      put story_share_admin_toggle_home_section_path(id: category.id)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
       expect(category.reload.story_share_home_section).to be(false)
       expect(response).to redirect_to(story_share_admin_path)
 
-      put story_share_admin_toggle_home_section_path(id: category.id)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
       expect(category.reload.story_share_home_section).to be(true)
+    end
+
+    it "toggles a sector's home section" do
+      sector = create(:sector, :published, story_share_position: 1)
+      put story_share_admin_toggle_home_section_path(type: "sector", id: sector.id)
+      expect(sector.reload.story_share_home_section).to be(false)
     end
 
     it "records an Ahoy event for the toggle" do
@@ -122,14 +128,14 @@ RSpec.describe "StoryShareAdmin", type: :request do
         .with(anything, "update.story_share_home_section",
               hash_including(resource_type: "Category", resource_id: category.id,
                              changes: { story_share_home_section: false }))
-      put story_share_admin_toggle_home_section_path(id: category.id)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
     end
 
     it "forbids non-admins" do
       sign_out admin
       sign_in regular_user
       category = create(:category, :published, story_share_position: 1)
-      put story_share_admin_toggle_home_section_path(id: category.id)
+      put story_share_admin_toggle_home_section_path(type: "category", id: category.id)
       expect(category.reload.story_share_home_section).to be(true)
     end
   end
