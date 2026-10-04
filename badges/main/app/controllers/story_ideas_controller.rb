@@ -125,6 +125,7 @@ class StoryIdeasController < ApplicationController
     params.require(:story_idea).permit(
       :title, :rhino_body, :youtube_url,
       :permission_given, :author_credit_preference,
+      :co_author_id, :co_author_credit_preference, :spotlighted_facilitator_id,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
       category_ids: [],

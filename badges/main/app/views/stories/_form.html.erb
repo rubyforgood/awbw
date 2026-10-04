@@ -218,8 +218,23 @@
 
   <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
     <div class="flex-1 mb-4 md:mb-0">
-      <%= render "shared/author_credit_field", f: f %>
-      <%= render "shared/author_credit_warning", record: f.object %>
+      <% story_idea_label = if f.object.story_idea
+        (link_to "Source story idea",
+                 story_idea_path(f.object.story_idea), class: "hover:underline")
+      else
+        "Source story idea"
+      end %>
+      <%= f.input :story_idea_id,
+                  collection: @story_ideas, label_method: :full_name,
+                  value_method: :id,
+                  selected: f.object.story_idea_id || @story_idea&.id,
+                  label: story_idea_label.html_safe,
+                  prompt: "Select idea",
+                  input_html: {
+                    class: select_caret_class(blank: f.object.story_idea_id.blank?),
+                    style: custom_caret_style,
+                    onchange: select_caret_onchange
+                  } %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
@@ -266,6 +281,8 @@
                             remote_select_model_value: "person" }
                   } %>
       <%= render "shared/author_credit_note", record: f.object %>
+      <%= render "shared/author_credit_field", f: f %>
+      <%= render "shared/author_credit_warning", record: f.object %>
     </div>
 
     <div class="flex-1 mb-4 md:mb-0">
@@ -300,26 +317,6 @@
                   input_html: {
                     data: { controller: "remote-select",
                             remote_select_model_value: "person" }
-                  } %>
-    </div>
-
-    <div class="flex-1 mb-4 md:mb-0">
-      <% story_idea_label = if f.object.story_idea
-        (link_to "Source story idea",
-                 story_idea_path(f.object.story_idea), class: "hover:underline")
-      else
-        "Source story idea"
-      end %>
-      <%= f.input :story_idea_id,
-                  collection: @story_ideas, label_method: :full_name,
-                  value_method: :id,
-                  selected: f.object.story_idea_id || @story_idea&.id,
-                  label: story_idea_label.html_safe,
-                  prompt: "Select idea",
-                  input_html: {
-                    class: select_caret_class(blank: f.object.story_idea_id.blank?),
-                    style: custom_caret_style,
-                    onchange: select_caret_onchange
                   } %>
     </div>
   </div>
