@@ -17,6 +17,9 @@
              title: "Top nav — sectors",
              type: "sector",
              records: @sectors,
+             fixed_leading: [ { label: "Home", dot: "bg-brand-navy-900" } ],
+             fixed_trailing: [ { label: "Facilitator Spotlights", dot: "bg-brand-magenta-700" },
+                               { label: "Additional Focus Areas", dot: "bg-brand-orange-600" } ],
              empty: "No sectors are featured yet. Add one below." %>
 
   <%= render "menu_section",

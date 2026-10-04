@@ -1,9 +1,13 @@
-<%# Sortable list of featured sectors/categories + an "Add" picker.
-    Locals: title, type ("sector"/"category"), records, empty. %>
+<%# Sortable list of featured sectors/categories + an "Add" picker. Fixed nav items
+    (Home, Facilitator Spotlights, …) render as non-interactive rows around the list.
+    Locals: title, type ("sector"/"category"), records, empty; optional fixed_leading,
+    fixed_trailing (lists of { label, dot }). %>
+<% fixed_leading = local_assigns.fetch(:fixed_leading, []) %>
+<% fixed_trailing = local_assigns.fetch(:fixed_trailing, []) %>
 <section class="bg-white rounded-lg shadow p-6 mb-8">
   <h2 class="font-semibold text-lg text-gray-900 mb-4"><%= title %></h2>
 
-  <% if records.any? %>
+  <% if records.any? || fixed_leading.any? || fixed_trailing.any? %>
     <%# Leading color swatch (a ::before dot) marks each menu slot's color. Sectors are
         colored by position via nth-child so the color stays fixed to the slot as rows are
         dragged (mirrors StorySharesHelper::SLOT_THEMES chips); categories are all grey. %>
@@ -13,29 +17,40 @@
        else
          "#{swatch_base} before:bg-gray-400"
        end %>
-    <ul class="divide-y divide-gray-200 border border-gray-200 rounded"
-        data-controller="sortable"
-        data-sortable-url-value="<%= story_share_admin_reorder_path(type: type, id: ":id") %>">
-      <% records.each do |record| %>
-        <li class="flex items-center gap-3 px-4 py-3 <%= swatch_classes %>" data-sortable-id="<%= record.id %>">
-          <i class="fa-solid fa-grip-vertical cursor-move text-gray-400 hover:text-gray-600" data-sortable-handle=""></i>
-          <span class="flex-1 text-gray-800"><%= record.name %></span>
-          <% on_home = record.story_share_home_section %>
-          <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
-                        method: :put,
-                        class: "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium #{on_home ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}" do %>
-            <i class="fa-solid <%= on_home ? "fa-check" : "fa-plus" %>"></i>
-            <%= on_home ? "On home" : "Add to home" %>
-          <% end %>
-          <%= button_to "Remove", story_share_admin_remove_path(type: type, id: record.id),
-                        method: :delete,
-                        form: { data: { turbo_confirm: "Remove “#{record.name}” from the menu?" } },
-                        class: "text-sm text-red-700 hover:underline" %>
-        </li>
+    <div class="divide-y divide-gray-200 border border-gray-200 rounded">
+      <% fixed_leading.each do |item| %>
+        <%= render "fixed_row", item: item %>
       <% end %>
-    </ul>
-  <% else %>
-    <p class="text-sm text-gray-500 mb-4"><%= empty %></p>
+      <% if records.any? %>
+        <ul class="divide-y divide-gray-200"
+            data-controller="sortable"
+            data-sortable-url-value="<%= story_share_admin_reorder_path(type: type, id: ":id") %>">
+          <% records.each do |record| %>
+            <li class="flex items-center gap-3 px-4 py-3 <%= swatch_classes %>" data-sortable-id="<%= record.id %>">
+              <i class="fa-solid fa-grip-vertical cursor-move text-gray-400 hover:text-gray-600" data-sortable-handle=""></i>
+              <span class="flex-1 text-gray-800"><%= record.name %></span>
+              <% on_home = record.story_share_home_section %>
+              <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
+                            method: :put,
+                            class: "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium #{on_home ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}" do %>
+                <i class="fa-solid <%= on_home ? "fa-check" : "fa-plus" %>"></i>
+                <%= on_home ? "On home" : "Add to home" %>
+              <% end %>
+              <%= button_to "Remove", story_share_admin_remove_path(type: type, id: record.id),
+                            method: :delete,
+                            form: { data: { turbo_confirm: "Remove “#{record.name}” from the menu?" } },
+                            class: "text-sm text-red-700 hover:underline" %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+      <% fixed_trailing.each do |item| %>
+        <%= render "fixed_row", item: item %>
+      <% end %>
+    </div>
+  <% end %>
+  <% if records.empty? %>
+    <p class="text-sm text-gray-500 mt-4"><%= empty %></p>
   <% end %>
 
   <%= form_with url: story_share_admin_add_path(type: type), method: :post, class: "flex items-center gap-2 mt-4" do %>

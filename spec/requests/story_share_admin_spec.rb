@@ -11,6 +11,15 @@ RSpec.describe "StoryShareAdmin", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "lists the fixed top-nav items without controls" do
+      sign_in admin
+      get story_share_admin_path
+      expect(response.body).to include("Home")
+      expect(response.body).to include("Facilitator Spotlights")
+      expect(response.body).to include("Additional Focus Areas")
+      expect(response.body).to include("Always shown")
+    end
+
     it "does not render for non-admins" do
       sign_in regular_user
       get story_share_admin_path
