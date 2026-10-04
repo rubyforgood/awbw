@@ -140,10 +140,82 @@ RSpec.describe StoryImporter do
       expect(StoryIdea.count).to eq(0)
     end
 
+    it "warns when a story-idea status has no organization to attach the idea to" do
+      result = import([ base_row("status" => "Published story + story idea", "organization_name" => "") ])
+
+      expect(result.warnings).to include(a_string_matching(/story idea but the row has no organization/))
+    end
+
+    it "does not warn for an org-less row whose status does not request an idea" do
+      result = import([ base_row("status" => "Published story", "organization_name" => "") ])
+
+      expect(result.warnings).to be_empty
+    end
+
     it "falls back to the published column when status is blank" do
       import([ base_row("status" => "", "published" => "no") ])
 
       expect(Story.sole.published).to be(false)
+    end
+
+    it "skips a row flagged Skipped in the status column" do
+      result = import([ base_row("status" => "Skipped — duplicate") ])
+
+      expect(result.skipped).to include(a_string_matching(/duplicate/))
+      expect(Story.count).to eq(0)
+    end
+
+    it "skips a second header row of human labels beneath the snake_case headers" do
+      header_echo = {
+        "title" => "Title", "status" => "Status", "wp_id" => "WP ID",
+        "published" => "Published", "window_type" => "Window type", "name_display" => "Name display"
+      }
+      result = import([ header_echo, base_row ])
+
+      expect(result.skipped).to include(a_string_matching(/duplicate header row/))
+      expect(Story.count).to eq(1)
+      expect(Story.sole.title).to eq("A story of healing")
+    end
+  end
+
+  describe "column header aliases" do
+    def labeled_csv(row)
+      file = Tempfile.new([ "labeled", ".csv" ])
+      tempfiles << file
+      CSV.open(file.path, "w", write_headers: true, headers: row.keys) do |csv|
+        csv << row.values
+      end
+      file.path
+    end
+
+    it "imports a sheet that uses the review labels instead of snake_case headers" do
+      path = labeled_csv(
+        "Title" => "A labeled story",
+        "Status" => "Published story + story idea",
+        "WP ID" => "99",
+        "Content" => "<p>Body.</p>",
+        "Publish date" => "2021-07-11 10:07:53",
+        "Organization" => "A Greater Hope",
+        "First name" => "Jamie",
+        "Last name" => "Rivera",
+        "Name display" => "first name only",
+        "Workshop" => "External title: Adult Windows Workshop",
+        "Sectors" => "Domestic Violence",
+        "Window type" => "Adult",
+        "Categories" => "AgeRange: Adults",
+        "Coauthor first name" => "Sam",
+        "Coauthor last name" => "Lee",
+        "Coauthor name display" => "first name only",
+        "Professional licenses" => "LMFT, LCSW"
+      )
+      described_class.new(csv_path: path, import_user: import_user).call
+
+      story = Story.sole
+      expect(story.title).to eq("A labeled story")
+      expect(story.story_idea).to eq(StoryIdea.sole)
+      expect(story.author).to have_attributes(first_name: "Jamie", last_name: "Rivera")
+      expect(story.co_author).to have_attributes(first_name: "Sam", last_name: "Lee")
+      expect(story.author.professional_licenses.pluck(:kind)).to contain_exactly("LMFT", "LCSW")
     end
   end
 
