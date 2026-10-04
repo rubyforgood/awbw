@@ -64,6 +64,17 @@
     story.
   action_path: "/story_ideas"
 
+- name: "Share a story idea with or without an organization"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-04
+  pr_number: 2604
+  summary: >-
+    When you share a story idea, picking an organization is required — it tells
+    us where the story came from. Admins can leave it blank and add the
+    organization later, so an idea never gets stuck waiting on one.
+  action_path: "/story_ideas"
+
 - name: "Credit two authors on a story"
   area: stories
   display_status: admin_facing
