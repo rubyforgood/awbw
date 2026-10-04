@@ -101,6 +101,39 @@ RSpec.describe "StoryShareAdmin", type: :request do
     end
   end
 
+  describe "PUT /story_share/admin/toggle_home_section" do
+    before { sign_in admin }
+
+    it "turns a category's home section off, then back on" do
+      category = create(:category, :published, story_share_position: 1)
+      expect(category.story_share_home_section).to be(true)
+
+      put story_share_admin_toggle_home_section_path(id: category.id)
+      expect(category.reload.story_share_home_section).to be(false)
+      expect(response).to redirect_to(story_share_admin_path)
+
+      put story_share_admin_toggle_home_section_path(id: category.id)
+      expect(category.reload.story_share_home_section).to be(true)
+    end
+
+    it "records an Ahoy event for the toggle" do
+      category = create(:category, :published, story_share_position: 1)
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "update.story_share_home_section",
+              hash_including(resource_type: "Category", resource_id: category.id,
+                             changes: { story_share_home_section: false }))
+      put story_share_admin_toggle_home_section_path(id: category.id)
+    end
+
+    it "forbids non-admins" do
+      sign_out admin
+      sign_in regular_user
+      category = create(:category, :published, story_share_position: 1)
+      put story_share_admin_toggle_home_section_path(id: category.id)
+      expect(category.reload.story_share_home_section).to be(true)
+    end
+  end
+
   describe "Ahoy tracking" do
     before { sign_in admin }
 

@@ -394,6 +394,7 @@ Rails.application.routes.draw do
   match "story_share/admin/reorder/:id", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
   post "story_share/admin/add", to: "story_share_admin#add", as: :story_share_admin_add
   delete "story_share/admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
+  match "story_share/admin/toggle_home_section/:id", to: "story_share_admin#toggle_home_section", via: [ :put, :patch ], as: :story_share_admin_toggle_home_section
   resources :story_shares, path: "story_share", only: [ :index, :show, :new ]
   resources :video_recordings
   resources :user_forms

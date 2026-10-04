@@ -5,9 +5,6 @@ class StorySharesController < ApplicationController
   before_action :set_story, only: [ :show ]
 
   FEATURED_SECTOR_LIMIT = 6
-  # Age-group audience sections on the landing page, resolved via the clean-named
-  # AgeRange categories (same as the navbar's audience row).
-  HOME_AUDIENCE_SECTIONS = %w[ Children Adults ].freeze
   SECTION_STORY_LIMIT = 5
   FEATURED_CAROUSEL_LIMIT = 10
   RELATED_STORY_LIMIT = 3
@@ -65,8 +62,8 @@ class StorySharesController < ApplicationController
     @stories_by_sector = @featured_sectors.index_with do |sector|
       section_stories(portal_scope.sector_names_all(sector.name))
     end
-    @stories_by_audience = HOME_AUDIENCE_SECTIONS.index_with do |name|
-      section_stories(portal_scope.category_names_all(name))
+    @stories_by_audience = Category.story_share_home_sections.index_with do |category|
+      section_stories(portal_scope.category_names_all(category.name))
     end
     @spotlight_stories = section_stories(portal_scope.facilitator_spotlights(true))
     @featured_stories = carousel_stories

@@ -56,6 +56,18 @@ class StoryShareAdminController < ApplicationController
     redirect_to story_share_admin_path, notice: "Removed from the Story Share menu."
   end
 
+  # Toggles whether a featured audience category also gets a full section on the
+  # Story Share home (ordered by its existing nav position).
+  def toggle_home_section
+    authorize! :story_share_admin, to: :reorder?
+    category = Category.find(params[:id])
+    category.update_columns(story_share_home_section: !category.story_share_home_section)
+    track_menu_change("update.story_share_home_section", category,
+                      changes: { story_share_home_section: category.story_share_home_section })
+    redirect_to story_share_admin_path,
+                notice: "#{category.name} #{category.story_share_home_section ? "now shows" : "no longer shows"} on the Story Share home."
+  end
+
   private
 
   def set_klass

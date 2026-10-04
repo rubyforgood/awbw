@@ -17,6 +17,8 @@ class Category < ApplicationRecord
   scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
   # Featured in the Story Share portal's audience nav, ordered by the admin-set position.
   scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
+  # Featured audiences that also get a full section on the Story Share home, in nav order.
+  scope :story_share_home_sections, -> { story_share_featured.where(story_share_home_section: true) }
 
   # Validations
   validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
