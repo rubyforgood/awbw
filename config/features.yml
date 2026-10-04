@@ -4047,5 +4047,19 @@
     person's own if they had one, otherwise the other person's — so you never end
     up with two "primary" addresses or phones. Addresses or phones that genuinely
     differ are all kept.
+
+- name: "Heads-up when a person has more than one membership"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  action_path: "/people"
+  summary: >-
+    A person who has more than one active membership is now flagged, so you can
+    spot and consolidate them — a person should have just one.
+  description: >-
+    When someone ends up with more than one active membership — usually a leftover
+    from a merge — a warning now appears on their profile, their edit page, and in
+    the people list. It tells you how many memberships they have and links straight
+    to the membership list so you can review and consolidate.
   pro_tips:
-    - "A person with more than one membership is now flagged on their profile, edit page, and the people list — a heads-up to consolidate, since a person should have just one."
+    - "This usually turns up after a merge, since the extra membership rides along from the other person. Keeping one membership per person keeps billing and reporting clean."
