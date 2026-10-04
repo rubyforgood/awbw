@@ -12,15 +12,19 @@
 <section class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
   <!-- Utility buttons -->
   <div class="mb-6 flex flex-wrap justify-end gap-1">
-    <%= link_to "All stories", story_shares_path, class: button_classes(:secondary_outline) %>
-    <%= link_to "Home", root_path, class: button_classes(:secondary_outline) %>
+    <%= link_to "Portal", root_path, class: button_classes(:secondary_outline) %>
+    <%= link_to "Story share home", story_shares_path, class: button_classes(:secondary_outline) %>
+    <%= link_to "All stories", story_shares_path(page: 1), class: button_classes(:secondary_outline) %>
+    <% if (tag_home = story_tag_home_path(@story)) %>
+      <%= link_to "Tag home", tag_home, class: button_classes(:secondary_outline) %>
+    <% end %>
     <% if current_user&.super_user? %>
       <%= link_to "Edit", edit_story_path(@story.id), class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
     <% end %>
+    <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
     <span class="inline-block text-sm">
       <%= render "bookmarks/editable_bookmark_button", resource: @story %>
     </span>
-    <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
   </div>
 
   <div class="grid grid-cols-1 gap-10 lg:grid-cols-3">
