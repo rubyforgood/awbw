@@ -431,4 +431,14 @@ RSpec.describe Story, type: :model do
       expect(story).to be_valid
     end
   end
+
+  describe ".story_share_carousel" do
+    it "returns only stories with a carousel position, ordered by it ascending" do
+      second = create(:story, story_share_carousel_position: 2)
+      first = create(:story, story_share_carousel_position: 1)
+      create(:story, story_share_carousel_position: nil)
+
+      expect(Story.story_share_carousel.to_a).to eq([ first, second ])
+    end
+  end
 end
