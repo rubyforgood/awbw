@@ -299,6 +299,16 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).to match(/href="[^"]*page=2[^"]*#stories"/)
     end
 
+    it "leads a sector page with the publicly featured story, even if older" do
+      newer = create(:story, :published, :publicly_visible, title: "Plain newer DV story", created_at: 1.day.ago)
+      tag_sector(newer, "Domestic Violence")
+      featured = create(:story, :published, :publicly_visible, :publicly_featured, title: "Featured older DV story", created_at: 10.days.ago)
+      tag_sector(featured, "Domestic Violence")
+
+      get story_shares_path(sector_names_all: "Domestic Violence")
+      expect(response.body.index("Featured older DV story")).to be < response.body.index("Plain newer DV story")
+    end
+
     it "aggregates non-featured sectors on the additional focus areas page" do
       featured = create(:sector, :published, name: "Featured Sector", story_share_position: 1)
       extra = create(:sector, :published, name: "Homelessness")
@@ -308,6 +318,29 @@ RSpec.describe "/story_share", type: :request do
       get story_shares_path(additional_focus_areas: true)
       expect(response.body).to include("An additional-area story")
       expect(response.body).not_to include("A featured-only story")
+    end
+  end
+
+  # ==========================================================
+  # HAND-PICKED HOME CAROUSEL
+  # ==========================================================
+  describe "hand-picked home carousel" do
+    it "shows the hand-picked story on the Story Share home page" do
+      create(:story, :published, :publicly_visible, title: "The hand-picked lead", story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("The hand-picked lead")
+    end
+
+    it "still renders the carousel from featured/recent when nothing is hand-picked" do
+      create(:story, :published, :publicly_visible, :publicly_featured, title: "A publicly featured story")
+
+      get story_shares_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("A publicly featured story")
     end
   end
 

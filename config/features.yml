@@ -142,6 +142,16 @@
   action_path: "/stories"
   pr_number: 2596
 
+- name: "Choose which stories lead the Story Share carousel"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-04
+  summary: >-
+    Set a "carousel order" number on a story to hand-pick the Story Share home
+    carousel (lowest leads); blank falls back to featured, then newest. Story Share
+    landing, sector, and audience pages now lead with featured, then newest stories.
+  action_path: "/story_share"
+
 - name: "Credit two authors on a story"
   area: stories
   display_status: admin_facing

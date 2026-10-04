@@ -105,6 +105,8 @@ class Story < ApplicationRecord
   # StorySharePolicy, HomePolicy). Admins and the author still see them.
   scope :not_funder_only, -> { where(funder_only: false) }
 
+  # Admin hand-picks the Story Share home carousel: lowest number leads, blank = not in it.
+  scope :story_share_carousel, -> { where.not(story_share_carousel_position: nil).order(:story_share_carousel_position) }
   scope :facilitator_spotlights, ->(value = nil) {
     return where.not(spotlighted_facilitator_id: nil) if value.blank?
     ActiveModel::Type::Boolean.new.cast(value) ?

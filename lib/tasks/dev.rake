@@ -9,7 +9,7 @@ namespace :db do
       workshops
       quotes
       people_profiles
-      home_page_content
+      story_share_content
       workshop_logs
       monthly_reports
       events_management
@@ -58,9 +58,9 @@ namespace :db do
       load Rails.root.join("db/seeds/dev/people_profiles.rb")
     end
 
-    desc "Seed dev home page content (news, ideas, stories)"
-    task home_page_content: :environment do
-      load Rails.root.join("db/seeds/dev/home_page_content.rb")
+    desc "Seed dev Story Share content (news, ideas, stories)"
+    task story_share_content: :environment do
+      load Rails.root.join("db/seeds/dev/story_share_content.rb")
     end
 
     desc "Seed dev workshop logs"
