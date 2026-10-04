@@ -196,7 +196,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
-      it "renders the organization as plain text and the creator as an editable link" do
+      it "renders the organization as plain text and the creator as a link" do
         person = create(:person, user: regular_user)
         org = create(:organization, name: "Community Arts Project")
         idea = create(:workshop_variation_idea, valid_attributes.merge(organization_id: org.id))
@@ -206,9 +206,7 @@ RSpec.describe "/workshop_variation_ideas", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_text(org.name)
         expect(page).not_to have_link(org.name)
-        # The owner can edit their own profile (owner self-editing is on outside
-        # production), so the author credit links to their edit page.
-        expect(page).to have_link(regular_user.name, href: edit_person_path(person))
+        expect(page).to have_link(regular_user.name, href: person_path(person))
       end
 
       it "shows the facilitator author credit, not the submitting account, when the creator has no person record" do
