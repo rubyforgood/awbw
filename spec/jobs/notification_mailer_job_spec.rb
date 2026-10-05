@@ -114,4 +114,20 @@ RSpec.describe NotificationMailerJob, type: :job do
       end
     end
   end
+
+  describe "transactional enqueuing" do
+    include ActiveJob::TestHelper
+
+    it "is configured to enqueue only after the surrounding transaction commits" do
+      expect(described_class.enqueue_after_transaction_commit).to be(true)
+    end
+
+    it "does not enqueue while the enclosing transaction is still open" do
+      ActiveRecord::Base.transaction do
+        described_class.perform_later(123)
+
+        expect(enqueued_jobs).to be_empty
+      end
+    end
+  end
 end
