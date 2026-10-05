@@ -56,12 +56,12 @@ RSpec.describe StoryImporter do
       expect(story.author).to eq(Person.find_by(first_name: "Jamie", last_name: "Rivera"))
     end
 
-    it "is Story-only when the organization is blank (an idea requires an org)" do
+    it "creates an org-less Story and still promotes its idea when the organization is blank" do
       import([ base_row("organization_name" => "") ])
 
-      expect(Story.count).to eq(1)
-      expect(StoryIdea.count).to eq(0)
       expect(Story.sole.organization).to be_nil
+      expect(Story.sole.story_idea).to eq(StoryIdea.sole)
+      expect(StoryIdea.sole.organization).to be_nil
     end
 
     it "credits no author and keeps the name as a comment when the author can't resolve" do
@@ -133,23 +133,20 @@ RSpec.describe StoryImporter do
       expect(story.story_idea).to eq(StoryIdea.sole)
     end
 
-    it "stays Story-only for a story-idea status without an organization" do
+    it "promotes an org-less story idea when the status requests one" do
       import([ base_row("status" => "Published story + story idea", "organization_name" => "") ])
 
       expect(Story.count).to eq(1)
+      expect(StoryIdea.count).to eq(1)
+      expect(StoryIdea.sole.organization).to be_nil
+      expect(Story.sole.story_idea).to eq(StoryIdea.sole)
+    end
+
+    it "stays Story-only for an org-less row whose status does not request an idea" do
+      import([ base_row("status" => "Published story", "organization_name" => "") ])
+
+      expect(Story.count).to eq(1)
       expect(StoryIdea.count).to eq(0)
-    end
-
-    it "warns when a story-idea status has no organization to attach the idea to" do
-      result = import([ base_row("status" => "Published story + story idea", "organization_name" => "") ])
-
-      expect(result.warnings).to include(a_string_matching(/story idea but the row has no organization/))
-    end
-
-    it "does not warn for an org-less row whose status does not request an idea" do
-      result = import([ base_row("status" => "Published story", "organization_name" => "") ])
-
-      expect(result.warnings).to be_empty
     end
 
     it "falls back to the published column when status is blank" do
