@@ -27,6 +27,20 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "See a story's tags at a glance"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-10-05
+  summary: >-
+    Story pages now show a story's sectors and audience categories as colored tag
+    chips under a "Tags:" label, and each chip filters the story library to that tag.
+  action_path: "/story_share"
+  pr_number: 2601
+  description: >-
+    Sectors come first, then audience categories, each in alphabetical order.
+    Related-story cards in the sidebar show the same chips in a compact size, so you
+    can tell what each one is about before clicking.
+
 - name: "Choose which sections appear on the Story Share home"
   area: stories
   display_status: public_facing

@@ -1,16 +1,23 @@
 <%# Sector + audience chips that link back into the portal's own filters
-    (not sectors/_tagging_label, which links to the auth-gated taggings page). %>
-<% sectors = story.sectors.to_a %>
-<% audiences = story.audience_categories.to_a %>
+    (not sectors/_tagging_label, which links to the auth-gated taggings page).
+    Sectors come first (alphabetical), then audience categories (alphabetical).
+    Pass compact: true for the tighter sidebar variant (bare chips, no label). %>
+<% compact = local_assigns.fetch(:compact, false) %>
+<% chip_pad = compact ? "px-2 py-0.5" : "px-3 py-1" %>
+<% sector_chip = "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full text-xs font-medium transition-colors #{chip_pad}" %>
+<% audience_chip = "bg-brand-amber-50 text-brand-amber-800 hover:bg-brand-amber-100 inline-flex items-center rounded-full text-xs font-medium transition-colors #{chip_pad}" %>
+<% sectors = story.sectors.sort_by { |sector| sector.name.downcase } %>
+<% audiences = story.audience_categories.map(&:decorate).sort_by { |category| category.display_name.downcase } %>
 <% if sectors.any? || audiences.any? %>
-  <div class="flex flex-wrap gap-2 mb-8">
+  <div class="flex flex-wrap items-center <%= compact ? "mb-3 gap-1.5" : "mb-8 gap-2 text-sm text-gray-700" %>">
+    <% unless compact %>
+      <strong>Tags:</strong>
+    <% end %>
     <% sectors.each do |sector| %>
-      <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
-                  class: "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors" %>
+      <%= link_to sector.name, story_shares_path(sector_names_all: sector.name), class: sector_chip %>
     <% end %>
     <% audiences.each do |category| %>
-      <%= link_to category.decorate.display_name, story_shares_path(category_names_all: category.name),
-                  class: "bg-brand-amber-50 text-brand-amber-800 hover:bg-brand-amber-100 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors" %>
+      <%= link_to category.display_name, story_shares_path(category_names_all: category.name), class: audience_chip %>
     <% end %>
   </div>
 <% end %>
