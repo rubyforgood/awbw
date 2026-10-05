@@ -26,7 +26,7 @@
                      params[:record_type]
                    ),
                    { include_blank: "All" },
-                   class: search_field_class(extra: "truncate bg-white search-select-placeholder") %>
+                   class: search_field_class(extra: "truncate pr-10 bg-white search-select-placeholder") %>
     </div>
 
     <%# Fixed, narrow width so the long topic labels don't balloon the closed
@@ -38,7 +38,7 @@
       <%= f.select :email_topic,
                    options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
                    { include_blank: "All" },
-                   class: search_field_class(extra: "truncate bg-white search-select-placeholder") %>
+                   class: search_field_class(extra: "truncate pr-10 bg-white search-select-placeholder") %>
     </div>
 
     <div class="flex-1">
@@ -58,7 +58,7 @@
       <%= f.select :delivery_status,
                    options_for_select([ [ "Delivered", "delivered" ], [ "Pending", "pending" ], [ "Failed", "failed" ] ], params[:delivery_status]),
                    { include_blank: "Any" },
-                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
+                   class: search_field_class(extra: "pr-10 bg-white search-select-placeholder") %>
     </div>
 
     <div>
@@ -68,7 +68,7 @@
       <%= f.select :responded_status,
                    options_for_select([ [ "Yes", "yes" ], [ "No", "no" ], [ "N/A", "na" ] ], params[:responded_status]),
                    { include_blank: "All" },
-                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
+                   class: search_field_class(extra: "pr-10 bg-white search-select-placeholder") %>
     </div>
 
     <!-- Clear -->
