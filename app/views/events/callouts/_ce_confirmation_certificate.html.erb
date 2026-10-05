@@ -1,0 +1,70 @@
+<%# The CE "Confirmation of Attendance" certificate — a CSS-drawn document issued
+    per professional license once the registrant's CE credit is earned, separate from
+    the completion/training certificate. The CE administrator's signature is an
+    admin-managed upload (passed in as signature_file) so real signatures never live
+    in this public repo; the name, license, dates, hours, and facilitators render live. %>
+<article class="certificate relative mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white text-gray-800 shadow-xl ring-1 ring-black/5 print:max-w-none print:rounded-none print:shadow-none print:ring-0">
+  <%# Decorative double frame: deep AWBW purple outer, thin gold inner. %>
+  <span class="pointer-events-none absolute inset-0 rounded-2xl border-[3px] border-purple-950 print:rounded-none"></span>
+  <span class="pointer-events-none absolute inset-[10px] rounded-xl border border-amber-400 print:rounded-none"></span>
+
+  <div class="relative flex flex-col gap-6 px-10 py-12 sm:px-14 print:min-h-[6.6in]">
+    <div class="flex items-center gap-5 border-b border-gray-200 pb-5">
+      <%= image_tag "logo-with-tagline.png",
+            alt: "A Window Between Worlds — art transforming trauma",
+            class: "h-14 w-auto shrink-0" %>
+      <h1 class="text-2xl leading-tight font-bold text-purple-900 sm:text-3xl">Continuing Education Confirmation of Attendance</h1>
+    </div>
+
+    <div class="flex flex-wrap gap-x-10 gap-y-3">
+      <p class="min-w-[14rem] flex-1 border-b border-gray-400 pb-1">
+        <span class="text-gray-500">Name:</span> <span class="font-semibold text-gray-900"><%= recipient %></span>
+      </p>
+      <p class="min-w-[12rem] flex-1 border-b border-gray-400 pb-1">
+        <span class="text-gray-500">License Number:</span> <span class="font-semibold text-gray-900 tabular-nums"><%= license_label %></span>
+      </p>
+    </div>
+
+    <p class="text-center text-gray-700">This certifies that the above-named participant attended and completed the course.</p>
+
+    <div class="space-y-1 text-center">
+      <p><span class="text-gray-600">Training Title:</span> <span class="font-bold text-gray-900"><%= event.title %></span></p>
+      <p><span class="text-gray-600">Dates:</span> <span class="font-bold text-gray-900"><%= event.date_range %></span></p>
+    </div>
+
+    <% if facilitator_names.any? %>
+      <p class="mx-auto max-w-2xl text-center">
+        <span class="text-gray-600">Facilitators:</span> <span class="font-bold text-gray-900"><%= facilitator_names.to_sentence %></span>
+      </p>
+    <% end %>
+
+    <div class="text-center">
+      <p class="text-xl font-bold tracking-wide text-purple-900">A WINDOW BETWEEN WORLDS</p>
+      <p class="text-sm text-purple-800"><%= ContinuingEducationRegistration::ACCREDITATION_ADDRESS %></p>
+      <p class="text-sm text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
+    </div>
+
+    <div class="mt-4 flex items-end justify-between gap-10">
+      <div class="flex-1">
+        <%# Served same-origin via the proxy (never the raw storage URL), so the
+            signature image is reachable only from an issued certificate. %>
+        <% if signature_file %>
+          <%= image_tag rails_storage_proxy_path(signature_file),
+                alt: "Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}",
+                class: "mb-1 h-14 w-auto object-contain object-left" %>
+        <% end %>
+        <p class="border-t border-gray-400 pt-1 text-sm font-semibold text-gray-900"><%= ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME %>, <%= ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE %></p>
+      </div>
+      <div class="w-40">
+        <p class="text-right text-sm text-gray-900"><%= issued_on.strftime("%-m/%-d/%y") %></p>
+        <p class="border-t border-gray-400 pt-1 text-center text-sm font-semibold text-gray-700">Date</p>
+      </div>
+    </div>
+
+    <p class="mx-auto max-w-2xl border-t border-gray-200 pt-5 text-center text-xs leading-relaxed text-gray-500">
+      This course meets the qualifications for <span class="font-semibold text-gray-700"><%= hours_label %> hours</span>
+      of continuing education credit for LMFTs, LCSWs, LPCCs, and/or LEPs as required by the California Board of
+      Behavioral Sciences. A Window Between Worlds is approved by the California Association of Marriage and Family Therapists.
+    </p>
+  </div>
+</article>

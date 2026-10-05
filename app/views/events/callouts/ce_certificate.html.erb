@@ -1,0 +1,84 @@
+<% content_for(:page_bg_class, "public") %>
+<% content_for(:page_title, "CE confirmation of attendance — #{@event.title}") %>
+<% if sample_preview? || @ce_registration.certificate_available? %>
+  <%
+    event = @event.decorate
+    back_path = sample_preview? ? sample_ce_event_path(@event) : registration_ce_path(@event_registration.slug)
+    license = @ce_registration.professional_license
+    license_label = license&.number_known? ? license.name : "—"
+    hours = @ce_registration.hours.to_d
+    hours_label = hours == hours.to_i ? hours.to_i : hours
+    facilitator_names = @event.facilitator_event_staffs.map { |staff| staff.person.full_name }
+    issued_on = @ce_registration.certificate_sent_at&.to_date || Date.current
+  %>
+
+  <% content_for :head do %>
+    <%# Slug-gated public page carrying a signature image — keep it out of search
+        indexes in case a certificate link is ever shared publicly. %>
+    <meta name="robots" content="noindex, noimageindex">
+    <style>
+      @media print {
+        /* Landscape, and zero page margin so the browser has no room to print its
+           own header/footer; the wrapper supplies its own inset via print padding. */
+        @page { size: landscape; margin: 0; }
+        .printed-logo { display: none !important; }
+        /* Force the frame/signature colors to survive the print pipeline. */
+        .certificate, .certificate img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      }
+    </style>
+  <% end %>
+
+  <%# Screen-only controls: return link + print. Hidden from the printed page. %>
+  <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-2 px-4 sm:px-8 pt-4 print:hidden">
+    <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to CE credit
+    <% end %>
+    <button onclick="window.print();"
+            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+    </button>
+  </div>
+
+  <div class="px-4 py-6 sm:px-8 print:p-[0.4in]">
+    <%= render "events/callouts/ce_confirmation_certificate",
+          event: event,
+          recipient: @event_registration.registrant.full_name,
+          license_label: license_label,
+          hours_label: hours_label,
+          facilitator_names: facilitator_names,
+          signature_file: @signature_file,
+          issued_on: issued_on %>
+  </div>
+<% else %>
+  <%= render layout: "events/callouts/callout_page", locals: { title: "CE confirmation of attendance" } do %>
+    <%# Not yet unlocked: show each CE condition and which are met, like the
+        completion certificate's pending page. %>
+    <% ended = @event.end_date&.past? %>
+    <% attended = @event_registration.attended? %>
+    <% paid = @ce_registration.paid_in_full? %>
+    <% ce_form = RegistrantCeForm.new(@event_registration) %>
+    <div class="space-y-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+      <p class="font-medium text-gray-700">Your CE confirmation of attendance unlocks once these are met:</p>
+      <ul class="space-y-1">
+        <li class="flex items-center gap-2">
+          <i class="fa-solid <%= ended ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+          The training has ended<%= " (#{@event.end_date.to_date.strftime("%B %-d, %Y")})" if @event.end_date %>
+        </li>
+        <li class="flex items-center gap-2">
+          <i class="fa-solid <%= attended ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+          Your attendance is confirmed
+        </li>
+        <li class="flex items-center gap-2">
+          <i class="fa-solid <%= paid ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+          Your CE payment is received in full
+        </li>
+        <% if ce_form.form %>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid <%= ce_form.complete? ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
+            <%= ce_form.form.display_name %> is complete
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+<% end %>

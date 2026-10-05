@@ -46,6 +46,17 @@ module Events
       @signature_file = certificate_signature_file if @event.facilitator_training?
     end
 
+    # CE "Confirmation of Attendance" certificate — a separate document from the
+    # completion/training certificate, one per CE registration (i.e. per professional
+    # license). Shows once that CE registration's certificate is available, otherwise
+    # the pending unlock conditions. The CE administrator's signature comes from its
+    # own admin-managed record (never committed to this public repo).
+    def ce_certificate
+      @ce_registration = ce_certificate_registration
+      return redirect_to(registration_ce_path(@event_registration.slug)) unless @ce_registration
+      @signature_file = Resource.ce_certificate_signature_file
+    end
+
     # Scholarship status: the award (amount, funder, criteria, tasks) once a
     # scholarship exists, or a pending state while it is only requested. Nothing
     # to show when neither requested nor received.
@@ -527,6 +538,15 @@ module Events
       connected = @builtin_callout&.resources&.first
       return connected.signature_file if connected
       Resource.training_certificate_signatures_file
+    end
+
+    # The CE registration this certificate is for. The sample preview has one
+    # in-memory CE registration; a real request names it by id, scoped to this
+    # registration so the slug alone can't reach another registrant's record.
+    def ce_certificate_registration
+      scope = @event_registration.continuing_education_registrations
+      return scope.first if sample_preview?
+      scope.find_by(id: params[:ce_registration_id])
     end
 
     # This registrant's cards for a callout's linked resources (nil callout → none).

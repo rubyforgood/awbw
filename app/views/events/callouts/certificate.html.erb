@@ -4,14 +4,6 @@
   <%
     event = @event.decorate
     back_path = sample_preview? ? sample_ticket_event_path(@event) : registration_ticket_path(@event_registration.slug)
-    # The CE clause certifies issued credit, so it shows once CE is requested and the
-    # credit has been issued or the balance paid in full. The admin sample preview
-    # always shows it (with all options on) so the CE variant can be previewed even
-    # though the sample balance isn't settled.
-    show_ce_clause = @event_registration.ce_registered? &&
-      (@event_registration.ce_certificate_issued? || @event_registration.ce_paid_in_full? || sample_preview?)
-    ce_hours = @event_registration.ce_hours_total
-    ce_hours_label = ce_hours == ce_hours.to_i ? ce_hours.to_i : ce_hours
   %>
 
   <% content_for :head do %>
@@ -34,34 +26,27 @@
   <% end %>
 
   <%# Screen-only controls: return link + print. Hidden from the printed page. %>
-  <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-2 px-4 sm:px-8 pt-4 print:hidden">
+  <div class="mx-auto flex max-w-4xl flex-wrap items-center gap-2 px-4 pt-4 sm:px-8 print:hidden">
     <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
     <% end %>
     <button onclick="window.print();"
-            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
       <i class="fa-solid fa-file-arrow-down"></i> Download PDF
     </button>
   </div>
 
-  <% if @event_registration.ce_registered? && !show_ce_clause %>
-    <%# The registrant requested CE but it isn't earned/paid yet, so it stays off
-        the printed certificate. Surface its status on screen (same gated-notice
-        style as the pending block below), print-hidden so it never prints. %>
-    <% ce_pending_reason = if !@event_registration.ce_license_provided?
-         "your professional license number is on file"
-       elsif !@event_registration.ce_paid_in_full?
-         "your CE payment is received"
-       else
-         "your CE certificate is issued"
-       end %>
+  <% if @event_registration.ce_registered? %>
+    <%# CE credit is confirmed on its own document (the CE Confirmation of
+        Attendance), not on this certificate — point earned registrants at it.
+        Print-hidden so it never prints on the certificate itself. %>
+    <% ce_page = sample_preview? ? sample_ce_event_path(@event, anchor: "ce-certificate") : registration_ce_path(@event_registration.slug, anchor: "ce-certificate") %>
     <div class="mx-auto max-w-4xl px-4 pt-3 sm:px-8 print:hidden">
       <div class="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
         <i class="fa-solid fa-graduation-cap mt-0.5 text-gray-400"></i>
         <span>
-          Your continuing education (CE) credit<%= " (#{ce_hours_label} hours)" if ce_hours.positive? %>
-          isn't shown on this certificate yet — it's added once <%= ce_pending_reason %>.
-          <%= link_to "View your CE status", registration_ce_path(@event_registration.slug),
+          Your continuing education (CE) credit is confirmed on a separate document.
+          <%= link_to "View your CE confirmation of attendance", ce_page,
                 class: "font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} underline #{DomainTheme.text_class_for(:events, intensity: 900, hover: true)}" %>.
         </span>
       </div>
@@ -77,8 +62,6 @@
     <%= render certificate_partial,
           event: event,
           recipient: @event_registration.registrant.full_name,
-          show_ce_clause: show_ce_clause,
-          ce_hours_label: ce_hours_label,
           signature_file: @signature_file %>
   </div>
 <% else %>
