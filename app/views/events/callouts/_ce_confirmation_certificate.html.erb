@@ -39,7 +39,7 @@
     <% end %>
 
     <div class="text-center">
-      <p class="text-xl font-bold tracking-wide text-purple-900">A WINDOW BETWEEN WORLDS</p>
+      <p class="text-xl font-bold tracking-wide text-purple-900 uppercase"><%= ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds") %></p>
       <p class="text-sm text-purple-800"><%= ContinuingEducationRegistration::ACCREDITATION_ADDRESS %></p>
       <p class="text-sm text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
     </div>
@@ -64,7 +64,7 @@
     <p class="mx-auto max-w-2xl border-t border-gray-200 pt-5 text-center text-xs leading-relaxed text-gray-500">
       This course meets the qualifications for <span class="font-semibold text-gray-700"><%= hours_label %> hours</span>
       of continuing education credit for LMFTs, LCSWs, LPCCs, and/or LEPs as required by the California Board of
-      Behavioral Sciences. A Window Between Worlds is approved by the California Association of Marriage and Family Therapists.
+      Behavioral Sciences. <%= ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds") %> is approved by the California Association of Marriage and Family Therapists.
     </p>
   </div>
 </article>
