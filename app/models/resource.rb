@@ -28,6 +28,18 @@ class Resource < ApplicationRecord
     find_by(title: TRAINING_CERTIFICATE_SIGNATURES_TITLE)&.signature_file
   end
 
+  # The CE "Confirmation of Attendance" certificate carries a single signature (the
+  # CE administrator), so it pulls from its own admin-managed, search-hidden record
+  # rather than the training certificate's multi-signer strip. Matched by title —
+  # keep this in sync. Create it hidden and attach the signature image.
+  CE_CERTIFICATE_SIGNATURE_TITLE = "Training CE certificate signatures".freeze
+
+  # The attached CE administrator signature image, or nil when the record/upload
+  # isn't present, so the CE certificate simply leaves the signature line blank.
+  def self.ce_certificate_signature_file
+    find_by(title: CE_CERTIFICATE_SIGNATURE_TITLE)&.signature_file
+  end
+
   # The first attached image on this resource (primary asset, then downloadable),
   # for use as a certificate signature strip. Nil when nothing is attached.
   def signature_file

@@ -54,10 +54,7 @@ module Events
     def ce_certificate
       @ce_registration = ce_certificate_registration
       return redirect_to(registration_ce_path(@event_registration.slug)) unless @ce_registration
-      # Share the training certificate's signature source: the certificate callout's
-      # linked resource when an admin connected one, else the title-matched default.
-      @builtin_callout = @event.registration_ticket_callouts.find_by(builtin_key: "certificate")
-      @signature_file = certificate_signature_file
+      @signature_file = Resource.ce_certificate_signature_file
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a

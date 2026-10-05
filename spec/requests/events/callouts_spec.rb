@@ -1066,14 +1066,24 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("This certifies that the above-named participant")
     end
 
-    it "renders the shared signature (same source as the training certificate), served same-origin" do
-      resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE, hidden_from_search: true)
+    it "renders the CE administrator signature from its own resource, served same-origin" do
+      resource = create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE, hidden_from_search: true)
       create(:primary_asset, :with_file, owner: resource)
 
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
       expect(response.body).to include("/rails/active_storage/blobs/proxy")
       expect(response.body).to include("Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}")
+    end
+
+    it "leaves the signature line blank when the training certificate's strip exists but the CE resource doesn't" do
+      training = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE, hidden_from_search: true)
+      create(:primary_asset, :with_file, owner: training)
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).not_to include("/rails/active_storage")
     end
 
     it "returns to the certificate chooser when reached from it" do
