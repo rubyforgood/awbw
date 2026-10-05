@@ -8,9 +8,9 @@ require "set"
 # re-uploaded.
 #
 # EVERY importable row becomes a Story; a StoryIdea (the submission record) is
-# promoted into it only when the "status" column says "story idea" (and an
-# organization exists for it to belong to). The "status" column also sets the
-# publish state ("Published story" vs "Draft story"). A "Skipped — reason" flag
+# promoted into it when the "status" column says "story idea" (an organization
+# is optional). The "status" column also sets the publish state ("Published
+# story" vs "Draft story"). A "Skipped — reason" flag
 # in either "import_action" or "status" drops the row. Column headers may be the
 # curated sheet's human labels (see COLUMN_ALIASES) or the snake_case keys.
 #
@@ -207,9 +207,6 @@ class StoryImporter
     preview.title = title
 
     organization = resolve_organization(row)
-    if status_text(row).include?("story idea") && organization.nil?
-      record_warning(row, "status requests a story idea but the row has no organization — imported as story only")
-    end
     author = resolve_person(row, AUTHOR_COLUMNS)
     co_author = resolve_co_author(row, author)
     tags = resolve_tags(row)
@@ -282,7 +279,7 @@ class StoryImporter
     preview.author_new = author&.new_record? || false
     preview.author_updated = author&.persisted? && DISPLAY_PREF_BY_CREDIT.key?(credit_for(row, AUTHOR_COLUMNS))
     preview.creates_story = true
-    preview.creates_idea = creates_story_idea?(row, organization)
+    preview.creates_idea = creates_story_idea?(row)
     preview.workshop_label =
       if workshop then "Matched workshop: #{workshop.title}"
       elsif external_title.present? then "External title: #{external_title}"
@@ -698,18 +695,13 @@ class StoryImporter
     clean(row["published"]).casecmp?("yes")
   end
 
-  # The status column decides whether a StoryIdea is wanted ("… + story idea").
-  # A blank status falls back to the legacy rule (an idea whenever an org exists).
-  def story_idea_requested?(row)
+  # The status column alone decides whether a StoryIdea is promoted into the
+  # story ("… + story idea"); an org is not required (story_ideas.organization is
+  # optional). A blank status falls back to promoting one.
+  def creates_story_idea?(row)
     status = status_text(row)
     return status.include?("story idea") if status.present?
     true
-  end
-
-  # A StoryIdea additionally requires an organization (model-level), so a
-  # requested idea is still Story-only without one (a warning is recorded).
-  def creates_story_idea?(row, organization)
-    organization.present? && story_idea_requested?(row)
   end
 
   def featured?(row)
