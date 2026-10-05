@@ -1066,13 +1066,16 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("This certifies that the above-named participant")
     end
 
-    it "renders the CE administrator signature from its own resource, served same-origin" do
+    it "renders the CE administrator signature from its own resource as a normalized web image, served same-origin" do
       resource = create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE, hidden_from_search: true)
       create(:primary_asset, :with_file, owner: resource)
 
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
-      expect(response.body).to include("/rails/active_storage/blobs/proxy")
+      # A variant representation (format-normalized), not the raw blob, so an upload
+      # a browser can't render in an <img> (e.g. a HEIC phone photo) still displays.
+      expect(response.body).to include("/rails/active_storage/representations/proxy")
+      expect(response.body).not_to include("/rails/active_storage/blobs/proxy")
       expect(response.body).to include("Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}")
     end
 

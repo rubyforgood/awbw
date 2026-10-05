@@ -49,7 +49,7 @@
         <%# Served same-origin via the proxy (never the raw storage URL), so the
             signature image is reachable only from an issued certificate. %>
         <% if signature_file %>
-          <%= image_tag rails_storage_proxy_path(signature_file),
+          <%= image_tag certificate_signature_src(signature_file),
                 alt: "Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}",
                 class: "mb-1 h-14 w-auto object-contain object-left" %>
         <% end %>
