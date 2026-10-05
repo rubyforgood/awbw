@@ -3,7 +3,14 @@
 <% if sample_preview? || @ce_registration.certificate_available? %>
   <%
     event = @event.decorate
-    back_path = sample_preview? ? sample_ce_event_path(@event) : registration_ce_path(@event_registration.slug)
+    from_certificate = params[:return_to] == "certificate"
+    if from_certificate
+      back_path = sample_preview? ? sample_certificate_event_path(@event) : registration_certificate_path(@event_registration.slug)
+      back_label = "Back to certificates"
+    else
+      back_path = sample_preview? ? sample_ce_event_path(@event) : registration_ce_path(@event_registration.slug)
+      back_label = "Back to CE credit"
+    end
     license = @ce_registration.professional_license
     license_label = license&.number_known? ? license.name : "—"
     hours = @ce_registration.hours.to_d
@@ -31,7 +38,7 @@
   <%# Screen-only controls: return link + print. Hidden from the printed page. %>
   <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-2 px-4 sm:px-8 pt-4 print:hidden">
     <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to CE credit
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
     <% end %>
     <button onclick="window.print();"
             class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">

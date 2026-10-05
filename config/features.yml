@@ -3797,8 +3797,9 @@
     certificate, so the training certificate and the CE confirmation are now two
     clean, separate documents.
   pro_tips:
+    - "When an event grants CE and you have a CE registration, the Certificate of completion tab lists both documents to choose from, like the payment documents list."
     - "The facilitators listed are the event staff whose title says \"facilitator\" — set their titles on the event's staff page."
-    - "The CE administrator's signature comes from an admin-managed, search-hidden resource titled \"CE certificate signature\"; upload it there."
+    - "The signature is the same one as the facilitator training certificate (the admin-managed \"Training certificate signatures\" resource)."
 
 - name: "Event tag on communications and comments about an event"
   area: communications
