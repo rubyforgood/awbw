@@ -89,6 +89,16 @@
     organization later, so an idea never gets stuck waiting on one.
   action_path: "/story_ideas"
 
+- name: "Cleaner story page layout"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-10-05
+  action_path: "/story_share"
+  summary: >-
+    On a Story Share story, Print and Bookmark now sit in the top-right of the
+    story itself, next to the title. Getting around uses the page's top menu, so
+    the old separate row of navigation buttons is gone.
+
 - name: "Credit two authors on a story"
   area: stories
   display_status: admin_facing

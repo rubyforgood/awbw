@@ -116,6 +116,16 @@ module StorySharesHelper
     end
   end
 
+  # Portal filter for a story's first tag — its first sector, or first audience
+  # category when it has no sector. Nil when the story carries neither.
+  def story_tag_home_path(story)
+    if (sector = story.sectors.first)
+      story_shares_path(sector_names_all: sector.name)
+    elsif (category = story.audience_categories.first)
+      story_shares_path(category_names_all: category.name)
+    end
+  end
+
   # Heading for a filtered browse page. Sector/category names keep their stored
   # casing (never .titleize — commit #1921).
   def browse_title(params)
