@@ -114,15 +114,21 @@
   display_status: admin_facing
   released_on: 2026-09-30
   action_path: "/forms"
-  pr_number: 2588
+  pr_number: 2609
   summary: >-
     Contact and profile smart fields (secondary email, phone, address, pronouns, name
-    pronunciation, sectors) and the registrant's organization now save from a
-    standalone form (a collab or agreement) the same way as on an event registration,
-    for new and existing people. The latest answer wins.
+    pronunciation, sectors, age groups) and the submitted organization now save from a
+    standalone form the same way as on an event registration, for new and existing
+    people. The latest answer wins.
   pro_tips:
     - The changes land on the person's "What this submission changed" audit, so you can
-      see exactly what a submission updated.
+      see exactly what a submission updated — including a tag it removed or reassigned.
+    - An agreement form (on-demand, new job, reinstatement, close program) whose
+      organization name matches exactly is now processed the moment it arrives, exactly
+      as if you had clicked "Link organization" yourself. If the name matches nothing,
+      or matches two organizations, it stays in your queue to resolve.
+    - Other forms fill in the organization's details but never add an affiliation —
+      joining someone to an organization stays your call.
 
 - name: "W-9 available before paying"
   area: payments

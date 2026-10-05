@@ -31,6 +31,10 @@ class PublicFormSubmission
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
+      # Answers first: the agreement linking core reads the submitted org off
+      # them, and a rejected answer (too long, unreadable upload) then aborts
+      # before any of the person's own records have been written.
+      save_form_answers(submission)
 
       if person
         record_news_subscription(person)
@@ -39,7 +43,6 @@ class PublicFormSubmission
                                                    organizations: [ organization ].compact)
       end
 
-      save_form_answers(submission)
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
       register_for_on_demand_training(submission)
@@ -90,13 +93,9 @@ class PublicFormSubmission
     return unless submission.person
 
     answers = submission.answers_by_identifier
-    name = answers["organization_name"].to_s.strip
-    return if name.blank?
+    organization = sole_organization_named(answers[FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER])
+    return unless organization
 
-    matches = Organization.where("LOWER(name) = ?", name.downcase)
-    return unless matches.count == 1
-
-    organization = matches.first
     ended = AffiliationServices::CloseProgram.call(
       person: submission.person,
       organization: organization,
@@ -115,26 +114,57 @@ class PublicFormSubmission
     nil
   end
 
-  # Roles whose whole purpose is a facilitator's standing with the org, so their
-  # submission mints/edits the Facilitator affiliation alongside the job one — even
-  # without a training event. Other standalone forms get the job affiliation only.
-  FACILITATOR_AFFILIATION_ROLES = %w[new_job reinstatement].freeze
-
-  # Link + fill the submitted organization the same way the event registration form
-  # does — matched by exact name, its profile/type/address synced and the person's
-  # affiliation(s) created. Skipped on a close-program form, whose submission ends
-  # affiliations at the org rather than creating them (process_close_program).
+  # Link + fill the submitted organization. An agreement submission is processed
+  # through the same linking core an admin would run (process_agreement_organization);
+  # any other form fills the org's profile and records the link without affiliating
+  # anyone. Skipped on a close-program form, whose submission ends affiliations at
+  # the org rather than creating them (process_close_program).
   def capture_organization(submission)
     return if @form.role == "close_program"
+    return process_agreement_organization(submission) if submission.agreement_scenario?
 
     organization = OrganizationServices::CaptureFromSubmission.call(
-      person: submission.person,
-      form: @form,
-      form_params: @form_params,
-      facilitator_training: @form.role.in?(FACILITATOR_AFFILIATION_ROLES)
+      form: @form, form_params: @form_params
     ).organization
     submission.link_organization!(organization.id) if organization
     organization
+  end
+
+  # An agreement submission whose organization name resolves unambiguously is
+  # processed on arrival, the way a close-program submission already is: the
+  # linking core applies the scenario (a new job ends the person's other orgs'
+  # rows and start-dates the new one), confers the standing Facilitator
+  # affiliation, and fills the org's blank profile fields — identical to an admin
+  # linking it by hand, so the two paths can't drift (ADR-0002). Anything the
+  # core would have to guess at is left for an admin on the submission's linking
+  # page.
+  def process_agreement_organization(submission)
+    organization = sole_organization_named(field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER))
+    return unless organization
+
+    result = OrganizationServices::LinkSubmittedOrganization.call(
+      person: submission.person,
+      organization: organization,
+      entry: submission.org_entry,
+      scenario: submission.linking_scenario,
+      training_date: submission.created_at.to_date
+    )
+
+    submission.link_organization!(organization.id)
+    submission.record_scenario_ended!(result.ended_affiliations.map(&:id))
+    organization
+  end
+
+  # Only an unambiguous name match is auto-processed. Organization names aren't
+  # unique and the column collates case-insensitively, so two orgs can answer to
+  # one submitted name — and picking the wrong one here would end a facilitator's
+  # affiliations at the org they actually work for. Ambiguity goes to an admin.
+  def sole_organization_named(name)
+    name = name.to_s.strip
+    return if name.blank?
+
+    matches = Organization.where("LOWER(name) = ?", name.downcase)
+    matches.first if matches.count == 1
   end
 
   def field_value(identifier)

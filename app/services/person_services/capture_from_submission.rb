@@ -124,26 +124,24 @@ module PersonServices
     end
 
     def apply_tags
-      primary_sector_ids = collect_ids(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS)
-      additional_sector_ids = collect_ids(FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS)
-      primary_age_ids = collect_ids(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS)
-      additional_age_ids = collect_ids(FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS)
+      apply_tag_set(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS,
+                    FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS, :tag_sectors)
+      apply_tag_set(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS,
+                    FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS, :tag_age_groups)
+    end
 
-      # Only a primary answer → reassign the primary but keep the rest (additive).
-      # Both primary and additional → the submission is the whole picture, so
-      # overwrite the person's set. The org mirror always stays additive (orgs
-      # aggregate their members' tags).
-      if primary_sector_ids.any? || additional_sector_ids.any?
-        SectorTagging.apply(person: @person, organizations: @organizations,
-                            primary_ids: primary_sector_ids, additional_ids: additional_sector_ids,
-                            replace_person: primary_sector_ids.any? && additional_sector_ids.any?)
-      end
+    # Only a primary answer → reassign the primary but keep the rest (additive).
+    # Both primary and additional → the submission is the whole picture, so
+    # overwrite the person's set.
+    def apply_tag_set(primary_identifiers, additional_identifiers, tag_with)
+      primary_ids = collect_ids(primary_identifiers)
+      additional_ids = collect_ids(additional_identifiers)
 
-      if primary_age_ids.any? || additional_age_ids.any?
-        @person.tag_age_groups(primary_ids: primary_age_ids, additional_ids: additional_age_ids,
-                               replace: primary_age_ids.any? && additional_age_ids.any?)
-        @organizations.each { |org| org.tag_age_groups(primary_ids: primary_age_ids, additional_ids: additional_age_ids) }
-      end
+      SubmissionTagging.apply(
+        person: @person, organizations: @organizations, tag_with: tag_with,
+        primary_ids: primary_ids, additional_ids: additional_ids,
+        replace_person: primary_ids.any? && additional_ids.any?
+      )
     end
 
     def collect_ids(identifiers)

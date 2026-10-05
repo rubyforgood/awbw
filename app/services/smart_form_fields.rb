@@ -91,10 +91,12 @@ class SmartFormFields
                "below fill in the organization's profile. Both affiliations are connected to the " \
                "organization's address when it has exactly one; with several addresses the address is " \
                "left blank for an admin to set. When it doesn't match, nothing is written and " \
-               "an admin resolves it on the event registration's Link organization page.",
+               "an admin resolves it on the submission's Link organization page. Agreement forms " \
+               "(on-demand, new job, reinstatement, close program) go a step further: an unambiguous " \
+               "name match is processed on arrival exactly as if an admin had linked it by hand.",
       fields: [
-        [ "organization_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
-        [ "organization_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
+        [ "organization_name", "Organization name", "Looked up against existing organizations by name, ignoring capitalization. A match is linked to the submission; no match — or two organizations answering to the same name — leaves it unlinked for an admin to resolve." ],
+        [ "organization_position", "Position / title", "On an event registration or an agreement form, creates a Job Affiliation between the person and that organization with this as its title. On any other form the answer is recorded but no affiliation is created — joining someone to an organization is a step an admin takes." ],
         [ "organization_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links it by hand (Link or Create and link) it only fills a blank, and a conflicting answer is flagged instead. Note: a raw URL is saved exactly as entered, so it may not be clickable if it isn't a properly formed URL." ],
         [ "organization_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
         [ "organization_street", "Organization street address", "Sets the street of the organization's work address." ],

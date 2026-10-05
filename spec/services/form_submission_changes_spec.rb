@@ -80,6 +80,37 @@ RSpec.describe FormSubmissionChanges do
     expect(change).to have_attributes(outcome: "Added", label: "Age group", value: "Adolescents (13-17)")
   end
 
+  # A re-submission that replaces the person's tags destroys the ones it dropped,
+  # and the destroy event carries the snapshot the page reads.
+  it "reports a sector the submission removed" do
+    person = create(:person)
+    sector = create(:sector, :published, name: "Housing")
+    stamp("destroy.sectorable_item", resource_type: "SectorableItem",
+          properties: { "attributes" => { "sector_id" => sector.id, "sectorable_type" => "Person",
+                                          "sectorable_id" => person.id } })
+
+    change = described_class.new(submission).groups.find { |g| g.record_type == "Person" }.changes.first
+    expect(change).to have_attributes(outcome: "Removed", label: "Sector", value: "Housing")
+  end
+
+  # A primary flip is an update, which carries only the changed column — so the
+  # owner and the sector come off the tag row itself.
+  it "reports a sector the submission demoted, reading the owner off the tag row" do
+    person = create(:person)
+    sector = create(:sector, :published, name: "Healthcare")
+    item = person.sectorable_items.create!(sector: sector, is_primary: false)
+    stamp("update.sectorable_item", resource_type: "SectorableItem", resource_id: item.id,
+          properties: { "changes" => { "is_primary" => { "before" => true, "after" => false } } })
+
+    changes = described_class.new(submission)
+    group = changes.groups.find { |g| g.record_type == "Person" }
+    expect(group.record_id).to eq(person.id)
+    expect(group.changes.first).to have_attributes(outcome: "Changed", label: "Sector",
+                                                   value: "Healthcare (no longer primary)")
+    # It edited a tag that was already on file, so the submission reads as edited.
+    expect(changes.edited?).to be(true)
+  end
+
   it "ignores bookkeeping records like form answers and the submission itself" do
     stamp("create.form_answer", resource_type: "FormAnswer", resource_id: 1)
     stamp("create.form_submission", resource_type: "FormSubmission", resource_id: submission.id)

@@ -57,10 +57,11 @@ module SectorsTaggable
   end
 
   # Demote any currently-primary sector that isn't the newly selected primary, so
-  # promoting the new pick never leaves two primaries behind.
+  # promoting the new pick never leaves two primaries behind. Saved row by row so
+  # the demotion reaches the change log (SectorableItem is AhoyTrackable).
   def demote_unselected_primary_sectors(primary_ids)
     sectorable_items.where(is_primary: true).where.not(sector_id: primary_ids)
-      .update_all(is_primary: false)
+      .find_each { |item| item.update!(is_primary: false) }
   end
 
   def upsert_sector_items(sector_ids, is_primary:)

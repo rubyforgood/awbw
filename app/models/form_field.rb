@@ -62,6 +62,12 @@ class FormField < ApplicationRecord
   # The "How did you hear about this AWBW training?" registration field.
   REFERRAL_SOURCE_FIELD_IDENTIFIER = "referral_source"
 
+  # The respondent's organization name and position. Read by every submission
+  # pipeline — event registration, standalone forms, and the registration
+  # importer — so they all resolve the same two questions.
+  ORGANIZATION_NAME_FIELD_IDENTIFIER = "organization_name"
+  ORGANIZATION_POSITION_FIELD_IDENTIFIER = "organization_position"
+
   # Quote smart fields. When a submission carries these, its answers are captured
   # as a Quote (see Quotes::CaptureFromSubmission): "quote_body" or the simpler
   # "quote" is the quote text (either is accepted; "quote_body" wins when both are

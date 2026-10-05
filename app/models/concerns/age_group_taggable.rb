@@ -70,9 +70,11 @@ module AgeGroupTaggable
 
   # Demote any currently-primary AgeRange category the caller didn't re-select as
   # primary, so the submitted primary set reassigns which age groups are primary.
+  # Saved row by row so the demotion reaches the change log (CategorizableItem is
+  # AhoyTrackable).
   def demote_unselected_primary_age_groups(primary_ids)
     age_range_items_relation.where(is_primary: true).where.not(category_id: primary_ids)
-      .update_all(is_primary: false)
+      .find_each { |item| item.update!(is_primary: false) }
   end
 
   def age_range_categories(primary:)

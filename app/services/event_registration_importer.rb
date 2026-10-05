@@ -45,8 +45,6 @@ class EventRegistrationImporter
     "organization_name" => :organization
   }.freeze
 
-  ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
-
   # metadata key stamped on the submission the import creates, so we can find our
   # own submission on a re-run (idempotency) without ever matching a real one.
   IMPORT_SOURCE_KEY = "imported_from".freeze
@@ -119,7 +117,7 @@ class EventRegistrationImporter
     form = event.registration_form
     return false unless form
 
-    form.form_fields.exists?(field_identifier: ORGANIZATION_NAME_IDENTIFIER)
+    form.form_fields.exists?(field_identifier: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER)
   end
 
   Result = Struct.new(

@@ -50,9 +50,9 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     def register_with(position:)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands"
       )
-      params[field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER)] = position if position
+      params[field_id(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER)] = position if position
       described_class.call(event: event, registration_form: form, form_params: params)
       Person.find_by(email: "sam@example.com")
     end
@@ -84,8 +84,8 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     it "links the created affiliations to the organization address built from the form" do
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
-        field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER) => "Counselor",
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands",
+        field_id(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER) => "Counselor",
         field_id("organization_street") => "1 Main St",
         field_id("organization_city") => "Austin",
         field_id("organization_state") => "TX",
@@ -132,7 +132,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     def register_with_org(org_name)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => org_name
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => org_name
       )
       described_class.call(event: event, registration_form: form, form_params: params)
       event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
@@ -386,7 +386,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       def register_with_org(extra)
         params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-          field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+          field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands"
         ).merge(extra)
         described_class.call(event: event, registration_form: form, form_params: params)
       end
@@ -508,7 +508,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     def register_with_organization_type(value)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands",
         field_id("organization_type") => value
       )
       described_class.call(event: event, registration_form: form, form_params: params)

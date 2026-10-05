@@ -191,14 +191,13 @@ RSpec.describe PublicFormSubmission do
       ).merge(overrides)
     end
 
-    it "matches the org by name, syncs its profile and address, adds a job affiliation, and links it to the submission" do
+    it "matches the org by name, syncs its profile and address, and links it to the submission" do
       result = described_class.call(form: form, form_params: org_params)
       org.reload
 
       expect(org.website_url).to eq("https://helpinghands.org")
       expect(org.organization_type).to eq("Nonprofit")
       expect(org.addresses.find_by(city: "Austin")).to be_present
-      expect(result.person.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Counselor")
       expect(result.form_submission.reload.linked_organizations).to include(org)
     end
 
@@ -208,19 +207,65 @@ RSpec.describe PublicFormSubmission do
       }.not_to change(Organization, :count)
     end
 
-    it "does not mint a facilitator affiliation on an ordinary standalone form" do
+    # Answering a position question on a survey shouldn't quietly join someone to
+    # an organization — only an agreement form (or an event registration) does that.
+    it "creates no affiliation on an ordinary standalone form" do
       result = described_class.call(form: form, form_params: org_params)
 
-      expect(result.person.affiliations.where(organization: org).pluck(:title)).not_to include("Facilitator")
+      expect(result.person.affiliations.where(organization: org)).to be_empty
     end
 
-    it "mints both a job and a facilitator affiliation on a new-job agreement form" do
-      form.update!(role: "new_job")
+    context "on an agreement form" do
+      let!(:other_org) { create(:organization, name: "Old Place") }
 
-      result = described_class.call(form: form, form_params: org_params)
+      it "runs the new-job scenario: start-dated job + facilitator affiliations, other orgs ended" do
+        form.update!(role: "new_job")
+        person = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
+        old_affiliation = create(:affiliation, person: person, organization: other_org, title: "Facilitator")
 
-      expect(result.person.affiliations.where(organization: org).pluck(:title))
-        .to contain_exactly("Counselor", "Facilitator")
+        result = described_class.call(form: form, form_params: org_params)
+        submission_date = result.form_submission.created_at.to_date
+
+        affiliations = person.reload.affiliations.where(organization: org)
+        expect(affiliations.pluck(:title)).to contain_exactly("Counselor", "Facilitator")
+        # A new job demonstrably starts with the agreement, so both are dated to it.
+        expect(affiliations.pluck(:start_date).uniq).to eq([ submission_date ])
+        expect(old_affiliation.reload.end_date).to eq(submission_date - 1.day)
+        expect(result.form_submission.scenario_ended_affiliation_ids).to include(old_affiliation.id)
+      end
+
+      it "confers the facilitator affiliation on an on-demand agreement" do
+        form.update!(role: "registration")
+
+        result = described_class.call(form: form, form_params: org_params)
+
+        expect(result.person.affiliations.where(organization: org).pluck(:title))
+          .to include("Facilitator")
+      end
+
+      # Two orgs answering to one submitted name would make the scenario guess
+      # which one to end affiliations at, so it stays in the admin's queue.
+      it "leaves an ambiguous name for an admin rather than picking an org" do
+        form.update!(role: "new_job")
+        create(:organization, name: "helping hands")
+
+        result = described_class.call(form: form, form_params: org_params)
+
+        expect(result.person.affiliations).to be_empty
+        expect(result.form_submission.reload.linked_organization_ids).to be_empty
+        expect(FormSubmission.org_link_status("pending")).to include(result.form_submission)
+      end
+
+      # Fill-blanks, not latest-wins: an agreement runs the admin linking core, so
+      # a curated value is kept and reported as a conflict on the linking page.
+      it "does not overwrite the organization's curated profile" do
+        form.update!(role: "new_job")
+        org.update!(website_url: "https://curated.example")
+
+        described_class.call(form: form, form_params: org_params)
+
+        expect(org.reload.website_url).to eq("https://curated.example")
+      end
     end
   end
 

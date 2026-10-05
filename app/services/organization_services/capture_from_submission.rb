@@ -1,29 +1,36 @@
 module OrganizationServices
   # Resolves and fills in the registrant's organization from a submitted form, the
   # same way for an event registration and a standalone form: the organization is
-  # looked up by exact name (never created here — an unmatched name is left for an
-  # admin to resolve), then its website, type (with "Other" folded in), and work
-  # address are synced from the answers, and the person gets their affiliation(s)
-  # with it.
+  # looked up by name (never created here — an unmatched name is left for an admin
+  # to resolve), then its website, type (with "Other" folded in), and work address
+  # are synced from the answers. A submitted answer overwrites the org's website
+  # and type, and an address the org doesn't already have is added as another work
+  # address rather than rewriting one (see UpsertAddress).
   #
-  # `facilitator_training:` decides whether a standing "Facilitator" affiliation is
-  # minted alongside the job affiliation — true only for a facilitator-training
-  # event. A standalone form has no training, so it passes false and only the job
-  # affiliation (from the typed position) is created.
+  # `person:` is what turns the capture into a relationship: given one, the person
+  # gets their affiliation(s) with the org, and `facilitator_training:` decides
+  # whether a standing "Facilitator" affiliation is minted alongside the job
+  # affiliation. Omit it to fill the org in without affiliating anyone — what an
+  # ordinary standalone form does, since answering a position question on a survey
+  # shouldn't quietly create a formal affiliation.
+  #
+  # Agreement-role submissions don't come through here at all: they run
+  # LinkSubmittedOrganization, which owns scenario end-dating and the job start
+  # date (ADR-0002).
   #
   # Returns the matched organization (or nil) and the autofill changes the form
   # wrote onto it, so the event flow can record them on its registration↔org link.
   class CaptureFromSubmission
     Result = Struct.new(:organization, :autofill, keyword_init: true)
 
-    def self.call(person:, form:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil)
-      new(person:, form:, form_params:, facilitator_training:, training_date:, event_registration:).call
+    def self.call(form:, form_params: {}, person: nil, facilitator_training: false, training_date: nil, event_registration: nil)
+      new(form:, form_params:, person:, facilitator_training:, training_date:, event_registration:).call
     end
 
-    def initialize(person:, form:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil)
-      @person = person
+    def initialize(form:, form_params: {}, person: nil, facilitator_training: false, training_date: nil, event_registration: nil)
       @form = form
       @form_params = (form_params || {}).transform_keys(&:to_s)
+      @person = person
       @facilitator_training = facilitator_training
       @training_date = training_date
       @event_registration = event_registration
@@ -48,23 +55,29 @@ module OrganizationServices
         country: field_value("organization_country")
       )
 
-      AffiliationServices::CreateFromRegistration.call(
-        person: @person,
-        organization: organization,
-        job_title: field_value("organization_position"),
-        training_date: @training_date,
-        organization_address: address_result.address,
-        facilitator_training: @facilitator_training,
-        event_registration: @event_registration
-      )
+      create_affiliations(organization, address_result.address)
 
       Result.new(organization: organization, autofill: profile_changes + address_result.changes)
     end
 
     private
 
+    def create_affiliations(organization, organization_address)
+      return unless @person
+
+      AffiliationServices::CreateFromRegistration.call(
+        person: @person,
+        organization: organization,
+        job_title: field_value(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
+        training_date: @training_date,
+        organization_address: organization_address,
+        facilitator_training: @facilitator_training,
+        event_registration: @event_registration
+      )
+    end
+
     def find_organization
-      name = field_value("organization_name")&.strip
+      name = field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER)&.strip
       return nil if name.blank?
 
       Organization.find_by(name: name)

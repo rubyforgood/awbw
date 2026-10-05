@@ -1757,7 +1757,7 @@ RSpec.describe "EventRegistrations", type: :request do
 
         it "creates a job affiliation and a facilitator affiliation from the submitted position" do
           reg_form = create(:form, name: "Reg form")
-          field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_POSITION_IDENTIFIER)
+          field = create(:form_field, form: reg_form, field_identifier: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER)
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Counselor")
@@ -1835,7 +1835,7 @@ RSpec.describe "EventRegistrations", type: :request do
         it "creates only the job affiliation for a non-facilitator-training event" do
           existing_registration.event.update!(facilitator_training: false)
           reg_form = create(:form, name: "Reg form")
-          field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_POSITION_IDENTIFIER)
+          field = create(:form_field, form: reg_form, field_identifier: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER)
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Counselor")
@@ -2114,8 +2114,8 @@ RSpec.describe "EventRegistrations", type: :request do
         it "creates a job affiliation and a facilitator affiliation for the new org from the submitted position" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          name_field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_NAME_IDENTIFIER)
-          position_field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_POSITION_IDENTIFIER)
+          name_field = create(:form_field, form: reg_form, field_identifier: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER)
+          position_field = create(:form_field, form: reg_form, field_identifier: FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER)
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")
@@ -2131,7 +2131,7 @@ RSpec.describe "EventRegistrations", type: :request do
         it "builds the new org's address from the submission and links the affiliations to it" do
           create(:organization_status, name: "Active")
           reg_form = create(:form, name: "Reg form")
-          name_field = create(:form_field, form: reg_form, field_identifier: EventRegistrationServices::PublicRegistration::ORGANIZATION_NAME_IDENTIFIER)
+          name_field = create(:form_field, form: reg_form, field_identifier: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER)
           create(:event_form, :registration, event: event, form: reg_form)
           submission = create(:form_submission, person: regular_user.person, form: reg_form)
           create(:form_answer, form_submission: submission, form_field: name_field, submitted_answer: "Brand New Org")

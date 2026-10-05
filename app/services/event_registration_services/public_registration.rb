@@ -29,12 +29,6 @@ module EventRegistrationServices
     ADDITIONAL_FORMS_INVOICE = "Invoice".freeze
     ADDITIONAL_FORMS_W9 = "W-9".freeze
 
-    # Well-known field_identifiers for the registrant's organization name and
-    # position on the registration form. Kept here so the service, controller,
-    # and specs agree on a single source.
-    ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
-    ORGANIZATION_POSITION_IDENTIFIER = "organization_position".freeze
-
     # Well-known field_identifier of the "Will someone else be paying?" question
     # seeded after the payment method. Answering it "Yes" sets the registration's
     # someone_else_will_pay flag (a sponsor or partner covers the cost). Named to
@@ -80,9 +74,9 @@ module EventRegistrationServices
         # registrant just changed it — @organization_autofill records what, and to
         # what value, for connect_organization's admin-linking-page note below.
         org_result = OrganizationServices::CaptureFromSubmission.call(
-          person: person,
           form: @registration_form,
           form_params: @form_params,
+          person: person,
           facilitator_training: @event.facilitator_training,
           training_date: @event.start_date,
           event_registration: event_registration
