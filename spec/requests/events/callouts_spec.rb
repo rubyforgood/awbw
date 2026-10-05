@@ -980,7 +980,7 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to include("/rails/active_storage")
       end
 
-      it "renders the uploaded signature strip, served same-origin, when the record exists" do
+      it "renders the uploaded signature strip as a normalized web image, served same-origin, when the record exists" do
         resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE,
                                      hidden_from_search: true)
         create(:primary_asset, :with_file, owner: resource)
@@ -988,7 +988,11 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_certificate_path(registration.slug)
 
         expect(response.body).to include("Signed by Christy Turek Rials")
-        expect(response.body).to include("/rails/active_storage/blobs/proxy")
+        # A variant representation (format-normalized), not the raw blob, so an
+        # upload a browser can't render in an <img> (e.g. a HEIC phone photo)
+        # still displays.
+        expect(response.body).to include("/rails/active_storage/representations/proxy")
+        expect(response.body).not_to include("/rails/active_storage/blobs/proxy")
       end
 
       it "prefers a resource linked to the certificate callout over the title default" do
@@ -1002,7 +1006,7 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_certificate_path(registration.slug)
 
         expect(response.body).to include("Signed by Christy Turek Rials")
-        expect(response.body).to include("/rails/active_storage/blobs/proxy")
+        expect(response.body).to include("/rails/active_storage/representations/proxy")
       end
 
       it "still adds the shared CE accreditation clause when CE credit is earned" do

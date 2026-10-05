@@ -39,7 +39,7 @@
         embedded here — so the signature image is reachable only from an issued
         certificate, not by browsing the repo or the resources index. %>
     <% if signature_file %>
-      <%= image_tag rails_storage_proxy_path(signature_file),
+      <%= image_tag certificate_signature_src(signature_file),
             alt: "Signed by Christy Turek Rials, Training & Outreach Director; Rudy Hernandez, Program Director; and Tiombe Wallace, Consultant",
             class: "w-[66cqw]" %>
     <% else %>
