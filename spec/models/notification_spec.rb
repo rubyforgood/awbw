@@ -269,15 +269,15 @@ RSpec.describe Notification do
 
   describe ".delivery_status" do
     let!(:delivered) { create(:notification, delivered_at: Time.current, error_at: nil) }
-    let!(:errored)   { create(:notification, delivered_at: nil, error_at: Time.current) }
+    let!(:failed)    { create(:notification, delivered_at: nil, error_at: Time.current) }
     let!(:pending)   { create(:notification, delivered_at: nil, error_at: nil) }
 
     it "returns delivered notifications for 'delivered'" do
       expect(Notification.delivery_status("delivered")).to contain_exactly(delivered)
     end
 
-    it "returns errored notifications for 'errored'" do
-      expect(Notification.delivery_status("errored")).to contain_exactly(errored)
+    it "returns failed notifications for 'failed'" do
+      expect(Notification.delivery_status("failed")).to contain_exactly(failed)
     end
 
     it "returns pending notifications for 'pending'" do
@@ -285,7 +285,7 @@ RSpec.describe Notification do
     end
 
     it "returns all notifications for blank/unknown values" do
-      all = [ delivered, errored, pending ]
+      all = [ delivered, failed, pending ]
       expect(Notification.delivery_status("")).to contain_exactly(*all)
       expect(Notification.delivery_status("bogus")).to contain_exactly(*all)
     end
