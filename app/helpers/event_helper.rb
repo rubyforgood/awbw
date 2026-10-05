@@ -1,4 +1,15 @@
 module EventHelper
+  # The certificate signature strip's same-origin proxy URL. A variable image
+  # (e.g. a HEIC photo straight off a phone, which most browsers can't render in
+  # an <img>) is served as a web-displayable webp variant so the certificate
+  # always shows the signatures; a non-variable attachment is served as-is.
+  def certificate_signature_src(file)
+    blob = file.blob
+    return rails_storage_proxy_path(blob) unless blob.variable?
+    variant = blob.variant(resize_to_limit: [ 1600, 600 ], format: :webp)
+    rails_blob_representation_proxy_path(blob.signed_id, variant.variation.key, blob.filename)
+  end
+
   # The admin-only sample-ticket preview path for a behavioral built-in callout's
   # per-registration page, keyed off its builtin_key. Returns nil for a callout
   # with no previewable page, so the sample ticket leaves that card non-navigating.
