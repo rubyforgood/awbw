@@ -30,11 +30,25 @@
 
       <!-- Metadata -->
       <div class="mb-5 space-y-1 text-sm text-gray-700">
-        <p><strong>Story by:</strong> <%= @story.author_credit %></p>
+        <% profile_link = "text-brand-magenta-700 hover:underline" %>
+        <p>
+          <strong>Story by:</strong>
+          <% author = @story.credited_author_people.one? ? @story.credited_author_people.first : nil %>
+          <% if author && allowed_to?(:show?, author) %>
+            <%= link_to @story.author_credit, person_path(author), class: profile_link %>
+          <% else %>
+            <%= @story.author_credit %>
+          <% end %>
+        </p>
         <% if @story.organization_name.present? %>
           <p>
             <strong>Organization name:</strong>
-            <%= @story.organization_name %><%= ", #{@story.organization.state}" if @story.organization&.state.present? %>
+            <% org = @story.organization %>
+            <% if org && allowed_to?(:show?, org) %>
+              <%= link_to org.name, organization_path(org), class: profile_link %>
+            <% else %>
+              <%= @story.organization_name %>
+            <% end %><%= ", #{org.state}" if org&.state.present? %>
           </p>
         <% end %>
         <% if @story.workshop_title.present? %>
