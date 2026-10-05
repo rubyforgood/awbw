@@ -3,7 +3,7 @@
     signature strip is an admin-managed upload (the certificate callout's linked
     resource, else the title-matched default), passed in as signature_file, so real
     signatures never live in this public repo.
-    The recipient name, dates, and CE clause are rendered live over the card.
+    The recipient name and dates are rendered live over the card.
     Sizes use container-query units (cqw) so the whole certificate scales as one. %>
 <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
   <%= image_tag "certificates/certificate-training-border.png", alt: "",
@@ -23,16 +23,6 @@
     <div class="flex flex-col items-center gap-[0.6cqw]">
       <p class="text-[3cqw] leading-tight font-bold text-gray-900">AWBW Facilitator Certification Training</p>
       <p class="text-[2.4cqw] font-semibold text-gray-700"><%= event.date_range %></p>
-      <% if show_ce_clause %>
-        <p class="mt-[1cqw] max-w-[80%] text-[1.7cqw] leading-relaxed text-gray-600">
-          A Window Between Worlds has issued <span class="font-semibold text-gray-800"><%= ce_hours_label %> hours</span>
-          of continuing education (CE) credit for this training, in accordance with our approval by
-          <%= link_to "CAMFT", ContinuingEducationRegistration::ACCREDITATION_URL,
-                target: "_blank", rel: "noopener",
-                class: "font-medium text-purple-800 underline decoration-amber-400 underline-offset-2 hover:text-purple-950" %>
-          (provider #<%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %>).
-        </p>
-      <% end %>
     </div>
 
     <%# Served same-origin via the proxy (never the raw storage URL), and only

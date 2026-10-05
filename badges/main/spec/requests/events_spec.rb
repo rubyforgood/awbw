@@ -1042,6 +1042,7 @@ RSpec.describe "Events", type: :request do
       "certificate" => :sample_certificate_event_path,
       "scholarship" => :sample_scholarship_event_path,
       "ce" => :sample_ce_event_path,
+      "ce_certificate" => :sample_ce_certificate_event_path,
       "videoconference" => :sample_videoconference_event_path,
       "staff" => :sample_staff_event_path
     }

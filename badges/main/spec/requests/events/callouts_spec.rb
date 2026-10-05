@@ -901,58 +901,62 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("Complete this training by")
     end
 
-    it "adds the CE accreditation clause once CE credit is registered and paid" do
+    it "shows a certificate chooser listing the completion and CE certificates when CE applies" do
       event.update!(ce_hours_offered: 6)
       license = create(:professional_license, person: registration.registrant, number: "LIC-1")
-      registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
+      ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
 
       get registration_certificate_path(registration.slug)
 
-      expect(response.body).to include("continuing education (CE) credit")
-      expect(response.body).to include(ContinuingEducationRegistration::ACCREDITATION_URL)
-      expect(response.body).to include("provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}")
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Certificate of completion")
+      expect(response.body).to include("CE confirmation of attendance")
+      expect(response.body).to include(registration_ce_certificate_path(registration.slug, ce, return_to: "certificate"))
+      # The chooser isn't the certificate document itself, and no clause lives here.
+      expect(response.body).not_to include("This certifies that")
+      expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
     end
 
-    it "unlocks the certificate when the CE credit was issued even without tracked attendance" do
+    it "unlocks the completion certificate when the CE credit was issued even without tracked attendance" do
       registration.update!(status: "registered")
       event.update!(ce_hours_offered: 6, end_date: 2.days.from_now)
       license = create(:professional_license, person: registration.registrant, number: "LIC-3")
       ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
       ce.mark_certificate_sent!
 
-      get registration_certificate_path(registration.slug)
+      get registration_certificate_path(registration.slug, document: "completion")
 
       expect(response.body).to include("This certifies that")
-      expect(response.body).to include("continuing education (CE) credit")
     end
 
-    it "adds the CE clause when the credit was issued even if a balance remains" do
-      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
-      license = create(:professional_license, person: registration.registrant, number: "LIC-2")
-      ce = registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
-      ce.mark_certificate_sent!
+    it "lists the CE certificate in the chooser once it's paid, whether or not the credit is earned yet" do
+      registration.update!(status: "registered")
+      event.update!(ce_hours_offered: 6)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-4")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
 
       get registration_certificate_path(registration.slug)
 
-      expect(response.body).to include("continuing education (CE) credit")
+      expect(response.body).to include("Certificate of completion")
+      expect(response.body).to include("CE confirmation of attendance")
     end
 
-    it "surfaces CE status above the certificate (screen-only) when CE isn't earned yet" do
+    it "opens the completion certificate directly when CE is requested but not yet paid" do
       event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
-      license = create(:professional_license, person: registration.registrant, number: "LIC-4")
+      license = create(:professional_license, person: registration.registrant, number: "LIC-5")
       registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
 
       get registration_certificate_path(registration.slug)
 
       expect(response.body).to include("This certifies that")
-      expect(response.body).to include("isn't shown on this certificate yet")
-      # The gated note never joins the printed CE clause.
-      expect(response.body).not_to include("in accordance with our approval by")
+      expect(response.body).not_to include("CE confirmation of attendance")
     end
 
-    it "omits the CE clause when no CE credit was earned" do
+    it "opens the completion certificate directly when no CE credit was requested" do
       get registration_certificate_path(registration.slug)
 
+      expect(response.body).to include("This certifies that")
+      expect(response.body).not_to include("CE confirmation of attendance")
       expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
     end
 
@@ -1009,15 +1013,18 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).to include("/rails/active_storage/representations/proxy")
       end
 
-      it "still adds the shared CE accreditation clause when CE credit is earned" do
+      it "shows the chooser with the training certificate and CE confirmation when CE applies" do
         event.update!(ce_hours_offered: 6)
         license = create(:professional_license, person: registration.registrant, number: "LIC-T")
         registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
 
         get registration_certificate_path(registration.slug)
 
-        expect(response.body).to include("continuing education (CE) credit")
-        expect(response.body).to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+        expect(response.body).to include("Certificate of training")
+        expect(response.body).to include("CE confirmation of attendance")
+        expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+        # The branded document itself is one click away, not inline on the chooser.
+        expect(response.body).not_to include("certificate-training-border")
       end
     end
 
@@ -1026,6 +1033,92 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response.body).to include("This certifies that")
       expect(response.body).not_to include("AWBW Facilitator Certification Training")
+    end
+  end
+
+  describe "GET /registration/:slug/ce/certificate/:ce_registration_id" do
+    let(:event) { create(:event, :ended, facilitator_training: true, ce_hours_offered: 6) }
+    let(:registration) { create(:event_registration, event: event, status: "attended") }
+    let(:license) { create(:professional_license, person: registration.registrant, kind: "LCSW", number: "86747") }
+    let(:ce_registration) { registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0) }
+
+    it "renders the CE confirmation of attendance once the credit is earned" do
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Continuing Education Confirmation of Attendance")
+      expect(response.body).to include("This certifies that the above-named participant")
+      expect(response.body).to include(registration.registrant.full_name)
+      expect(response.body).to include("LCSW 86747")
+      expect(response.body).to include("Provider # #{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}")
+      expect(response.body).to include(ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME)
+      expect(response.body).to include("6 hours")
+    end
+
+    it "lists only the event staff titled as facilitators" do
+      facilitator = create(:person, first_name: "Rudy", last_name: "Hernandez")
+      greeter = create(:person, first_name: "Sam", last_name: "Greeter")
+      create(:event_staff, event: event, person: facilitator, title: "Lead Facilitator")
+      create(:event_staff, event: event, person: greeter, title: "Greeter")
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).to include("Rudy Hernandez")
+      expect(response.body).not_to include("Sam Greeter")
+    end
+
+    it "shows the pending conditions until the credit is earned" do
+      registration.update!(status: "registered")
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("unlocks once these are met")
+      expect(response.body).to include("Your CE payment is received in full")
+      expect(response.body).not_to include("This certifies that the above-named participant")
+    end
+
+    it "renders the CE administrator signature from its own resource as a normalized web image, served same-origin" do
+      resource = create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE, hidden_from_search: true)
+      create(:primary_asset, :with_file, owner: resource)
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      # A variant representation (format-normalized), not the raw blob, so an upload
+      # a browser can't render in an <img> (e.g. a HEIC phone photo) still displays.
+      expect(response.body).to include("/rails/active_storage/representations/proxy")
+      expect(response.body).not_to include("/rails/active_storage/blobs/proxy")
+      expect(response.body).to include("Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}")
+    end
+
+    it "leaves the signature line blank when the training certificate's strip exists but the CE resource doesn't" do
+      training = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE, hidden_from_search: true)
+      create(:primary_asset, :with_file, owner: training)
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).not_to include("/rails/active_storage")
+    end
+
+    it "returns to the certificate chooser when reached from it" do
+      get registration_ce_certificate_path(registration.slug, ce_registration, return_to: "certificate")
+
+      expect(response.body).to include("Back to certificates")
+      expect(response.body).to include(registration_certificate_path(registration.slug))
+    end
+
+    it "omits the signature (no error) when the admin-managed record isn't present" do
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).not_to include("/rails/active_storage")
+    end
+
+    it "redirects to the CE page when the id doesn't name a CE registration on this registration" do
+      get registration_ce_certificate_path(registration.slug, 0)
+
+      expect(response).to redirect_to(registration_ce_path(registration.slug))
     end
   end
 

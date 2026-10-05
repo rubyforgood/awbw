@@ -1,17 +1,49 @@
 <% content_for(:page_bg_class, "public") %>
-<% content_for(:page_title, "Certificate of completion — #{@event.title}") %>
-<% if sample_preview? || @event_registration.certificate_available? %>
+<%# When the event grants CE and this registrant has a CE registration, the tab is
+    a chooser of certificate documents (the completion/training certificate plus a
+    CE Confirmation of Attendance per license), styled like the payment documents
+    list. Otherwise it opens the completion certificate straight away. The completion
+    card re-enters this action with ?document=completion to render the document. %>
+<%# Only paid CE registrations earn a certificate (an unpaid licence can't), so the
+    chooser — and whether we show one at all — keys off those. %>
+<% ce_certificate_regs = @event_registration.continuing_education_registrations.select { |ce| ce.paid_in_full? || sample_preview? } %>
+<% ce_applies = ce_certificate_regs.any? && (sample_preview? || @event.ce_eligible?) %>
+<% from_chooser = params[:document] == "completion" %>
+<% show_chooser = ce_applies && !from_chooser %>
+<% content_for(:page_title, "#{show_chooser ? "Certificates" : "Certificate of completion"} — #{@event.title}") %>
+<% if show_chooser %>
+  <% training = @event.facilitator_training? %>
+  <% completion_href = sample_preview? ? sample_certificate_event_path(@event, document: "completion") : registration_certificate_path(@event_registration.slug, document: "completion") %>
+  <% cards = [ BuiltinCalloutCards::Card.new(
+        icon_class: "fa-solid fa-certificate", color: "gray",
+        title: training ? "Certificate of training" : "Certificate of completion",
+        subtitle: "Your certificate for completing this training",
+        href: completion_href, target: nil, trailing_icon: "fa-solid fa-arrow-right") ] %>
+  <% ce_certificate_regs.each do |ce_reg| %>
+    <% ce_href = sample_preview? ? sample_ce_certificate_event_path(@event, return_to: "certificate") : registration_ce_certificate_path(@event_registration.slug, ce_reg, return_to: "certificate") %>
+    <% ce_subtitle = ce_reg.professional_license&.number_known? ? "Continuing education confirmation · #{ce_reg.professional_license.name}" : "Continuing education confirmation of attendance" %>
+    <% cards << BuiltinCalloutCards::Card.new(
+          icon_class: "fa-solid fa-award", color: "gray",
+          title: "CE confirmation of attendance", subtitle: ce_subtitle,
+          href: ce_href, target: nil, trailing_icon: "fa-solid fa-arrow-right") %>
+  <% end %>
+  <%= render layout: "events/callouts/callout_page", locals: { title: "Certificates" } do %>
+    <div class="space-y-3">
+      <% cards.each do |card| %>
+        <%= render "event_registrations/callout_card", callout: card %>
+      <% end %>
+    </div>
+  <% end %>
+<% elsif sample_preview? || @event_registration.certificate_available? %>
   <%
     event = @event.decorate
-    back_path = sample_preview? ? sample_ticket_event_path(@event) : registration_ticket_path(@event_registration.slug)
-    # The CE clause certifies issued credit, so it shows once CE is requested and the
-    # credit has been issued or the balance paid in full. The admin sample preview
-    # always shows it (with all options on) so the CE variant can be previewed even
-    # though the sample balance isn't settled.
-    show_ce_clause = @event_registration.ce_registered? &&
-      (@event_registration.ce_certificate_issued? || @event_registration.ce_paid_in_full? || sample_preview?)
-    ce_hours = @event_registration.ce_hours_total
-    ce_hours_label = ce_hours == ce_hours.to_i ? ce_hours.to_i : ce_hours
+    if from_chooser
+      back_path = sample_preview? ? sample_certificate_event_path(@event) : registration_certificate_path(@event_registration.slug)
+      back_label = "Back to certificates"
+    else
+      back_path = sample_preview? ? sample_ticket_event_path(@event) : registration_ticket_path(@event_registration.slug)
+      back_label = "Back to ticket"
+    end
   %>
 
   <% content_for :head do %>
@@ -34,39 +66,15 @@
   <% end %>
 
   <%# Screen-only controls: return link + print. Hidden from the printed page. %>
-  <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-2 px-4 sm:px-8 pt-4 print:hidden">
+  <div class="mx-auto flex max-w-4xl flex-wrap items-center gap-2 px-4 pt-4 sm:px-8 print:hidden">
     <%= link_to back_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Back to ticket
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= back_label %>
     <% end %>
     <button onclick="window.print();"
-            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
       <i class="fa-solid fa-file-arrow-down"></i> Download PDF
     </button>
   </div>
-
-  <% if @event_registration.ce_registered? && !show_ce_clause %>
-    <%# The registrant requested CE but it isn't earned/paid yet, so it stays off
-        the printed certificate. Surface its status on screen (same gated-notice
-        style as the pending block below), print-hidden so it never prints. %>
-    <% ce_pending_reason = if !@event_registration.ce_license_provided?
-         "your professional license number is on file"
-       elsif !@event_registration.ce_paid_in_full?
-         "your CE payment is received"
-       else
-         "your CE certificate is issued"
-       end %>
-    <div class="mx-auto max-w-4xl px-4 pt-3 sm:px-8 print:hidden">
-      <div class="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-        <i class="fa-solid fa-graduation-cap mt-0.5 text-gray-400"></i>
-        <span>
-          Your continuing education (CE) credit<%= " (#{ce_hours_label} hours)" if ce_hours.positive? %>
-          isn't shown on this certificate yet — it's added once <%= ce_pending_reason %>.
-          <%= link_to "View your CE status", registration_ce_path(@event_registration.slug),
-                class: "font-medium #{DomainTheme.text_class_for(:events, intensity: 700)} underline #{DomainTheme.text_class_for(:events, intensity: 900, hover: true)}" %>.
-        </span>
-      </div>
-    </div>
-  <% end %>
 
   <%# Facilitator trainings get the branded painted-border certificate (full-bleed
       in print so the painted border reaches the paper edge); every other event
@@ -77,12 +85,17 @@
     <%= render certificate_partial,
           event: event,
           recipient: @event_registration.registrant.full_name,
-          show_ce_clause: show_ce_clause,
-          ce_hours_label: ce_hours_label,
           signature_file: @signature_file %>
   </div>
 <% else %>
-  <%= render layout: "events/callouts/callout_page", locals: { title: "Certificate of completion" } do %>
+  <% if from_chooser %>
+    <% pending_back_path = sample_preview? ? sample_certificate_event_path(@event) : registration_certificate_path(@event_registration.slug) %>
+    <% pending_back_label = "Back to certificates" %>
+  <% else %>
+    <% pending_back_path = sample_preview? ? sample_ticket_event_path(@event) : registration_ticket_path(@event_registration.slug) %>
+    <% pending_back_label = "Back to ticket" %>
+  <% end %>
+  <%= render layout: "events/callouts/callout_page", locals: { title: "Certificate of completion", back_path: pending_back_path, back_label: pending_back_label } do %>
     <%# Not yet unlocked: show each condition and which are met, like the videoconference page. %>
     <% ended = @event.end_date&.past? %>
     <% attended = @event_registration.attended? %>
