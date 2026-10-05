@@ -929,15 +929,27 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("This certifies that")
     end
 
-    it "lists the CE certificate in the chooser whether or not the credit is earned yet" do
-      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+    it "lists the CE certificate in the chooser once it's paid, whether or not the credit is earned yet" do
+      registration.update!(status: "registered")
+      event.update!(ce_hours_offered: 6)
       license = create(:professional_license, person: registration.registrant, number: "LIC-4")
-      registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6, cost_cents: 0)
 
       get registration_certificate_path(registration.slug)
 
       expect(response.body).to include("Certificate of completion")
       expect(response.body).to include("CE confirmation of attendance")
+    end
+
+    it "opens the completion certificate directly when CE is requested but not yet paid" do
+      event.update!(ce_hours_offered: 6, ce_hours_cost_cents: 12_000)
+      license = create(:professional_license, person: registration.registrant, number: "LIC-5")
+      registration.continuing_education_registrations.create!(professional_license: license, hours: 6)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).not_to include("CE confirmation of attendance")
     end
 
     it "opens the completion certificate directly when no CE credit was requested" do

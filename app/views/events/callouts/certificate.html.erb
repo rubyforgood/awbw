@@ -4,7 +4,10 @@
     CE Confirmation of Attendance per license), styled like the payment documents
     list. Otherwise it opens the completion certificate straight away. The completion
     card re-enters this action with ?document=completion to render the document. %>
-<% ce_applies = @event_registration.ce_registered? && (sample_preview? || @event.ce_eligible?) %>
+<%# Only paid CE registrations earn a certificate (an unpaid licence can't), so the
+    chooser — and whether we show one at all — keys off those. %>
+<% ce_certificate_regs = @event_registration.continuing_education_registrations.select { |ce| ce.paid_in_full? || sample_preview? } %>
+<% ce_applies = ce_certificate_regs.any? && (sample_preview? || @event.ce_eligible?) %>
 <% from_chooser = params[:document] == "completion" %>
 <% show_chooser = ce_applies && !from_chooser %>
 <% content_for(:page_title, "#{show_chooser ? "Certificates" : "Certificate of completion"} — #{@event.title}") %>
@@ -16,7 +19,7 @@
         title: training ? "Certificate of training" : "Certificate of completion",
         subtitle: "Your certificate for completing this training",
         href: completion_href, target: nil, trailing_icon: "fa-solid fa-arrow-right") ] %>
-  <% @event_registration.continuing_education_registrations.each do |ce_reg| %>
+  <% ce_certificate_regs.each do |ce_reg| %>
     <% ce_href = sample_preview? ? sample_ce_certificate_event_path(@event, return_to: "certificate") : registration_ce_certificate_path(@event_registration.slug, ce_reg, return_to: "certificate") %>
     <% ce_subtitle = ce_reg.professional_license&.number_known? ? "Continuing education confirmation · #{ce_reg.professional_license.name}" : "Continuing education confirmation of attendance" %>
     <% cards << BuiltinCalloutCards::Card.new(
