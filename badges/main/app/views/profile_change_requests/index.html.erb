@@ -1,0 +1,19 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="mx-auto w-full max-w-4xl px-4 py-6">
+  <div class="mb-2">
+    <%= link_to root_path, class: "text-sm #{eyebrow_link_class}" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Home
+    <% end %>
+  </div>
+
+  <h1 class="text-2xl font-semibold text-gray-900">Changes requested</h1>
+  <p class="mt-1 text-gray-600">
+    Requests from facilitators to update profile details they can't edit themselves.
+  </p>
+
+  <%= turbo_frame_tag :profile_change_requests_results,
+                      src: profile_change_requests_path(status: @status),
+                      data: { turbo: "temporary" } do %>
+    <p class="mt-6 text-gray-400">Loading…</p>
+  <% end %>
+</div>

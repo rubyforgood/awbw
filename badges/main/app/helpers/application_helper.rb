@@ -429,6 +429,8 @@ module ApplicationHelper
   # they get a tailored destination via form_submission_link_path.
   def routable_path(record)
     return form_submission_link_path(record) if record.is_a?(FormSubmission)
+    # A profile change request has no show route; send viewers to the admin queue.
+    return profile_change_requests_path if record.is_a?(ProfileChangeRequest)
     polymorphic_path(record)
   rescue NoMethodError
     nil

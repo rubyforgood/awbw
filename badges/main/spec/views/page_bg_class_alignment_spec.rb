@@ -88,6 +88,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/people/workshop_logs.html.erb"          => "admin-or-owner",
 
     "app/views/notifications/show.html.erb"            => "admin-or-owner",
+    "app/views/profile_change_requests/new.html.erb"   => "admin-or-owner",
+    "app/views/profile_change_requests/edit.html.erb"  => "admin-or-owner",
     "app/views/organizations/show.html.erb"            => "admin-or-auth",
     "app/views/people/show.html.erb"                   => "admin-or-owner-or-authsearchable",
     "app/views/organizations/edit.html.erb"            => "admin-or-owner",
@@ -109,6 +111,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/bookmarks/tally.html.erb"               => "admin-only bg-blue-100",
     "app/views/users/flow_diagram.html.erb"            => "admin-only bg-blue-100",
     "app/views/dedupes/index.html.erb"                 => "admin-only bg-blue-100",
+    "app/views/profile_change_requests/index.html.erb" => "admin-only bg-blue-100",
     "app/views/dedupes/preview.html.erb"               => "admin-only bg-blue-100",
     "app/views/taggings/matrix.html.erb"               => "admin-only bg-blue-100",
     "app/views/story_share_admin/show.html.erb"        => "admin-only bg-blue-100",
