@@ -127,8 +127,8 @@
       organization name matches exactly is now processed the moment it arrives, exactly
       as if you had clicked "Link organization" yourself. If the name matches nothing,
       or matches two organizations, it stays in your queue to resolve.
-    - Other forms fill in the organization's details but never add an affiliation —
-      joining someone to an organization stays your call.
+    - Any other form fills in the organization's details and adds the job affiliation
+      from the position they typed, exactly as an event registration does.
 
 - name: "W-9 available before paying"
   area: payments

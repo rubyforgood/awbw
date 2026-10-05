@@ -116,15 +116,16 @@ class PublicFormSubmission
 
   # Link + fill the submitted organization. An agreement submission is processed
   # through the same linking core an admin would run (process_agreement_organization);
-  # any other form fills the org's profile and records the link without affiliating
-  # anyone. Skipped on a close-program form, whose submission ends affiliations at
-  # the org rather than creating them (process_close_program).
+  # any other role runs the same capture an event registration does, so a job
+  # affiliation comes from the typed position either way. Skipped on a
+  # close-program form, whose submission ends affiliations at the org rather than
+  # creating them (process_close_program).
   def capture_organization(submission)
     return if @form.role == "close_program"
     return process_agreement_organization(submission) if submission.agreement_scenario?
 
     organization = OrganizationServices::CaptureFromSubmission.call(
-      form: @form, form_params: @form_params
+      form: @form, form_params: @form_params, person: submission.person
     ).organization
     submission.link_organization!(organization.id) if organization
     organization

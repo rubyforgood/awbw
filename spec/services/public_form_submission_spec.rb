@@ -191,13 +191,14 @@ RSpec.describe PublicFormSubmission do
       ).merge(overrides)
     end
 
-    it "matches the org by name, syncs its profile and address, and links it to the submission" do
+    it "matches the org by name, syncs its profile and address, adds a job affiliation, and links it to the submission" do
       result = described_class.call(form: form, form_params: org_params)
       org.reload
 
       expect(org.website_url).to eq("https://helpinghands.org")
       expect(org.organization_type).to eq("Nonprofit")
       expect(org.addresses.find_by(city: "Austin")).to be_present
+      expect(result.person.affiliations.where(organization: org).pluck(:title)).to contain_exactly("Counselor")
       expect(result.form_submission.reload.linked_organizations).to include(org)
     end
 
@@ -207,12 +208,12 @@ RSpec.describe PublicFormSubmission do
       }.not_to change(Organization, :count)
     end
 
-    # Answering a position question on a survey shouldn't quietly join someone to
-    # an organization — only an agreement form (or an event registration) does that.
-    it "creates no affiliation on an ordinary standalone form" do
+    # Being a facilitator is conferred by a training or an agreement, never by an
+    # ordinary form — which has no event, so it can't be a training.
+    it "adds no facilitator affiliation on a non-agreement form" do
       result = described_class.call(form: form, form_params: org_params)
 
-      expect(result.person.affiliations.where(organization: org)).to be_empty
+      expect(result.person.affiliations.where(organization: org).pluck(:title)).not_to include("Facilitator")
     end
 
     context "on an agreement form" do
@@ -253,6 +254,7 @@ RSpec.describe PublicFormSubmission do
 
         expect(result.person.affiliations).to be_empty
         expect(result.form_submission.reload.linked_organization_ids).to be_empty
+        expect(Organization.where("LOWER(name) = ?", "helping hands").count).to eq(2)
         expect(FormSubmission.org_link_status("pending")).to include(result.form_submission)
       end
 
