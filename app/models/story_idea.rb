@@ -28,7 +28,7 @@ class StoryIdea < ApplicationRecord
              inverse_of: :story_ideas_as_spotlighted_facilitator, optional: true
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
-  belongs_to :organization
+  belongs_to :organization, optional: true
   belongs_to :windows_type
   # Kept as a legacy safety copy alongside story_idea_workshops during the
   # multi-step import; the join is the source of truth for display and editing.
@@ -51,10 +51,14 @@ class StoryIdea < ApplicationRecord
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
 
+  # The column stays optional so admins can file an idea without one; the form
+  # sets this flag to require organization from everyone else.
+  attr_accessor :organization_required
+
   # Validations
   validates :created_by_id, presence: true
   validates :updated_by_id, presence: true
-  validates :organization_id, presence: true
+  validates :organization_id, presence: true, if: :organization_required
   validates :windows_type_id, presence: true
   validates :permission_given, presence: true
   validates :rhino_body, presence: true
@@ -107,7 +111,7 @@ class StoryIdea < ApplicationRecord
   end
 
   def organization_name
-    organization.name
+    organization&.name
   end
 
   def organization_locality

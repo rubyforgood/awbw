@@ -62,6 +62,10 @@ When changing a model or controller, check whether these related files need upda
 - **Default to no comment.** Most code should carry none — clear names and small methods explain themselves. Only add a comment for a genuinely non-obvious *why* or a gotcha that would trip up the next reader, and only when you can't make the code say it instead (a better name, a named constant, an extracted method). Never restate what the code already says, and don't comment a constant, scope, or step whose intent is clear from its name. When a comment truly earns its place, keep it to **one line**; let it run longer only when the logic is genuinely complex and the reasoning can't be inferred from the code plus domain knowledge.
 - **Comment on what the code does now, never on what it used to do or an alternative it isn't.** A comment describes current behavior — not the old version, not a bug that was fixed, not the approach that was rejected, not what another component *doesn't* do. Cut phrases like "used to", "no longer", "instead of", "rather than", "would otherwise", "we don't X here". If a *why* needs a contrast, state the reason positively (e.g. "update_columns so the over-allocation persists past the cost validation", not "update_columns because a plain update would be rejected"). Git history, not comments, carries the past.
 
+## Roles & admin
+
+- **"Admin" means `User#super_user?`** — there is no separate admin model, role enum, or `admin?` method on `User`. A user is an admin when their `super_user` flag is set. In policies use the `ApplicationPolicy#admin?` helper (it returns `user&.super_user?`); in controllers and views check `current_user&.super_user?` directly. When a requirement, gate, or copy says "admin" / "super-admin", it resolves to this flag.
+
 ## RuboCop (rubocop-rails-omakase)
 
 This project uses rubocop-rails-omakase. All code MUST follow these rules:
