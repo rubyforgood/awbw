@@ -147,6 +147,13 @@ class Event < ApplicationRecord
   def on_demand_facilitator_training?
     on_demand? && facilitator_training?
   end
+
+  # Event staff whose title names them a facilitator, ordered by name — the roster
+  # printed on the CE Confirmation of Attendance certificate. Staff titles are free
+  # text, so match "facilitator" case-insensitively rather than on an exact role.
+  def facilitator_event_staffs
+    event_staffs.ordered_by_name.includes(:person).select { |staff| staff.title.to_s.match?(/facilitator/i) }
+  end
   # Events that charge a registration fee (cost_cents may be nil for free ones).
   scope :paid, -> { where("cost_cents > 0") }
   # Events whose start date falls in the given calendar year. Keyed off the year

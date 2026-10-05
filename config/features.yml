@@ -3780,6 +3780,27 @@
     Others sits beside it in the same style but lighter, so it's easy to find
     without competing for attention.
 
+- name: "Separate CE Confirmation of Attendance certificate"
+  area: registration
+  display_status: public_facing
+  released_on: 2026-10-04
+  summary: >-
+    A trainee who earns continuing education credit now gets a dedicated CE
+    Confirmation of Attendance — a separate printable document from the training
+    certificate — with their license number, the facilitators, and the CAMFT
+    provider details a licensing board wants to see.
+  description: >-
+    The CE confirmation is reached from the registrant's CE page, one per
+    professional license, and unlocks on the same conditions as the CE credit
+    (training ended, attendance confirmed, CE paid in full, and any CE form
+    complete). It replaces the CE line that used to sit on the completion
+    certificate, so the training certificate and the CE confirmation are now two
+    clean, separate documents.
+  pro_tips:
+    - "When an event grants CE and you have a CE registration, the Certificate of completion tab lists both documents to choose from, like the payment documents list."
+    - "The facilitators listed are the event staff whose title says \"facilitator\" — set their titles on the event's staff page."
+    - "The signature comes from an admin-managed, search-hidden resource titled \"Training CE certificate signatures\" (just the CE administrator); upload it there and it appears on the signature line."
+
 - name: "Event tag on communications and comments about an event"
   area: communications
   display_status: admin_facing
