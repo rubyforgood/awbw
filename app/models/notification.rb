@@ -261,12 +261,12 @@ class Notification < ApplicationRecord
   }
 
   # Delivery axis, mirroring the per-row status shown in the index: a delivered
-  # email has a delivered_at; an errored one recorded an error and never landed;
+  # email has a delivered_at; a failed one recorded an error and never landed;
   # anything else is still pending (includes pre-launch archived rows).
   scope :delivery_status, ->(status) {
     case status.to_s
     when "delivered" then delivered
-    when "errored" then where(delivered_at: nil).where.not(error_at: nil)
+    when "failed" then where(delivered_at: nil).where.not(error_at: nil)
     when "pending" then where(delivered_at: nil, error_at: nil)
     else all
     end

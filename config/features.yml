@@ -47,7 +47,7 @@
   released_on: 2026-10-05
   summary: >-
     The Communications list has a new Status filter to narrow the feed to
-    delivered, pending, or errored emails — so you can quickly find messages
+    delivered, pending, or failed emails — so you can quickly find messages
     that didn't go out.
   action_path: "/notifications"
 
