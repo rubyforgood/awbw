@@ -89,16 +89,15 @@
     organization later, so an idea never gets stuck waiting on one.
   action_path: "/story_ideas"
 
-- name: "Clearer navigation on story pages"
+- name: "Cleaner story page layout"
   area: stories
   display_status: public_facing
-  released_on: 2026-10-04
+  released_on: 2026-10-05
   action_path: "/story_share"
   summary: >-
-    The buttons at the top of a story now read Portal, Story share home, All
-    stories, and Tag home. "All stories" opens the full, paginated list (not the
-    landing page), and "Tag home" jumps to other stories under this one's first
-    sector or category.
+    On a Story Share story, Print and Bookmark now sit in the top-right of the
+    story itself, next to the title. Getting around uses the page's top menu, so
+    the old separate row of navigation buttons is gone.
 
 - name: "Credit two authors on a story"
   area: stories
