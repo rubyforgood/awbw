@@ -296,19 +296,6 @@
   }
 }
 
-/* Filter <select>s draw their own chevron (appearance-none + inset background
-   arrow) so it clears the right border. The browser's native arrow is pinned to
-   the edge and padding-right can't move it, so pair this with pr-10 to keep the
-   value from sliding under the chevron. */
-.search-select-placeholder {
-  -webkit-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1rem;
-}
-
 /* Grey a filter <select>'s "All"/blank first option like a placeholder while it
    is the current selection. Raw CSS because the :has() selector has no Tailwind
    utility equivalent. */
