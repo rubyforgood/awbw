@@ -1,0 +1,18 @@
+<h1 style="margin: 0 0 16px;">Update on your change request</h1>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  Your request to update your <strong><%= @request.field_label.downcase %></strong> has been
+  <strong><%= @outcome %></strong> by AWBW staff.
+</p>
+
+<% if @request.resolved? && @request.field == "primary_email" %>
+  <p style="margin: 0 0 16px; color:#374151;">
+    Check your inbox at <strong><%= @request.requested_value %></strong> for a confirmation link to
+    finish the change.
+  </p>
+<% end %>
+
+<% if @request.reviewer_note.present? %>
+  <p style="margin: 0 0 8px; color:#6b7280;">Note from staff:</p>
+  <p style="margin: 0 0 16px; white-space: pre-line;"><%= @request.reviewer_note %></p>
+<% end %>

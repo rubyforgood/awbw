@@ -17,14 +17,15 @@ RSpec.describe "Owner view of affiliations on the person edit form", type: :requ
     allow_any_instance_of(PersonPolicy).to receive(:edit?).and_return(true)
   end
 
-  it "lists the owner's affiliations with dates, status, and a contact-us request link" do
+  it "lists the owner's affiliations with dates, status, and change-request links" do
     get edit_person_path(person)
 
     expect(response).to be_successful
     expect(response.body).to include("Sunrise Center")
     expect(response.body).to include("Jan 2018 – Jun 2020")
     expect(response.body).to include("Inactive")
-    expect(response.body).to include("Contact us to request a change")
-    expect(response.body).to include("return_to=person_edit")
+    expect(response.body).to include("Request an affiliation change")
+    expect(response.body).to include("field=affiliation")
+    expect(response.body).to include("field=organization_name")
   end
 end

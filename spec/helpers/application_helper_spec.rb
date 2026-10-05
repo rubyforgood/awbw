@@ -32,6 +32,13 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#routable_path" do
+    it "sends a profile change request to the admin queue (it has no show route)" do
+      request = create(:profile_change_request)
+      expect(helper.routable_path(request)).to eq(profile_change_requests_path)
+    end
+  end
+
   describe "#credited_author_link" do
     let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
 
