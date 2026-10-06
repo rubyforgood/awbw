@@ -16,6 +16,7 @@
       <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
+      <%= f.hidden_field :funder_only, value: f.object.funder_only %>
     <% end %>
     <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
 
@@ -353,6 +354,17 @@
                     "Windows Facilitators. If there is any identifying information in my images, " +
                     "such as names or faces, I certify that I have received permission from the subject, " +
                     "or their caregiver, to display their likeness online.",
+                  input_html: {
+                    class: ("readonly" if promoted_to_story)
+                  } %>
+    </div>
+
+    <div class="my-12 rounded-lg border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> p-4">
+      <%= f.input :funder_only,
+                  as: :boolean,
+                  disabled: promoted_to_story,
+                  label: "Share my story only with the funder who provided my training scholarship and not on Story Share.",
+                  hint: "Check this if your story is a training-scholarship deliverable. It won't appear on Story Share — only A Window Between Worlds staff and the funder will see it.",
                   input_html: {
                     class: ("readonly" if promoted_to_story)
                   } %>

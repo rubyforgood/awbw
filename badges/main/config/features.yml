@@ -99,6 +99,18 @@
     story itself, next to the title. Getting around uses the page's top menu, so
     the old separate row of navigation buttons is gone.
 
+- name: "Share a story only with its scholarship funder"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-03
+  summary: >-
+    Recipients can now mark a required training-scholarship story "Funder-only": it's
+    shared only with the funder who paid for the training and stays off Story Share,
+    search, and the home page. Staff and the author still see it, flagged with a chip,
+    with a matching filter on the stories list.
+  action_path: "/stories"
+  pr_number: 2596
+
 - name: "Credit two authors on a story"
   area: stories
   display_status: admin_facing

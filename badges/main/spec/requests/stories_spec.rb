@@ -39,6 +39,12 @@ RSpec.describe "/stories", type: :request do
     ))
   end
 
+  # Published AND publicly visible, but funder-only — so it must still stay out
+  # of every general-audience listing despite the public flags.
+  let!(:funder_only_story) do
+    create(:story, :published, :publicly_visible, :funder_only, title: "Funder Only #{SecureRandom.hex(4)}")
+  end
+
   # ==========================================================
   # ADMIN
   # ==========================================================
@@ -51,6 +57,18 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
         expect(response.body).to include(private_story.title)
+      end
+
+      it "shows funder-only stories to admins, flagged with a chip" do
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include(funder_only_story.title)
+        expect(response.body).to include("Funder-only")
+      end
+
+      it "narrows to funder-only stories when the funder_only filter is set" do
+        get stories_url(funder_only: "true"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include(funder_only_story.title)
+        expect(response.body).not_to include(published_story.title)
       end
 
       it "filters by organization_id on lazy turbo-frame request" do
@@ -324,6 +342,26 @@ RSpec.describe "/stories", type: :request do
           expect(admin_note.recipient_role).to eq("admin")
           expect(admin_note.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
         end
+
+        it "pre-checks the funder-only box when promoting a funder-only idea" do
+          funder_idea = create(:story_idea, :funder_only, created_by: submitter)
+          get new_story_url(story_idea_id: funder_idea.id)
+
+          checkbox = Nokogiri::HTML(response.body).at_css("input#story_funder_only[type='checkbox']")
+          expect(checkbox["checked"]).to be_present
+        end
+
+        it "leaves the funder-only box unchecked when promoting a regular idea" do
+          get new_story_url(story_idea_id: story_idea.id)
+
+          checkbox = Nokogiri::HTML(response.body).at_css("input#story_funder_only[type='checkbox']")
+          expect(checkbox["checked"]).to be_nil
+        end
+      end
+
+      it "persists funder_only when the box is checked on submit" do
+        post stories_url, params: { story: base_attributes.merge(funder_only: "1") }
+        expect(Story.order(:created_at).last).to be_funder_only
       end
 
       it "does not send promotion emails when no story idea is linked" do
@@ -533,6 +571,11 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(private_story.title)
       end
 
+      it "never shows funder-only stories" do
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).not_to include(funder_only_story.title)
+      end
+
       it "does not show Details button for external stories" do
         external_story = create(:story, :published, title: "External Story", website_url: "https://example.com")
         get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
@@ -549,6 +592,11 @@ RSpec.describe "/stories", type: :request do
 
       it "cannot view private story" do
         get story_url(private_story)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "cannot view a funder-only story even though it is published and public" do
+        get story_url(funder_only_story)
         expect(response).to redirect_to(root_path)
       end
     end
@@ -572,6 +620,7 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(public_story.title)
         expect(response.body).not_to include(published_story.title)
         expect(response.body).not_to include(private_story.title)
+        expect(response.body).not_to include(funder_only_story.title)
       end
     end
 

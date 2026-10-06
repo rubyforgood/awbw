@@ -2077,6 +2077,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.string "youtube_url"
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
+    t.boolean "funder_only", default: false, null: false
     t.index ["author_id"], name: "index_stories_on_author_id"
     t.index ["co_author_id"], name: "index_stories_on_co_author_id"
     t.index ["created_by_id"], name: "index_stories_on_created_by_id"
@@ -2120,6 +2121,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
     t.bigint "spotlighted_facilitator_id"
+    t.boolean "funder_only", default: false, null: false
     t.index ["author_id"], name: "index_story_ideas_on_author_id"
     t.index ["co_author_id"], name: "index_story_ideas_on_co_author_id"
     t.index ["created_by_id"], name: "index_story_ideas_on_created_by_id"
