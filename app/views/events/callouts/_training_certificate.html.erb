@@ -25,11 +25,10 @@
       <p class="text-[2.4cqw] font-semibold text-gray-700"><%= event.date_range %></p>
     </div>
 
-    <%# Served same-origin via the proxy (never the raw storage URL), and only
-        embedded here — so the signature image is reachable only from an issued
-        certificate, not by browsing the repo or the resources index. %>
-    <% if signature_file %>
-      <%= image_tag certificate_signature_src(signature_file),
+    <%# Rendered through the asset's :card webp variant so any uploaded image
+        (e.g. a HEIC phone photo most browsers can't show raw) displays. %>
+    <% if signature_file&.variable? %>
+      <%= image_tag signature_file.variant(:card),
             alt: "Signed by Christy Turek Rials, Training & Outreach Director; Rudy Hernandez, Program Director; and Tiombe Wallace, Consultant",
             class: "w-[66cqw]" %>
     <% else %>
