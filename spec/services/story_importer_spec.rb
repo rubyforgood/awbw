@@ -458,14 +458,13 @@ RSpec.describe StoryImporter do
       expect(story.comments.pluck(:body)).not_to include(a_string_matching(/category not in portal/))
     end
 
-    it "tags an age-named primary story population without starring it" do
+    it "stars an age-named primary story population on its AgeRange category" do
       teens = create(:category, category_type: age_range, name: "Teens")
-      result = import([ base_row("categories" => "", "primary_story_population" => "StoryPopulation: Teens") ])
+      import([ base_row("categories" => "", "primary_story_population" => "StoryPopulation: Teens") ])
 
       story = Story.sole
       expect(story.categories).to contain_exactly(teens)
-      expect(story.primary_category).to be_nil
-      expect(result.warnings).to include(a_string_matching(/is an age group, not a story population/))
+      expect(story.primary_category).to eq(teens)
     end
 
     it "flags the primary sector and primary story population on their join rows" do

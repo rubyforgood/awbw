@@ -120,7 +120,6 @@ class StoryImporter
   # The age groups belong to AgeRange; StoryPopulation carries only the non-age
   # audiences (Self, Colleagues, Community, Families). Sheets built before that
   # split file the ages under StoryPopulation, so they are read as AgeRange.
-  AGE_CATEGORY_TYPE = "AgeRange"
   AGE_CATEGORY_NAMES = %w[Children Teens Adults Elders].freeze
 
   # Story author_credit_preference → the author's profile display_name_preference.
@@ -655,9 +654,8 @@ class StoryImporter
     sector
   end
 
-  # The row's primary story population, written "StoryPopulation: Name". Only a
-  # story population can be a story's primary, so an age group named here is
-  # tagged as its AgeRange without the star, and the row is warned about.
+  # The row's primary audience, written "Type: Name". An age group named here
+  # stars its AgeRange category — either kind of audience can be the primary.
   def resolve_primary_category(row, categories, missing_categories)
     token = clean(row["primary_story_population"])
     return if token.blank?
@@ -671,8 +669,6 @@ class StoryImporter
     end
 
     categories << category unless categories.include?(category)
-    return record_warning(row, "primary #{name.inspect} is an age group, not a story population — tagged without the star") unless audience_category?(category)
-
     category
   end
 
@@ -692,7 +688,7 @@ class StoryImporter
   # that AgeRange whichever type the sheet filed it under — the StoryPopulation
   # age twins ("Children_", "Teens_", "Adults_") are never tagged.
   def category_named(name, type)
-    type = AGE_CATEGORY_TYPE if age_category?(name)
+    type = AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE if age_category?(name)
     scope = Category.where("LOWER(categories.name) = ?", name.to_s.downcase)
     scope = scope.joins(:category_type).where(category_types: { name: type }) if type.present?
     scope.first
@@ -700,10 +696,6 @@ class StoryImporter
 
   def age_category?(name)
     AGE_CATEGORY_NAMES.any? { |age| age.casecmp?(name.to_s.strip) }
-  end
-
-  def audience_category?(category)
-    category.category_type&.name == CategoriesTaggable::AUDIENCE_CATEGORY_TYPE
   end
 
   # Persist tags only for a saved record on a real run; a dry run resolves above
