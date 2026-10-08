@@ -447,8 +447,8 @@ RSpec.describe StoryImporter do
                         "primary_story_population" => "StoryPopulation: Teens") ])
 
       story = Story.sole
-      expect(story.sectorable_items.find { |i| i.sector.name == "Domestic Violence" }.is_primary).to be(true)
-      expect(story.categorizable_items.find { |i| i.category.name == "Teens" }.is_primary).to be(true)
+      expect(story.primary_sector.name).to eq("Domestic Violence")
+      expect(story.primary_category.name).to eq("Teens")
     end
 
     it "tags and flags a primary sector even when it's absent from the sectors list" do
