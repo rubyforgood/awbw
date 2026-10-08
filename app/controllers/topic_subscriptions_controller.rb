@@ -144,9 +144,10 @@ class TopicSubscriptionsController < ApplicationController
   # When the list is filtered to a single topic, the Mark column header takes that
   # topic's configured label; otherwise it stays the generic "Mark".
   def mark_column_label
-    return "Mark" if params[:topic_subscription_type_id].blank?
+    ids = Array(params[:topic_subscription_type_id]).reject(&:blank?)
+    return "Mark" unless ids.one?
 
-    TopicSubscriptionType.where(id: params[:topic_subscription_type_id]).pick(:mark_label).presence || "Mark"
+    TopicSubscriptionType.where(id: ids).pick(:mark_label).presence || "Mark"
   end
 
   def topic_subscription_params
