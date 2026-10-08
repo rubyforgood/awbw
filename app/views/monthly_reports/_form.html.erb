@@ -161,16 +161,7 @@
       <!-- ######## uploads sectors ####### -->
       <% if [4, 2].include? params[:form_builder_id].to_i %>
 
-      <div class="form-group image-fields-wrapper">
-        <!-- ######## upload image ###### -->
-        <%= f.fields_for :media_files do |files_form| %>
-        <%= render 'media_file', :f => files_form %>
-
-        <div class="links small">
-          <%= link_to_add_association 'Add Another Media File', f, :media_files, partial: 'media_file', class:'btn-underline' %>
-        </div>
-        <% end %>
-      </div>
+      <%= render "shared/form_image_fields", f: f, include_primary_asset: false %>
 
       <% end %>
    </div>

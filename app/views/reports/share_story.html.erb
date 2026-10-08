@@ -90,16 +90,7 @@ class:"selectpicker form-control form-control-custom" %>
          </div>
        </div>
 
-       <!-- ######## upload image ###### -->
-       <div class="form-group image-fields-wrapper">
-         <%= f.fields_for :media_files do |files_form| %>
-         <%= render 'media_file', :f => files_form %>
-
-         <div class="links small">
-           <%= link_to_add_association 'Add Another Media File', f, :media_files, partial: 'media_file', class:'btn-underline' %>
-         </div>
-         <% end %>
-       </div>
+       <%= render "shared/form_image_fields", f: f, include_primary_asset: false %>
 
      <!-- ######### SUBMIT BUTTON ########## -->
      <div class="row">
