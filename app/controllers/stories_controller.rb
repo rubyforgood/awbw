@@ -74,13 +74,14 @@ class StoriesController < ApplicationController
 
     Story.transaction do
       if @story.save
+        just_published = @story.saved_change_to_published?(to: true)
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@story)
         end
-        notify_story_promoted if @story.story_idea.present?
+        notify_story_promoted if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -104,10 +105,12 @@ class StoriesController < ApplicationController
     Story.transaction do
       @story.assign_attributes(story_params.except(:images, :category_ids, :sector_ids))
       if @story.save
+        just_published = @story.saved_change_to_published?(to: true)
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
         end
+        notify_story_promoted if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -168,15 +171,19 @@ class StoriesController < ApplicationController
 
   private
 
-  # Promoting a story idea into a story emails the idea's submitter and an admin FYI.
   def notify_story_promoted
-    NotificationServices::CreateNotification.call(
-      noticeable: @story,
-      person: @story.story_idea.created_by&.person,
-      kind: :story_promoted,
-      recipient_role: :person,
-      recipient_email: @story.story_idea.created_by.email,
-      notification_type: 0)
+    return unless @story.story_idea
+    return if @story.notifications.exists?(kind: %w[story_promoted story_promoted_fyi])
+
+    if (submitter = @story.story_idea.created_by)
+      NotificationServices::CreateNotification.call(
+        noticeable: @story,
+        person: submitter.person,
+        kind: :story_promoted,
+        recipient_role: :person,
+        recipient_email: submitter.email,
+        notification_type: 0)
+    end
     NotificationServices::CreateNotification.call(
       noticeable: @story,
       kind: :story_promoted_fyi,
@@ -184,7 +191,6 @@ class StoriesController < ApplicationController
       recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
       notification_type: 0)
   end
-
 
   def set_story
     # Accepts both the bare id ("23") and the slugged param ("23-my-great-story");

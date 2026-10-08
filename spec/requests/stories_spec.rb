@@ -329,14 +329,21 @@ RSpec.describe "/stories", type: :request do
         let(:submitter) { create(:user, email: "submitter@example.com") }
         let(:story_idea) { create(:story_idea, created_by: submitter) }
 
-        it "notifies the idea's submitter and an admin" do
+        it "holds both promotion notices while the story is unpublished" do
           expect {
             post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id) }
+          }.not_to change(Notification, :count)
+        end
+
+        it "notifies the idea's submitter and an admin when the story is created already published" do
+          expect {
+            post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, published: "1") }
           }.to change(Notification, :count).by(2)
 
           person_note = Notification.find_by(kind: "story_promoted")
           expect(person_note.recipient_role).to eq("person")
           expect(person_note.recipient_email).to eq(submitter.email)
+          expect(person_note.noticeable).to eq(Story.last)
 
           admin_note = Notification.find_by(kind: "story_promoted_fyi")
           expect(admin_note.recipient_role).to eq("admin")
@@ -519,6 +526,45 @@ RSpec.describe "/stories", type: :request do
 
         expect(response).to have_http_status(:see_other)
         expect(story.reload.story_workshops.count).to eq(2)
+      end
+    end
+
+    describe "PATCH /update publishing a promoted story" do
+      let(:submitter) { create(:user, email: "submitter@example.com") }
+      let(:story_idea) { create(:story_idea, created_by: submitter) }
+      let(:promoted_story) { Story.create!(base_attributes.merge(story_idea: story_idea, published: false)) }
+
+      def promotion_notices
+        Notification.where(noticeable: promoted_story).pluck(:kind, :recipient_email)
+      end
+
+      it "notifies the idea's submitter and an admin when the story is published" do
+        patch story_url(promoted_story), params: { story: { published: "1" } }
+
+        expect(promotion_notices).to contain_exactly(
+          [ "story_promoted", submitter.email ],
+          [ "story_promoted_fyi", ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ]
+        )
+      end
+
+      it "sends nothing while the story stays unpublished" do
+        patch story_url(promoted_story), params: { story: { title: "Retitled" } }
+
+        expect(promotion_notices).to be_empty
+      end
+
+      it "does not resend either notice when the story is unpublished and republished" do
+        patch story_url(promoted_story), params: { story: { published: "1" } }
+        patch story_url(promoted_story), params: { story: { published: "0" } }
+        patch story_url(promoted_story), params: { story: { published: "1" } }
+
+        expect(promotion_notices.size).to eq(2)
+      end
+
+      it "does not email anyone when publishing a story with no story idea" do
+        expect {
+          patch story_url(private_story), params: { story: { published: "1" } }
+        }.not_to change(Notification, :count)
       end
     end
 
