@@ -95,6 +95,17 @@ RSpec.describe "/story_share", type: :request do
         expect(page).to have_no_css("span[title^='Primary'] i.fa-star")
       end
 
+      it "falls back to the first sector on picture cards when none is starred" do
+        arts = create(:sector, :published, name: "Arts")
+        public_story.sectorable_items.create!(sector: arts)
+
+        get story_shares_url(sector_names_all: arts.name)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("span.rounded-full.uppercase", text: "Arts")
+        expect(page).to have_no_css("span[title^='Primary']")
+      end
+
       it "can view any story" do
         get story_share_path(private_story)
         expect(response).to have_http_status(:ok)

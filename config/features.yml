@@ -132,7 +132,7 @@
   pro_tips:
     - "Starring a tag also checks it, and unchecking a starred tag clears the star."
     - "Promoting a story idea into a story carries its starred sector and story population over."
-    - "Picture cards only show starred tags, so a story with no star shows no tag on its picture."
+    - "A story with no starred sector shows its first sector on its picture."
     - "A story's full tag list leads with its starred tags, marked with a star."
   action_path: "/story_share"
 
