@@ -260,7 +260,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         notification_type: 0,
         kind: "profile_change_requested_fyi",
         recipient_role: "admin",
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+        recipient_email: programs_email
       )
     NotificationMailer.profile_change_requested_fyi(notification)
   end
