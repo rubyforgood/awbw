@@ -450,7 +450,7 @@ set_category_positions.(age_range_type, age_ranges.map { |name, _, position| [ n
 
 # Order the Story Share audience nav: age ranges, then story populations, each
 # numbered within its own group.
-{ age_range_type => %w[Children Teens Adults], story_population_type => %w[Families Community Self Colleagues] }.each do |type, names|
+{ age_range_type => %w[Children Teens Adults Elders], story_population_type => %w[Families Community Self Colleagues] }.each do |type, names|
   names.each_with_index do |name, index|
     type.categories.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
   end
