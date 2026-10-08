@@ -38,6 +38,18 @@
   pro_tips:
     - "The \"View story\" button only appears once the story is published or publicly visible."
 
+- name: "Story idea submitters are emailed when their story is published"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-08
+  summary: >-
+    When a story idea becomes a story, the person who shared the idea now gets
+    their "Your story has been shared" email once the story is published, with a
+    link to read it.
+  pro_tips:
+    - "Admins still get the FYI as soon as the idea is turned into a story, even while it's unpublished."
+    - "The email goes out only once per story, so unpublishing and republishing won't send it again."
+
 - name: "See a story's tags at a glance"
   area: stories
   display_status: public_facing

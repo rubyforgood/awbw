@@ -329,18 +329,24 @@ RSpec.describe "/stories", type: :request do
         let(:submitter) { create(:user, email: "submitter@example.com") }
         let(:story_idea) { create(:story_idea, created_by: submitter) }
 
-        it "notifies the idea's submitter and an admin" do
+        it "notifies an admin but holds the submitter's email while the story is unpublished" do
           expect {
             post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id) }
-          }.to change(Notification, :count).by(2)
-
-          person_note = Notification.find_by(kind: "story_promoted")
-          expect(person_note.recipient_role).to eq("person")
-          expect(person_note.recipient_email).to eq(submitter.email)
+          }.to change(Notification, :count).by(1)
 
           admin_note = Notification.find_by(kind: "story_promoted_fyi")
           expect(admin_note.recipient_role).to eq("admin")
           expect(admin_note.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+          expect(Notification.where(kind: "story_promoted")).to be_empty
+        end
+
+        it "emails the idea's submitter when the story is created already published" do
+          post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, published: "1") }
+
+          person_note = Notification.find_by(kind: "story_promoted")
+          expect(person_note.recipient_role).to eq("person")
+          expect(person_note.recipient_email).to eq(submitter.email)
+          expect(person_note.noticeable).to eq(Story.last)
         end
 
         it "pre-checks the funder-only box when promoting a funder-only idea" do
@@ -519,6 +525,43 @@ RSpec.describe "/stories", type: :request do
 
         expect(response).to have_http_status(:see_other)
         expect(story.reload.story_workshops.count).to eq(2)
+      end
+    end
+
+    describe "PATCH /update publishing a promoted story" do
+      let(:submitter) { create(:user, email: "submitter@example.com") }
+      let(:story_idea) { create(:story_idea, created_by: submitter) }
+      let(:promoted_story) { Story.create!(base_attributes.merge(story_idea: story_idea, published: false)) }
+
+      def submitter_emails
+        Notification.where(kind: "story_promoted", noticeable: promoted_story)
+      end
+
+      it "emails the idea's submitter when the story is published" do
+        patch story_url(promoted_story), params: { story: { published: "1" } }
+
+        expect(submitter_emails.count).to eq(1)
+        expect(submitter_emails.first.recipient_email).to eq(submitter.email)
+      end
+
+      it "does not email the submitter while the story stays unpublished" do
+        patch story_url(promoted_story), params: { story: { title: "Retitled" } }
+
+        expect(submitter_emails).to be_empty
+      end
+
+      it "does not email the submitter again when the story is unpublished and republished" do
+        patch story_url(promoted_story), params: { story: { published: "1" } }
+        patch story_url(promoted_story), params: { story: { published: "0" } }
+        patch story_url(promoted_story), params: { story: { published: "1" } }
+
+        expect(submitter_emails.count).to eq(1)
+      end
+
+      it "does not email anyone when publishing a story with no story idea" do
+        expect {
+          patch story_url(private_story), params: { story: { published: "1" } }
+        }.not_to change(Notification, :count)
       end
     end
 
