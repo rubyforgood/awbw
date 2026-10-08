@@ -21,7 +21,7 @@ RSpec.describe CategoriesTaggable do
       story.categorizable_items.build(category: teens, is_primary: true)
 
       expect(story).not_to be_valid
-      expect(story.errors[:base]).to include("Only one \"who is this story about\" tag can be marked as primary")
+      expect(story.errors[:base]).to include("Only one category can be marked as primary")
     end
 
     it "allows a primary age range" do
@@ -30,11 +30,10 @@ RSpec.describe CategoriesTaggable do
       expect(story).to be_valid
     end
 
-    it "rejects a primary category outside the audience types" do
+    it "allows a primary category of any type" do
       story.categorizable_items.build(category: create(:category, :published), is_primary: true)
 
-      expect(story).not_to be_valid
-      expect(story.errors[:base]).to include("Only an age range or story population can be marked as primary")
+      expect(story).to be_valid
     end
 
     it "rejects two primary categories on a story idea" do

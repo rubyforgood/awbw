@@ -68,7 +68,7 @@ module TagAssignable
     Array(params[key][field].presence).map(&:to_i).first(1)
   end
 
-  # Only an audience category (age range or story population) can be primary.
+  # The story forms star only audience categories (age range or story population).
   def primary_category_ids(key)
     Category.audiences.where(id: primary_tag_ids(key, :primary_category_id)).ids
   end

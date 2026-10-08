@@ -1,8 +1,6 @@
 # Single-primary category rule for records tagged through categorizable_items
-# (Story, StoryIdea) — the category counterpart of SectorsTaggable. Only an
-# audience category (AgeRange or StoryPopulation) can be primary, mirroring how a
-# person's primary is limited to age ranges. The form's single star is the first
-# line of defense; this guards imports and the console.
+# (Story, StoryIdea) — the category counterpart of SectorsTaggable. Any category
+# can be primary; the story forms offer the star only on the audience tag set.
 module CategoriesTaggable
   extend ActiveSupport::Concern
 
@@ -13,7 +11,6 @@ module CategoriesTaggable
 
   included do
     validate :at_most_one_primary_category
-    validate :primary_category_is_an_audience
   end
 
   def primary_category
@@ -33,12 +30,6 @@ module CategoriesTaggable
   def at_most_one_primary_category
     return if live_primary_category_items.size <= 1
 
-    errors.add(:base, "Only one \"who is this story about\" tag can be marked as primary")
-  end
-
-  def primary_category_is_an_audience
-    return if live_primary_category_items.all? { |item| item.category&.category_type&.name.in?(AUDIENCE_CATEGORY_TYPES) }
-
-    errors.add(:base, "Only an age range or story population can be marked as primary")
+    errors.add(:base, "Only one category can be marked as primary")
   end
 end
