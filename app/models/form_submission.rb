@@ -119,8 +119,29 @@ class FormSubmission < ApplicationRecord
   # signal the index filters on.
   def self.org_name_answers
     FormAnswer.joins(:form_field)
-      .where(form_fields: { field_identifier: "organization_name" })
+      .where(form_fields: { field_identifier: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER })
       .where.not(submitted_answer: [ nil, "" ])
+  end
+
+  # The org-related answers on this submission, shaped the way
+  # OrganizationServices::LinkSubmittedOrganization reads them. Shared by the
+  # admin linking editor and the auto-processing a public submission runs.
+  def org_entry
+    answers = answers_by_identifier
+    read = ->(identifier) { answers[identifier].presence }
+    {
+      org_name: read.call(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER),
+      position: read.call(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
+      website: read.call("organization_website"),
+      organization_type: read.call("organization_type"),
+      address: {
+        street_address: read.call("organization_street"),
+        city: read.call("organization_city"),
+        state: read.call("organization_state"),
+        zip_code: read.call("organization_zip"),
+        country: read.call("organization_country")
+      }
+    }
   end
 
   # The registration-org row a submission is pinned to — the link public
