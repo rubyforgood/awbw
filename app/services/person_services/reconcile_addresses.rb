@@ -11,6 +11,13 @@ module PersonServices
       street_address city state zip_code country county district address_type locality
     ].freeze
 
+    # Columns outside the identity that a folded duplicate may carry, filled in on
+    # the survivor when it has none so a fold never drops a phone number or a
+    # geocoded district only one copy had.
+    CARRIED_COLUMNS = %w[
+      phone la_city_council_district la_service_planning_area la_supervisorial_district
+    ].freeze
+
     def self.signature(address)
       return unless address
 
@@ -32,7 +39,7 @@ module PersonServices
 
     def call
       survivors = {}
-      @person.addresses.reload.each do |address|
+      fold_candidates.each do |address|
         signature = self.class.signature(address)
         if (survivor = survivors[signature])
           fold(address, into: survivor)
@@ -46,8 +53,28 @@ module PersonServices
 
     private
 
+    # Active before inactive, then the primary, then oldest — so a fold keeps the
+    # copy still in use. `Address.active` drives bill-to addresses and the
+    # geographic breakdowns, so letting an inactive duplicate win would drop the
+    # person out of all of them.
+    def fold_candidates
+      @person.addresses.reload.sort_by do |address|
+        [ address.inactive? ? 1 : 0, address.primary? ? 0 : 1, address.id ]
+      end
+    end
+
     def fold(loser, into:)
+      carry_over(loser, into)
       deduper.merge(into, loser)
+    end
+
+    def carry_over(loser, survivor)
+      filled = CARRIED_COLUMNS.select do |column|
+        survivor.public_send(column).blank? && loser.public_send(column).present?
+      end
+      return if filled.empty?
+
+      survivor.update!(filled.index_with { |column| loser.public_send(column) })
     end
 
     def settle_primary(addresses)

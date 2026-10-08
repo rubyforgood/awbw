@@ -4043,7 +4043,10 @@
   description: >-
     When two people share the same address or phone number, the merge now keeps
     just one copy and moves anything attached to the duplicate (like a phone tied
-    to an address) onto the survivor. It also settles a single primary — the kept
+    to an address) onto the survivor. The copy it keeps is the one still in use —
+    an active address or phone always wins over one marked inactive — and any
+    detail only the other copy had (a phone number on an address, for example) is
+    filled in rather than lost. It also settles a single primary — the kept
     person's own if they had one, otherwise the other person's — so you never end
     up with two "primary" addresses or phones. Addresses or phones that genuinely
     differ are all kept.

@@ -500,6 +500,18 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       expect(primaries.first.id).to eq(keep_address.id)
     end
 
+    it "keeps the active address when the survivor's own copy is inactive" do
+      stale = person_address(keep, inactive: true)
+      person_address(delete_rec)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      addresses = keep.reload.addresses
+      expect(addresses.count).to eq(1)
+      expect(addresses.first.id).not_to eq(stale.id)
+      expect(addresses.active.count).to eq(1)
+    end
+
     it "moves a folded address's contact method onto the surviving address" do
       keep_address = person_address(keep)
       dupe_address = person_address(delete_rec)
@@ -529,6 +541,16 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       primaries = methods.where(primary: true)
       expect(primaries.count).to eq(1)
       expect(primaries.first.id).to eq(keep_method.id)
+    end
+
+    it "keeps the active phone when the survivor's own copy is inactive" do
+      create(:contact_method, contactable: keep, value: "555-1000", kind: "phone", inactive: true)
+      create(:contact_method, contactable: delete_rec, value: "555-1000", kind: "phone")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      expect(keep.reload.contact_methods.count).to eq(1)
+      expect(keep.phone_number).to eq("555-1000")
     end
   end
 end
