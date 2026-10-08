@@ -1,5 +1,6 @@
 <%# A story's starred primary sector and primary story population, as pills laid
-    over its picture. Renders nothing when neither is starred.
+    over its picture. They stand alone, so they carry no star (the star marks the
+    primary only in a full tag list). Renders nothing when neither is starred.
     Locals: story; wrapper_class (positioning); pad (pill size);
     glass: true for translucent pills on color-washed tiles. %>
 <% pad = local_assigns.fetch(:pad, "px-3 py-1.5") %>
@@ -14,7 +15,7 @@
     <% pills.each do |name, color, title| %>
       <span class="<%= glass ? "bg-white/20" : color %> <%= pad %> inline-flex items-center rounded-full text-xs font-semibold tracking-wide text-white uppercase"
             title="<%= title %>">
-        <i class="fa-solid fa-star mr-1 text-amber-300" aria-hidden="true"></i><%= name %>
+        <%= name %>
       </span>
     <% end %>
   </div>

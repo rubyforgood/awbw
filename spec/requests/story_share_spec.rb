@@ -89,8 +89,10 @@ RSpec.describe "/story_share", type: :request do
 
         get story_shares_url(sector_names_all: arts.name)
 
-        pills = Capybara.string(response.body).all("span[title^='Primary']").map { |pill| pill.text.strip }
+        page = Capybara.string(response.body)
+        pills = page.all("span[title^='Primary']").map { |pill| pill.text.strip }
         expect(pills).to eq([ "Zoo", "Teens" ])
+        expect(page).to have_no_css("span[title^='Primary'] i.fa-star")
       end
 
       it "can view any story" do

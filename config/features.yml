@@ -126,14 +126,14 @@
   released_on: 2026-10-07
   pr_number: 2617
   summary: >-
-    When you share a story idea (or an admin tags a story), you can star one
-    sector and one story population as its primary — the same star used for a
-    person's sectors and age ranges. Story Share shows the starred pair on each
-    story's picture and leads the story's tags with them.
+    When sharing a story idea or tagging a story, star one sector and one story
+    population as its primary — like a person's sectors and age ranges. Story
+    Share shows just those two on each story's picture.
   pro_tips:
     - "Starring a tag also checks it, and unchecking a starred tag clears the star."
     - "Promoting a story idea into a story carries its starred sector and story population over."
     - "Picture cards only show starred tags, so a story with no star shows no tag on its picture."
+    - "A story's full tag list leads with its starred tags, marked with a star."
   action_path: "/story_share"
 
 - name: "Cleaner story page layout"
