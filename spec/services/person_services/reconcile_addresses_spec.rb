@@ -52,4 +52,54 @@ RSpec.describe PersonServices::ReconcileAddresses do
     expect(keep.reload.primary?).to be true
     expect(other.reload.primary?).to be false
   end
+
+  it "folds into the active copy when an older duplicate is inactive" do
+    inactive = address(inactive: true)
+    active = address
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ active.id ])
+    expect(person.addresses.active.count).to eq(1)
+    expect(Address.exists?(inactive.id)).to be false
+  end
+
+  it "folds into the primary copy when the duplicate is not primary" do
+    plain = address
+    primary = address(primary: true)
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ primary.id ])
+    expect(Address.exists?(plain.id)).to be false
+  end
+
+  it "carries a folded address's phone onto a survivor that has none" do
+    keep = address
+    address(phone: "555-9000")
+
+    described_class.new(person).call
+
+    expect(keep.reload.phone).to eq("555-9000")
+  end
+
+  it "leaves the survivor's own phone alone when the duplicate also has one" do
+    keep = address(phone: "555-1000")
+    address(phone: "555-9000")
+
+    described_class.new(person).call
+
+    expect(keep.reload.phone).to eq("555-1000")
+  end
+
+  it "carries a folded address's geocoded districts onto a survivor that has none" do
+    keep = address(la_city_council_district: nil, la_service_planning_area: nil, la_supervisorial_district: nil)
+    address(la_city_council_district: 4, la_service_planning_area: 2, la_supervisorial_district: 3)
+
+    described_class.new(person).call
+
+    expect(keep.reload.la_city_council_district).to eq(4)
+    expect(keep.la_service_planning_area).to eq(2)
+    expect(keep.la_supervisorial_district).to eq(3)
+  end
 end
