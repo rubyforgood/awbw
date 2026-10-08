@@ -14,6 +14,16 @@ class PersonPolicy < ApplicationPolicy
     notifications_attributes user_attributes
   ].freeze
 
+  # People-index filters only an admin may apply. The index itself is readable by
+  # any signed-in user while profiles preview, but each of these narrows the list
+  # by internal data — so a non-admin passing one by URL would learn which people
+  # carry an admin-only staff tag or subscription. The filter bar renders them
+  # behind the same `manage?` gate PeopleController#index enforces.
+  ADMIN_ONLY_FILTERS = %i[
+    role facilitator_status membership_status
+    staff_tag_ids topic_subscription_type_id
+  ].freeze
+
   def index?
     admin? || profiles_visible_to_users?
   end

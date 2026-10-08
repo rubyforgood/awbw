@@ -13,6 +13,12 @@ RSpec.describe "TopicSubscriptions", type: :request do
     end
   end
 
+  # The marked column is the only sortable header, so its sort link is the one
+  # place @mark_column_label reaches the page.
+  def mark_column_header(body)
+    Capybara.string(body).first("th a").text.strip
+  end
+
   describe "GET /topic_subscriptions" do
     it "renders the index shell for a full-page request" do
       get topic_subscriptions_path
@@ -88,6 +94,36 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("Tara Trainings")
       expect(response.body).to include("Nora News")
       expect(response.body).not_to include("Ollie Other")
+    end
+
+    it "carries the selected topics into the sort links" do
+      news = create(:topic_subscription_type, :news)
+      create(:topic_subscription, person: create(:person), topic_subscription_type: trainings)
+
+      get topic_subscriptions_path(topic_subscription_type_id: [ trainings.id, news.id ]), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      sort_href = Capybara.string(response.body).first("th a")[:href]
+      expect(sort_href).to include("topic_subscription_type_id%5B%5D=#{trainings.id}")
+      expect(sort_href).to include("topic_subscription_type_id%5B%5D=#{news.id}")
+    end
+
+    it "titles the mark column after the one selected topic" do
+      trainings.update!(mark_label: "Invited")
+      create(:topic_subscription, person: create(:person), topic_subscription_type: trainings)
+
+      get topic_subscriptions_path(topic_subscription_type_id: [ trainings.id ]), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(mark_column_header(response.body)).to eq("Invited")
+    end
+
+    it "keeps the generic mark column title when several topics are selected" do
+      trainings.update!(mark_label: "Invited")
+      news = create(:topic_subscription_type, :news, mark_label: "Mailed")
+      create(:topic_subscription, person: create(:person), topic_subscription_type: trainings)
+
+      get topic_subscriptions_path(topic_subscription_type_id: [ trainings.id, news.id ]), headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(mark_column_header(response.body)).to eq("Mark")
     end
 
     it "filters by marked status via the frame request" do
