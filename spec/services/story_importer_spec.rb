@@ -29,7 +29,7 @@ RSpec.describe StoryImporter do
     {
       "wp_id" => "1",
       "title" => "A story of healing",
-      "import_action" => "Published story + story idea",
+      "status" => "Published story + story idea",
       "content" => "<p>Once upon a time.</p>",
       "published" => "yes",
       "organization_name" => "A Greater Hope",
@@ -87,8 +87,8 @@ RSpec.describe StoryImporter do
       expect(Story.count).to eq(0)
     end
 
-    it "skips rows the sheet flagged as skipped in import_action" do
-      result = import([ base_row("import_action" => "Skipped — duplicate") ])
+    it "skips rows the sheet flagged as skipped in the status column" do
+      result = import([ base_row("status" => "Skipped — duplicate") ])
 
       expect(result.skipped).to include(a_string_matching(/duplicate/))
       expect(result.previews.sole.skipped_reason).to eq("duplicate")

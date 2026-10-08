@@ -10,9 +10,9 @@ require "set"
 # EVERY importable row becomes a Story; a StoryIdea (the submission record) is
 # promoted into it when the "status" column says "story idea" (an organization
 # is optional). The "status" column also sets the publish state ("Published
-# story" vs "Draft story"). A "Skipped — reason" flag
-# in either "import_action" or "status" drops the row. Column headers may be the
-# curated sheet's human labels (see COLUMN_ALIASES) or the snake_case keys.
+# story" vs "Draft story"), and a "Skipped — reason" status drops the row. Column
+# headers may be the curated sheet's human labels (see COLUMN_ALIASES) or the
+# snake_case keys.
 #
 # The taxonomy is trusted as written: the sheet already carries resolved portal
 # "sectors", "categories" (as "Type: Name") and "window_type" values, so they are
@@ -22,7 +22,7 @@ require "set"
 class StoryImporter
   # Columns the importer reads, in a natural order, for the downloadable template.
   TEMPLATE_HEADERS = %w[
-    row_source row_number title import_action status wp_id content published published_date
+    row_source row_number title status wp_id content published published_date
     organization_name organization_status facilitator_name facilitator_last_name
     facilitator_email author_note name_display anonymous
     co_facilitator_name co_facilitator_last_name co_facilitator_email co_name_display co_anonymous
@@ -108,7 +108,7 @@ class StoryImporter
     keyword_init: true
   )
 
-  # An import_action value the preview flagged as skipped (e.g. "Skipped — blank title").
+  # A status value the preview flagged as skipped (e.g. "Skipped — blank title").
   SKIP_ACTION = "Skipped"
 
   # A facilitator first name that means AWBW staff authored it — credit no Person.
@@ -726,10 +726,10 @@ class StoryImporter
     skip_flag(row).sub(/\ASkipped\s*[—–-]\s*/, "").presence || "flagged skipped"
   end
 
-  # The skip flag can live in import_action or in the status column ("Skipped —
-  # reason"); import_action wins when both carry one.
+  # A "Skipped — reason" value in the status column drops the row.
   def skip_flag(row)
-    [ clean(row["import_action"]), clean(row["status"]) ].find { |value| value.start_with?(SKIP_ACTION) }.to_s
+    status = clean(row["status"])
+    status.start_with?(SKIP_ACTION) ? status : ""
   end
 
   # A re-uploaded sheet can keep a second header row (the human column labels)
