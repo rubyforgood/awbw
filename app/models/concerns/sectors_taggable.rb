@@ -1,5 +1,5 @@
 # Shared sector-tagging rules for models that own sectorable_items (Person,
-# Organization). Currently enforces that at most one tagged sector is marked
+# Organization, Story, StoryIdea). Currently enforces that at most one tagged sector is marked
 # primary; the chip editor's single-star UI is the first line of defense, this
 # is the data-integrity guarantee for imports, the console, and any future API.
 module SectorsTaggable
@@ -7,6 +7,10 @@ module SectorsTaggable
 
   included do
     validate :at_most_one_primary_sector
+  end
+
+  def primary_sector
+    sectorable_items.find(&:is_primary?)&.sector
   end
 
   # Sectorable items ordered for display: the primary sector first, then the

@@ -162,7 +162,7 @@ RSpec.describe AhoyTrackable do
       person.track_membership_changes(categories: { added: [ category ], removed: [] })
 
       added = event_named("update.person")[:properties][:association_changes][:categories].first
-      expect(added).to eq({ action: "added", type: "Category", id: category.id })
+      expect(added).to eq({ action: "added", type: "Category", id: category.id, label: category.name })
     end
 
     it "records a removed record" do

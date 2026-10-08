@@ -44,6 +44,8 @@
           <% end %>
         </div>
 
+        <%= render "story_shares/tag_chips", story: @story %>
+
         <div id="upload-progress" class="mt-2 hidden h-1 w-full overflow-hidden rounded bg-gray-200">
           <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>
         </div>

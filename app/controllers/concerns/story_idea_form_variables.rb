@@ -20,6 +20,8 @@ module StoryIdeaFormVariables
     if submitted_sector_ids.any? || submitted_category_ids.any?
       @preselected_sector_ids = submitted_sector_ids.map(&:to_i)
       @preselected_category_ids = submitted_category_ids.map(&:to_i)
+      @preselected_primary_sector_id = params.dig(:story_idea, :primary_sector_id).presence&.to_i
+      @preselected_primary_category_id = params.dig(:story_idea, :primary_category_id).presence&.to_i
     end
 
     if @story_idea.persisted?

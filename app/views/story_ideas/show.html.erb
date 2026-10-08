@@ -115,8 +115,8 @@
         <div class="mt-3 border-t border-gray-200 pt-3">
           <span class="font-semibold text-gray-700">Sectors:</span>
           <div class="mt-1 flex flex-wrap gap-1">
-            <% @story_idea.sectors.each do |sector| %>
-              <%= render "sectors/tagging_label", sector: sector %>
+            <% @story_idea.sectorable_items_primary_first.each do |item| %>
+              <%= render "sectors/tagging_label", sector: item.sector, is_primary: item.is_primary? %>
             <% end %>
           </div>
         </div>
@@ -126,8 +126,8 @@
         <div class="mt-2">
           <span class="font-semibold text-gray-700">Categories:</span>
           <div class="mt-1 flex flex-wrap gap-1">
-            <% @story_idea.categories.each do |cat| %>
-              <%= render "categories/tagging_label", category: cat %>
+            <% @story_idea.categorizable_items.sort_by { |item| item.is_primary? ? 0 : 1 }.each do |item| %>
+              <%= render "categories/tagging_label", category: item.category, is_primary: item.is_primary? %>
             <% end %>
           </div>
         </div>

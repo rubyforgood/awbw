@@ -361,6 +361,15 @@ RSpec.describe Ahoy::EventDecorator do
       expect(link_row[:link][:path]).to be_nil
     end
 
+    it "falls back to the recorded label when the record is gone" do
+      event = decorate(
+        "association_changes" => { "sectors" => [ { "action" => "removed", "type" => "Sector", "id" => 0, "label" => "Retired sector" } ] }
+      )
+      link_row = event.detail_rows.find { |r| r[:link] }
+      expect(link_row[:action]).to eq("removed")
+      expect(link_row[:link][:text]).to eq("Retired sector")
+    end
+
     it "resolves references from the page record_cache without its own query" do
       workshop = create(:workshop)
       cache = { [ "Workshop", workshop.id ] => workshop }

@@ -91,4 +91,32 @@ RSpec.describe SectorsTaggable do
       expect(names).to eq([ "Education", "Healthcare", "Housing" ])
     end
   end
+
+  describe "single-primary validation on stories and story ideas" do
+    it "rejects two primary sectors on a story" do
+      story = create(:story)
+      story.sectorable_items.build(sector: health, is_primary: true)
+      story.sectorable_items.build(sector: education, is_primary: true)
+
+      expect(story).not_to be_valid
+      expect(story.errors[:base]).to include("Only one sector can be marked as primary")
+    end
+
+    it "rejects two primary sectors on a story idea" do
+      story_idea = create(:story_idea)
+      story_idea.sectorable_items.build(sector: health, is_primary: true)
+      story_idea.sectorable_items.build(sector: education, is_primary: true)
+
+      expect(story_idea).not_to be_valid
+    end
+  end
+
+  describe "#primary_sector" do
+    it "returns the sector marked primary" do
+      person.sectorable_items.create!(sector: education, is_primary: false)
+      person.sectorable_items.create!(sector: health, is_primary: true)
+
+      expect(person.primary_sector).to eq(health)
+    end
+  end
 end

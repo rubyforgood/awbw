@@ -116,12 +116,13 @@ module StorySharesHelper
     end
   end
 
-  # Portal filter for a story's first tag — its first sector, or first audience
-  # category when it has no sector. Nil when the story carries neither.
+  # Portal filter for a story's lead tag — its primary (else first) sector, or
+  # its primary (else first) audience category when it has no sector. Nil when
+  # the story carries neither.
   def story_tag_home_path(story)
-    if (sector = story.sectors.first)
+    if (sector = story.primary_sector || story.sectors.first)
       story_shares_path(sector_names_all: sector.name)
-    elsif (category = story.audience_categories.first)
+    elsif (category = story.primary_category || story.audience_categories.first)
       story_shares_path(category_names_all: category.name)
     end
   end
