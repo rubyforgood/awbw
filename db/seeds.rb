@@ -448,10 +448,12 @@ age_range_type.categories.reject { |cat| canonical_age_names.include?(cat.name.d
   .each { |cat| cat.update!(published: false) }
 set_category_positions.(age_range_type, age_ranges.map { |name, _, position| [ name, position ] })
 
-# Order the Story Share audience nav. The age groups resolve to the clean-named
-# AgeRange categories; the rest to their StoryPopulation categories.
-%w[Children Teens Adults Families Community Self Colleagues].each_with_index do |name, index|
-  Category.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
+# Order the Story Share audience nav: age ranges, then story populations, each
+# numbered within its own group.
+{ age_range_type => %w[Children Teens Adults], story_population_type => %w[Families Community Self Colleagues] }.each do |type, names|
+  names.each_with_index do |name, index|
+    type.categories.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
+  end
 end
 
 puts "Creating WorkshopEnvironment CategoryType…"

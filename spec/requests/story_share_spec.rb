@@ -187,6 +187,18 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).not_to include('href="#"')
     end
 
+    it "shows featured age ranges, then story populations, as one audience row" do
+      age_range = create(:category_type, name: "AgeRange")
+      create(:category, :published, name: "Children", category_type: age_range, story_share_position: 1)
+      create(:category, :published, name: "Clay", story_share_position: 1)
+
+      get story_shares_path
+
+      expect(response.body).to include("category_names_all=Children")
+      expect(response.body).not_to include("category_names_all=Clay")
+      expect(response.body.index("category_names_all=Children")).to be < response.body.index("category_names_all=Teens")
+    end
+
     it "points the footer Contact us link at the in-app portal contact page" do
       get story_shares_path
 

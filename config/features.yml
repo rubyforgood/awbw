@@ -4002,3 +4002,18 @@
   pro_tips:
     - "Star any one of them — an age range or a population — as the story's primary."
   action_path: "/story_ideas/new"
+
+- name: "Story Share audience menu: age ranges, then populations"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-08
+  pr_number: 2628
+  summary: >-
+    The Story Share audience menu now lists featured age ranges, then featured
+    story populations, as one row. The Story Share admin page manages each group
+    separately, and you can drag to reorder within a group.
+  pro_tips:
+    - "Only age ranges and story populations can be added to the audience menu."
+    - "An unpublished category stays on the admin list, marked as hidden from the menu."
+    - "The home page's audience sections follow the same order."
+  action_path: "/story_share/admin"
