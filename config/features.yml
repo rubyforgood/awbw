@@ -41,6 +41,16 @@
     Related-story cards in the sidebar show the same chips in a compact size, so you
     can tell what each one is about before clicking.
 
+- name: "Filter communications by delivery status"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-05
+  summary: >-
+    The Communications list has a new Status filter to narrow the feed to
+    delivered, pending, or failed emails — so you can quickly find messages
+    that didn't go out.
+  action_path: "/notifications"
+
 - name: "Choose which sections appear on the Story Share home"
   area: stories
   display_status: public_facing

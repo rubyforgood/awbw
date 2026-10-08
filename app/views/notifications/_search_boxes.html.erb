@@ -6,7 +6,7 @@
                       turbo_frame: "notifications_results" },
                       autocomplete: "off",
                 class: "flex items-end gap-3" do |f| %>
-    <div class="flex-[2]">
+    <div class="flex-1">
       <%= f.label :email, "Email contains",
                   class: search_label_class %>
 
@@ -16,17 +16,20 @@
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
-    <div>
+    <div class="w-32">
       <%= f.label :record_type, "Record type",
                   class: search_label_class %>
 
-      <%= f.select :record_type,
-                   options_for_select(
-                     Notification::NOTICEABLE_TYPES.map { |t| [ t.underscore.humanize, t ] },
-                     params[:record_type]
-                   ),
-                   { include_blank: "All" },
-                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
+      <div class="relative">
+        <%= f.select :record_type,
+                     options_for_select(
+                       Notification::NOTICEABLE_TYPES.map { |t| [ t.underscore.humanize, t ] },
+                       params[:record_type]
+                     ),
+                     { include_blank: "All" },
+                     class: search_field_class(extra: "appearance-none truncate pr-10 bg-white search-select-placeholder") %>
+        <%= render "shared/select_chevron" %>
+      </div>
     </div>
 
     <%# Fixed, narrow width so the long topic labels don't balloon the closed
@@ -35,10 +38,13 @@
       <%= f.label :email_topic, "Email topic",
                   class: search_label_class %>
 
-      <%= f.select :email_topic,
-                   options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
-                   { include_blank: "All" },
-                   class: search_field_class(extra: "truncate bg-white search-select-placeholder") %>
+      <div class="relative">
+        <%= f.select :email_topic,
+                     options_for_select(Notification::EMAIL_TOPICS.map(&:first), params[:email_topic]),
+                     { include_blank: "All" },
+                     class: search_field_class(extra: "appearance-none truncate pr-10 bg-white search-select-placeholder") %>
+        <%= render "shared/select_chevron" %>
+      </div>
     </div>
 
     <div class="flex-1">
@@ -52,13 +58,29 @@
     </div>
 
     <div>
+      <%= f.label :delivery_status, "Status",
+                  class: search_label_class %>
+
+      <div class="relative">
+        <%= f.select :delivery_status,
+                     options_for_select([ [ "Delivered", "delivered" ], [ "Pending", "pending" ], [ "Failed", "failed" ] ], params[:delivery_status]),
+                     { include_blank: "Any" },
+                     class: search_field_class(extra: "appearance-none pr-10 bg-white search-select-placeholder") %>
+        <%= render "shared/select_chevron" %>
+      </div>
+    </div>
+
+    <div>
       <%= f.label :responded_status, "Responded",
                   class: search_label_class %>
 
-      <%= f.select :responded_status,
-                   options_for_select([ [ "Yes", "yes" ], [ "No", "no" ], [ "N/A", "na" ] ], params[:responded_status]),
-                   { include_blank: "All" },
-                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
+      <div class="relative">
+        <%= f.select :responded_status,
+                     options_for_select([ [ "Yes", "yes" ], [ "No", "no" ], [ "N/A", "na" ] ], params[:responded_status]),
+                     { include_blank: "All" },
+                     class: search_field_class(extra: "appearance-none pr-10 bg-white search-select-placeholder") %>
+        <%= render "shared/select_chevron" %>
+      </div>
     </div>
 
     <!-- Clear -->

@@ -260,6 +260,18 @@ class Notification < ApplicationRecord
     end
   }
 
+  # Delivery axis, mirroring the per-row status shown in the index: a delivered
+  # email has a delivered_at; a failed one recorded an error and never landed;
+  # anything else is still pending (includes pre-launch archived rows).
+  scope :delivery_status, ->(status) {
+    case status.to_s
+    when "delivered" then delivered
+    when "failed" then where(delivered_at: nil).where.not(error_at: nil)
+    when "pending" then where(delivered_at: nil, error_at: nil)
+    else all
+    end
+  }
+
   # Shared follow-up axis with Comment#follow_up_status: "needed" is an open item
   # on either side ("responded" and "none" only a communication can be).
   scope :follow_up_status, ->(status) {
@@ -290,6 +302,7 @@ class Notification < ApplicationRecord
     stories = stories.email_topic(topic_phrase) if topic_phrase.present?
     stories = stories.record_type(params[:record_type]) if params[:record_type].present?
     stories = stories.responded_status(params[:responded_status]) if params[:responded_status].present?
+    stories = stories.delivery_status(params[:delivery_status]) if params[:delivery_status].present?
     stories = stories.matching(params[:query]) if params[:query].present?
     stories = stories.created_on_or_after(params[:from]) if params[:from].present?
     stories = stories.created_on_or_before(params[:to]) if params[:to].present?

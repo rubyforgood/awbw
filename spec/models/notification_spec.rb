@@ -267,6 +267,30 @@ RSpec.describe Notification do
     end
   end
 
+  describe ".delivery_status" do
+    let!(:delivered) { create(:notification, delivered_at: Time.current, error_at: nil) }
+    let!(:failed)    { create(:notification, delivered_at: nil, error_at: Time.current) }
+    let!(:pending)   { create(:notification, delivered_at: nil, error_at: nil) }
+
+    it "returns delivered notifications for 'delivered'" do
+      expect(Notification.delivery_status("delivered")).to contain_exactly(delivered)
+    end
+
+    it "returns failed notifications for 'failed'" do
+      expect(Notification.delivery_status("failed")).to contain_exactly(failed)
+    end
+
+    it "returns pending notifications for 'pending'" do
+      expect(Notification.delivery_status("pending")).to contain_exactly(pending)
+    end
+
+    it "returns all notifications for blank/unknown values" do
+      all = [ delivered, failed, pending ]
+      expect(Notification.delivery_status("")).to contain_exactly(*all)
+      expect(Notification.delivery_status("bogus")).to contain_exactly(*all)
+    end
+  end
+
   describe "#requires_response?" do
     it "returns true for contact_us_fyi kind" do
       expect(build(:notification, kind: "contact_us_fyi").requires_response?).to be true
