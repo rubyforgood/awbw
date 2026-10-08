@@ -1117,4 +1117,32 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).not_to include("$100")
     end
   end
+
+  describe "GET new hides already-answered answers_on_file fields" do
+    let(:user) { create(:user, :with_person) }
+    let(:person) { user.person }
+    let!(:on_file_field) do
+      create(:form_field, form: form, visibility: :answers_on_file, one_time: true,
+             name: "Professional credentials", required: false)
+    end
+
+    before { sign_in user }
+
+    it "hides an answers_on_file field the person already answered — no form-level flag required" do
+      submission = create(:form_submission, person: person, form: form)
+      create(:form_answer, form_submission: submission, form_field: on_file_field, submitted_answer: "LCSW")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("Professional credentials")
+      # The always_ask control field still renders.
+      expect(response.body).to include("Tell us why you'd like to attend")
+    end
+
+    it "still shows an answers_on_file field the person has not answered" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Professional credentials")
+    end
+  end
 end

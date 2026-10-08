@@ -128,11 +128,11 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "7e5324c61b530c0337efaa8dd2ab03c283b90aca0b358be8457aec600019692f",
+      "fingerprint": "457d39dbd6e24228eccecf62464a7408cd89fae4432daadfd2b8c8922bd9a4a3",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "app/controllers/forms_controller.rb",
-      "line": 158,
+      "line": 205,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": null,
       "render_path": null,

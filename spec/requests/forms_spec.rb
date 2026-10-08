@@ -711,16 +711,6 @@ RSpec.describe "Forms", type: :request do
       expect(response).to redirect_to(edit_form_path(form))
     end
 
-    it "updates hide_answered flags" do
-      form = create(:form, :standalone)
-      patch form_path(form), params: {
-        form: { hide_answered_person_questions: true, hide_answered_form_questions: true }
-      }
-      form.reload
-      expect(form.hide_answered_person_questions).to be true
-      expect(form.hide_answered_form_questions).to be true
-    end
-
     it "appends a newly added field to the bottom of the list, not the top" do
       form = create(:form, :standalone)
       first = create(:form_field, form: form, name: "First", position: 1)
