@@ -543,7 +543,7 @@ RSpec.describe "/stories", type: :request do
 
         expect(promotion_notices).to contain_exactly(
           [ "story_promoted", submitter.email ],
-          [ "story_promoted_fyi", ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ]
+          [ "story_promoted_fyi", Organization.programs_email ]
         )
       end
 
