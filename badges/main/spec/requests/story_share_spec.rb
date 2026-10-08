@@ -64,6 +64,48 @@ RSpec.describe "/story_share", type: :request do
     end
 
     describe "GET /show" do
+      it "leads the tag chips with the starred primary sector and audience" do
+        population = create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE)
+        public_story.sectorable_items.create!(sector: create(:sector, :published, name: "Arts"))
+        public_story.sectorable_items.create!(sector: create(:sector, :published, name: "Zoo"), is_primary: true)
+        public_story.categorizable_items.create!(category: create(:category, :published, name: "Adults", category_type: population))
+        public_story.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: population), is_primary: true)
+
+        get story_share_url(public_story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("a[title='Primary sector'] i.fa-star")
+        expect(page).to have_css("a[title='Primary category'] i.fa-star")
+        chips = page.find("strong", text: "Tags:").find(:xpath, "..").all("a").map { |chip| chip.text.strip }
+        expect(chips).to eq([ "Zoo", "Arts", "Teens", "Adults" ])
+      end
+
+      it "shows only the starred primary sector and story population on picture cards" do
+        population = create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE)
+        arts = create(:sector, :published, name: "Arts")
+        public_story.sectorable_items.create!(sector: arts)
+        public_story.sectorable_items.create!(sector: create(:sector, :published, name: "Zoo"), is_primary: true)
+        public_story.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: population), is_primary: true)
+
+        get story_shares_url(sector_names_all: arts.name)
+
+        page = Capybara.string(response.body)
+        pills = page.all("span[title^='Primary']").map { |pill| pill.text.strip }
+        expect(pills).to eq([ "Zoo", "Teens" ])
+        expect(page).to have_no_css("span[title^='Primary'] i.fa-star")
+      end
+
+      it "falls back to the first sector on picture cards when none is starred" do
+        arts = create(:sector, :published, name: "Arts")
+        public_story.sectorable_items.create!(sector: arts)
+
+        get story_shares_url(sector_names_all: arts.name)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("span.rounded-full.uppercase", text: "Arts")
+        expect(page).to have_no_css("span[title^='Primary']")
+      end
+
       it "can view any story" do
         get story_share_path(private_story)
         expect(response).to have_http_status(:ok)

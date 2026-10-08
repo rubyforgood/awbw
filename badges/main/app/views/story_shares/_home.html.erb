@@ -60,11 +60,8 @@
                              extra_image_classes: "!w-full h-full object-cover",
                              variant: :hero %>
                 </div>
-                <% if story.sectors.first %>
-                  <div class="<%= story_share_sector_chip_class(story.sectors.first.name) %> absolute top-5 left-5 z-10 rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase">
-                    <%= story.sectors.first.name %>
-                  </div>
-                <% end %>
+                <%= render "story_shares/primary_tag_pills", story: story, pad: "px-4 py-1.5",
+                           wrapper_class: "absolute top-5 left-5 right-5 z-10" %>
                 <div class="from-brand-navy-950/85 absolute right-0 bottom-0 left-0 bg-gradient-to-t to-transparent p-6 text-white sm:p-8">
                   <h2 class="font-display text-2xl sm:text-3xl"><%= story.title %></h2>
                   <p class="mt-1 text-sm opacity-90">
@@ -132,9 +129,7 @@
             <div class="absolute inset-0 <%= theme[:overlay] %> mix-blend-multiply"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
             <div class="absolute inset-x-0 bottom-0 p-5">
-              <% if story.sectors.first %>
-                <span class="mb-2 inline-flex rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-white uppercase"><%= story.sectors.first.name %></span>
-              <% end %>
+              <%= render "story_shares/primary_tag_pills", story: story, glass: true, pad: "px-2.5 py-0.5", wrapper_class: "mb-2" %>
               <h3 class="font-display text-xl leading-snug text-white line-clamp-3"><%= story.title %></h3>
             </div>
           <% end %>

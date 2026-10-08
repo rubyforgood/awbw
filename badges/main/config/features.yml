@@ -120,6 +120,35 @@
     organization later, so an idea never gets stuck waiting on one.
   action_path: "/story_ideas"
 
+- name: "Change log on stories and story ideas"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-07
+  pr_number: 2617
+  summary: >-
+    Story and story idea edit pages now have the same Change log toggle as people
+    and organizations, including tags added or removed and the primary sector or
+    story population moving.
+  pro_tips:
+    - "Tags removed since keep their name in the log, even after the tag itself is deleted."
+  action_path: "/stories"
+
+- name: "Star a primary sector and story population on stories"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-07
+  pr_number: 2617
+  summary: >-
+    When sharing a story idea or tagging a story, star one sector and one story
+    population as its primary — like a person's sectors and age ranges. Story
+    Share shows just those two on each story's picture.
+  pro_tips:
+    - "Starring a tag also checks it, and unchecking a starred tag clears the star."
+    - "Promoting a story idea into a story carries its starred sector and story population over."
+    - "A story with no starred sector shows its first sector on its picture."
+    - "A story's full tag list leads with its starred tags, marked with a star."
+  action_path: "/story_share"
+
 - name: "Cleaner story page layout"
   area: stories
   display_status: public_facing

@@ -1,5 +1,6 @@
 class Story < ApplicationRecord
   include AuthorCreditable
+  include CategoriesTaggable, SectorsTaggable
   include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Communicable
 
@@ -198,10 +199,6 @@ class Story < ApplicationRecord
   def sector_names_all
     sectors.pluck(:name)
   end
-
-  # StoryPopulation categories describe who a story is about (Children, Teens,
-  # Adults, …) — the portal's audience facet.
-  AUDIENCE_CATEGORY_TYPE = "StoryPopulation"
 
   def audience_categories
     categories.joins(:category_type).where(category_types: { name: AUDIENCE_CATEGORY_TYPE })
