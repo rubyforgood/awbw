@@ -46,10 +46,31 @@
   display_status: admin_facing
   released_on: 2026-10-05
   summary: >-
-    The Communications list has a new Status filter to narrow the feed to
-    delivered, pending, or failed emails — so you can quickly find messages
-    that didn't go out.
+    The Communications list has a new Status filter — Delivered, Pending,
+    Failed, Resent, or Archived — so you can quickly find messages that didn't
+    go out, or ones that have already been resent.
   action_path: "/notifications"
+  pro_tips:
+    - "A resent email stays under the Pending filter on purpose — it still hasn't been delivered, so it keeps showing up as pending; the Resent tag just records that a resend was sent."
+
+- name: "Resend a stuck or failed communication from the list"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-05
+  summary: >-
+    A pending or failed communication now has a Resend button right on the
+    communications list, so you can re-send a stuck email without opening it first.
+  pro_tips:
+    - "Resending takes you to that communication's page with a confirmation; Devise emails (password resets, confirmations) have no button because they carry a one-time security token."
+
+- name: "See which communications have been resent"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-05
+  summary: >-
+    Any communication that's part of a resend chain now shows a small "Resent N
+    times" or "Resend #N" tag next to its status, whatever its own delivery
+    state — so you can tell at a glance which ones have already been handled.
 
 - name: "Choose which sections appear on the Story Share home"
   area: stories

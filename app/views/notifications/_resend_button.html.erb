@@ -1,0 +1,9 @@
+<% if allowed_to?(:resend?, notification) %>
+  <%= button_to resend_notification_path(notification),
+                form: { class: "mt-1", data: { turbo_frame: "_top" } },
+                data: { turbo_confirm: "Resend this email?" },
+                class: button_classes(:info_outline, size: :sm, extra: "gap-1") do %>
+    <i class="fas fa-redo"></i>
+    Resend
+  <% end %>
+<% end %>
