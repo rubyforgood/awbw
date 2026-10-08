@@ -1,4 +1,6 @@
-<%= simple_form_for(@story, html: { multipart: true }) do |f| %>
+<%# The form-wide primary-tag controller keeps one starred category across every
+    category grid; the sector grid nests its own for an independent primary sector. %>
+<%= simple_form_for(@story, html: { multipart: true, data: { controller: "primary-tag", primary_tag_primary_class: "border-amber-300 bg-amber-50", primary_tag_default_class: "border-gray-200 bg-white" } }) do |f| %>
   <%= render 'shared/errors', resource: @story if @story.errors.any? %>
 
   <%# Carries the origin forward so a rejected save re-renders with its back link intact. %>
@@ -10,6 +12,11 @@
   <% story_idea = @story_idea || f.object.story_idea %>
   <% selected_sector_ids = @preselected_sector_ids || @story.sector_ids %>
   <% selected_category_ids = @preselected_category_ids || @story.category_ids %>
+  <% primary_sector_id = @preselected_sector_ids ? @preselected_primary_sector_id : @story.primary_sector&.id %>
+  <% primary_category_id = @preselected_category_ids ? @preselected_primary_category_id : @story.primary_category&.id %>
+  <%# Blank defaults precede the stars so a starred chip's value wins, and unstarring clears the primary. %>
+  <%= hidden_field_tag "story[primary_sector_id]", "" %>
+  <%= hidden_field_tag "story[primary_category_id]", "" %>
   <% story_specific_categories = @categories_grouped.select { |type, _| type&.story_specific? } %>
   <% remaining_categories = @categories_grouped.reject { |type, _| type&.story_specific? } %>
 
@@ -118,27 +125,16 @@
   <div class="my-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
     <h3 class="text-base font-semibold text-gray-800 mb-3">
       <%= Sector::STORY_DISPLAY_TEXT %>
-      <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+      <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
     </h3>
 
-    <div class="flex flex-wrap gap-3">
+    <div class="flex flex-wrap gap-3"
+         data-controller="primary-tag"
+         data-primary-tag-primary-class="border-amber-300 bg-amber-50"
+         data-primary-tag-default-class="border-gray-200 bg-white">
       <% @sectors.each do |sector| %>
-        <% id = "story_sector_ids_#{sector.id}" %>
-
-        <label
-          for="<%= id %>"
-          class="
-            flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-            rounded-lg shadow-sm hover:bg-gray-100 transition">
-          <%= hidden_field_tag "story[sector_ids][]", "" %>
-          <%= check_box_tag "story[sector_ids][]",
-                            sector.id,
-                            selected_sector_ids.include?(sector.id),
-                            id: id,
-                            class: "h-4 w-4 text-blue-600 rounded" %>
-
-          <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
-        </label>
+        <%= render "shared/primary_tag_checkbox", param_key: "story", kind: :sector, value: sector.id, label: sector.name,
+                   checked: selected_sector_ids.include?(sector.id), primary: primary_sector_id == sector.id %>
       <% end %>
     </div>
   </div>
@@ -147,27 +143,13 @@
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
       <h3 class="text-base font-semibold text-gray-800 mb-3">
         <%= type.display_label %>
-        <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+        <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
       </h3>
 
       <div class="flex flex-wrap gap-3">
         <% cats.each do |category| %>
-          <% id = "story_category_ids_#{category.id}" %>
-
-          <label
-            for="<%= id %>"
-            class="
-              flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-              border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-            <%= hidden_field_tag "story[category_ids][]", "" %>
-            <%= check_box_tag "story[category_ids][]",
-                              category.id,
-                              selected_category_ids.include?(category.id),
-                              id: id,
-                              class: "h-4 w-4 text-blue-600 rounded" %>
-
-            <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-          </label>
+          <%= render "shared/primary_tag_checkbox", param_key: "story", kind: :category, value: category.id, label: category.name,
+                     checked: selected_category_ids.include?(category.id), primary: primary_category_id == category.id %>
         <% end %>
       </div>
     </div>
@@ -359,22 +341,8 @@
 
                 <div class="flex flex-wrap gap-3">
                   <% cats.each do |category| %>
-                    <% id = "story_category_ids_#{category.id}" %>
-
-                    <label
-                      for="<%= id %>"
-                      class="
-                        flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                        border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                      <%= hidden_field_tag "story[category_ids][]", "" %>
-                      <%= check_box_tag "story[category_ids][]",
-                                        category.id,
-                                        selected_category_ids.include?(category.id),
-                                        id: id,
-                                        class: "h-4 w-4 text-blue-600 rounded" %>
-
-                      <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-                    </label>
+                    <%= render "shared/primary_tag_checkbox", param_key: "story", kind: :category, value: category.id, label: category.name,
+                               checked: selected_category_ids.include?(category.id), primary: primary_category_id == category.id %>
                   <% end %>
                 </div>
               </div>

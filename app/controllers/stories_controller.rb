@@ -153,9 +153,13 @@ class StoriesController < ApplicationController
     if submitted_sector_ids.any? || submitted_category_ids.any?
       @preselected_sector_ids = submitted_sector_ids.map(&:to_i)
       @preselected_category_ids = submitted_category_ids.map(&:to_i)
+      @preselected_primary_sector_id = params.dig(:story, :primary_sector_id).presence&.to_i
+      @preselected_primary_category_id = params.dig(:story, :primary_category_id).presence&.to_i
     elsif @story_idea
       @preselected_sector_ids = @story_idea.sector_ids
       @preselected_category_ids = @story_idea.category_ids
+      @preselected_primary_sector_id = @story_idea.primary_sector&.id
+      @preselected_primary_category_id = @story_idea.primary_category&.id
     end
     @story.story_workshops.build if @story.story_workshops.blank?
     @story.build_primary_asset if @story.primary_asset.blank?

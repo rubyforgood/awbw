@@ -1,0 +1,27 @@
+<%# One checkbox chip in a sector/category tag grid, plus the single-select
+    primary star (driven by the enclosing primary-tag controller). kind is
+    :sector or :category; the star posts <param_key>[primary_<kind>_id]. %>
+<% id = "#{param_key}_#{kind}_ids_#{value}" %>
+<div class="flex w-auto min-w-[180px] items-center gap-2 rounded-lg border p-3 shadow-sm transition hover:bg-gray-100 <%= primary ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-white" %>"
+     data-primary-tag-target="chip">
+  <label for="<%= id %>" class="flex flex-1 cursor-pointer items-center gap-2">
+    <%= hidden_field_tag "#{param_key}[#{kind}_ids][]", "" %>
+    <%= check_box_tag "#{param_key}[#{kind}_ids][]",
+                      value,
+                      checked,
+                      id: id,
+                      class: "h-4 w-4 text-blue-600 rounded",
+                      data: { primary_tag_target: "member", action: "primary-tag#selectMember" } %>
+    <span class="text-sm text-gray-700 whitespace-nowrap"><%= label %></span>
+  </label>
+  <label class="cursor-pointer leading-none" title="Mark as primary <%= kind %>">
+    <%= check_box_tag "#{param_key}[primary_#{kind}_id]",
+                      value,
+                      primary,
+                      id: "#{param_key}_primary_#{kind}_id_#{value}",
+                      class: "peer sr-only",
+                      data: { primary_tag_target: "primary", action: "primary-tag#selectPrimary" } %>
+    <i class="fa-solid fa-star text-base text-gray-300 transition-colors peer-checked:text-amber-400" aria-hidden="true"></i>
+    <span class="sr-only">Primary</span>
+  </label>
+</div>

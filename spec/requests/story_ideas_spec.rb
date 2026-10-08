@@ -72,6 +72,18 @@ RSpec.describe "/story_ideas", type: :request do
         expect(page).to have_link(org.name, href: organization_path(org))
         expect(page).to have_link(creator.name, href: person_path(creator_person))
       end
+
+      it "stars the primary sector and category" do
+        story_idea = create(:story_idea)
+        story_idea.sectorable_items.create!(sector: create(:sector, :published), is_primary: true)
+        story_idea.categorizable_items.create!(category: create(:category, :published), is_primary: true)
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("i.fa-star[title='Primary sector']")
+        expect(page).to have_css("i.fa-star[title='Primary category']")
+      end
     end
 
     describe "GET /new" do
@@ -228,6 +240,26 @@ RSpec.describe "/story_ideas", type: :request do
 
         expect(enqueued_jobs.map { |j| j[:job] })
           .to include(NotificationMailerJob)
+      end
+    end
+
+    describe "POST /create with a primary sector and category" do
+      let(:health) { create(:sector, :published, name: "Healthcare") }
+      let(:education) { create(:sector, :published, name: "Education") }
+      let(:children) { create(:category, :published, name: "Children") }
+      let(:teens) { create(:category, :published, name: "Teens") }
+
+      it "marks the starred sector and category primary" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(
+          sector_ids: [ health.id, education.id ], primary_sector_id: health.id,
+          category_ids: [ children.id, teens.id ], primary_category_id: children.id
+        ) }
+
+        story_idea = StoryIdea.last
+        expect(story_idea.primary_sector).to eq(health)
+        expect(story_idea.sectorable_items.where(is_primary: true).count).to eq(1)
+        expect(story_idea.primary_category).to eq(children)
+        expect(story_idea.categorizable_items.where(is_primary: true).count).to eq(1)
       end
     end
 

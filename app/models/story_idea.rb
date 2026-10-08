@@ -1,5 +1,6 @@
 class StoryIdea < ApplicationRecord
   include AuthorCreditable
+  include CategoriesTaggable, SectorsTaggable
   include Communicable
   # The submitter is the author when none is named.
   credits_creator

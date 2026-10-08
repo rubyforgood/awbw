@@ -1,5 +1,6 @@
 class Story < ApplicationRecord
   include AuthorCreditable
+  include CategoriesTaggable, SectorsTaggable
   include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Communicable
 

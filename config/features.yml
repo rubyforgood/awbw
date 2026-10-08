@@ -120,6 +120,20 @@
     organization later, so an idea never gets stuck waiting on one.
   action_path: "/story_ideas"
 
+- name: "Star a primary sector and category on stories and story ideas"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-07
+  pr_number: 2617
+  summary: >-
+    When you tag a story or story idea, you can now star one sector and one
+    category as its primary — the same star used for a person's sectors and
+    age ranges.
+  pro_tips:
+    - "Starring a tag also checks it, and unchecking a starred tag clears the star."
+    - "Promoting a story idea into a story carries its starred sector and category over."
+  action_path: "/story_ideas"
+
 - name: "Cleaner story page layout"
   area: stories
   display_status: public_facing
