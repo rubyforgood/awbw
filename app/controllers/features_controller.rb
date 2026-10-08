@@ -10,6 +10,7 @@ class FeaturesController < ApplicationController
 
     if turbo_frame_request?
       @features = filtered_features(scope).decorate
+      @sorted_by_logged = sorted_by_logged?
       render :features_results
     else
       present_areas = scope.distinct.pluck(:area)
@@ -95,9 +96,13 @@ class FeaturesController < ApplicationController
   # A chosen "date logged" sort leads; release date then breaks ties.
   def feature_order
     by_release = { released_on: params[:direction] == "asc" ? :asc : :desc, name: :asc }
-    return by_release unless SORT_DIRECTIONS.include?(params[:logged_direction])
+    return by_release unless sorted_by_logged?
 
     { created_at: params[:logged_direction].to_sym, **by_release }
+  end
+
+  def sorted_by_logged?
+    SORT_DIRECTIONS.include?(params[:logged_direction])
   end
 
   def set_feature
