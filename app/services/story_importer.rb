@@ -587,6 +587,7 @@ class StoryImporter
   # default; otherwise the display preference is synced, but only when it is still
   # the default (full_name) — a deliberate choice is honored.
   def sync_author_profile(author, row, cols)
+    return if @dry_run
     return unless author&.persisted?
 
     credit = credit_for(row, cols)
@@ -677,7 +678,14 @@ class StoryImporter
     end
   end
 
+  # The sheet carries the decorator's display name, which hides the trailing
+  # underscore the age-twin StoryPopulations ("Children_", "Teens_", "Adults_")
+  # are stored with, so an exact miss retries against the underscored name.
   def category_named(name, type)
+    category_matching(name, type) || category_matching("#{name}_", type)
+  end
+
+  def category_matching(name, type)
     scope = Category.where("LOWER(categories.name) = ?", name.downcase)
     scope = scope.joins(:category_type).where(category_types: { name: type }) if type.present?
     scope.first
@@ -781,13 +789,12 @@ class StoryImporter
   end
 
   def skip_reason(row)
-    skip_flag(row).sub(/\ASkipped\s*[—–-]\s*/, "").presence || "flagged skipped"
+    skip_flag(row).sub(/\A#{SKIP_ACTION}\s*[—–-]\s*/i, "").presence || "flagged skipped"
   end
 
   # A "Skipped — reason" value in the status column drops the row.
   def skip_flag(row)
-    status = clean(row["status"])
-    status.start_with?(SKIP_ACTION) ? status : ""
+    status_text(row).start_with?(SKIP_ACTION.downcase) ? clean(row["status"]) : ""
   end
 
   # A re-uploaded sheet can keep a second header row (the human column labels)
