@@ -3,23 +3,28 @@ class StoryShareAdminController < ApplicationController
 
   # Admin page for curating the Story Share portal's nav menus by setting
   # story_share_position on sectors (top row) and audience categories (second
-  # row). story_share_position is a plain integer (NOT the positioned gem), so
+  # row: age ranges, then story populations, each numbered within its own group).
+  # story_share_position is a plain integer (NOT the positioned gem), so
   # reordering renumbers it manually here.
   before_action :set_klass, only: [ :reorder, :add, :remove, :toggle_home_section ]
 
   def show
     authorize! :story_share_admin, to: :show?
     @sectors = Sector.story_share_featured.to_a
-    @categories = Category.story_share_featured.to_a
+    @audience_groups = Category.story_share_audience_groups.map do |type_name, scope|
+      { label: type_name.underscore.humanize.pluralize,
+        featured: scope.story_share_featured.to_a,
+        addable: scope.published.where(story_share_position: nil).ordered_by_position_and_name.to_a }
+    end
   end
 
   # Drag-and-drop: moves the record to the given 1-based position and renumbers
   # the rest. Driven by sortable_controller.js (PUT { position: N }).
   def reorder
     authorize! :story_share_admin, to: :reorder?
-    featured = @klass.story_share_featured.to_a
-    moved = featured.find { |record| record.id == params[:id].to_i }
-    return head :not_found unless moved
+    moved = @klass.find_by(id: params[:id])
+    featured = moved ? featured_peers(moved).to_a : []
+    return head :not_found unless featured.include?(moved)
 
     previous_position = moved.story_share_position
     featured.delete(moved)
@@ -40,7 +45,11 @@ class StoryShareAdminController < ApplicationController
     return redirect_to story_share_admin_path, alert: "Select a #{@klass.model_name.human.downcase} to add." if params[:id].blank?
 
     record = @klass.find(params[:id])
-    max = @klass.story_share_featured.maximum(:story_share_position) || 0
+    if record.is_a?(Category) && !Category.audiences.exists?(record.id)
+      return redirect_to story_share_admin_path, alert: "Only age ranges and story populations can be added to the Story Share menu."
+    end
+
+    max = featured_peers(record).maximum(:story_share_position) || 0
     record.update_columns(story_share_position: max + 1)
     expire_menu_caches
     track_menu_change("create.story_share_menu", record, position: record.story_share_position)
@@ -51,7 +60,7 @@ class StoryShareAdminController < ApplicationController
     authorize! :story_share_admin, to: :remove?
     record = @klass.find(params[:id])
     record.update_columns(story_share_position: nil)
-    renumber(@klass.story_share_featured.to_a)
+    renumber(featured_peers(record).to_a)
     track_menu_change("destroy.story_share_menu", record)
     redirect_to story_share_admin_path, notice: "Removed from the Story Share menu."
   end
@@ -73,6 +82,12 @@ class StoryShareAdminController < ApplicationController
 
   def set_klass
     @klass = params[:type] == "category" ? Category : Sector
+  end
+
+  def featured_peers(record)
+    return Sector.story_share_featured if record.is_a?(Sector)
+
+    Category.story_share_featured.where(category_type_id: record.category_type_id)
   end
 
   # These curate the menu via update_columns, which skips the AhoyTrackable

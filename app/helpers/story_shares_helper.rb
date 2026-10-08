@@ -98,10 +98,10 @@ module StorySharesHelper
     end
   end
 
-  # Audience categories (StoryPopulation) shown in the navbar's second row.
+  # Featured age ranges, then story populations, shown as one row in the navbar.
   def story_share_audience_categories
     Rails.cache.fetch("story_share_audience_categories", expires_in: 1.hour) do
-      Category.story_share_featured.to_a
+      Category.story_share_audience_nav
     end
   end
 

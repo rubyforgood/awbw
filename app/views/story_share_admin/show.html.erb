@@ -7,10 +7,10 @@
 
   <h1 class="text-primary mb-2 font-display text-2xl font-bold">Story Share admin</h1>
   <p class="mb-8 text-gray-600">
-    Choose which sectors and audience categories appear in the Story Share portal's nav menus,
-    and drag to reorder them. The top nav shows the first six sectors; the second nav shows the
-    audience categories in this order. Use <span class="font-medium">On home</span> to pick which
-    sectors and audiences also get a full section on the portal home — they appear in this same order.
+    Choose which sectors, age ranges, and story populations appear in the Story Share portal's nav
+    menus, and drag to reorder them. The top nav shows the first six sectors; the second nav shows the
+    age ranges, then the story populations, in this order. Use <span class="font-medium">On home</span>
+    to pick which also get a full section on the portal home — they appear in this same order.
   </p>
 
   <%= render "menu_section",
@@ -22,9 +22,21 @@
                                { label: "Additional Focus Areas", dot: "bg-brand-orange-600" } ],
              empty: "No sectors are featured yet. Add one below." %>
 
-  <%= render "menu_section",
-             title: "Second nav — audience categories",
-             type: "category",
-             records: @categories,
-             empty: "No categories are featured yet. Add one below." %>
+  <section class="mb-8 rounded-lg bg-white p-6 shadow">
+    <h2 class="mb-1 text-lg font-semibold text-gray-900">Second nav — who stories are about</h2>
+    <p class="mb-4 text-sm text-gray-600">One nav row: age ranges first, then story populations. Drag to reorder within each group.</p>
+    <div class="space-y-6">
+      <% @audience_groups.each do |group| %>
+        <div>
+          <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase"><%= group[:label] %></h3>
+          <%= render "menu_list",
+                     type: "category",
+                     records: group[:featured],
+                     addable: group[:addable],
+                     label: group[:label].singularize,
+                     empty: "No #{group[:label].downcase} are featured yet. Add one below." %>
+        </div>
+      <% end %>
+    </div>
+  </section>
 </div>

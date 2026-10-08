@@ -17,14 +17,22 @@ class Category < ApplicationRecord
   scope :audiences, -> { joins(:category_type).where(category_types: { name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPES }) }
   scope :story_categories, -> { joins(:category_type).where(category_types: { name: "StoryCategory" }) }
   scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
-  # Featured in the Story Share portal's audience nav, ordered by the admin-set position.
+  # Featured in the Story Share portal's audience nav, ordered by the admin-set position within its group.
   scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
-  # Featured audiences that also get a full section on the Story Share home, in nav order.
-  scope :story_share_home_sections, -> { story_share_featured.where(story_share_home_section: true) }
 
   # The story forms' "Who is this story about?" tag set: age ranges, then story populations.
   def self.story_audience_rows
     [ age_ranges, story_populations ].map { |scope| scope.published.ordered_by_position_and_name.to_a }
+  end
+
+  # The Story Share audience nav is one row built from these groups in this order;
+  # each group numbers its own story_share_position, so admins reorder within a group.
+  def self.story_share_audience_groups
+    CategoriesTaggable::AUDIENCE_CATEGORY_TYPES.index_with { |type_name| joins(:category_type).where(category_types: { name: type_name }) }
+  end
+
+  def self.story_share_audience_nav
+    story_share_audience_groups.values.flat_map { |scope| scope.published.story_share_featured.to_a }
   end
 
   # Validations
