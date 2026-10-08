@@ -984,7 +984,7 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to include("/rails/active_storage")
       end
 
-      it "renders the uploaded signature strip as a normalized web image, served same-origin, when the record exists" do
+      it "renders the uploaded signature strip as a normalized web image when the record exists" do
         resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE,
                                      hidden_from_search: true)
         create(:primary_asset, :with_file, owner: resource)
@@ -992,11 +992,11 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_certificate_path(registration.slug)
 
         expect(response.body).to include("Signed by Christy Turek Rials")
-        # A variant representation (format-normalized), not the raw blob, so an
-        # upload a browser can't render in an <img> (e.g. a HEIC phone photo)
-        # still displays.
-        expect(response.body).to include("/rails/active_storage/representations/proxy")
-        expect(response.body).not_to include("/rails/active_storage/blobs/proxy")
+        # The :card webp variant representation (format-normalized), not the raw
+        # blob, so an upload a browser can't render in an <img> (e.g. a HEIC
+        # phone photo) still displays.
+        expect(response.body).to include("/rails/active_storage/representations/")
+        expect(response.body).not_to include("/rails/active_storage/blobs/")
       end
 
       it "prefers a resource linked to the certificate callout over the title default" do
@@ -1010,7 +1010,7 @@ RSpec.describe "Events::Callouts", type: :request do
         get registration_certificate_path(registration.slug)
 
         expect(response.body).to include("Signed by Christy Turek Rials")
-        expect(response.body).to include("/rails/active_storage/representations/proxy")
+        expect(response.body).to include("/rails/active_storage/representations/")
       end
 
       it "shows the chooser with the training certificate and CE confirmation when CE applies" do
@@ -1078,16 +1078,17 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("This certifies that the above-named participant")
     end
 
-    it "renders the CE administrator signature from its own resource as a normalized web image, served same-origin" do
+    it "renders the CE administrator signature from its own resource as a normalized web image" do
       resource = create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE, hidden_from_search: true)
       create(:primary_asset, :with_file, owner: resource)
 
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
-      # A variant representation (format-normalized), not the raw blob, so an upload
-      # a browser can't render in an <img> (e.g. a HEIC phone photo) still displays.
-      expect(response.body).to include("/rails/active_storage/representations/proxy")
-      expect(response.body).not_to include("/rails/active_storage/blobs/proxy")
+      # The :card webp variant representation (format-normalized), not the raw
+      # blob, so an upload a browser can't render in an <img> (e.g. a HEIC phone
+      # photo) still displays.
+      expect(response.body).to include("/rails/active_storage/representations/")
+      expect(response.body).not_to include("/rails/active_storage/blobs/")
       expect(response.body).to include("Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}")
     end
 

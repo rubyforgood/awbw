@@ -46,10 +46,10 @@
 
     <div class="mt-4 flex items-end justify-between gap-10">
       <div class="flex-1">
-        <%# Served same-origin via the proxy (never the raw storage URL), so the
-            signature image is reachable only from an issued certificate. %>
-        <% if signature_file %>
-          <%= image_tag certificate_signature_src(signature_file),
+        <%# Rendered through the asset's :card webp variant so any uploaded image
+            (e.g. a HEIC phone photo most browsers can't show raw) displays. %>
+        <% if signature_file&.variable? %>
+          <%= image_tag signature_file.variant(:card),
                 alt: "Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}",
                 class: "mb-1 h-14 w-auto object-contain object-left" %>
         <% end %>
