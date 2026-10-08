@@ -252,14 +252,29 @@ RSpec.describe StoryImporter do
       expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("first_name_only")
     end
 
-    it "maps a first name + last initial name_display to the matching preference" do
-      import([ base_row("name_display" => "first name + last initial") ])
+    it "maps every portal name_display option to its preference" do
+      {
+        "First name" => "first_name_only",
+        "first name last initial" => "first_name_last_initial",
+        "last name only" => "last_name_only",
+        "first and last name" => "full_name"
+      }.each_with_index do |(label, pref), i|
+        import([ base_row("wp_id" => i.to_s, "title" => "Pref #{i}",
+                          "facilitator_name" => "Pref#{i}", "facilitator_last_name" => "Author",
+                          "name_display" => label) ])
 
-      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").display_name_preference).to eq("first_name_last_initial")
+        expect(Person.find_by(first_name: "Pref#{i}", last_name: "Author").display_name_preference).to eq(pref)
+      end
     end
 
     it "flags the author's profile anonymous for an anonymous credit" do
       import([ base_row("anonymous" => "anonymous") ])
+
+      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").anonymous_contributions).to be(true)
+    end
+
+    it "flags the author anonymous when name_display itself says anonymous" do
+      import([ base_row("name_display" => "anonymous") ])
 
       expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").anonymous_contributions).to be(true)
     end

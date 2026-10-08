@@ -115,23 +115,33 @@ class StoryImporter
   AWBW_NAME = "AWBW"
 
   # Story author_credit_preference → the author's profile display_name_preference.
-  # "anonymous" has no profile equivalent, so it is left off (never synced).
+  # "anonymous" has no profile equivalent (it's the anonymous_contributions flag),
+  # so it is left off and never synced here.
   DISPLAY_PREF_BY_CREDIT = {
     "full_name" => "full_name",
+    "first_name_last_initial" => "first_name_last_initial",
     "first_name_only" => "first_name_only",
-    "first_name_last_initial" => "first_name_last_initial"
+    "last_name_only" => "last_name_only"
   }.freeze
 
   # Resolved tags for one row, applied to both the idea and its connected story,
   # plus the names that matched nothing (preserved as comments on the story).
   RowTags = Struct.new(:sectors, :categories, :missing_sectors, :missing_categories, keyword_init: true)
 
-  # Sheet "name_display" → our author_credit_preference. An "anonymous" value in
-  # the separate "anonymous" column overrides this.
+  # Sheet "name_display" → our author_credit_preference, covering all five portal
+  # settings. Lookups are case-insensitive, and each portal option is accepted
+  # both by its short sheet label and its full profile label. An "anonymous" value
+  # in the separate "anonymous" column (or an AWBW row) also forces "anonymous".
   AUTHOR_CREDIT_BY_DISPLAY = {
     "full name" => "full_name",
+    "first and last name" => "full_name",
+    "first name" => "first_name_only",
     "first name only" => "first_name_only",
-    "first name + last initial" => "first_name_last_initial"
+    "first name last initial" => "first_name_last_initial",
+    "first name + last initial" => "first_name_last_initial",
+    "first name and last initial" => "first_name_last_initial",
+    "last name only" => "last_name_only",
+    "anonymous" => "anonymous"
   }.freeze
   DEFAULT_AUTHOR_CREDIT = "full_name"
 
