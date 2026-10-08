@@ -3,7 +3,6 @@ module EventHelper
   # (e.g. a HEIC photo straight off a phone, which most browsers can't render in
   # an <img>) is served through the asset's :card webp variant so the certificate
   # always shows the signatures; a non-variable attachment is served as-is.
-  def certificate_signature_src(file)
     blob = file.blob
     return rails_storage_proxy_path(blob) unless blob.variable?
     variant = file.variant(:card)
