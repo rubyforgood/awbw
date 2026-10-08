@@ -1,4 +1,6 @@
 class FeaturesController < ApplicationController
+  SORT_DIRECTIONS = %w[asc desc].freeze
+
   before_action :set_feature, only: %i[ show edit update destroy ]
 
   def index
@@ -87,8 +89,15 @@ class FeaturesController < ApplicationController
     scope = scope.where(released_on: params[:released_from]..) if params[:released_from].present?
     scope = scope.where(released_on: ..params[:released_to]) if params[:released_to].present?
 
-    direction = params[:direction] == "asc" ? :asc : :desc
-    scope.order(released_on: direction, name: :asc)
+    scope.order(feature_order)
+  end
+
+  # A chosen "date logged" sort leads; release date then breaks ties.
+  def feature_order
+    by_release = { released_on: params[:direction] == "asc" ? :asc : :desc, name: :asc }
+    return by_release unless SORT_DIRECTIONS.include?(params[:logged_direction])
+
+    { created_at: params[:logged_direction].to_sym, **by_release }
   end
 
   def set_feature
