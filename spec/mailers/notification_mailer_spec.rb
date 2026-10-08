@@ -316,10 +316,10 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(described_class.story_promoted(notification).subject).to eq("AWBW Portal: Your story idea is now a story")
     end
 
-    it "names the story and greets the submitter by full name" do
+    it "names the story and greets the submitter by first name" do
       body = described_class.story_promoted(notification).body.encoded
       expect(body).to include("A Healing Story")
-      expect(body).to include("Hello #{submitter.full_name}")
+      expect(body).to include("Hello #{submitter.first_name_or_email}")
       expect(body).to include("now live on Story Share")
     end
 
