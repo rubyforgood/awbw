@@ -3997,7 +3997,7 @@
   summary: >-
     When sharing a story idea or tagging a story, "Who is this story about?" now
     offers age ranges (Children, Teens, Adults, Elders) on the first row and
-    populations (Self, Colleagues, Community, Families) on the second, as one set
+    populations (Families, Community, Self, Colleagues) on the second, as one set
     of tags.
   pro_tips:
     - "Star any one of them — an age range or a population — as the story's primary."

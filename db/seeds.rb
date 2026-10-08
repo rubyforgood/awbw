@@ -403,10 +403,10 @@ story_population_type.update!(display_text: "Who is this story about?", story_sp
 # duplicated. The age twins stay unpublished (taggings preserved) because the story
 # forms offer the AgeRange categories alongside these.
 story_populations = [
-  [ "Self", "Self", 1, true ],
-  [ "Colleagues", "Colleagues", 2, true ],
-  [ "Community", "Community", 3, true ],
-  [ "Families", "Families", 4, true ],
+  [ "Families", "Families", 1, true ],
+  [ "Community", "Community", 2, true ],
+  [ "Self", "Self", 3, true ],
+  [ "Colleagues", "Colleagues", 4, true ],
   [ "Children_", "Children", 5, false ],
   [ "Teens_", "Teens", 6, false ],
   [ "Adults_", "Adults", 7, false ]
