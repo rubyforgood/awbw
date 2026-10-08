@@ -12,6 +12,7 @@ RSpec.describe "stories/edit", type: :view do
     assign(:people, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
+    assign(:story_audience_rows, [])
     allow(view).to receive(:current_user).and_return(user)
   end
 

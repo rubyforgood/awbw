@@ -65,7 +65,7 @@ RSpec.describe "/story_share", type: :request do
 
     describe "GET /show" do
       it "leads the tag chips with the starred primary sector and audience" do
-        population = create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE)
+        population = create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)
         public_story.sectorable_items.create!(sector: create(:sector, :published, name: "Arts"))
         public_story.sectorable_items.create!(sector: create(:sector, :published, name: "Zoo"), is_primary: true)
         public_story.categorizable_items.create!(category: create(:category, :published, name: "Adults", category_type: population))
@@ -81,7 +81,7 @@ RSpec.describe "/story_share", type: :request do
       end
 
       it "shows only the starred primary sector and story population on picture cards" do
-        population = create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE)
+        population = create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)
         arts = create(:sector, :published, name: "Arts")
         public_story.sectorable_items.create!(sector: arts)
         public_story.sectorable_items.create!(sector: create(:sector, :published, name: "Zoo"), is_primary: true)

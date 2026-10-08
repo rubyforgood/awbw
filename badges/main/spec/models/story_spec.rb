@@ -357,16 +357,19 @@ RSpec.describe Story, type: :model do
   end
 
   describe "#audience_categories" do
-    it "returns only StoryPopulation categories" do
+    it "returns only AgeRange and StoryPopulation categories" do
       story = create(:story)
       population = create(:category_type, name: "StoryPopulation")
+      age_range = create(:category_type, name: "AgeRange")
       other_type = create(:category_type, name: "ArtType")
-      teens = create(:category, name: "Teens", category_type: population)
+      self_category = create(:category, name: "Self", category_type: population)
+      teens = create(:category, name: "Teens", category_type: age_range)
       clay = create(:category, name: "Clay", category_type: other_type)
+      story.categorizable_items.create!(category: self_category)
       story.categorizable_items.create!(category: teens)
       story.categorizable_items.create!(category: clay)
 
-      expect(story.audience_categories).to contain_exactly(teens)
+      expect(story.audience_categories).to contain_exactly(self_category, teens)
     end
   end
 

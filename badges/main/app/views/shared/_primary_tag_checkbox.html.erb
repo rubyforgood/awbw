@@ -18,7 +18,7 @@
     <span class="text-sm whitespace-nowrap text-gray-700"><%= label %></span>
   </label>
   <% if starrable %>
-    <label class="cursor-pointer leading-none" title="Mark as primary <%= kind == :category ? "story population" : kind %>">
+    <label class="cursor-pointer leading-none" title="Mark as primary <%= kind == :category ? "audience" : kind %>">
       <%= check_box_tag "#{param_key}[primary_#{kind}_id]",
                         value,
                         primary,

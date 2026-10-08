@@ -1,6 +1,6 @@
-<%# A story's primary sector (else its first sector) and starred primary story
-    population, as pills laid over its picture. They stand alone, so they carry no
-    star (the star marks the primary only in a full tag list).
+<%# A story's primary sector (else its first sector) and starred primary audience
+    (age range or story population), as pills laid over its picture. They stand
+    alone, so they carry no star (the star marks the primary only in a full tag list).
     Locals: story; wrapper_class (positioning); pad (pill size);
     glass: true for translucent pills on color-washed tiles. %>
 <% pad = local_assigns.fetch(:pad, "px-3 py-1.5") %>
@@ -10,7 +10,7 @@
 <% audience = story.primary_category %>
 <% pills = [] %>
 <% pills << [ sector.name, story_share_sector_chip_class(sector.name), ("Primary sector" if primary_sector) ] if sector %>
-<% pills << [ audience.decorate.display_name, "bg-brand-amber-700", "Primary story population" ] if audience %>
+<% pills << [ audience.decorate.display_name, "bg-brand-amber-700", "Primary audience" ] if audience %>
 <% if pills.any? %>
   <div class="<%= local_assigns[:wrapper_class] %> flex flex-wrap gap-1.5">
     <% pills.each do |name, color, title| %>

@@ -134,18 +134,20 @@
     </div>
   </div>
 
+  <%= render "shared/story_audience_tags", param_key: "story", rows: @story_audience_rows, label: @story_audience_label,
+             selected_category_ids: selected_category_ids, primary_category_id: primary_category_id %>
+
   <% story_specific_categories.each do |type, cats| %>
-    <% starrable = type.name == CategoriesTaggable::AUDIENCE_CATEGORY_TYPE %>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
       <h3 class="text-base font-semibold text-gray-800 mb-3">
         <%= type.display_label %>
-        <span class="text-sm font-normal italic text-gray-500 ml-1"><%= starrable ? "(check all that apply, star the primary)" : "(check all that apply)" %></span>
+        <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
       </h3>
 
-      <div class="flex flex-wrap gap-3" <%= tag.attributes(data: (primary_tag_grid_data if starrable)) %>>
+      <div class="flex flex-wrap gap-3">
         <% cats.each do |category| %>
           <%= render "shared/primary_tag_checkbox", param_key: "story", kind: :category, value: category.id, label: category.name,
-                     checked: selected_category_ids.include?(category.id), primary: primary_category_id == category.id, starrable: starrable %>
+                     checked: selected_category_ids.include?(category.id), starrable: false %>
         <% end %>
       </div>
     </div>

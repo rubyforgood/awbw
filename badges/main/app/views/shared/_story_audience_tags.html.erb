@@ -1,0 +1,23 @@
+<%# "Who is this story about?" — one starrable tag set laid out as rows (age
+    ranges, then story populations), sharing a single primary star.
+    Locals: param_key, rows, label, selected_category_ids, primary_category_id. %>
+<% rows = rows.select(&:any?) %>
+<% if rows.any? %>
+  <div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+    <h3 class="mb-3 text-base font-semibold text-gray-800">
+      <%= label.presence || "Who is this story about?" %>
+      <span class="ml-1 text-sm font-normal text-gray-500 italic">(check all that apply, star the primary)</span>
+    </h3>
+
+    <div class="space-y-3" <%= tag.attributes(data: primary_tag_grid_data) %>>
+      <% rows.each do |categories| %>
+        <div class="flex flex-wrap gap-3">
+          <% categories.each do |category| %>
+            <%= render "shared/primary_tag_checkbox", param_key: param_key, kind: :category, value: category.id, label: category.decorate.display_name,
+                       checked: selected_category_ids.include?(category.id), primary: primary_category_id == category.id %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
