@@ -120,6 +120,19 @@
     organization later, so an idea never gets stuck waiting on one.
   action_path: "/story_ideas"
 
+- name: "Change log on stories and story ideas"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-07
+  pr_number: 2617
+  summary: >-
+    Story and story idea edit pages now have the same Change log toggle as people
+    and organizations, including tags added or removed and the primary sector or
+    story population moving.
+  pro_tips:
+    - "Tags removed since keep their name in the log, even after the tag itself is deleted."
+  action_path: "/stories"
+
 - name: "Star a primary sector and story population on stories"
   area: stories
   display_status: user_facing

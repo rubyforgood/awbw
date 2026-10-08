@@ -16,6 +16,11 @@
         <div class="mt-4">
           <%= render "form", story_idea: @story_idea %>
           <%= render "shared/audit_info", resource: @story_idea %>
+          <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+            <div class="mt-4 flex justify-end">
+              <%= render "application/activity_log", record: @story_idea %>
+            </div>
+          <% end %>
         </div>
       </div>
 </div>

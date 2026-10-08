@@ -43,11 +43,14 @@ module TagAssignable
       record.apply_primary_age_groups!(Array(params[key][:primary_age_category_ids]))
     end
     # The single-star primary picker (stories, story ideas) sends one id per kind.
+    primary_changes = {}
     if params[key].key?(:primary_sector_id)
-      assign_primary_tag(record.sectorable_items, :sector_id, primary_tag_ids(key, :primary_sector_id).first)
+      primary_changes[:primary_sector] =
+        assign_primary_tag(record.sectorable_items, :sector, primary_tag_ids(key, :primary_sector_id).first)
     end
     if params[key].key?(:primary_category_id)
-      assign_primary_tag(record.categorizable_items, :category_id, primary_category_ids(key).first)
+      primary_changes[:primary_category] =
+        assign_primary_tag(record.categorizable_items, :category, primary_category_ids(key).first)
     end
 
     # These memberships change outside the record's dirty tracking, so hand the
@@ -56,7 +59,8 @@ module TagAssignable
 
     record.track_membership_changes(
       categories: membership_delta(categories_before, categories_after),
-      sectors: (membership_delta(sectors_before, sectors_after) if sectors_changed)
+      sectors: (membership_delta(sectors_before, sectors_after) if sectors_changed),
+      **primary_changes
     )
   end
 
@@ -69,10 +73,14 @@ module TagAssignable
     Category.story_populations.where(id: primary_tag_ids(key, :primary_category_id)).ids
   end
 
-  def assign_primary_tag(items, foreign_key, primary_id)
-    items.reload.each do |item|
-      is_primary = item.public_send(foreign_key) == primary_id
-      item.update!(is_primary:) if item.is_primary? != is_primary
+  # Returns the tags promoted/demoted, so the record's change log shows the primary moving.
+  def assign_primary_tag(items, tag, primary_id)
+    items.reload.each_with_object({ added: [], removed: [] }) do |item, delta|
+      is_primary = item.public_send(:"#{tag}_id") == primary_id
+      next if item.is_primary? == is_primary
+
+      item.update!(is_primary:)
+      delta[is_primary ? :added : :removed] << item.public_send(tag)
     end
   end
 

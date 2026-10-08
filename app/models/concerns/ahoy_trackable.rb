@@ -39,8 +39,10 @@ module AhoyTrackable
     added + removed
   end
 
+  # The label snapshots the record's name so the entry still reads once the
+  # record is deleted.
   def membership_entry(action, record)
-    { action: action, type: record.class.name, id: record.id }
+    { action: action, type: record.class.name, id: record.id, label: record.try(:name).presence }.compact
   end
 
   def devise_only_changes?(changes)
