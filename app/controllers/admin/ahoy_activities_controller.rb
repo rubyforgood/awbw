@@ -605,7 +605,7 @@ module Admin
 
       # Filtered counts
       @filtered_user_count = user_scope.count
-      @portal_access_users = user_scope.where.not(welcome_instructions_sent_at: nil).count
+      @portal_access_users = user_scope.invited.count
       @has_access_users = user_scope.has_access.count
       @confirmed_users = user_scope.where.not(confirmed_at: nil).count
       @authenticated_users = user_scope.where("sign_in_count > 0").count
