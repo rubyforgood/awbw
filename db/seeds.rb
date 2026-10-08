@@ -398,24 +398,26 @@ story_population_type = find_or_create_by_name!(CategoryType, "StoryPopulation")
 end
 story_population_type.update!(display_text: "Who is this story about?", story_specific: true, published: true)
 
-# [ target name, legacy clean name, position ]. The underscore names match the
-# earlier clean form so a pre-rename category is renamed in place, not duplicated.
+# [ target name, legacy clean name, position, published ]. The underscore names
+# match the earlier clean form so a pre-rename category is renamed in place, not
+# duplicated. The age twins stay unpublished (taggings preserved) because the story
+# forms offer the AgeRange categories alongside these.
 story_populations = [
-  [ "Colleagues", "Colleagues", 1 ],
-  [ "Community", "Community", 2 ],
-  [ "Self", "Self", 3 ],
-  [ "Teens_", "Teens", 4 ],
-  [ "Children_", "Children", 5 ],
-  [ "Adults_", "Adults", 6 ],
-  [ "Families", "Families", 7 ]
+  [ "Self", "Self", 1, true ],
+  [ "Colleagues", "Colleagues", 2, true ],
+  [ "Community", "Community", 3, true ],
+  [ "Families", "Families", 4, true ],
+  [ "Children_", "Children", 5, false ],
+  [ "Teens_", "Teens", 6, false ],
+  [ "Adults_", "Adults", 7, false ]
 ]
-story_populations.each do |name, legacy, _position|
+story_populations.each do |name, legacy, _position, published|
   cat = story_population_type.categories.where("LOWER(name) = LOWER(?)", name).first ||
         story_population_type.categories.where("LOWER(name) = LOWER(?)", legacy).first ||
         story_population_type.categories.create!(name: name)
-  cat.update!(name: name, published: true)
+  cat.update!(name: name, published: published)
 end
-set_category_positions.(story_population_type, story_populations.map { |name, _, position| [ name, position ] })
+set_category_positions.(story_population_type, story_populations.map { |name, _, position, _| [ name, position ] })
 
 # --- AgeRange --------------------------------------------------------------
 # Clean names with the range moved into the description column (matching the

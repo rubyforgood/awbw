@@ -200,10 +200,6 @@ class Story < ApplicationRecord
     sectors.pluck(:name)
   end
 
-  def audience_categories
-    categories.joins(:category_type).where(category_types: { name: AUDIENCE_CATEGORY_TYPE })
-  end
-
   def attach_assets_from_idea!
     return unless story_idea
 

@@ -76,7 +76,7 @@ RSpec.describe "/story_ideas", type: :request do
       it "stars the primary sector and category" do
         story_idea = create(:story_idea)
         story_idea.sectorable_items.create!(sector: create(:sector, :published), is_primary: true)
-        population = create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE)
+        population = create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)
         story_idea.categorizable_items.create!(category: create(:category, :published, category_type: population), is_primary: true)
 
         get story_idea_url(story_idea)
@@ -97,7 +97,7 @@ RSpec.describe "/story_ideas", type: :request do
     describe "POST /create with a primary sector and category" do
       let(:health) { create(:sector, :published, name: "Healthcare") }
       let(:education) { create(:sector, :published, name: "Education") }
-      let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE) }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE) }
       let(:children) { create(:category, :published, name: "Children", category_type: population) }
       let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 
@@ -268,7 +268,7 @@ RSpec.describe "/story_ideas", type: :request do
     describe "primary sector and category" do
       let(:health) { create(:sector, :published, name: "Healthcare") }
       let(:education) { create(:sector, :published, name: "Education") }
-      let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE) }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE) }
       let(:children) { create(:category, :published, name: "Children", category_type: population) }
       let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 

@@ -571,7 +571,7 @@ RSpec.describe "/stories", type: :request do
     describe "primary sector and category" do
       let(:health) { create(:sector, :published, name: "Healthcare") }
       let(:education) { create(:sector, :published, name: "Education") }
-      let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE, story_specific: true) }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE, story_specific: true) }
       let(:children) { create(:category, :published, name: "Children", category_type: population) }
       let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 
@@ -618,7 +618,17 @@ RSpec.describe "/stories", type: :request do
         expect(story.categories).to contain_exactly(children)
       end
 
-      it "ignores a primary category outside story population" do
+      it "marks a starred age range primary" do
+        elders = create(:category, :published, name: "Elders", category_type: create(:category_type, :published, name: "AgeRange"))
+
+        post stories_url, params: { story: base_attributes.merge(
+          category_ids: [ elders.id ], primary_category_id: elders.id
+        ) }
+
+        expect(Story.order(:created_at).last.primary_category).to eq(elders)
+      end
+
+      it "ignores a primary category outside the audience types" do
         theme = create(:category, :published)
 
         post stories_url, params: { story: base_attributes.merge(
@@ -630,7 +640,7 @@ RSpec.describe "/stories", type: :request do
         expect(story.primary_category).to be_nil
       end
 
-      it "only offers the category star on the story population grid" do
+      it "only offers the category star on the audience tag set" do
         children
         theme = create(:category, :published, category_type: create(:category_type, :published))
 
@@ -640,6 +650,22 @@ RSpec.describe "/stories", type: :request do
         expect(page.at_css("input#story_primary_category_id_#{children.id}")).to be_present
         expect(page.at_css("input#story_category_ids_#{theme.id}")).to be_present
         expect(page.at_css("input#story_primary_category_id_#{theme.id}")).to be_nil
+      end
+
+      it "shows published age ranges, then published story populations, as one starrable tag set" do
+        age_range = create(:category_type, :published, name: "AgeRange")
+        elders = create(:category, :published, name: "Elders", category_type: age_range)
+        create(:category, name: "Infants", category_type: age_range)
+        self_category = create(:category, :published, name: "Self", category_type: population)
+        create(:category, name: "Teens_", category_type: population)
+
+        get edit_story_url(create(:story, :published))
+
+        page = Nokogiri::HTML(response.body)
+        grid = page.at_css("[data-controller='primary-tag']:has(#story_primary_category_id_#{elders.id})")
+        rows = grid.css("> div").map { |row| row.css("span.text-sm").map { |label| label.text.strip } }
+        expect(rows).to eq([ [ "Elders" ], [ "Self" ] ])
+        expect(page.css("#story_category_ids_#{self_category.id}").size).to eq(1)
       end
 
       it "leaves existing primaries alone when the form doesn't send a primary" do

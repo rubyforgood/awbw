@@ -149,7 +149,10 @@ class StoriesController < ApplicationController
         .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
+        .reject { |type, _| type&.name.in?(CategoriesTaggable::AUDIENCE_CATEGORY_TYPES) }
         .sort_by { |type, _| [ type&.story_specific? ? 0 : 1, type&.name.to_s.downcase ] }
+    @story_audience_label = CategoryType.find_by(name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)&.display_label
+    @story_audience_rows = Category.story_audience_rows
     @sectors = Sector.published.order(:name)
     submitted_sector_ids = Array(params.dig(:story, :sector_ids)).reject(&:blank?)
     submitted_category_ids = Array(params.dig(:story, :category_ids)).reject(&:blank?)

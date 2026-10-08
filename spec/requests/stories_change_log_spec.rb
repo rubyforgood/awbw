@@ -38,7 +38,7 @@ RSpec.describe "Stories and story ideas change log", type: :request do
   describe "recording a primary change" do
     let(:arts) { create(:sector, :published, name: "Arts") }
     let(:bio) { create(:sector, :published, name: "Bio") }
-    let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE) }
+    let(:population) { create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE) }
     let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 
     it "logs the primary sector and story population moving on the story's own event" do
