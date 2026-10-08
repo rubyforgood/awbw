@@ -500,11 +500,24 @@ RSpec.describe Organization, "scholarship index helpers" do
       expect(Organization.programs_email).to eq("legacy@example.test")
     end
 
+    it "reads the contact mailbox from INFO_EMAIL" do
+      stub_env("INFO_EMAIL" => "info@example.test", "PROGRAMS_EMAIL" => "programs@example.test")
+
+      expect(Organization.info_email).to eq("info@example.test")
+    end
+
+    it "falls back to the programs mailbox for contact info when INFO_EMAIL is unset" do
+      stub_env("INFO_EMAIL" => nil, "PROGRAMS_EMAIL" => "programs@example.test")
+
+      expect(Organization.info_email).to eq("programs@example.test")
+    end
+
     it "is nil when nothing is configured, so no hard-coded address leaks out" do
-      stub_env("PROGRAMS_EMAIL" => nil, "NO_REPLY_EMAIL" => nil, "REPLY_TO_EMAIL" => nil)
+      stub_env("PROGRAMS_EMAIL" => nil, "NO_REPLY_EMAIL" => nil, "REPLY_TO_EMAIL" => nil, "INFO_EMAIL" => nil)
 
       expect(Organization.programs_email).to be_nil
       expect(Organization.no_reply_email).to be_nil
+      expect(Organization.info_email).to be_nil
     end
   end
 

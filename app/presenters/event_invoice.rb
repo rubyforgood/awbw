@@ -5,7 +5,6 @@
 class EventInvoice
   ISSUER_NAME = "A Window Between Worlds".freeze
   ISSUER_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  ISSUER_EMAIL = "info@awbw.org".freeze
   PAYABLE_TO_NOTE = "Please make checks payable to A Window Between Worlds".freeze
 
   LineItem = Struct.new(:date, :description, :quantity, :unit_price_cents, :details, keyword_init: true) do
@@ -172,7 +171,7 @@ class EventInvoice
 
   def issuer_name = ISSUER_NAME
   def issuer_address_lines = ISSUER_ADDRESS_LINES
-  def issuer_email = ISSUER_EMAIL
+  def issuer_email = Organization.info_email
   def payable_to_note = PAYABLE_TO_NOTE
 
   def self.address_lines_for(addressable)

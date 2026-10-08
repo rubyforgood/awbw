@@ -74,6 +74,11 @@ class Organization < ApplicationRecord
     ENV["NO_REPLY_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
   end
 
+  # The public contact mailbox printed on invoices, receipts, and portal contact info.
+  def self.info_email
+    ENV["INFO_EMAIL"].presence || programs_email
+  end
+
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],

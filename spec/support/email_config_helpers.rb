@@ -1,6 +1,7 @@
 module EmailConfigHelpers
   PROGRAMS_EMAIL = "umberto.programs@example.test".freeze
   NO_REPLY_EMAIL = "umberto.no-reply@example.test".freeze
+  INFO_EMAIL = "umberto.info@example.test".freeze
 
   # Overrides the suite-wide addresses below for one example — mainly to exercise the
   # REPLY_TO_EMAIL fallback, by passing the newer vars as nil.
@@ -17,6 +18,7 @@ end
 # instead of being spread across the suite.
 ENV["PROGRAMS_EMAIL"] ||= EmailConfigHelpers::PROGRAMS_EMAIL
 ENV["NO_REPLY_EMAIL"] ||= EmailConfigHelpers::NO_REPLY_EMAIL
+ENV["INFO_EMAIL"] ||= EmailConfigHelpers::INFO_EMAIL
 
 RSpec.configure do |config|
   config.include EmailConfigHelpers
