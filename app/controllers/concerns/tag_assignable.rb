@@ -68,9 +68,9 @@ module TagAssignable
     Array(params[key][field].presence).map(&:to_i).first(1)
   end
 
-  # Only a story population (audience) category can be primary.
+  # The story forms star only audience categories (age range or story population).
   def primary_category_ids(key)
-    Category.story_populations.where(id: primary_tag_ids(key, :primary_category_id)).ids
+    Category.audiences.where(id: primary_tag_ids(key, :primary_category_id)).ids
   end
 
   # Returns the tags promoted/demoted, so the record's change log shows the primary moving.

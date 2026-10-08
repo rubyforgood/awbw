@@ -12,14 +12,20 @@ class Category < ApplicationRecord
 
   # Scopes
   # See NameFilterable, Publishable
-  scope :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" }) }
-  scope :story_populations, -> { joins(:category_type).where(category_types: { name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE }) }
+  scope :age_ranges, -> { joins(:category_type).where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }) }
+  scope :story_populations, -> { joins(:category_type).where(category_types: { name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE }) }
+  scope :audiences, -> { joins(:category_type).where(category_types: { name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPES }) }
   scope :story_categories, -> { joins(:category_type).where(category_types: { name: "StoryCategory" }) }
   scope :ordered_by_position_and_name, -> { reorder(position: :asc, name: :asc) }
   # Featured in the Story Share portal's audience nav, ordered by the admin-set position.
   scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
   # Featured audiences that also get a full section on the Story Share home, in nav order.
   scope :story_share_home_sections, -> { story_share_featured.where(story_share_home_section: true) }
+
+  # The story forms' "Who is this story about?" tag set: age ranges, then story populations.
+  def self.story_audience_rows
+    [ age_ranges, story_populations ].map { |scope| scope.published.ordered_by_position_and_name.to_a }
+  end
 
   # Validations
   validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
