@@ -6,8 +6,15 @@
     The recipient name and dates are rendered live over the card.
     Sizes use container-query units (cqw) so the whole certificate scales as one. %>
 <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
-  <%= image_tag "certificates/certificate-training-border.png", alt: "",
-        class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+  <%# An admin-uploaded frame overrides the committed border; rendered from the
+      original (full resolution) so print stays crisp. %>
+  <% if frame_file %>
+    <%= image_tag frame_file, alt: "",
+          class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+  <% else %>
+    <%= image_tag "certificates/certificate-training-border.png", alt: "",
+          class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+  <% end %>
 
   <div class="absolute inset-x-[12.6%] top-[11.4%] bottom-[8.5%] flex flex-col items-center justify-between px-[3%] pt-[2%] pb-[1%] text-center">
     <div class="flex flex-col items-center gap-[1.5cqw]">

@@ -148,6 +148,16 @@ class Event < ApplicationRecord
     on_demand? && facilitator_training?
   end
 
+  # Which certificate design this event's completion certificate uses — also the
+  # key for its admin-uploaded frame override (Resource.certificate_frame_file):
+  # :on_demand (self-paced facilitator training), :training (live facilitator
+  # training), or :other (every non-training event).
+  def certificate_category
+    return :on_demand if on_demand_facilitator_training?
+    return :training if facilitator_training?
+    :other
+  end
+
   # Event staff whose title names them a facilitator, ordered by name — the roster
   # printed on the CE Confirmation of Attendance certificate. Staff titles are free
   # text, so match "facilitator" case-insensitively rather than on an exact role.

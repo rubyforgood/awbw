@@ -1,18 +1,22 @@
 <%# The on-demand facilitator-training certificate — the painted brushstroke frame
     from the on-demand certificate art (app/assets/images/certificates), distinct
-    from the live-training frame (_training_certificate). The AWBW logo is baked
-    into the frame, so it isn't overlaid here; the title, recipient, course title,
-    and dates are rendered live over the frame, so the same dynamic content flows
-    onto whichever on-demand training the registrant completed.
-    The signature strip is the admin-managed upload passed in as signature_file, so
-    real signatures never live in this public repo.
+    from the live-training frame (_training_certificate), and overridable by an
+    admin-uploaded frame (frame_file). The AWBW logo is baked into the frame, so it
+    isn't overlaid here; the title, recipient, course title, and dates are rendered
+    live over the frame, so the same dynamic content flows onto whichever on-demand
+    training the registrant completed. On-demand certificates carry no signature.
     Sizes use container-query units (cqw) so the whole certificate scales as one. %>
 <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
-  <%= image_tag "certificates/certificate-ondemand-border.png", alt: "",
-        class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+  <% if frame_file %>
+    <%= image_tag frame_file, alt: "",
+          class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+  <% else %>
+    <%= image_tag "certificates/certificate-ondemand-border.png", alt: "",
+          class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+  <% end %>
 
   <%# The frame's baked-in logo fills the top ~28%, so content starts below it. %>
-  <div class="absolute inset-x-[8%] top-[30%] bottom-[7.5%] flex flex-col items-center justify-between px-[3%] text-center">
+  <div class="absolute inset-x-[8%] top-[30%] bottom-[7.5%] flex flex-col items-center justify-center gap-[2cqw] px-[3%] text-center">
     <div class="flex flex-col items-center gap-[1cqw]">
       <p class="font-display text-[4.6cqw] font-bold tracking-tight text-gray-900">Certificate of Completion</p>
       <p class="text-[2.2cqw] text-gray-500">presented to</p>
@@ -24,16 +28,5 @@
       <p class="text-[3cqw] leading-tight font-bold text-gray-900"><%= event.title %></p>
       <p class="text-[2.4cqw] font-semibold text-gray-700"><%= event.date_range %></p>
     </div>
-
-    <%# Served same-origin via the proxy (never the raw storage URL), and only
-        embedded here — so the signature image is reachable only from an issued
-        certificate, not by browsing the repo or the resources index. %>
-    <% if signature_file %>
-      <%= image_tag certificate_signature_src(signature_file),
-            alt: "Signed by Christy Turek Rials, Training & Outreach Director; Rudy Hernandez, Program Director; and Tiombe Wallace, Consultant",
-            class: "w-[60cqw]" %>
-    <% else %>
-      <span></span>
-    <% end %>
   </div>
 </article>
