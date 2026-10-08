@@ -1,6 +1,4 @@
 class FeaturesController < ApplicationController
-  SORT_DIRECTIONS = %w[asc desc].freeze
-
   before_action :set_feature, only: %i[ show edit update destroy ]
 
   def index
@@ -102,7 +100,7 @@ class FeaturesController < ApplicationController
   end
 
   def sorted_by_logged?
-    SORT_DIRECTIONS.include?(params[:logged_direction])
+    %w[asc desc].include?(params[:logged_direction])
   end
 
   def set_feature
