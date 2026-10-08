@@ -232,8 +232,8 @@ class StoryImporter
     credit = story_credit(row, AUTHOR_COLUMNS)
     co_credit = story_credit(row, CO_AUTHOR_COLUMNS)
 
-    # Every importable row becomes a Story with a StoryIdea promoted into it. A
-    # StoryIdea requires an organization, so an org-less row is Story-only.
+    # Every importable row becomes a Story; a StoryIdea is promoted into it when
+    # the status column asks for one (an organization is optional).
     idea = nil
     if preview.creates_idea
       idea = build_idea(row, title:, organization:, windows_type:, author:, co_author:, content:, workshop:, external_title:, credit:, co_credit:)
