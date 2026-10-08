@@ -95,6 +95,13 @@ RSpec.describe StoryImporter do
       expect(Story.count).to eq(0)
     end
 
+    it "skips a lower-cased skipped status too" do
+      result = import([ base_row("status" => "skipped — duplicate") ])
+
+      expect(result.previews.sole.skipped_reason).to eq("duplicate")
+      expect(Story.count).to eq(0)
+    end
+
     it "skips a row whose window type does not match exactly" do
       result = import([ base_row("window_type" => "Martians") ])
 
@@ -438,6 +445,20 @@ RSpec.describe StoryImporter do
       expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported category not in portal: AgeRange: Nope/))
     end
 
+    # The sheet carries the decorator's display name, which hides the trailing
+    # underscore the age-twin StoryPopulations are stored with.
+    it "matches an age-twin story population written without its trailing underscore" do
+      story_population = create(:category_type, name: "StoryPopulation")
+      teens = create(:category, category_type: story_population, name: "Teens_")
+      import([ base_row("categories" => "StoryPopulation: Teens",
+                        "primary_story_population" => "StoryPopulation: Teens") ])
+
+      story = Story.sole
+      expect(story.categories).to include(teens)
+      expect(story.primary_category).to eq(teens)
+      expect(story.comments.pluck(:body)).not_to include(a_string_matching(/category not in portal/))
+    end
+
     it "flags the primary sector and primary story population on their join rows" do
       create(:sector, name: "Domestic Violence")
       story_population = create(:category_type, name: "StoryPopulation")
@@ -551,6 +572,15 @@ RSpec.describe StoryImporter do
       expect(Person.count).to eq(0)
       expect(result.ideas_created).to eq(1)
       expect(result.stories_created).to eq(1)
+    end
+
+    it "leaves an existing author's profile untouched" do
+      author = create(:person, first_name: "Jamie", last_name: "Rivera",
+                               display_name_preference: "full_name", anonymous_contributions: false)
+      import([ base_row("name_display" => "first name only", "anonymous" => "anonymous") ], dry_run: true)
+
+      expect(author.reload).to have_attributes(anonymous_contributions: false,
+                                               display_name_preference: "full_name")
     end
 
     it "builds a per-row preview of the matched and new records" do
