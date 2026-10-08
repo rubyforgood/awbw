@@ -1,4 +1,6 @@
 class SectorableItem < ApplicationRecord
+  include AhoyTrackable
+
   belongs_to :sector
   belongs_to :sectorable, polymorphic: true, touch: true
   belongs_to :created_by, class_name: "User", optional: true

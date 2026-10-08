@@ -7,6 +7,9 @@ class FormSubmissionChanges
   # The records whose changes are worth surfacing. Bookkeeping rows a submission
   # also touches (the submission, its answers, the registration link) are noise here.
   RELEVANT_TYPES = %w[Person Organization Address ContactMethod Affiliation SectorableItem CategorizableItem].freeze
+  # Tag rows: their changes read as the tag they applied, under the record tagged.
+  TAG_TYPES = %w[SectorableItem CategorizableItem].freeze
+  TAG_OUTCOMES = { "create" => "Added", "destroy" => "Removed", "update" => "Changed" }.freeze
   GROUP_ORDER = %w[Person Organization Affiliation].freeze
   IGNORED_ATTRIBUTES = %w[id created_at updated_at slug locality].freeze
   # Friendlier than humanizing the raw column (e.g. "value" on a phone contact).
@@ -46,12 +49,13 @@ class FormSubmissionChanges
 
   # A submission "changed" a value when it edited a record that already existed —
   # a value replaced, or a blank filled, on that record (both come from an update
-  # event) — or when it added an organization to the database through the linking
-  # flow (a created org). A person's own new records and added tags are the
-  # submission's own data, not edits, so they stay out. (This is why linking an
-  # org that wasn't a clean match can raise the count: the fill lands on the org,
-  # and creating one shows the org itself.)
-  EDIT_OUTCOMES = %w[Replaced Filled].freeze
+  # event), or a tag that was on file removed or reassigned — or when it added an
+  # organization to the database through the linking flow (a created org). A
+  # person's own new records and added tags are the submission's own data, not
+  # edits, so they stay out. (This is why linking an org that wasn't a clean match
+  # can raise the count: the fill lands on the org, and creating one shows the org
+  # itself.)
+  EDIT_OUTCOMES = %w[Replaced Filled Removed Changed].freeze
 
   def edited_groups
     groups.filter_map do |group|
@@ -82,11 +86,29 @@ class FormSubmissionChanges
   def owner_key(event)
     props = event.properties
     case props["resource_type"]
-    when "SectorableItem" then [ props.dig("attributes", "sectorable_type"), props.dig("attributes", "sectorable_id") ]
-    when "CategorizableItem" then [ props.dig("attributes", "categorizable_type"), props.dig("attributes", "categorizable_id") ]
+    when "SectorableItem" then tag_owner_key(event, "sectorable")
+    when "CategorizableItem" then tag_owner_key(event, "categorizable")
     when "Address", "ContactMethod" then [ props.dig("attributes", "addressable_type") || props.dig("attributes", "contactable_type"), props.dig("attributes", "addressable_id") || props.dig("attributes", "contactable_id") ]
     else [ props["resource_type"], props["resource_id"] ]
     end
+  end
+
+  def tag_owner_key(event, prefix)
+    attributes = tag_attributes(event)
+    [ attributes["#{prefix}_type"], attributes["#{prefix}_id"] ]
+  end
+
+  # A tag row's own columns. A create or destroy event snapshots them; an update
+  # (the primary flag flipping as a new primary is selected) carries only the
+  # changed column, so the row itself supplies the rest.
+  def tag_attributes(event)
+    @tag_attributes ||= {}
+    @tag_attributes[event.id] ||= event.properties["attributes"].presence || tag_row_attributes(event)
+  end
+
+  def tag_row_attributes(event)
+    props = event.properties
+    props["resource_type"].safe_constantize&.find_by(id: props["resource_id"])&.attributes || {}
   end
 
   def build_group(type, id, events)
@@ -104,8 +126,8 @@ class FormSubmissionChanges
     action = event.name.split(".").first
     props = event.properties
 
+    return [ tag_change(action, event) ] if props["resource_type"].in?(TAG_TYPES)
     return attribute_changes(props["changes"], props["resource_type"]) if props["changes"].present?
-    return [ tag_change(action, event) ] if props["resource_type"].in?(%w[SectorableItem CategorizableItem])
     return [ record_change(action, event) ] if action.in?(%w[create destroy])
 
     []
@@ -141,16 +163,22 @@ class FormSubmissionChanges
   end
 
   def tag_change(action, event)
-    props = event.properties
-    if props["resource_type"] == "SectorableItem"
-      name = Sector.find_by(id: props.dig("attributes", "sector_id"))&.name
+    attributes = tag_attributes(event)
+    if event.properties["resource_type"] == "SectorableItem"
+      name = Sector.find_by(id: attributes["sector_id"])&.name
       kind = "sector"
     else
-      name = Category.find_by(id: props.dig("attributes", "category_id"))&.name
+      name = Category.find_by(id: attributes["category_id"])&.name
       kind = "age group"
     end
-    primary = props.dig("attributes", "is_primary") ? " (primary)" : ""
-    Change.new(outcome: action == "destroy" ? "Removed" : "Added", label: kind.humanize, value: "#{name}#{primary}")
+    # A flip says which way it went; an added or removed tag only calls out a
+    # primary, since "additional" is the unremarkable case.
+    suffix = if action == "update"
+      event.properties.dig("changes", "is_primary", "after") ? " (now primary)" : " (no longer primary)"
+    else
+      attributes["is_primary"] ? " (primary)" : ""
+    end
+    Change.new(outcome: TAG_OUTCOMES.fetch(action, "Changed"), label: kind.humanize, value: "#{name}#{suffix}")
   end
 
   def record_change(action, event)

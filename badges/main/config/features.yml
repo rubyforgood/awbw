@@ -41,6 +41,16 @@
     Related-story cards in the sidebar show the same chips in a compact size, so you
     can tell what each one is about before clicking.
 
+- name: "Filter communications by delivery status"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-05
+  summary: >-
+    The Communications list has a new Status filter to narrow the feed to
+    delivered, pending, or failed emails — so you can quickly find messages
+    that didn't go out.
+  action_path: "/notifications"
+
 - name: "Choose which sections appear on the Story Share home"
   area: stories
   display_status: public_facing
@@ -144,6 +154,27 @@
     typed in for one that isn't listed), and a workshop's page lists the stories
     that use it — connect them from either side.
   action_path: "/workshops"
+
+- name: "Standalone forms fill in profiles too"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-30
+  action_path: "/forms"
+  pr_number: 2609
+  summary: >-
+    Contact and profile smart fields (secondary email, phone, address, pronouns, name
+    pronunciation, sectors, age groups) and the submitted organization now save from a
+    standalone form the same way as on an event registration, for new and existing
+    people. The latest answer wins.
+  pro_tips:
+    - The changes land on the person's "What this submission changed" audit, so you can
+      see exactly what a submission updated — including a tag it removed or reassigned.
+    - An agreement form (on-demand, new job, reinstatement, close program) whose
+      organization name matches exactly is now processed the moment it arrives, exactly
+      as if you had clicked "Link organization" yourself. If the name matches nothing,
+      or matches two organizations, it stays in your queue to resolve.
+    - Any other form fills in the organization's details and adds the job affiliation
+      from the position they typed, exactly as an event registration does.
 
 - name: "W-9 available before paying"
   area: payments
@@ -3706,6 +3737,16 @@
   action_path: /events
   pr_number: 2504
 
+- name: "Unique certificate design for on-demand trainings"
+  area: events
+  display_status: user_facing
+  released_on: 2026-10-07
+  summary: >-
+    On-demand facilitator training completions now download their own painted
+    certificate frame, distinct from the scheduled-training design. The
+    recipient's name, course title, and dates still print live over it.
+  action_path: /events
+  pr_number: 2606
 - name: "Slider questions on forms"
   area: registration
   display_status: admin_facing

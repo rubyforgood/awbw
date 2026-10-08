@@ -1,4 +1,6 @@
 class CategorizableItem < ApplicationRecord
+  include AhoyTrackable
+
   belongs_to :categorizable, polymorphic: true
   belongs_to :category
   belongs_to :created_by, class_name: "User", optional: true

@@ -131,7 +131,7 @@ RSpec.describe "Forms", type: :request do
         expect(response).to have_http_status(:success)
         expect(response.body).to include("Smart field settings")
         expect(response.body).to include("organization_name")
-        expect(response.body).to include("Looked up against existing organizations by exact name")
+        expect(response.body).to include("Looked up against existing organizations by name, ignoring capitalization")
       end
 
       it "links the Other responses review queue phrase to that page" do
