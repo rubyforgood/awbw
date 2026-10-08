@@ -312,10 +312,27 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(described_class.story_promoted(notification).to).to eq([ submitter.email ])
     end
 
-    it "names the story and greets the submitter" do
+    it "uses the story-idea subject" do
+      expect(described_class.story_promoted(notification).subject).to eq("AWBW Portal: Your story idea is now a story")
+    end
+
+    it "names the story and greets the submitter by full name" do
       body = described_class.story_promoted(notification).body.encoded
       expect(body).to include("A Healing Story")
-      expect(body).to include(submitter.first_name_or_email)
+      expect(body).to include("Hello #{submitter.full_name}")
+      expect(body).to include("now live on Story Share")
+    end
+
+    it "links to the story when it is published" do
+      expect(described_class.story_promoted(notification).body.encoded).to include("View story")
+    end
+
+    context "when the story is neither published nor publicly visible" do
+      let(:story) { create(:story, :unpublished, story_idea: story_idea, title: "A Healing Story", publicly_visible: false) }
+
+      it "omits the story link" do
+        expect(described_class.story_promoted(notification).body.encoded).not_to include("View story")
+      end
     end
   end
 
