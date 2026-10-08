@@ -1,0 +1,53 @@
+<% content_for(:page_title, "Certificate settings") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">Certificate of completion settings</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Upload the artwork used on registrants' certificates of completion. A frame overrides the
+    built-in design for that certificate type; a signature fills the signature line. Leave a slot
+    empty to use the built-in design. Images are stored privately and shown only on an issued
+    certificate.
+  </p>
+
+  <div class="space-y-4">
+    <% @slots.each do |slot| %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0 sm:flex-1">
+            <h2 class="text-sm font-semibold text-gray-800"><%= slot[:label] %></h2>
+            <p class="mt-1 text-xs text-gray-500"><%= slot[:description] %></p>
+
+            <%= form_with url: admin_certificate_settings_path, method: :patch, class: "mt-3 flex flex-wrap items-center gap-2" do |f| %>
+              <%= hidden_field_tag :slot, slot[:key] %>
+              <%= file_field_tag :file, accept: "image/*", required: true,
+                    class: "text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-purple-800 hover:file:bg-purple-100" %>
+              <%= f.submit slot[:file] ? "Replace" : "Upload", class: button_classes(:primary, size: :sm) %>
+            <% end %>
+          </div>
+
+          <div class="sm:w-56 sm:shrink-0">
+            <% if slot[:file]&.variable? %>
+              <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                <%= image_tag slot[:file].variant(:card), alt: "#{slot[:label]} preview",
+                      class: "mx-auto max-h-32 w-auto object-contain" %>
+              </div>
+              <%= button_to "Remove", admin_certificate_settings_path, method: :patch,
+                    params: { slot: slot[:key], remove: "1" },
+                    class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
+                    form: { data: { turbo_confirm: "Remove the #{slot[:label].downcase}? Certificates will use the built-in design until you upload a new one." } } %>
+            <% else %>
+              <div class="flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400">
+                <%= slot[:file] ? "Uploaded file isn't a previewable image" : "No image — using built-in design" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </section>
+    <% end %>
+  </div>
+</div>

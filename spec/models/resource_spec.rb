@@ -154,4 +154,29 @@ RSpec.describe Resource do
       expect(Resource.ce_certificate_signature_file).to be_attached
     end
   end
+
+  describe ".certificate_frame_file" do
+    it "returns nil when no record exists for the category" do
+      expect(Resource.certificate_frame_file(:training)).to be_nil
+    end
+
+    it "returns nil for an unknown category" do
+      expect(Resource.certificate_frame_file(:nonsense)).to be_nil
+    end
+
+    it "returns the attached frame for the matching category" do
+      resource = create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:on_demand])
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.certificate_frame_file(:on_demand)).to be_attached
+    end
+
+    it "matches the category by title, not across categories" do
+      resource = create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:training])
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.certificate_frame_file(:training)).to be_attached
+      expect(Resource.certificate_frame_file(:other)).to be_nil
+    end
+  end
 end

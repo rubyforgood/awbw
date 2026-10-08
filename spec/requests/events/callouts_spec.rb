@@ -1026,6 +1026,16 @@ RSpec.describe "Events::Callouts", type: :request do
         # The branded document itself is one click away, not inline on the chooser.
         expect(response.body).not_to include("certificate-training-border")
       end
+
+      it "overrides the committed training border with an uploaded frame" do
+        frame = create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:training], hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: frame)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response.body).not_to include("certificate-training-border")
+        expect(response.body).to include("/rails/active_storage/blobs/")
+      end
     end
 
     context "for an on-demand facilitator training event" do
@@ -1044,6 +1054,27 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to include("certificate-training-border")
         expect(response.body).not_to include("This certifies that")
       end
+
+      it "overrides the committed on-demand border with an uploaded frame" do
+        frame = create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:on_demand], hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: frame)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response.body).not_to include("certificate-ondemand-border")
+        expect(response.body).to include("/rails/active_storage/blobs/")
+      end
+
+      it "never shows a signature, even when the training signatures record exists" do
+        resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE, hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: resource)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).not_to include("Signed by Christy Turek Rials")
+        expect(response.body).not_to include("/rails/active_storage")
+      end
     end
 
     it "uses the default completion certificate for non-training events" do
@@ -1051,6 +1082,16 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response.body).to include("This certifies that")
       expect(response.body).not_to include("AWBW Facilitator Certification Training")
+    end
+
+    it "renders an uploaded other-events frame full-bleed for non-training events" do
+      frame = create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:other], hidden_from_search: true)
+      create(:primary_asset, :with_file, owner: frame)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).to include("/rails/active_storage/blobs/")
     end
   end
 

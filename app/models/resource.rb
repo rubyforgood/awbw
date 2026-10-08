@@ -40,8 +40,26 @@ class Resource < ApplicationRecord
     find_by(title: CE_CERTIFICATE_SIGNATURE_TITLE)&.signature_file
   end
 
+  # Optional admin-uploaded full-bleed frame image per certificate category, which
+  # overrides the committed/default frame when present. Like the signature records,
+  # these live on hidden, title-matched Resources so the art is managed in-app
+  # rather than committed. Matched by title — keep in sync with the settings page.
+  CERTIFICATE_FRAME_TITLES = {
+    training: "Training certificate frame",
+    on_demand: "On-demand certificate frame",
+    other: "Event certificate frame"
+  }.freeze
+
+  # The uploaded frame image for a certificate category (:training, :on_demand,
+  # :other), or nil when none is uploaded — the certificate then uses its
+  # committed/default frame.
+  def self.certificate_frame_file(category)
+    title = CERTIFICATE_FRAME_TITLES[category&.to_sym]
+    find_by(title: title)&.signature_file if title
+  end
+
   # The first attached image on this resource (primary asset, then downloadable),
-  # for use as a certificate signature strip. Nil when nothing is attached.
+  # for use as a certificate signature strip or frame. Nil when nothing is attached.
   def signature_file
     [ primary_asset, downloadable_asset ].compact.map(&:file).find(&:attached?)
   end
