@@ -83,7 +83,10 @@
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span class="text-xs text-gray-500">Sectors:</span>
               <% p.sectors.each do |name| %>
-                <span class="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-800"><%= name %></span>
+                <% primary = name == p.primary_sector %>
+                <span class="rounded-full px-2 py-0.5 text-xs <%= primary ? "bg-purple-200 text-purple-900 font-medium ring-1 ring-purple-400" : "bg-purple-100 text-purple-800" %>">
+                  <% if primary %><i class="fa-solid fa-star mr-0.5"></i><% end %><%= name %>
+                </span>
               <% end %>
             </div>
           <% end %>
@@ -92,9 +95,18 @@
             <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
               <span class="text-xs text-gray-500">Categories:</span>
               <% p.categories.each do |label| %>
-                <span class="rounded-full bg-lime-100 px-2 py-0.5 text-xs text-lime-800"><%= label %></span>
+                <% primary = label == p.primary_category %>
+                <span class="rounded-full px-2 py-0.5 text-xs <%= primary ? "bg-lime-200 text-lime-900 font-medium ring-1 ring-lime-400" : "bg-lime-100 text-lime-800" %>">
+                  <% if primary %><i class="fa-solid fa-star mr-0.5"></i><% end %><%= label %>
+                </span>
               <% end %>
             </div>
+          <% end %>
+
+          <% if p.primary_sector.present? || p.primary_category.present? %>
+            <p class="mt-1.5 text-xs text-gray-500">
+              <i class="fa-solid fa-star text-amber-400"></i> marks the primary sector / story population
+            </p>
           <% end %>
 
           <% if p.images.to_i.positive? %>
