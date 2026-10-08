@@ -107,7 +107,7 @@ class StoryImporter
     :wp_id, :title, :will_publish, :skipped_reason,
     :organization, :organization_new, :author_label, :author_new, :author_updated,
     :creates_story, :creates_idea, :workshop_label, :sectors, :categories, :images, :comment, :warnings,
-    :primary_sector, :primary_category,
+    :primary_sector, :primary_category, :window_type, :featured, :grants, :licenses, :missing_tags,
     keyword_init: true
   )
 
@@ -301,6 +301,11 @@ class StoryImporter
     preview.categories = tags.categories.map { |c| "#{c.category_type.name}: #{c.decorate.display_name}" }
     preview.primary_sector = tags.primary_sector&.name
     preview.primary_category = tags.primary_category&.then { |c| "#{c.category_type.name}: #{c.decorate.display_name}" }
+    preview.window_type = clean(row["window_type"]).presence
+    preview.featured = featured?(row)
+    preview.grants = grant_names_for(row)
+    preview.licenses = license_kinds(row)
+    preview.missing_tags = tags.missing_sectors + tags.missing_categories.map { |type, name| type.present? ? "#{type}: #{name}" : name }
     preview.comment = author ? nil : person_display(row, AUTHOR_COLUMNS).presence
     preview.warnings = @result.warnings.drop(warnings_before).map { |w| w.sub(/\Arow \S+ \(.*?\): /, "") }
   end

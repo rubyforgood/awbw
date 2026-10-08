@@ -572,6 +572,19 @@ RSpec.describe StoryImporter do
 
       expect(result.previews.sole.skipped_reason).to eq("blank title")
     end
+
+    it "surfaces window type, featured, grants, licenses, and unmatched taxonomy" do
+      result = import([ base_row("window_type" => "Children", "featured" => "yes",
+                                 "grants" => "Some Grant", "professional_licenses" => "LCSW",
+                                 "sectors" => "Imaginary Sector") ], dry_run: true)
+
+      preview = result.previews.sole
+      expect(preview.window_type).to eq("Children")
+      expect(preview.featured).to be(true)
+      expect(preview.grants).to include("Some Grant")
+      expect(preview.licenses).to include("LCSW")
+      expect(preview.missing_tags).to include("Imaginary Sector")
+    end
   end
 
   describe "image import" do
