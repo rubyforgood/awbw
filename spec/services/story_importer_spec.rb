@@ -445,31 +445,40 @@ RSpec.describe StoryImporter do
       expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported category not in portal: AgeRange: Nope/))
     end
 
-    # The sheet carries the decorator's display name, which hides the trailing
-    # underscore the age-twin StoryPopulations are stored with.
-    it "matches an age-twin story population written without its trailing underscore" do
+    # Ages belong to AgeRange; the StoryPopulation age twins are on their way out.
+    it "reads an age filed under StoryPopulation as its AgeRange category" do
       story_population = create(:category_type, name: "StoryPopulation")
-      teens = create(:category, category_type: story_population, name: "Teens_")
-      import([ base_row("categories" => "StoryPopulation: Teens",
-                        "primary_story_population" => "StoryPopulation: Teens") ])
+      twin = create(:category, category_type: story_population, name: "Teens_")
+      teens = create(:category, category_type: age_range, name: "Teens")
+      import([ base_row("categories" => "StoryPopulation: Teens") ])
 
       story = Story.sole
-      expect(story.categories).to include(teens)
-      expect(story.primary_category).to eq(teens)
+      expect(story.categories).to contain_exactly(teens)
+      expect(story.categories).not_to include(twin)
       expect(story.comments.pluck(:body)).not_to include(a_string_matching(/category not in portal/))
+    end
+
+    it "tags an age-named primary story population without starring it" do
+      teens = create(:category, category_type: age_range, name: "Teens")
+      result = import([ base_row("categories" => "", "primary_story_population" => "StoryPopulation: Teens") ])
+
+      story = Story.sole
+      expect(story.categories).to contain_exactly(teens)
+      expect(story.primary_category).to be_nil
+      expect(result.warnings).to include(a_string_matching(/is an age group, not a story population/))
     end
 
     it "flags the primary sector and primary story population on their join rows" do
       create(:sector, name: "Domestic Violence")
       story_population = create(:category_type, name: "StoryPopulation")
-      create(:category, category_type: story_population, name: "Teens")
+      create(:category, category_type: story_population, name: "Families")
       import([ base_row("sectors" => "Domestic Violence", "primary_sector" => "Domestic Violence",
-                        "categories" => "StoryPopulation: Teens",
-                        "primary_story_population" => "StoryPopulation: Teens") ])
+                        "categories" => "StoryPopulation: Families",
+                        "primary_story_population" => "StoryPopulation: Families") ])
 
       story = Story.sole
       expect(story.primary_sector.name).to eq("Domestic Violence")
-      expect(story.primary_category.name).to eq("Teens")
+      expect(story.primary_category.name).to eq("Families")
     end
 
     it "tags and flags a primary sector even when it's absent from the sectors list" do
