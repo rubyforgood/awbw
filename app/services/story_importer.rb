@@ -117,6 +117,9 @@ class StoryImporter
   # A facilitator first name that means AWBW staff authored it — credit no Person.
   AWBW_NAME = "AWBW"
 
+  # Stamped on every change-log event the import writes (Current.source).
+  IMPORT_SOURCE = "story_import"
+
   # The age groups belong to AgeRange; StoryPopulation carries only the non-age
   # audiences (Self, Colleagues, Community, Families). Sheets built before that
   # split file the ages under StoryPopulation, so they are read as AgeRange.
@@ -168,10 +171,21 @@ class StoryImporter
     @conflicting_authors = Set.new
   end
 
+  # The run carries its own change-log context: lifecycle events are only
+  # recorded for an attributed actor, and a rake import has no controller to set
+  # one. The source marks the rows as this importer's rather than hand edits.
   def call
     raise ArgumentError, "import_user is required" if @import_user.nil?
     raise ArgumentError, "no OrganizationStatus available" if @organization_status.nil?
 
+    Current.set(user: @import_user, source: IMPORT_SOURCE) { import_rows }
+  end
+
+  private
+
+  attr_reader :result
+
+  def import_rows
     @conflicting_authors = scan_conflicting_authors
     CSV.foreach(@csv_path, headers: true, header_converters: HEADER_CONVERTER, encoding: "bom|utf-8") do |row|
       @result.rows_processed += 1
@@ -182,12 +196,19 @@ class StoryImporter
         @logger.error("[StoryImporter] row #{wp_id(row)}: #{e.class} - #{e.message}")
       end
     end
+    flush_change_log
     @result
   end
 
-  private
+  # The buffer is drained here rather than left to a controller, so an import run
+  # from a rake task or the console logs its changes too. A dry run buffers
+  # nothing, but the store is cleared either way so a preview can't leak events
+  # into whatever flushes next.
+  def flush_change_log
+    return Analytics::LifecycleBuffer.store.clear if @dry_run
 
-  attr_reader :result
+    Analytics::LifecycleBuffer.flush_without_request(label: IMPORT_SOURCE)
+  end
 
   def import_row(row)
     return record_skip(row, "duplicate header row") if header_echo?(row)
@@ -702,19 +723,43 @@ class StoryImporter
   # but writes nothing.
   def apply_tags(record, tags)
     return if @dry_run || record.new_record?
+
+    sectors_before = record.sectors.to_a
+    categories_before = record.categories.to_a
     record.sectors |= tags.sectors if tags.sectors.any?
     record.categories |= tags.categories if tags.categories.any?
-    mark_primary(record, tags)
+
+    # The collection setters above persist outside the record's dirty tracking,
+    # so the change log is handed the diff directly (as TagAssignable does for
+    # the form) — otherwise the tagging shows up only on the join rows.
+    record.track_membership_changes(
+      sectors: membership_delta(sectors_before, record.sectors.to_a),
+      categories: membership_delta(categories_before, record.categories.to_a),
+      **mark_primary(record, tags)
+    )
   end
 
-  # Flag the primary sector / story population on their join rows (is_primary).
+  # Flag the primary sector / audience on their join rows (is_primary), returning
+  # what moved so the change log shows the star landing.
   def mark_primary(record, tags)
-    if tags.primary_sector
-      record.sectorable_items.find_by(sector_id: tags.primary_sector.id)&.update!(is_primary: true)
-    end
-    if tags.primary_category
-      record.categorizable_items.find_by(category_id: tags.primary_category.id)&.update!(is_primary: true)
-    end
+    changes = {}
+    changes[:primary_sector] = star_tag(record.sectorable_items, :sector_id, tags.primary_sector)
+    changes[:primary_category] = star_tag(record.categorizable_items, :category_id, tags.primary_category)
+    changes.compact
+  end
+
+  def star_tag(items, foreign_key, tag)
+    return unless tag
+
+    item = items.find_by(foreign_key => tag.id)
+    return unless item
+
+    item.update!(is_primary: true)
+    { added: [ tag ] }
+  end
+
+  def membership_delta(before, after)
+    { added: after - before, removed: before - after }
   end
 
   def find_or_create_organization(name)

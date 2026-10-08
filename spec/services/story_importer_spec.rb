@@ -537,6 +537,45 @@ RSpec.describe StoryImporter do
     end
   end
 
+  # Lifecycle events are only recorded for an attributed actor, and a rake import
+  # has no controller to set one, so the importer carries its own.
+  describe "change log" do
+    def story_events
+      Ahoy::Event.where(name: [ "create.story", "update.story" ])
+    end
+
+    around do |example|
+      Current.set(user: nil, source: nil) { example.run }
+    end
+
+    it "records the created story with the import as its source" do
+      import([ base_row ])
+
+      event = story_events.find_by(name: "create.story")
+      expect(event).to be_present
+      expect(event.properties["source"]).to eq("story_import")
+      expect(event.user_id).to eq(import_user.id)
+    end
+
+    it "folds the imported sector and category tagging onto the story's own entry" do
+      sector = create(:sector, name: "Domestic Violence")
+      adults = create(:category, category_type: create(:category_type, name: "AgeRange"), name: "Adults")
+      import([ base_row("sectors" => "Domestic Violence", "primary_sector" => "Domestic Violence",
+                        "categories" => "AgeRange: Adults") ])
+
+      changes = story_events.where(name: "update.story").flat_map { |e| e.properties["association_changes"].to_h.to_a }.to_h
+      expect(changes["sectors"]).to include(a_hash_including("action" => "added", "label" => sector.name))
+      expect(changes["categories"]).to include(a_hash_including("action" => "added", "label" => adults.name))
+      expect(changes["primary_sector"]).to include(a_hash_including("action" => "added", "label" => sector.name))
+    end
+
+    it "writes nothing to the change log on a dry run" do
+      import([ base_row ], dry_run: true)
+
+      expect(story_events).to be_empty
+    end
+  end
+
   describe "side effects" do
     it "creates a facilitator affiliation for a non-AWBW author" do
       import([ base_row ])
