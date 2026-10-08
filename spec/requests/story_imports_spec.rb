@@ -132,6 +132,16 @@ RSpec.describe "Story imports", type: :request do
       expect(flash[:notice]).to match(/3 story ideas and 4 connected stories/)
     end
 
+    it "logs every imported story to the change log under the import's own visit" do
+      post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
+
+      events = Ahoy::Event.where(name: "create.story")
+      expect(events.count).to eq(4)
+      expect(events.map { |e| e.properties["source"] }.uniq).to eq([ "story_import" ])
+      expect(events.map(&:visit).uniq.map(&:landing_page)).to eq([ "story_import" ])
+      expect(events.map(&:user_id).uniq).to eq([ admin.id ])
+    end
+
     it "tags stories with the sectors named in the sheet" do
       post confirm_story_import_path, params: { signed_id: signed_blob_for_fixture }
 
