@@ -7,6 +7,11 @@
     <%= f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
     <% selected_sector_ids = @preselected_sector_ids || @story_idea.sector_ids %>
     <% selected_category_ids = @preselected_category_ids || @story_idea.category_ids %>
+    <% primary_sector_id = @preselected_sector_ids ? @preselected_primary_sector_id : @story_idea.primary_sector&.id %>
+    <% primary_category_id = @preselected_category_ids ? @preselected_primary_category_id : @story_idea.primary_category&.id %>
+    <%# Blank defaults precede the stars so a starred chip's value wins, and unstarring clears the primary. %>
+    <%= hidden_field_tag "story_idea[primary_sector_id]", "" %>
+    <%= hidden_field_tag "story_idea[primary_category_id]", "" %>
     <% promoted_to_story = f.object.stories.any? %>
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
@@ -162,57 +167,30 @@
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
               <h3 class="text-base font-semibold text-gray-800 mb-3">
                 <%= Sector::STORY_DISPLAY_TEXT %>
-                <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+                <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
               </h3>
 
-              <div class="flex flex-wrap gap-3">
+              <div class="flex flex-wrap gap-3" <%= tag.attributes(data: primary_tag_grid_data) %>>
                 <% @sectors.each do |sector| %>
-                  <% id = "story_idea_sector_ids_#{sector.id}" %>
-
-                  <label
-                    for="<%= id %>"
-                    class="
-                      flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                      rounded-lg shadow-sm hover:bg-gray-100 transition">
-                    <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
-                    <%= check_box_tag "story_idea[sector_ids][]",
-                                      sector.id,
-                                      selected_sector_ids.include?(sector.id),
-                                      id: id,
-                                      class: "h-4 w-4 text-blue-600 rounded" %>
-
-                    <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
-                  </label>
+                  <%= render "shared/primary_tag_checkbox", param_key: "story_idea", kind: :sector, value: sector.id, label: sector.name,
+                             checked: selected_sector_ids.include?(sector.id), primary: primary_sector_id == sector.id %>
                 <% end %>
               </div>
             </div>
 
             <div class="form-group space-y-6">
               <% @categories_grouped.each do |type, cats| %>
+                <% starrable = type&.name == CategoriesTaggable::AUDIENCE_CATEGORY_TYPE %>
                 <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                   <h3 class="text-base font-semibold text-gray-800 mb-3">
                     <%= type.display_label %>
-                    <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+                    <span class="text-sm font-normal italic text-gray-500 ml-1"><%= starrable ? "(check all that apply, star the primary)" : "(check all that apply)" %></span>
                   </h3>
 
-                  <div class="flex flex-wrap gap-3">
+                  <div class="flex flex-wrap gap-3" <%= tag.attributes(data: (primary_tag_grid_data if starrable)) %>>
                     <% cats.each do |category| %>
-                      <% id = "story_idea_category_ids_#{category.id}" %>
-
-                      <label
-                        for="<%= id %>"
-                        class="
-                          flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                          border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                        <%= hidden_field_tag "story_idea[category_ids][]", "" %>
-                        <%= check_box_tag "story_idea[category_ids][]",
-                                          category.id,
-                                          selected_category_ids.include?(category.id),
-                                          id: id,
-                                          class: "h-4 w-4 text-blue-600 rounded" %>
-
-                        <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-                      </label>
+                      <%= render "shared/primary_tag_checkbox", param_key: "story_idea", kind: :category, value: category.id, label: category.name,
+                                 checked: selected_category_ids.include?(category.id), primary: primary_category_id == category.id, starrable: starrable %>
                     <% end %>
                   </div>
                 </div>
@@ -226,27 +204,13 @@
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
         <h3 class="text-base font-semibold text-gray-800 mb-3">
           <%= Sector::STORY_DISPLAY_TEXT %>
-          <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+          <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
         </h3>
 
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3" <%= tag.attributes(data: primary_tag_grid_data) %>>
           <% @sectors.each do |sector| %>
-            <% id = "story_idea_sector_ids_#{sector.id}" %>
-
-            <label
-              for="<%= id %>"
-              class="
-                flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                rounded-lg shadow-sm hover:bg-gray-100 transition">
-              <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
-              <%= check_box_tag "story_idea[sector_ids][]",
-                                sector.id,
-                                selected_sector_ids.include?(sector.id),
-                                id: id,
-                                class: "h-4 w-4 text-blue-600 rounded" %>
-
-              <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
-            </label>
+            <%= render "shared/primary_tag_checkbox", param_key: "story_idea", kind: :sector, value: sector.id, label: sector.name,
+                       checked: selected_sector_ids.include?(sector.id), primary: primary_sector_id == sector.id %>
           <% end %>
         </div>
       </div>
@@ -255,27 +219,13 @@
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
           <h3 class="text-base font-semibold text-gray-800 mb-3">
             <%= @story_population_type.display_label %>
-            <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+            <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
           </h3>
 
-          <div class="flex flex-wrap gap-3">
+          <div class="flex flex-wrap gap-3" <%= tag.attributes(data: primary_tag_grid_data) %>>
             <% @story_population_categories.each do |category| %>
-              <% id = "story_idea_category_ids_#{category.id}" %>
-
-              <label
-                for="<%= id %>"
-                class="
-                  flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                  border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "story_idea[category_ids][]", "" %>
-                <%= check_box_tag "story_idea[category_ids][]",
-                                  category.id,
-                                  selected_category_ids.include?(category.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
-
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.decorate.display_name %></span>
-              </label>
+              <%= render "shared/primary_tag_checkbox", param_key: "story_idea", kind: :category, value: category.id, label: category.decorate.display_name,
+                         checked: selected_category_ids.include?(category.id), primary: primary_category_id == category.id %>
             <% end %>
           </div>
         </div>

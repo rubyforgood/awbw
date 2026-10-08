@@ -522,6 +522,123 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
+    describe "primary sector and category" do
+      let(:health) { create(:sector, :published, name: "Healthcare") }
+      let(:education) { create(:sector, :published, name: "Education") }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE, story_specific: true) }
+      let(:children) { create(:category, :published, name: "Children", category_type: population) }
+      let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
+
+      it "marks the starred sector and category primary on create" do
+        post stories_url, params: { story: base_attributes.merge(
+          sector_ids: [ health.id, education.id ], primary_sector_id: education.id,
+          category_ids: [ children.id, teens.id ], primary_category_id: teens.id
+        ) }
+
+        story = Story.order(:created_at).last
+        expect(story.primary_sector).to eq(education)
+        expect(story.sectorable_items.where(is_primary: true).count).to eq(1)
+        expect(story.primary_category).to eq(teens)
+        expect(story.categorizable_items.where(is_primary: true).count).to eq(1)
+      end
+
+      it "tags a starred sector and category even when their boxes are unchecked" do
+        post stories_url, params: { story: base_attributes.merge(
+          sector_ids: [ "" ], primary_sector_id: health.id,
+          category_ids: [ "" ], primary_category_id: children.id
+        ) }
+
+        story = Story.order(:created_at).last
+        expect(story.sectors).to contain_exactly(health)
+        expect(story.primary_sector).to eq(health)
+        expect(story.primary_category).to eq(children)
+      end
+
+      it "moves the primary on update and clears it when unstarred" do
+        story = create(:story, :published)
+        story.sectorable_items.create!(sector: health, is_primary: true)
+        story.sectorable_items.create!(sector: education, is_primary: false)
+        story.categorizable_items.create!(category: children, is_primary: true)
+
+        patch story_url(story), params: { story: {
+          sector_ids: [ health.id, education.id ], primary_sector_id: education.id,
+          category_ids: [ children.id ], primary_category_id: ""
+        } }
+
+        expect(response).to have_http_status(:see_other)
+        expect(story.reload.primary_sector).to eq(education)
+        expect(story.sectorable_items.where(is_primary: true).count).to eq(1)
+        expect(story.primary_category).to be_nil
+        expect(story.categories).to contain_exactly(children)
+      end
+
+      it "ignores a primary category outside story population" do
+        theme = create(:category, :published)
+
+        post stories_url, params: { story: base_attributes.merge(
+          category_ids: [ theme.id ], primary_category_id: theme.id
+        ) }
+
+        story = Story.order(:created_at).last
+        expect(story.categories).to contain_exactly(theme)
+        expect(story.primary_category).to be_nil
+      end
+
+      it "only offers the category star on the story population grid" do
+        children
+        theme = create(:category, :published, category_type: create(:category_type, :published))
+
+        get edit_story_url(create(:story, :published))
+
+        page = Nokogiri::HTML(response.body)
+        expect(page.at_css("input#story_primary_category_id_#{children.id}")).to be_present
+        expect(page.at_css("input#story_category_ids_#{theme.id}")).to be_present
+        expect(page.at_css("input#story_primary_category_id_#{theme.id}")).to be_nil
+      end
+
+      it "leaves existing primaries alone when the form doesn't send a primary" do
+        story = create(:story, :published)
+        story.sectorable_items.create!(sector: health, is_primary: true)
+
+        patch story_url(story), params: { story: { sector_ids: [ health.id ] } }
+
+        expect(story.reload.primary_sector).to eq(health)
+      end
+
+      it "shows the starred primary sector on the story page" do
+        story = create(:story, :published)
+        story.sectorable_items.create!(sector: health, is_primary: true)
+
+        get story_url(story, no_redirect: true)
+
+        expect(Capybara.string(response.body)).to have_css("a[title='Primary sector'] i.fa-star")
+      end
+
+      it "stars the current primaries on the edit form" do
+        story = create(:story, :published)
+        story.sectorable_items.create!(sector: health, is_primary: true)
+        story.categorizable_items.create!(category: children, is_primary: true)
+
+        get edit_story_url(story)
+
+        page = Nokogiri::HTML(response.body)
+        expect(page.at_css("input#story_primary_sector_id_#{health.id}")["checked"]).to be_present
+        expect(page.at_css("input#story_primary_category_id_#{children.id}")["checked"]).to be_present
+      end
+
+      it "carries the story idea's primaries into the promotion form" do
+        story_idea = create(:story_idea)
+        story_idea.sectorable_items.create!(sector: health, is_primary: true)
+        story_idea.categorizable_items.create!(category: children, is_primary: true)
+
+        get new_story_url(story_idea_id: story_idea.id)
+
+        page = Nokogiri::HTML(response.body)
+        expect(page.at_css("input#story_primary_sector_id_#{health.id}")["checked"]).to be_present
+        expect(page.at_css("input#story_primary_category_id_#{children.id}")["checked"]).to be_present
+      end
+    end
+
     describe "comments and communications on the edit page" do
       it "renders the combined comments and communications section" do
         get edit_story_url(published_story)

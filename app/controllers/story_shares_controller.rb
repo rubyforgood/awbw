@@ -50,7 +50,7 @@ class StorySharesController < ApplicationController
   end
 
   def preloaded(scope)
-    scope.includes(:sectors, :organization, :primary_asset)
+    scope.includes(:sectors, :organization, :primary_asset, sectorable_items: :sector, categorizable_items: :category)
   end
 
   def browsing?
