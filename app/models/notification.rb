@@ -165,6 +165,30 @@ class Notification < ApplicationRecord
   # rather than flagging tens of thousands of old rows as stuck.
   LAUNCHED_ON = Date.new(2026, 1, 1)
 
+  # Plain-language explanation of the Archived status for the status tooltip.
+  ARCHIVED_HELP = "Undelivered messages imported from the Dashboard on Jan 1, 2026".freeze
+
+  # SQL counterparts of the derived status predicates (#failed?/#archived? and
+  # the pending fallback) so the list can filter by a status that isn't stored.
+  # Pending stays inclusive of resent-but-still-undelivered rows on purpose.
+  scope :failed, -> { where.not(error_at: nil).where(delivered_at: nil) }
+  scope :archived, -> { where(delivered_at: nil, error_at: nil).where(created_at: ...LAUNCHED_ON) }
+  scope :pending, -> { where(delivered_at: nil, error_at: nil).where(created_at: LAUNCHED_ON..) }
+  # Every row in a resend chain: a resend itself, or an original that has been
+  # resent — the same rows that carry the "Resent"/"Resend #N" indicator.
+  scope :resent, -> {
+    resent_root_ids = Notification.where.not(root_notification_id: nil).select(:root_notification_id)
+    where.not(parent_notification_id: nil).or(where(id: resent_root_ids))
+  }
+
+  STATUS_FILTER_OPTIONS = [
+    [ "Delivered", "delivered" ],
+    [ "Pending", "pending" ],
+    [ "Failed", "failed" ],
+    [ "Resent", "resent" ],
+    [ "Archived", "archived" ]
+  ].freeze
+
   validates :kind, presence: true, inclusion: { in: KINDS }
   validates :recipient_role, presence: true, inclusion: { in: RECIPIENT_ROLES }
   validates :recipient_email, presence: true
@@ -260,14 +284,16 @@ class Notification < ApplicationRecord
     end
   }
 
-  # Delivery axis, mirroring the per-row status shown in the index: a delivered
-  # email has a delivered_at; a failed one recorded an error and never landed;
-  # anything else is still pending (includes pre-launch archived rows).
+  # Delivery axis mirroring the per-row status in the index, plus the resend
+  # cross-axis. Each case maps to the matching scope above; "resent" overlaps the
+  # others (a row keeps its own delivery status and may also be in a resend chain).
   scope :delivery_status, ->(status) {
     case status.to_s
     when "delivered" then delivered
-    when "failed" then where(delivered_at: nil).where.not(error_at: nil)
-    when "pending" then where(delivered_at: nil, error_at: nil)
+    when "pending" then pending
+    when "failed" then failed
+    when "resent" then resent
+    when "archived" then archived
     else all
     end
   }

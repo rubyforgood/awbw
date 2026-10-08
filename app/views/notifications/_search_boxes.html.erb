@@ -63,7 +63,7 @@
 
       <div class="relative">
         <%= f.select :delivery_status,
-                     options_for_select([ [ "Delivered", "delivered" ], [ "Pending", "pending" ], [ "Failed", "failed" ] ], params[:delivery_status]),
+                     options_for_select(Notification::STATUS_FILTER_OPTIONS, params[:delivery_status]),
                      { include_blank: "Any" },
                      class: search_field_class(extra: "appearance-none pr-10 bg-white search-select-placeholder") %>
         <%= render "shared/select_chevron" %>

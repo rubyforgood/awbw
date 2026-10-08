@@ -284,6 +284,20 @@ RSpec.describe Notification do
       expect(Notification.delivery_status("pending")).to contain_exactly(pending)
     end
 
+    it "returns pre-launch undelivered rows for 'archived', and excludes them from 'pending'" do
+      archived = create(:notification, delivered_at: nil, error_at: nil, created_at: Notification::LAUNCHED_ON - 1.day)
+
+      expect(Notification.delivery_status("archived")).to contain_exactly(archived)
+      expect(Notification.delivery_status("pending")).to contain_exactly(pending)
+    end
+
+    it "returns the original and its resends for 'resent', not unrelated rows" do
+      root = create(:notification)
+      child = create(:notification, parent_notification_id: root.id, root_notification_id: root.id)
+
+      expect(Notification.delivery_status("resent")).to contain_exactly(root, child)
+    end
+
     it "returns all notifications for blank/unknown values" do
       all = [ delivered, failed, pending ]
       expect(Notification.delivery_status("")).to contain_exactly(*all)

@@ -22,11 +22,15 @@
           <%= time_ago_in_words(notification.delivered_at.in_time_zone("Pacific Time (US & Canada)")) %> ago
         <% elsif notification.failed? %>
           <span class="font-medium text-red-600" title="<%= notification.error_class %>: <%= notification.error_message %>">Failed</span>
+          <%= render "resend_button", notification: notification %>
         <% elsif notification.archived? %>
-          <span class="font-medium text-gray-400" title="Retired — old undelivered email, no longer tracked as pending">Archived</span>
+          <span class="font-medium text-gray-400">Archived</span>
+          <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-gray-400" title="<%= Notification::ARCHIVED_HELP %>"></i>
         <% else %>
           <span class="font-medium text-yellow-600">Pending</span>
+          <%= render "resend_button", notification: notification %>
         <% end %>
+        <%= render "resend_indicator", notification: notification %>
       </td>
 
       <!-- Kind -->
