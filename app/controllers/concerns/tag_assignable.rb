@@ -7,7 +7,7 @@ module TagAssignable
     key = param_key || record.model_name.param_key
 
     selected_category_ids = Array(params[key][:category_ids]).reject(&:blank?).map(&:to_i)
-    selected_category_ids |= primary_tag_ids(key, :primary_category_id)
+    selected_category_ids |= primary_category_ids(key)
     selected = Category.where(id: selected_category_ids).to_a
 
     categories_before = record.categories.to_a
@@ -43,11 +43,11 @@ module TagAssignable
       record.apply_primary_age_groups!(Array(params[key][:primary_age_category_ids]))
     end
     # The single-star primary picker (stories, story ideas) sends one id per kind.
-    if primary_tag_editable?(key, :primary_sector_id)
+    if params[key].key?(:primary_sector_id)
       assign_primary_tag(record.sectorable_items, :sector_id, primary_tag_ids(key, :primary_sector_id).first)
     end
-    if primary_tag_editable?(key, :primary_category_id)
-      assign_primary_tag(record.categorizable_items, :category_id, primary_tag_ids(key, :primary_category_id).first)
+    if params[key].key?(:primary_category_id)
+      assign_primary_tag(record.categorizable_items, :category_id, primary_category_ids(key).first)
     end
 
     # These memberships change outside the record's dirty tracking, so hand the
@@ -61,14 +61,12 @@ module TagAssignable
   end
 
   def primary_tag_ids(key, field)
-    return [] unless primary_tag_editable?(key, field)
-
     Array(params[key][field].presence).map(&:to_i).first(1)
   end
 
-  # Only admins curate the primary star; anyone else's submission leaves it untouched.
-  def primary_tag_editable?(key, field)
-    current_user&.super_user? && params[key].key?(field)
+  # Only a story population (audience) category can be primary.
+  def primary_category_ids(key)
+    Category.story_populations.where(id: primary_tag_ids(key, :primary_category_id)).ids
   end
 
   def assign_primary_tag(items, foreign_key, primary_id)

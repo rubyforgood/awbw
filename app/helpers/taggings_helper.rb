@@ -1,4 +1,10 @@
 module TaggingsHelper
+  # Wires a tag checkbox grid (shared/_primary_tag_checkbox chips) to the
+  # primary-tag controller so only one chip in the grid can be starred.
+  def primary_tag_grid_data
+    { controller: "primary-tag", primary_tag_primary_class: "border-amber-300 bg-amber-50", primary_tag_default_class: "border-gray-200 bg-white" }
+  end
+
   def tagged_index_path(type, sector_names_all:, category_names_all:)
     klass = Tag::TAGGABLE_META.fetch(type)[:klass]
 

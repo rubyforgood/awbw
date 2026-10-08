@@ -525,7 +525,7 @@ RSpec.describe "/stories", type: :request do
     describe "primary sector and category" do
       let(:health) { create(:sector, :published, name: "Healthcare") }
       let(:education) { create(:sector, :published, name: "Education") }
-      let(:population) { create(:category_type, :published) }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE, story_specific: true) }
       let(:children) { create(:category, :published, name: "Children", category_type: population) }
       let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 
@@ -570,6 +570,30 @@ RSpec.describe "/stories", type: :request do
         expect(story.sectorable_items.where(is_primary: true).count).to eq(1)
         expect(story.primary_category).to be_nil
         expect(story.categories).to contain_exactly(children)
+      end
+
+      it "ignores a primary category outside story population" do
+        theme = create(:category, :published)
+
+        post stories_url, params: { story: base_attributes.merge(
+          category_ids: [ theme.id ], primary_category_id: theme.id
+        ) }
+
+        story = Story.order(:created_at).last
+        expect(story.categories).to contain_exactly(theme)
+        expect(story.primary_category).to be_nil
+      end
+
+      it "only offers the category star on the story population grid" do
+        children
+        theme = create(:category, :published, category_type: create(:category_type, :published))
+
+        get edit_story_url(create(:story, :published))
+
+        page = Nokogiri::HTML(response.body)
+        expect(page.at_css("input#story_primary_category_id_#{children.id}")).to be_present
+        expect(page.at_css("input#story_category_ids_#{theme.id}")).to be_present
+        expect(page.at_css("input#story_primary_category_id_#{theme.id}")).to be_nil
       end
 
       it "leaves existing primaries alone when the form doesn't send a primary" do

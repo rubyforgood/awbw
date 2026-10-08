@@ -2,8 +2,9 @@ require "rails_helper"
 
 RSpec.describe CategoriesTaggable do
   let(:story) { create(:story) }
-  let(:children) { create(:category, :published, name: "Children") }
-  let(:teens) { create(:category, :published, name: "Teens") }
+  let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE) }
+  let(:children) { create(:category, :published, name: "Children", category_type: population) }
+  let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 
   describe "single-primary validation" do
     it "allows one primary category" do
@@ -18,7 +19,14 @@ RSpec.describe CategoriesTaggable do
       story.categorizable_items.build(category: teens, is_primary: true)
 
       expect(story).not_to be_valid
-      expect(story.errors[:base]).to include("Only one category can be marked as primary")
+      expect(story.errors[:base]).to include("Only one story population can be marked as primary")
+    end
+
+    it "rejects a primary category outside story population" do
+      story.categorizable_items.build(category: create(:category, :published), is_primary: true)
+
+      expect(story).not_to be_valid
+      expect(story.errors[:base]).to include("Only a story population category can be marked as primary")
     end
 
     it "rejects two primary categories on a story idea" do

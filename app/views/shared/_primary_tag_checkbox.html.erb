@@ -1,6 +1,9 @@
-<%# One checkbox chip in a sector/category tag grid, plus the admin-only
-    single-select primary star (driven by the enclosing primary-tag controller).
-    kind is :sector or :category; the star posts <param_key>[primary_<kind>_id]. %>
+<%# One checkbox chip in a sector/category tag grid. With starrable (default),
+    it adds the single-select primary star driven by the enclosing primary-tag
+    controller. kind is :sector or :category; the star posts
+    <param_key>[primary_<kind>_id]. %>
+<% starrable = local_assigns.fetch(:starrable, true) %>
+<% primary = starrable && local_assigns.fetch(:primary, false) %>
 <% id = "#{param_key}_#{kind}_ids_#{value}" %>
 <div class="flex w-auto min-w-[180px] items-center gap-2 rounded-lg border p-3 shadow-sm transition hover:bg-gray-100 <%= primary ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-white" %>"
      data-primary-tag-target="chip">
@@ -11,11 +14,11 @@
                       checked,
                       id: id,
                       class: "h-4 w-4 text-blue-600 rounded",
-                      data: { primary_tag_target: "member", action: "primary-tag#selectMember" } %>
+                      data: (starrable ? { primary_tag_target: "member", action: "primary-tag#selectMember" } : {}) %>
     <span class="text-sm whitespace-nowrap text-gray-700"><%= label %></span>
   </label>
-  <% if current_user&.super_user? %>
-    <label class="admin-only cursor-pointer leading-none" title="Mark as primary <%= kind %>">
+  <% if starrable %>
+    <label class="cursor-pointer leading-none" title="Mark as primary <%= kind == :category ? "story population" : kind %>">
       <%= check_box_tag "#{param_key}[primary_#{kind}_id]",
                         value,
                         primary,

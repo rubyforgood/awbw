@@ -120,20 +120,21 @@
     organization later, so an idea never gets stuck waiting on one.
   action_path: "/story_ideas"
 
-- name: "Star a primary sector and category on stories and story ideas"
+- name: "Star a primary sector and story population on stories"
   area: stories
-  display_status: admin_facing
+  display_status: user_facing
   released_on: 2026-10-07
   pr_number: 2617
   summary: >-
-    When you tag a story or story idea, you can now star one sector and one
-    category as its primary — the same star used for a person's sectors and
-    age ranges. The starred tags lead the tag chips on the story page and Story Share.
+    When you share a story idea (or an admin tags a story), you can star one
+    sector and one story population as its primary — the same star used for a
+    person's sectors and age ranges. Story Share shows the starred pair on each
+    story's picture and leads the story's tags with them.
   pro_tips:
     - "Starring a tag also checks it, and unchecking a starred tag clears the star."
-    - "Promoting a story idea into a story carries its starred sector and category over."
-    - "Only admins see the star; facilitators sharing a story just check the boxes."
-  action_path: "/story_ideas"
+    - "Promoting a story idea into a story carries its starred sector and story population over."
+    - "Picture cards only show starred tags, so a story with no star shows no tag on its picture."
+  action_path: "/story_share"
 
 - name: "Cleaner story page layout"
   area: stories

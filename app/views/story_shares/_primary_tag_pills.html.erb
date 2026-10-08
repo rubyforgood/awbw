@@ -1,0 +1,21 @@
+<%# A story's starred primary sector and primary story population, as pills laid
+    over its picture. Renders nothing when neither is starred.
+    Locals: story; wrapper_class (positioning); pad (pill size);
+    glass: true for translucent pills on color-washed tiles. %>
+<% pad = local_assigns.fetch(:pad, "px-3 py-1.5") %>
+<% glass = local_assigns.fetch(:glass, false) %>
+<% sector = story.primary_sector %>
+<% audience = story.primary_category %>
+<% pills = [] %>
+<% pills << [ sector.name, story_share_sector_chip_class(sector.name), "Primary sector" ] if sector %>
+<% pills << [ audience.decorate.display_name, "bg-brand-amber-700", "Primary story population" ] if audience %>
+<% if pills.any? %>
+  <div class="<%= local_assigns[:wrapper_class] %> flex flex-wrap gap-1.5">
+    <% pills.each do |name, color, title| %>
+      <span class="<%= glass ? "bg-white/20" : color %> <%= pad %> inline-flex items-center rounded-full text-xs font-semibold tracking-wide text-white uppercase"
+            title="<%= title %>">
+        <i class="fa-solid fa-star mr-1 text-amber-300" aria-hidden="true"></i><%= name %>
+      </span>
+    <% end %>
+  </div>
+<% end %>

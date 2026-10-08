@@ -76,7 +76,8 @@ RSpec.describe "/story_ideas", type: :request do
       it "stars the primary sector and category" do
         story_idea = create(:story_idea)
         story_idea.sectorable_items.create!(sector: create(:sector, :published), is_primary: true)
-        story_idea.categorizable_items.create!(category: create(:category, :published), is_primary: true)
+        population = create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE)
+        story_idea.categorizable_items.create!(category: create(:category, :published, category_type: population), is_primary: true)
 
         get story_idea_url(story_idea)
 
@@ -96,8 +97,9 @@ RSpec.describe "/story_ideas", type: :request do
     describe "POST /create with a primary sector and category" do
       let(:health) { create(:sector, :published, name: "Healthcare") }
       let(:education) { create(:sector, :published, name: "Education") }
-      let(:children) { create(:category, :published, name: "Children") }
-      let(:teens) { create(:category, :published, name: "Teens") }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE) }
+      let(:children) { create(:category, :published, name: "Children", category_type: population) }
+      let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 
       it "marks the starred sector and category primary" do
         post story_ideas_url, params: { story_idea: valid_attributes.merge(
@@ -266,10 +268,11 @@ RSpec.describe "/story_ideas", type: :request do
     describe "primary sector and category" do
       let(:health) { create(:sector, :published, name: "Healthcare") }
       let(:education) { create(:sector, :published, name: "Education") }
-      let(:children) { create(:category, :published, name: "Children") }
-      let(:teens) { create(:category, :published, name: "Teens") }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::AUDIENCE_CATEGORY_TYPE) }
+      let(:children) { create(:category, :published, name: "Children", category_type: population) }
+      let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
 
-      it "tags the checked boxes but ignores the admin-only primary star" do
+      it "marks the starred sector and story population primary" do
         post story_ideas_url, params: { story_idea: valid_attributes.merge(
           sector_ids: [ health.id, education.id ], primary_sector_id: health.id,
           category_ids: [ children.id, teens.id ], primary_category_id: children.id
@@ -277,18 +280,16 @@ RSpec.describe "/story_ideas", type: :request do
 
         story_idea = StoryIdea.last
         expect(story_idea.sectors).to contain_exactly(health, education)
-        expect(story_idea.categories).to contain_exactly(children, teens)
-        expect(story_idea.primary_sector).to be_nil
-        expect(story_idea.primary_category).to be_nil
+        expect(story_idea.primary_sector).to eq(health)
+        expect(story_idea.primary_category).to eq(children)
       end
 
-      it "doesn't offer the star on the share form" do
-        create(:sector, :published)
+      it "offers the star on the share form" do
+        sector = create(:sector, :published)
 
         get new_story_idea_url
 
-        expect(response.body).not_to include("primary_sector_id")
-        expect(response.body).to include("story_idea[sector_ids][]")
+        expect(response.body).to include("story_idea_primary_sector_id_#{sector.id}")
       end
     end
 
