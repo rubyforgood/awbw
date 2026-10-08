@@ -62,7 +62,7 @@ class StorySharesController < ApplicationController
     @stories_by_sector = @home_sectors.index_with do |sector|
       section_stories(portal_scope.sector_names_all(sector.name))
     end
-    @stories_by_audience = Category.story_share_home_sections.index_with do |category|
+    @stories_by_audience = Category.story_share_audience_nav.select(&:story_share_home_section).index_with do |category|
       section_stories(portal_scope.category_names_all(category.name))
     end
     @spotlight_stories = section_stories(portal_scope.facilitator_spotlights(true))

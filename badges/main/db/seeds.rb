@@ -403,10 +403,10 @@ story_population_type.update!(display_text: "Who is this story about?", story_sp
 # duplicated. The age twins stay unpublished (taggings preserved) because the story
 # forms offer the AgeRange categories alongside these.
 story_populations = [
-  [ "Self", "Self", 1, true ],
-  [ "Colleagues", "Colleagues", 2, true ],
-  [ "Community", "Community", 3, true ],
-  [ "Families", "Families", 4, true ],
+  [ "Families", "Families", 1, true ],
+  [ "Community", "Community", 2, true ],
+  [ "Self", "Self", 3, true ],
+  [ "Colleagues", "Colleagues", 4, true ],
   [ "Children_", "Children", 5, false ],
   [ "Teens_", "Teens", 6, false ],
   [ "Adults_", "Adults", 7, false ]
@@ -448,10 +448,12 @@ age_range_type.categories.reject { |cat| canonical_age_names.include?(cat.name.d
   .each { |cat| cat.update!(published: false) }
 set_category_positions.(age_range_type, age_ranges.map { |name, _, position| [ name, position ] })
 
-# Order the Story Share audience nav. The age groups resolve to the clean-named
-# AgeRange categories; the rest to their StoryPopulation categories.
-%w[Children Teens Adults Families Community Self Colleagues].each_with_index do |name, index|
-  Category.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
+# Order the Story Share audience nav: age ranges, then story populations, each
+# numbered within its own group.
+{ age_range_type => %w[Children Teens Adults Elders], story_population_type => %w[Families Community Self Colleagues] }.each do |type, names|
+  names.each_with_index do |name, index|
+    type.categories.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
+  end
 end
 
 puts "Creating WorkshopEnvironment CategoryType…"
