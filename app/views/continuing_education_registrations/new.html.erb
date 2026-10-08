@@ -22,7 +22,7 @@
 
   <div class="space-y-6">
     <%= form_with model: @ce_registration, url: continuing_education_registrations_path,
-          method: :post, id: "ce_registration_form", data: { turbo: false } do |f| %>
+          method: :post, id: "ce_registration_form" do |f| %>
       <%= hidden_field_tag :allocatable_sgid, registration.to_sgid.to_s %>
       <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
       <%= render "details_section", f: f, license: @ce_registration.professional_license, ce_registration: @ce_registration, event: event %>
@@ -32,7 +32,7 @@
     <div class="flex items-center gap-3 border-t border-gray-200 pt-6">
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", ce_registration_return_path(registration), class: button_classes(:secondary_outline) %>
-        <button type="submit" form="ce_registration_form" class="<%= button_classes(:primary) %>">Create CE registration</button>
+        <button type="submit" form="ce_registration_form" class="<%= button_classes(:primary) %>" data-turbo-submits-with="Saving…">Create CE registration</button>
       </div>
     </div>
   </div>

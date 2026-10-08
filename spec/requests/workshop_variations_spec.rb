@@ -256,6 +256,7 @@ RSpec.describe "/workshop_variations", type: :request do
           }.to change(WorkshopVariation, :count).by(1)
 
           expect(response).to redirect_to(workshop_variation_path(WorkshopVariation.last))
+          expect(response).to have_http_status(:see_other)
         end
 
         it "credits the chosen person as author and records the creator" do
@@ -276,7 +277,7 @@ RSpec.describe "/workshop_variations", type: :request do
             post workshop_variations_path, params: { workshop_variation: invalid_attributes }
           }.not_to change(WorkshopVariation, :count)
 
-          expect(response).to have_http_status(:ok)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include("Unable to save the workshop variation")
         end
       end
@@ -328,6 +329,16 @@ RSpec.describe "/workshop_variations", type: :request do
 
         expect(variation.reload.name).to eq("Updated Name")
         expect(response).to redirect_to(workshop_variation_path(variation))
+        expect(response).to have_http_status(:see_other)
+      end
+
+      it "does not update with invalid params and renders edit with 422" do
+        variation = create(:workshop_variation, valid_attributes)
+
+        patch workshop_variation_path(variation),
+              params: { workshop_variation: { name: "", windows_type_id: nil } }
+
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
       it "attaches assets from the idea when promote_idea_assets is true" do
