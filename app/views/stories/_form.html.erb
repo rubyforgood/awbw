@@ -14,9 +14,11 @@
   <% selected_category_ids = @preselected_category_ids || @story.category_ids %>
   <% primary_sector_id = @preselected_sector_ids ? @preselected_primary_sector_id : @story.primary_sector&.id %>
   <% primary_category_id = @preselected_category_ids ? @preselected_primary_category_id : @story.primary_category&.id %>
-  <%# Blank defaults precede the stars so a starred chip's value wins, and unstarring clears the primary. %>
-  <%= hidden_field_tag "story[primary_sector_id]", "" %>
-  <%= hidden_field_tag "story[primary_category_id]", "" %>
+  <% if current_user&.super_user? %>
+    <%# Blank defaults precede the stars so a starred chip's value wins, and unstarring clears the primary. %>
+    <%= hidden_field_tag "story[primary_sector_id]", "" %>
+    <%= hidden_field_tag "story[primary_category_id]", "" %>
+  <% end %>
   <% story_specific_categories = @categories_grouped.select { |type, _| type&.story_specific? } %>
   <% remaining_categories = @categories_grouped.reject { |type, _| type&.story_specific? } %>
 

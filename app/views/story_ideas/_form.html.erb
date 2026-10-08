@@ -11,9 +11,12 @@
     <% selected_category_ids = @preselected_category_ids || @story_idea.category_ids %>
     <% primary_sector_id = @preselected_sector_ids ? @preselected_primary_sector_id : @story_idea.primary_sector&.id %>
     <% primary_category_id = @preselected_category_ids ? @preselected_primary_category_id : @story_idea.primary_category&.id %>
-    <%# Blank defaults precede the stars so a starred chip's value wins, and unstarring clears the primary. %>
-    <%= hidden_field_tag "story_idea[primary_sector_id]", "" %>
-    <%= hidden_field_tag "story_idea[primary_category_id]", "" %>
+    <% tag_hint = current_user&.super_user? ? "(check all that apply, star the primary)" : "(check all that apply)" %>
+    <% if current_user&.super_user? %>
+      <%# Blank defaults precede the stars so a starred chip's value wins, and unstarring clears the primary. %>
+      <%= hidden_field_tag "story_idea[primary_sector_id]", "" %>
+      <%= hidden_field_tag "story_idea[primary_category_id]", "" %>
+    <% end %>
     <% promoted_to_story = f.object.stories.any? %>
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
@@ -169,7 +172,7 @@
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
               <h3 class="text-base font-semibold text-gray-800 mb-3">
                 <%= Sector::STORY_DISPLAY_TEXT %>
-                <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
+                <span class="text-sm font-normal italic text-gray-500 ml-1"><%= tag_hint %></span>
               </h3>
 
               <div class="flex flex-wrap gap-3"
@@ -188,7 +191,7 @@
                 <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
                   <h3 class="text-base font-semibold text-gray-800 mb-3">
                     <%= type.display_label %>
-                    <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
+                    <span class="text-sm font-normal italic text-gray-500 ml-1"><%= tag_hint %></span>
                   </h3>
 
                   <div class="flex flex-wrap gap-3">
@@ -208,7 +211,7 @@
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
         <h3 class="text-base font-semibold text-gray-800 mb-3">
           <%= Sector::STORY_DISPLAY_TEXT %>
-          <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
+          <span class="text-sm font-normal italic text-gray-500 ml-1"><%= tag_hint %></span>
         </h3>
 
         <div class="flex flex-wrap gap-3"
@@ -226,7 +229,7 @@
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
           <h3 class="text-base font-semibold text-gray-800 mb-3">
             <%= @story_population_type.display_label %>
-            <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
+            <span class="text-sm font-normal italic text-gray-500 ml-1"><%= tag_hint %></span>
           </h3>
 
           <div class="flex flex-wrap gap-3">

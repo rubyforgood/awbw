@@ -122,16 +122,17 @@
 
 - name: "Star a primary sector and category on stories and story ideas"
   area: stories
-  display_status: user_facing
+  display_status: admin_facing
   released_on: 2026-10-07
   pr_number: 2617
   summary: >-
     When you tag a story or story idea, you can now star one sector and one
     category as its primary — the same star used for a person's sectors and
-    age ranges.
+    age ranges. The starred tags lead the tag chips on the story page and Story Share.
   pro_tips:
     - "Starring a tag also checks it, and unchecking a starred tag clears the star."
     - "Promoting a story idea into a story carries its starred sector and category over."
+    - "Only admins see the star; facilitators sharing a story just check the boxes."
   action_path: "/story_ideas"
 
 - name: "Cleaner story page layout"

@@ -93,6 +93,26 @@ RSpec.describe "/story_ideas", type: :request do
       end
     end
 
+    describe "POST /create with a primary sector and category" do
+      let(:health) { create(:sector, :published, name: "Healthcare") }
+      let(:education) { create(:sector, :published, name: "Education") }
+      let(:children) { create(:category, :published, name: "Children") }
+      let(:teens) { create(:category, :published, name: "Teens") }
+
+      it "marks the starred sector and category primary" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(
+          sector_ids: [ health.id, education.id ], primary_sector_id: health.id,
+          category_ids: [ children.id, teens.id ], primary_category_id: children.id
+        ) }
+
+        story_idea = StoryIdea.last
+        expect(story_idea.primary_sector).to eq(health)
+        expect(story_idea.sectorable_items.where(is_primary: true).count).to eq(1)
+        expect(story_idea.primary_category).to eq(children)
+        expect(story_idea.categorizable_items.where(is_primary: true).count).to eq(1)
+      end
+    end
+
     describe "GET /update" do
       it "updates own story_idea" do
         story_idea = create(:story_idea)
@@ -243,23 +263,32 @@ RSpec.describe "/story_ideas", type: :request do
       end
     end
 
-    describe "POST /create with a primary sector and category" do
+    describe "primary sector and category" do
       let(:health) { create(:sector, :published, name: "Healthcare") }
       let(:education) { create(:sector, :published, name: "Education") }
       let(:children) { create(:category, :published, name: "Children") }
       let(:teens) { create(:category, :published, name: "Teens") }
 
-      it "marks the starred sector and category primary" do
+      it "tags the checked boxes but ignores the admin-only primary star" do
         post story_ideas_url, params: { story_idea: valid_attributes.merge(
           sector_ids: [ health.id, education.id ], primary_sector_id: health.id,
           category_ids: [ children.id, teens.id ], primary_category_id: children.id
         ) }
 
         story_idea = StoryIdea.last
-        expect(story_idea.primary_sector).to eq(health)
-        expect(story_idea.sectorable_items.where(is_primary: true).count).to eq(1)
-        expect(story_idea.primary_category).to eq(children)
-        expect(story_idea.categorizable_items.where(is_primary: true).count).to eq(1)
+        expect(story_idea.sectors).to contain_exactly(health, education)
+        expect(story_idea.categories).to contain_exactly(children, teens)
+        expect(story_idea.primary_sector).to be_nil
+        expect(story_idea.primary_category).to be_nil
+      end
+
+      it "doesn't offer the star on the share form" do
+        create(:sector, :published)
+
+        get new_story_idea_url
+
+        expect(response.body).not_to include("primary_sector_id")
+        expect(response.body).to include("story_idea[sector_ids][]")
       end
     end
 

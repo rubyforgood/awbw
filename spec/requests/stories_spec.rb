@@ -581,6 +581,15 @@ RSpec.describe "/stories", type: :request do
         expect(story.reload.primary_sector).to eq(health)
       end
 
+      it "shows the starred primary sector on the story page" do
+        story = create(:story, :published)
+        story.sectorable_items.create!(sector: health, is_primary: true)
+
+        get story_url(story, no_redirect: true)
+
+        expect(Capybara.string(response.body)).to have_css("a[title='Primary sector'] i.fa-star")
+      end
+
       it "stars the current primaries on the edit form" do
         story = create(:story, :published)
         story.sectorable_items.create!(sector: health, is_primary: true)

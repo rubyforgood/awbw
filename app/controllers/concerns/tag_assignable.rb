@@ -43,10 +43,10 @@ module TagAssignable
       record.apply_primary_age_groups!(Array(params[key][:primary_age_category_ids]))
     end
     # The single-star primary picker (stories, story ideas) sends one id per kind.
-    if params[key].key?(:primary_sector_id)
+    if primary_tag_editable?(key, :primary_sector_id)
       assign_primary_tag(record.sectorable_items, :sector_id, primary_tag_ids(key, :primary_sector_id).first)
     end
-    if params[key].key?(:primary_category_id)
+    if primary_tag_editable?(key, :primary_category_id)
       assign_primary_tag(record.categorizable_items, :category_id, primary_tag_ids(key, :primary_category_id).first)
     end
 
@@ -61,7 +61,14 @@ module TagAssignable
   end
 
   def primary_tag_ids(key, field)
+    return [] unless primary_tag_editable?(key, field)
+
     Array(params[key][field].presence).map(&:to_i).first(1)
+  end
+
+  # Only admins curate the primary star; anyone else's submission leaves it untouched.
+  def primary_tag_editable?(key, field)
+    current_user&.super_user? && params[key].key?(field)
   end
 
   def assign_primary_tag(items, foreign_key, primary_id)
