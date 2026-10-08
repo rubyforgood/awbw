@@ -39,7 +39,7 @@ class ScholarshipsController < ApplicationController
       authorize! @scholarship
 
       if @scholarship.save
-        redirect_to grant_return_path, notice: "Scholarship created."
+        redirect_to grant_return_path, notice: "Scholarship created.", status: :see_other
       else
         render :new, status: :unprocessable_content
       end
@@ -55,7 +55,7 @@ class ScholarshipsController < ApplicationController
     return if redirect_transferred_in_scholarship
 
     if @scholarship.save
-      redirect_to scholarship_save_path, notice: "Scholarship created."
+      redirect_to scholarship_save_path, notice: "Scholarship created.", status: :see_other
     else
       @grants = Grant.selectable_for(@scholarship)
       render :new, status: :unprocessable_content
@@ -76,7 +76,7 @@ class ScholarshipsController < ApplicationController
     @scholarship.assign_attributes(scholarship_params)
 
     if @scholarship.save
-      redirect_to scholarship_save_path, notice: "Scholarship updated."
+      redirect_to scholarship_save_path, notice: "Scholarship updated.", status: :see_other
     else
       @grants = Grant.selectable_for(@scholarship)
       render :edit, status: :unprocessable_content
@@ -89,7 +89,7 @@ class ScholarshipsController < ApplicationController
     grant = @scholarship.grant
     @scholarship.destroy!
 
-    redirect_to scholarship_return_path(grant), notice: "Scholarship removed."
+    redirect_to scholarship_return_path(grant), notice: "Scholarship removed.", status: :see_other
   end
 
   # Flip a recipient's tasks-completed state from the event recipients roster.
