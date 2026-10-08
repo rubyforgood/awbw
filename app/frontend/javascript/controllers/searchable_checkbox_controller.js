@@ -31,12 +31,4 @@ export default class extends Controller {
       }
     });
   }
-
-  clear() {
-    this.selectTargets.forEach((select) => {
-      if (select._tomSelect) {
-        select._tomSelect.clear();
-      }
-    });
-  }
 }
