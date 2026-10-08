@@ -71,6 +71,12 @@
                 <% end %>
               </dd>
             </div>
+            <% if p.window_type.present? %>
+              <div>
+                <dt class="inline text-gray-500">Window type:</dt>
+                <dd class="inline text-gray-800"><%= p.window_type %><%= " · featured" if p.featured %></dd>
+              </div>
+            <% end %>
             <% if p.workshop_label %>
               <div class="sm:col-span-2">
                 <dt class="inline text-gray-500">Workshop:</dt>
@@ -107,6 +113,23 @@
             <p class="mt-1.5 text-xs text-gray-500">
               <i class="fa-solid fa-star text-amber-400"></i> marks the primary sector / story population
             </p>
+          <% end %>
+
+          <% if p.grants.present? %>
+            <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <span class="text-xs text-gray-500">Grant(s):</span>
+              <% p.grants.each do |grant| %>
+                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"><%= grant %></span>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if p.licenses.present? %>
+            <p class="mt-1.5 text-xs text-gray-500">Licenses (to author): <span class="text-gray-700"><%= p.licenses.join(", ") %></span></p>
+          <% end %>
+
+          <% if p.missing_tags.present? %>
+            <p class="mt-1.5 text-xs text-yellow-700">Not in the portal (kept as a note on the story): <%= p.missing_tags.join(", ") %></p>
           <% end %>
 
           <% if p.images.to_i.positive? %>
