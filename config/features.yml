@@ -35,20 +35,19 @@
   summary: >-
     When a story idea becomes a story, the submitter's email now tells them it's
     live on Story Share and invites them to share it with friends and colleagues.
-  pro_tips:
-    - "The \"View story\" button only appears once the story is published or publicly visible."
 
-- name: "Story idea submitters are emailed when their story is published"
+- name: "Story idea emails wait until the story is published"
   area: stories
   display_status: user_facing
   released_on: 2026-10-08
+  pr_number: 2620
   summary: >-
-    When a story idea becomes a story, the person who shared the idea now gets
-    their "Your story has been shared" email once the story is published, with a
-    link to read it.
+    When a story idea becomes a story, the submitter's "your story has been
+    shared" email and the admin FYI now go out the first time the story is
+    published, so the submitter gets a working link to their live story.
   pro_tips:
-    - "Admins still get the FYI as soon as the idea is turned into a story, even while it's unpublished."
-    - "The email goes out only once per story, so unpublishing and republishing won't send it again."
+    - "Saving a promoted story as unpublished sends nothing; check Published when it's ready to go live."
+    - "Both emails go out only once per story, so unpublishing and republishing won't send them again."
 
 - name: "See a story's tags at a glance"
   area: stories
