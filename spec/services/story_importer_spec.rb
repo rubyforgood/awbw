@@ -437,6 +437,33 @@ RSpec.describe StoryImporter do
 
       expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported category not in portal: AgeRange: Nope/))
     end
+
+    it "flags the primary sector and primary story population on their join rows" do
+      create(:sector, name: "Domestic Violence")
+      story_population = create(:category_type, name: "StoryPopulation")
+      create(:category, category_type: story_population, name: "Teens")
+      import([ base_row("sectors" => "Domestic Violence", "primary_sector" => "Domestic Violence",
+                        "categories" => "StoryPopulation: Teens",
+                        "primary_story_population" => "StoryPopulation: Teens") ])
+
+      story = Story.sole
+      expect(story.sectorable_items.find { |i| i.sector.name == "Domestic Violence" }.is_primary).to be(true)
+      expect(story.categorizable_items.find { |i| i.category.name == "Teens" }.is_primary).to be(true)
+    end
+
+    it "tags and flags a primary sector even when it's absent from the sectors list" do
+      create(:sector, name: "Incarceration")
+      import([ base_row("sectors" => "", "primary_sector" => "Incarceration") ])
+
+      item = Story.sole.sectorable_items.find { |i| i.sector.name == "Incarceration" }
+      expect(item.is_primary).to be(true)
+    end
+
+    it "keeps an unknown primary sector as a comment on the story" do
+      import([ base_row("primary_sector" => "Imaginary Sector") ])
+
+      expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported sector not in portal: Imaginary Sector/))
+    end
   end
 
   describe "grants" do

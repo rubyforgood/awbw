@@ -26,8 +26,8 @@ class StoryImporter
     organization_name organization_status facilitator_name facilitator_last_name
     facilitator_email author_note name_display anonymous
     co_facilitator_name co_facilitator_last_name co_facilitator_email co_name_display co_anonymous
-    workshop sectors window_type categories grants professional_licenses
-    image_count image_urls image_alt_titles youtube_url featured
+    workshop sectors primary_sector window_type categories primary_story_population grants
+    professional_licenses image_count image_urls image_alt_titles youtube_url featured
   ].freeze
 
   # The curated review sheet carries human-readable column labels; map each to
@@ -56,7 +56,9 @@ class StoryImporter
     "workshop" => "workshop",
     "sectors" => "sectors",
     "window type" => "window_type",
+    "primary sector" => "primary_sector",
     "categories" => "categories",
+    "primary story population" => "primary_story_population",
     "grant(s)" => "grants",
     "professional licenses" => "professional_licenses",
     "professional license(s)" => "professional_licenses",
@@ -105,6 +107,7 @@ class StoryImporter
     :wp_id, :title, :will_publish, :skipped_reason,
     :organization, :organization_new, :author_label, :author_new, :author_updated,
     :creates_story, :creates_idea, :workshop_label, :sectors, :categories, :images, :comment, :warnings,
+    :primary_sector, :primary_category,
     keyword_init: true
   )
 
@@ -126,7 +129,7 @@ class StoryImporter
 
   # Resolved tags for one row, applied to both the idea and its connected story,
   # plus the names that matched nothing (preserved as comments on the story).
-  RowTags = Struct.new(:sectors, :categories, :missing_sectors, :missing_categories, keyword_init: true)
+  RowTags = Struct.new(:sectors, :categories, :missing_sectors, :missing_categories, :primary_sector, :primary_category, keyword_init: true)
 
   # Sheet "name_display" → our author_credit_preference, covering all five portal
   # settings. Lookups are case-insensitive, and each portal option is accepted
@@ -296,6 +299,8 @@ class StoryImporter
       end
     preview.sectors = tags.sectors.map(&:name)
     preview.categories = tags.categories.map { |c| "#{c.category_type.name}: #{c.decorate.display_name}" }
+    preview.primary_sector = tags.primary_sector&.name
+    preview.primary_category = tags.primary_category&.then { |c| "#{c.category_type.name}: #{c.decorate.display_name}" }
     preview.comment = author ? nil : person_display(row, AUTHOR_COLUMNS).presence
     preview.warnings = @result.warnings.drop(warnings_before).map { |w| w.sub(/\Arow \S+ \(.*?\): /, "") }
   end
@@ -612,10 +617,47 @@ class StoryImporter
       category ? categories << category : missing_categories << [ type, name ]
     end
 
+    primary_sector = resolve_primary_sector(row, sectors, missing_sectors)
+    primary_category = resolve_primary_category(row, categories, missing_categories)
+
     RowTags.new(
       sectors: sectors.uniq, categories: categories.uniq,
-      missing_sectors: missing_sectors.uniq, missing_categories: missing_categories.uniq
+      missing_sectors: missing_sectors.uniq, missing_categories: missing_categories.uniq,
+      primary_sector: primary_sector, primary_category: primary_category
     )
+  end
+
+  # The row's single primary sector (a subset of the sectors list) — added to the
+  # tagged set if missing; an unmatched name becomes a comment like any other.
+  def resolve_primary_sector(row, sectors, missing_sectors)
+    name = clean(row["primary_sector"])
+    return if name.blank?
+
+    sector = Sector.where("LOWER(name) = ?", name.downcase).first
+    unless sector
+      missing_sectors << name
+      return
+    end
+
+    sectors << sector unless sectors.include?(sector)
+    sector
+  end
+
+  # The row's primary story population, written "StoryPopulation: Name".
+  def resolve_primary_category(row, categories, missing_categories)
+    token = clean(row["primary_story_population"])
+    return if token.blank?
+
+    type, name = token.split(":", 2).map(&:strip)
+    type, name = nil, type unless name
+    category = category_named(name, type)
+    unless category
+      missing_categories << [ type, name ]
+      return
+    end
+
+    categories << category unless categories.include?(category)
+    category
   end
 
   def sector_names(row)
@@ -642,6 +684,17 @@ class StoryImporter
     return if @dry_run || record.new_record?
     record.sectors |= tags.sectors if tags.sectors.any?
     record.categories |= tags.categories if tags.categories.any?
+    mark_primary(record, tags)
+  end
+
+  # Flag the primary sector / story population on their join rows (is_primary).
+  def mark_primary(record, tags)
+    if tags.primary_sector
+      record.sectorable_items.find_by(sector_id: tags.primary_sector.id)&.update!(is_primary: true)
+    end
+    if tags.primary_category
+      record.categorizable_items.find_by(category_id: tags.primary_category.id)&.update!(is_primary: true)
+    end
   end
 
   def find_or_create_organization(name)
