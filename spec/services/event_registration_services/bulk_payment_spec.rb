@@ -22,6 +22,18 @@ RSpec.describe EventRegistrationServices::BulkPayment do
     }.merge(overrides)
   end
 
+  describe "matching the payer" do
+    it "reuses an existing person whose email is stored as their secondary email" do
+      existing = create(:person, first_name: "Pat", last_name: "Payer", email: "pat.work@example.com", email_2: "pat@example.com")
+
+      result = nil
+      expect { result = described_class.call(event: event, form: form, form_params: base_form_params) }
+        .not_to change(Person, :count)
+
+      expect(result.form_submission.person).to eq(existing)
+    end
+  end
+
   describe "payer phone" do
     it "stores the payer phone as a primary phone contact method on the person" do
       result = described_class.call(

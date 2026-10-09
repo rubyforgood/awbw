@@ -73,7 +73,7 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  before_validation :strip_whitespace
+  before_validation :normalize_names_and_emails
 
   # Validations
   validates :avatar,
@@ -95,6 +95,14 @@ class Person < ApplicationRecord
   validates :youtube_url, length: { maximum: 255 }
   validates :twitter_url, length: { maximum: 255 }
   validate :unique_name_and_email_combination
+
+  # Autocorrect and pasted text swap in look-alike dashes; storing a plain hyphen keeps "Smith-Jones" one person.
+  DASH_VARIANTS = /[\u2010-\u2015\u2212]/
+  NAME_AND_EMAIL_INDEX = "index_people_on_name_and_email".freeze
+
+  def self.normalize_name(name)
+    name&.strip&.gsub(DASH_VARIANTS, "-")
+  end
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
@@ -608,10 +616,10 @@ class Person < ApplicationRecord
       .uniq
   end
 
-  def strip_whitespace
-    self.first_name = first_name&.strip
-    self.last_name = last_name&.strip
-    self.legal_first_name = legal_first_name&.strip
+  def normalize_names_and_emails
+    self.first_name = Person.normalize_name(first_name)
+    self.last_name = Person.normalize_name(last_name)
+    self.legal_first_name = Person.normalize_name(legal_first_name)
     self.email = email&.strip
     self.email_2 = email_2&.strip
   end
