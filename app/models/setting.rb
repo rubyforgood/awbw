@@ -26,15 +26,21 @@ class Setting < ApplicationRecord
 
   after_commit { Current.setting = nil }
 
-  # The row's value for a field, or nil when the schema is behind the code — the
-  # devise initializer reads a mailbox while booting, which happens before migrations
-  # on a fresh checkout.
+  # The row's value for a field, or nil when the database or column isn't there yet,
+  # so a rake task can boot the app to create or migrate the very schema it reads.
   def self.stored(field)
-    return nil unless table_exists? && column_names.include?(field.to_s)
+    return nil unless schema_ready?(field)
 
     current.public_send(field).presence
   end
   private_class_method :stored
+
+  def self.schema_ready?(field)
+    table_exists? && column_names.include?(field.to_s)
+  rescue ActiveRecord::NoDatabaseError
+    false
+  end
+  private_class_method :schema_ready?
 
   # Memoized for the request: the mailbox is read by a footer on every page.
   # Unsaved when no row exists yet, so every reader still answers.
@@ -46,7 +52,7 @@ class Setting < ApplicationRecord
   # and marks the grants it funds as subsidy rather than external funding. The name
   # match is the fallback for deployments where nobody has picked one yet.
   def self.app_organization
-    return Organization.find_by(name: organization_name) unless table_exists?
+    return nil unless schema_ready?(:organization_id)
 
     current.app_organization
   end
