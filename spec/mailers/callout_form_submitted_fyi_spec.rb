@@ -29,10 +29,14 @@ RSpec.describe NotificationMailer, "#callout_form_submitted_fyi" do
     create(:form_answer, form_submission: submission, form_field: age_field,
       submitted_answer: age_group.id.to_s, question_name_when_answered: "Primary age")
 
-    body = described_class.callout_form_submitted_fyi(submission).body.encoded
+    html = described_class.callout_form_submitted_fyi(submission).html_part.body.decoded
 
-    expect(body).to include("Domestic violence").and include("Ages 3-5")
-    expect(body).not_to match(/>\s*#{sector.id}\s*</)
+    expect(html).to include("Domestic violence").and include("Ages 3-5")
+    # The resolved name sits in the answer paragraph; a stored id would show as its
+    # only text. Anchor on </p> so the match can't collide with a layout constant
+    # that happens to equal the id (e.g. the Outlook <o:PixelsPerInch>96</...>).
+    expect(html).not_to match(/>\s*#{sector.id}\s*<\/p>/)
+    expect(html).not_to match(/>\s*#{age_group.id}\s*<\/p>/)
   end
 
   it "says Updated in the subject and body for an edit" do
