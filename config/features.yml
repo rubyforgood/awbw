@@ -4036,7 +4036,7 @@
   area: people
   display_status: admin_facing
   released_on: 2026-10-09
-  pr_number: 2631
+  pr_number: 2632
   action_path: "/people/dedupe_index"
   summary: >-
     Registrations and public forms now recognize a returning person when their
