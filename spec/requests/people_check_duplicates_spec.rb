@@ -2,7 +2,12 @@ require "rails_helper"
 
 RSpec.describe "/people/check_duplicates", type: :request do
   let(:admin) { create(:user, :admin) }
-  let!(:existing_person) { create(:person, first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com") }
+  # A login email that differs from the person's own, as on records linked before the login email sync.
+  let!(:existing_person) do
+    create(:person, first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com").tap do |person|
+      person.user.update_column(:email, "jane.login@test.org")
+    end
+  end
 
   before do
     sign_in admin
