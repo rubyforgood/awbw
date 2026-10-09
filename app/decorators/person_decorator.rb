@@ -14,7 +14,7 @@ class PersonDecorator < ApplicationDecorator
 
   # A person may hold only one uncancelled membership (Membership enforces it), so
   # more than one usually means a duplicate a merge left behind — flagged for admins
-  # on the profile, edit, and index so they can consolidate. Cancelled historical
+  # on the profile and edit pages so they can consolidate. Cancelled historical
   # memberships don't count. Uses the loaded association when preloaded.
   def multiple_memberships?
     uncancelled_membership_count > 1
