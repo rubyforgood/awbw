@@ -4031,3 +4031,18 @@
     - "Pick a direction under \"Sort: logged\" to see the most recently added entries first; release date then breaks ties."
     - "While sorting by date logged, each card shows both dates, labeled Logged and Released."
     - "Set it back to \"—\" (or click Clear filters) to return to sorting by release date."
+
+- name: "Fewer duplicate people from registrations and forms"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-09
+  pr_number: 2631
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Registrations and public forms now recognize a returning person when their
+    email is their secondary or login email, or when a hyphenated name is typed
+    with a different dash. Two people can no longer share the same first name,
+    last name, and email.
+  pro_tips:
+    - "Double-clicking Register no longer creates a second person; the extra click shows \"You are already registered.\""
+    - "Use Dedupe on the People page to combine records that already exist twice."

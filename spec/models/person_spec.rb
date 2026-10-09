@@ -76,7 +76,7 @@ RSpec.describe Person, type: :model do
     it { should have_many(:sectorable_items) }
   end
 
-  describe "strip_whitespace" do
+  describe "normalize_names_and_emails" do
     let(:admin) { create(:user, :admin) }
 
     it "strips leading and trailing whitespace from names and emails" do
@@ -87,6 +87,15 @@ RSpec.describe Person, type: :model do
       expect(person.last_name).to eq("Doe")
       expect(person.email).to eq("jane@test.org")
       expect(person.email_2).to eq("jane2@test.org")
+    end
+
+    it "stores look-alike dashes in names as a plain hyphen" do
+      person = create(:person, first_name: "Mary\u2011Kate", last_name: "Rivera\u2013Cole",
+                       legal_first_name: "Mary\u2010Katherine", created_by: admin, updated_by: admin)
+
+      expect(person.first_name).to eq("Mary-Kate")
+      expect(person.last_name).to eq("Rivera-Cole")
+      expect(person.legal_first_name).to eq("Mary-Katherine")
     end
 
     it "handles nil values" do
@@ -161,6 +170,22 @@ RSpec.describe Person, type: :model do
         duplicate = build(:person, first_name: "Jane", last_name: "Doe", email: "",
                           created_by: admin, updated_by: admin)
         expect(duplicate).not_to be_valid
+      end
+
+      it "treats an en dash in the name as the same person" do
+        create(:person, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@test.org",
+               created_by: admin, updated_by: admin)
+        duplicate = build(:person, first_name: "Jamie", last_name: "Rivera\u2013Cole", email: "jamie@test.org",
+                          created_by: admin, updated_by: admin)
+        expect(duplicate).not_to be_valid
+      end
+
+      it "is enforced by a unique index when validations are skipped" do
+        create(:person, first_name: "Jane", last_name: "Doe", email: "jane@test.org",
+               created_by: admin, updated_by: admin)
+        duplicate = build(:person, first_name: "jane", last_name: "doe", email: "JANE@test.org",
+                          created_by: admin, updated_by: admin)
+        expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique, /#{Person::NAME_AND_EMAIL_INDEX}/)
       end
 
       it "allows updating the existing record itself" do

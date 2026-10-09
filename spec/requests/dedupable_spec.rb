@@ -473,10 +473,9 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(affiliation.reload.person_id).to eq(keep.id)
       end
 
-      it "merges exact duplicates (same name and email) despite the uniqueness validation" do
-        keep.update!(first_name: "Sam", last_name: "Twin", email: "twin@example.com")
-        dupe = build(:person, first_name: "Sam", last_name: "Twin", email: "twin@example.com", user: nil)
-        dupe.save!(validate: false)
+      it "lets the keeper adopt the duplicate's name and email despite the uniqueness index" do
+        keep.update!(first_name: "Sam", last_name: "Twin", email: "twin.old@example.com")
+        dupe = create(:person, first_name: "Sam", last_name: "Twin", email: "twin@example.com", user: nil)
 
         expect {
           post dedupe_perform_people_path, params: {
