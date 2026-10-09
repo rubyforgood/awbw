@@ -114,20 +114,6 @@ RSpec.describe Address, type: :model do
 
       expect(Address.display_lines_for(organization)).to eq([])
     end
-
-    it "returns nothing for the remittance role when no address is flagged for it" do
-      create(:address, addressable: organization, invoice_address: true)
-
-      expect(Address.display_lines_for(organization, role: :remittance)).to eq([])
-    end
-
-    it "returns the remittance address when one is flagged" do
-      create(:address, addressable: organization, street_address: "1 Office Way", city: "Springfield", state: "IL", zip_code: "62704")
-      create(:address, addressable: organization, street_address: "9 Checks Ln", city: "La Canada", state: "CA", zip_code: "91011",
-                       remittance_address: true)
-
-      expect(Address.display_lines_for(organization, role: :remittance)).to eq([ "9 Checks Ln", "La Canada, CA 91011" ])
-    end
   end
 
   describe "role flags" do
@@ -155,13 +141,6 @@ RSpec.describe Address, type: :model do
       create(:address, addressable: organization, invoice_address: true)
 
       expect(theirs.reload.invoice_address).to be(true)
-    end
-
-    it "tracks the two roles independently" do
-      invoice = create(:address, addressable: organization, invoice_address: true)
-      create(:address, addressable: organization, remittance_address: true)
-
-      expect(invoice.reload.invoice_address).to be(true)
     end
   end
 end

@@ -89,9 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_184108) do
     t.integer "updated_by_id"
     t.string "zip_code", null: false
     t.boolean "invoice_address"
-    t.boolean "remittance_address"
     t.index ["addressable_type", "addressable_id", "invoice_address"], name: "index_addresses_on_addressable_and_invoice_role", unique: true
-    t.index ["addressable_type", "addressable_id", "remittance_address"], name: "index_addresses_on_addressable_and_remittance_role", unique: true
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
     t.index ["created_by_id"], name: "index_addresses_on_created_by_id"
     t.index ["updated_by_id"], name: "index_addresses_on_updated_by_id"
@@ -2031,6 +2029,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_184108) do
     t.integer "organization_id"
     t.string "info_email"
     t.string "reply_to_email"
+    t.string "programs_email"
+    t.string "no_reply_email"
     t.text "organization_address"
     t.text "remittance_address"
     t.string "invoice_prefix"

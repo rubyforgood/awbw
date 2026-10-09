@@ -139,6 +139,10 @@ RSpec.describe EventRevenueFigures do
       other
     end
 
+    # The Setting row is read once per request and memoized on Current, so warm it
+    # here rather than letting the count depend on whether setup happened to read it.
+    Setting.current
+
     queries = 0
     counter = ->(_name, _start, _finish, _id, payload) { queries += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
     ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
@@ -149,6 +153,6 @@ RSpec.describe EventRevenueFigures do
     # 5 batch component queries + 2 constant queries that classify AWBW-donated
     # grants as subsidy (the AWBW org lookup and its grant ids), regardless of
     # how many events are loaded.
-    expect(queries).to eq(8)
+    expect(queries).to eq(7)
   end
 end

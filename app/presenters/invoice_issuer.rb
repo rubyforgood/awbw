@@ -20,17 +20,13 @@ class InvoiceIssuer
   end
 
   def address_lines
-    Address.display_lines_for(@organization).presence ||
-      Setting.organization_address_lines.presence ||
-      DEFAULT_ADDRESS_LINES
+    Setting.organization_address_lines.presence || DEFAULT_ADDRESS_LINES
   end
 
   # Where checks are mailed, which is a different address from the header: the
   # header carries the return address, checks go to the remittance address.
   def remittance_address_lines
-    Address.display_lines_for(@organization, role: :remittance).presence ||
-      Setting.remittance_address_lines.presence ||
-      DEFAULT_REMITTANCE_ADDRESS_LINES
+    Setting.remittance_address_lines.presence || DEFAULT_REMITTANCE_ADDRESS_LINES
   end
 
   def email = Setting.info_email

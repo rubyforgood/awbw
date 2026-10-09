@@ -6,23 +6,15 @@ class AddAddressRolesAndOrgTaxId < ActiveRecord::Migration[8.1]
     add_column :organizations, :tax_id, :string unless column_exists?(:organizations, :tax_id)
 
     add_column :addresses, :invoice_address, :boolean unless column_exists?(:addresses, :invoice_address)
-    add_column :addresses, :remittance_address, :boolean unless column_exists?(:addresses, :remittance_address)
 
     unless index_exists?(:addresses, [ :addressable_type, :addressable_id, :invoice_address ])
       add_index :addresses, [ :addressable_type, :addressable_id, :invoice_address ],
                 unique: true, name: "index_addresses_on_addressable_and_invoice_role"
     end
-
-    unless index_exists?(:addresses, [ :addressable_type, :addressable_id, :remittance_address ])
-      add_index :addresses, [ :addressable_type, :addressable_id, :remittance_address ],
-                unique: true, name: "index_addresses_on_addressable_and_remittance_role"
-    end
   end
 
   def down
-    remove_index :addresses, name: "index_addresses_on_addressable_and_remittance_role" if index_exists?(:addresses, [ :addressable_type, :addressable_id, :remittance_address ])
     remove_index :addresses, name: "index_addresses_on_addressable_and_invoice_role" if index_exists?(:addresses, [ :addressable_type, :addressable_id, :invoice_address ])
-    remove_column :addresses, :remittance_address, if_exists: true
     remove_column :addresses, :invoice_address, if_exists: true
     remove_column :organizations, :tax_id, if_exists: true
   end
