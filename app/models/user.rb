@@ -16,7 +16,6 @@ class User < ApplicationRecord
   after_update :track_welcome_completion, if: :welcome_token_cleared?
   after_update :track_login_event
   after_update :track_email_change
-  after_update :sync_email_to_person
   after_update :track_lock_change
   after_update :track_admin_change
   after_update :track_inactive_change
@@ -24,6 +23,8 @@ class User < ApplicationRecord
   after_update :track_password_changed
 
   after_commit :create_email_changed_notification, on: :update
+  after_commit :sync_email_to_person, on: [ :create, :update ],
+    if: -> { saved_change_to_email? || saved_change_to_person_id? }
 
   before_destroy :track_account_deleted
 
@@ -398,9 +399,7 @@ class User < ApplicationRecord
   end
 
   def sync_email_to_person
-    return unless saved_change_to_email? && person.present?
-
-    person.update(email: email)
+    PersonLoginEmailSync.call(self)
   end
 
   def create_email_changed_notification
