@@ -88,6 +88,43 @@ RSpec.describe "/features", type: :request do
         expect(response.body).not_to include("Facilitator feature")
       end
 
+      it "sorts by date released, newest first, by default" do
+        user_facing.update!(released_on: 2.days.ago)
+        admin_facing.update!(released_on: 1.day.ago)
+        get features_path, headers: frame_headers
+        expect(response.body.index("Admin-only feature")).to be < response.body.index("Facilitator feature")
+      end
+
+      it "sorts by date logged when chosen, ahead of date released" do
+        user_facing.update!(released_on: 1.day.ago, created_at: 3.days.ago)
+        admin_facing.update!(released_on: 2.days.ago, created_at: 1.day.ago)
+        get features_path, params: { logged_direction: "desc" }, headers: frame_headers
+        expect(response.body.index("Admin-only feature")).to be < response.body.index("Facilitator feature")
+
+        get features_path, params: { logged_direction: "asc" }, headers: frame_headers
+        expect(response.body.index("Facilitator feature")).to be < response.body.index("Admin-only feature")
+      end
+
+      it "shows the logged date and labels the release date when sorting by date logged" do
+        user_facing.update!(released_on: Date.new(2026, 10, 5), created_at: Time.zone.local(2026, 10, 8, 12))
+        get features_path, params: { logged_direction: "desc" }, headers: frame_headers
+        expect(response.body).to include("Logged Oct 8, 2026")
+        expect(response.body).to match(/Released\s+Oct 5, 2026/)
+      end
+
+      it "shows only the unlabeled release date when sorting by date released" do
+        user_facing.update!(released_on: Date.new(2026, 10, 5))
+        get features_path, headers: frame_headers
+        expect(response.body).to include("Oct 5, 2026")
+        expect(response.body).not_to include("Logged ")
+        expect(response.body).not_to match(/Released\s+Oct 5, 2026/)
+      end
+
+      it "ignores an unrecognized date-logged direction" do
+        get features_path, params: { logged_direction: "sideways" }, headers: frame_headers
+        expect(response).to have_http_status(:ok)
+      end
+
       it "filters by audience" do
         get features_path, params: { display_status: "admin_facing" }, headers: frame_headers
         expect(response.body).to include("Admin-only feature")

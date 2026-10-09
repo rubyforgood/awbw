@@ -4017,3 +4017,17 @@
     - "An unpublished category stays on the admin list, marked as hidden from the menu."
     - "The home page's audience sections follow the same order."
   action_path: "/story_share/admin"
+
+- name: "Sort features by date logged"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-08
+  action_path: "/features"
+  pr_number: 2624
+  summary: >-
+    The Features & tips page can now sort by the date a feature was logged on the
+    page, alongside the existing sort by release date.
+  pro_tips:
+    - "Pick a direction under \"Sort: logged\" to see the most recently added entries first; release date then breaks ties."
+    - "While sorting by date logged, each card shows both dates, labeled Logged and Released."
+    - "Set it back to \"—\" (or click Clear filters) to return to sorting by release date."
