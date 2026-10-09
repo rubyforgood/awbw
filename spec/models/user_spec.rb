@@ -235,6 +235,33 @@ RSpec.describe User do
     end
   end
 
+  describe "syncing the login email to the person" do
+    let(:person) { create(:person, user: nil, email: "work@example.com") }
+
+    it "syncs when a new user is created for an existing person" do
+      create(:user, email: "login@example.com", person: person)
+
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: "work@example.com")
+    end
+
+    it "syncs when an existing user is linked to the person" do
+      user = create(:user, email: "login@example.com")
+
+      user.update!(person: person)
+
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: "work@example.com")
+    end
+
+    it "syncs when a linked user's email changes" do
+      user = create(:user, email: "login@example.com", person: person)
+      user.skip_reconfirmation!
+
+      user.update!(email: "new-login@example.com")
+
+      expect(person.reload.email).to eq("new-login@example.com")
+    end
+  end
+
   describe "#person_id_must_be_present_if_previously_set" do
     it "prevents removing person_id once set" do
       person = create(:person)
