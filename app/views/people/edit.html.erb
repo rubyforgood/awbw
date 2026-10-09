@@ -81,7 +81,4 @@
       <%= render "associated_records", person: @person %>
     </div>
   </div>
-  <% if allowed_to?(:index?, MembershipInvoice) %>
-    <%= render "people/membership", person: @person, membership: @membership %>
-  <% end %>
 <% end %>

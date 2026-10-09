@@ -1,14 +1,24 @@
-<div class="admin-only rounded-lg border border-blue-200 bg-blue-100 shadow-sm">
-  <div class="section-header flex flex-col justify-between gap-2 border-b border-blue-200 px-6 py-3 sm:flex-row sm:items-center sm:px-7">
-    <h2 class="text-xl font-semibold text-gray-800">Membership</h2>
-    <%= link_to "Manage membership", person_memberships_path(person), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-  </div>
+<%# Collapses to the membership's status and cost, like the other form sections.
+    Read-only — memberships are managed on their own page, linked from inside. %>
+<% summary = membership.blank? ? "No membership yet." : "#{membership.status_label} · #{membership.cost_label}" %>
+<details class="admin-only group rounded-lg border border-blue-200 bg-blue-100 shadow-sm">
+  <summary class="section-header flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:memberships, intensity: 100) %> <%= DomainTheme.text_class_for(:memberships, intensity: 600) %>">
+      <i class="fa-solid fa-id-card"></i>
+    </span>
+    <h2 class="text-sm font-semibold text-gray-700">Membership</h2>
+    <span class="text-sm text-gray-600"><%= summary %></span>
+    <%# Safe inside the summary: the click navigates away, so the toggle it also
+        fires never lands. %>
+    <%= link_to "Manage membership", person_memberships_path(person), class: "ml-auto text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
+  </summary>
 
-  <div class="section-content px-3 py-4 sm:px-4">
+  <div class="section-content space-y-3 border-t border-blue-200 p-4">
     <% if membership.blank? %>
-      <p class="px-3 text-gray-500 italic">No membership yet.</p>
+      <p class="text-gray-500 italic">No membership yet.</p>
     <% else %>
-      <div class="px-3">
+      <div>
         <div class="mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
           <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
           <span class="text-gray-600">Status: <span class="font-medium text-gray-800"><%= membership.status_label %></span></span>
@@ -24,4 +34,4 @@
       </div>
     <% end %>
   </div>
-</div>
+</details>

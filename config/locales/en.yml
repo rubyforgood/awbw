@@ -50,6 +50,12 @@ en:
     add_comment: "Add comment"
     section_none: "No comments or communications yet."
     section_none_comms_only: "No communications yet."
+    section_summary_comments:
+      one: "1 comment"
+      other: "%{count} comments"
+    section_summary_communications:
+      one: "1 communication"
+      other: "%{count} communications"
     all_section_none: "No comments or communications match these filters."
   activerecord:
     attributes:
