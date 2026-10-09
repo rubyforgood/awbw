@@ -134,19 +134,43 @@ RSpec.describe Setting do
   end
 
   describe "addresses" do
-    it "reads the return address a line at a time" do
-      described_class.create!(organization_address: "100 Main St\nAnytown, CA 90001")
+    let(:organization) { create(:organization) }
+
+    def address_for(organization, **attrs)
+      create(:address, { addressable: organization, street_address: "100 Main St",
+                         city: "Anytown", state: "CA", zip_code: "90001" }.merge(attrs))
+    end
+
+    it "reads the return address the row points at, a line at a time" do
+      described_class.create!(organization: organization, return_address: address_for(organization))
 
       expect(described_class.organization_address_lines).to eq([ "100 Main St", "Anytown, CA 90001" ])
     end
 
     it "reads the remittance address separately from the return address" do
-      described_class.create!(organization_address: "100 Main St", remittance_address: "9 Checks Ln\nElsewhere, CA 90000")
+      described_class.create!(organization: organization,
+                              return_address: address_for(organization),
+                              remittance_address: address_for(organization, street_address: "9 Checks Ln",
+                                                                            city: "Elsewhere", zip_code: "90000"))
 
       expect(described_class.remittance_address_lines).to eq([ "9 Checks Ln", "Elsewhere, CA 90000" ])
     end
 
-    it "is empty with nothing stored, leaving the fallback to the caller" do
+    it "falls back to the app organization's invoice address when the row points nowhere" do
+      address_for(organization, invoice_address: true, street_address: "7 Flagged St",
+                                city: "Townsville", zip_code: "90002")
+      described_class.create!(organization: organization)
+
+      expect(described_class.organization_address_lines).to eq([ "7 Flagged St", "Townsville, CA 90002" ])
+    end
+
+    it "mails cheques to the return address when no remittance address is set" do
+      described_class.create!(organization: organization, return_address: address_for(organization))
+
+      expect(described_class.remittance_address_lines).to eq([ "100 Main St", "Anytown, CA 90001" ])
+    end
+
+    it "is empty with no organization and nothing stored" do
       expect(described_class.organization_address_lines).to eq([])
       expect(described_class.remittance_address_lines).to eq([])
     end
