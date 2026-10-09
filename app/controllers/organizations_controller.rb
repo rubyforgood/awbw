@@ -244,7 +244,6 @@ class OrganizationsController < ApplicationController
         :primary,
         :inactive,
         :invoice_address,
-        :remittance_address,
         :phone,
         :street_address,
         :city,

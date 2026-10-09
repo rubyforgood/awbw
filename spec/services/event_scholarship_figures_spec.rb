@@ -111,6 +111,10 @@ RSpec.describe EventScholarshipFigures do
       other
     end
 
+    # The Setting row is read once per request and memoized on Current, so warm it
+    # here rather than letting the count depend on whether setup happened to read it.
+    Setting.current
+
     queries = 0
     counter = ->(_name, _start, _finish, _id, payload) { queries += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
     ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
@@ -122,7 +126,7 @@ RSpec.describe EventScholarshipFigures do
     # funded/unfunded splits + 2 constant queries classifying AWBW-donated grants as
     # subsidy (the org lookup + its grant ids). All independent of event count —
     # that's the point, since this replaced one EventDashboard per event.
-    expect(queries).to eq(7)
+    expect(queries).to eq(6)
   end
 
   # The report rows expand to name the people behind each split, so the loader has

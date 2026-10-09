@@ -26,6 +26,16 @@ class Setting < ApplicationRecord
 
   after_commit { Current.setting = nil }
 
+  # The row's value for a field, or nil when the schema is behind the code — the
+  # devise initializer reads a mailbox while booting, which happens before migrations
+  # on a fresh checkout.
+  def self.stored(field)
+    return nil unless table_exists? && column_names.include?(field.to_s)
+
+    current.public_send(field).presence
+  end
+  private_class_method :stored
+
   # Memoized for the request: the mailbox is read by a footer on every page.
   # Unsaved when no row exists yet, so every reader still answers.
   def self.current
@@ -36,6 +46,8 @@ class Setting < ApplicationRecord
   # and marks the grants it funds as subsidy rather than external funding. The name
   # match is the fallback for deployments where nobody has picked one yet.
   def self.app_organization
+    return Organization.find_by(name: organization_name) unless table_exists?
+
     current.app_organization
   end
 
@@ -51,12 +63,12 @@ class Setting < ApplicationRecord
 
   # The return address on invoices and receipts, one line per line of the field.
   def self.organization_address_lines
-    address_lines(current.organization_address)
+    address_lines(stored(:organization_address))
   end
 
   # Where cheques are mailed, which is a different address from the return address.
   def self.remittance_address_lines
-    address_lines(current.remittance_address)
+    address_lines(stored(:remittance_address))
   end
 
   def self.address_lines(value)
@@ -67,44 +79,44 @@ class Setting < ApplicationRecord
   # The public contact mailbox, shown on the contact page, the story-share footer,
   # and the invoice/receipt header.
   def self.info_email
-    current.info_email.presence || ENV["INFO_EMAIL"].presence || programs_email
+    stored(:info_email) || ENV["INFO_EMAIL"].presence || programs_email
   end
 
   # The staffed programs mailbox: the reply_to on portal mail and the address users
   # are told to write to.
   def self.programs_email
-    current.programs_email.presence || ENV["PROGRAMS_EMAIL"].presence || reply_to_email
+    stored(:programs_email) || ENV["PROGRAMS_EMAIL"].presence || reply_to_email
   end
 
   # The unattended sending mailbox, used as the from: on event mail so replies land
   # in the programs mailbox instead.
   def self.no_reply_email
-    current.no_reply_email.presence || ENV["NO_REPLY_EMAIL"].presence || reply_to_email
+    stored(:no_reply_email) || ENV["NO_REPLY_EMAIL"].presence || reply_to_email
   end
 
   def self.reply_to_email
-    current.reply_to_email.presence || ENV["REPLY_TO_EMAIL"].presence
+    stored(:reply_to_email) || ENV["REPLY_TO_EMAIL"].presence
   end
 
   # Leading tag on generated invoice numbers, e.g. "INV-004".
   def self.invoice_prefix
-    current.invoice_prefix.presence || ENV["INVOICE_PREFIX"].presence || DEFAULT_INVOICE_PREFIX
+    stored(:invoice_prefix) || ENV["INVOICE_PREFIX"].presence || DEFAULT_INVOICE_PREFIX
   end
 
   def self.annual_membership_cents
-    current.annual_membership_cents ||
+    stored(:annual_membership_cents) ||
       ENV.fetch("ANNUAL_MEMBERSHIP_CENTS", DEFAULT_ANNUAL_MEMBERSHIP_CENTS).to_i
   end
 
   # How many days before a membership term ends its renewal invoice is generated.
   def self.membership_renewal_window_days
-    current.membership_renewal_window_days ||
+    stored(:membership_renewal_window_days) ||
       ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS).to_i
   end
 
   # How long past a term's start an unpaid membership invoice still reads as current.
   def self.membership_grace_period_days
-    current.membership_grace_period_days ||
+    stored(:membership_grace_period_days) ||
       ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS).to_i
   end
 end
