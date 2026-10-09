@@ -13,6 +13,8 @@ class Setting < ApplicationRecord
   DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS = 30
 
   belongs_to :organization, optional: true
+  belongs_to :return_address, class_name: "Address", optional: true
+  belongs_to :remittance_address, class_name: "Address", optional: true
 
   # singleton is a constant true behind a unique index: MySQL has no CHECK-based
   # way to cap a table at one row, but a unique index on a constant does it.
@@ -67,20 +69,32 @@ class Setting < ApplicationRecord
     ENV.fetch("ORGANIZATION_NAME", DEFAULT_ORGANIZATION_NAME)
   end
 
-  # The return address on invoices and receipts, one line per line of the field.
+  # The return address printed in the invoice and receipt header: the address the
+  # row points at, else the app organization's flagged invoice address.
   def self.organization_address_lines
-    address_lines(stored(:organization_address))
+    stored_address_lines(:return_address) || app_organization_invoice_address_lines
   end
 
-  # Where cheques are mailed, which is a different address from the return address.
+  # Where cheques are mailed: the chosen remittance address, else the return address
+  # (checks go to the return address when a separate one isn't set).
   def self.remittance_address_lines
-    address_lines(stored(:remittance_address))
+    stored_address_lines(:remittance_address) || organization_address_lines
   end
 
-  def self.address_lines(value)
-    value.to_s.lines.map(&:strip).reject(&:blank?)
+  def self.stored_address_lines(association)
+    return nil unless schema_ready?("#{association}_id")
+
+    current.public_send(association)&.display_lines.presence
   end
-  private_class_method :address_lines
+  private_class_method :stored_address_lines
+
+  def self.app_organization_invoice_address_lines
+    org = app_organization
+    return [] unless org
+
+    Address.display_lines_for(org)
+  end
+  private_class_method :app_organization_invoice_address_lines
 
   # The public contact mailbox, shown on the contact page, the story-share footer,
   # and the invoice/receipt header.

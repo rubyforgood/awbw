@@ -16,29 +16,44 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.payable_to_note).to eq("Please make checks payable to Env Org")
     end
 
-    it "takes the header address from the Setting row" do
-      Setting.create!(organization_address: "100 Main St\nAnytown, CA 90001")
-
-      expect(issuer.address_lines).to eq([ "100 Main St", "Anytown, CA 90001" ])
-    end
-
-    it "degrades to the built-in return address with nothing stored" do
-      expect(issuer.address_lines).to eq([ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ])
-    end
-
-    it "takes the remittance address from the Setting row" do
-      Setting.create!(remittance_address: "9 Checks Ln\nElsewhere, CA 90000")
-
-      expect(issuer.remittance_address_lines).to eq([ "9 Checks Ln", "Elsewhere, CA 90000" ])
-    end
-
-    it "degrades to the built-in remittance address, which is not the return address" do
-      expect(issuer.remittance_address_lines).to eq([ "1210 Fernside Dr.", "La Cañada, CA 91011" ])
-      expect(issuer.remittance_address_lines).not_to eq(issuer.address_lines)
+    it "has no address with nothing configured" do
+      expect(issuer.address_lines).to eq([])
+      expect(issuer.remittance_address_lines).to eq([])
     end
 
     it "has no tax id to offer" do
       expect(issuer.tax_id).to be_nil
+    end
+  end
+
+  describe "resolving the issuer addresses" do
+    let(:organization) { create(:organization) }
+
+    def address_for(organization, **attrs)
+      create(:address, { addressable: organization, street_address: "100 Main St",
+                         city: "Anytown", state: "CA", zip_code: "90001" }.merge(attrs))
+    end
+
+    it "takes the header address from the address the Setting points at" do
+      Setting.create!(organization: organization, return_address: address_for(organization))
+
+      expect(described_class.current.address_lines).to eq([ "100 Main St", "Anytown, CA 90001" ])
+    end
+
+    it "falls back to the organization's flagged invoice address" do
+      address_for(organization, invoice_address: true, street_address: "7 Flagged St",
+                                city: "Townsville", zip_code: "90002")
+      Setting.create!(organization: organization)
+
+      expect(described_class.current.address_lines).to eq([ "7 Flagged St", "Townsville, CA 90002" ])
+    end
+
+    it "takes the remittance address from the address the Setting points at" do
+      Setting.create!(organization: organization,
+                      remittance_address: address_for(organization, street_address: "9 Checks Ln",
+                                                                    city: "Elsewhere", zip_code: "90000"))
+
+      expect(described_class.current.remittance_address_lines).to eq([ "9 Checks Ln", "Elsewhere, CA 90000" ])
     end
   end
 
@@ -56,18 +71,6 @@ RSpec.describe InvoiceIssuer do
 
     it "builds the payable-to note from the organization name" do
       expect(issuer.payable_to_note).to eq("Please make checks payable to Test Org")
-    end
-
-    # The addresses are settings, not attributes of the organization, so marking one
-    # on the record doesn't change what the header prints.
-    it "ignores the organization's own addresses" do
-      create(:address, addressable: organization, invoice_address: true,
-                       street_address: "9 Billing Rd", city: "Shelbyville",
-                       state: "IL", zip_code: "62565")
-      Setting.create!(organization_address: "1 Settings Way\nElsewhere, CA 90000")
-
-      expect(described_class.new(organization.reload).address_lines)
-        .to eq([ "1 Settings Way", "Elsewhere, CA 90000" ])
     end
   end
 

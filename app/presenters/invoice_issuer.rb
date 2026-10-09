@@ -1,12 +1,9 @@
 # Single source of truth for the organization that issues invoices and receipts:
-# its name, address, email, and the "make checks payable to" note. Reads the
-# admin-flagged system organization when it supplies a field, falling back to
-# Setting and then to a built-in default, so an unconfigured deployment still
-# prints a usable document.
+# its name, tax id, addresses, email, and the "make checks payable to" note. The
+# name and tax id come from the admin-chosen system organization; the addresses
+# and email are app-wide settings (which themselves fall back to the organization's
+# flagged addresses and to ENV).
 class InvoiceIssuer
-  DEFAULT_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  DEFAULT_REMITTANCE_ADDRESS_LINES = [ "1210 Fernside Dr.", "La Cañada, CA 91011" ].freeze
-
   def self.current
     new(Setting.app_organization)
   end
@@ -19,15 +16,11 @@ class InvoiceIssuer
     @organization&.name.presence || Setting.organization_name
   end
 
-  def address_lines
-    Setting.organization_address_lines.presence || DEFAULT_ADDRESS_LINES
-  end
+  def address_lines = Setting.organization_address_lines
 
-  # Where checks are mailed, which is a different address from the header: the
-  # header carries the return address, checks go to the remittance address.
-  def remittance_address_lines
-    Setting.remittance_address_lines.presence || DEFAULT_REMITTANCE_ADDRESS_LINES
-  end
+  # Where checks are mailed: the header carries the return address, checks go to the
+  # remittance address.
+  def remittance_address_lines = Setting.remittance_address_lines
 
   def email = Setting.info_email
   def tax_id = @organization&.tax_id.presence

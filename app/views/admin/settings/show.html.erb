@@ -50,21 +50,34 @@
     <section class="rounded-xl border border-gray-200 bg-white p-6">
       <h2 class="mb-1 text-lg font-semibold text-gray-800">Addresses</h2>
       <p class="mb-4 text-sm text-gray-600">
-        One line per line of the address. The header carries the return address; cheques
-        go to the remittance address.
+        Chosen from the organization's addresses. The header carries the return address;
+        cheques go to the remittance address.
       </p>
-      <%= f.input :organization_address,
-                  as: :text,
-                  label: "Return address",
-                  placeholder: Setting.organization_address_lines.join("\n"),
-                  hint: "Printed in the invoice and receipt header",
-                  input_html: { rows: 3, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
-      <%= f.input :remittance_address,
-                  as: :text,
-                  label: "Remittance address",
-                  placeholder: Setting.remittance_address_lines.join("\n"),
-                  hint: "Where cheques are mailed — shown under \"make checks payable to\" and on the pay-by-check instructions",
-                  input_html: { rows: 3, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
+      <% addresses = (org = Setting.app_organization) ? org.addresses.active.to_a : [] %>
+      <% if addresses.any? %>
+        <% address_options = addresses.map { |address| [ address.decorate.picker_label, address.id ] } %>
+        <%= f.input :return_address_id,
+                    collection: address_options,
+                    label: "Return address",
+                    include_blank: "Use #{org.name}'s invoice address",
+                    selected: @setting.return_address_id || addresses.find(&:invoice_address?)&.id,
+                    hint: "Printed in the invoice and receipt header",
+                    input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
+        <%= f.input :remittance_address_id,
+                    collection: address_options,
+                    label: "Remittance address",
+                    include_blank: "Same as the return address",
+                    hint: "Where cheques are mailed — shown under \"make checks payable to\" and on the pay-by-check instructions",
+                    input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
+      <% elsif org %>
+        <p class="text-sm text-gray-600">
+          Add an address to
+          <%= link_to org.name, edit_organization_path(org), class: "text-blue-600 hover:text-blue-800 underline" %>
+          to choose its return and remittance addresses.
+        </p>
+      <% else %>
+        <p class="text-sm text-gray-600">Choose this portal's organization above, then pick its addresses here.</p>
+      <% end %>
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-6">

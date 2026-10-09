@@ -22,7 +22,7 @@ module Admin
 
     def setting_params
       params.require(:setting).permit(:organization_id, :info_email, :reply_to_email, :invoice_prefix,
-                                      :organization_address, :remittance_address,
+                                      :return_address_id, :remittance_address_id,
                                       :programs_email, :no_reply_email,
                                       :annual_membership_cents, :membership_renewal_window_days,
                                       :membership_grace_period_days)
