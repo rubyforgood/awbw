@@ -11,11 +11,9 @@ export default class extends Controller {
     this.selectTargets.forEach((select) => {
       if (select._tomSelect) return;
 
+      // The form's collection controller submits on the native change TomSelect dispatches on the select.
       select._tomSelect = new TomSelect(select, {
         plugins: ["checkbox_options", "remove_button"],
-        onChange: () => {
-          this.element.requestSubmit();
-        },
         onInitialize() {
           this.control.classList.add("!rounded-lg", "!py-2");
         },
