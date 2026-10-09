@@ -63,16 +63,16 @@ class WorkshopVariationsController < ApplicationController
     if success
       flash[:notice] = "Workshop Variation has been created."
       if params[:from] == "workshop_show" && @workshop_variation.workshop.present?
-        redirect_to workshop_path(@workshop_variation.workshop, anchor: "variation-#{@workshop_variation.id}") and return
+        redirect_to workshop_path(@workshop_variation.workshop, anchor: "variation-#{@workshop_variation.id}"), status: :see_other and return
       elsif allowed_to?(:show?, @workshop_variation)
-        redirect_to @workshop_variation and return
+        redirect_to @workshop_variation, status: :see_other and return
       else
-        redirect_to root_path and return
+        redirect_to root_path, status: :see_other and return
       end
     else
       set_form_variables
       flash.now[:alert] = "Unable to save the workshop variation."
-      render :new
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -102,11 +102,11 @@ class WorkshopVariationsController < ApplicationController
     if @workshop_variation.update(workshop_variation_params)
       @workshop_variation.attach_assets_from_idea! if params[:promote_idea_assets] == "true"
       flash[:notice] = "Workshop Variation updated successfully."
-      redirect_to @workshop_variation
+      redirect_to @workshop_variation, status: :see_other
     else
       set_form_variables
-      flash[:alert] = "Unable to update Workshop Variation."
-      render :edit
+      flash.now[:alert] = "Unable to update Workshop Variation."
+      render :edit, status: :unprocessable_content
     end
   end
 
