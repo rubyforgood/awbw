@@ -218,9 +218,9 @@ RSpec.describe DeviseMailer, type: :mailer do
       invitee.send_confirmation_instructions(sender: admin)
 
       mail = ActionMailer::Base.deliveries.last
-      expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.from).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
       expect(mail[:from].display_names.compact).to eq([ ApplicationMailer::FROM_NAME ])
-      expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.reply_to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
       expect(mail.header.fields.map(&:to_s).join("\n")).not_to include("Dana Sender")
     end
 

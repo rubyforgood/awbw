@@ -63,6 +63,22 @@ class Organization < ApplicationRecord
     find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
   end
 
+  # The staffed programs mailbox: what facilitators are told to write to, and the
+  # reply_to on portal mail. REPLY_TO_EMAIL is the retiring name for it.
+  def self.programs_email
+    ENV["PROGRAMS_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
+  end
+
+  # The unattended sending mailbox, for mail whose from: should not invite a reply.
+  def self.no_reply_email
+    ENV["NO_REPLY_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
+  end
+
+  # The public contact mailbox printed on invoices, receipts, and portal contact info.
+  def self.info_email
+    ENV["INFO_EMAIL"].presence || programs_email
+  end
+
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],

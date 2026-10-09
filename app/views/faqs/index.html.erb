@@ -20,7 +20,7 @@
   <% end %>
 <% end %>
 <% subtitle = capture do %>
-  Find answers to common questions here. If you don't see what you need, please reach out to us at <%= mail_to ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"), class: "text-blue-600 hover:text-blue-800" %>.
+  Find answers to common questions here. If you don't see what you need, please reach out to us at <%= mail_to Organization.programs_email, class: "text-blue-600 hover:text-blue-800" %>.
 <% end %>
 <%= render layout: "shared/index_page",
            locals: { domain: :faqs, eyebrow: "Support", title: "FAQs",

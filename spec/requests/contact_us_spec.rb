@@ -138,7 +138,7 @@ RSpec.describe "ContactUs", type: :request do
       get contact_us_path(from: "story_share")
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("info@awbw.org")
+      expect(response.body).to include(EmailConfigHelpers::INFO_EMAIL)
       expect(response.body).to include("1029 1/2 W 24th Street")
       # Rendered inside the story_shares layout (the get-involved band)
       expect(response.body).to include("There's a place for you at AWBW")
@@ -200,7 +200,7 @@ RSpec.describe "ContactUs", type: :request do
         notification = Notification.find_by(kind: "contact_us_fyi")
         expect(notification).to be_present
         expect(notification.recipient_role).to eq("admin")
-        expect(notification.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+        expect(notification.recipient_email).to eq(EmailConfigHelpers::PROGRAMS_EMAIL)
       end
 
       it "silently drops a bot that posts a scraped form without our decoy field" do

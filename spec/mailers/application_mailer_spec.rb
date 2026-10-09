@@ -1,9 +1,13 @@
 require 'rails_helper'
 
 RSpec.describe ApplicationMailer do
-  it 'sets the default from address with the AWBW Programs display name' do
-    expect(described_class.default[:from]).to eq(described_class.sender)
-    expect(described_class.default[:from]).to include(ApplicationMailer::FROM_NAME)
+  it 'wraps the configured programs mailbox in the AWBW Programs display name' do
+    expect(described_class.sender).to eq(%("#{ApplicationMailer::FROM_NAME}" <#{EmailConfigHelpers::PROGRAMS_EMAIL}>))
+  end
+
+  it 'resolves the default from address when the mail is built, not when the class loads' do
+    expect(described_class.default[:from]).to be_a(Proc)
+    expect(described_class.default[:reply_to]).to be_a(Proc)
   end
 
   it 'uses the correct layout' do

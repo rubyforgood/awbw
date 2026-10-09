@@ -374,9 +374,11 @@ end
 
 ## Mailers
 
-- `ApplicationMailer` — Base, from: `ENV["REPLY_TO_EMAIL"]`
+- `ApplicationMailer` — Base; from/reply_to both default to `Organization.programs_email`, wrapped in `FROM_NAME` by `.sender`
 - `DeviseMailer` — Custom Devise emails
-- `EventMailer` — Event registration confirmations
+- `EventMailer` — Event registration confirmations; sends from `Organization.no_reply_email` with reply_to `Organization.programs_email`
+- **Addresses come from config, never literals.** `Organization.programs_email` (`PROGRAMS_EMAIL`) is the staffed mailbox used for reply_to and for admin FYI recipients; `Organization.no_reply_email` (`NO_REPLY_EMAIL`) is the unattended sending mailbox; `Organization.info_email` (`INFO_EMAIL`, falling back to the programs mailbox) is the public contact address on invoices, receipts, and portal contact info. These `Organization` readers are the only place mailboxes are read, so a future settings source plugs in behind them. The first two fall back to the older `REPLY_TO_EMAIL` while it is being retired, and return `nil` when nothing is set — so mail headers are blank in an unconfigured environment rather than leaking a hard-coded address
+- **Class-level `default` values are procs** (`default to: -> { … }`), because a bare call freezes the address when the class loads, before a spec or a reloaded environment can change it
 - `NotificationMailer` — Notification delivery
 - `ContactUsMailer` — Contact form submissions
 - `ScholarshipMailer` — Trainings-team FYI on a recipient's agreement response (accept / decline / request additional support)
