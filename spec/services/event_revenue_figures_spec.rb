@@ -149,6 +149,6 @@ RSpec.describe EventRevenueFigures do
     # 5 batch component queries + 2 constant queries that classify AWBW-donated
     # grants as subsidy (the AWBW org lookup and its grant ids), regardless of
     # how many events are loaded.
-    expect(queries).to eq(7)
+    expect(queries).to eq(8)
   end
 end

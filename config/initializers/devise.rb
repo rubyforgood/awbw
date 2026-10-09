@@ -13,7 +13,7 @@ Devise.setup do |config|
   # Assigned in to_prepare because Organization isn't autoloadable while
   # initializers run, and Devise only reads this when it sends the first email.
   Rails.application.config.to_prepare do
-    Devise.mailer_sender = Organization.programs_email
+    Devise.mailer_sender = Setting.programs_email
   end
   config.sign_in_after_reset_password = true
 
