@@ -1363,7 +1363,7 @@ class EventDashboard
   end
 
   # Ids of grants the org self-funded; memoized so the funded/unfunded split
-  # doesn't re-run Grant.self_funded_ids (an Organization.awbw + pluck) per call.
+  # doesn't re-run Grant.self_funded_ids (a Setting.app_organization + pluck) per call.
   def self_funded_grant_ids
     @self_funded_grant_ids ||= Grant.self_funded_ids
   end

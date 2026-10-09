@@ -55,7 +55,7 @@ class WorkshopLogsController < ApplicationController
         noticeable: @workshop_log,
         kind: :workshop_log_submitted_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0)
 
       flash[:notice] = "Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile."

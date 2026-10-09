@@ -17,7 +17,7 @@ class MembershipInvoicesController < ApplicationController
     authorize!
     @membership_invoice = @membership.membership_invoices.new(
       start_date: next_start_date,
-      cost_cents: @membership.cost_cents || Membership::ANNUAL_COST_CENTS
+      cost_cents: @membership.cost_cents || Membership.annual_cost_cents
     )
   end
 

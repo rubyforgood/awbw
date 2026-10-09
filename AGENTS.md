@@ -61,7 +61,7 @@ This codebase (Rails 8.1)
 | `app/views/` | ERB templates | ~824 files |
 | `app/decorators/` | Draper decorators for view logic | ~50 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
-| `app/presenters/` | Presentation objects | 6 files |
+| `app/presenters/` | Presentation objects | 8 files |
 | `app/helpers/` | View helpers | ~47 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
@@ -92,6 +92,7 @@ This codebase (Rails 8.1)
 
 | Model | Purpose |
 |---|---|
+| `Setting` | The single row of app-wide settings, edited at `/admin/settings`: which `Organization` this portal runs as (`app_organization`), the four mailboxes (`info_email` → `programs_email` → `reply_to_email`, plus `no_reply_email`), the `return_address` / `remittance_address` the invoice header and cheque instructions use (FK references to `Address` records chosen from the app org, falling back to its flagged invoice address), the invoice number prefix, and the membership price plus renewal/grace windows. Every class-level reader falls back to ENV and then a built-in default, so a blank field means "use the deployment's value" and a deployment with no row behaves exactly as before. `singleton` is a constant true behind a unique index, which is how MySQL caps the table at one row. `Setting.current` is memoized per request because the mailbox is read by a footer on every page; the memo is cleared `after_commit`. Reads go through a private `stored` helper that returns nil when the schema is behind the code, since the devise initializer reads a mailbox while booting. Read by `InvoiceIssuer`, `Invoice.next_number`, `Membership.annual_cost_cents` / `.grace_period_days` / `.renewal_window_days`, `Grant.self_funded_ids`, the contact page and the story-share footer |
 | `User` | Devise authentication, SearchCop search, super_user admin flag |
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
@@ -260,6 +261,7 @@ action, or `authorize! :workshop, to: :summary?`).
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
+- `InvoiceIssuer` (presenter) — Single source of truth for the issuing org's invoice/receipt header (name, address, email, tax id, payable-to note), shared by `EventInvoice`, `EventReceipt`, and `InvoicePresenter`. Name and tax id come from `Setting.app_organization`; the addresses and email are app-wide settings. `#address_lines` / `#remittance_address_lines` delegate to `Setting`, which reads the `Address` the row points at (`return_address` / `remittance_address`) and otherwise falls back to the app org's flagged invoice address (`Address.display_lines_for`); there are no hard-coded address literals. The email is `Setting.info_email`. The header carries the return address; `#remittance_address_lines` is the separate address cheques are mailed to, printed under the payable-to line on both invoices and on the pay-by-check callout
 
 ### Event Registrations
 

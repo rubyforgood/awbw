@@ -61,7 +61,7 @@ class ContactUsController < ApplicationController
     admin_notification = NotificationServices::CreateNotification.call(
       noticeable: noticeable,
       recipient_role: :admin,
-      recipient_email: Organization.programs_email,
+      recipient_email: Setting.programs_email,
       kind: "contact_us_fyi",
       notification_type: "contact_us_notification",
       deliver: false

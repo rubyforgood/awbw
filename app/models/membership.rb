@@ -10,9 +10,12 @@ class Membership < ApplicationRecord
   TIME_ZONE = "Pacific Time (US & Canada)".freeze
   INVOICE_PERIOD = 1.year
 
-  ANNUAL_COST_CENTS = ENV.fetch("ANNUAL_MEMBERSHIP_CENTS", 2500).to_i
-  GRACE_PERIOD_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", 30).to_i
-  RENEWAL_WINDOW_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", 30).to_i
+
+  # Methods, not constants: these read the Setting row, and a constant would run
+  # that query while the class loads — before the table exists during migration.
+  def self.annual_cost_cents = Setting.annual_membership_cents
+  def self.grace_period_days = Setting.membership_grace_period_days
+  def self.renewal_window_days = Setting.membership_renewal_window_days
 
   has_paper_trail
 

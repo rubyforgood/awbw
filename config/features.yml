@@ -4031,3 +4031,30 @@
     - "Pick a direction under \"Sort: logged\" to see the most recently added entries first; release date then breaks ties."
     - "While sorting by date logged, each card shows both dates, labeled Logged and Released."
     - "Set it back to \"—\" (or click Clear filters) to return to sorting by release date."
+
+- name: "App settings page"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-08
+  action_path: /admin/settings
+  pr_number: 2570
+  summary: >-
+    A new App settings page under Admin holds the settings the whole portal shares:
+    which organization the portal invoices as, the contact and reply-to addresses,
+    the invoice number prefix, and the standard membership price and renewal windows.
+  pro_tips:
+    - "Leave a field blank to keep using the value this deployment is configured with — the grey placeholder shows what that currently is."
+    - "After picking the organization, the page lists what it supplies, with links to where the tax ID and addresses are edited."
+
+- name: "Mark which address invoices use"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-10-08
+  action_path: /organizations
+  pr_number: 2570
+  summary: >-
+    An organization's address can now be marked as its invoice address, so invoices
+    and receipts bill to the right one instead of whichever address happened to be
+    first. The address picker on an invoice lists the marked one first and labels it.
+  pro_tips:
+    - "Nothing changes until you mark one — unmarked organizations keep their current behaviour."

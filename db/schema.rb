@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_09_155123) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -88,6 +88,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "zip_code", null: false
+    t.boolean "invoice_address"
+    t.index ["addressable_type", "addressable_id", "invoice_address"], name: "index_addresses_on_addressable_and_invoice_role", unique: true
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
     t.index ["created_by_id"], name: "index_addresses_on_created_by_id"
     t.index ["updated_by_id"], name: "index_addresses_on_updated_by_id"
@@ -1477,6 +1479,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.integer "updated_by_id"
     t.string "website_url"
     t.integer "windows_type_id"
+    t.string "tax_id"
     t.index ["created_by_id"], name: "index_organizations_on_created_by_id"
     t.index ["location_id"], name: "index_organizations_on_location_id"
     t.index ["organization_status_id"], name: "index_organizations_on_organization_status_id"
@@ -2019,6 +2022,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.index ["created_by_id"], name: "index_sectors_on_created_by_id"
     t.index ["story_share_position"], name: "index_sectors_on_story_share_position"
     t.index ["updated_by_id"], name: "index_sectors_on_updated_by_id"
+  end
+
+  create_table "settings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "singleton", default: true, null: false
+    t.integer "organization_id"
+    t.string "info_email"
+    t.string "reply_to_email"
+    t.string "programs_email"
+    t.string "no_reply_email"
+    t.string "invoice_prefix"
+    t.integer "annual_membership_cents"
+    t.integer "membership_renewal_window_days"
+    t.integer "membership_grace_period_days"
+    t.integer "created_by_id"
+    t.integer "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "return_address_id"
+    t.bigint "remittance_address_id"
+    t.index ["created_by_id"], name: "index_settings_on_created_by_id"
+    t.index ["organization_id"], name: "index_settings_on_organization_id"
+    t.index ["remittance_address_id"], name: "index_settings_on_remittance_address_id"
+    t.index ["return_address_id"], name: "index_settings_on_return_address_id"
+    t.index ["singleton"], name: "index_settings_on_singleton", unique: true
+    t.index ["updated_by_id"], name: "index_settings_on_updated_by_id"
   end
 
   create_table "staff_taggings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2827,6 +2855,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
   add_foreign_key "sectorable_items", "users", column: "updated_by_id"
   add_foreign_key "sectors", "users", column: "created_by_id"
   add_foreign_key "sectors", "users", column: "updated_by_id"
+  add_foreign_key "settings", "addresses", column: "remittance_address_id", on_delete: :nullify
+  add_foreign_key "settings", "addresses", column: "return_address_id", on_delete: :nullify
+  add_foreign_key "settings", "organizations"
   add_foreign_key "staff_taggings", "staff_tags"
   add_foreign_key "stories", "organizations"
   add_foreign_key "stories", "people", column: "author_id"

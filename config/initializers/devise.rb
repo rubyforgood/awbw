@@ -7,14 +7,8 @@ Devise.setup do |config|
   config.secret_key = Rails.application.credentials.secret_key_base || ENV["SECRET_KEY_BASE"]
 
   # ==> Mailer Configuration
-  # Configure the e-mail address which will be shown in Devise::Mailer,
-  # note that it will be overwritten if you use your own mailer class
-  # with default "from" parameter.
-  # Assigned in to_prepare because Organization isn't autoloadable while
-  # initializers run, and Devise only reads this when it sends the first email.
-  Rails.application.config.to_prepare do
-    Devise.mailer_sender = Organization.programs_email
-  end
+  # mailer_sender is unset on purpose: config.mailer below is DeviseMailer, whose
+  # own `default from:` takes precedence over it.
   config.sign_in_after_reset_password = true
 
   # Use Turbo-compatible HTTP status codes

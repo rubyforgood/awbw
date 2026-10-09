@@ -1206,7 +1206,7 @@ class EventRegistration < ApplicationRecord
       noticeable: self,
       kind: "event_registration_cancelled_fyi",
       recipient_role: :admin,
-      recipient_email: Organization.programs_email,
+      recipient_email: Setting.programs_email,
       notification_type: 1
     )
   end

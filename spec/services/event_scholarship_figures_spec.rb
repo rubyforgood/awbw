@@ -111,6 +111,10 @@ RSpec.describe EventScholarshipFigures do
       other
     end
 
+    # The Setting row is read once per request and memoized on Current, so warm it
+    # here rather than letting the count depend on whether setup happened to read it.
+    Setting.current
+
     queries = 0
     counter = ->(_name, _start, _finish, _id, payload) { queries += 1 unless payload[:name].to_s.match?(/SCHEMA|TRANSACTION/) }
     ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do

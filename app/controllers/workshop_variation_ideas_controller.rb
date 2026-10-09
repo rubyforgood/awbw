@@ -54,7 +54,7 @@ class WorkshopVariationIdeasController < ApplicationController
         noticeable: @workshop_variation_idea,
         kind: :idea_submitted_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0)
 
       flash[:notice] = "Workshop variation idea was successfully created."

@@ -56,29 +56,6 @@ class Organization < ApplicationRecord
   ORGANIZATION_TYPE_OTHER = "Other"
   ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
 
-  # The organization that runs this app. A grant it self-funds counts as subsidy
-  # (unfunded), not external funding, in reports. Not memoized: the record can be
-  # created mid-process (seeds, tests).
-  def self.awbw
-    find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
-  end
-
-  # The staffed programs mailbox: what facilitators are told to write to, and the
-  # reply_to on portal mail. REPLY_TO_EMAIL is the retiring name for it.
-  def self.programs_email
-    ENV["PROGRAMS_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
-  end
-
-  # The unattended sending mailbox, for mail whose from: should not invite a reply.
-  def self.no_reply_email
-    ENV["NO_REPLY_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
-  end
-
-  # The public contact mailbox printed on invoices, receipts, and portal contact info.
-  def self.info_email
-    ENV["INFO_EMAIL"].presence || programs_email
-  end
-
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],
@@ -87,6 +64,7 @@ class Organization < ApplicationRecord
   validates :organization_status_id, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
   validates :organization_type_other, length: { maximum: 255 }
+  validates :tax_id, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
