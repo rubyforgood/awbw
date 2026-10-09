@@ -283,7 +283,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   # Placeholder keeps previews working on a checkout with no PROGRAMS_EMAIL set;
   # recipient_email is required.
   def programs_email
-    Organization.programs_email.presence || "programs@example.com"
+    Setting.programs_email.presence || "programs@example.com"
   end
 
   def find_valid_notification(kind)

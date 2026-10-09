@@ -3,10 +3,6 @@
 # organization's bulk-payment FormSubmission. Both resolve to the same shape
 # (bill-to, attention, line items, total) so one view renders both.
 class EventInvoice
-  ISSUER_NAME = "A Window Between Worlds".freeze
-  ISSUER_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  PAYABLE_TO_NOTE = "Please make checks payable to A Window Between Worlds".freeze
-
   LineItem = Struct.new(:date, :description, :quantity, :unit_price_cents, :details, keyword_init: true) do
     def amount_cents
       unit_price_cents.to_i * quantity.to_i
@@ -47,7 +43,7 @@ class EventInvoice
       date: registration.created_at.to_date,
       client_id: organization&.id || registrant.id,
       bill_to_name: organization&.name.presence || registrant.full_name,
-      bill_to_address_lines: address_lines_for(addressable),
+      bill_to_address_lines: Address.display_lines_for(addressable),
       bill_to_email: organization&.email.presence || registrant.preferred_email,
       attention: registrant.full_name,
       line_items: [
@@ -169,21 +165,10 @@ class EventInvoice
     [ total_cents - amount_applied_cents, 0 ].max
   end
 
-  def issuer_name = ISSUER_NAME
-  def issuer_address_lines = ISSUER_ADDRESS_LINES
-  def issuer_email = Organization.info_email
-  def payable_to_note = PAYABLE_TO_NOTE
-
-  def self.address_lines_for(addressable)
-    return [] unless addressable.respond_to?(:addresses)
-
-    address = addressable.addresses.active.first
-    return [] unless address
-
-    city_line = [ address.city.presence,
-                  [ address.state.presence, address.zip_code.presence ].compact.join(" ").presence ]
-      .compact.join(", ")
-    [ address.street_address.presence, city_line.presence ].compact
-  end
-  private_class_method :address_lines_for
+  def issuer = @issuer ||= InvoiceIssuer.current
+  def issuer_name = issuer.name
+  def issuer_address_lines = issuer.address_lines
+  def issuer_email = issuer.email
+  def payable_to_note = issuer.payable_to_note
+  def remittance_address_lines = issuer.remittance_address_lines
 end

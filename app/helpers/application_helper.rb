@@ -692,6 +692,12 @@ module ApplicationHelper
 
   # Fundamental US time zones only (for user preference dropdown).
   # Order: Eastern → Pacific, then Alaska, Hawaii, Arizona.
+  # The admin-flagged organization running this app. Memoized so the footer on every
+  # page doesn't re-query.
+  def app_organization
+    @app_organization ||= Setting.app_organization
+  end
+
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 

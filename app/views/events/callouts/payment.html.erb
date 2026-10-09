@@ -49,8 +49,9 @@
       <summary class="cursor-pointer text-sm <%= eyebrow_link_class %>">Prefer to pay by check?</summary>
 
       <div class="mt-3 space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
-        <p>Write the check out to <strong>A Window Between Worlds</strong> and mail it to:</p>
-        <p class="font-medium text-gray-900">1210 Fernside Dr.<br>La Cañada, CA 91011</p>
+        <% issuer = InvoiceIssuer.current %>
+        <p>Write the check out to <strong><%= issuer.name %></strong> and mail it to:</p>
+        <p class="font-medium text-gray-900"><%= safe_join(issuer.remittance_address_lines, tag.br) %></p>
         <p>Please send us an email letting us know the date the check will be mailed. If that date changes, please let us know.</p>
         <p><strong>Note:</strong> AWBW had an address change in recent years. Please be sure your accounting department has this current address — mail sent to the old address will not be received.</p>
         <% if (due_display = @event.decorate.payment_due_deadline_display) %>

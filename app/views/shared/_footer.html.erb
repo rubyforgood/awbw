@@ -1,7 +1,7 @@
 <footer class="bg-primary py-4 text-white">
   <div class="container mx-auto text-center">
     <p class="py-4 text-sm text-white">
-      2026 A Window Between Worlds ® ™ • Registered 501(c)(3) EIN: 95-448606
+      © <%= Date.current.year %> A Window Between Worlds ® ™ • Registered 501(c)(3) EIN: <%= app_organization&.tax_id.presence || "95-448606" %>
       <br>
       Portal built with 🤍 by
       <a href="https://www.rubyforgood.org"

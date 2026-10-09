@@ -1,12 +1,12 @@
 require "rails_helper"
 
 RSpec.describe "MembershipInvoices", type: :request do
-  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership.annual_cost_cents) }
   around { |example| travel_to(Time.current.midday) { example.run } }
 
   let(:admin) { create(:user, :admin) }
 
-  def term_for(name, cost_cents: Membership::ANNUAL_COST_CENTS, start_date: Date.current)
+  def term_for(name, cost_cents: Membership.annual_cost_cents, start_date: Date.current)
     person = create(:person, first_name: name, last_name: "Tester")
     create(:membership_invoice,
       membership: create(:membership, person: person),
@@ -61,7 +61,7 @@ RSpec.describe "MembershipInvoices", type: :request do
       end
 
       it "shows the status badge for an overdue year" do
-        term_for("Behind", start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1)
+        term_for("Behind", start_date: Date.current - Membership.grace_period_days - 1)
 
         get membership_invoices_path, headers: frame
 

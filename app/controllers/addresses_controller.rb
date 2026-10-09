@@ -6,8 +6,8 @@ class AddressesController < ApplicationController
     addressable = GlobalID::Locator.locate_signed(params[:addressable_sgid])
     return render json: { addresses: [] } unless addressable&.respond_to?(:addresses)
 
-    addresses = addressable.addresses.active.order(id: :desc)
-    render json: { addresses: addresses.map { |address| { id: address.id, label: address.name } } }
+    addresses = addressable.addresses.active.order(Arel.sql("invoice_address IS NULL"), id: :desc)
+    render json: { addresses: addresses.map { |address| { id: address.id, label: address.decorate.picker_label } } }
   rescue => _e
     render json: { addresses: [] }
   end

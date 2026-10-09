@@ -219,7 +219,7 @@ RSpec.describe MembershipInvoice, type: :model do
   end
 
   describe "the grace window" do
-    let(:grace) { Membership::GRACE_PERIOD_DAYS }
+    let(:grace) { Membership.grace_period_days }
 
     def term_starting(days_ago, cost_cents: 2_500)
       create(:membership_invoice,

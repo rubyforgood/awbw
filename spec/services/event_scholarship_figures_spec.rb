@@ -122,7 +122,7 @@ RSpec.describe EventScholarshipFigures do
     # funded/unfunded splits + 2 constant queries classifying AWBW-donated grants as
     # subsidy (the org lookup + its grant ids). All independent of event count —
     # that's the point, since this replaced one EventDashboard per event.
-    expect(queries).to eq(6)
+    expect(queries).to eq(7)
   end
 
   # The report rows expand to name the people behind each split, so the loader has

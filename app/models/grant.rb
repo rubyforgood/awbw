@@ -52,7 +52,7 @@ class Grant < ApplicationRecord
   # external funding, by the scholarship funding split. Empty when the AWBW org
   # isn't on file, collapsing the split back to grant-present vs grant-absent.
   def self.self_funded_ids
-    where(funder: Organization.awbw).ids
+    where(funder: Setting.app_organization).ids
   end
 
   # Total scholarship draws against a grant, as a correlated subquery. Used by the

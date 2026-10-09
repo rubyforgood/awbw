@@ -13,6 +13,7 @@ module AdminCardsHelper
       model_card(:stories, icon: "🗣️"),
       custom_card("Story share admin", story_share_admin_path, icon: "⚙️", color: :sky, intensity: 100),
       custom_card("Staff taggings", staff_taggings_path, icon: "🏷️", color: :sky, intensity: 100),
+      custom_card("App settings", admin_settings_path, icon: "⚙️", color: :sky, intensity: 100),
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
       model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),

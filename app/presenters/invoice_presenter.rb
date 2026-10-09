@@ -1,8 +1,4 @@
 class InvoicePresenter
-  ISSUER_NAME = "A Window Between Worlds".freeze
-  ISSUER_ADDRESS_LINES = [ "1029 1/2 W 24th St", "Los Angeles, CA 90007" ].freeze
-  PAYABLE_TO_NOTE = "Please make checks payable to A Window Between Worlds".freeze
-
   attr_reader :invoice
 
   def initialize(invoice)
@@ -23,11 +19,13 @@ class InvoicePresenter
   def date = invoice.date
   def invoicee_id = invoicee&.id
   def reference = nil
-  def payable_to_note = PAYABLE_TO_NOTE
 
-  def issuer_name = ISSUER_NAME
-  def issuer_address_lines = ISSUER_ADDRESS_LINES
-  def issuer_email = Organization.info_email
+  def issuer = @issuer ||= InvoiceIssuer.current
+  def issuer_name = issuer.name
+  def issuer_address_lines = issuer.address_lines
+  def issuer_email = issuer.email
+  def payable_to_note = issuer.payable_to_note
+  def remittance_address_lines = issuer.remittance_address_lines
 
   def amount_applied_cents = 0
   def balance_due_cents = total_cents

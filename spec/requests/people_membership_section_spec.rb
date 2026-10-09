@@ -3,12 +3,12 @@ require "rails_helper"
 RSpec.describe "Person profile membership section", type: :request do
   around { |example| travel_to(Time.current.midday) { example.run } }
 
-  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership.annual_cost_cents) }
   let(:admin) { create(:user, :admin) }
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
 
-  def membership_invoice_for(cost_cents: Membership::ANNUAL_COST_CENTS, start_date: Date.current, membership: nil)
+  def membership_invoice_for(cost_cents: Membership.annual_cost_cents, start_date: Date.current, membership: nil)
     create(:membership_invoice,
       membership: membership || create(:membership, person: person),
       cost_cents: cost_cents,

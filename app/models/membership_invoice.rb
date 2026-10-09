@@ -27,7 +27,7 @@ class MembershipInvoice < ApplicationRecord
   scope :paid_in_full, -> { where(cost_covered_by_allocations) }
   scope :not_paid_in_full, -> { where(chargeable.and(cost_covered_by_allocations.not)) }
   scope :overdue, ->(as_of = Date.current) {
-    not_paid_in_full.where(start_date: ...(as_of - Membership::GRACE_PERIOD_DAYS))
+    not_paid_in_full.where(start_date: ...(as_of - Membership.grace_period_days))
   }
   # Defined as the complement to `overdue` so it can't drift.
   scope :paid_or_within_grace, ->(as_of = Date.current) {
@@ -69,7 +69,7 @@ class MembershipInvoice < ApplicationRecord
   def overdue?(as_of = Date.current)
     return false if paid_in_full? || start_date.blank?
 
-    as_of > start_date + Membership::GRACE_PERIOD_DAYS
+    as_of > start_date + Membership.grace_period_days
   end
 
   def within_grace?(as_of = Date.current)

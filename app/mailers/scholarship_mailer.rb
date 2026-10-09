@@ -1,5 +1,5 @@
 class ScholarshipMailer < ApplicationMailer
-  default to: -> { Organization.programs_email }
+  default to: -> { Setting.programs_email }
 
   # Trainings-team heads-up when a recipient asks for more support instead of
   # accepting or declining — the award stays live, so staff can revisit the amount.

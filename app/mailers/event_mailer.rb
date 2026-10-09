@@ -12,8 +12,8 @@ class EventMailer < ApplicationMailer
 
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} received for #{@event.title}"
     )
   end
@@ -41,8 +41,8 @@ class EventMailer < ApplicationMailer
 
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: "AWBW Portal: Payment submission received for #{@event&.title}"
     )
   end
@@ -75,8 +75,8 @@ class EventMailer < ApplicationMailer
     # page's pre-fill so the preview and the delivered email can't drift apart.
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: @custom_subject || @event.default_reminder_subject(time_zone: @time_zone)
     )
   end
@@ -100,9 +100,9 @@ class EventMailer < ApplicationMailer
 
     count = @recipient_labels.size
     mail(
-      to: Organization.programs_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      to: Setting.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: "AWBW Portal: [FYI] Reminder sent to #{count} registrant#{'s' if count != 1} for #{@event.title}"
     )
   end
@@ -120,8 +120,8 @@ class EventMailer < ApplicationMailer
 
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} cancelled for #{@event.title}"
     )
   end

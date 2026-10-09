@@ -1,6 +1,6 @@
 class MembershipDecorator < ApplicationDecorator
   def cost_label
-    return "Standard (#{h.dollars_from_cents(Membership::ANNUAL_COST_CENTS)})" if cost_cents.nil?
+    return "Standard (#{h.dollars_from_cents(Membership.annual_cost_cents)})" if cost_cents.nil?
 
     "Locked at #{h.dollars_from_cents(cost_cents)}"
   end
