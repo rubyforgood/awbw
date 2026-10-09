@@ -35,7 +35,7 @@ RSpec.describe MembershipInvoiceDecorator, type: :decorator do
     end
 
     it "reads Overdue past the grace window" do
-      badge = invoice(start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1).status_badge
+      badge = invoice(start_date: Date.current - Membership.grace_period_days - 1).status_badge
 
       expect(badge.label).to eq("Overdue")
       expect(badge.classes).to eq(described_class::BADGE_CLASSES[:red])

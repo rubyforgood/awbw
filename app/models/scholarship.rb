@@ -56,7 +56,7 @@ class Scholarship < ApplicationRecord
   # EventRevenueFigures): externally funded = backed by a grant whose funder isn't
   # the org itself; org-subsidized = no grant, or a grant AWBW funded itself.
   # Callers rendering both sides can pass an already-loaded self_funded set to
-  # avoid re-running Grant.self_funded_ids (an Organization.awbw + pluck) per scope.
+  # avoid re-running Grant.self_funded_ids (a Setting.app_organization + pluck) per scope.
   # Declined awards are excluded (a decline funds nothing).
   scope :externally_funded, ->(self_funded = Grant.self_funded_ids) { not_declined.where.not(grant_id: [ nil, *self_funded ]) }
   scope :org_subsidized, ->(self_funded = Grant.self_funded_ids) { not_declined.where(grant_id: [ nil, *self_funded ]) }

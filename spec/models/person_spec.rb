@@ -36,7 +36,7 @@ RSpec.describe Person, type: :model do
 
     it "is false on an unpaid term past the grace window" do
       term(cost_cents: 2_500,
-        start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1,
+        start_date: Date.current - Membership.grace_period_days - 1,
         subscription: subscription)
 
       expect(person).not_to be_membership_current

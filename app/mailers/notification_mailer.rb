@@ -1,7 +1,7 @@
 class NotificationMailer < ApplicationMailer
   helper EventHelper
 
-  default to: -> { Organization.programs_email }
+  default to: -> { Setting.programs_email }
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze

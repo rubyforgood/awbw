@@ -170,7 +170,7 @@ RSpec.describe PayChargeExtensions do
     let(:member) { create(:person) }
     let(:membership) { create(:membership, person: member) }
 
-    def renewal_charge(period_start:, amount: Membership::ANNUAL_COST_CENTS, charge_id: "ch_membership")
+    def renewal_charge(period_start:, amount: Membership.annual_cost_cents, charge_id: "ch_membership")
       pay_subscription = Pay::Subscription.create!(
         customer: pay_customer, name: "default", processor_id: "sub_membership",
         processor_plan: "membership", status: "active", quantity: 1,
@@ -188,13 +188,13 @@ RSpec.describe PayChargeExtensions do
 
     it "allocates the charge to the year covering the invoice period" do
       invoice = create(:membership_invoice, membership: membership,
-        cost_cents: Membership::ANNUAL_COST_CENTS,
+        cost_cents: Membership.annual_cost_cents,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
       renewal_charge(period_start: Date.current.to_time)
 
       expect(invoice.reload).to be_paid_in_full
-      expect(invoice.allocations.sole.amount).to eq(Membership::ANNUAL_COST_CENTS)
+      expect(invoice.allocations.sole.amount).to eq(Membership.annual_cost_cents)
     end
 
     it "records the payment against the subscription's person, not the Stripe customer owner" do
@@ -219,11 +219,11 @@ RSpec.describe PayChargeExtensions do
       invoice = create(:membership_invoice, membership: membership,
         cost_cents: 1_000, start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
-      renewal_charge(period_start: Date.current.to_time, amount: Membership::ANNUAL_COST_CENTS)
+      renewal_charge(period_start: Date.current.to_time, amount: Membership.annual_cost_cents)
 
       expect(invoice.allocations.sole.amount).to eq(1_000)
       expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_membership").amount_cents_remaining)
-        .to eq(Membership::ANNUAL_COST_CENTS - 1_000)
+        .to eq(Membership.annual_cost_cents - 1_000)
     end
 
     it "leaves a subscription charge that is not a membership unallocated" do
@@ -246,13 +246,13 @@ RSpec.describe PayChargeExtensions do
 
     it "allocates a checkout charge from the invoice metadata before Pay links the subscription" do
       invoice = create(:membership_invoice, membership: membership,
-        cost_cents: Membership::ANNUAL_COST_CENTS,
+        cost_cents: Membership.annual_cost_cents,
         start_date: Date.current, end_date: Date.current + 1.year - 1.day)
 
       period_start = Date.current.to_time.to_i
       Pay::Charge.create!(
         customer: pay_customer, processor_id: "ch_checkout",
-        amount: Membership::ANNUAL_COST_CENTS, amount_refunded: 0, currency: "usd",
+        amount: Membership.annual_cost_cents, amount_refunded: 0, currency: "usd",
         metadata: {},
         data: {
           "stripe_invoice" => {
@@ -263,13 +263,13 @@ RSpec.describe PayChargeExtensions do
             }
           }
         },
-        object: { "id" => "ch_checkout", "amount" => Membership::ANNUAL_COST_CENTS,
+        object: { "id" => "ch_checkout", "amount" => Membership.annual_cost_cents,
                   "currency" => "usd", "paid" => true, "metadata" => {},
                   "refunds" => { "data" => [], "has_more" => false } }
       )
 
       expect(invoice.reload).to be_paid_in_full
-      expect(invoice.allocations.sole.amount).to eq(Membership::ANNUAL_COST_CENTS)
+      expect(invoice.allocations.sole.amount).to eq(Membership.annual_cost_cents)
       expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_checkout"))
         .to have_attributes(external_origin: false, person: member)
     end

@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :invoice do
-    sequence(:number) { |n| "#{ENV.fetch("INVOICE_PREFIX", "INV")}-#{format('%03d', n)}" }
+    sequence(:number) { |n| "#{Setting.invoice_prefix}-#{format('%03d', n)}" }
     date { Date.current }
     invoicee { create(:person) }
     bill_to_additional_info { "123 Main St\nLos Angeles, CA 90001" }
