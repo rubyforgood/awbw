@@ -36,7 +36,9 @@ contact_us_samples = [
     message: "I have a background in counseling and would like to volunteer. Where can I learn about current openings?" }
 ]
 
-reply_to_email = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+# Placeholder keeps the seed working on a checkout with no PROGRAMS_EMAIL set;
+# recipient_email is required.
+programs_email = Organization.programs_email.presence || "programs@example.com"
 sample_user = User.where.not(person_id: nil).first
 
 contact_us_samples.each_with_index do |sample, i|
@@ -96,7 +98,7 @@ contact_us_samples.each_with_index do |sample, i|
   TEXT
 
   fyi = Notification.find_or_create_by!(
-    recipient_email: reply_to_email,
+    recipient_email: programs_email,
     email_subject: "[FYI] New contact form submission from #{sample[:from]}: #{sample[:subject]}",
     kind: "contact_us_fyi"
   ) do |n|
@@ -125,7 +127,7 @@ end
   body_text = "#{attrs[:subject]}\n\n#{attrs[:body]}"
 
   notification = Notification.find_or_create_by!(
-    recipient_email: reply_to_email,
+    recipient_email: programs_email,
     email_subject: attrs[:subject],
     kind: attrs[:kind]
   ) do |n|
@@ -160,7 +162,7 @@ delivery_problem_samples.each do |sample|
   created_at = archived ? (Notification::LAUNCHED_ON - 2.weeks).to_time : sample[:hours_ago].hours.ago
 
   notification = Notification.find_or_create_by!(
-    recipient_email: reply_to_email,
+    recipient_email: programs_email,
     kind: sample[:kind],
     email_subject: nil
   ) do |n|

@@ -94,9 +94,9 @@ RSpec.describe NotificationMailerJob, type: :job do
         described_class.new.perform(notification.id)
 
         mail = ActionMailer::Base.deliveries.last
-        expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org") ])
+        expect(mail.from).to eq([ EmailConfigHelpers::NO_REPLY_EMAIL ])
         expect(mail[:from].display_names.compact).to eq([ ApplicationMailer::FROM_NAME ])
-        expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+        expect(mail.reply_to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
       end
 
       it "never names the sender in any header" do

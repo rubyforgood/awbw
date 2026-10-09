@@ -123,7 +123,7 @@ class ProfileChangeRequestsController < ApplicationController
     NotificationServices::CreateNotification.call(
       noticeable: request,
       recipient_role: :admin,
-      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      recipient_email: Organization.programs_email,
       kind: "profile_change_requested_fyi",
       notification_type: "profile_change_requested_notification",
       sender: current_user

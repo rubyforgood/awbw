@@ -24,8 +24,13 @@
         </div>
       </div>
       <div class="flex shrink-0 items-center gap-3">
+        <% if local_assigns[:show_logged] %>
+          <span class="text-xs font-medium whitespace-nowrap text-gray-500">
+            <i class="fa-regular fa-calendar-plus"></i> Logged <%= feature.logged_label %>
+          </span>
+        <% end %>
         <span class="text-xs font-medium whitespace-nowrap text-gray-500">
-          <i class="fa-regular fa-calendar"></i> <%= feature.released_label %>
+          <i class="fa-regular fa-calendar"></i> <%= "Released" if local_assigns[:show_logged] %> <%= feature.released_label %>
         </span>
         <button type="button" data-action="expandable-card#toggle" aria-label="Expand feature"
                 class="text-gray-400 hover:text-gray-600">

@@ -6,12 +6,14 @@ class ApplicationMailer < ActionMailer::Base
 
   # Wraps the generic mailbox with a friendly display name so recipients see
   # "AWBW Programs" rather than the bare "programs" local part.
-  def self.sender(address = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+  def self.sender(address = Organization.programs_email)
     %("#{FROM_NAME}" <#{address}>)
   end
 
-  default from: sender
-  default reply_to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+  # Procs, not values: a bare call here would freeze the address at class load,
+  # before a spec or a reloaded environment can change it.
+  default from: -> { self.class.sender }
+  default reply_to: -> { Organization.programs_email }
 
   layout "mailer"
 end

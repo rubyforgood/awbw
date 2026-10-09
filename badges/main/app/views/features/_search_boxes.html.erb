@@ -45,12 +45,22 @@
             class: date_filter_class(search_field_class, params[:released_to]) %>
     </div>
 
-    <div>
-      <label for="direction" class="<%= search_label_class %>">Sort by date</label>
-      <%= f.select :direction,
-            options_for_select([ [ "Newest first", "desc" ], [ "Oldest first", "asc" ] ], params[:direction].presence || "desc"),
-            {},
-            class: search_field_class %>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label for="direction" class="<%= search_label_class %>">Sort: released</label>
+        <%= f.select :direction,
+              options_for_select([ [ "Newest", "desc" ], [ "Oldest", "asc" ] ], params[:direction].presence || "desc"),
+              {},
+              class: search_field_class %>
+      </div>
+
+      <div>
+        <label for="logged_direction" class="<%= search_label_class %>">Sort: logged</label>
+        <%= f.select :logged_direction,
+              options_for_select([ [ "—", "" ], [ "Newest", "desc" ], [ "Oldest", "asc" ] ], params[:logged_direction]),
+              {},
+              class: search_field_class %>
+      </div>
     </div>
 
     <div class="flex items-end">

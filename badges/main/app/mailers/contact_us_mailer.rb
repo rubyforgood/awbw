@@ -3,7 +3,7 @@ class ContactUsMailer < ApplicationMailer
     @contact_us = contact_us
     @user = user
 
-    @mail_to = ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+    @mail_to = Organization.programs_email
 
     sender_name = if user.present?
       user.full_name

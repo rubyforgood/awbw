@@ -15,7 +15,7 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
       expect(mail.subject).to eq('AWBW Portal: [FYI] New contact form submission from John Doe: Test Subject')
       expect(mail.from).to eq([ 'test@example.com' ])
     end
@@ -33,7 +33,7 @@ RSpec.describe ContactUsMailer do
 
       mail = described_class.hello(contact_params)
 
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it 'renders the email content correctly for non-logged in user' do

@@ -79,6 +79,11 @@ RSpec.describe FeatureDecorator do
     expect(decorated.released_label).to eq("Aug 9, 2026")
   end
 
+  it "formats the logged date" do
+    feature = build(:feature, created_at: Time.zone.local(2026, 10, 8, 12)).decorate
+    expect(feature.logged_label).to eq("Oct 8, 2026")
+  end
+
   it "falls back to a neutral area for an unknown key" do
     unknown = build(:feature).decorate
     allow(unknown).to receive(:area).and_return("mystery")

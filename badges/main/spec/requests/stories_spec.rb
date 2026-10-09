@@ -347,7 +347,7 @@ RSpec.describe "/stories", type: :request do
 
           admin_note = Notification.find_by(kind: "story_promoted_fyi")
           expect(admin_note.recipient_role).to eq("admin")
-          expect(admin_note.recipient_email).to eq(ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+          expect(admin_note.recipient_email).to eq(EmailConfigHelpers::PROGRAMS_EMAIL)
         end
 
         it "pre-checks the funder-only box when promoting a funder-only idea" do
@@ -543,7 +543,7 @@ RSpec.describe "/stories", type: :request do
 
         expect(promotion_notices).to contain_exactly(
           [ "story_promoted", submitter.email ],
-          [ "story_promoted_fyi", ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ]
+          [ "story_promoted_fyi", Organization.programs_email ]
         )
       end
 
