@@ -8,6 +8,8 @@ RSpec.describe "Person profile admin-only details", type: :request do
   before do
     person.update!(
       first_name: "Realfirst",
+      email: "own-work@example.com",
+      email_type: "work",
       legal_first_name: "Legalname",
       pronunciation: "SAY-it",
       date_of_birth: Date.new(1990, 3, 14),
@@ -34,6 +36,7 @@ RSpec.describe "Person profile admin-only details", type: :request do
     "Legal first name: Legalname",
     "SAY-it",
     "Mar 14",
+    "own-work@example.com",
     "secondary@example.com",
     "Mornings",
     "555-777-1212",

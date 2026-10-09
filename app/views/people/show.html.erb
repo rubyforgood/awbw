@@ -108,8 +108,8 @@
         <% end %>
         <!-- Contact info + social -->
         <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm md:justify-start">
-          <% email = @person.user&.email || @person.email %>
-          <% email_type = @person.email_type.presence || @person.user&.email_type %>
+          <% email = @person.headline_email %>
+          <% email_type = @person.headline_email_type %>
           <% if email.present? %>
             <% if @person.profile_show_email? %>
               <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
@@ -158,6 +158,11 @@
           <% end %>
           <%# Admin-only contact extras that have no public profile home. %>
           <% if allowed_to?(:manage?, Person) %>
+            <% if (own_email = @person.email_besides_login) %>
+              <span class="<%= admin_only_chip_class %>" title="Email on the person record, different from their login email (admin only)">
+                <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to own_email, own_email, class: "hover:text-primary" %><!--email_on--><% if @person.email_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= @person.email_type %>)</span><% end %>
+              </span>
+            <% end %>
             <% if @person.email_2.present? %>
               <span class="<%= admin_only_chip_class %>" title="Secondary email (admin only)">
                 <i class="fa-solid fa-lock text-xs text-blue-700"></i> <!--email_off--><%= mail_to @person.email_2, @person.email_2, class: "hover:text-primary" %><!--email_on--><% if @person.email_2_type.present? %> <span class="text-2xs text-blue-700 uppercase">(<%= @person.email_2_type %>)</span><% end %>
