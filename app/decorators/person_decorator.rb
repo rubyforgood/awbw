@@ -18,23 +18,6 @@ class PersonDecorator < ApplicationDecorator
     h.topic_subscriptions_path(person_id: id, topic_subscription_type_id: TopicSubscriptionType.news&.id)
   end
 
-  # The login email leads because it's what the person signs in with and sees as theirs.
-  def headline_email
-    user&.email.presence || email
-  end
-
-  def headline_email_type
-    return user.email_type if email_besides_login
-    email_type.presence || user&.email_type
-  end
-
-  # The person's own email when a different login email is the headline, so admins
-  # can still see (and match against) the address on the person record.
-  def email_besides_login
-    return if user&.email.blank? || email.blank?
-    email unless email.casecmp?(user.email)
-  end
-
   # Their name on the record, plus what the app calls them elsewhere when the two
   # differ — an admin reconciling a roster needs to recognise both.
   def full_name_with_display_name

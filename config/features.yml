@@ -4046,14 +4046,3 @@
   pro_tips:
     - "Double-clicking Register no longer creates a second person; the extra click shows \"You are already registered.\""
     - "Use Dedupe on the People page to combine records that already exist twice."
-
-- name: "See a person's own email when it differs from their login"
-  area: people
-  display_status: admin_facing
-  released_on: 2026-10-09
-  summary: >-
-    A person's profile leads with their login email. When the email saved on the
-    person record is a different address, admins now see it too, in an admin-only
-    chip next to the secondary email.
-  pro_tips:
-    - "If a registrant typed an address you don't see on the profile, check this chip before assuming they're a new person."

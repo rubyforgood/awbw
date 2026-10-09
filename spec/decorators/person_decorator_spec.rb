@@ -20,48 +20,6 @@ RSpec.describe PersonDecorator do
     end
   end
 
-  describe "#email_besides_login" do
-    it "returns the person's own email when it differs from their login email" do
-      person = create(:person, email: "work@example.com", user: create(:user, email: "login@example.com"))
-
-      expect(person.decorate.email_besides_login).to eq("work@example.com")
-    end
-
-    it "is nil when the own email matches the login email ignoring case" do
-      person = create(:person, email: "Login@Example.com", user: create(:user, email: "login@example.com"))
-
-      expect(person.decorate.email_besides_login).to be_nil
-    end
-
-    it "is nil without a login, where the own email is already the headline address" do
-      person = create(:person, email: "work@example.com", user: nil)
-
-      expect(person.decorate.email_besides_login).to be_nil
-    end
-  end
-
-  describe "#headline_email_type" do
-    it "uses the login's email type when the own email differs from the login" do
-      person = create(:person, email: "work@example.com", email_type: "work",
-                               user: create(:user, email: "login@example.com", email_type: "personal"))
-
-      expect(person.decorate.headline_email_type).to eq("personal")
-    end
-
-    it "prefers the person's email type when the own email is the login email" do
-      person = create(:person, email: "login@example.com", email_type: "work",
-                               user: create(:user, email: "login@example.com", email_type: "personal"))
-
-      expect(person.decorate.headline_email_type).to eq("work")
-    end
-
-    it "uses the person's email type without a login" do
-      person = create(:person, email: "work@example.com", email_type: "work", user: nil)
-
-      expect(person.decorate.headline_email_type).to eq("work")
-    end
-  end
-
   describe "#active_facilitator_organization_names" do
     let(:person) { create(:person) }
 
