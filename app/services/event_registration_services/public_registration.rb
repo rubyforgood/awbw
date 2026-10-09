@@ -130,7 +130,7 @@ module EventRegistrationServices
     rescue ActiveRecord::RecordInvalid => e
       Result.new(success?: false, event_registration: nil, errors: [ e.message ])
     rescue ActiveRecord::RecordNotUnique => e
-      if e.message.include?("registrant_id")
+      if e.message.include?("registrant_id") || e.message.include?(Person::NAME_AND_EMAIL_INDEX)
         Result.new(success?: false, event_registration: nil,
                    errors: [ "You are already registered for this event." ])
       else
@@ -191,26 +191,10 @@ module EventRegistrationServices
       )
     end
 
-    # Find the existing registrant this submission belongs to, tolerating a
-    # first-name / nickname swap. We match on email + last name (both strong,
-    # stable identifiers) and accept either the typed first name or the nickname
-    # against either the stored first_name or legal_first_name. Without this, a
-    # returning registrant who types their legal name when we stored their
-    # nickname (or vice versa) slips past the match and registers as a duplicate
-    # Person. Anonymous (incognito) registrations rely on this; logged-in ones
-    # already arrive with @person set and never reach here.
+    # Accepts either the typed first name or the nickname so a returning registrant
+    # who swaps their legal name and nickname still matches.
     def find_matching_person(last_name:, email:)
-      return if email.blank? || last_name.blank?
-
-      first_names = [ field_value("first_name"), field_value("nickname") ]
-        .filter_map { |value| value&.strip.presence&.downcase }
-        .uniq
-      return if first_names.empty?
-
-      Person
-        .where("LOWER(last_name) = ? AND LOWER(email) = ?", last_name.downcase, email.downcase)
-        .where("LOWER(first_name) IN (:names) OR LOWER(COALESCE(legal_first_name, '')) IN (:names)", names: first_names)
-        .first
+      PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("nickname") ])
     end
 
     def record_news_subscription(person)

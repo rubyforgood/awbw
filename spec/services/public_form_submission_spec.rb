@@ -102,6 +102,26 @@ RSpec.describe PublicFormSubmission do
     expect(FormSubmission.last.person).to eq(existing)
   end
 
+  it "reuses an existing person whose email is only on their login" do
+    existing = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: nil)
+    create(:user, person: existing, email: "sam@example.com")
+
+    expect { described_class.call(form: form, form_params: params_for) }.not_to change(Person, :count)
+
+    expect(FormSubmission.last.person).to eq(existing)
+  end
+
+  it "reports an already-submitted error when a simultaneous submission created the person first" do
+    allow(Person).to receive(:create!).and_raise(
+      ActiveRecord::RecordNotUnique, "Duplicate entry for key 'people.#{Person::NAME_AND_EMAIL_INDEX}'"
+    )
+
+    result = described_class.call(form: form, form_params: params_for)
+
+    expect(result.success?).to be false
+    expect(result.errors).to eq([ PublicFormSubmission::ALREADY_SUBMITTED_MESSAGE ])
+  end
+
   describe "person profile & contact capture (parity with the event registration form)" do
     let!(:pronouns_field)      { create(:form_field, form: form, name: "Pronouns", field_identifier: "pronouns") }
     let!(:pronunciation_field) { create(:form_field, form: form, name: "Name pronunciation", field_identifier: "pronunciation") }
