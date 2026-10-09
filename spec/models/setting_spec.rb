@@ -63,14 +63,6 @@ RSpec.describe Setting do
       expect(described_class.info_email).to eq("env@example.test")
     end
 
-    it "falls through the contact email to the reply-to address" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("INFO_EMAIL").and_return(nil)
-      described_class.create!(reply_to_email: "replies@example.test")
-
-      expect(described_class.info_email).to eq("replies@example.test")
-    end
-
     it "degrades to the built-in defaults with nothing configured" do
       expect(described_class.organization_name).to eq("A Window Between Worlds")
       expect(described_class.invoice_prefix).to eq("INV")

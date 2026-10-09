@@ -42,15 +42,9 @@ RSpec.describe InvoiceIssuer do
     end
   end
 
-  describe "reading from the flagged organization" do
+  describe "reading from the chosen organization" do
     let(:organization) { create(:organization, name: "Test Org", tax_id: "12-3456789") }
     subject(:issuer) { described_class.new(organization) }
-
-    before do
-      create(:address, addressable: organization,
-                       street_address: "123 Main St", city: "Springfield",
-                       state: "IL", zip_code: "62704")
-    end
 
     it "uses the organization name" do
       expect(issuer.name).to eq("Test Org")
@@ -60,37 +54,20 @@ RSpec.describe InvoiceIssuer do
       expect(issuer.tax_id).to eq("12-3456789")
     end
 
-    it "builds header address lines from its address" do
-      expect(issuer.address_lines).to eq([ "123 Main St", "Springfield, IL 62704" ])
-    end
-
-    it "prefers an address flagged for invoices" do
-      create(:address, addressable: organization, invoice_address: true,
-                       street_address: "9 Billing Rd", city: "Shelbyville",
-                       state: "IL", zip_code: "62565")
-
-      expect(issuer.address_lines).to eq([ "9 Billing Rd", "Shelbyville, IL 62565" ])
-    end
-
     it "builds the payable-to note from the organization name" do
       expect(issuer.payable_to_note).to eq("Please make checks payable to Test Org")
     end
 
-    it "prefers an address flagged for remittance over the built-in one" do
-      create(:address, addressable: organization, remittance_address: true,
-                       street_address: "9 Checks Ln", city: "La Canada",
-                       state: "CA", zip_code: "91011")
-
-      expect(described_class.new(organization.reload).remittance_address_lines)
-        .to eq([ "9 Checks Ln", "La Canada, CA 91011" ])
-    end
-
-    it "falls back to the Setting row when the organization has no address" do
-      organization.addresses.destroy_all
-      Setting.create!(organization_address: "1 Fallback Way\nElsewhere, CA 90000")
+    # The addresses are settings, not attributes of the organization, so marking one
+    # on the record doesn't change what the header prints.
+    it "ignores the organization's own addresses" do
+      create(:address, addressable: organization, invoice_address: true,
+                       street_address: "9 Billing Rd", city: "Shelbyville",
+                       state: "IL", zip_code: "62565")
+      Setting.create!(organization_address: "1 Settings Way\nElsewhere, CA 90000")
 
       expect(described_class.new(organization.reload).address_lines)
-        .to eq([ "1 Fallback Way", "Elsewhere, CA 90000" ])
+        .to eq([ "1 Settings Way", "Elsewhere, CA 90000" ])
     end
   end
 

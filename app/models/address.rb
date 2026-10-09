@@ -5,7 +5,7 @@ class Address < ApplicationRecord
   LOCALITIES = [ "LA City", "LA County", "Southern CA", "Northern CA",
                 "Central CA", "Orange County", "Outside CA", "Outside USA", "Unknown" ]
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", "unknown" ].freeze
-  ROLE_FLAGS = %i[invoice_address remittance_address].freeze
+  ROLE_FLAGS = %i[invoice_address].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
   # draws — the whitelist behind every "States" breakdown, so international
   # regions (e.g. "ON", "England") are excluded (they belong to the Countries map).
@@ -33,11 +33,10 @@ class Address < ApplicationRecord
 
   scope :active, -> { where(inactive: false) }
   scope :for_invoices, -> { where(invoice_address: true) }
-  scope :for_remittance, -> { where(remittance_address: true) }
 
-  # Both role flags store true or NULL, never false: the unique indexes enforce one
-  # flagged address per owner, and an unchecked box writing false would collide with
-  # every other unflagged address.
+  # The flag stores true or NULL, never false: the unique index enforces one flagged
+  # address per owner, and an unchecked box writing false would collide with every
+  # other unflagged address.
   before_save :normalize_role_flags
   before_save :demote_sibling_role_flags
 
@@ -53,20 +52,13 @@ class Address < ApplicationRecord
     [ street_address.presence, city_line.presence ].compact
   end
 
-  # The lines to print for one of an addressable's roles. The invoice role falls back
-  # to the first active address, which is how a bill-to has always been picked; the
-  # remittance role has no fallback, so check instructions can't silently retarget to
-  # an office address.
-  def self.display_lines_for(addressable, role: :invoice)
+  # The bill-to lines for an addressable: the address marked for invoices, else its
+  # first active one, which is how a bill-to has always been picked.
+  def self.display_lines_for(addressable)
     return [] unless addressable.respond_to?(:addresses)
 
     scope = addressable.addresses.active
-    address = if role == :remittance
-      scope.for_remittance.first
-    else
-      scope.for_invoices.first || scope.first
-    end
-    address&.display_lines || []
+    (scope.for_invoices.first || scope.first)&.display_lines || []
   end
 
   private
