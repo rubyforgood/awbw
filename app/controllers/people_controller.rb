@@ -23,8 +23,6 @@ class PeopleController < ApplicationController
                            .order(:first_name, :last_name)
       @count_display = filtered.count
       @people = filtered.paginate(page: params[:page], per_page: per_page)
-      @multiple_membership_person_ids = Membership.not_cancelled.where(person_id: @people.map(&:id))
-        .group(:person_id).count.select { |_id, count| count > 1 }.keys.to_set
 
       render :people_results
     else
