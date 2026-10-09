@@ -4031,3 +4031,38 @@
     - "Pick a direction under \"Sort: logged\" to see the most recently added entries first; release date then breaks ties."
     - "While sorting by date logged, each card shows both dates, labeled Logged and Released."
     - "Set it back to \"—\" (or click Clear filters) to return to sorting by release date."
+
+- name: "Merges tidy up duplicate addresses and phone numbers"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two people now folds identical addresses and phone numbers into one
+    instead of leaving the kept person with duplicates, and keeps a single primary.
+  description: >-
+    When two people share the same address or phone number, the merge now keeps
+    just one copy and moves anything attached to the duplicate (like a phone tied
+    to an address) onto the survivor. The copy it keeps is the one still in use —
+    an active address or phone always wins over one marked inactive — and any
+    detail only the other copy had (a phone number on an address, for example) is
+    filled in rather than lost. It also settles a single primary — the kept
+    person's own if they had one, otherwise the other person's — so you never end
+    up with two "primary" addresses or phones. Addresses or phones that genuinely
+    differ are all kept.
+
+- name: "Heads-up when a person has more than one membership"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  action_path: "/people"
+  summary: >-
+    A person who has more than one active membership is now flagged, so you can
+    spot and consolidate them — a person should have just one.
+  description: >-
+    When someone ends up with more than one active membership — usually a leftover
+    from a merge — a warning now appears on their profile and their edit page. It
+    tells you how many memberships they have and links straight to the membership
+    list so you can review and consolidate.
+  pro_tips:
+    - "This usually turns up after a merge, since the extra membership rides along from the other person. Keeping one membership per person keeps billing and reporting clean."

@@ -12,6 +12,22 @@ class PersonDecorator < ApplicationDecorator
     avatar
   end
 
+  # A person may hold only one uncancelled membership (Membership enforces it), so
+  # more than one usually means a duplicate a merge left behind — flagged for admins
+  # on the profile and edit pages so they can consolidate. Cancelled historical
+  # memberships don't count. Uses the loaded association when preloaded.
+  def multiple_memberships?
+    uncancelled_membership_count > 1
+  end
+
+  def uncancelled_membership_count
+    if memberships.loaded?
+      memberships.count { |membership| membership.cancelled_at.nil? }
+    else
+      memberships.not_cancelled.count
+    end
+  end
+
   # The subscriptions index filtered to this person's News (mailing-list) topic —
   # where mailing-list interest now lives since the person-level consent flag retired.
   def news_subscriptions_path
