@@ -32,6 +32,15 @@
     </div>
 
     <div>
+      <label for="created_by" class="<%= search_label_class %>">Created by</label>
+      <%= f.select :created_by,
+            options_for_select([ [ "Any", "" ], [ "Admins", FeaturesController::ADMIN_CREATORS ] ] +
+                               @creators.map { |user| [ user.full_name, user.id ] }, params[:created_by]),
+            {},
+            class: search_field_class %>
+    </div>
+
+    <div>
       <label for="released_from" class="<%= search_label_class %>">Released from</label>
       <%= f.date_field :released_from, value: params[:released_from],
             onchange: "this.form.requestSubmit()",

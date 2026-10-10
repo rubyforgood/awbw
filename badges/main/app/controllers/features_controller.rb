@@ -1,4 +1,6 @@
 class FeaturesController < ApplicationController
+  ADMIN_CREATORS = "admins".freeze
+
   before_action :set_feature, only: %i[ show edit update destroy ]
 
   def index
@@ -15,6 +17,7 @@ class FeaturesController < ApplicationController
       present_statuses = scope.distinct.pluck(:display_status)
       @areas = Feature::AREAS.select { |area| present_areas.include?(area[:key]) }
       @statuses = Feature::DISPLAY_STATUSES.slice(*present_statuses)
+      @creators = User.where(id: scope.select(:created_by_id)).includes(:person).sort_by { |user| user.full_name.downcase }
     end
   end
 
@@ -79,6 +82,7 @@ class FeaturesController < ApplicationController
   def filtered_features(scope)
     scope = scope.where(area: params[:area]) if params[:area].present?
     scope = scope.where(display_status: params[:display_status]) if params[:display_status].present?
+    scope = filter_by_creator(scope, params[:created_by]) if params[:created_by].present?
 
     if params[:query].present?
       q = "%#{Feature.sanitize_sql_like(params[:query].strip)}%"
@@ -89,6 +93,12 @@ class FeaturesController < ApplicationController
     scope = scope.where(released_on: ..params[:released_to]) if params[:released_to].present?
 
     scope.order(feature_order)
+  end
+
+  def filter_by_creator(scope, created_by)
+    return scope.created_by_admins if created_by == ADMIN_CREATORS
+
+    scope.where(created_by_id: created_by)
   end
 
   # A chosen "date logged" sort leads; release date then breaks ties.
