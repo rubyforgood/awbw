@@ -45,6 +45,7 @@ class Feature < ApplicationRecord
   scope :published, -> { where(published: true) }
   scope :readable_by_non_admins, -> { where.not(display_status: ADMIN_ONLY_STATUS) }
   scope :by_release, -> { order(released_on: :desc, name: :asc) }
+  scope :created_by_admins, -> { joins(:created_by).where(users: { super_user: true }) }
 
   def pro_tips_list
     pro_tips.to_s.split("\n").map(&:strip).reject(&:blank?)

@@ -130,6 +130,37 @@ RSpec.describe "/features", type: :request do
         expect(response.body).to include("Admin-only feature")
         expect(response.body).not_to include("Facilitator feature")
       end
+
+      context "filtering by creator" do
+        let(:other_admin) { create(:user, :admin) }
+        let!(:by_admin) { create(:feature, name: "Logged by admin", created_by: admin) }
+        let!(:by_other_admin) { create(:feature, name: "Logged by other admin", created_by: other_admin) }
+        let!(:by_regular_user) { create(:feature, name: "Logged by regular user", created_by: regular_user) }
+
+        it "narrows to one creator" do
+          get features_path, params: { created_by: admin.id }, headers: frame_headers
+          expect(response.body).to include("Logged by admin")
+          expect(response.body).not_to include("Logged by other admin")
+          expect(response.body).not_to include("Facilitator feature")
+        end
+
+        it "narrows to features any admin created" do
+          get features_path, params: { created_by: "admins" }, headers: frame_headers
+          expect(response.body).to include("Logged by admin", "Logged by other admin")
+          expect(response.body).not_to include("Logged by regular user")
+          expect(response.body).not_to include("Facilitator feature")
+        end
+      end
+    end
+  end
+
+  describe "the creator filter dropdown" do
+    let!(:by_admin) { create(:feature, name: "Logged by admin", created_by: admin) }
+
+    it "offers Any, Admins, and each creator" do
+      sign_in regular_user
+      get features_path
+      expect(response.body).to include('name="created_by"', ">Any<", ">Admins<", admin.full_name)
     end
   end
 
@@ -156,6 +187,22 @@ RSpec.describe "/features", type: :request do
         get feature_path(admin_facing)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Admin-only feature")
+      end
+    end
+
+    context "the creator" do
+      let!(:with_creator) { create(:feature, name: "Has a creator", created_by: admin) }
+
+      it "is shown on the detail page" do
+        sign_in regular_user
+        get feature_path(with_creator)
+        expect(response.body).to include("Added by", admin.full_name)
+      end
+
+      it "is omitted when the feature has no creator" do
+        sign_in regular_user
+        get feature_path(user_facing)
+        expect(response.body).not_to include("Added by")
       end
     end
 

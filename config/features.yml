@@ -4031,3 +4031,16 @@
     - "Pick a direction under \"Sort: logged\" to see the most recently added entries first; release date then breaks ties."
     - "While sorting by date logged, each card shows both dates, labeled Logged and Released."
     - "Set it back to \"—\" (or click Clear filters) to return to sorting by release date."
+
+- name: "See and filter features by who added them"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-09
+  action_path: "/features"
+  pr_number: 2634
+  summary: >-
+    Each feature's detail page now shows who added it, and the Features & tips
+    page can be filtered to features added by a specific person or by any admin.
+  pro_tips:
+    - "Pick \"Admins\" under \"Created by\" to see every entry an admin logged."
+    - "Set it back to \"Any\" (or click Clear filters) to see everything again."
