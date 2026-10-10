@@ -73,6 +73,18 @@ RSpec.describe "People search", type: :request do
       expect(response.body).not_to include("Alice")
     end
 
+    it "filters by several topic subscriptions at once" do
+      topic_a = create(:topic_subscription_type)
+      topic_b = create(:topic_subscription_type)
+      create(:topic_subscription, person: person_alice, topic_subscription_type: topic_a)
+      create(:topic_subscription, person: person_bob, topic_subscription_type: topic_b)
+
+      get people_path, params: { topic_subscription_type_id: [ topic_a.id, topic_b.id ] }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).to include("Bob")
+    end
+
     it "filters by staff tag" do
       tag = create(:staff_tag)
       create(:staff_tagging, staff_tag: tag, staff_taggable: person_alice)
@@ -82,6 +94,18 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Alice")
       expect(response.body).not_to include("Bob")
     end
+
+    it "filters by several staff tags at once" do
+      tag_a = create(:staff_tag)
+      tag_b = create(:staff_tag)
+      create(:staff_tagging, staff_tag: tag_a, staff_taggable: person_alice)
+      create(:staff_tagging, staff_tag: tag_b, staff_taggable: person_bob)
+
+      get people_path, params: { staff_tag_ids: [ tag_a.id, tag_b.id ] }, headers: turbo_headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Alice")
+      expect(response.body).to include("Bob")
+    end
   end
 
   describe "GET /people (full page) admin filters" do
@@ -90,7 +114,7 @@ RSpec.describe "People search", type: :request do
 
       get people_path
       page = Capybara.string(response.body)
-      expect(page).to have_css("select[name=staff_tag_ids]")
+      expect(page).to have_css('select[name="staff_tag_ids[]"][multiple]')
       expect(page).to have_link("Manage staff tags", href: staff_tags_path)
     end
 
@@ -99,8 +123,68 @@ RSpec.describe "People search", type: :request do
 
       get people_path
       page = Capybara.string(response.body)
-      expect(page).to have_css("select[name=topic_subscription_type_id]")
+      expect(page).to have_css('select[name="topic_subscription_type_id[]"][multiple]')
       expect(page).to have_link("Manage topics", href: topic_subscription_types_path)
+    end
+
+    it "tells TomSelect what to show while nothing is selected" do
+      get people_path
+      page = Capybara.string(response.body)
+      expect(page).to have_css('select[name="staff_tag_ids[]"][data-placeholder="Any"]')
+      expect(page).to have_css('select[name="topic_subscription_type_id[]"][data-placeholder="Any topic"]')
+    end
+  end
+
+  # The index opens to any signed-in user while profiles preview, but the filter
+  # bar's admin-only controls must not be appliable by URL — they narrow the list
+  # by internal data (PersonPolicy::ADMIN_ONLY_FILTERS).
+  describe "GET /people (turbo frame) as a non-admin" do
+    let(:viewer) { create(:user) }
+    let(:tag) { create(:staff_tag) }
+    let(:topic) { create(:topic_subscription_type) }
+
+    def published_person(first_name)
+      person = create(:person, first_name: first_name, last_name: "Facil", profile_is_searchable: true)
+      create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+      person
+    end
+
+    let!(:marked) { published_person("Markedone") }
+    let!(:plain) { published_person("Plainone") }
+
+    before do
+      create(:staff_tagging, staff_tag: tag, staff_taggable: marked)
+      create(:topic_subscription, person: marked, topic_subscription_type: topic)
+      sign_in viewer
+    end
+
+    it "hides the admin-only filter controls" do
+      get people_path
+      expect(response.body).not_to include("Admin-only filters")
+      expect(response.body).not_to include("staff_tag_ids")
+    end
+
+    it "ignores a staff tag filter passed by URL" do
+      get people_path, params: { staff_tag_ids: [ tag.id ] }, headers: turbo_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Markedone")
+      expect(response.body).to include("Plainone")
+    end
+
+    it "ignores a topic subscription filter passed by URL" do
+      get people_path, params: { topic_subscription_type_id: [ topic.id ] }, headers: turbo_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Markedone")
+      expect(response.body).to include("Plainone")
+    end
+
+    it "still applies the filters the bar does offer them" do
+      get people_path, params: { contact_info: "Markedone" }, headers: turbo_headers
+
+      expect(response.body).to include("Markedone")
+      expect(response.body).not_to include("Plainone")
     end
   end
 

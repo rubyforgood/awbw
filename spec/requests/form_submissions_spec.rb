@@ -181,6 +181,14 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include("aria-label=\"Form pages\"")
       end
 
+      # TomSelect reads this prompt off the select's own `placeholder` attribute,
+      # so the attribute is what the enhanced control renders from.
+      it "tells TomSelect what to show while no form is selected" do
+        get form_submissions_path
+
+        expect(Capybara.string(response.body)).to have_css('select[name="form_id[]"][placeholder="All forms"]')
+      end
+
       it "keeps the forms origin on the filter form so changing the filter doesn't lose it" do
         form = create(:form, name: "Volunteer interest")
         get form_submissions_path(form_id: form.id, return_to: "forms")

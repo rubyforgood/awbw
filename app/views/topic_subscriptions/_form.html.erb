@@ -18,9 +18,7 @@
 
 <%= simple_form_for @topic_subscription, html: { class: "space-y-5", data: { controller: "dirty-form conditional-fields" } } do |f| %>
   <%# Where this form was opened from, so the redirect after save matches the eyebrow. %>
-  <% topic_subscription_return_params.each do |key, value| %>
-    <%= hidden_field_tag key, value, id: nil %>
-  <% end %>
+  <%= hidden_filter_fields(topic_subscription_return_params) %>
 
   <% if @topic_subscription.errors.any? %>
     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

@@ -5,6 +5,19 @@ module ApplicationHelper
     "text-gray-500 hover:text-gray-700"
   end
 
+  # Hidden inputs carrying a params hash through a GET form, preserving array
+  # values as `key[]` so multi-value filters survive the round-trip (a plain
+  # hidden_field_tag would stringify the whole array into one broken value).
+  def hidden_filter_fields(params_hash)
+    safe_join(params_hash.flat_map do |key, value|
+      if value.is_a?(Array)
+        value.map { |item| hidden_field_tag("#{key}[]", item, id: nil) }
+      else
+        hidden_field_tag(key, value, id: nil)
+      end
+    end)
+  end
+
   # Byline for an AuthorCreditable record. Links each credited author to their person
   # profile when it's searchable; a non-searchable author renders as plain text. The
   # names and the separator come from the record (`credited_name_for_person`,
