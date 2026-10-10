@@ -27,6 +27,20 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "Certificate of completion settings"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-10-08
+  summary: >-
+    A new admin page to upload certificate-of-completion artwork: a full-bleed frame
+    override for live trainings, on-demand trainings, and other events, plus the
+    training and CE signature strips — no more creating hidden Resources by hand with
+    exact magic titles.
+  action_path: "/admin/certificate_settings"
+  pro_tips:
+    - "Leave a frame empty to use the built-in design for that certificate type."
+    - "Signatures show on live training certificates only — never on-demand or other events."
+
 - name: "Friendlier \"your story has been shared\" email"
   area: stories
   display_status: user_facing

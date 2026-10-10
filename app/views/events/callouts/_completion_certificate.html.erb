@@ -1,5 +1,25 @@
 <%# The default certificate of completion — a CSS-drawn purple/gold frame.
-    Used for every event except facilitator trainings (see _training_certificate). %>
+    Used for every event except facilitator trainings (see _training_certificate).
+    An uploaded "Event certificate frame" renders full-bleed, matching the
+    training certificate's framed layout. %>
+<% if frame_file %>
+  <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
+    <%= image_tag frame_file, alt: "",
+          class: "pointer-events-none absolute inset-0 h-full w-full object-fill" %>
+    <%# Content sits in a centered safe area, inset from the frame's edges. %>
+    <div class="absolute inset-[13%] flex flex-col items-center justify-center gap-[1.4cqw] text-center">
+      <%= image_tag "logo-with-tagline.png",
+            alt: "A Window Between Worlds — art transforming trauma",
+            class: "w-[18cqw]" %>
+      <p class="text-[1.5cqw] font-semibold uppercase tracking-[0.35em] text-purple-800">Certificate of completion</p>
+      <p class="text-[1.8cqw] text-gray-500">This certifies that</p>
+      <p class="text-[4.2cqw] leading-tight font-bold tracking-tight text-gray-900"><%= recipient %></p>
+      <p class="text-[1.8cqw] text-gray-500">has successfully completed</p>
+      <p class="text-[3cqw] font-semibold text-purple-900"><%= event.title %></p>
+      <p class="text-[2cqw] text-gray-600"><%= event.date_range %></p>
+    </div>
+  </article>
+<% else %>
 <article class="certificate relative mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white text-center text-gray-800 shadow-xl ring-1 ring-black/5 print:max-w-none print:rounded-none print:shadow-none print:ring-0">
   <%# Decorative double frame: deep AWBW purple outer, thin gold inner. %>
   <span class="pointer-events-none absolute inset-0 rounded-2xl border-[3px] border-purple-950 print:rounded-none"></span>
@@ -42,3 +62,4 @@
     </div>
   </div>
 </article>
+<% end %>
