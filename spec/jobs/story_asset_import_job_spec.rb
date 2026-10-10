@@ -15,13 +15,13 @@ RSpec.describe StoryAssetImportJob do
     described_class.perform_now(
       story,
       [ "https://ex.com/cover.jpg", "https://ex.com/two.jpg", "https://ex.com/three.jpg" ],
-      title: "Alt text"
+      titles: [ "Cover", "Two", "Three" ]
     )
 
     expect(calls).to eq([
-      { url: "https://ex.com/cover.jpg", owner: story, type: "PrimaryAsset", title: "Alt text" },
-      { url: "https://ex.com/two.jpg", owner: story, type: "GalleryAsset", title: "Alt text" },
-      { url: "https://ex.com/three.jpg", owner: story, type: "GalleryAsset", title: "Alt text" }
+      { url: "https://ex.com/cover.jpg", owner: story, type: "PrimaryAsset", title: "Cover" },
+      { url: "https://ex.com/two.jpg", owner: story, type: "GalleryAsset", title: "Two" },
+      { url: "https://ex.com/three.jpg", owner: story, type: "GalleryAsset", title: "Three" }
     ])
   end
 
