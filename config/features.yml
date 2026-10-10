@@ -94,6 +94,15 @@
     times" or "Resend #N" tag next to its status, whatever its own delivery
     state — so you can tell at a glance which ones have already been handled.
 
+- name: "\"Pay for Multiple People\" renames the bulk payment button"
+  area: payments
+  display_status: public_facing
+  released_on: 2026-10-05
+  summary: >-
+    The event-page button that was labeled "Pay for Other(s)" is now
+    "Pay for Multiple People", making it clearer that it covers paying for several
+    attendees at once.
+
 - name: "Choose which sections appear on the Story Share home"
   area: stories
   display_status: public_facing

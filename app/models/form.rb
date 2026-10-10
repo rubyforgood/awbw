@@ -5,7 +5,7 @@ class Form < ApplicationRecord
   # Public-facing name for the "bulk payment" form — what visitors see on the
   # event page CTA and the form heading. Internal/admin labels still say "Bulk
   # payment" (the form role). Single source of truth so both ends stay in sync.
-  BULK_PAYMENT_PUBLIC_NAME = "Pay for Other(s)".freeze
+  BULK_PAYMENT_PUBLIC_NAME = "Pay for Multiple People".freeze
 
   # Form roles whose standalone public submissions are agreement intake
   # scenarios with affiliation processing (ADR-0002): a standalone
