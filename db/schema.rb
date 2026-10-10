@@ -2077,6 +2077,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.string "youtube_url"
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
+    t.integer "story_share_carousel_position"
     t.boolean "funder_only", default: false, null: false
     t.index ["author_id"], name: "index_stories_on_author_id"
     t.index ["co_author_id"], name: "index_stories_on_co_author_id"
@@ -2085,6 +2086,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.index ["published"], name: "index_stories_on_published"
     t.index ["spotlighted_facilitator_id"], name: "index_stories_on_spotlighted_facilitator_id"
     t.index ["story_idea_id"], name: "index_stories_on_story_idea_id"
+    t.index ["story_share_carousel_position"], name: "index_stories_on_story_share_carousel_position"
     t.index ["updated_by_id"], name: "index_stories_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_stories_on_windows_type_id"
     t.index ["workshop_id"], name: "index_stories_on_workshop_id"

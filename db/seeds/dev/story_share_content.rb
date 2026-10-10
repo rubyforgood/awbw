@@ -1,4 +1,4 @@
-# Home page content seeds (dev-only) - run on their own via `rake db:seed:home_page_content`,
+# Story Share content seeds (dev-only) - run on their own via `rake db:seed:story_share_content`,
 # or as part of `rake db:seed:dev`. Covers the editorial content surfaced on the home page:
 # CommunityNews, StoryIdeas, WorkshopIdeas, WorkshopVariationIdeas (and links some variations
 # to them), and Stories. Related records (organizations, workshops, people) are looked up when present.
@@ -177,4 +177,75 @@ story_seeds.each_with_index do |seed, i|
   asset ||= story.assets.build(type: "PrimaryAsset")
   asset.file.attach(io: File.open(image_path), filename: story_images[i], content_type: "image/jpeg")
   asset.save!
+end
+
+# Bulk stories so the Story Share portal, admin index, pagination, and the sector/
+# audience/year/spotlight filters all have realistic volume to exercise. Titles are
+# deterministic ("Sample story 001: …") so re-running the seed is idempotent, and
+# attributes vary across the set.
+bulk_story_count = 50
+puts "Creating #{bulk_story_count} bulk Stories…"
+
+bulk_sectors = Sector.all.to_a
+bulk_audiences = Category.joins(:category_type)
+                         .where(category_types: { name: [ "StoryPopulation", "AgeRange" ] })
+                         .to_a
+bulk_people = Person.all.to_a
+bulk_windows_types = WindowsType.all.to_a
+bulk_organizations = Organization.all.to_a
+bulk_workshops = Workshop.all.to_a
+seed_user = User.first
+
+title_openers = [
+  "Healing", "Hope", "Resilience", "Courage", "Transformation", "Connection",
+  "Belonging", "Renewal", "Strength", "Light", "Voices", "Journeys",
+  "Finding", "Rebuilding", "Reclaiming", "Discovering", "Honoring", "Weaving"
+]
+title_subjects = [
+  "Through Art", "After the Storm", "in Community", "One Workshop at a Time",
+  "in Every Brushstroke", "Across Generations", "with Open Hands",
+  "Beyond Survival", "in Shared Spaces", "Together", "from the Inside Out",
+  "on the Path Home", "in Color and Clay", "Through Creative Expression"
+]
+
+bulk_story_count.times do |n|
+  opener = title_openers[n % title_openers.length]
+  subject = title_subjects[(n / title_openers.length) % title_subjects.length]
+  title = "Sample story #{format("%03d", n + 1)}: #{opener} #{subject}"
+
+  body_content = Faker::Lorem.paragraph(sentence_count: rand(6..14))
+  has_spotlight = n % 9 == 0
+  has_youtube = n % 7 == 0
+  is_public = n % 4 != 0
+  is_featured = n % 11 == 0
+  has_author = bulk_people.any? && n % 3 != 0
+  created = Time.current - rand(1..900).days
+
+  story = Story.where(title: title).first_or_create!(
+    body: body_content,
+    rhino_body: "<p>#{body_content}</p>",
+    permission_given: true,
+    organization_id: bulk_organizations.sample&.id,
+    workshop_id: [ nil, bulk_workshops.sample&.id ].sample,
+    windows_type_id: bulk_windows_types.sample&.id,
+    spotlighted_facilitator_id: (bulk_people.sample&.id if has_spotlight),
+    author_id: (bulk_people.sample&.id if has_author),
+    youtube_url: (has_youtube ? "https://youtube.com/watch?v=dQw4w9WgXcQ" : nil),
+    created_by_id: seed_user&.id,
+    updated_by_id: seed_user&.id,
+    created_at: created,
+    updated_at: created + rand(0..30).days,
+    published: true,
+    publicly_visible: is_public,
+    publicly_featured: is_public && is_featured,
+    featured: is_featured,
+    story_share_carousel_position: (n + 1 if is_public && n < 6)
+  )
+
+  bulk_sectors.sample(rand(1..2)).each do |sector|
+    story.sectorable_items.find_or_create_by!(sector: sector)
+  end
+  bulk_audiences.sample(rand(1..2)).each do |category|
+    story.categorizable_items.find_or_create_by!(category: category)
+  end
 end

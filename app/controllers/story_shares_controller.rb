@@ -92,11 +92,13 @@ class StorySharesController < ApplicationController
     preloaded(scope).order(publicly_featured: :desc, created_at: :desc).limit(SECTION_STORY_LIMIT).decorate
   end
 
-  # Prefer publicly featured stories for the hero carousel; fall back to recent.
+  # Hand-picked stories lead the hero carousel (by carousel order); fall back to
+  # publicly featured then most recent so the carousel never empties.
   def carousel_stories
-    featured = preloaded(portal_scope.publicly_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT)
-    featured = preloaded(portal_scope).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if featured.empty?
-    featured.decorate
+    stories = preloaded(portal_scope.story_share_carousel).limit(FEATURED_CAROUSEL_LIMIT)
+    stories = preloaded(portal_scope.publicly_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
+    stories = preloaded(portal_scope).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
+    stories.decorate
   end
 
   def load_browse
@@ -104,7 +106,8 @@ class StorySharesController < ApplicationController
     filtered = portal_scope.search_by_params(params)
     filtered = filtered.where(id: additional_focus_area_story_ids) if params[:additional_focus_areas].present?
     @count_display = filtered.count
-    @stories = preloaded(filtered).order(created_at: :desc)
+    # Publicly featured stories lead each browse page (hero/carousel), then newest.
+    @stories = preloaded(filtered).order(publicly_featured: :desc, created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
   end
