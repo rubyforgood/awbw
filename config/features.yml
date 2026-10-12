@@ -4261,3 +4261,15 @@
     the archive record links back to the affiliation.
   pro_tips:
     - "An affiliation's code is usually its program's FileMaker project ID (like P2775), and occasionally a personnel ID (like PS9999)."
+
+- name: "FileMaker codes on payments, workshops, and resources"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2656
+  summary: >-
+    The payment, workshop, and resource editors now show each record's FileMaker
+    code so admins can see and fix it, the same way people and organizations do.
+  pro_tips:
+    - "Separate several codes with commas — a record can answer to more than one."
+    - "With admin mode on, payment and workshop codes link to their row in the FileMaker archive."

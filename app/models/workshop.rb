@@ -3,6 +3,7 @@ class Workshop < ApplicationRecord
   credits_to_org
   include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Communicable
+  include FilemakerCoded
   include PunctuationStrippable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable

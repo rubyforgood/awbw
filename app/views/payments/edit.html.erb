@@ -40,6 +40,18 @@
         <%= f.input :form_submission_id,
           input_html: { class: "bg-white" },
           label: "Form Submission ID" %>
+
+        <div>
+          <%= f.input :filemaker_code,
+            input_html: { class: "bg-white" },
+            label: "FileMaker code" %>
+          <%- if params[:admin] == "true" %>
+            <p class="mt-1 text-xs">
+              <%= filemaker_code_links(f.object, archive: FmPayment, table: "payments", label: "View archive",
+                                       link_class: "text-blue-600 hover:text-blue-800 underline") %>
+            </p>
+          <% end %>
+        </div>
       </div>
       <div class="action-buttons mt-8 flex justify-center gap-3">
         <%= link_to "Cancel", payment_path(@payment), class: button_classes(:secondary_outline) %>

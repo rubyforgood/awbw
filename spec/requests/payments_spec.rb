@@ -172,8 +172,39 @@ RSpec.describe "Payments", type: :request do
     end
   end
 
+  describe "GET /payments/:id/edit FileMaker code" do
+    it "renders the FileMaker code field" do
+      payment = create(:payment, person:)
+
+      get edit_payment_path(payment)
+
+      expect(response.body).to include("payment[filemaker_code]")
+    end
+
+    it "links each archived code to the FileMaker payments archive in admin mode" do
+      FmPayment.create!(fm_id: "D29186", data: {})
+      payment = create(:payment, person:, filemaker_code: "D29186, D99999")
+
+      get edit_payment_path(payment, admin: "true")
+
+      expect(response.body).to include(fm_archive_path("D29186", table: "payments"))
+      expect(response.body).to include("View archive D99999")
+      expect(response.body).not_to include(fm_archive_path("D99999", table: "payments"))
+    end
+  end
+
   describe "PATCH /payments/:id" do
     let(:organization) { create(:organization) }
+
+    it "updates the FileMaker code" do
+      payment = create(:payment, person:)
+
+      patch payment_path(payment), params: {
+        payment: { payer_sgid: person.to_sgid.to_s, filemaker_code: "D29186" }
+      }
+
+      expect(payment.reload.filemaker_code).to eq("D29186")
+    end
 
     it "updates payer and designation via sgids" do
       payment = create(:payment, person:, organization: nil)

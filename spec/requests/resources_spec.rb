@@ -139,6 +139,13 @@ RSpec.describe "/resources", type: :request do
       expect(response.body).to include('name="resource[publicly_visible]"')
       expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:hidden_from_search][:description])
     end
+
+    it "renders the FileMaker code field" do
+      resource = Resource.create! valid_attributes
+      get edit_resource_url(resource)
+
+      expect(response.body).to include('name="resource[filemaker_code]"')
+    end
   end
 
   describe "POST /create" do
@@ -198,6 +205,13 @@ RSpec.describe "/resources", type: :request do
 
         resource.reload
         expect(resource.title).to eq("Updated Resource Title")
+      end
+
+      it "updates the FileMaker code" do
+        resource = Resource.create! valid_attributes
+        patch resource_url(resource), params: { resource: new_attributes.merge(filemaker_code: "R42") }
+
+        expect(resource.reload.filemaker_code).to eq("R42")
       end
 
       it "redirects to the updated resource" do

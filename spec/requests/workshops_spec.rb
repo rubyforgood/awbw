@@ -52,6 +52,36 @@ RSpec.describe "/workshops", type: :request do
     end
   end
 
+  describe "FileMaker code" do
+    let(:admin) { create(:user, :admin) }
+    let(:workshop) { create(:workshop) }
+
+    before { sign_in admin }
+
+    it "renders the FileMaker code field on edit" do
+      get edit_workshop_url(workshop)
+
+      expect(response.body).to include("workshop[filemaker_code]")
+    end
+
+    it "links an archived code to the FileMaker workshops archive in admin mode" do
+      FmWorkshop.create!(fm_id: "W123", data: {})
+      workshop.update!(filemaker_code: "W123")
+
+      get edit_workshop_url(workshop, admin: "true")
+
+      expect(response.body).to include(fm_archive_path("W123", table: "workshops"))
+    end
+
+    it "updates the FileMaker code" do
+      patch workshop_url(workshop), params: {
+        workshop: { title: workshop.title, category_ids: [ "" ], filemaker_code: "W123" }
+      }
+
+      expect(workshop.reload.filemaker_code).to eq("W123")
+    end
+  end
+
   # --- STORIES THAT USE THIS WORKSHOP ----------------------------------------
   describe "GET /show stories section" do
     let(:user) { create(:user) }
