@@ -51,7 +51,7 @@ class FmArchivesController < ApplicationController
     { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects expenditures personnels services] },
     { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
     { label: "Events", icon: "📆", tables: %w[events exhibited_items participants volunteers] },
-    { label: "Payments", icon: "💳", tables: %w[payments match_donations] },
+    { label: "Payments & donations", icon: "💳", tables: %w[payments match_donations] },
     { label: "Invoicing", icon: "🧾", tables: %w[invoices line_items] },
     { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs] },
     { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases] },
