@@ -35,14 +35,25 @@
                   <% end %>
                 </select>
               </div>
-              <%= submit_tag slot[:connected] ? "Reconnect" : "Connect", class: "shrink-0 #{button_classes(:primary, size: :sm)}" %>
+              <%= submit_tag slot[:resource] ? "Reconnect" : "Connect",
+                    class: "shrink-0 #{button_classes(slot[:resource] ? :secondary : :primary, size: :sm)}" %>
             <% end %>
 
-            <p class="mt-2 text-xs text-gray-400">
-              Or title a Resource exactly
-              <span class="font-medium text-gray-600">“<%= slot[:title] %>”</span>
-              and it's matched automatically.
-            </p>
+            <% if slot[:resource] %>
+              <%= link_to edit_resource_path(slot[:resource]), target: "_blank", rel: "noopener",
+                    class: "mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900" do %>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                Open “<%= slot[:resource].title %>” in a new tab
+              <% end %>
+            <% else %>
+              <p class="mt-2 text-xs text-gray-400">
+                Or
+                <%= link_to "create a Resource titled “#{slot[:title]}”",
+                      new_resource_path(title: slot[:title]), target: "_blank", rel: "noopener",
+                      class: "font-medium text-gray-700 underline hover:text-gray-900" %>
+                and it's matched automatically.
+              </p>
+            <% end %>
           </div>
 
           <div class="sm:w-60 sm:shrink-0">

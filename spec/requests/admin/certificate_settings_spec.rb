@@ -42,6 +42,20 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       expect(response.body).to include("Auto-matched by title")
     end
 
+    it "links to create a title-prefilled Resource for an empty slot" do
+      get admin_certificate_settings_path
+
+      expect(response.body).to include(new_resource_path(title: Resource::CERTIFICATE_FRAME_TITLES[:training]))
+    end
+
+    it "offers to open a linked resource in a new tab" do
+      resource = create(:resource, certificate_artwork_role: "training_frame")
+
+      get admin_certificate_settings_path
+
+      expect(response.body).to include(edit_resource_path(resource))
+    end
+
     it "previews the connected resource and offers reconnect" do
       resource = create(:resource, title: "Training frame art", certificate_artwork_role: "training_frame")
       create(:primary_asset, :with_file, owner: resource)
