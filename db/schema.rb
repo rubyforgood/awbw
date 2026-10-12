@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_08_151649) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_09_032758) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1688,6 +1688,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_151649) do
     t.integer "updated_by_id"
     t.string "youtube_url"
     t.index ["created_by_id"], name: "index_people_on_created_by_id"
+    t.index ["first_name", "last_name", "email"], name: "index_people_on_name_and_email", unique: true
     t.index ["updated_by_id"], name: "index_people_on_updated_by_id"
   end
 

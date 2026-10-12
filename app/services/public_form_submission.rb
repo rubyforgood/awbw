@@ -15,6 +15,7 @@ class PublicFormSubmission
   # rather than recorded anonymously.
   IDENTITY_REQUIRED_MESSAGE =
     "This form needs your name and email to complete your submission.".freeze
+  ALREADY_SUBMITTED_MESSAGE = "This form was already submitted.".freeze
 
   def self.call(form:, form_params:)
     new(form:, form_params:).call
@@ -57,6 +58,10 @@ class PublicFormSubmission
     Result.new(success?: false, errors: [ "One of your answers is too long. Please shorten it and try again." ])
   rescue ActiveRecord::RecordInvalid => e
     Result.new(success?: false, errors: [ e.message ])
+  rescue ActiveRecord::RecordNotUnique => e
+    raise unless e.message.include?(Person::NAME_AND_EMAIL_INDEX)
+
+    Result.new(success?: false, errors: [ ALREADY_SUBMITTED_MESSAGE ])
   end
 
   private
@@ -194,9 +199,7 @@ class PublicFormSubmission
   end
 
   def find_matching_person(last_name:, email:)
-    Person
-      .where("LOWER(email) = ? AND LOWER(last_name) = ?", email.downcase, last_name.downcase)
-      .first
+    PersonMatcher.call(email:, last_name:)
   end
 
   # An affirmative communication-consent answer subscribes the person to the

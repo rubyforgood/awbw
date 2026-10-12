@@ -920,6 +920,30 @@ RSpec.describe "Events::Registrations", type: :request do
       end
     end
 
+    context "when the user has no linked person" do
+      let(:user) { create(:user, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com") }
+
+      it "links and registers an existing person with the same name and email" do
+        existing = create(:person, user: nil, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+        expect {
+          post event_registrant_registration_path(event_id: event.id), headers: turbo_headers
+        }.not_to change(Person, :count)
+
+        expect(response).to have_http_status(:ok)
+        expect(user.reload.person).to eq(existing)
+        expect(event.event_registrations.last.registrant).to eq(existing)
+      end
+
+      it "creates a person when none matches" do
+        expect {
+          post event_registrant_registration_path(event_id: event.id), headers: turbo_headers
+        }.to change(Person, :count).by(1)
+
+        expect(user.reload.person).to have_attributes(first_name: "Jamie", last_name: "Rivera-Cole")
+      end
+    end
+
     context "when a cancelled registration exists" do
       let!(:cancelled_registration) do
         create(:event_registration, event: event, registrant: user.person, status: "cancelled")

@@ -96,10 +96,7 @@ module EventRegistrationServices
       last_name = field_value("last_name")&.strip
       email = field_value("primary_email")&.strip&.downcase
 
-      person = Person.find_by(
-        "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(email) = ?",
-        first_name&.downcase, last_name&.downcase, email&.downcase
-      )
+      person = PersonMatcher.call(email:, last_name:, first_names: [ first_name ])
       return person if person
 
       Person.create!(
