@@ -50,8 +50,11 @@ RSpec.describe "Bulk payment event card interactions", type: :system do
     visit bulk_payments_event_path(event, expand: submission.id)
 
     within("#payment-card-#{submission.id}") do
+      expect(page).to have_no_css("option", text: registrant.name, visible: :all)
       click_button "Unlink"
-      expect(page).to have_no_button("Unlink", wait: 5)
+      # Turbo disables Unlink mid-submit (have_no_button counts that as gone), so wait on the re-rendered card.
+      expect(page).to have_css("option", text: registrant.name, visible: :all, wait: 5)
+      expect(page).to have_no_button("Unlink", disabled: :all)
     end
 
     expect(page).not_to have_content("Oopsie!")
