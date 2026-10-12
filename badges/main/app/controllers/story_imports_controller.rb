@@ -1,5 +1,7 @@
+require "csv"
+
 class StoryImportsController < ApplicationController
-  # Admin-only flow for importing stories from a WordPress Posts Export CSV.
+  # Admin-only flow for importing stories from the curated stories spreadsheet.
   #
   #   new     → upload form
   #   create  → dry-run preview of what would be created (nothing written)
@@ -11,6 +13,14 @@ class StoryImportsController < ApplicationController
 
   def new
     authorize! Story, to: :import?
+  end
+
+  def template
+    authorize! Story, to: :import?
+
+    csv = CSV.generate { |out| out << StoryImporter::TEMPLATE_HEADERS }
+    send_data csv, filename: "stories-import-template.csv",
+                   type: "text/csv", disposition: "attachment"
   end
 
   def create
