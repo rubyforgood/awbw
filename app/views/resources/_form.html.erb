@@ -37,6 +37,15 @@
                       input_html: { class: "w-24 rounded border-gray-300 px-2 py-1", min: 1, step: 1 },
                       label_html: { class: "font-medium mb-1 block" } %>
         </div>
+
+        <% if allowed_to?(:manage?, @resource) %>
+          <div class="admin-only -mt-2 w-40 shrink-0 rounded bg-blue-100 px-2 pt-2">
+            <%= f.input :filemaker_code,
+                        label: "FileMaker code",
+                        input_html: { class: "w-full rounded border-gray-300" },
+                        label_html: { class: "font-medium mb-1 block" } %>
+          </div>
+        <% end %>
       </div>
     </div>
 
@@ -51,11 +60,6 @@
             <%= visibility_flag_input f, :publicly_featured %>
             <%= visibility_flag_input f, :hidden_from_search %>
           </div>
-          <%= f.input :filemaker_code,
-                      label: "FileMaker code",
-                      wrapper_html: { class: "mt-4" },
-                      input_html: { class: "w-full rounded border-gray-300" },
-                      label_html: { class: "font-medium mb-1 block" } %>
         </div>
       <% end %>
     </div>
