@@ -1,0 +1,24 @@
+<% user_accounts = person.decorate.user_accounts %>
+<% if user_accounts.size > 1 %>
+  <div class="admin-only mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+    <div class="flex items-start gap-3">
+      <div class="flex-shrink-0 pt-0.5">
+        <i class="fa-solid fa-triangle-exclamation text-yellow-600"></i>
+      </div>
+      <div class="flex-1">
+        <h3 class="text-sm font-medium text-yellow-800">Multiple user accounts</h3>
+        <p class="mt-1 text-sm text-yellow-700">
+          This person has <%= user_accounts.size %> user accounts. A person should have only one — the extras are usually a leftover from a merge.
+        </p>
+        <ul class="mt-2 space-y-1 text-sm text-yellow-700">
+          <% user_accounts.each_with_index do |user, index| %>
+            <li>
+              <%= link_to user.email, user_path(user), class: "underline hover:text-yellow-900", data: { turbo_frame: "_top" } %>
+              <span class="text-yellow-600">· last signed in <%= user.decorate.last_logged_in %><%= " · shown on profile" if index.zero? %></span>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+<% end %>

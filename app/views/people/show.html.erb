@@ -12,6 +12,9 @@
 <% if allowed_to?(:index?, MembershipInvoice) %>
   <%= render "people/multiple_memberships_warning", person: @person %>
 <% end %>
+<% if allowed_to?(:index?, User) %>
+  <%= render "people/multiple_user_accounts_warning", person: @person %>
+<% end %>
 <div class="admin-or-owner bg-brand-cream border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
   <%= render accent_strip_partial %>
   <!-- Person hero -->

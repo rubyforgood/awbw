@@ -4537,3 +4537,19 @@
     carried over from FileMaker, on the person's edit page.
   pro_tips:
     - "Add ?admin=true to the end of the edit page's address to show the Internal notes box, the same as on organizations and users."
+
+    - "Admins see the same blue markers."
+
+    - "Use \"Change sharing settings\" in the Hidden from public section to turn something back on."
+
+- name: "Flag people with more than one user account"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2661
+  summary: >-
+    A person's profile and edit pages now warn admins when the person has more
+    than one user account, and link to each one so you can review them.
+  pro_tips:
+    - "The extra account is usually left over from a merge."
+    - "The account marked \"shown on profile\" is the one used most recently."
