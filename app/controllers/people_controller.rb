@@ -385,7 +385,7 @@ class PeopleController < ApplicationController
         next [] unless delete.user
         next [ "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." ] unless keep.user
 
-        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
+        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently." ]
       },
       # Block the merge when both people carry an active pay subscription: the merge
       # keeps both live (soft-deleting one would strand its billing), so the kept person

@@ -530,6 +530,7 @@ RSpec.describe "Dedupable concern", type: :request do
         )
 
         expect(response.body).to include("Both people have a login")
+        expect(response.body).to include("shows whichever login was used most recently")
         expect(response.body).not_to include("Merge blocked")
       end
 
@@ -547,6 +548,15 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(Person.exists?(delete_rec.id)).to be false
         expect(keep_user.reload.person_id).to eq(keep.id)
         expect(delete_user.reload.person_id).to eq(keep.id)
+      end
+
+      it "shows the most recently updated of the two logins on the kept person" do
+        keep.user.update_columns(updated_at: 1.week.ago)
+        delete_rec.user.update_columns(email: "recent.login@example.com", updated_at: 1.hour.ago)
+
+        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+        expect(keep.reload.user.email).to eq("recent.login@example.com")
       end
 
       it "leaves the kept person's primary email alone" do
