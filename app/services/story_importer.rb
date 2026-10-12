@@ -53,6 +53,7 @@ class StoryImporter
     "coauthor last name" => "co_facilitator_last_name",
     "coauthor email" => "co_facilitator_email",
     "coauthor name display" => "co_name_display",
+    "coauthor anonymous credit?" => "co_anonymous",
     "workshop" => "workshop",
     "sectors" => "sectors",
     "window type" => "window_type",
@@ -476,11 +477,15 @@ class StoryImporter
   end
 
   # The second author only sticks when there's a first author to sit behind (the
-  # model requires one) and the two are different people.
+  # model requires one) and the two are different people. Compared both by the
+  # sheet's own key — which catches the unsaved pair a dry run builds — and by the
+  # Person each resolved to, since the two column sets can name one person two
+  # ways (an email on one side, bare first + last on the other).
   def resolve_co_author(row, author)
     co_author = resolve_person(row, CO_AUTHOR_COLUMNS)
     return unless co_author && author
     return if author_key(row, AUTHOR_COLUMNS) == author_key(row, CO_AUTHOR_COLUMNS)
+    return if co_author == author
 
     co_author
   end

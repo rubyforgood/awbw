@@ -221,6 +221,25 @@ RSpec.describe StoryImporter do
       expect(story.co_author).to have_attributes(first_name: "Sam", last_name: "Lee")
       expect(story.author.professional_licenses.pluck(:kind)).to contain_exactly("LMFT", "LCSW")
     end
+
+    it "honors a labeled anonymous credit for either author" do
+      path = labeled_csv(
+        "Title" => "A labeled story",
+        "Status" => "Published story",
+        "Content" => "<p>Body.</p>",
+        "Window type" => "Adult",
+        "First name" => "Jamie",
+        "Last name" => "Rivera",
+        "Anonymous credit?" => "anonymous",
+        "Coauthor first name" => "Sam",
+        "Coauthor last name" => "Lee",
+        "Coauthor anonymous credit?" => "anonymous"
+      )
+      described_class.new(csv_path: path, import_user: import_user).call
+
+      expect(Person.find_by(first_name: "Jamie", last_name: "Rivera").anonymous_contributions).to be(true)
+      expect(Person.find_by(first_name: "Sam", last_name: "Lee").anonymous_contributions).to be(true)
+    end
   end
 
   describe "title" do
@@ -351,6 +370,14 @@ RSpec.describe StoryImporter do
 
     it "does not set a co-author equal to the first author" do
       import([ co_author_row("co_facilitator_name" => "Jamie", "co_facilitator_last_name" => "Rivera",
+                             "co_facilitator_email" => "") ])
+
+      expect(Story.sole.co_author).to be_nil
+    end
+
+    it "does not set a co-author equal to the first author when only one side names an email" do
+      import([ co_author_row("facilitator_email" => "jamie@example.org",
+                             "co_facilitator_name" => "Jamie", "co_facilitator_last_name" => "Rivera",
                              "co_facilitator_email" => "") ])
 
       expect(Story.sole.co_author).to be_nil
