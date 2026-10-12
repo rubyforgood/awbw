@@ -4221,3 +4221,16 @@
     The FileMaker archive now sorts its 44 tables into labeled groups — people,
     organizations, events, payments, funding and more — so the table you want
     is easier to find.
+
+- name: "Jump between people, orgs, and the FileMaker archive"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2648
+  summary: >-
+    Archive buttons now sit next to the FileMaker code on person and organization
+    edit pages, and each archive record links back to the portal person or
+    organization that carries its code.
+  pro_tips:
+    - "A struck-through code button means the archive has no record for that code — check it for a typo."
+    - "An organization's edit page also links the FileMaker agency its project belongs to."

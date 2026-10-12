@@ -63,6 +63,8 @@ class FmArchivesController < ApplicationController
     { label: "Other", icon: "📎", tables: %w[notes] }
   ]
 
+  PORTAL_MODELS = [ Person, Organization ].freeze
+
   def index
     authorize! :fm_archive
 
@@ -92,9 +94,16 @@ class FmArchivesController < ApplicationController
     end
 
     load_backlinks
+    load_portal_records
   end
 
   private
+
+  def load_portal_records
+    @portal_records = PORTAL_MODELS
+      .select { |model| model.filemaker_archives.include?(@record.class) }
+      .flat_map { |model| model.with_filemaker_code(@record.fm_id).to_a }
+  end
 
   def load_backlinks
     @backlinks = {}

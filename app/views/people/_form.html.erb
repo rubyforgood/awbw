@@ -464,17 +464,14 @@
                         wrapper_html: { class: "w-full" } %>
           </div>
 
-          <div class="w-full sm:w-64">
+          <div class="flex w-full items-end gap-2 sm:w-auto">
             <%= f.input :filemaker_code,
                         label: "FileMaker code",
                         input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full" } %>
-            <%- if params[:admin] == "true" %>
-              <p class="mt-1 text-xs">
-                <%= filemaker_code_links(f.object, archive: FmRolodex, table: "rolodexes", label: "View archive",
-                                         link_class: "text-blue-600 hover:text-blue-800 underline") %>
-              </p>
-            <% end %>
+                        wrapper_html: { class: "w-full sm:w-64" } %>
+            <div class="mb-4 flex shrink-0 flex-wrap gap-1 pb-2">
+              <%= filemaker_code_chips(f.object) %>
+            </div>
           </div>
         </div>
 

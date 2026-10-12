@@ -3,21 +3,66 @@ require "rails_helper"
 RSpec.describe "FM archives", type: :request do
   let(:admin) { create(:user, :admin) }
 
-  before { sign_in admin }
-
   describe "GET /fm_archives/:id" do
-    let!(:rolodex) { FmRolodex.create!(fm_id: "ROL1", data: { "ID" => "ROL1" }) }
-    let!(:funding) { FmFunding.create!(fm_id: "FND1", data: { "RecordID" => "FND1", "FunderID" => "ROL1" }) }
+    before { sign_in admin }
 
-    it "lists a rolodex record's funding under related records" do
-      get fm_archive_path(rolodex.fm_id, table: "rolodexes")
+    context "with related records" do
+      let!(:rolodex) { FmRolodex.create!(fm_id: "ROL1", data: { "ID" => "ROL1" }) }
+      let!(:funding) { FmFunding.create!(fm_id: "FND1", data: { "RecordID" => "FND1", "FunderID" => "ROL1" }) }
 
-      expect(response.body).to include("Funding (1)", "table=fundings")
+      it "lists a rolodex record's funding under related records" do
+        get fm_archive_path(rolodex.fm_id, table: "rolodexes")
+
+        expect(response.body).to include("Funding (1)", "table=fundings")
+      end
+    end
+
+    it "links back to the portal people carrying the archive code" do
+      FmRolodex.create!(fm_id: "00006")
+      person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")
+      create(:person, filemaker_code: "000066")
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(person_path(person))
+      expect(response.body).to include("Archie Coded")
+      expect(response.body.scan(%r{href="/people/\d+"}).size).to eq(1)
+    end
+
+    it "links an archived project back to its portal organization" do
+      FmProject.create!(fm_id: "P2775")
+      organization = create(:organization, filemaker_code: "P2775")
+
+      get fm_archive_path("P2775", table: "projects")
+
+      expect(response.body).to include(organization_path(organization))
+    end
+
+    it "omits the portal section when nothing carries the code" do
+      FmRolodex.create!(fm_id: "00006")
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).not_to include("In the portal")
+    end
+  end
+
+  describe "GET /fm_archives/:id as a non-admin" do
+    it "is not allowed" do
+      FmRolodex.create!(fm_id: "00006")
+      sign_in create(:user)
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response).to redirect_to(root_path)
     end
   end
 
   describe "GET /fm_archives" do
     let!(:funding) { FmFunding.create!(fm_id: "FND1", data: { "RecordID" => "FND1" }) }
+
+    before { sign_in admin }
 
     it "lists funding records at the table name a funding record's back link uses" do
       get fm_archives_path(table: FmFunding.table_name.delete_prefix("fm_"))

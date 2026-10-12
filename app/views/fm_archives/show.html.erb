@@ -9,6 +9,17 @@
       <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: button_classes(:primary_outline) %>
     </div>
 
+    <% if @portal_records.any? %>
+      <div class="rounded-xl bg-white p-6">
+        <h2 class="mb-3 text-lg font-semibold">In the portal</h2>
+        <div class="flex flex-wrap gap-2">
+          <% @portal_records.each do |record| %>
+            <%= filemaker_portal_link(record) %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <div class="rounded-xl bg-white p-6">
       <dl class="divide-y divide-gray-200">
         <% @record.data.each do |key, value| %>

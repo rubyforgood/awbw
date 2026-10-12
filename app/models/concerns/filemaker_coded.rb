@@ -6,11 +6,24 @@
 module FilemakerCoded
   extend ActiveSupport::Concern
 
+  included do
+    class_attribute :filemaker_archives, instance_writer: false, default: []
+  end
+
   def filemaker_codes
     self.class.split_filemaker_codes(filemaker_code)
   end
 
   class_methods do
+    # The Fm* archive tables this model's codes point into, checked in order.
+    def filemaker_archived_in(*archives)
+      self.filemaker_archives = archives
+    end
+
+    def with_filemaker_code(code)
+      where("FIND_IN_SET(?, REPLACE(filemaker_code, ' ', ''))", code.to_s.strip)
+    end
+
     def split_filemaker_codes(value)
       value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
     end
