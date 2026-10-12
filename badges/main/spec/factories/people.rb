@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :person do
-    association :user
+    user { email.present? ? association(:user, email: email) : association(:user) }
     association :created_by, factory: :user
     association :updated_by, factory: :user
     first_name { Faker::Name.first_name.gsub("'", " ") }
