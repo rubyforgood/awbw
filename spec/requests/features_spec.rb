@@ -251,6 +251,16 @@ RSpec.describe "/features", type: :request do
       expect(response).to redirect_to(features_path)
     end
 
+    it "reports seeded features it left alone because they were edited in-app" do
+      sign_in admin
+      FeatureCatalog.new.import!
+      Feature.update_all(area: "reporting", created_at: 2.days.ago, updated_at: 1.day.ago)
+
+      post import_features_path
+
+      expect(flash[:notice]).to match(/Kept \d+ edited in-app features as-is/)
+    end
+
     it "blocks a regular user" do
       sign_in regular_user
       expect { post import_features_path }.not_to change(Feature, :count)

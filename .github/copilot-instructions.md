@@ -359,7 +359,8 @@ Admins click **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
 matched by `name`) to add newly-shipped features, **re-sync catalog classification**
 on existing records (`CATALOG_FIELDS` — area, audience, links, date, PR — so seed
 fixes propagate) and **fill blank content** (`CONTENT_FIELDS` — summary, tips,
-guide, description) without overwriting admin writing. New area → add it to
+guide, description) without overwriting admin writing. A feature edited in-app
+since creation (`Feature#edited?`) is skipped entirely. New area → add it to
 `Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
 
 ## JavaScript
