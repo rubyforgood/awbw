@@ -7,7 +7,14 @@ RSpec.describe "Events recipient shout-out form", type: :system, js: true do
   let(:scholarship_form) { create(:form, :scholarship) }
   let(:existing_recipient) { create(:person, first_name: "Alex", last_name: "Smith", shoutout_text: "Proud to serve.") }
   let!(:existing_registration) do
-    create(:event_registration, event: event, registrant: existing_recipient, status: "registered", scholarship_requested: true, shoutout: true)
+    create(
+      :event_registration,
+      event: event,
+      registrant: existing_recipient,
+      status: "registered",
+      scholarship_requested: true,
+      shoutout: true
+    )
   end
   let(:applicant) { create(:person, first_name: "Tara", last_name: "Gallagher") }
   let!(:registration) do
@@ -35,8 +42,9 @@ RSpec.describe "Events recipient shout-out form", type: :system, js: true do
     end
 
     expect(page).to have_current_path(
-      edit_event_registration_path(registration, return_to: "recipients", anchor: "shout-out")
+      edit_event_registration_path(registration, return_to: "recipients")
     )
+    expect(page).to have_css("#shout-out")
     expect(page).to have_content("Featured on the recipients page — review their shout-out text below.")
     expect(registration.reload.shoutout).to be(true)
   end

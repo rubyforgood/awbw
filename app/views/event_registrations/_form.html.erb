@@ -376,7 +376,8 @@
           registrant's profile (Person#shoutout_text); editing it here updates
           their profile via nested attributes. ---- %>
       <%= locked_fieldset(locked) do %>
-      <section id="shout-out" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <section id="shout-out" class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+               data-controller="reveal-section" data-reveal-section-anchor-value="shout-out">
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
           <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= section_icon_class(:scholarships, f.object.shoutout? || f.object.registrant.shoutout_text.present?) %>">
             <i class="fa-solid fa-bullhorn"></i>

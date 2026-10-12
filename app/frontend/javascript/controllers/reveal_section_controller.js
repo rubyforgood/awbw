@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Expands a collapsible section and scrolls it into view when the page loads
-// with a matching URL hash — e.g. when linked from another page so the user
-// lands on the section already open rather than collapsed or scrolled past.
+// with a matching URL hash or scroll_to query parameter. The query parameter
+// carries the target through Turbo form redirects, which drop URL fragments.
 //
 //   <div data-controller="dropdown reveal-section"
 //        data-reveal-section-anchor-value="registration_form_section"
@@ -19,16 +19,18 @@ export default class extends Controller {
   static values = { anchor: String }
 
   connect() {
-    if (window.location.hash.slice(1) !== this.anchorValue) return
+    const url = new URL(window.location.href)
+    const matchingHash = url.hash.slice(1) === this.anchorValue
+    const matchingQuery = url.searchParams.get("scroll_to") === this.anchorValue
+    if (!matchingHash && !matchingQuery) return
+
     if (this.hasContentTarget && this.contentTarget.classList.contains("hidden")) {
       this.toggleTarget.click()
     }
     this.element.scrollIntoView({ behavior: "smooth", block: "start" })
-    // Drop the hash once it has been honoured. A section inside a lazily-loaded
-    // frame reconnects on every frame render (each filter change), and a Turbo
-    // frame submit never touches the address bar — so the hash would still match
-    // and pull the page back here for the rest of the visit.
-    const { pathname, search } = window.location
-    history.replaceState(history.state, "", pathname + search)
+
+    if (matchingQuery) url.searchParams.delete("scroll_to")
+    url.hash = ""
+    history.replaceState(history.state, "", `${url.pathname}${url.search}`)
   }
 }

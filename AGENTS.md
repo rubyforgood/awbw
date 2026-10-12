@@ -425,7 +425,7 @@ end
 - `print_options` — Print options toggle for analytics
 - `reminder_preview` — Live-preview the reminder email as the admin composes it on the bulk-reminder page: custom message, subject, and the event-details box toggle (announced to screen readers)
 - `remote_select` — AJAX-powered select dropdown
-- `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash
+- `reveal_section` — Expand a collapsible section and scroll to it when loaded via matching URL hash or `scroll_to` query parameter
 - `rhino_source` — Rich text editor integration
 - `scholarship_preview` — Live-preview the scholarship's allocated amount as the edit form changes
 - `scroll_to_top` — Scrolls the window to the top on connect (used by the duplicate-person warning so it comes into view on create)

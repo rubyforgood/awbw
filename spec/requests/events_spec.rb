@@ -3884,7 +3884,7 @@ RSpec.describe "Events", type: :request do
           expect(registration.reload.shoutout).to be(true)
           expect(response).to have_http_status(:see_other)
           expect(response).to redirect_to(
-            edit_event_registration_path(registration, return_to: "recipients", anchor: "shout-out")
+            edit_event_registration_path(registration, return_to: "recipients", scroll_to: "shout-out")
           )
         end
 
