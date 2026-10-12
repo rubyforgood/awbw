@@ -599,6 +599,56 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(EventRegistration.last.registrant).to eq(existing)
     end
 
+    it "matches a person whose email is stored as their secondary email" do
+      existing = create(:person, first_name: "Jamie", last_name: "Rivera-Cole",
+                                 email: "jamie.work@example.com", email_2: "jamie@example.com")
+
+      params = base_form_params(first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "matches a person whose email is only on their login" do
+      existing = create(:person, user: nil, first_name: "Jamie", last_name: "Rivera-Cole", email: nil)
+      create(:user, person: existing, email: "jamie@example.com")
+
+      params = base_form_params(first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "matches when the registrant types an en dash in a hyphenated last name" do
+      existing = create(:person, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+      params = base_form_params(first_name: "Jamie", last_name: "Rivera\u2013Cole", email: "jamie@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "reports an already-registered error when a simultaneous submission created the person first" do
+      allow(Person).to receive(:create!).and_raise(
+        ActiveRecord::RecordNotUnique, "Duplicate entry for key 'people.#{Person::NAME_AND_EMAIL_INDEX}'"
+      )
+
+      result = described_class.call(event: event, registration_form: form,
+                                    form_params: base_form_params(first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com"))
+
+      expect(result.success?).to be false
+      expect(result.errors).to eq([ "You are already registered for this event." ])
+    end
+
     it "still creates a new person when the email matches but it is a different name" do
       create(:person, first_name: "Bob", last_name: "Smith", email: "shared@example.com")
 
