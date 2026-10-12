@@ -27,6 +27,15 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "Registration forms skip questions you've already answered"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-10-08
+  summary: >-
+    Signed-in registrants no longer re-answer questions already on file — the
+    form hides them automatically. Form editors no longer need to tick a box to
+    turn this on; each question's own "answers on file" setting drives it.
+
 - name: "Friendlier \"your story has been shared\" email"
   area: stories
   display_status: user_facing
