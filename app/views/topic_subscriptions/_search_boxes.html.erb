@@ -53,8 +53,7 @@
       <%= hidden_field_tag :status, params[:status], id: nil if params[:status].present? %>
       <div>
         <label class="<%= label_class %>">&nbsp;</label>
-        <%= render "shared/search_clear", url: topic_subscriptions_path,
-              action: "searchable-checkbox#clear collection#clearAndSubmit" %>
+        <%= render "shared/search_clear", url: topic_subscriptions_path %>
       </div>
     </div>
   <% end %>

@@ -1,8 +1,8 @@
 <%# Shared labeled multi-<select> for filter bars — the searchable (TomSelect)
     multi-value counterpart of events/filter_select, so one filter can match
-    several values at once. The enclosing form must carry the `searchable-checkbox`
-    Stimulus controller (which enhances the select and submits on change); its
-    "Clear filters" button resets the control via collection#clearAndSubmit. Locals:
+    several values at once. The enclosing form must carry both the
+    `searchable-checkbox` controller (hands the select to TomSelect) and
+    `collection` (submits on change, and empties the select on "Clear filters"). Locals:
       param         – base param name (Symbol); the field submits as `param[]`
       label         – field label
       options       – array passed to options_for_select
