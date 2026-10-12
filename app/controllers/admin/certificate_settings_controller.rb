@@ -12,20 +12,26 @@ module Admin
     SLOTS = {
       "training_frame" => { label: "Facilitator training frame",
                             description: "Full-bleed frame for the live facilitator-training certificate. Falls back to the built-in painted border when empty.",
+                            title: Resource::CERTIFICATE_FRAME_TITLES[:training],
                             builtin: "certificates/certificate-training-border.png" },
       "on_demand_frame" => { label: "On-demand training frame",
                              description: "Full-bleed frame for on-demand (self-paced) facilitator-training certificates. On-demand certificates never show signatures.",
+                             title: Resource::CERTIFICATE_FRAME_TITLES[:on_demand],
                              builtin: "certificates/certificate-ondemand-border.png" },
       "ce_frame" => { label: "CE certificate frame",
                       description: "Full-bleed frame for the CE Confirmation of Attendance certificate. Falls back to the default purple/gold design when empty.",
+                      title: Resource::CE_CERTIFICATE_FRAME_TITLE,
                       builtin_css: true },
       "other_frame" => { label: "Other events frame",
                          description: "Full-bleed frame for every non-training event certificate. Falls back to the default purple/gold design when empty.",
+                         title: Resource::CERTIFICATE_FRAME_TITLES[:other],
                          builtin_css: true },
       "training_signatures" => { label: "Facilitator training signatures",
-                                 description: "Signature strip shown on the live facilitator-training certificate only — not on-demand or other events." },
+                                 description: "Signature strip shown on the live facilitator-training certificate only — not on-demand or other events.",
+                                 title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE },
       "ce_signatures" => { label: "CE certificate signature",
-                           description: "The CE administrator's signature on the CE Confirmation of Attendance certificate." }
+                           description: "The CE administrator's signature on the CE Confirmation of Attendance certificate.",
+                           title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE }
     }.freeze
 
     def show
@@ -72,6 +78,7 @@ module Admin
         role: role,
         label: config[:label],
         description: config[:description],
+        title: config[:title],
         builtin: config[:builtin],
         builtin_css: config[:builtin_css],
         resource: resource,

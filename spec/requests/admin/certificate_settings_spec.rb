@@ -18,6 +18,14 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       expect(response.body).to include("CE certificate signature")
     end
 
+    it "shows the exact auto-match Resource title for each slot" do
+      get admin_certificate_settings_path
+
+      expect(response.body).to include(Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      expect(response.body).to include(Resource::CE_CERTIFICATE_SIGNATURE_TITLE)
+      expect(response.body).to include(Resource::CERTIFICATE_FRAME_TITLES[:training])
+    end
+
     it "previews the connected resource and offers reconnect" do
       resource = create(:resource, title: "Training frame art", certificate_role: "training_frame")
       create(:primary_asset, :with_file, owner: resource)

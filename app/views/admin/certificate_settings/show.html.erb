@@ -37,6 +37,12 @@
               </div>
               <%= submit_tag slot[:resource] ? "Reconnect" : "Connect", class: "shrink-0 #{button_classes(:primary, size: :sm)}" %>
             <% end %>
+
+            <p class="mt-2 text-xs text-gray-400">
+              Or title a Resource exactly
+              <span class="font-medium text-gray-600">“<%= slot[:title] %>”</span>
+              and it's matched automatically.
+            </p>
           </div>
 
           <div class="sm:w-56 sm:shrink-0">
