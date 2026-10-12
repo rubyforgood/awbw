@@ -25,6 +25,10 @@ Rails.application.routes.draw do
     collection do
       get :check_duplicates
       get :flow_diagram
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_perform
+      patch :dedupe_update_keep
     end
     member do
       post :send_reset_password_instructions

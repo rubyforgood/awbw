@@ -1058,4 +1058,111 @@ RSpec.describe "Dedupable concern", type: :request do
       end
     end
   end
+
+  # ============================================================
+  # USERS — merging two logins of one person
+  # ============================================================
+
+  describe "Users" do
+    let(:person) { create(:person, first_name: "Jane", last_name: "Doe", user: nil) }
+    let!(:keep) { create(:user, person: person, email: "jane.keep@example.com", updated_at: 1.hour.ago) }
+    let!(:delete_rec) { create(:user, person: person, email: "jane.old@example.com", updated_at: 1.week.ago) }
+
+    before { sign_in admin }
+
+    describe "GET dedupe_index" do
+      it "lists logins that share a person, labelled by email" do
+        get dedupe_index_users_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Same person", "jane.keep@example.com", "jane.old@example.com")
+      end
+
+      it "denies access to a regular user" do
+        sign_in regular_user
+
+        get dedupe_index_users_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      it "compares the logins and warns which email stops signing in" do
+        get dedupe_preview_users_path(user_to_keep_id: keep.id, user_to_delete_id: delete_rec.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Last sign in at", "Sign in count")
+        expect(response.body).to include("Signing in as jane.old@example.com stops working")
+        expect(response.body).not_to include("Merge blocked")
+      end
+
+      it "blocks merging logins that belong to different people" do
+        delete_rec.update!(person: create(:person, first_name: "Other", last_name: "Human", user: nil))
+
+        get dedupe_preview_users_path(user_to_keep_id: keep.id, user_to_delete_id: delete_rec.id)
+
+        expect(response.body).to include("Merge blocked", "Merge the people first")
+      end
+
+      it "blocks merging away the admin's own login" do
+        get dedupe_preview_users_path(user_to_keep_id: keep.id, user_to_delete_id: admin.id)
+
+        expect(response.body).to include("Merge blocked", "can&#39;t merge away your own login")
+      end
+    end
+
+    describe "PATCH dedupe_update_keep" do
+      it "ignores columns the preview doesn't offer for editing" do
+        patch dedupe_update_keep_users_path, params: { id: keep.id, user_to_keep: { notes: "Merged", super_user: "1" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(keep.reload.notes).to eq("Merged")
+        expect(keep.super_user).to be(false)
+      end
+    end
+
+    describe "POST dedupe_perform" do
+      it "moves the deleted login's records and history onto the keeper" do
+        bookmark = create(:bookmark, user: delete_rec)
+        grant = create(:grant, created_by: delete_rec)
+        event = create(:ahoy_event, user_id: delete_rec.id)
+        version = PaperTrail::Version.create!(event: "update", item_type: "Payment", item_id: 1, whodunnit: delete_rec.id.to_s)
+
+        expect {
+          post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+        }.to change(User, :count).by(-1)
+
+        expect(response).to redirect_to(users_path)
+        expect(bookmark.reload.user_id).to eq(keep.id)
+        expect(grant.reload.created_by_id).to eq(keep.id)
+        expect(event.reload.user_id).to eq(keep.id)
+        expect(version.reload.whodunnit).to eq(keep.id.to_s)
+        expect(person.reload.user).to eq(keep)
+      end
+
+      it "hands the person to a kept login that had none" do
+        keep.update_columns(person_id: nil)
+
+        post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+
+        expect(keep.reload.person).to eq(person)
+      end
+
+      it "keeps the deleted login's password hash out of the tracked event" do
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "dedupe.user", hash_including(
+          deleted_record: hash_including("encrypted_password" => "[FILTERED]", "email" => "jane.old@example.com")
+        ))
+
+        post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+      end
+
+      it "refuses to merge logins that belong to different people" do
+        delete_rec.update!(person: create(:person, user: nil))
+
+        expect {
+          post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+        }.not_to change(User, :count)
+      end
+    end
+  end
 end
