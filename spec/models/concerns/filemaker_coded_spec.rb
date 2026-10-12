@@ -11,6 +11,38 @@ RSpec.describe FilemakerCoded do
 
       expect(Person.with_filemaker_code(" 00006 ")).to contain_exactly(single, listed, spaced)
     end
+
+    it "ignores tabs, line breaks, and non-breaking spaces stored in the list" do
+      messy = create(:person)
+      messy.update_columns(filemaker_code: "00012,\t00006\u00A0\n")
+
+      expect(Person.with_filemaker_code("00006")).to contain_exactly(messy)
+    end
+  end
+
+  describe "#filemaker_codes" do
+    it "splits on commas only, dropping every kind of whitespace" do
+      person = build(:person)
+      person.filemaker_code = " 00006\t,\n00012\u00A0, ,00006"
+
+      expect(person.filemaker_codes).to eq(%w[00006 00012])
+    end
+
+    it "keeps a list joined by another separator as one code" do
+      expect(build(:person, filemaker_code: "00006; 00012").filemaker_codes).to eq([ "00006;00012" ])
+    end
+  end
+
+  describe "saving" do
+    it "stores the codes as a sorted, comma-space list" do
+      person = create(:person, filemaker_code: "00012 ,\t00006,00012\n")
+
+      expect(person.reload.filemaker_code).to eq("00006, 00012")
+    end
+
+    it "stores nil for a blank list" do
+      expect(create(:person, filemaker_code: " , \t").reload.filemaker_code).to be_nil
+    end
   end
 
   describe ".filemaker_archives" do

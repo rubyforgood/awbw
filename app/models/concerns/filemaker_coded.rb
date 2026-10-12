@@ -1,13 +1,16 @@
 # One record can answer to more than one FileMaker code — two records that each mapped
 # to a FileMaker row get merged, or the archive itself holds several rows for one
-# person. The `filemaker_code` column holds them as a trimmed, comma-separated list;
+# person. The `filemaker_code` column holds them as a sorted, comma-separated list;
 # this is the seam for reading and combining them, so nothing compares the whole
-# column against a single code.
+# column against a single code. Codes never hold whitespace, so any (tabs, line
+# breaks, pasted non-breaking spaces) is dropped.
 module FilemakerCoded
   extend ActiveSupport::Concern
 
   included do
     class_attribute :filemaker_archives, instance_writer: false, default: []
+
+    normalizes :filemaker_code, with: ->(value) { join_filemaker_codes(value) }, apply_to_nil: true
   end
 
   def filemaker_codes
@@ -21,11 +24,15 @@ module FilemakerCoded
     end
 
     def with_filemaker_code(code)
-      where("FIND_IN_SET(?, REPLACE(filemaker_code, ' ', ''))", code.to_s.strip)
+      where("FIND_IN_SET(?, REGEXP_REPLACE(filemaker_code, '[[:space:]]', ''))", strip_filemaker_code(code))
     end
 
     def split_filemaker_codes(value)
-      value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
+      value.to_s.split(",").map { |code| strip_filemaker_code(code) }.reject(&:empty?).uniq
+    end
+
+    def strip_filemaker_code(code)
+      code.to_s.gsub(/[[:space:]]/, "")
     end
 
     # A single normalized column value from any mix of code strings/lists.
