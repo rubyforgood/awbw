@@ -1161,6 +1161,17 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("/rails/active_storage")
     end
 
+    it "renders an uploaded CE certificate frame full-bleed, keeping the live content" do
+      frame = create(:resource, title: Resource::CE_CERTIFICATE_FRAME_TITLE, hidden_from_search: true)
+      create(:primary_asset, :with_file, owner: frame)
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).to include("Continuing Education Confirmation of Attendance")
+      expect(response.body).to include(registration.registrant.full_name)
+      expect(response.body).to include("/rails/active_storage/blobs/")
+    end
+
     it "returns to the certificate chooser when reached from it" do
       get registration_ce_certificate_path(registration.slug, ce_registration, return_to: "certificate")
 

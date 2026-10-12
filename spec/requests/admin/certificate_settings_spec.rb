@@ -11,10 +11,11 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       get admin_certificate_settings_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Live training frame")
+      expect(response.body).to include("Facilitator training frame")
       expect(response.body).to include("On-demand training frame")
+      expect(response.body).to include("CE certificate frame")
       expect(response.body).to include("Other events frame")
-      expect(response.body).to include("Training signatures")
+      expect(response.body).to include("Facilitator training signatures")
       expect(response.body).to include("CE certificate signature")
     end
 
@@ -53,6 +54,13 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       patch admin_certificate_settings_path, params: { slot: "ce_signatures", file: image }
 
       resource = Resource.find_by(title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE)
+      expect(resource.signature_file).to be_attached
+    end
+
+    it "attaches the CE certificate frame to its own slot" do
+      patch admin_certificate_settings_path, params: { slot: "ce_frame", file: image }
+
+      resource = Resource.find_by(title: Resource::CE_CERTIFICATE_FRAME_TITLE)
       expect(resource.signature_file).to be_attached
     end
 

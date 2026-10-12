@@ -58,6 +58,7 @@ module Events
       @ce_registration = ce_certificate_registration
       return redirect_to(registration_ce_path(@event_registration.slug)) unless @ce_registration
       @signature_file = Resource.ce_certificate_signature_file
+      @frame_file = Resource.ce_certificate_frame_file
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a

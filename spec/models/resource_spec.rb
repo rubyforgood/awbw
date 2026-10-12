@@ -179,4 +179,17 @@ RSpec.describe Resource do
       expect(Resource.certificate_frame_file(:other)).to be_nil
     end
   end
+
+  describe ".ce_certificate_frame_file" do
+    it "returns nil when no record exists" do
+      expect(Resource.ce_certificate_frame_file).to be_nil
+    end
+
+    it "returns the attached frame when the record has one" do
+      resource = create(:resource, title: Resource::CE_CERTIFICATE_FRAME_TITLE)
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.ce_certificate_frame_file).to be_attached
+    end
+  end
 end

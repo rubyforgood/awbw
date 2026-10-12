@@ -58,6 +58,14 @@ class Resource < ApplicationRecord
     find_by(title: title)&.signature_file if title
   end
 
+  # The CE Confirmation of Attendance certificate's own optional frame override,
+  # matched by title like the others. Nil when none is uploaded.
+  CE_CERTIFICATE_FRAME_TITLE = "CE certificate frame".freeze
+
+  def self.ce_certificate_frame_file
+    find_by(title: CE_CERTIFICATE_FRAME_TITLE)&.signature_file
+  end
+
   # The first attached image on this resource (primary asset, then downloadable),
   # for use as a certificate signature strip or frame. Nil when nothing is attached.
   def signature_file
