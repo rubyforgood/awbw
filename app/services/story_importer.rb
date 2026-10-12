@@ -500,7 +500,7 @@ class StoryImporter
     person ||= Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first.downcase, last.downcase).first
     return person if person
 
-    attrs = { first_name: first, last_name: last, email: email }
+    attrs = { first_name: first, last_name: last, email: email || Person::PLACEHOLDER_EMAIL }
     @dry_run ? Person.new(attrs) : Person.create!(attrs)
   end
 

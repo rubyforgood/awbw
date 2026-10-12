@@ -87,6 +87,7 @@ class Person < ApplicationRecord
   validates :first_name, presence: true, length: { maximum: 255 }
   validates :last_name, presence: true, length: { maximum: 255 }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
+  validate :email_present, if: -> { new_record? || will_save_change_to_email? }
   validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
   validates :legal_first_name, length: { maximum: 255 }
   validates :pronouns, length: { maximum: 255 }
@@ -103,6 +104,8 @@ class Person < ApplicationRecord
   # Autocorrect and pasted text swap in look-alike dashes; storing a plain hyphen keeps "Smith-Jones" one person.
   DASH_VARIANTS = /[\u2010-\u2015\u2212]/
   NAME_AND_EMAIL_INDEX = "index_people_on_name_and_email".freeze
+  PLACEHOLDER_EMAIL = "1@example.com".freeze
+  EMAIL_REQUIRED_MESSAGE = "is required. If this person doesn't have one, enter the placeholder #{PLACEHOLDER_EMAIL}".freeze
 
   def self.normalize_name(name)
     name&.strip&.gsub(DASH_VARIANTS, "-")
@@ -668,6 +671,13 @@ class Person < ApplicationRecord
     self.legal_first_name = Person.normalize_name(legal_first_name)
     self.email = email&.strip
     self.email_2 = email_2&.strip
+  end
+
+  # Legacy people saved before email was required stay valid until their email changes.
+  def email_present
+    return if email.present? || user&.email.present?
+
+    errors.add(:email, EMAIL_REQUIRED_MESSAGE)
   end
 
   def unique_name_and_email_combination

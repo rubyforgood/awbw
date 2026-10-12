@@ -332,8 +332,8 @@ RSpec.describe StoryImporter do
 
   describe "matching the author to an existing person" do
     it "matches on a secondary email and the legal first name" do
-      existing = create(:person, user: nil, first_name: "Jim", legal_first_name: "Jamie",
-                                 last_name: "Rivera", email: nil, email_2: "jamie@example.org")
+      existing = create(:person, :legacy_without_email, user: nil, first_name: "Jim", legal_first_name: "Jamie",
+                                 last_name: "Rivera", email_2: "jamie@example.org")
 
       expect {
         import([ base_row("facilitator_email" => "jamie@example.org") ])
@@ -364,11 +364,17 @@ RSpec.describe StoryImporter do
     end
 
     it "still matches on an exact name when the row carries no email" do
-      existing = create(:person, user: nil, first_name: "Jamie", last_name: "Rivera", email: nil)
+      existing = create(:person, :legacy_without_email, user: nil, first_name: "Jamie", last_name: "Rivera")
 
       expect { import([ base_row ]) }.not_to change(Person, :count)
 
       expect(Story.sole.author).to eq(existing)
+    end
+
+    it "gives a new author with no email the placeholder email" do
+      import([ base_row ])
+
+      expect(Story.sole.author.email).to eq(Person::PLACEHOLDER_EMAIL)
     end
   end
 
