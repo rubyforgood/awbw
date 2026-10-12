@@ -392,7 +392,7 @@ class EventsController < ApplicationController
       # accurate "locked" warning instead of the generic prompt. (#1944)
       locked = @event.event_registrations.find_by(id: params[:registration_id])&.editing_locked?
       message = locked ? "That registrant was transferred out — their registration is locked. Undo the transfer to feature them." : "Choose a recipient to feature."
-      redirect_to recipients_event_path(@event), alert: message and return
+      redirect_to recipients_event_path(@event), alert: message, status: :see_other and return
     end
 
     authorize! registration, to: :update?

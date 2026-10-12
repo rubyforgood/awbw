@@ -3882,6 +3882,7 @@ RSpec.describe "Events", type: :request do
           post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
 
           expect(registration.reload.shoutout).to be(true)
+          expect(response).to have_http_status(:see_other)
           expect(response).to redirect_to(
             edit_event_registration_path(registration, return_to: "recipients", anchor: "shout-out")
           )
@@ -3917,6 +3918,7 @@ RSpec.describe "Events", type: :request do
         it "returns to the recipients page with an alert when no recipient is chosen" do
           post feature_recipient_shoutout_event_path(event), params: { registration_id: "" }
 
+          expect(response).to have_http_status(:see_other)
           expect(response).to redirect_to(recipients_event_path(event))
         end
 
@@ -3927,6 +3929,7 @@ RSpec.describe "Events", type: :request do
           post feature_recipient_shoutout_event_path(event), params: { registration_id: registration.id }
 
           expect(registration.reload.shoutout).to be(false)
+          expect(response).to have_http_status(:see_other)
           expect(response).to redirect_to(recipients_event_path(event))
           expect(flash[:alert]).to match(/transferred out|locked/i)
         end
