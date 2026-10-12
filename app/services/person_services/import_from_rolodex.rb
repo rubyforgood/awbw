@@ -9,13 +9,22 @@ module PersonServices
   #                        claim is the same person; reconcile by hand
   #   * skipped          — agency, soft-deleted, or nameless rows
   #   * failed           — the Person didn't validate
+  #
+  # A row whose email matches nobody is created even when someone already shares the
+  # name: folding the occasional duplicate with the person deduper beats hand-resolving
+  # every name collision in a 39,000-row archive.
   class ImportFromRolodex
     OUTCOMES = %i[created linked already_imported ambiguous skipped failed].freeze
     FALSE_FLAGS = %w[0 n no false].freeze
-    DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d].freeze
-    CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "work" => "work", "mailing" => "mailing" }.freeze
+    DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d %m-%d-%Y %Y/%m/%d].freeze
+    # A two-digit year below this is read as 20xx, at or above it as 19xx.
+    TWO_DIGIT_YEAR_PIVOT = 10
+    CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
+                      "mobile" => "personal", "work" => "work", "mailing" => "mailing" }.freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
     UNKNOWN_LOCALITY = "Unknown"
+    UNKNOWN_CONTACT_TYPE = "unknown"
+    STRING_LIMIT = 255
 
     attr_reader :results
 
@@ -77,9 +86,9 @@ module PersonServices
       person = Person.new(
         **names,
         filemaker_code: rolodex.fm_id,
-        pronouns: data["Pronouns"].presence,
-        best_time_to_call: data["BestTimeToCall"].presence,
-        racial_ethnic_identity: data["Ethnicity"].presence,
+        pronouns: clip(data["Pronouns"]),
+        best_time_to_call: clip(data["BestTimeToCall"]),
+        racial_ethnic_identity: clip(data["Ethnicity"]),
         date_of_birth: parse_date(data["DateOfBirth"]),
         notes: data["Comments"].presence
       )
@@ -98,18 +107,18 @@ module PersonServices
       fields = fm_id.presence && FmAddress.find_by(fm_id:)&.data
       return unless fields
 
-      street = [ fields["AddrsLine1"], fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
+      street = [ street_line(fields), fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
       city = fields["AddrsCity"].to_s.strip
       state = fields["AddrsState"].to_s.strip
       return if street.blank? || city.blank? || state.blank?
 
       {
-        street_address: street,
+        street_address: clip(street),
         city:,
         state:,
         zip_code: fields["AddrsPostalCode"].to_s.strip,
-        country: fields["AddrsCountry"].presence,
-        address_type: contact_type(fields["AddrsType"]),
+        country: clip(fields["AddrsCountry"]),
+        address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
         locality: UNKNOWN_LOCALITY,
         primary: true
       }
@@ -120,11 +129,31 @@ module PersonServices
       number = fields && fields["PhoneNumber"].to_s.strip
       return if number.blank?
 
-      { kind: "phone", value: number, contact_type: contact_type(fields["PhoneType"]), primary: true }
+      { kind: "phone", value: number, contact_type: contact_type(fields["PhoneType"], allowed: ContactMethod::CONTACT_TYPES), primary: true }
     end
 
-    def contact_type(value)
-      CONTACT_TYPES[value.to_s.strip.downcase]
+    # The archive's types map onto one set of ours, but each model declares the slice it
+    # accepts — an address can be the mailing one, a phone number can't. A type we can't
+    # place is recorded as unknown, so an imported record never reads as simply untyped.
+    def contact_type(value, allowed:)
+      mapped = CONTACT_TYPES[value.to_s.strip.downcase]
+      mapped.presence_in(allowed) || UNKNOWN_CONTACT_TYPE.presence_in(allowed)
+    end
+
+    # The house number has its own field, sometimes already repeated at the front of
+    # the first line.
+    def street_line(fields)
+      number = fields["StreetNo"].to_s.strip
+      line = fields["AddrsLine1"].to_s.strip
+      return line if number.blank? || line[/\A\S+/] == number
+
+      "#{number} #{line}".strip
+    end
+
+    # Every string copied here lands in a varchar(255) the archive's free text isn't
+    # bounded by, and an over-long incidental field would otherwise cost the person.
+    def clip(value)
+      value.presence && value.to_s.truncate(STRING_LIMIT)
     end
 
     def parse_date(value)
@@ -132,11 +161,30 @@ module PersonServices
       return if value.blank?
 
       DATE_FORMATS.each do |format|
-        return Date.strptime(value, format)
-      rescue Date::Error
-        next
+        parsed = parse_with(value, format)
+        return parsed if parsed
       end
       nil
+    end
+
+    # Parsing stops where the format ends, so "10-5-1983" read as %Y-%m-%d takes 19
+    # as the day and drops the 83 — digits left over mean the format split the value
+    # in the wrong place, so the next one gets its turn.
+    def parse_with(value, format)
+      parts = Date._strptime(value, format)
+      return if parts.nil? || parts[:leftover].to_s.match?(/\A\d/)
+
+      expand_century(Date.new(parts[:year], parts[:mon], parts[:mday]))
+    rescue Date::Error, TypeError
+      nil
+    end
+
+    # %Y reads a two-digit year as the year itself, so "10/5/83" is 83 AD. The archive
+    # mixes two- and four-digit years, so a bare pair gets a century: 83 is 1983, 05 is 2005.
+    def expand_century(date)
+      return date if date.year >= 100
+
+      date.change(year: date.year + (date.year < TWO_DIGIT_YEAR_PIVOT ? 2000 : 1900))
     end
 
     def flag?(value)

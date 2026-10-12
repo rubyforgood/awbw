@@ -36,6 +36,74 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00007")).to have_attributes(email: "ada@example.com", email_2: "ada@work.example.com")
   end
 
+  it "prefixes the street number when the first line doesn't already carry it" do
+    FmAddress.create!(fm_id: "A2", data: { "StreetNo" => "1234", "AddrsLine1" => "Main St",
+                                           "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A3", data: { "StreetNo" => "1234", "AddrsLine1" => "1234 Main St",
+                                           "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    rolodex("00030", FirstName: "Grace", EMail: "grace@example.com", PrimaryAddrsID: "A2")
+    rolodex("00031", FirstName: "Hedy", EMail: "hedy@example.com", PrimaryAddrsID: "A3")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00030").addresses.sole.street_address).to eq("1234 Main St")
+    expect(Person.find_by!(filemaker_code: "00031").addresses.sole.street_address).to eq("1234 Main St")
+  end
+
+  it "truncates over-long free text instead of losing the person to it" do
+    FmAddress.create!(fm_id: "A4", data: { "AddrsLine1" => "x" * 200, "AddrsLine2" => "y" * 200,
+                                           "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    rolodex("00032", EMail: "ada@example.com", BestTimeToCall: "z" * 300, PrimaryAddrsID: "A4")
+
+    expect(results[:failed]).to be_empty
+
+    person = Person.find_by!(filemaker_code: "00032")
+    expect(person.best_time_to_call.length).to eq(255)
+    expect(person.addresses.sole.street_address.length).to eq(255)
+  end
+
+  it "types a phone the contact method can't take as unknown, keeping it on the address" do
+    FmAddress.create!(fm_id: "A5", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Los Angeles",
+                                           "AddrsState" => "CA", "AddrsType" => "Mailing" })
+    FmPhoneNumber.create!(fm_id: "P2", data: { "PhoneNumber" => "555-0100", "PhoneType" => "Mailing" })
+    FmPhoneNumber.create!(fm_id: "P3", data: { "PhoneNumber" => "555-0200", "PhoneType" => "Cell" })
+    rolodex("00033", EMail: "ada@example.com", PrimaryAddrsID: "A5", PrimaryPhoneID: "P2")
+    rolodex("00034", FirstName: "Grace", EMail: "grace@example.com", PrimaryPhoneID: "P3")
+
+    results
+
+    mailing = Person.find_by!(filemaker_code: "00033")
+    expect(mailing.addresses.sole.address_type).to eq("mailing")
+    expect(mailing.contact_methods.sole.contact_type).to eq("unknown")
+    expect(Person.find_by!(filemaker_code: "00034").contact_methods.sole.contact_type).to eq("personal")
+  end
+
+  it "types an address and phone the archive left blank as unknown" do
+    FmAddress.create!(fm_id: "A6", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    FmPhoneNumber.create!(fm_id: "P4", data: { "PhoneNumber" => "555-0300" })
+    rolodex("00035", EMail: "ada@example.com", PrimaryAddrsID: "A6", PrimaryPhoneID: "P4")
+
+    results
+
+    person = Person.find_by!(filemaker_code: "00035")
+    expect(person.addresses.sole.address_type).to eq("unknown")
+    expect(person.contact_methods.sole.contact_type).to eq("unknown")
+  end
+
+  it "reads the archive's date formats, giving a two-digit year its century" do
+    rolodex("00020", FirstName: "Grace", EMail: "grace@example.com", DateOfBirth: "10/5/83")
+    rolodex("00021", FirstName: "Katherine", EMail: "katherine@example.com", DateOfBirth: "3/4/05")
+    rolodex("00022", FirstName: "Hedy", EMail: "hedy@example.com", DateOfBirth: "10-5-1983")
+    rolodex("00023", FirstName: "Mary", EMail: "mary@example.com", DateOfBirth: "1983/10/05")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00020").date_of_birth).to eq(Date.new(1983, 10, 5))
+    expect(Person.find_by!(filemaker_code: "00021").date_of_birth).to eq(Date.new(2005, 3, 4))
+    expect(Person.find_by!(filemaker_code: "00022").date_of_birth).to eq(Date.new(1983, 10, 5))
+    expect(Person.find_by!(filemaker_code: "00023").date_of_birth).to eq(Date.new(1983, 10, 5))
+  end
+
   it "links an existing person with the same name and email instead of creating one" do
     person = create(:person, first_name: "ada", last_name: "LOVELACE", email: "Ada@Example.com")
     rolodex("00008", EMail: "ada@example.com")
