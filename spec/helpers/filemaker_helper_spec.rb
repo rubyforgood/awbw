@@ -37,6 +37,28 @@ RSpec.describe FilemakerHelper, type: :helper do
       expect(helper.filemaker_code_links(build(:person, filemaker_code: nil))).to be_nil
     end
 
+    context "when only linked codes are wanted" do
+      it "drops a code the archive has no row for" do
+        html = helper.filemaker_code_links(person, label: "Rolodex", linked_only: true)
+
+        expect(html).not_to include("00012")
+        expect(html).not_to include("No FileMaker archive record")
+      end
+
+      it "names the one remaining link by its label alone" do
+        html = helper.filemaker_code_links(person, label: "Rolodex", linked_only: true)
+
+        expect(html).to include(">Rolodex</a>")
+        expect(html).not_to include("Rolodex 00006")
+      end
+
+      it "returns nothing when no code has an archive row" do
+        html = helper.filemaker_code_links(build(:person, filemaker_code: "00012"), label: "Rolodex", linked_only: true)
+
+        expect(html).to be_nil
+      end
+    end
+
     context "when the viewer can't open the archive" do
       let(:archive_viewer) { false }
 
@@ -75,6 +97,14 @@ RSpec.describe FilemakerHelper, type: :helper do
 
       expect(html).to include(fm_archive_path("ORG07206", table: "organizations"))
       expect(html).to include(">FM organization</a>")
+    end
+
+    it "drops an FM organization the archive has no row for when only linked ones are wanted" do
+      FmProject.create!(fm_id: "P9000", data: { "OrgID" => "ORG99999" })
+
+      html = helper.filemaker_organization_links(build(:organization, filemaker_code: "P9000"), label: "FM organization", linked_only: true)
+
+      expect(html).to be_nil
     end
   end
 end

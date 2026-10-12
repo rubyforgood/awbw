@@ -2,10 +2,9 @@ module FilemakerHelper
   # One archive link per FileMaker code a record carries, since a record can answer to
   # several (see FilemakerCoded). A `label` names the button, adding each code only when
   # there are several to tell apart.
-  def filemaker_code_links(record, link_class: nil, label: nil)
-    codes = record.filemaker_codes
-    filemaker_archive_links(codes, archives: record.class.filemaker_archives, link_class: link_class,
-                                   label: label, show_code: label.nil? || codes.many?)
+  def filemaker_code_links(record, link_class: nil, label: nil, linked_only: false)
+    filemaker_archive_links(record.filemaker_codes, archives: record.class.filemaker_archives,
+                                                    link_class: link_class, label: label, linked_only: linked_only)
   end
 
   # The hint under a FileMaker code input, linking each code to its archive record.
@@ -15,10 +14,10 @@ module FilemakerHelper
   end
 
   # An org's codes are FileMaker projects; this links the FM organization each project sits under.
-  def filemaker_organization_links(organization, link_class: nil, label: nil)
+  def filemaker_organization_links(organization, link_class: nil, label: nil, linked_only: false)
     fm_organization_ids = FmProject.where(fm_id: organization.filemaker_codes).filter_map { |project| project.data["OrgID"].presence }.uniq
-    filemaker_archive_links(fm_organization_ids, archives: [ FmOrganization ], link_class: link_class,
-                                                 label: label, show_code: label.nil? || fm_organization_ids.many?)
+    filemaker_archive_links(fm_organization_ids, archives: [ FmOrganization ],
+                                                 link_class: link_class, label: label, linked_only: linked_only)
   end
 
   # The way back from an archive row to the portal record carrying its code.
@@ -31,15 +30,20 @@ module FilemakerHelper
     link_to text, path, class: button_classes(:primary_outline, size: :sm)
   end
 
-  # A code no archive table holds renders struck through, flagging a likely typo.
-  def filemaker_archive_links(codes, archives:, link_class: nil, label: nil, show_code: true)
+  # A code no archive table holds renders struck through, flagging a likely typo —
+  # or is dropped with `linked_only`, for nav buttons that must all lead somewhere.
+  def filemaker_archive_links(codes, archives:, link_class: nil, label: nil, linked_only: false)
     return if codes.empty? || !allowed_to?(:show?, :fm_archive)
 
     stored = archives.index_with { |archive| archive.where(fm_id: codes).pluck(:fm_id).to_set }
+    archive_by_code = codes.index_with { |code| archives.find { |candidate| stored[candidate].include?(code) } }
+    archive_by_code.compact! if linked_only
+    return if archive_by_code.empty?
 
-    safe_join(codes.map do |code|
+    show_code = label.nil? || archive_by_code.many?
+
+    safe_join(archive_by_code.map do |code, archive|
       text = show_code ? safe_join([ label, code ].compact, " ") : label
-      archive = archives.find { |candidate| stored[candidate].include?(code) }
       # line-through! outranks a link_class `underline`, which sets the same text-decoration-line.
       next tag.span(text, class: [ link_class, "line-through! opacity-60" ], title: "No FileMaker archive record for #{code}") unless archive
 
