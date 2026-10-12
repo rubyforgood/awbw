@@ -110,15 +110,15 @@
   summary: >-
     The Story Share home now has audience columns (Children, Adults, …) next to the
     focus-area sectors and Facilitator Spotlights, so visitors can jump to stories by age
-    group. Admins pick which sectors and audiences appear with the new "Add to home page" button.
+    group. Admins pick which sectors and audiences appear with the new "Add to Story Share home" button.
   action_path: "/story_share"
   description: >-
-    Admins control the home grid from the Story Share admin page. Each featured sector
-    and audience has an "Add to home page" button; the ones set to "Show on home page" get
-    their own box of stories on the portal home page, shown in the same order as the nav.
+    Admins control the Story Share home grid from the Story Share admin page. Each featured sector
+    and audience has an "Add to Story Share home" button; the ones set to "Show on Story Share home"
+    get their own box of stories on the Story Share home, shown in the same order as the nav.
   pro_tips:
-    - "A sector or audience can stay in the nav without getting a box on the home page — just set it to \"Menu only\"."
-    - "Home sections follow the nav order, so drag to reorder once and both update."
+    - "A sector or audience can stay in the nav without getting a box on the Story Share home — just set it to \"Menu only\"."
+    - "Story Share home boxes follow the nav order, so drag to reorder once and both update."
 
 - name: "Credit a second author on a story idea"
   area: stories
