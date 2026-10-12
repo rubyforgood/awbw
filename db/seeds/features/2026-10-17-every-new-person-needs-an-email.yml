@@ -1,0 +1,12 @@
+name: "Every new person needs an email"
+area: people
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2646
+action_path: "/people/new"
+summary: >-
+  A person can no longer be saved without an email. If they don't have one,
+  enter the placeholder 1@example.com and the form will accept it.
+pro_tips:
+  - "A person with a login already counts as having an email, so you don't need to fill in Primary email for them."
+  - "People added before this change keep working until someone edits their email."

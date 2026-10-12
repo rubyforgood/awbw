@@ -100,9 +100,8 @@ RSpec.describe Person, type: :model do
 
     it "handles nil values" do
       person = create(:person, user: nil, first_name: "Jane", last_name: "Doe",
-                       email: nil, email_2: nil,
+                       email: "jane@example.com", email_2: nil,
                        created_by: admin, updated_by: admin)
-      expect(person.email).to be_nil
       expect(person.email_2).to be_nil
     end
   end
@@ -112,13 +111,46 @@ RSpec.describe Person, type: :model do
     it { should validate_presence_of(:last_name) }
 
     it { should allow_value("test@example.com").for(:email) }
-    it { should allow_value("").for(:email) }
-    it { should allow_value(nil).for(:email) }
+    it { should_not allow_value("").for(:email).with_message(Person::EMAIL_REQUIRED_MESSAGE) }
+    it { should_not allow_value(nil).for(:email).with_message(Person::EMAIL_REQUIRED_MESSAGE) }
     it { should_not allow_value("not-an-email").for(:email).with_message("must be a valid email address") }
 
     it { should allow_value("test@example.com").for(:email_2) }
     it { should allow_value("").for(:email_2) }
     it { should_not allow_value("not-an-email").for(:email_2).with_message("must be a valid email address") }
+
+    describe "email requirement" do
+      it "tells the user to enter a placeholder when a new person has no email" do
+        person = build(:person, user: nil, email: "")
+
+        expect(person).not_to be_valid
+        expect(person.errors.full_messages).to include(
+          "Email is required. If this person doesn't have one, enter the placeholder 1@example.com"
+        )
+      end
+
+      it "accepts the placeholder email" do
+        expect(build(:person, user: nil, email: "1@example.com")).to be_valid
+      end
+
+      it "is satisfied by the linked user's login email" do
+        expect(build(:person, user: create(:user), email: nil)).to be_valid
+      end
+
+      it "blocks clearing an existing email" do
+        person = create(:person, user: nil, email: "keep@example.com")
+
+        expect(person.update(email: "")).to be(false)
+        expect(person.errors[:email]).to include(Person::EMAIL_REQUIRED_MESSAGE)
+      end
+
+      it "still saves a legacy person who has no email when their email isn't touched" do
+        person = create(:person, user: nil, email: "legacy@example.com")
+        person.update_column(:email, nil)
+
+        expect(person.update(pronouns: "they/them")).to be(true)
+      end
+    end
 
     describe "unique_name_and_email_combination" do
       let(:admin) { create(:user, :admin) }
@@ -165,11 +197,12 @@ RSpec.describe Person, type: :model do
       end
 
       it "treats blank and nil emails as equivalent" do
-        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil,
-               created_by: admin, updated_by: admin)
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: "jane@example.com",
+               created_by: admin, updated_by: admin).update_column(:email, nil)
         duplicate = build(:person, first_name: "Jane", last_name: "Doe", email: "",
                           created_by: admin, updated_by: admin)
         expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:base]).to include("A person named Jane Doe with this email already exists")
       end
 
       it "treats an en dash in the name as the same person" do
@@ -478,7 +511,7 @@ RSpec.describe Person, type: :model do
 
     it "can exist without a user" do
       admin = create(:user, :admin)
-      person = Person.create!(first_name: "Solo", last_name: "Person",
+      person = Person.create!(first_name: "Solo", last_name: "Person", email: "solo@example.com",
                               created_by: admin, updated_by: admin)
       expect(person.user).to be_nil
     end
@@ -1061,7 +1094,8 @@ RSpec.describe Person, "scholarship index helpers" do
     end
 
     it "returns none when the person has no addresses on file" do
-      person = create(:person, user: nil, email: nil, email_2: nil)
+      person = create(:person, user: nil, email: "legacy@example.com", email_2: nil)
+      person.update_column(:email, nil)
       create(:notification, recipient_email: "someone@example.com")
 
       expect(person.communications_scope).to be_empty

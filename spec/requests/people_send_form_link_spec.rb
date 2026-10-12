@@ -38,7 +38,7 @@ RSpec.describe "People send_form_link", type: :request do
       end
 
       it "refuses when the person has no email" do
-        emailless = create(:person, user: nil, email: nil)
+        emailless = create(:person, :legacy_without_email, user: nil)
 
         expect {
           post send_form_link_person_path(emailless, form_id: form.id)

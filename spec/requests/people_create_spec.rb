@@ -14,6 +14,7 @@ RSpec.describe "POST /people", type: :request do
         person: {
           first_name: "Sector",
           last_name: "Tester",
+          email: "sector.tester@example.com",
           created_by_id: admin.id,
           updated_by_id: admin.id,
           category_ids: [ "" ],

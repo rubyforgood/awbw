@@ -1,10 +1,15 @@
 FactoryBot.define do
   factory :person do
+    sequence(:email) { |n| "person#{n}@example.com" }
     user { email.present? ? association(:user, email: email) : association(:user) }
     association :created_by, factory: :user
     association :updated_by, factory: :user
     first_name { Faker::Name.first_name.gsub("'", " ") }
     last_name { Faker::Name.last_name.gsub("'", " ") }
+
+    trait :legacy_without_email do
+      after(:create) { |person| person.update_columns(email: nil) }
+    end
 
     trait :anonymous_contributions do
       anonymous_contributions { true }

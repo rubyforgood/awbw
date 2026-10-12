@@ -337,7 +337,7 @@ RSpec.describe "Notifications", type: :request do
       end
 
       it "binds the logged communication to the person even with no email on file" do
-        emailless = create(:person, user: nil, email: nil, email_2: nil)
+        emailless = create(:person, :legacy_without_email, user: nil, email_2: nil)
 
         post notifications_path, params: valid_params.merge(person_id: emailless.id)
 
