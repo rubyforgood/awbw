@@ -20,20 +20,22 @@
         <div class="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0 sm:flex-1">
             <h2 class="text-sm font-semibold text-gray-800"><%= slot[:label] %></h2>
-            <p class="mt-1 text-xs text-gray-500"><%= slot[:description] %></p>
+            <p class="mt-1 truncate text-xs text-gray-500" title="<%= slot[:description] %>"><%= slot[:description] %></p>
 
-            <%= form_with url: admin_certificate_settings_path, method: :patch, class: "mt-3 flex flex-wrap items-center gap-2" do %>
+            <%= form_with url: admin_certificate_settings_path, method: :patch, class: "mt-3 flex items-center gap-2" do %>
               <%= hidden_field_tag :slot, slot[:role] %>
-              <select name="resource_id"
-                      data-controller="remote-select"
-                      data-remote-select-model-value="resource"
-                      class="min-w-56 rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
-                <option value="">Type to search resources…</option>
-                <% if slot[:resource] %>
-                  <option value="<%= slot[:resource].id %>" selected><%= slot[:resource].title %></option>
-                <% end %>
-              </select>
-              <%= submit_tag slot[:resource] ? "Reconnect" : "Connect", class: button_classes(:primary, size: :sm) %>
+              <div class="min-w-0 flex-1">
+                <select name="resource_id"
+                        data-controller="remote-select"
+                        data-remote-select-model-value="resource"
+                        class="w-full rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
+                  <option value="">Type to search resources…</option>
+                  <% if slot[:resource] %>
+                    <option value="<%= slot[:resource].id %>" selected><%= slot[:resource].title %></option>
+                  <% end %>
+                </select>
+              </div>
+              <%= submit_tag slot[:resource] ? "Reconnect" : "Connect", class: "shrink-0 #{button_classes(:primary, size: :sm)}" %>
             <% end %>
           </div>
 
@@ -53,6 +55,12 @@
                     params: { slot: slot[:role], remove: "1" },
                     class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
                     form: { data: { turbo_confirm: "Disconnect the #{slot[:label].downcase}? Certificates will use the built-in design until you connect another." } } %>
+            <% elsif slot[:builtin] %>
+              <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                <%= image_tag slot[:builtin], alt: "#{slot[:label]} built-in design",
+                      class: "mx-auto max-h-32 w-auto object-contain" %>
+              </div>
+              <p class="mt-2 text-center text-xs text-gray-400">Built-in design — none connected</p>
             <% else %>
               <div class="flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400">
                 None connected — using built-in design

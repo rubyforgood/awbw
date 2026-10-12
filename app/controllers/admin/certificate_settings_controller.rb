@@ -11,9 +11,11 @@ module Admin
     # role => how the slot is labelled on the page.
     SLOTS = {
       "training_frame" => { label: "Facilitator training frame",
-                            description: "Full-bleed frame for the live facilitator-training certificate. Falls back to the built-in painted border when empty." },
+                            description: "Full-bleed frame for the live facilitator-training certificate. Falls back to the built-in painted border when empty.",
+                            builtin: "certificates/certificate-training-border.png" },
       "on_demand_frame" => { label: "On-demand training frame",
-                             description: "Full-bleed frame for on-demand (self-paced) facilitator-training certificates. On-demand certificates never show signatures." },
+                             description: "Full-bleed frame for on-demand (self-paced) facilitator-training certificates. On-demand certificates never show signatures.",
+                             builtin: "certificates/certificate-ondemand-border.png" },
       "ce_frame" => { label: "CE certificate frame",
                       description: "Full-bleed frame for the CE Confirmation of Attendance certificate. Falls back to the default purple/gold design when empty." },
       "other_frame" => { label: "Other events frame",
@@ -68,6 +70,7 @@ module Admin
         role: role,
         label: config[:label],
         description: config[:description],
+        builtin: config[:builtin],
         resource: resource,
         file: resource&.signature_file
       }
