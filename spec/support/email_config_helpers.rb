@@ -16,9 +16,10 @@ end
 # required, so every flow that emails staff would fail on a blank address. What happens
 # when nothing is configured is asserted directly in spec/models/organization_spec.rb
 # instead of being spread across the suite.
-ENV["PROGRAMS_EMAIL"] ||= EmailConfigHelpers::PROGRAMS_EMAIL
-ENV["NO_REPLY_EMAIL"] ||= EmailConfigHelpers::NO_REPLY_EMAIL
-ENV["INFO_EMAIL"] ||= EmailConfigHelpers::INFO_EMAIL
+# Assigned outright so a local .env (loaded by dotenv-rails) can't change what the specs see.
+ENV["PROGRAMS_EMAIL"] = EmailConfigHelpers::PROGRAMS_EMAIL
+ENV["NO_REPLY_EMAIL"] = EmailConfigHelpers::NO_REPLY_EMAIL
+ENV["INFO_EMAIL"] = EmailConfigHelpers::INFO_EMAIL
 
 RSpec.configure do |config|
   config.include EmailConfigHelpers
