@@ -18,7 +18,7 @@ class PersonPolicy < ApplicationPolicy
   # any signed-in user while profiles preview, but each of these narrows the list
   # by internal data — so a non-admin passing one by URL would learn which people
   # carry an admin-only staff tag or subscription. The filter bar renders them
-  # behind the same `manage?` gate PeopleController#index enforces.
+  # behind the same `manage?` gate the :index_filters scope enforces.
   ADMIN_ONLY_FILTERS = %i[
     role facilitator_status membership_status
     staff_tag_ids topic_subscription_type_id
@@ -164,6 +164,13 @@ class PersonPolicy < ApplicationPolicy
   relation_scope do |relation|
     next relation if admin?
     relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
+  end
+
+  # The people index's filter params, keeping only the filters this viewer may
+  # apply. Named, because the unnamed params_filter below is the write path.
+  params_filter :index_filters do |params|
+    next params if manage?
+    params.except(*ADMIN_ONLY_FILTERS)
   end
 
   params_filter do |params|

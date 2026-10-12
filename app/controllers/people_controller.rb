@@ -19,7 +19,8 @@ class PeopleController < ApplicationController
         event_registrations: :event,
         categorizable_items: { category: :category_type }
       ).references(:user))
-      filtered = base_scope.search_by_params(index_filter_params)
+      filters = authorized_scope(params, as: :index_filters).to_unsafe_h
+      filtered = base_scope.search_by_params(filters)
                            .order(:first_name, :last_name)
       @count_display = filtered.count
       @people = filtered.paginate(page: params[:page], per_page: per_page)
@@ -363,16 +364,6 @@ class PeopleController < ApplicationController
   end
 
   private
-
-  # The index's filter params, minus the admin-only ones for a non-admin viewer —
-  # the filter bar hides those controls, so this is the server-side half of the
-  # same gate (see PersonPolicy::ADMIN_ONLY_FILTERS).
-  def index_filter_params
-    filters = params.to_unsafe_h
-    return filters if allowed_to?(:manage?, Person)
-
-    filters.except(*PersonPolicy::ADMIN_ONLY_FILTERS)
-  end
 
   def dedupe_config
     {
