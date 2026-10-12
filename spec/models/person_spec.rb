@@ -979,6 +979,26 @@ RSpec.describe Person, "scholarship index helpers" do
     end
   end
 
+  describe "FileMaker codes" do
+    it "parses a trimmed, de-duplicated list from the column" do
+      person = build(:person, filemaker_code: " 00006 , 00012,00006 ")
+
+      expect(person.filemaker_codes).to eq(%w[00006 00012])
+    end
+
+    it "is empty when the column is blank" do
+      expect(build(:person, filemaker_code: nil).filemaker_codes).to eq([])
+    end
+
+    it "combines mixed strings and lists into one sorted normalized value" do
+      expect(Person.join_filemaker_codes("00012, 00006", " 00031 ", nil, "00006")).to eq("00006, 00012, 00031")
+    end
+
+    it "returns nil when there is nothing to combine" do
+      expect(Person.join_filemaker_codes(nil, "")).to be_nil
+    end
+  end
+
   describe ".find_by_any_email" do
     it "matches on email, email_2, or the login email, case-insensitively" do
       by_primary = create(:person, user: nil, email: "primary@example.com", email_2: nil)
