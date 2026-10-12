@@ -490,8 +490,12 @@ class StoryImporter
     co_author
   end
 
+  # PersonMatcher is the shared rule every person-matching path uses: the email in
+  # any of the person's three addresses (primary, secondary, login) plus the name,
+  # matching the sheet's first name against either the stored or the legal one. A
+  # row with no email falls back to an exact name.
   def find_or_build_person(first, last, email)
-    person = email && Person.where("LOWER(email) = ?", email.downcase).first
+    person = PersonMatcher.call(email: email, last_name: last, first_names: [ first ])
     person ||= Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first.downcase, last.downcase).first
     return person if person
 

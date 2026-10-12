@@ -330,6 +330,48 @@ RSpec.describe StoryImporter do
     end
   end
 
+  describe "matching the author to an existing person" do
+    it "matches on a secondary email and the legal first name" do
+      existing = create(:person, user: nil, first_name: "Jim", legal_first_name: "Jamie",
+                                 last_name: "Rivera", email: nil, email_2: "jamie@example.org")
+
+      expect {
+        import([ base_row("facilitator_email" => "jamie@example.org") ])
+      }.not_to change(Person, :count)
+
+      expect(Story.sole.author).to eq(existing)
+    end
+
+    it "matches on the person's login email" do
+      existing = create(:person, user: create(:user, email: "jamie@example.org"),
+                                 first_name: "Jim", legal_first_name: "Jamie", last_name: "Rivera", email: nil)
+
+      expect {
+        import([ base_row("facilitator_email" => "jamie@example.org") ])
+      }.not_to change(Person, :count)
+
+      expect(Story.sole.author).to eq(existing)
+    end
+
+    it "does not match a different person who merely shares the email and last name" do
+      create(:person, user: nil, first_name: "Dana", last_name: "Rivera", email: "shared@example.org")
+
+      expect {
+        import([ base_row("facilitator_email" => "shared@example.org") ])
+      }.to change(Person, :count).by(1)
+
+      expect(Story.sole.author).to have_attributes(first_name: "Jamie", last_name: "Rivera")
+    end
+
+    it "still matches on an exact name when the row carries no email" do
+      existing = create(:person, user: nil, first_name: "Jamie", last_name: "Rivera", email: nil)
+
+      expect { import([ base_row ]) }.not_to change(Person, :count)
+
+      expect(Story.sole.author).to eq(existing)
+    end
+  end
+
   describe "second author" do
     def co_author_row(overrides = {})
       base_row({
