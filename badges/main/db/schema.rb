@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_08_151649) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1216,8 +1216,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_224045) do
     t.integer "created_by_id"
     t.integer "form_builder_id"
     t.text "header"
-    t.boolean "hide_answered_form_questions", default: false, null: false
-    t.boolean "hide_answered_person_questions", default: false, null: false
     t.string "name"
     t.integer "owner_id"
     t.string "owner_type"
