@@ -110,14 +110,14 @@
   summary: >-
     The Story Share home now has audience columns (Children, Adults, …) next to the
     focus-area sectors and Facilitator Spotlights, so visitors can jump to stories by age
-    group. Admins pick which sectors and audiences appear with the new "On home" toggle.
+    group. Admins pick which sectors and audiences appear with the new "Home column" toggle.
   action_path: "/story_share"
   description: >-
     Admins control the home grid from the Story Share admin page. Each featured sector
-    and audience has an "On home" dropdown; the ones set to "On home" get a full section
+    and audience has a "Home column" dropdown; the ones set to "Home column" get a column
     on the portal home, shown in the same order as the nav.
   pro_tips:
-    - "A sector or audience can stay in the nav without getting a home box — just set its \"On home\" dropdown to \"Not on home\"."
+    - "A sector or audience can stay in the nav without getting a home column — just set its \"Home column\" dropdown to \"No home column\"."
     - "Home sections follow the nav order, so drag to reorder once and both update."
 
 - name: "Credit a second author on a story idea"
