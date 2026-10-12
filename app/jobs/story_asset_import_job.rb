@@ -1,15 +1,17 @@
 class StoryAssetImportJob < ApplicationJob
   queue_as :default
 
-  # Downloads a WordPress story's images and attaches them to the record. The
-  # image_urls come from the export's "Image URL" column in order: the first is
-  # the featured image (PrimaryAsset), the rest become GalleryAssets. `title` is
-  # the alt text. A bad URL or rejected file is logged and skipped so one broken
-  # image doesn't take down the rest.
-  def perform(record, image_urls, title: nil)
-    featured, *gallery = Array(image_urls).compact_blank
-    import(record, featured, "PrimaryAsset", title) if featured.present?
-    gallery.each { |url| import(record, url, "GalleryAsset", title) }
+  # Downloads a story's images and attaches them to the record. The image_urls come
+  # from the sheet's "image_urls" column in order: the first is the featured image
+  # (PrimaryAsset), the rest become GalleryAssets. `titles` is the parallel list
+  # from "image_alt_titles" — each image takes the title at its position. A bad URL
+  # or rejected file is logged and skipped so one broken image doesn't take down
+  # the rest.
+  def perform(record, image_urls, titles: [])
+    pairs = Array(image_urls).each_with_index.map { |url, i| [ url, Array(titles)[i] ] }
+    pairs.reject { |url, _| url.blank? }.each_with_index do |(url, title), index|
+      import(record, url, index.zero? ? "PrimaryAsset" : "GalleryAsset", title)
+    end
   end
 
   private

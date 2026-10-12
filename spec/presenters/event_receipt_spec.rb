@@ -72,7 +72,7 @@ RSpec.describe EventReceipt do
     end
 
     context "with a snapshotted organization" do
-      let(:organization) { create(:organization, name: "A Greater Hope") }
+      let(:organization) { create(:organization, name: "Example Family Services") }
 
       before do
         create(:event_registration_organization, event_registration: registration, organization: organization)
@@ -84,7 +84,7 @@ RSpec.describe EventReceipt do
       it "addresses the receipt to the organization but keeps the registrant as attention" do
         receipt = described_class.from_registration(registration)
 
-        expect(receipt.bill_to_name).to eq("A Greater Hope")
+        expect(receipt.bill_to_name).to eq("Example Family Services")
         expect(receipt.attention).to eq("Helena Lopez")
         expect(receipt.bill_to_address_lines).to eq([ "PO Box 1477", "Victorville, CA 92393" ])
         expect(receipt.client_id).to eq(organization.id)

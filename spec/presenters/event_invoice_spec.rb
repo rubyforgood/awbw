@@ -62,7 +62,7 @@ RSpec.describe EventInvoice do
     end
 
     context "with a snapshotted organization" do
-      let(:organization) { create(:organization, name: "A Greater Hope") }
+      let(:organization) { create(:organization, name: "Example Family Services") }
 
       before do
         create(:event_registration_organization, event_registration: registration, organization: organization)
@@ -72,7 +72,7 @@ RSpec.describe EventInvoice do
       it "bills the organization with its address but keeps the registrant as attention" do
         invoice = described_class.from_registration(registration)
 
-        expect(invoice.bill_to_name).to eq("A Greater Hope")
+        expect(invoice.bill_to_name).to eq("Example Family Services")
         expect(invoice.attention).to eq("Helena Lopez")
         expect(invoice.bill_to_address_lines).to eq([ "PO Box 1477", "Victorville, CA 92393" ])
         expect(invoice.client_id).to eq(organization.id)
@@ -129,14 +129,14 @@ RSpec.describe EventInvoice do
     before do
       add_answer("first_name", "Helena")
       add_answer("last_name", "Lopez")
-      add_answer("organization_name", "A Greater Hope")
+      add_answer("organization_name", "Example Family Services")
       add_answer("number_of_attendees", "8")
     end
 
     it "bills the payer's organization for every attendee submitted" do
       invoice = described_class.from_bulk_payment(submission)
 
-      expect(invoice.bill_to_name).to eq("A Greater Hope")
+      expect(invoice.bill_to_name).to eq("Example Family Services")
       expect(invoice.attention).to eq("Helena Lopez")
 
       item = invoice.line_items.first
