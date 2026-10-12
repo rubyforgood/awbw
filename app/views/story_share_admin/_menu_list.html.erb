@@ -37,19 +37,27 @@
             <details class="relative">
               <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium [&::-webkit-details-marker]:hidden <%= on_home ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200" %>">
                 <i class="fa-solid <%= on_home ? "fa-check" : "fa-plus" %>"></i>
-                <%= on_home ? "Home highlight card" : "Add highlight card" %>
+                <%= on_home ? "On home page" : "Add to home page" %>
                 <i class="fa-solid fa-chevron-down text-xs"></i>
               </summary>
-              <div class="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+              <div class="absolute right-0 z-10 mt-1 w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                 <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
                               method: :put, params: { on_home: true },
-                              class: "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 #{on_home ? "font-semibold text-green-800" : "text-gray-700"}" do %>
-                  <i class="fa-solid fa-check w-4 <%= on_home ? "" : "invisible" %>"></i> Home highlight card
+                              class: "flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 #{on_home ? "font-semibold text-green-800" : "text-gray-700"}" do %>
+                  <i class="fa-solid fa-check mt-0.5 w-4 <%= on_home ? "" : "invisible" %>"></i>
+                  <span>
+                    Show on home page
+                    <span class="block text-xs font-normal text-gray-500">Gets its own box of stories on the Story Share home page</span>
+                  </span>
                 <% end %>
                 <%= button_to story_share_admin_toggle_home_section_path(type: type, id: record.id),
                               method: :put, params: { on_home: false },
-                              class: "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 #{on_home ? "text-gray-700" : "font-semibold text-gray-900"}" do %>
-                  <i class="fa-solid fa-check w-4 <%= on_home ? "invisible" : "" %>"></i> No highlight card
+                              class: "flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 #{on_home ? "text-gray-700" : "font-semibold text-gray-900"}" do %>
+                  <i class="fa-solid fa-check mt-0.5 w-4 <%= on_home ? "invisible" : "" %>"></i>
+                  <span>
+                    Menu only
+                    <span class="block text-xs font-normal text-gray-500">Stays in the menu, with no box on the home page</span>
+                  </span>
                 <% end %>
               </div>
             </details>
