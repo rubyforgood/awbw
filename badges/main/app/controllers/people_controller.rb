@@ -382,7 +382,8 @@ class PeopleController < ApplicationController
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        next [] unless keep.user && delete.user
+        next [] unless delete.user
+        next [ "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." ] unless keep.user
 
         [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
       },
@@ -406,6 +407,7 @@ class PeopleController < ApplicationController
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
         @keeper_primary_address_signature = PersonServices::ReconcileAddresses.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
+        @adopted_login_id = delete.user&.id unless keep.user
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (fold blank-number
@@ -419,7 +421,8 @@ class PeopleController < ApplicationController
       #     else the survivor's own — and soft-delete the redundant sibling so
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (fold identical ones into one,
-      #     keeping a single primary — the survivor's own, else the deleted person's).
+      #     keeping a single primary — the survivor's own, else the deleted person's);
+      #   * a survivor gaining its first login (adopt the login's email as primary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
@@ -432,11 +435,22 @@ class PeopleController < ApplicationController
           primary_signature: @keeper_primary_address_signature).call
         PersonServices::ReconcileContactMethods.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
+        sync_adopted_login_email(keep)
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
       }
     }
+  end
+
+  # Saves the preview's edits first so the sync moves the email the admin picked into
+  # the secondary slot.
+  def sync_adopted_login_email(keep)
+    login = User.find_by(id: @adopted_login_id)
+    return unless login
+
+    keep.save! if keep.changed?
+    PersonLoginEmailSync.call(login)
   end
 
   def active_pay_subscription?(person)
