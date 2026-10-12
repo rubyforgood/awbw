@@ -1202,11 +1202,16 @@ class EventRegistration < ApplicationRecord
       notification_type: 1
     )
 
+    programs_email = Organization.programs_email
+    # No staff FYI without a configured programs mailbox (e.g. dev/seed with no
+    # address env var); the registrant notice above still goes out.
+    return if programs_email.blank?
+
     NotificationServices::CreateNotification.call(
       noticeable: self,
       kind: "event_registration_cancelled_fyi",
       recipient_role: :admin,
-      recipient_email: Organization.programs_email,
+      recipient_email: programs_email,
       notification_type: 1
     )
   end

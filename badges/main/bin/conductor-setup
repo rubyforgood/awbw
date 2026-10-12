@@ -59,14 +59,6 @@ export WORKSPACE_PORT=${WORKSPACE_PORT:-${CONDUCTOR_PORT:-}}
 
 if [ -z "$CONDUCTOR_ROOT_PATH" ]; then
   echo "Not running inside Conductor. Falling back to normal setup..."
-
-  if [ ! -f .env ]; then
-    echo "Creating .env from .env.sample..."
-    cp .env.sample .env
-  else
-    echo ".env already exists, skipping..."
-  fi
-
   bin/setup "$@"
   exit 0
 fi
@@ -79,7 +71,8 @@ if [ -f "$CONDUCTOR_ROOT_PATH/.env" ]; then
   ln -sf "$CONDUCTOR_ROOT_PATH/.env" .env
 else
   echo "Warning: $CONDUCTOR_ROOT_PATH/.env not found."
-  echo "Create it from .env.sample: cp .env.sample $CONDUCTOR_ROOT_PATH/.env"
+  echo "bin/setup will create a workspace-local .env from .env.sample; to share one"
+  echo "across workspaces instead: cp .env.sample $CONDUCTOR_ROOT_PATH/.env"
 fi
 
 # Copy credential files from repo root

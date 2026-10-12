@@ -36,9 +36,8 @@ contact_us_samples = [
     message: "I have a background in counseling and would like to volunteer. Where can I learn about current openings?" }
 ]
 
-# Placeholder keeps the seed working on a checkout with no PROGRAMS_EMAIL set;
-# recipient_email is required.
-programs_email = Organization.programs_email.presence || "programs@example.com"
+programs_email = Organization.programs_email.presence ||
+  abort("PROGRAMS_EMAIL is blank: copy it from .env.sample into .env (bin/setup creates .env when missing)")
 sample_user = User.where.not(person_id: nil).first
 
 contact_us_samples.each_with_index do |sample, i|
