@@ -110,15 +110,15 @@
   summary: >-
     The Story Share home now has audience columns (Children, Adults, …) next to the
     focus-area sectors and Facilitator Spotlights, so visitors can jump to stories by age
-    group. Admins pick which sectors and audiences appear with the new "On home" toggle.
+    group. Admins pick which sectors and audiences appear with the new "Add to Story Share home" button.
   action_path: "/story_share"
   description: >-
-    Admins control the home grid from the Story Share admin page. Each featured sector
-    and audience has an "On home" dropdown; the ones set to "On home" get a full section
-    on the portal home, shown in the same order as the nav.
+    Admins control the Story Share home grid from the Story Share admin page. Each featured sector
+    and audience has an "Add to Story Share home" button; the ones set to "Show on Story Share home"
+    get their own box of stories on the Story Share home, shown in the same order as the nav.
   pro_tips:
-    - "A sector or audience can stay in the nav without getting a home box — just set its \"On home\" dropdown to \"Not on home\"."
-    - "Home sections follow the nav order, so drag to reorder once and both update."
+    - "A sector or audience can stay in the nav without getting a box on the Story Share home — just set it to \"Menu only\"."
+    - "Story Share home boxes follow the nav order, so drag to reorder once and both update."
 
 - name: "Credit a second author on a story idea"
   area: stories
@@ -4176,3 +4176,13 @@
   pro_tips:
     - "A record can answer to several codes — they're shown as a comma-separated list, and each one links to its own row in the archive."
     - "The duplicate list now reads two records as a match when their codes overlap, rather than flagging them as conflicting."
+
+- name: "Image carousels loop back to the start"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-12
+  pr_number: 2651
+  summary: >-
+    The image carousel on workshop variations and stories now loops: the right
+    arrow on the last image goes back to the first, and the left arrow on the
+    first image goes to the last.
