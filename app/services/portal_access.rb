@@ -1,4 +1,4 @@
-# Whether a user's relationships with AWBW still entitle them to sign in (ADR-0005).
+# Whether a user's relationships with AWBW still entitle them to sign in (ADR-0006).
 # A person is lapsed when they hold a membership or facilitator affiliation but
 # none of them is current; people with neither on record aren't gated.
 class PortalAccess

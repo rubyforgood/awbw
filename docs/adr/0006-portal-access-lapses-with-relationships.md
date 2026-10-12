@@ -1,4 +1,4 @@
-# ADR-0005 — Portal access lapses with a person's relationships; `users.inactive` is retired
+# ADR-0006 — Portal access lapses with a person's relationships; `users.inactive` is retired
 
 - **Status:** Accepted
 - **Date:** 2026-10-12
