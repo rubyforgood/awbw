@@ -12,7 +12,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Comfort Journals",
     windows_type: adult_wt,
-    full_name: "Rose Curtis",
+    full_name: "Rosalind Carver",
     author_location: "Haven House, CA",
     month: 11,
     year: 1996,
@@ -26,7 +26,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Our Family Tree",
     windows_type: combined_wt,
-    full_name: "Ellen Denninger",
+    full_name: "Elena Danforth",
     author_location: "Haven House, CA",
     month: 2,
     year: 1997,
@@ -40,7 +40,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Watercolor Windows",
     windows_type: adult_wt,
-    full_name: "Cathy Salser",
+    full_name: "Cora Sandoval",
     month: 3,
     year: 1997,
     description: "Offers survivors an opportunity to notice their inner and outer worlds, and to express their sense of self-transformation through the use of watercolors. Allows participants an opportunity to work successfully with the medium in a short time with rewarding results regardless of experience.",
@@ -56,7 +56,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Befriending Your Feelings",
     windows_type: adult_wt,
-    full_name: "Shara Stevens",
+    full_name: "Sharon Stiles",
     month: 4,
     year: 1997,
     description: "Allows participants an opportunity to explore and understand their feelings, know that all feelings are acceptable, and notice what their relationship to their feelings is like today. Participants do a series of quick, intuitive drawings, the focus being more on their experience than on the final product.",
@@ -70,7 +70,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Story Dolls",
     windows_type: adult_wt,
-    full_name: "Shara Stevens",
+    full_name: "Sharon Stiles",
     month: 6,
     year: 1997,
     description: "Gives participants a voice to explore their abuse and what directions they can choose to take for their future. By externalizing their own story onto a doll, it becomes a safe place to explore, often becoming a way to discover feelings and thoughts never before claimed.",
@@ -85,7 +85,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Ceremonial Staffs",
     windows_type: adult_wt,
-    full_name: "Cate O'Hagan",
+    full_name: "Kate O'Brannon",
     author_location: "Central Oregon Arts Association, OR",
     month: 8,
     year: 1997,
@@ -99,7 +99,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Peace Weavings",
     windows_type: adult_wt,
-    full_name: "Julia Weaver",
+    full_name: "Juno Webster",
     month: 10,
     year: 1997,
     description: "Shares a simple weaving method as a way for participants to express themselves creatively, learn about themselves and their world, and raise their self-esteem. The finished product is a woven journal cover.",
@@ -112,7 +112,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Dreams and Goals Greeting Cards",
     windows_type: adult_wt,
-    full_name: "Suzy Karcher Rogers",
+    full_name: "Susan Kingsley Rowe",
     month: 2,
     year: 1998,
     description: "Provides a space of time for participants to think about dreams and goals for the future and to take those dreams and goals off \"hold.\" The end product is a decorated greeting card that the participant writes to themselves, reminding themselves in a positive voice of their desires for the future.",
@@ -125,7 +125,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Blob Pictures",
     windows_type: children_wt,
-    full_name: "Cordelia Roosevelt",
+    full_name: "Cordelia Rothwell",
     month: 1,
     year: 1999,
     description: "Provides children with an opportunity to enjoy tearing the paper and making shapes, supporting each child in enjoying the surprise of selecting a shape and creating something out of it.",
@@ -138,7 +138,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Rapping Puppets",
     windows_type: children_wt,
-    full_name: "Lucy Rizo",
+    full_name: "Lucia Rivas",
     month: 1,
     year: 2000,
     description: "Creates an opportunity for speaking out, offering a safe outlet for emotions of all kinds and, for children who feel they don't know how to express themselves through speech, a tool for exploring their own voice.",
@@ -166,7 +166,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "New Year's Gardens",
     windows_type: children_wt,
-    full_name: "Suzy Karcher Rogers",
+    full_name: "Susan Kingsley Rowe",
     author_location: "Lancaster, Ohio",
     month: 1,
     year: 2003,
@@ -181,7 +181,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Feelings Collages",
     windows_type: adult_wt,
-    full_name: "Carolyn Coleman Manns",
+    full_name: "Carolina Colby Mann",
     author_location: "Laurel House, PA",
     month: 1,
     year: 2005,
@@ -198,7 +198,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Out with the Old and In with the New",
     windows_type: adult_wt,
-    full_name: "Carrie Michel-Wynne",
+    full_name: "Cari Mitchell-Wynn",
     author_location: "Alternatives for Battered Women",
     month: 1,
     year: 2006,
@@ -212,7 +212,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Inspirational Scrolls",
     windows_type: adult_wt,
-    full_name: "Anna Reyner",
+    full_name: "Annika Reyes",
     month: 8,
     year: 2008,
     description: "This workshop helps participants access their deepest feelings through the use of writing and Liquid Watercolors to create an Inspirational Scroll.",
@@ -225,7 +225,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Inner Self Portraits",
     windows_type: children_wt,
-    full_name: "Rose Curtis",
+    full_name: "Rosalind Carver",
     month: 9,
     year: 2009,
     description: "This workshop will assist older children and teens to look inside and discover more about their inner-self. We are used to looking at our outer selves, our looks, our clothes, our appearance, the image we try to portray. This workshop gives us an opportunity to go to a deeper level and get more in touch with our inner-self.",
@@ -242,7 +242,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "The Source of My Strength",
     windows_type: children_wt,
-    full_name: "Anna Reyner",
+    full_name: "Annika Reyes",
     month: 7,
     year: 2010,
     description: "This workshop is designed to engage teens in a creative exercise to identify the things about them that are strong. They will create symbols that help represent the source of their own personal strength, so that they will be able to more quickly and readily understand their strengths and access them when needed.",
@@ -269,7 +269,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Creating Joy",
     windows_type: children_wt,
-    full_name: "Anna Reyner",
+    full_name: "Annika Reyes",
     month: 8,
     year: 2013,
     description: "Participants will explore, uncover, and identify their joy through a variety of creative exercises including paint, music, and movement.",
@@ -283,7 +283,7 @@ admin_user = User.find_by(email: "umberto.user@example.com")
   {
     title: "Personal Needs Flower",
     windows_type: adult_wt,
-    full_name: "Karen Deborah Farris",
+    full_name: "Karina Devon Farrow",
     month: 4,
     year: 2014,
     description: "This workshop provides an opportunity for participants to notice their personal needs by creating a flower where each petal represents one need. They will begin to see the many layers of needs\u2014physical, emotional and spiritual\u2014and to honor all these layers.",
