@@ -17,9 +17,11 @@ module Admin
                              description: "Full-bleed frame for on-demand (self-paced) facilitator-training certificates. On-demand certificates never show signatures.",
                              builtin: "certificates/certificate-ondemand-border.png" },
       "ce_frame" => { label: "CE certificate frame",
-                      description: "Full-bleed frame for the CE Confirmation of Attendance certificate. Falls back to the default purple/gold design when empty." },
+                      description: "Full-bleed frame for the CE Confirmation of Attendance certificate. Falls back to the default purple/gold design when empty.",
+                      builtin_css: true },
       "other_frame" => { label: "Other events frame",
-                         description: "Full-bleed frame for every non-training event certificate. Falls back to the default purple/gold design when empty." },
+                         description: "Full-bleed frame for every non-training event certificate. Falls back to the default purple/gold design when empty.",
+                         builtin_css: true },
       "training_signatures" => { label: "Facilitator training signatures",
                                  description: "Signature strip shown on the live facilitator-training certificate only — not on-demand or other events." },
       "ce_signatures" => { label: "CE certificate signature",
@@ -71,6 +73,7 @@ module Admin
         label: config[:label],
         description: config[:description],
         builtin: config[:builtin],
+        builtin_css: config[:builtin_css],
         resource: resource,
         file: resource&.signature_file
       }

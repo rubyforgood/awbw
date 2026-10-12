@@ -61,6 +61,22 @@
                       class: "mx-auto max-h-16 w-auto object-contain" %>
               </div>
               <p class="mt-2 text-center text-xs text-gray-400">Built-in design — none connected</p>
+            <% elsif slot[:builtin_css] %>
+              <%# Miniature of the CSS-drawn purple/gold certificate frame used in-app
+                  when nothing is connected (see _completion_certificate / _ce_confirmation_certificate). %>
+              <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                <div class="relative mx-auto aspect-[2200/1556] h-16 overflow-hidden rounded bg-white ring-1 ring-black/5">
+                  <span class="pointer-events-none absolute inset-0 rounded border-2 border-purple-950"></span>
+                  <span class="pointer-events-none absolute inset-[3px] rounded-sm border border-amber-400"></span>
+                  <span class="pointer-events-none absolute -top-3 -left-3 h-8 w-8 rounded-full bg-gradient-to-br from-purple-700 to-purple-950 opacity-10"></span>
+                  <span class="pointer-events-none absolute -right-3 -bottom-3 h-8 w-8 rounded-full bg-gradient-to-tr from-amber-400 to-purple-700 opacity-10"></span>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center gap-[2px]">
+                    <span class="from-accent to-accent h-[3px] w-8 rounded bg-gradient-to-r via-amber-400"></span>
+                    <span class="text-[5px] font-semibold tracking-[0.2em] text-purple-800 uppercase">Certificate</span>
+                  </div>
+                </div>
+              </div>
+              <p class="mt-2 text-center text-xs text-gray-400">Built-in design — none connected</p>
             <% else %>
               <div class="flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400">
                 None connected — using built-in design
