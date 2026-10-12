@@ -336,7 +336,7 @@ RSpec.describe PersonPolicy, type: :policy do
     end
   end
 
-  describe "params_filter :index_filters" do
+  describe "params_filter(:index)" do
     let(:filters) do
       ActionController::Parameters.new(
         contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
@@ -347,7 +347,7 @@ RSpec.describe PersonPolicy, type: :policy do
 
     def index_filters_for(user)
       policy_for(record: Person, user: user)
-        .apply_scope(filters, type: :action_controller_params, name: :index_filters)
+        .apply_scope(filters, type: :action_controller_params, name: :index)
     end
 
     it "keeps every filter for an admin" do
