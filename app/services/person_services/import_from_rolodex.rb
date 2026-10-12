@@ -23,7 +23,6 @@ module PersonServices
                       "mobile" => "personal", "work" => "work", "mailing" => "mailing" }.freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
     UNKNOWN_LOCALITY = "Unknown"
-    UNKNOWN_CONTACT_TYPE = "unknown"
     STRING_LIMIT = 255
 
     attr_reader :results
@@ -134,10 +133,9 @@ module PersonServices
 
     # The archive's types map onto one set of ours, but each model declares the slice it
     # accepts — an address can be the mailing one, a phone number can't. A type we can't
-    # place is recorded as unknown, so an imported record never reads as simply untyped.
+    # place is left blank, which both models then record as unknown.
     def contact_type(value, allowed:)
-      mapped = CONTACT_TYPES[value.to_s.strip.downcase]
-      mapped.presence_in(allowed) || UNKNOWN_CONTACT_TYPE.presence_in(allowed)
+      CONTACT_TYPES[value.to_s.strip.downcase].presence_in(allowed)
     end
 
     # The house number has its own field, sometimes already repeated at the front of
