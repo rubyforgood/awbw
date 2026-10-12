@@ -425,6 +425,56 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # PORTRAIT IMAGES IN CAROUSELS
+  # ==========================================================
+  describe "portrait images in carousels" do
+    def attach_image(story, asset_factory, width:, height:)
+      asset = create(asset_factory, owner: story)
+      asset.file.attach(ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("image"), filename: "art.png", content_type: "image/png",
+        metadata: { width: width, height: height, analyzed: true }
+      ))
+    end
+
+    def carousel_slide(story)
+      Capybara.string(response.body).find(".swiper-slide", text: story.title)
+    end
+
+    it "shows a portrait story image whole over a blurred backdrop on the home carousel" do
+      story = create(:story, :published, :publicly_visible, title: "Tall artwork", story_share_carousel_position: 1)
+      attach_image(story, :primary_asset, width: 600, height: 900)
+
+      get story_shares_path
+
+      slide = carousel_slide(story)
+      expect(slide).to have_css("img.object-contain[alt='Tall artwork']")
+      expect(slide).to have_css("img.blur-2xl[aria-hidden='true']", visible: :all)
+    end
+
+    it "keeps cropping a landscape story image to fill the home carousel" do
+      story = create(:story, :published, :publicly_visible, title: "Wide artwork", story_share_carousel_position: 1)
+      attach_image(story, :primary_asset, width: 900, height: 600)
+
+      get story_shares_path
+
+      slide = carousel_slide(story)
+      expect(slide).to have_css("img.object-cover[alt='Wide artwork']")
+      expect(slide).to have_no_css("img.blur-2xl", visible: :all)
+    end
+
+    it "shows a portrait gallery image whole on the story page carousel" do
+      story = create(:story, :published, :publicly_visible)
+      attach_image(story, :gallery_asset, width: 600, height: 900)
+
+      get story_share_path(story)
+
+      slide = Capybara.string(response.body).find(".swiper-slide")
+      expect(slide).to have_css("img.object-contain\\!")
+      expect(slide).to have_css("img.blur-2xl[aria-hidden='true']", visible: :all)
+    end
+  end
+
+  # ==========================================================
   # "What others are reading" — most-read by Ahoy view count
   # ==========================================================
   describe "\"What others are reading\" section" do

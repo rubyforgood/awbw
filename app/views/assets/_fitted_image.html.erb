@@ -1,0 +1,9 @@
+<%# Fills a sized, positioned box: portrait images show whole over a blurred backdrop; others crop to cover.
+    Locals: file; alt; loading (optional). %>
+<% loading = local_assigns[:loading] %>
+<% if portrait_image?(file) %>
+  <%= render "assets/blurred_backdrop", file: file %>
+  <%= image_tag file, alt: alt, loading: loading, class: "relative h-full w-full object-contain" %>
+<% else %>
+  <%= image_tag file, alt: alt, loading: loading, class: "h-full w-full object-cover" %>
+<% end %>
