@@ -48,13 +48,12 @@ class FmArchivesController < ApplicationController
 
   TABLE_GROUPS = [
     { label: "People", icon: "👥", tables: %w[rolodexes activities ancillary_data contacts group_members groups] },
-    { label: "Organizations", icon: "🏫", tables: %w[organizations people_to_organizations] },
+    { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels services] },
     { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
-    { label: "Programs", icon: "🗂️", tables: %w[projects personnels services] },
-    { label: "Events", icon: "📆", tables: %w[events exhibited_items participants volunteers] },
+    { label: "Events", icon: "📆", tables: %w[events exhibited_items participants payments volunteers] },
     { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs] },
     { label: "Grants & funding", icon: "💰", tables: %w[funding allocations expenditures program_sponsorships reporting] },
-    { label: "Fundraising", icon: "🤝", tables: %w[campaigns donor_developers match_donations payments solicitations] },
+    { label: "Fundraising", icon: "🤝", tables: %w[campaigns donor_developers match_donations solicitations] },
     { label: "Invoicing", icon: "🧾", tables: %w[invoices line_items] },
     { label: "Art & quotes", icon: "🖼️", tables: %w[art_registries art_purchases quotations] },
     { label: "Forms & letters", icon: "📋", tables: %w[forms_lists form_fields form_letters form_submissions] },
