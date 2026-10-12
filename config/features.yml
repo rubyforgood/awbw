@@ -4177,12 +4177,12 @@
     - "A record can answer to several codes — they're shown as a comma-separated list, and each one links to its own row in the archive."
     - "The duplicate list now reads two records as a match when their codes overlap, rather than flagging them as conflicting."
 
-- name: "Carousels wrap back to the start"
+- name: "Image carousels loop back to the start"
   area: content
   display_status: user_facing
   released_on: 2026-10-12
   pr_number: 2651
   summary: >-
-    Clicking the right arrow on the last slide of a carousel now takes you back
-    to the first one instead of stopping, and the left arrow on the first slide
-    jumps to the last.
+    The image carousel on workshop variations and stories now loops: the right
+    arrow on the last image goes back to the first, and the left arrow on the
+    first image goes to the last.

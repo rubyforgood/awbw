@@ -14,8 +14,7 @@ export default class extends Controller {
   connect() {
     const defaults = {
       modules: [Navigation, Autoplay],
-      // Loop mode silently disables itself when there are too few slides; rewind wraps at any count.
-      rewind: true,
+      loop: true,
       speed: 1400,
       spaceBetween: 30,
 
