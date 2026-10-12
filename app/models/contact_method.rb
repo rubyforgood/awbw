@@ -1,5 +1,5 @@
 class ContactMethod < ApplicationRecord
-  CONTACT_TYPES = [ nil, "work", "personal" ].freeze
+  CONTACT_TYPES = [ nil, "work", "personal", "unknown" ].freeze
 
   belongs_to :contactable, polymorphic: true
   belongs_to :created_by, class_name: "User", optional: true
