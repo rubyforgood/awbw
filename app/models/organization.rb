@@ -2,7 +2,7 @@ class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
   include Communicable
   include FilemakerCoded
-  filemaker_archived_in FmProject
+  filemaker_archived_in FmProject, FmOrganization
   belongs_to :organization_status
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true

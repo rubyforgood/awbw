@@ -39,6 +39,17 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include(organization_path(organization))
     end
 
+    it "links an archived FM organization back to the portal organization carrying its code" do
+      FmOrganization.create!(fm_id: "ORG00023")
+      organization = create(:organization, filemaker_code: "ORG00023")
+      create(:organization, filemaker_code: "P00023")
+
+      get fm_archive_path("ORG00023", table: "organizations")
+
+      expect(response.body).to include(organization_path(organization))
+      expect(response.body.scan(%r{href="/organizations/\d+"}).size).to eq(1)
+    end
+
     it "omits the portal section when nothing carries the code" do
       FmRolodex.create!(fm_id: "00006")
 

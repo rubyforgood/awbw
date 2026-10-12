@@ -13,9 +13,17 @@ module FilemakerHelper
     safe_join([ "In the archive:", links ], " ") if links
   end
 
-  # An org's codes are FileMaker projects; this links the FM organization each project sits under.
+  # The FM projects among an org's codes.
+  def filemaker_project_links(organization, link_class: nil, label: nil, linked_only: false)
+    project_ids = FmProject.where(fm_id: organization.filemaker_codes).pluck(:fm_id)
+    filemaker_archive_links(project_ids, archives: [ FmProject ], link_class: link_class, label: label, linked_only: linked_only)
+  end
+
+  # The FM organizations among an org's codes, plus the one each of its projects sits under.
   def filemaker_organization_links(organization, link_class: nil, label: nil, linked_only: false)
-    fm_organization_ids = FmProject.where(fm_id: organization.filemaker_codes).filter_map { |project| project.data["OrgID"].presence }.uniq
+    codes = organization.filemaker_codes
+    parent_ids = FmProject.where(fm_id: codes).filter_map { |project| project.data["OrgID"].presence }
+    fm_organization_ids = (FmOrganization.where(fm_id: codes).pluck(:fm_id) + parent_ids).uniq
     filemaker_archive_links(fm_organization_ids, archives: [ FmOrganization ],
                                                  link_class: link_class, label: label, linked_only: linked_only)
   end

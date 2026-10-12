@@ -106,5 +106,46 @@ RSpec.describe FilemakerHelper, type: :helper do
 
       expect(html).to be_nil
     end
+
+    it "links an FM organization the org carries directly, alongside its projects' FM organizations" do
+      FmOrganization.create!(fm_id: "ORG00023")
+
+      html = helper.filemaker_organization_links(build(:organization, filemaker_code: "P2775, ORG00023"), label: "FM organization")
+
+      expect(html).to include(fm_archive_path("ORG00023", table: "organizations"))
+      expect(html).to include(fm_archive_path("ORG07206", table: "organizations"))
+    end
+
+    it "links the FM organization once when the org carries it and one of its projects sits under it" do
+      html = helper.filemaker_organization_links(build(:organization, filemaker_code: "P2775, ORG07206"), label: "FM organization")
+
+      expect(html.scan(fm_archive_path("ORG07206", table: "organizations")).size).to eq(1)
+    end
+  end
+
+  describe "#filemaker_project_links" do
+    it "links only the org's FM project codes" do
+      FmProject.create!(fm_id: "P2775")
+      FmOrganization.create!(fm_id: "ORG00023")
+
+      html = helper.filemaker_project_links(build(:organization, filemaker_code: "P2775, ORG00023"), label: "FM project", linked_only: true)
+
+      expect(html).to include(fm_archive_path("P2775", table: "projects"))
+      expect(html).not_to include("ORG00023")
+      expect(html).to include(">FM project</a>")
+    end
+  end
+
+  describe "organization codes" do
+    it "match the full code, so a bare number reaches neither a project nor an FM organization" do
+      FmProject.create!(fm_id: "P00023")
+      FmOrganization.create!(fm_id: "ORG00023")
+
+      html = helper.filemaker_code_links(build(:organization, filemaker_code: "00023, P00023, ORG00023"))
+
+      expect(html).to include(fm_archive_path("P00023", table: "projects"))
+      expect(html).to include(fm_archive_path("ORG00023", table: "organizations"))
+      expect(html).to include(%(title="No FileMaker archive record for 00023"))
+    end
   end
 end
