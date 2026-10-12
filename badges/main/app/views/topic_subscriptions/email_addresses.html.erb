@@ -34,9 +34,7 @@
       is the app's pure-CSS `peer` switch — the input must stay the first sibling. %>
   <%= form_with url: email_addresses_topic_subscriptions_path, method: :get,
         class: "mb-6 flex flex-wrap items-center gap-x-8 gap-y-3" do %>
-    <% request.query_parameters.except("include_unsubscribed", "include_registered").each do |key, value| %>
-      <%= hidden_field_tag key, value, id: nil %>
-    <% end %>
+    <%= hidden_filter_fields(request.query_parameters.except("include_unsubscribed", "include_registered")) %>
 
     <% [ [ :include_unsubscribed, @include_unsubscribed, @unsubscribed_count, "people who unsubscribed", "fa-bell-slash" ],
          [ :include_registered, @include_registered, @registered_count, "people already registered", "fa-clipboard-check" ] ].each do |name, checked, hidden_count, label, icon| %>

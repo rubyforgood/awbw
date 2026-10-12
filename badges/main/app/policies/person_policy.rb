@@ -14,6 +14,16 @@ class PersonPolicy < ApplicationPolicy
     notifications_attributes user_attributes
   ].freeze
 
+  # People-index filters only an admin may apply. The index itself is readable by
+  # any signed-in user while profiles preview, but each of these narrows the list
+  # by internal data — so a non-admin passing one by URL would learn which people
+  # carry an admin-only staff tag or subscription. The filter bar renders them
+  # behind the same admin gate the :index params_filter enforces.
+  ADMIN_ONLY_FILTERS = %i[
+    role facilitator_status membership_status
+    staff_tag_ids topic_subscription_type_id
+  ].freeze
+
   def index?
     admin? || profiles_visible_to_users?
   end
@@ -154,6 +164,13 @@ class PersonPolicy < ApplicationPolicy
   relation_scope do |relation|
     next relation if admin?
     relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
+  end
+
+  # The people index's filter params, keeping only the filters this viewer may
+  # apply. Named, because the unnamed params_filter below is the write path.
+  params_filter(:index) do |params|
+    next params if admin?
+    params.except(*ADMIN_ONLY_FILTERS)
   end
 
   params_filter do |params|

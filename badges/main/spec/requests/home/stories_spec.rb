@@ -41,5 +41,14 @@ RSpec.describe "/home/stories", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("AWBW Facilitator")
     end
+
+    it "lists featured stories newest first" do
+      create(:story, :published, :featured, title: "Older featured story", created_at: 10.days.ago)
+      create(:story, :published, :featured, title: "Newer featured story", created_at: 1.day.ago)
+
+      get home_stories_path
+
+      expect(response.body.index("Newer featured story")).to be < response.body.index("Older featured story")
+    end
   end
 end

@@ -5,7 +5,7 @@ module Home
     def index
       authorize! :home
       @stories = authorized_scope(Story.published.not_funder_only.with_author_credit
-                      .order(:title), with: HomePolicy)
+                      .order(created_at: :desc), with: HomePolicy)
                       .decorate
 
       render "home/stories/index"

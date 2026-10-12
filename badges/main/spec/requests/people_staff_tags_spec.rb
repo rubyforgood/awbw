@@ -71,7 +71,7 @@ RSpec.describe "Person staff tags", type: :request do
     it "pre-selects the clicked staff tag in the filter dropdown" do
       get people_path(staff_tag_ids: cohort_tag.id)
 
-      expect(response.body).to include('name="staff_tag_ids"')
+      expect(response.body).to include('name="staff_tag_ids[]"')
       expect(response.body).to match(/value="#{cohort_tag.id}"[^>]*\bselected\b|\bselected\b[^>]*value="#{cohort_tag.id}"/)
     end
 

@@ -335,4 +335,31 @@ RSpec.describe PersonPolicy, type: :policy do
       end
     end
   end
+
+  describe "params_filter(:index)" do
+    let(:filters) do
+      ActionController::Parameters.new(
+        contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
+        topic_subscription_type_id: [ "2" ], facilitator_status: "active",
+        membership_status: "paid"
+      )
+    end
+
+    def index_filters_for(user)
+      policy_for(record: Person, user: user)
+        .apply_scope(filters, type: :action_controller_params, name: :index)
+    end
+
+    it "keeps every filter for an admin" do
+      expect(index_filters_for(admin_user).keys).to match_array(filters.keys)
+    end
+
+    it "drops the admin-only filters for a regular user" do
+      expect(index_filters_for(regular_user).keys).to contain_exactly("contact_info")
+    end
+
+    it "drops the admin-only filters for a visitor" do
+      expect(index_filters_for(nil).keys).to contain_exactly("contact_info")
+    end
+  end
 end

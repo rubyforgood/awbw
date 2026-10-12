@@ -353,6 +353,42 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).to match(/href="[^"]*page=2[^"]*#stories"/)
     end
 
+    it "leads a sector page with the publicly featured story, even if older" do
+      newer = create(:story, :published, :publicly_visible, title: "Plain newer DV story", created_at: 1.day.ago)
+      tag_sector(newer, "Domestic Violence")
+      featured = create(:story, :published, :publicly_visible, :publicly_featured, title: "Featured older DV story", created_at: 10.days.ago)
+      tag_sector(featured, "Domestic Violence")
+
+      get story_shares_path(sector_names_all: "Domestic Violence")
+      expect(response.body.index("Featured older DV story")).to be < response.body.index("Plain newer DV story")
+    end
+
+    it "orders the cards below the sector hero newest-first, without repeating the hero" do
+      lead = create(:story, :published, :publicly_visible, :publicly_featured, title: "Featured lead DV story", created_at: 10.days.ago)
+      older_featured = create(:story, :published, :publicly_visible, :publicly_featured, title: "Featured older DV story", created_at: 20.days.ago)
+      newest = create(:story, :published, :publicly_visible, title: "Plain newest DV story", created_at: 1.day.ago)
+      [ lead, older_featured, newest ].each { |story| tag_sector(story, "Domestic Violence") }
+
+      get story_shares_path(sector_names_all: "Domestic Violence")
+      body = response.body
+      expect(body.index("Featured lead DV story")).to be < body.index("Plain newest DV story")
+      expect(body.index("Plain newest DV story")).to be < body.index("Featured older DV story")
+      expect(body.scan(%r{href="#{story_share_path(lead)}"}).size).to eq(1)
+    end
+
+    it "shows the hero only on the first browse page" do
+      create(:story, :published, :publicly_visible, :publicly_featured, title: "Featured lead housing story", created_at: 10.days.ago)
+        .tap { |story| tag_sector(story, "Housing") }
+      create(:story, :published, :publicly_visible, title: "Plain newest housing story", created_at: 1.day.ago)
+        .tap { |story| tag_sector(story, "Housing") }
+      create(:story, :published, :publicly_visible, title: "Plain older housing story", created_at: 5.days.ago)
+        .tap { |story| tag_sector(story, "Housing") }
+
+      get story_shares_path(sector_names_all: "Housing", number_of_items_per_page: 1, page: 2)
+      expect(response.body).to include("Plain older housing story")
+      expect(response.body).not_to include("Featured lead housing story")
+    end
+
     it "aggregates non-featured sectors on the additional focus areas page" do
       featured = create(:sector, :published, name: "Featured Sector", story_share_position: 1)
       extra = create(:sector, :published, name: "Homelessness")
@@ -362,6 +398,29 @@ RSpec.describe "/story_share", type: :request do
       get story_shares_path(additional_focus_areas: true)
       expect(response.body).to include("An additional-area story")
       expect(response.body).not_to include("A featured-only story")
+    end
+  end
+
+  # ==========================================================
+  # HAND-PICKED HOME CAROUSEL
+  # ==========================================================
+  describe "hand-picked home carousel" do
+    it "shows the hand-picked story on the Story Share home page" do
+      create(:story, :published, :publicly_visible, title: "The hand-picked lead", story_share_carousel_position: 1)
+
+      get story_shares_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("The hand-picked lead")
+    end
+
+    it "still renders the carousel from featured/recent when nothing is hand-picked" do
+      create(:story, :published, :publicly_visible, :publicly_featured, title: "A publicly featured story")
+
+      get story_shares_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("A publicly featured story")
     end
   end
 
