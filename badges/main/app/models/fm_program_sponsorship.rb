@@ -25,7 +25,7 @@ class FmProgramSponsorship < ApplicationRecord
 
   FM_LINKS = {
     "FunderID" => "fm_rolodexes",
-    "FundingID" => "fm_funding",
+    "FundingID" => "fm_fundings",
     "ProgramID" => "fm_projects"
   }.freeze
 end
