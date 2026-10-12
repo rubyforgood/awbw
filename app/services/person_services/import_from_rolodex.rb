@@ -2,8 +2,9 @@ module PersonServices
   # Turns FileMaker Rolodex archive rows (FmRolodex) into people. Each row lands in
   # one outcome bucket of #results:
   #   * created          — new Person, with the row's primary address and phone
-  #   * linked           — an existing person with the same name + email gets the
-  #                        row's ID as their filemaker_code
+  #   * linked           — the person PersonMatcher finds for the row's name + email —
+  #                        which reaches their secondary and login addresses too — gets
+  #                        the row's ID as their filemaker_code
   #   * already_imported — a person already carries the row's ID
   #   * ambiguous        — a name or email collides with someone we can't safely
   #                        claim is the same person; reconcile by hand
@@ -42,8 +43,8 @@ module PersonServices
 
     def import(rolodex)
       data = rolodex.data
-      first_name = data["FirstName"].to_s.strip
-      last_name = data["LastName"].to_s.strip
+      first_name = Person.normalize_name(data["FirstName"]).to_s
+      last_name = Person.normalize_name(data["LastName"]).to_s
       label = "#{rolodex.fm_id} #{first_name} #{last_name}".squish
 
       return record(:already_imported, label) if @imported_codes.include?(rolodex.fm_id)
@@ -52,17 +53,17 @@ module PersonServices
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
 
       email, email_2 = data["EMail"].to_s.scan(EMAIL_PATTERN)
-      same_name = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
 
       if email
-        match = same_name.where("LOWER(email) = :email OR LOWER(email_2) = :email", email: email.downcase).to_a
+        match = PersonMatcher.new(email:, last_name:, first_names: [ first_name ]).matches.to_a
         return link(match.first, rolodex, label) if match.one?
         return record(:ambiguous, "#{label}: #{match.size} people share this name and email (#{ids(match)})") if match.many?
 
         others = Person.where("LOWER(email) = :email OR LOWER(email_2) = :email", email: email.downcase).to_a
         return record(:ambiguous, "#{label}: #{email} belongs to #{others.map { |p| "##{p.id} #{p.full_name}" }.join(', ')}") if others.any?
       else
-        no_email = same_name.where(email: [ nil, "" ]).to_a
+        no_email = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
+                         .where(email: [ nil, "" ]).to_a
         return record(:ambiguous, "#{label}: no email, same name as #{ids(no_email)}") if no_email.any?
       end
 

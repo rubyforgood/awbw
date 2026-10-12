@@ -112,6 +112,17 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(person.reload.filemaker_code).to eq("00008")
   end
 
+  it "links a person the archive knows by their login email" do
+    person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada.l@example.com")
+    # Bypassing the sync leaves the login address the person's own columns never got,
+    # which is the legacy shape PersonMatcher reaches.
+    person.user.update_columns(email: "ada@example.com")
+    rolodex("00040", EMail: "ada@example.com")
+
+    expect { results }.not_to change(Person, :count)
+    expect(person.reload.filemaker_code).to eq("00040")
+  end
+
   it "leaves rows whose ID a person already carries alone" do
     create(:person, filemaker_code: "00009")
     rolodex("00009")
@@ -128,7 +139,9 @@ RSpec.describe PersonServices::ImportFromRolodex do
   end
 
   it "flags a same-name match with no email to confirm it" do
-    create(:person, first_name: "Ada", last_name: "Lovelace", email: nil)
+    # A linked login would become their primary email (PersonLoginEmailSync), so the
+    # person this guards against is one with no account.
+    create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
     rolodex("00011")
 
     expect { expect(results[:ambiguous].size).to eq(1) }.not_to change(Person, :count)
