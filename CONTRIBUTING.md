@@ -61,6 +61,7 @@ Either option below will get you a working development environment. Pick whichev
    - **Windows**: Use WSL2 with Ubuntu - follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)
    - **Linux/Ubuntu**: Follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)
    - Alternative (Docker): with docker installed run `mise docker-db` to start the DB only (after cloning the repo)
+     - Then uncomment the docker `DATABASE_URL` line in `.env` (`bin/setup` creates `.env` from `.env.sample` when it's missing)
 
    **Note:** If you receive an error when connecting to the database "Access denied for user 'root'@'localhost'" you may need to [create a root user password](https://phoenixnap.com/kb/access-denied-for-user-root-localhost) (a blank password will work).
 
