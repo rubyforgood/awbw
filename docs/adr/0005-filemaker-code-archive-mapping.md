@@ -41,5 +41,6 @@ drive the archive pages' links.
 
 ## Consequences
 
-A UI link for affiliations, payments, or workshops passes the archive table above to
-`filemaker_code_links` (e.g. `archive: FmPersonnel, table: "personnels"`).
+A UI link for affiliations, payments, or workshops includes `FilemakerCoded` on the
+model and declares the archive table above (e.g. `filemaker_archived_in FmPersonnel`);
+`filemaker_code_links` reads it from there.
