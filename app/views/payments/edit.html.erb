@@ -37,20 +37,24 @@
           prompt: "Search people and organizations",
           label: "Additional designation" %>
 
-        <%= f.input :form_submission_id,
-          input_html: { class: "bg-white" },
-          label: "Form Submission ID" %>
+        <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+          <div class="pt-3">
+            <%= f.input :form_submission_id,
+              input_html: { class: "bg-white" },
+              label: "Form Submission ID" %>
+          </div>
 
-        <div class="admin-only rounded-md bg-blue-100 p-3">
-          <%= f.input :filemaker_code,
-            input_html: { class: "bg-white" },
-            label: "FileMaker code" %>
-          <%- if params[:admin] == "true" %>
-            <p class="mt-1 text-xs">
-              <%= filemaker_code_links(f.object, archive: FmPayment, table: "payments", label: "View archive",
-                                       link_class: "text-blue-600 hover:text-blue-800 underline") %>
-            </p>
-          <% end %>
+          <div class="admin-only rounded-md bg-blue-100 px-3 pt-3">
+            <%= f.input :filemaker_code,
+              input_html: { class: "bg-white" },
+              label: "FileMaker code" %>
+            <%- if params[:admin] == "true" %>
+              <p class="-mt-3 pb-3 text-xs">
+                <%= filemaker_code_links(f.object, archive: FmPayment, table: "payments", label: "View archive",
+                                         link_class: "text-blue-600 hover:text-blue-800 underline") %>
+              </p>
+            <% end %>
+          </div>
         </div>
       </div>
       <div class="action-buttons mt-8 flex justify-center gap-3">
