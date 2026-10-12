@@ -489,6 +489,18 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.reload.notes).to eq("Canonical record")
       end
 
+      it "combines both people's FileMaker codes onto the keeper" do
+        keep.update!(filemaker_code: "00006")
+        delete_rec.update!(filemaker_code: "00012")
+
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.filemaker_code).to eq("00006, 00012")
+      end
+
       # invoicee is polymorphic, so it carries no DB foreign key for the schema scan to
       # find — without Person's `has_many :invoices, as: :invoicee` the safeguard sees an
       # unhandled reference and refuses the merge outright.

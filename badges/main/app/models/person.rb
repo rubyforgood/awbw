@@ -1,6 +1,7 @@
 class Person < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable, StaffTaggable
   include Communicable
+  include FilemakerCoded
 
   pay_customer default_payment_processor: :stripe
 

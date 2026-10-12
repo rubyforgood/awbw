@@ -64,6 +64,16 @@ RSpec.describe PersonServices::DuplicateFinder do
       expect(group.reasons).to include("Same FileMaker code (FM777)")
     end
 
+    it "groups people whose FileMaker code lists overlap" do
+      a = person(first_name: "Erin", last_name: "Three", email: "e3@example.com", filemaker_code: "FM777")
+      b = person(first_name: "Erin", last_name: "Four", email: "e4@example.com", filemaker_code: "FM888, FM777")
+
+      group = described_class.new.groups.first
+
+      expect(group.records).to contain_exactly(a, b)
+      expect(group.reasons).to include("Same FileMaker code (FM777)")
+    end
+
     it "flags different FileMaker codes on records grouped by another signal as a caution" do
       person(first_name: "Fay", last_name: "Nguyen", email: "fay@example.com", filemaker_code: "FM1")
       person(first_name: "Fay", last_name: "Nguyen", email: "fay2@example.com", filemaker_code: "FM2")
