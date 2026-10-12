@@ -285,6 +285,12 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include("group-hover:block")
         expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:publicly_visible][:description])
       end
+
+      it "tells the editor which image shape looks best" do
+        get edit_story_url(private_story)
+
+        expect(response.body).to include(CGI.escapeHTML(StorySharesHelper::STORY_IMAGE_GUIDANCE))
+      end
     end
 
     describe "POST /create" do

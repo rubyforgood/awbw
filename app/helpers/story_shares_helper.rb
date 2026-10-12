@@ -13,6 +13,12 @@ module StorySharesHelper
   ].freeze
   SPOTLIGHT_THEME = { heading: "text-purple-700", link: "text-purple-700 hover:underline", overlay: "bg-purple-700/80", chip: "bg-purple-700" }.freeze
 
+  STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
+  STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
+  STORY_IMAGE_GUIDANCE = "Images look best as landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. " \
+    "A recent phone photo taken sideways works well. Tall images show in full on a blurred background. " \
+    "Some spots trim the edges, so keep the main subject near the center.".freeze
+
   def story_share_slot_theme(index)
     SLOT_THEMES[index % SLOT_THEMES.size]
   end

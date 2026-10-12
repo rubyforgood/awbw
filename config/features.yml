@@ -4374,3 +4374,17 @@
   pro_tips:
     - "Long lists show the first 10; click \"Show more\" for the rest."
     - "A struck-through ID in the list means the archive has no record for it."
+
+- name: "Story images share one standard shape"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-12
+  pr_number: 2654
+  action_path: "/story_share"
+  summary: >-
+    Story Share cards and images now use one standard 3:2 shape, and the
+    image upload on stories and story ideas says which photos look best.
+  pro_tips:
+    - "For the best fit, upload landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. A recent phone photo taken sideways works well."
+    - "Wide banners at the top of the home and browse pages trim a little off the top and bottom, so keep the main subject near the center."
+    - "Tall photos and artwork still show in full on a blurred background."
