@@ -60,8 +60,12 @@ module PersonServices
     end
 
     def filemaker_reasons(records)
-      codes = records.filter_map { |person| person.filemaker_code.presence }.uniq.sort
+      code_sets = records.map(&:filemaker_codes)
+      codes = code_sets.flatten.uniq.sort
       return [] if codes.empty?
+
+      shared = codes.select { |code| code_sets.count { |set| set.include?(code) } > 1 }
+      return [ "Same FileMaker code (#{shared.join(", ")})" ] if shared.any?
       return [ "⚠ Different FileMaker codes (#{codes.join(", ")}) — verify these are the same person" ] if codes.size > 1
 
       [ "Same FileMaker code (#{codes.first})" ]
@@ -91,8 +95,7 @@ module PersonServices
     end
 
     def filemaker_key(person)
-      code = person.filemaker_code.to_s.strip.downcase
-      "fm|#{code}" if code.present?
+      person.filemaker_codes.map { |code| "fm|#{code.downcase}" }
     end
 
     def dob_key(person)

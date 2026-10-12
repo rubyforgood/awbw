@@ -377,6 +377,7 @@ class PeopleController < ApplicationController
         first_name legal_first_name last_name email email_type email_2 email_2_type
         date_of_birth pronouns filemaker_code member_since notes
       ],
+      union_columns: %w[filemaker_code],
       # Merging two people who each have a login leaves the kept person with both
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
@@ -397,6 +398,7 @@ class PeopleController < ApplicationController
       # they become indistinguishable), capture which primary sector + age range to
       # keep: the survivor's own, or — when it has none — the deleted person's.
       merge_keeper: ->(keep, delete) {
+        keep.filemaker_code = Person.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
         @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id ||
           delete.sectorable_items.find_by(is_primary: true)&.sector_id
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
