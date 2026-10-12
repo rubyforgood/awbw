@@ -31,7 +31,8 @@ module PersonServices
     def initialize(scope: FmRolodex.all)
       @scope = scope
       @results = OUTCOMES.index_with { [] }
-      @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code).map(&:strip).to_set
+      @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
+                              .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
     end
 
     def call
