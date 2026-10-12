@@ -110,14 +110,14 @@
   summary: >-
     The Story Share home now has audience columns (Children, Adults, …) next to the
     focus-area sectors and Facilitator Spotlights, so visitors can jump to stories by age
-    group. Admins pick which sectors and audiences appear with the new "Home highlight" toggle.
+    group. Admins pick which sectors and audiences appear with the new "Home highlight card" toggle.
   action_path: "/story_share"
   description: >-
     Admins control the home grid from the Story Share admin page. Each featured sector
-    and audience has a "Home highlight" dropdown; the ones set to "Home highlight" get a column in the
+    and audience has a "Home highlight card" dropdown; the ones set to "Home highlight card" get a highlight card in the
     portal home grid, shown in the same order as the nav.
   pro_tips:
-    - "A sector or audience can stay in the nav without getting a column in the home grid — just set its \"Home highlight\" dropdown to \"Not highlighted\"."
+    - "A sector or audience can stay in the nav without getting a highlight card on the Story Share home — just set its \"Home highlight card\" dropdown to \"No highlight card\"."
     - "Home sections follow the nav order, so drag to reorder once and both update."
 
 - name: "Credit a second author on a story idea"
