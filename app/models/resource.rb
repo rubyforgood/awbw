@@ -15,7 +15,7 @@ class Resource < ApplicationRecord
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
   # Each certificate "slot" is filled by connecting a library Resource on the admin
-  # certificate-settings page, recorded as its certificate_role (unique). The art
+  # certificate-settings page, recorded as its certificate_artwork_role (unique). The art
   # lives on a normal Resource (never committed to this public repo) and is embedded
   # via a signed, same-origin URL. A legacy title (below) is the fallback for
   # records created before the connect UI, so nothing needs re-connecting to keep
@@ -42,7 +42,7 @@ class Resource < ApplicationRecord
   # The Resource connected to a certificate slot — the one holding this role, else
   # the legacy title-matched record (pre-connect-UI). Nil when neither exists.
   def self.certificate_artwork(role, legacy_title = nil)
-    find_by(certificate_role: role) || (legacy_title && find_by(title: legacy_title))
+    find_by(certificate_artwork_role: role) || (legacy_title && find_by(title: legacy_title))
   end
 
   # The signature strip / frame image for each slot, or nil when nothing is
@@ -117,12 +117,12 @@ class Resource < ApplicationRecord
 
   # Blank out to nil so the unique index treats "not connected" as NULL (MySQL
   # allows many NULLs) rather than a shared empty string.
-  normalizes :certificate_role, with: ->(value) { value.presence }
+  normalizes :certificate_artwork_role, with: ->(value) { value.presence }
 
   # Validations
   validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :kind, presence: true
-  validates :certificate_role, inclusion: { in: CERTIFICATE_ROLES }, allow_nil: true
+  validates :certificate_artwork_role, inclusion: { in: CERTIFICATE_ROLES }, allow_nil: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true

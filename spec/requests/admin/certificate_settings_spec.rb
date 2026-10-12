@@ -34,8 +34,16 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       expect(response.body).to include("certificate-training-border")
     end
 
+    it "reflects a resource auto-matched by its exact legacy title" do
+      create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:training])
+
+      get admin_certificate_settings_path
+
+      expect(response.body).to include("Auto-matched by title")
+    end
+
     it "previews the connected resource and offers reconnect" do
-      resource = create(:resource, title: "Training frame art", certificate_role: "training_frame")
+      resource = create(:resource, title: "Training frame art", certificate_artwork_role: "training_frame")
       create(:primary_asset, :with_file, owner: resource)
 
       get admin_certificate_settings_path
@@ -55,7 +63,7 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
 
       expect(response).to redirect_to(admin_certificate_settings_path)
       expect(response).to have_http_status(:see_other)
-      expect(resource.reload.certificate_role).to eq("training_frame")
+      expect(resource.reload.certificate_artwork_role).to eq("training_frame")
     end
 
     it "connects a resource to the CE frame slot" do
@@ -63,7 +71,7 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
 
       patch admin_certificate_settings_path, params: { slot: "ce_frame", resource_id: resource.id }
 
-      expect(resource.reload.certificate_role).to eq("ce_frame")
+      expect(resource.reload.certificate_artwork_role).to eq("ce_frame")
     end
 
     it "connects the signature strips to their own slots" do
@@ -73,28 +81,28 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       patch admin_certificate_settings_path, params: { slot: "training_signatures", resource_id: training.id }
       patch admin_certificate_settings_path, params: { slot: "ce_signatures", resource_id: ce.id }
 
-      expect(training.reload.certificate_role).to eq("training_signatures")
-      expect(ce.reload.certificate_role).to eq("ce_signatures")
+      expect(training.reload.certificate_artwork_role).to eq("training_signatures")
+      expect(ce.reload.certificate_artwork_role).to eq("ce_signatures")
     end
 
     it "clears the previous holder when reassigning a slot" do
-      old = create(:resource, certificate_role: "other_frame")
+      old = create(:resource, certificate_artwork_role: "other_frame")
       new_resource = create(:resource)
 
       patch admin_certificate_settings_path, params: { slot: "other_frame", resource_id: new_resource.id }
 
-      expect(old.reload.certificate_role).to be_nil
-      expect(new_resource.reload.certificate_role).to eq("other_frame")
+      expect(old.reload.certificate_artwork_role).to be_nil
+      expect(new_resource.reload.certificate_artwork_role).to eq("other_frame")
     end
 
     it "disconnects a slot" do
-      resource = create(:resource, certificate_role: "other_frame")
+      resource = create(:resource, certificate_artwork_role: "other_frame")
 
       patch admin_certificate_settings_path, params: { slot: "other_frame", remove: "1" }
 
       expect(response).to redirect_to(admin_certificate_settings_path)
       expect(response).to have_http_status(:see_other)
-      expect(resource.reload.certificate_role).to be_nil
+      expect(resource.reload.certificate_artwork_role).to be_nil
     end
 
     it "rejects an unknown slot rather than erroring" do
@@ -104,7 +112,7 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
 
       expect(response).to redirect_to(admin_certificate_settings_path)
       expect(flash[:alert]).to eq("Unknown setting.")
-      expect(resource.reload.certificate_role).to be_nil
+      expect(resource.reload.certificate_artwork_role).to be_nil
     end
 
     it "asks for a resource when none is chosen" do
@@ -130,7 +138,7 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       patch admin_certificate_settings_path, params: { slot: "training_frame", resource_id: resource.id }
 
       expect(response).not_to have_http_status(:ok)
-      expect(resource.reload.certificate_role).to be_nil
+      expect(resource.reload.certificate_artwork_role).to be_nil
     end
   end
 end

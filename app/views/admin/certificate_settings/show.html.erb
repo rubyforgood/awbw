@@ -35,7 +35,7 @@
                   <% end %>
                 </select>
               </div>
-              <%= submit_tag slot[:resource] ? "Reconnect" : "Connect", class: "shrink-0 #{button_classes(:primary, size: :sm)}" %>
+              <%= submit_tag slot[:connected] ? "Reconnect" : "Connect", class: "shrink-0 #{button_classes(:primary, size: :sm)}" %>
             <% end %>
 
             <p class="mt-2 text-xs text-gray-400">
@@ -61,9 +61,9 @@
                 </div>
               </div>
               <p class="mt-2 text-center text-xs text-gray-400">
-                <%= slot[:resource] ? "Connected preview" : "Built-in design — none connected" %>
+                <% if slot[:connected] %>Connected preview<% elsif slot[:resource] %>Auto-matched by title<% else %>Built-in design — none connected<% end %>
               </p>
-              <% if slot[:resource] %>
+              <% if slot[:connected] %>
                 <%= button_to "Disconnect", admin_certificate_settings_path, method: :patch,
                       params: { slot: slot[:role], remove: "1" },
                       class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
@@ -76,14 +76,19 @@
                         class: "mx-auto max-h-16 w-auto object-contain" %>
                 <% else %>
                   <p class="py-6 text-center text-xs text-amber-700">
-                    Connected to “<%= slot[:resource].title %>”, but it has no previewable image attached.
+                    “<%= slot[:resource].title %>” has no previewable image attached.
                   </p>
                 <% end %>
               </div>
-              <%= button_to "Disconnect", admin_certificate_settings_path, method: :patch,
-                    params: { slot: slot[:role], remove: "1" },
-                    class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
-                    form: { data: { turbo_confirm: "Disconnect the #{slot[:label].downcase}? Certificates will use the built-in design until you connect another." } } %>
+              <p class="mt-2 text-center text-xs text-gray-400">
+                <%= slot[:connected] ? "Connected" : "Auto-matched by title" %>
+              </p>
+              <% if slot[:connected] %>
+                <%= button_to "Disconnect", admin_certificate_settings_path, method: :patch,
+                      params: { slot: slot[:role], remove: "1" },
+                      class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
+                      form: { data: { turbo_confirm: "Disconnect the #{slot[:label].downcase}? Certificates will use the built-in design until you connect another." } } %>
+              <% end %>
             <% else %>
               <div class="flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400">
                 No default signature — blank until connected

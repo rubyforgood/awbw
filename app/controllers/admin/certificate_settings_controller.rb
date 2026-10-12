@@ -4,7 +4,7 @@ module Admin
   # on-demand, CE, and other-events certificates, plus the facilitator-training
   # and CE signature strips. The connected Resource is the global default the
   # certificate reads (a frame overrides the committed/default design; a signature
-  # fills the signature line). The connection is stored on resources.certificate_role,
+  # fills the signature line). The connection is stored on resources.certificate_artwork_role,
   # so the artwork lives on normal Resources rather than committed to this public
   # repo, served via a signed same-origin proxy on the certificate page.
   class CertificateSettingsController < ApplicationController
@@ -64,20 +64,24 @@ module Admin
     # then stamp the chosen one.
     def connect(resource, role)
       Resource.transaction do
-        Resource.where(certificate_role: role).where.not(id: resource.id).find_each do |held|
-          held.update!(certificate_role: nil)
+        Resource.where(certificate_artwork_role: role).where.not(id: resource.id).find_each do |held|
+          held.update!(certificate_artwork_role: nil)
         end
-        resource.update!(certificate_role: role)
+        resource.update!(certificate_artwork_role: role)
       end
     end
 
     def disconnect(role, config)
-      Resource.where(certificate_role: role).find_each { |held| held.update!(certificate_role: nil) }
+      Resource.where(certificate_artwork_role: role).find_each { |held| held.update!(certificate_artwork_role: nil) }
       redirect_to admin_certificate_settings_path, notice: "#{config[:label]} disconnected.", status: :see_other
     end
 
     def slot_view(role, config)
-      resource = Resource.find_by(certificate_role: role)
+      # Mirror the certificate's own resolution: a resource connected by role, else
+      # one auto-matched by the legacy exact title. Only a role-connected resource
+      # can be disconnected (a title match has no role to clear).
+      connected = Resource.find_by(certificate_artwork_role: role)
+      resource = connected || Resource.find_by(title: config[:title])
       {
         role: role,
         label: config[:label],
@@ -85,6 +89,7 @@ module Admin
         title: config[:title],
         preview_partial: config[:preview_partial],
         resource: resource,
+        connected: connected.present?,
         file: resource&.signature_file
       }
     end

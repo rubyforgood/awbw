@@ -1944,9 +1944,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_160225) do
     t.string "url"
     t.integer "windows_type_id"
     t.integer "workshop_id"
-    t.string "certificate_role"
+    t.string "certificate_artwork_role"
     t.index ["author_id"], name: "index_resources_on_author_id"
-    t.index ["certificate_role"], name: "index_resources_on_certificate_role", unique: true
+    t.index ["certificate_artwork_role"], name: "index_resources_on_certificate_artwork_role", unique: true
     t.index ["created_by_id"], name: "index_resources_on_created_by_id"
     t.index ["organization_id"], name: "index_resources_on_organization_id"
     t.index ["published"], name: "index_resources_on_published"
