@@ -1,8 +1,8 @@
 # FileMaker archive seeds (dev-only) - run on their own via `rake db:seed:fm_archive`,
 # or as part of `rake db:seed:dev`. Three fake rows per archive table: rows 1-2 point
 # at each other, row 3 carries IDs the archive has no row for, as the real export does.
-# Then the alphabetically-first people, organizations, their affiliations, payments,
-# resources and workshops (when seeded) get FileMaker codes — some resolve, some don't.
+# Then the alphabetically-first people, organizations, their affiliations, payments and
+# workshops (when seeded) get FileMaker codes — some resolve, some don't (see ADR-0005).
 
 puts "Creating FileMaker archive records…"
 
@@ -67,11 +67,9 @@ affiliations = Affiliation.joins(:person).where(person: people).or(Affiliation.j
                           .order("people.first_name, people.last_name, affiliations.id").first(3)
 payments = (Payment.where(person: people).or(Payment.where(organization: organizations)).order(:id).first(3) +
             Payment.order(:id).limit(3)).uniq.first(3)
-resources = Resource.order(:title).first(3)
 workshops = Workshop.order(:title).first(3)
 
 workshop_titles = [ workshops[0]&.title || "Comfort Journals", workshops[1]&.title || "Watercolor Windows", "Story Dolls" ]
-letter_names = [ resources[0]&.title || "Donation thank you", resources[1]&.title || "Training confirmation", "Lapsed donor appeal" ]
 payment_amounts = [ payments[0], payments[1] ].map { |payment| payment && format("%.2f", payment.amount_cents / 100.0) }
 payment_amounts = [ payment_amounts[0] || "150.00", payment_amounts[1] || "500.00", "75.00" ]
 
@@ -530,7 +528,7 @@ end
 seed_fm FmFormLetter, fm_ids[:form_letter] do |i|
   {
     "SignatureID" => fm_ref[:rolodex, i],
-    "DocumentName" => letter_names[i],
+    "DocumentName" => [ "Donation thank you", "Training confirmation", "Lapsed donor appeal" ][i],
     "DocumentText" => [ "Thank you for your generous gift.", "We're excited to see you at training.", "We miss you!" ][i],
     "Type" => %w[Acknowledgment Confirmation Appeal][i],
     "Pages" => "1",
@@ -730,5 +728,4 @@ link_codes.call(people, fm_ids[:rolodex])
 link_codes.call(organizations, fm_ids[:project])
 link_codes.call(affiliations, fm_ids[:personnel])
 link_codes.call(payments, fm_ids[:payment])
-link_codes.call(resources, fm_ids[:form_letter])
 link_codes.call(workshops, fm_ids[:workshop])
