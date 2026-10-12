@@ -74,7 +74,6 @@ class FeaturesController < ApplicationController
     else
       "You're all caught up — no new updates."
     end
-    notice += " Kept #{result.skipped} edited in-app #{'feature'.pluralize(result.skipped)} as-is." if result.skipped.positive?
     redirect_to features_path, notice: notice
   end
 

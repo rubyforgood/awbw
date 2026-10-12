@@ -61,22 +61,6 @@ RSpec.describe Feature, type: :model do
     end
   end
 
-  describe "#edited?" do
-    it "is false for a feature saved once" do
-      expect(create(:feature)).not_to be_edited
-    end
-
-    it "is false when its description touched it right after creation" do
-      feature = create(:feature, created_at: 1.day.ago, updated_at: 1.day.ago + 1.second)
-      expect(feature).not_to be_edited
-    end
-
-    it "is true once it has been saved again later" do
-      feature = create(:feature, created_at: 2.days.ago, updated_at: 1.day.ago)
-      expect(feature).to be_edited
-    end
-  end
-
   describe "scopes" do
     let!(:published)   { create(:feature, released_on: Date.new(2026, 1, 1)) }
     let!(:unpublished) { create(:feature, :unpublished, released_on: Date.new(2026, 6, 1)) }

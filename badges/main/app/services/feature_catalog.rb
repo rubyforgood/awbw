@@ -2,7 +2,7 @@ require "yaml"
 
 # Syncs config/features.yml into the DB behind /features. `import!` creates
 # missing features, re-syncs CATALOG_FIELDS from the seed, and only fills BLANK
-# CONTENT_FIELDS. A feature edited in-app (Feature#edited?) is left entirely alone.
+# CONTENT_FIELDS — so seed fixes propagate without clobbering admin writing.
 class FeatureCatalog
   DATA_PATH = Rails.root.join("config/features.yml")
 
@@ -12,7 +12,7 @@ class FeatureCatalog
   # Only filled when blank; never overwritten.
   CONTENT_FIELDS = %i[ summary pro_tips external_url rhino_description ].freeze
 
-  Result = Struct.new(:created, :updated, :skipped) do
+  Result = Struct.new(:created, :updated) do
     def total = created + updated
     def any? = total.positive?
   end
@@ -24,28 +24,19 @@ class FeatureCatalog
   def import!
     created = 0
     updated = 0
-    skipped = 0
-    # Sync writes leave updated_at alone so they never register as an in-app edit.
-    Feature.no_touching do
-      entries.each do |entry|
-        attributes = attributes_for(entry)
-        feature = Feature.find_by(name: attributes[:name])
+    entries.each do |entry|
+      attributes = attributes_for(entry)
+      feature = Feature.find_by(name: attributes[:name])
 
-        if feature.nil?
-          Feature.create!(attributes)
-          created += 1
-        elsif (changes = sync_changes(feature, attributes)).none?
-          next
-        elsif feature.edited?
-          skipped += 1
-        else
-          feature.assign_attributes(changes)
-          feature.save!(touch: false)
-          updated += 1
-        end
+      if feature.nil?
+        Feature.create!(attributes)
+        created += 1
+      elsif (changes = sync_changes(feature, attributes)).any?
+        feature.update!(changes)
+        updated += 1
       end
     end
-    Result.new(created, updated, skipped)
+    Result.new(created, updated)
   end
 
   def entries

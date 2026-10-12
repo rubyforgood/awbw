@@ -93,32 +93,6 @@ RSpec.describe FeatureCatalog do
       )
     end
 
-    it "leaves a feature edited in-app untouched, even blank fields and drifted classification" do
-      existing = create(:feature, name: "Seed feature one", area: "reporting", external_url: nil,
-                                  created_at: 2.days.ago, updated_at: 1.day.ago)
-
-      result = catalog.import!
-
-      expect(result.updated).to eq(0)
-      expect(result.skipped).to eq(1)
-      expect(existing.reload).to have_attributes(area: "reporting", external_url: nil)
-    end
-
-    it "does not count its own sync as an in-app edit" do
-      existing = create(:feature, name: "Seed feature one", area: "reporting", external_url: nil,
-                                  created_at: 2.days.ago, updated_at: 2.days.ago)
-
-      catalog.import!
-
-      expect(existing.reload).not_to be_edited
-    end
-
-    it "does not count a seeded description as an in-app edit" do
-      catalog.import!
-
-      expect(Feature.find_by(name: "Seed feature one")).not_to be_edited
-    end
-
     it "is a no-op on a second run" do
       catalog.import!
       expect { catalog.import! }.not_to change(Feature, :count)

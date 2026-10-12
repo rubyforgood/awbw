@@ -4126,16 +4126,3 @@
     kept as the secondary email, so registrations still recognize the person by it.
   pro_tips:
     - "If the secondary email already holds a different address, the replaced one is saved as a comment on the person instead."
-
-- name: "Syncing features & tips keeps your edits"
-  area: reporting
-  display_status: admin_facing
-  released_on: 2026-10-12
-  pr_number: 2640
-  action_path: "/features"
-  summary: >-
-    Sync features & tips on the admin home no longer changes a feature you've
-    edited in the portal. It still adds newly shipped features and fills in
-    details on ones nobody has touched.
-  pro_tips:
-    - "After syncing, the message tells you how many edited features were kept as-is."
