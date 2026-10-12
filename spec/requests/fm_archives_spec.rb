@@ -24,6 +24,23 @@ RSpec.describe "FM archives", type: :request do
 
       expect(response.body).to include(fm_archive_path("FND1", table: "fundings"))
     end
+
+    it "renders each group with its tables" do
+      get fm_archives_path
+
+      expect(response).to have_http_status(:ok)
+      FmArchivesController::TABLE_GROUPS.each do |group|
+        expect(response.body).to include(CGI.escapeHTML(group[:label]))
+      end
+      expect(response.body).to include("People to organizations")
+    end
+
+    it "marks the selected table as the current page" do
+      get fm_archives_path(table: "rolodexes")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to match(/aria-current="page"[^>]*>Rolodex</)
+    end
   end
 
   describe "table references" do
@@ -43,6 +60,12 @@ RSpec.describe "FM archives", type: :request do
       end
 
       expect(targets.reject { |_, target| table_names.include?(target) }).to be_empty
+    end
+
+    it "lists every archive table in exactly one group" do
+      grouped = FmArchivesController::TABLE_GROUPS.flat_map { |group| group[:tables] }
+
+      expect(grouped).to match_array(tables.keys)
     end
   end
 end
