@@ -99,7 +99,7 @@ RSpec.describe Person, type: :model do
     end
 
     it "handles nil values" do
-      person = create(:person, first_name: "Jane", last_name: "Doe",
+      person = create(:person, user: nil, first_name: "Jane", last_name: "Doe",
                        email: nil, email_2: nil,
                        created_by: admin, updated_by: admin)
       expect(person.email).to be_nil
@@ -157,15 +157,15 @@ RSpec.describe Person, type: :model do
       end
 
       it "allows same email with different name" do
-        create(:person, first_name: "Jane", last_name: "Doe", email: "jane@test.org",
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: "jane@test.org",
                created_by: admin, updated_by: admin)
-        different_name = build(:person, first_name: "John", last_name: "Smith", email: "jane@test.org",
+        different_name = build(:person, user: nil, first_name: "John", last_name: "Smith", email: "jane@test.org",
                                created_by: admin, updated_by: admin)
         expect(different_name).to be_valid
       end
 
       it "treats blank and nil emails as equivalent" do
-        create(:person, first_name: "Jane", last_name: "Doe", email: nil,
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil,
                created_by: admin, updated_by: admin)
         duplicate = build(:person, first_name: "Jane", last_name: "Doe", email: "",
                           created_by: admin, updated_by: admin)

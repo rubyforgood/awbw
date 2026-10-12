@@ -36,7 +36,7 @@ RSpec.describe "Public form submissions", type: :system do
   let!(:sector_mental_health) { create(:sector, :published, name: "Mental Health") }
   let!(:sector_dv) { create(:sector, :published, name: "Domestic Violence") }
 
-  let(:user) { create(:user) }
+  let(:user) { create(:user, email: "dana.lee@example.com") }
   # A returning registrant whose name, email, primary address, and phone are on
   # file — so the logged_out_only identity / mailing / phone fields are hidden when
   # signed in, leaving the always-ask + answers-on-file questions to fill.
