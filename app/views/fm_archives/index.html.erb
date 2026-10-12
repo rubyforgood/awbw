@@ -2,13 +2,24 @@
 <div class="border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="space-y-6">
     <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-primary font-display text-2xl font-semibold">FileMaker Archive</h1>
+      <h1 class="text-primary font-display text-2xl font-semibold">FileMaker archive</h1>
     </div>
 
-    <div class="flex flex-wrap gap-2">
-      <% @tables.each do |key, config| %>
-        <%= link_to config[:label], fm_archives_path(table: key),
-              class: button_classes(key == @selected ? :primary : :primary_outline) %>
+    <div class="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
+      <% @table_groups.each do |group| %>
+        <section class="mb-4 break-inside-avoid rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
+            <span aria-hidden="true"><%= group[:icon] %></span>
+            <%= group[:label] %>
+          </h2>
+          <div class="flex flex-wrap gap-2">
+            <% group[:tables].each do |key| %>
+              <%= link_to @tables.dig(key, :label), fm_archives_path(table: key),
+                    class: button_classes(key == @selected ? :primary : :primary_outline, size: :sm),
+                    aria: { current: (key == @selected ? "page" : nil) } %>
+            <% end %>
+          </div>
+        </section>
       <% end %>
     </div>
 
