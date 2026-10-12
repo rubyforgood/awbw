@@ -45,8 +45,31 @@
             </p>
           </div>
 
-          <div class="sm:w-56 sm:shrink-0">
-            <% if slot[:resource] %>
+          <div class="sm:w-60 sm:shrink-0">
+            <% if slot[:preview_partial] %>
+              <%# A true miniature of the final certificate: the real partial rendered
+                  at full size, scaled down by transform so the committed-PNG and
+                  CSS-drawn frames both read accurately. frame_file is the connected
+                  upload (else nil → the built-in design). %>
+              <div class="mx-auto h-[136px] w-[192px] overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div class="w-[1024px] origin-top-left scale-[0.1875]">
+                  <%= render slot[:preview_partial],
+                        event: @preview_event, recipient: @preview_recipient,
+                        frame_file: slot[:file], signature_file: nil,
+                        license_label: "LMFT 00000", hours_label: 6,
+                        facilitator_names: [ "Sample Facilitator" ], issued_on: Date.current %>
+                </div>
+              </div>
+              <p class="mt-2 text-center text-xs text-gray-400">
+                <%= slot[:resource] ? "Connected preview" : "Built-in design — none connected" %>
+              </p>
+              <% if slot[:resource] %>
+                <%= button_to "Disconnect", admin_certificate_settings_path, method: :patch,
+                      params: { slot: slot[:role], remove: "1" },
+                      class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
+                      form: { data: { turbo_confirm: "Disconnect the #{slot[:label].downcase}? Certificates will use the built-in design until you connect another." } } %>
+              <% end %>
+            <% elsif slot[:resource] %>
               <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
                 <% if slot[:file]&.variable? %>
                   <%= image_tag slot[:file].variant(:card), alt: "#{slot[:label]} preview",
@@ -61,31 +84,9 @@
                     params: { slot: slot[:role], remove: "1" },
                     class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
                     form: { data: { turbo_confirm: "Disconnect the #{slot[:label].downcase}? Certificates will use the built-in design until you connect another." } } %>
-            <% elsif slot[:builtin] %>
-              <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
-                <%= image_tag slot[:builtin], alt: "#{slot[:label]} built-in design",
-                      class: "mx-auto max-h-16 w-auto object-contain" %>
-              </div>
-              <p class="mt-2 text-center text-xs text-gray-400">Built-in design — none connected</p>
-            <% elsif slot[:builtin_css] %>
-              <%# Miniature of the CSS-drawn purple/gold certificate frame used in-app
-                  when nothing is connected (see _completion_certificate / _ce_confirmation_certificate). %>
-              <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
-                <div class="relative mx-auto aspect-[2200/1556] h-16 overflow-hidden rounded bg-white ring-1 ring-black/5">
-                  <span class="pointer-events-none absolute inset-0 rounded border-2 border-purple-950"></span>
-                  <span class="pointer-events-none absolute inset-[3px] rounded-sm border border-amber-400"></span>
-                  <span class="pointer-events-none absolute -top-3 -left-3 h-8 w-8 rounded-full bg-gradient-to-br from-purple-700 to-purple-950 opacity-10"></span>
-                  <span class="pointer-events-none absolute -right-3 -bottom-3 h-8 w-8 rounded-full bg-gradient-to-tr from-amber-400 to-purple-700 opacity-10"></span>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center gap-[2px]">
-                    <span class="from-accent to-accent h-[3px] w-8 rounded bg-gradient-to-r via-amber-400"></span>
-                    <span class="text-[5px] font-semibold tracking-[0.2em] text-purple-800 uppercase">Certificate</span>
-                  </div>
-                </div>
-              </div>
-              <p class="mt-2 text-center text-xs text-gray-400">Built-in design — none connected</p>
             <% else %>
               <div class="flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400">
-                None connected — using built-in design
+                No default signature — blank until connected
               </div>
             <% end %>
           </div>

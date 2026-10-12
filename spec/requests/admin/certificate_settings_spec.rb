@@ -26,6 +26,14 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       expect(response.body).to include(Resource::CERTIFICATE_FRAME_TITLES[:training])
     end
 
+    it "renders a live mini-preview of the final certificate with sample content" do
+      get admin_certificate_settings_path
+
+      expect(response.body).to include("Jordan Rivera")
+      expect(response.body).to include("Spring Facilitator Training")
+      expect(response.body).to include("certificate-training-border")
+    end
+
     it "previews the connected resource and offers reconnect" do
       resource = create(:resource, title: "Training frame art", certificate_role: "training_frame")
       create(:primary_asset, :with_file, owner: resource)
