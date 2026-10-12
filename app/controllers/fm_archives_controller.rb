@@ -48,16 +48,16 @@ class FmArchivesController < ApplicationController
 
   TABLE_GROUPS = [
     { label: "People", icon: "👥", tables: %w[rolodexes activities ancillary_data contacts group_members groups] },
-    { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects personnels services] },
+    { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects expenditures personnels services] },
     { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
     { label: "Events", icon: "📆", tables: %w[events exhibited_items participants volunteers] },
-    { label: "Payments", icon: "💳", tables: %w[payments] },
+    { label: "Payments", icon: "💳", tables: %w[payments match_donations] },
     { label: "Invoicing", icon: "🧾", tables: %w[invoices line_items] },
     { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs] },
     { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases] },
     { label: "Quotes", icon: "💬", tables: %w[quotations] },
-    { label: "Fundraising", icon: "🤝", tables: %w[campaigns donor_developers match_donations solicitations] },
-    { label: "Grants & funding", icon: "💰", tables: %w[funding allocations expenditures program_sponsorships reporting] },
+    { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] },
+    { label: "Grants & funding", icon: "💰", tables: %w[funding allocations program_sponsorships reporting] },
     { label: "Forms & letters", icon: "📋", tables: %w[forms_lists form_fields form_letters form_submissions] },
     { label: "Committees", icon: "🏛️", tables: %w[committees committee_meetings committee_members] },
     { label: "Other", icon: "📎", tables: %w[notes] }

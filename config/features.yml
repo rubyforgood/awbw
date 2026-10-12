@@ -4219,5 +4219,5 @@
   action_path: "/fm_archives"
   summary: >-
     The FileMaker archive now sorts its 44 tables into labeled groups — people,
-    organizations, events, funding, fundraising and more — so the table you want
+    organizations, events, payments, funding and more — so the table you want
     is easier to find.
