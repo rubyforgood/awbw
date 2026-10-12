@@ -8,11 +8,10 @@ module FilemakerHelper
                                    label: label, show_code: label.nil? || codes.many?)
   end
 
-  # Compact archive buttons that sit beside a record's FileMaker code input.
-  def filemaker_code_chips(record)
-    filemaker_archive_links(record.filemaker_codes, archives: record.class.filemaker_archives,
-                                                    label: tag.i(class: "fa-solid fa-box-archive", aria: { hidden: true }),
-                                                    link_class: button_classes(:primary_outline, size: :sm, extra: "bg-white"))
+  # The hint under a FileMaker code input, linking each code to its archive record.
+  def filemaker_code_hint(record)
+    links = filemaker_code_links(record, link_class: "text-blue-600 underline hover:text-blue-800")
+    safe_join([ "In the archive:", links ], " ") if links
   end
 
   # An org's codes are FileMaker projects; this links the agency each project sits under.

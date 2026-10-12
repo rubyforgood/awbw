@@ -46,13 +46,19 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
-  describe "#filemaker_code_chips" do
+  describe "#filemaker_code_hint" do
     before { FmRolodex.create!(fm_id: "00006") }
 
-    it "shows the code even when the record carries a single code" do
-      html = helper.filemaker_code_chips(build(:person, filemaker_code: "00006"))
+    it "lists each code as an archive link" do
+      html = helper.filemaker_code_hint(build(:person, filemaker_code: "00006"))
 
+      expect(html).to include("In the archive:")
+      expect(html).to include(%(href="#{fm_archive_path("00006", table: "rolodexes")}"))
       expect(html).to include("00006</a>")
+    end
+
+    it "returns nothing for a record without codes" do
+      expect(helper.filemaker_code_hint(build(:person, filemaker_code: nil))).to be_nil
     end
   end
 

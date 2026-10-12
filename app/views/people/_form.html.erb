@@ -464,14 +464,12 @@
                         wrapper_html: { class: "w-full" } %>
           </div>
 
-          <div class="flex w-full items-end gap-2 sm:w-auto">
+          <div class="w-full sm:w-64">
             <%= f.input :filemaker_code,
                         label: "FileMaker code",
+                        hint: filemaker_code_hint(f.object),
                         input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full sm:w-64" } %>
-            <div class="mb-4 flex shrink-0 flex-wrap gap-1 pb-2">
-              <%= filemaker_code_chips(f.object) %>
-            </div>
+                        wrapper_html: { class: "w-full" } %>
           </div>
         </div>
 
