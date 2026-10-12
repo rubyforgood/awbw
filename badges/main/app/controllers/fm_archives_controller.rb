@@ -14,7 +14,7 @@ class FmArchivesController < ApplicationController
     "phone_numbers" => { model: FmPhoneNumber, label: "Phone Numbers" },
     "workshop_logs" => { model: FmWorkshopLog, label: "Workshop Logs" },
     "expenditures" => { model: FmExpenditure, label: "Expenditure" },
-    "fundings" => { model: FmFunding, label: "Funding" },
+    "funding" => { model: FmFunding, label: "Funding" },
     "allocations" => { model: FmAllocation, label: "Allocations" },
     "program_sponsorships" => { model: FmProgramSponsorship, label: "Program Sponsorships" },
     "postal_codes" => { model: FmPostalCode, label: "Postal Codes" },
@@ -40,7 +40,7 @@ class FmArchivesController < ApplicationController
     "match_donations" => { model: FmMatchDonation, label: "Match Donations" },
     "people_to_organizations" => { model: FmPeopleToOrganization, label: "People to Organizations" },
     "quotations" => { model: FmQuotation, label: "Quotations" },
-    "reportings" => { model: FmReporting, label: "Reporting" },
+    "reporting" => { model: FmReporting, label: "Reporting" },
     "solicitations" => { model: FmSolicitation, label: "Solicitations" },
     "volunteers" => { model: FmVolunteer, label: "Volunteers" },
     "workshops" => { model: FmWorkshop, label: "Workshops" }

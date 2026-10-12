@@ -58,6 +58,6 @@ class FmFunding < ApplicationRecord
     "fm_allocations" => { via: "FundingRecID", label: "Allocations" },
     "fm_program_sponsorships" => { via: "FundingID", label: "Program Sponsorships" },
     "fm_match_donations" => { via: "FundingID", label: "Match Donations" },
-    "fm_reportings" => { via: "FundingRecordID", label: "Reporting Obligations" }
+    "fm_reporting" => { via: "FundingRecordID", label: "Reporting Obligations" }
   }.freeze
 end

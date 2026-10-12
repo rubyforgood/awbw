@@ -24,7 +24,7 @@ class FmAllocation < ApplicationRecord
   FM_KEY_COLUMN = "AllocRecID"
 
   FM_LINKS = {
-    "FundingRecID" => "fm_fundings",
+    "FundingRecID" => "fm_funding",
     "ProjectID" => "fm_projects"
   }.freeze
 
