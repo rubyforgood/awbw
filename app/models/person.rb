@@ -8,7 +8,8 @@ class Person < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
-  has_one :user, inverse_of: :person, dependent: :nullify
+  # A merge can leave several logins on one person; show the most recently updated (every sign-in bumps it).
+  has_one :user, -> { order(updated_at: :desc, id: :desc) }, inverse_of: :person, dependent: :nullify
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
