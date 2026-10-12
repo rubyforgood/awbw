@@ -14,11 +14,11 @@ module FilemakerHelper
     safe_join([ "In the archive:", links ], " ") if links
   end
 
-  # An org's codes are FileMaker projects; this links the agency each project sits under.
-  def filemaker_agency_links(organization, link_class: nil, label: nil)
-    agency_ids = FmProject.where(fm_id: organization.filemaker_codes).filter_map { |project| project.data["OrgID"].presence }.uniq
-    filemaker_archive_links(agency_ids, archives: [ FmOrganization ], link_class: link_class,
-                                        label: label, show_code: label.nil? || agency_ids.many?)
+  # An org's codes are FileMaker projects; this links the FM organization each project sits under.
+  def filemaker_organization_links(organization, link_class: nil, label: nil)
+    fm_organization_ids = FmProject.where(fm_id: organization.filemaker_codes).filter_map { |project| project.data["OrgID"].presence }.uniq
+    filemaker_archive_links(fm_organization_ids, archives: [ FmOrganization ], link_class: link_class,
+                                                 label: label, show_code: label.nil? || fm_organization_ids.many?)
   end
 
   # The way back from an archive row to the portal record carrying its code.

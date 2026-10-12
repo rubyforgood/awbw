@@ -11,8 +11,8 @@
 <% actions = capture do %>
   <%= filemaker_code_links(@organization, label: "FM project",
                            link_class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1") %>
-  <%= filemaker_agency_links(@organization, label: "FM agency",
-                             link_class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1") %>
+  <%= filemaker_organization_links(@organization, label: "FM organization",
+                                   link_class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1") %>
   <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   <%= link_to "Organizations", organizations_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   <%= link_to "Profile", organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>

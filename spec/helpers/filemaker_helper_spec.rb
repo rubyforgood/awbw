@@ -62,7 +62,7 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
-  describe "#filemaker_agency_links" do
+  describe "#filemaker_organization_links" do
     let(:organization) { build(:organization, filemaker_code: "P2775") }
 
     before do
@@ -70,11 +70,11 @@ RSpec.describe FilemakerHelper, type: :helper do
       FmOrganization.create!(fm_id: "ORG07206")
     end
 
-    it "links the agency each of the org's projects belongs to" do
-      html = helper.filemaker_agency_links(organization, label: "FM agency")
+    it "links the FM organization each of the org's projects belongs to" do
+      html = helper.filemaker_organization_links(organization, label: "FM organization")
 
       expect(html).to include(fm_archive_path("ORG07206", table: "organizations"))
-      expect(html).to include(">FM agency</a>")
+      expect(html).to include(">FM organization</a>")
     end
   end
 end
