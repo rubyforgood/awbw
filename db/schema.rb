@@ -1477,6 +1477,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_013218) do
     t.integer "windows_type_id"
     t.index ["created_by_id"], name: "index_organizations_on_created_by_id"
     t.index ["location_id"], name: "index_organizations_on_location_id"
+    t.index ["name"], name: "index_organizations_on_name", unique: true
     t.index ["organization_status_id"], name: "index_organizations_on_organization_status_id"
     t.index ["parent_id"], name: "index_organizations_on_parent_id"
     t.index ["updated_by_id"], name: "index_organizations_on_updated_by_id"

@@ -19,6 +19,22 @@ RSpec.describe Organization do
     subject { build(:organization) }
     it { should validate_presence_of(:name) }
     it { should_not validate_presence_of(:organization_status_id) }
+    it { should validate_uniqueness_of(:name).case_insensitive }
+
+    it "strips surrounding whitespace from the name" do
+      expect(build(:organization, name: "  Hope House  ").name).to eq("Hope House")
+    end
+
+    it "rejects a name that differs only by case or trailing whitespace" do
+      create(:organization, name: "Hope House")
+      expect(build(:organization, name: "hope house ")).not_to be_valid
+    end
+
+    it "is enforced by a unique index when validations are skipped" do
+      create(:organization, name: "Hope House")
+      duplicate = build(:organization, name: "HOPE HOUSE")
+      expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique, /#{Organization::NAME_INDEX}/)
+    end
 
     it { should allow_value("info@example.com").for(:email) }
     it { should allow_value("").for(:email) }
