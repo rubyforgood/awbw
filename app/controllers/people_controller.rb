@@ -19,7 +19,8 @@ class PeopleController < ApplicationController
         event_registrations: :event,
         categorizable_items: { category: :category_type }
       ).references(:user))
-      filtered = base_scope.search_by_params(params.to_unsafe_h)
+      filters = authorized_scope(params, as: :index).to_unsafe_h
+      filtered = base_scope.search_by_params(filters)
                            .order(:first_name, :last_name)
       @count_display = filtered.count
       @people = filtered.paginate(page: params[:page], per_page: per_page)
