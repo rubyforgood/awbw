@@ -300,6 +300,10 @@ class OrganizationsController < ApplicationController
       union_columns: %w[filemaker_code],
       merge_keeper: ->(keep, delete) {
         keep.filemaker_code = Organization.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
+        @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
+      },
+      after_merge: ->(keep) {
+        AddressDeduper.new(keep, primary_signature: @keeper_primary_address_signature).call
       },
       belongs_to_options: -> {
         {
