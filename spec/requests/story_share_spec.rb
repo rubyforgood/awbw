@@ -462,6 +462,32 @@ RSpec.describe "/story_share", type: :request do
       expect(slide).to have_no_css("img.blur-2xl", visible: :all)
     end
 
+    it "shows a portrait story image whole on a home topic card" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      story = create(:story, :published, :publicly_visible, title: "Tall topic artwork")
+      story.sectorable_items.create!(sector: sector)
+      attach_image(story, :primary_asset, width: 600, height: 900)
+
+      get story_shares_path
+
+      card = Capybara.string(response.body).find("article", text: "Tall topic artwork")
+      expect(card).to have_css("img.object-contain[alt='Tall topic artwork']")
+      expect(card).to have_css("img.blur-2xl[aria-hidden='true']", visible: :all)
+    end
+
+    it "shows a portrait story image whole on a browse card" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      story = create(:story, :published, :publicly_visible, title: "Tall browse artwork", created_at: 2.days.ago)
+      lead = create(:story, :published, :publicly_visible, title: "Newer lead story")
+      [ story, lead ].each { |s| s.sectorable_items.create!(sector: sector) }
+      attach_image(story, :primary_asset, width: 600, height: 900)
+
+      get story_shares_path(sector_names_all: "Homelessness")
+
+      card = Capybara.string(response.body).find("article", text: "Tall browse artwork")
+      expect(card).to have_css("img.object-contain[alt='Tall browse artwork']")
+    end
+
     it "shows a portrait gallery image whole on the story page carousel" do
       story = create(:story, :published, :publicly_visible)
       attach_image(story, :gallery_asset, width: 600, height: 900)

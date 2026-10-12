@@ -32,7 +32,7 @@
             <% @lead_stories.each do |story| %>
               <div class="swiper-slide">
                 <%= link_to story_share_path(story), class: "block relative" do %>
-                  <%= render "story_image", story: story, aspect: "aspect-[16/6]", fit_portrait: true %>
+                  <%= render "story_image", story: story, aspect: "aspect-[16/6]" %>
                   <div class="from-brand-navy-950/85 absolute right-0 bottom-0 left-0 bg-gradient-to-t to-transparent p-6 text-white">
                     <h2 class="mb-1 font-display text-2xl"><%= story.title %></h2>
                     <p class="text-sm opacity-90">
