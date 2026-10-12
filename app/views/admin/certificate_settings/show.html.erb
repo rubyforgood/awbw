@@ -44,7 +44,7 @@
               <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
                 <% if slot[:file]&.variable? %>
                   <%= image_tag slot[:file].variant(:card), alt: "#{slot[:label]} preview",
-                        class: "mx-auto max-h-32 w-auto object-contain" %>
+                        class: "mx-auto max-h-16 w-auto object-contain" %>
                 <% else %>
                   <p class="py-6 text-center text-xs text-amber-700">
                     Connected to “<%= slot[:resource].title %>”, but it has no previewable image attached.
@@ -58,7 +58,7 @@
             <% elsif slot[:builtin] %>
               <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
                 <%= image_tag slot[:builtin], alt: "#{slot[:label]} built-in design",
-                      class: "mx-auto max-h-32 w-auto object-contain" %>
+                      class: "mx-auto max-h-16 w-auto object-contain" %>
               </div>
               <p class="mt-2 text-center text-xs text-gray-400">Built-in design — none connected</p>
             <% else %>
