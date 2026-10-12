@@ -49,10 +49,12 @@ module Admin
       config = SLOTS[role]
       return redirect_to(admin_certificate_settings_path, alert: "Unknown setting.", status: :see_other) unless config
 
-      return disconnect(role, config) if params[:remove] == "1"
+      # Clearing the picker (the ✕) submits a blank resource_id — treat it, and the
+      # explicit remove, as a disconnect.
+      return disconnect(role, config) if params[:remove] == "1" || params[:resource_id].blank?
 
       resource = Resource.find_by(id: params[:resource_id])
-      return redirect_to(admin_certificate_settings_path, alert: "Choose a resource to connect.", status: :see_other) unless resource
+      return redirect_to(admin_certificate_settings_path, alert: "We couldn't find that resource.", status: :see_other) unless resource
 
       connect(resource, role)
       redirect_to admin_certificate_settings_path, notice: "#{config[:label]} connected to “#{resource.title}”.", status: :see_other

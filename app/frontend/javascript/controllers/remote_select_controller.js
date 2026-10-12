@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
 export default class extends Controller {
-  static values = { model: String, exclude: String };
+  static values = { model: String, exclude: String, submitOnChange: Boolean };
 
   connect() {
     // TomSelect stamps itself on the element; bail if it's already initialized so
@@ -10,7 +10,7 @@ export default class extends Controller {
     // + search icon on top of the first.
     if (this.element.tomselect) return;
 
-    this.select = new TomSelect(this.element, {
+    const config = {
       valueField: "id",
       labelField: "label",
       searchField: "label",
@@ -30,7 +30,16 @@ export default class extends Controller {
           .then((json) => callback(json))
           .catch(() => callback());
       },
-    });
+    };
+
+    // Opt-in: picking (or clearing with the ✕) submits the owning form, so the
+    // selection connects/disconnects via a page reload with no dedicated button.
+    if (this.submitOnChangeValue) {
+      config.plugins = { clear_button: { title: "Remove" } };
+      config.onChange = () => this.element.form?.requestSubmit();
+    }
+
+    this.select = new TomSelect(this.element, config);
     this.addSearchIcon();
     this.injectStyles();
 

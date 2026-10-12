@@ -22,21 +22,20 @@
             <h2 class="text-sm font-semibold text-gray-800"><%= slot[:label] %></h2>
             <p class="mt-1 truncate text-xs text-gray-500" title="<%= slot[:description] %>"><%= slot[:description] %></p>
 
-            <%= form_with url: admin_certificate_settings_path, method: :patch, class: "mt-3 flex items-center gap-2" do %>
+            <%# Picking a resource (or clearing it with the ✕) submits this form and
+                connects/disconnects the slot — no separate button. %>
+            <%= form_with url: admin_certificate_settings_path, method: :patch, class: "mt-3" do %>
               <%= hidden_field_tag :slot, slot[:role] %>
-              <div class="min-w-0 flex-1">
-                <select name="resource_id"
-                        data-controller="remote-select"
-                        data-remote-select-model-value="resource"
-                        class="w-full rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
-                  <option value="">Type to search resources…</option>
-                  <% if slot[:resource] %>
-                    <option value="<%= slot[:resource].id %>" selected><%= slot[:resource].title %></option>
-                  <% end %>
-                </select>
-              </div>
-              <%= submit_tag slot[:resource] ? "Reconnect" : "Connect",
-                    class: "shrink-0 #{button_classes(slot[:resource] ? :secondary : :primary, size: :sm)}" %>
+              <select name="resource_id"
+                      data-controller="remote-select"
+                      data-remote-select-model-value="resource"
+                      data-remote-select-submit-on-change-value="true"
+                      class="w-full rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
+                <option value="">Type to search resources…</option>
+                <% if slot[:resource] %>
+                  <option value="<%= slot[:resource].id %>" selected><%= slot[:resource].title %></option>
+                <% end %>
+              </select>
             <% end %>
 
             <% if slot[:resource] %>
@@ -74,12 +73,6 @@
               <p class="mt-2 text-center text-xs text-gray-400">
                 <% if slot[:connected] %>Connected preview<% elsif slot[:resource] %>Auto-matched by title<% else %>Built-in design — none connected<% end %>
               </p>
-              <% if slot[:connected] %>
-                <%= button_to "Disconnect", admin_certificate_settings_path, method: :patch,
-                      params: { slot: slot[:role], remove: "1" },
-                      class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
-                      form: { data: { turbo_confirm: "Disconnect the #{slot[:label].downcase}? Certificates will use the built-in design until you connect another." } } %>
-              <% end %>
             <% elsif slot[:resource] %>
               <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
                 <% if slot[:file]&.variable? %>
@@ -94,12 +87,6 @@
               <p class="mt-2 text-center text-xs text-gray-400">
                 <%= slot[:connected] ? "Connected" : "Auto-matched by title" %>
               </p>
-              <% if slot[:connected] %>
-                <%= button_to "Disconnect", admin_certificate_settings_path, method: :patch,
-                      params: { slot: slot[:role], remove: "1" },
-                      class: "mt-2 #{button_classes(:danger_outline, size: :sm)} w-full",
-                      form: { data: { turbo_confirm: "Disconnect the #{slot[:label].downcase}? Certificates will use the built-in design until you connect another." } } %>
-              <% end %>
             <% else %>
               <div class="flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400">
                 No default signature — blank until connected

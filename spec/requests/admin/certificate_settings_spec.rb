@@ -56,14 +56,13 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       expect(response.body).to include(edit_resource_path(resource))
     end
 
-    it "previews the connected resource and offers reconnect" do
+    it "preselects the connected resource in the picker" do
       resource = create(:resource, title: "Training frame art", certificate_artwork_role: "training_frame")
       create(:primary_asset, :with_file, owner: resource)
 
       get admin_certificate_settings_path
 
       expect(response.body).to include("Training frame art")
-      expect(response.body).to include("Reconnect")
     end
   end
 
@@ -119,6 +118,15 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       expect(resource.reload.certificate_artwork_role).to be_nil
     end
 
+    it "treats a cleared (blank) picker as a disconnect" do
+      resource = create(:resource, certificate_artwork_role: "other_frame")
+
+      patch admin_certificate_settings_path, params: { slot: "other_frame", resource_id: "" }
+
+      expect(response).to redirect_to(admin_certificate_settings_path)
+      expect(resource.reload.certificate_artwork_role).to be_nil
+    end
+
     it "rejects an unknown slot rather than erroring" do
       resource = create(:resource)
 
@@ -129,10 +137,10 @@ RSpec.describe "Admin::CertificateSettings", type: :request do
       expect(resource.reload.certificate_artwork_role).to be_nil
     end
 
-    it "asks for a resource when none is chosen" do
-      patch admin_certificate_settings_path, params: { slot: "training_frame" }
+    it "alerts when the chosen resource no longer exists" do
+      patch admin_certificate_settings_path, params: { slot: "training_frame", resource_id: "0" }
 
-      expect(flash[:alert]).to eq("Choose a resource to connect.")
+      expect(flash[:alert]).to eq("We couldn't find that resource.")
     end
   end
 
