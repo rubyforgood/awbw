@@ -19,13 +19,13 @@ drive the archive pages' links.
 
 ## Decision
 
-| App column | Archive table | Archive key | Where it's relied on |
+| App column | Archive table | Archive key | Read by |
 |---|---|---|---|
 | `people.filemaker_code` | `fm_rolodexes` | `ID`, e.g. `00006` | `filemaker_code_links` on person edit + admin details |
 | `organizations.filemaker_code` | `fm_projects` | `ProjectID`, e.g. `P2775` | `filemaker_code_links` on org edit + form |
-| `affiliations.filemaker_code` | `fm_personnels` | `PrsnlRecID`, e.g. `PS9999` | dev seed only |
-| `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | dev seed only |
-| `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | dev seed only |
+| `affiliations.filemaker_code` | `fm_personnels` | `PrsnlRecID`, e.g. `PS9999` | dev seed (no UI link yet) |
+| `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | dev seed (no UI link yet) |
+| `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | dev seed (no UI link yet) |
 | `resources.filemaker_code` | none | — | unmapped |
 
 - **Organization → Project, not → Organization.** An app `Organization` is one art
@@ -39,6 +39,5 @@ drive the archive pages' links.
 
 ## Consequences
 
-The "dev seed only" rows are the seed's working assumption. Confirm them (and the
-`fm_*` table to pass) before adding a `filemaker_code_links` call for affiliations,
-payments, or workshops.
+A UI link for affiliations, payments, or workshops passes the archive table above to
+`filemaker_code_links` (e.g. `archive: FmPersonnel, table: "personnels"`).
