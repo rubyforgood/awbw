@@ -192,4 +192,47 @@ RSpec.describe Resource do
       expect(Resource.ce_certificate_frame_file).to be_attached
     end
   end
+
+  describe "certificate_role connections" do
+    it "resolves a slot from the connected resource (role), not just the legacy title" do
+      connected = create(:resource, title: "Any signature art", certificate_role: "training_signatures")
+      create(:primary_asset, :with_file, owner: connected)
+
+      expect(Resource.training_certificate_signatures_file).to be_attached
+      expect(Resource.certificate_artwork("training_signatures")).to eq(connected)
+    end
+
+    it "prefers the connected resource over a legacy title-matched record" do
+      create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      connected = create(:resource, title: "Newer signature art", certificate_role: "training_signatures")
+
+      expect(Resource.certificate_artwork("training_signatures", Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)).to eq(connected)
+    end
+
+    it "resolves a connected frame by category role" do
+      frame = create(:resource, certificate_role: "on_demand_frame")
+      create(:primary_asset, :with_file, owner: frame)
+
+      expect(Resource.certificate_frame_file(:on_demand)).to be_attached
+    end
+
+    it "rejects a role outside the known set" do
+      resource = build(:resource, certificate_role: "bogus")
+
+      expect(resource).not_to be_valid
+      expect(resource.errors[:certificate_role]).to be_present
+    end
+
+    it "normalizes a blank role to nil (not connected)" do
+      resource = create(:resource, certificate_role: "")
+
+      expect(resource.certificate_role).to be_nil
+    end
+
+    it "forbids two resources sharing a role" do
+      create(:resource, certificate_role: "ce_frame")
+
+      expect { create(:resource, certificate_role: "ce_frame") }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
 end

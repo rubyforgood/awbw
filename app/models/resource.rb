@@ -14,56 +14,57 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
-  # The facilitator-training certificate pulls its signature strip from this
-  # admin-managed record instead of a committed asset, so real handwritten
-  # signatures never live in this public repo. Create the record hidden from
-  # search (admin-only) and attach the signature image; the certificate embeds
-  # it via a signed, same-origin URL. Matched by title — keep this in sync.
+  # Each certificate "slot" is filled by connecting a library Resource on the admin
+  # certificate-settings page, recorded as its certificate_role (unique). The art
+  # lives on a normal Resource (never committed to this public repo) and is embedded
+  # via a signed, same-origin URL. A legacy title (below) is the fallback for
+  # records created before the connect UI, so nothing needs re-connecting to keep
+  # working.
+  CERTIFICATE_ROLES = %w[
+    training_frame on_demand_frame ce_frame other_frame training_signatures ce_signatures
+  ].freeze
+
   TRAINING_CERTIFICATE_SIGNATURES_TITLE = "Training certificate signatures".freeze
-
-  # The attached signature image for the training certificate, or nil when the
-  # record/upload isn't present (e.g. dev/OSS), so the certificate simply omits
-  # the signatures rather than erroring.
-  def self.training_certificate_signatures_file
-    find_by(title: TRAINING_CERTIFICATE_SIGNATURES_TITLE)&.signature_file
-  end
-
-  # The CE "Confirmation of Attendance" certificate carries a single signature (the
-  # CE administrator), so it pulls from its own admin-managed, search-hidden record
-  # rather than the training certificate's multi-signer strip. Matched by title —
-  # keep this in sync. Create it hidden and attach the signature image.
   CE_CERTIFICATE_SIGNATURE_TITLE = "Training CE certificate signatures".freeze
-
-  # The attached CE administrator signature image, or nil when the record/upload
-  # isn't present, so the CE certificate simply leaves the signature line blank.
-  def self.ce_certificate_signature_file
-    find_by(title: CE_CERTIFICATE_SIGNATURE_TITLE)&.signature_file
-  end
-
-  # Optional admin-uploaded full-bleed frame image per certificate category, which
-  # overrides the committed/default frame when present. Like the signature records,
-  # these live on hidden, title-matched Resources so the art is managed in-app
-  # rather than committed. Matched by title — keep in sync with the settings page.
+  CE_CERTIFICATE_FRAME_TITLE = "CE certificate frame".freeze
   CERTIFICATE_FRAME_TITLES = {
     training: "Training certificate frame",
     on_demand: "On-demand certificate frame",
     other: "Event certificate frame"
   }.freeze
+  # Certificate category (Event#certificate_category) → its frame slot role.
+  CERTIFICATE_FRAME_ROLES = {
+    training: "training_frame",
+    on_demand: "on_demand_frame",
+    other: "other_frame"
+  }.freeze
 
-  # The uploaded frame image for a certificate category (:training, :on_demand,
-  # :other), or nil when none is uploaded — the certificate then uses its
-  # committed/default frame.
-  def self.certificate_frame_file(category)
-    title = CERTIFICATE_FRAME_TITLES[category&.to_sym]
-    find_by(title: title)&.signature_file if title
+  # The Resource connected to a certificate slot — the one holding this role, else
+  # the legacy title-matched record (pre-connect-UI). Nil when neither exists.
+  def self.certificate_artwork(role, legacy_title = nil)
+    find_by(certificate_role: role) || (legacy_title && find_by(title: legacy_title))
   end
 
-  # The CE Confirmation of Attendance certificate's own optional frame override,
-  # matched by title like the others. Nil when none is uploaded.
-  CE_CERTIFICATE_FRAME_TITLE = "CE certificate frame".freeze
+  # The signature strip / frame image for each slot, or nil when nothing is
+  # connected — the certificate then omits the signature or uses its committed
+  # design rather than erroring.
+  def self.training_certificate_signatures_file
+    certificate_artwork("training_signatures", TRAINING_CERTIFICATE_SIGNATURES_TITLE)&.signature_file
+  end
+
+  def self.ce_certificate_signature_file
+    certificate_artwork("ce_signatures", CE_CERTIFICATE_SIGNATURE_TITLE)&.signature_file
+  end
 
   def self.ce_certificate_frame_file
-    find_by(title: CE_CERTIFICATE_FRAME_TITLE)&.signature_file
+    certificate_artwork("ce_frame", CE_CERTIFICATE_FRAME_TITLE)&.signature_file
+  end
+
+  # The frame image connected for a certificate category (:training, :on_demand,
+  # :other), or nil.
+  def self.certificate_frame_file(category)
+    role = CERTIFICATE_FRAME_ROLES[category&.to_sym]
+    certificate_artwork(role, CERTIFICATE_FRAME_TITLES[category&.to_sym])&.signature_file if role
   end
 
   # The first attached image on this resource (primary asset, then downloadable),
@@ -114,9 +115,14 @@ class Resource < ApplicationRecord
   attribute :published, :boolean, default: false
   attribute :hidden_from_search, :boolean, default: false
 
+  # Blank out to nil so the unique index treats "not connected" as NULL (MySQL
+  # allows many NULLs) rather than a shared empty string.
+  normalizes :certificate_role, with: ->(value) { value.presence }
+
   # Validations
   validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :kind, presence: true
+  validates :certificate_role, inclusion: { in: CERTIFICATE_ROLES }, allow_nil: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
