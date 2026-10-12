@@ -1,8 +1,8 @@
-# FileMaker is the source of truth, and one record can answer to more than one
-# FileMaker code — two records that each mapped to a FileMaker row get merged, or the
-# archive itself holds several rows for one person. The `filemaker_code` column holds
-# them as a trimmed, comma-separated list; this is the seam for reading and combining
-# them, so nothing compares the whole column against a single code.
+# One record can answer to more than one FileMaker code — two records that each mapped
+# to a FileMaker row get merged, or the archive itself holds several rows for one
+# person. The `filemaker_code` column holds them as a trimmed, comma-separated list;
+# this is the seam for reading and combining them, so nothing compares the whole
+# column against a single code.
 module FilemakerCoded
   extend ActiveSupport::Concern
 

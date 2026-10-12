@@ -5,7 +5,7 @@
 
 ## Context
 
-FileMaker is the source of truth we're importing from (rubyforgood/awbw#508).
+FileMaker is the legacy system we're importing from (rubyforgood/awbw#508).
 There, `Organization` records carry a `ParentID` self-reference and also own
 `Project` records. Staff historically split one real organization into two
 FileMaker Projects when it ran both Adult and Children's Windows programs; they

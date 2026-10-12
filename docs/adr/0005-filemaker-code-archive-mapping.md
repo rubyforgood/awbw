@@ -5,7 +5,9 @@
 
 ## Context
 
-FileMaker is the source of truth we import from (rubyforgood/awbw#508). The raw
+FileMaker is the legacy system we import from (rubyforgood/awbw#508). It isn't the
+source of truth across the board: staff edited records in both FileMaker and the
+portal, so for some data the portal is right and for some FileMaker is. The raw
 export lives in the read-only `fm_*` archive tables (one per FileMaker table, keyed
 by `fm_id`, every other field in a `data` JSON column; see `lib/tasks/fm_import.rake`).
 Six app tables carry a `filemaker_code` column, read as a comma-separated set of
