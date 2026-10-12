@@ -482,6 +482,15 @@ RSpec.describe Person, type: :model do
                               created_by: admin, updated_by: admin)
       expect(person.user).to be_nil
     end
+
+    it "returns the most recently updated login when several point at the person" do
+      person = create(:person, user: nil)
+      create(:user, person: person, updated_at: 2.days.ago)
+      recent = create(:user, person: person, updated_at: 1.hour.ago)
+      create(:user, person: person, updated_at: 1.week.ago)
+
+      expect(person.reload.user).to eq(recent)
+    end
   end
 
   describe '.search_by_params' do
