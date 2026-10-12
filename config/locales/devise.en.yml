@@ -11,6 +11,7 @@ en:
       inactive: "Invalid email or password. Please email us or fill out our Contact Us form for assistance."
       invalid: "Invalid email or password. Please email us or fill out our Contact Us form for assistance."
       locked: "Please email us or fill out our Contact Us form for assistance."
+      lapsed: "Your portal access has ended. Please email us or fill out our Contact Us form to renew it."
       last_attempt: "You have one more attempt before your account is locked."
       not_found_in_database: "Invalid email or password. Please email us or fill out our Contact Us form for assistance."
       timeout: "Your session expired. Please sign in again to continue."

@@ -262,6 +262,7 @@ RSpec.describe "/workshop_logs", type: :request do
         person = create(:person, user: user)
         inactive_org = create(:organization, name: "Inactive Affiliation Org")
         create(:affiliation, person: person, organization: inactive_org, inactive: true)
+        create(:membership, person: person)
 
         get workshop_logs_path
 

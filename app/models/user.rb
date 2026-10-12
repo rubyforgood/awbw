@@ -92,7 +92,8 @@ class User < ApplicationRecord
     attributes user: "organizations.name"
   end
 
-  scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
+  scope :lapsed, -> { where(super_user: [ false, nil ]).where(person_id: PortalAccess.lapsed_people.select(:id)) }
+  scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil).where.not(id: lapsed.select(:id)) }
   scope :invited, -> { where.not(welcome_instructions_sent_at: nil) }
 
   def self.search_by_params(params)
@@ -102,7 +103,7 @@ class User < ApplicationRecord
     if params[:access] == "true"
       results = results.has_access
     elsif params[:access] == "false"
-      results = results.where("users.inactive = ? OR users.locked_at IS NOT NULL OR users.confirmed_at IS NULL", true)
+      results = results.where.not(id: has_access.select(:id))
     end
     results = results.invited if params[:invited] == "true"
     results = results.where.not(confirmed_at: nil) if params[:confirmed] == "true"
@@ -145,13 +146,22 @@ class User < ApplicationRecord
   end
 
   def active_for_authentication?
-    super && !inactive?
+    super && !inactive? && !portal_access_lapsed?
+  end
+
+  def inactive_message
+    message = super
+    message == :inactive && !inactive? ? :lapsed : message
   end
 
   # Instance-level mirror of the `has_access` scope: the account can sign in —
-  # confirmed, not locked, not deactivated.
+  # confirmed, not locked, not deactivated, access not lapsed.
   def has_access?
-    locked_at.nil? && !inactive? && confirmed_at.present?
+    locked_at.nil? && !inactive? && confirmed_at.present? && !portal_access_lapsed?
+  end
+
+  def portal_access_lapsed?
+    PortalAccess.new(self).lapsed?
   end
 
   def bookmark_for(record)

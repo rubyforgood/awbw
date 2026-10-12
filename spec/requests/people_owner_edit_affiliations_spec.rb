@@ -13,6 +13,7 @@ RSpec.describe "Owner view of affiliations on the person edit form", type: :requ
     create(:affiliation, person: person, organization: organization,
                          title: "Facilitator", start_date: Date.new(2018, 1, 1),
                          end_date: Date.new(2020, 6, 1), inactive: true)
+    create(:membership, person: person)
     sign_in owner_user
     allow_any_instance_of(PersonPolicy).to receive(:edit?).and_return(true)
   end
