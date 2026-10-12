@@ -32,11 +32,11 @@
   <% if @person.user %>
     <%= link_to "User account", user_path(@person.user), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
   <% end %>
+  <%= filemaker_code_links(@person, label: "Rolodex",
+                           link_class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1") %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <%= link_to "Activity", admin_activities_events_path(person_id: @person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
   <% end %>
-  <%= filemaker_code_links(@person, label: "Rolodex",
-                           link_class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1") %>
   <%= link_to "Change password", change_password_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>

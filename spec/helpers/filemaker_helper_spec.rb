@@ -19,6 +19,13 @@ RSpec.describe FilemakerHelper, type: :helper do
       expect(html).to include("Rolodex 00006")
     end
 
+    it "shows just the label when the record carries a single code" do
+      html = helper.filemaker_code_links(build(:person, filemaker_code: "00006"), label: "Rolodex")
+
+      expect(html).to include(">Rolodex</a>")
+      expect(html).not_to include("Rolodex 00006")
+    end
+
     it "marks a code the archive has no row for instead of linking it" do
       html = helper.filemaker_code_links(person)
 
@@ -39,6 +46,16 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
+  describe "#filemaker_code_chips" do
+    before { FmRolodex.create!(fm_id: "00006") }
+
+    it "shows the code even when the record carries a single code" do
+      html = helper.filemaker_code_chips(build(:person, filemaker_code: "00006"))
+
+      expect(html).to include("00006</a>")
+    end
+  end
+
   describe "#filemaker_agency_links" do
     let(:organization) { build(:organization, filemaker_code: "P2775") }
 
@@ -51,7 +68,7 @@ RSpec.describe FilemakerHelper, type: :helper do
       html = helper.filemaker_agency_links(organization, label: "FM agency")
 
       expect(html).to include(fm_archive_path("ORG07206", table: "organizations"))
-      expect(html).to include("FM agency ORG07206")
+      expect(html).to include(">FM agency</a>")
     end
   end
 end
