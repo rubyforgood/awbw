@@ -4,7 +4,8 @@ class Address < ApplicationRecord
 
   LOCALITIES = [ "LA City", "LA County", "Southern CA", "Northern CA",
                 "Central CA", "Orange County", "Outside CA", "Outside USA", "Unknown" ]
-  CONTACT_TYPES = [ nil, "work", "personal", "mailing", "unknown" ].freeze
+  UNKNOWN_CONTACT_TYPE = "unknown"
+  CONTACT_TYPES = [ nil, "work", "personal", "mailing", UNKNOWN_CONTACT_TYPE ].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
   # draws — the whitelist behind every "States" breakdown, so international
   # regions (e.g. "ON", "England") are excluded (they belong to the Countries map).
@@ -18,6 +19,8 @@ class Address < ApplicationRecord
   # Affiliations that point to this address as their organization address. Nullify
   # the link rather than block deletion when an org address is removed.
   has_many :affiliations, foreign_key: :organization_address_id, dependent: :nullify, inverse_of: :organization_address
+
+  before_validation :type_as_unknown
 
   validates :locality, presence: true
   validates :city, presence: true, length: { maximum: 255 }
@@ -53,5 +56,19 @@ class Address < ApplicationRecord
 
     scope = addressable.addresses.active.order(:id)
     (scope.for_invoices.first || scope.first)&.display_lines || []
+  end
+
+  # Unknown is a recorded answer, not a known one, so a flow that asks what kind of
+  # address this is still has to ask.
+  def known_type?
+    address_type.present? && address_type != UNKNOWN_CONTACT_TYPE
+  end
+
+  private
+
+  # Every address carries a type, so one saved without an answer says so. Rows written
+  # before this keep their blank until something saves them.
+  def type_as_unknown
+    self.address_type = UNKNOWN_CONTACT_TYPE if address_type.blank?
   end
 end
