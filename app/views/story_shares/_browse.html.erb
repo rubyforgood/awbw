@@ -9,13 +9,10 @@
       <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
     </div>
 
-    <% if @stories.any? %>
-      <%# Sector pages get one big lead hero; category / spotlight / additional /
-          search pages get an autoplay carousel (like the home page). %>
-      <% single_hero = params[:sector_names_all].present? %>
-
-      <% if single_hero %>
-        <% lead = @stories.first %>
+    <% if @lead_stories.any? || @stories.any? %>
+      <%# Lead spot (first page only): featured, then newest. Cards below: newest. %>
+      <% if single_hero? && @lead_stories.any? %>
+        <% lead = @lead_stories.first %>
         <div class="ring-brand-navy-900/10 mb-12 overflow-hidden rounded-2xl shadow-md ring-1">
           <%= link_to story_share_path(lead), class: "block" do %>
             <%= render "story_image", story: lead, aspect: "aspect-[16/6]" %>
@@ -27,15 +24,12 @@
             </div>
           <% end %>
         </div>
-        <% grid_stories = @stories.drop(1).first(3) %>
-        <% row_stories = @stories.drop(4) %>
-      <% else %>
-        <% hero_stories = @stories.first(5) %>
+      <% elsif @lead_stories.any? %>
         <div data-controller="carousel"
              class="swiper ring-brand-navy-900/10 relative mb-12 overflow-hidden rounded-2xl shadow-lg ring-1"
              data-carousel-options-value='{ "autoplay": { "delay": 5000, "pauseOnMouseEnter": true }, "slidesPerView": 1, "breakpoints": {} }'>
           <div class="swiper-wrapper">
-            <% hero_stories.each do |story| %>
+            <% @lead_stories.each do |story| %>
               <div class="swiper-slide">
                 <%= link_to story_share_path(story), class: "block relative" do %>
                   <%= render "story_image", story: story, aspect: "aspect-[16/6]" %>
@@ -56,9 +50,9 @@
             <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
-        <% grid_stories = @stories.drop(5).first(3) %>
-        <% row_stories = @stories.drop(8) %>
       <% end %>
+      <% grid_stories = @stories.first(3) %>
+      <% row_stories = @stories.drop(3) %>
 
       <%# Pagination anchors to the first story's title (#stories) so paging
           lands on the results, not the hero. Falls to the first row when the
