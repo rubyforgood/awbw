@@ -374,7 +374,8 @@ catalog-owned classification** on existing records (`CATALOG_FIELDS` — area,
 `display_status`, `released_on`, `action_path`, `pr_number`, so a seed fix like a
 wrong audience propagates), **and fill in blank content** (`CONTENT_FIELDS` —
 `summary`, `pro_tips`, `external_url`, `description`) without ever overwriting what
-an admin wrote.
+an admin wrote. **A feature edited in-app since creation (`Feature#edited?`) is skipped
+entirely** — sync writes don't bump `updated_at`, so only admin saves count as edits.
 
 - **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind
   hue already safelisted in `application.tailwind.css`) and use its key in the

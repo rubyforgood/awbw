@@ -30,6 +30,8 @@ class Feature < ApplicationRecord
   }.freeze
   DISPLAY_STATUS_KEYS = DISPLAY_STATUSES.keys.freeze
   ADMIN_ONLY_STATUS = "admin_facing".freeze
+  # Absorbs ActionText touching the record a moment after it's created with a description.
+  EDIT_GRACE_PERIOD = 1.minute
 
   validates :name, presence: true, length: { maximum: 150 }
   validates :summary, presence: true, length: { maximum: 300 }
@@ -53,5 +55,9 @@ class Feature < ApplicationRecord
 
   def admin_only?
     display_status == ADMIN_ONLY_STATUS
+  end
+
+  def edited?
+    updated_at > created_at + EDIT_GRACE_PERIOD
   end
 end
