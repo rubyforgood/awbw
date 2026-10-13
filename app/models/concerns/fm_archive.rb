@@ -7,6 +7,7 @@ module FmArchive
   TALL_GROUPS = [].freeze
   PORTAL_COUNTERPARTS = {}.freeze
   PORTAL_FIELDS = {}.freeze
+  USER_LOOKUP_FIELDS = [].freeze
 
   included do
     before_validation :set_defaults

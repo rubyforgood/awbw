@@ -123,9 +123,10 @@ class FmRolodex < ApplicationRecord
     "PrimaryAgeGroup" => "the person's primary age group",
     "DateEntered" => "people.created_at",
     "DateTimeModified" => "people.updated_at",
-    "EnteredBy" => "people.created_by_id (matched to a portal user)",
-    "ModifiedBy" => "people.updated_by_id (matched to a portal user)"
+    "EnteredBy" => "people.created_by_id",
+    "ModifiedBy" => "people.updated_by_id"
   }.freeze
+  USER_LOOKUP_FIELDS = %w[EnteredBy ModifiedBy].freeze
 
   PORTAL_COUNTERPARTS = {
     "fm_addresses" => "Addresses",
