@@ -33,7 +33,7 @@ RSpec.describe Organization do
     it "is enforced by a unique index when validations are skipped" do
       create(:organization, name: "Hope House")
       duplicate = build(:organization, name: "HOPE HOUSE")
-      expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique, /#{Organization::NAME_INDEX}/)
+      expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique, /index_organizations_on_name/)
     end
 
     it { should allow_value("info@example.com").for(:email) }
