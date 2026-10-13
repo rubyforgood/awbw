@@ -338,7 +338,7 @@ Both flows record on `EventRegistrationOrganization` what the submission meant f
 
 - `UserServices::ProcessEmailChange` — Email change processing
 - `UserServices::ProcessEmailManualConfirm` — Manual email confirmation
-- `UserServices::DuplicateFinder` — Candidate groups for the users (logins) deduper: logins sharing one person (e.g. left by a person merge), most recently updated first so the deduper suggests the login the person signs in with
+- `UserServices::DuplicateFinder` — Candidate groups for the users (logins) deduper: logins sharing one person (e.g. left by a person merge); a login that can sign in leads, most recently updated first, so the deduper suggests the login the person uses. The deduper's pickers query `SearchController`'s virtual `user_any_status` model (every login via `User.activity_search`, labelled with `UserDecorator#access_statuses`)
 
 ## Decorators (Draper)
 

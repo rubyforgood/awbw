@@ -1,7 +1,7 @@
 module UserServices
   # Logins that share one person — typically left behind when a person merge keeps
-  # both people's logins. The most recently updated login (the one the person signs
-  # in with) leads each group so the deduper suggests keeping it.
+  # both people's logins. A login that can sign in leads each group, most recently
+  # updated first, so the deduper suggests keeping the one the person uses.
   class DuplicateFinder
     Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
 
@@ -15,6 +15,7 @@ module UserServices
         .order(updated_at: :desc, id: :desc)
         .group_by(&:person_id)
         .map do |person_id, records|
+          records = records.sort_by.with_index { |user, index| [ user.has_access? ? 0 : 1, index ] }
           Group.new(key: person_id.to_s, label: records.first.person.full_name.to_s, records: records, reasons: [ "Same person" ])
         end
         .sort_by { |group| group.label.downcase }

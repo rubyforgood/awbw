@@ -329,13 +329,14 @@ class UsersController < ApplicationController
       domain: :users,
       candidate_finder: -> { UserServices::DuplicateFinder.new.groups },
       record_label: ->(user) { user.full_name_with_email },
+      search_model: SearchController::USER_ANY_STATUS_MODEL,
       read_only_columns: %w[email super_user confirmed_at last_sign_in_at sign_in_count inactive locked_at],
       editable_columns: %w[time_zone notes],
       # Audit stamps and analytics carry no DB foreign key to users, so name them for the merge to move.
       reference_columns: %w[user_id created_by_id updated_by_id welcome_instructions_sent_by_id],
       record_extras: ->(user) {
         last_sign_in = user.last_sign_in_at ? "last signed in #{user.last_sign_in_at.to_date}" : "never signed in"
-        [ user.super_user? && "Admin", last_sign_in ].compact_blank.join(" · ")
+        [ user.super_user? && "Admin", *user.decorate.access_statuses, last_sign_in ].compact_blank.join(" · ")
       },
       merge_notes: ->(keep, delete) {
         notes = [ "Signing in as #{delete.email} stops working after the merge — #{keep.email} stays the login. Swap to keep the other address." ]

@@ -1078,6 +1078,15 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Same person", "jane.keep@example.com", "jane.old@example.com")
       end
 
+      it "searches every login and shows a login's status in the suggestions" do
+        delete_rec.update_columns(confirmed_at: nil)
+
+        get dedupe_index_users_path
+
+        expect(response.body).to include('data-remote-select-model-value="user_any_status"')
+        expect(response.body).to include("Unconfirmed")
+      end
+
       it "denies access to a regular user" do
         sign_in regular_user
 

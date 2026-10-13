@@ -169,6 +169,8 @@ module Dedupable
   #                       e.g. a login's email and sign-in history (optional)
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
   #                       apart, e.g. two logins of one person (optional, defaults to #name)
+  #   search_model:       Search model the index pickers query (optional, defaults to the model's own
+  #                       remote search), e.g. "user_any_status" to reach logins that can't sign in
   #   reference_columns:  Array of column names that reference this model in any table but carry no DB
   #                       foreign key, so the merge moves them too (e.g. created_by_id stamps) (optional)
   #   movable_attachments: Array of has_one_attached names to move to the keeper when it has none
@@ -219,7 +221,7 @@ module Dedupable
       delete_id_param: "#{mn}_to_delete_id",
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
-      search_model: mn,
+      search_model: config[:search_model] || mn,
       editable_columns: config[:editable_columns],
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
       record_label: config[:record_label] || :name.to_proc,

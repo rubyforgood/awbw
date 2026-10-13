@@ -15,6 +15,14 @@ RSpec.describe UserServices::DuplicateFinder do
       expect(groups.first.reasons).to eq([ "Same person" ])
     end
 
+    it "leads with a login that can sign in over a more recently updated one that can't" do
+      person = create(:person, user: nil)
+      usable = create(:user, person: person, updated_at: 1.week.ago)
+      unconfirmed = create(:user, :unconfirmed, person: person, updated_at: 1.hour.ago)
+
+      expect(described_class.new.groups.first.records).to eq([ usable, unconfirmed ])
+    end
+
     it "ignores a person with one login and logins without a person" do
       create(:user, :with_person)
       create(:user, person: nil)
