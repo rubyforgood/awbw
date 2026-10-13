@@ -65,6 +65,25 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body.scan(%r{href="/organizations/\d+"}).size).to eq(2)
     end
 
+    it "links an archived project back to the affiliations carrying its code" do
+      FmProject.create!(fm_id: "P2775")
+      affiliation = create(:affiliation, filemaker_code: "P2775")
+
+      get fm_archive_path("P2775", table: "projects")
+
+      expect(response.body).to include(edit_affiliation_path(affiliation))
+    end
+
+    it "links an archived personnel row back to its portal affiliation" do
+      FmPersonnel.create!(fm_id: "PS9999")
+      affiliation = create(:affiliation, filemaker_code: "PS9999")
+
+      get fm_archive_path("PS9999", table: "personnels")
+
+      expect(response.body).to include(edit_affiliation_path(affiliation))
+      expect(response.body).to include(ERB::Util.html_escape("#{affiliation.person.full_name} at #{affiliation.organization.name}"))
+    end
+
     it "omits the portal section when nothing carries the code" do
       FmRolodex.create!(fm_id: "00006")
 
