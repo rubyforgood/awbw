@@ -34,12 +34,17 @@ export default class extends Controller {
 
     // Opt-in: picking (or clearing with the ✕) submits the owning form, so the
     // selection connects/disconnects via a page reload with no dedicated button.
+    // Guarded by `ready` so setting the initial value during construction (which
+    // fires onChange) can't auto-submit on load.
     if (this.submitOnChangeValue) {
       config.plugins = { clear_button: { title: "Remove" } };
-      config.onChange = () => this.element.form?.requestSubmit();
+      config.onChange = () => {
+        if (this.ready) this.element.form?.requestSubmit();
+      };
     }
 
     this.select = new TomSelect(this.element, config);
+    this.ready = true;
     this.addSearchIcon();
     this.injectStyles();
 

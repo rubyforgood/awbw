@@ -32,8 +32,8 @@
                       data-remote-select-submit-on-change-value="true"
                       class="w-full rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
                 <option value="">Type to search resources…</option>
-                <% if slot[:resource] %>
-                  <option value="<%= slot[:resource].id %>" selected><%= slot[:resource].title %></option>
+                <% if slot[:connected_resource] %>
+                  <option value="<%= slot[:connected_resource].id %>" selected><%= slot[:connected_resource].title %></option>
                 <% end %>
               </select>
             <% end %>

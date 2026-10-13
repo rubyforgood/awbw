@@ -79,20 +79,22 @@ module Admin
     end
 
     def slot_view(role, config)
-      # Mirror the certificate's own resolution: a resource connected by role, else
-      # one auto-matched by the legacy exact title. Only a role-connected resource
-      # can be disconnected (a title match has no role to clear).
+      # The picker reflects only a role-connected resource, so a legacy title match
+      # (which the certificate still uses as a fallback) never gets pre-selected and
+      # stuck — the admin can always pick freely to override it. The effective
+      # resource (role, else title match) drives the preview and caption.
       connected = Resource.find_by(certificate_artwork_role: role)
-      resource = connected || Resource.find_by(title: config[:title])
+      effective = connected || Resource.find_by(title: config[:title])
       {
         role: role,
         label: config[:label],
         description: config[:description],
         title: config[:title],
         preview_partial: config[:preview_partial],
-        resource: resource,
+        connected_resource: connected,
+        resource: effective,
         connected: connected.present?,
-        file: resource&.signature_file
+        file: effective&.signature_file
       }
     end
   end
