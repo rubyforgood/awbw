@@ -89,8 +89,6 @@
                  [ "border-red-300", "fa-lock", "text-red-600", "Locked" ]
                elsif account.inactive?
                  [ "border-red-300", "fa-lock", "text-red-600", "Inactive" ]
-               elsif account.portal_access_lapsed?
-                 [ "border-red-300", "fa-hourglass-end", "text-red-600", "Access lapsed" ]
                elsif account.confirmed_at.blank?
                  [ "border-yellow-400", "fa-clock", "text-yellow-600", (account.welcome_instructions_sent_at.present? ? "Invited — not confirmed" : "Unconfirmed") ]
                else

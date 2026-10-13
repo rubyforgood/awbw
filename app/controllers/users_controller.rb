@@ -11,7 +11,7 @@ class UsersController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(User.includes(:created_by, :updated_by, :welcome_instructions_sent_by,
-                                                  person: [ :affiliations, :memberships, { avatar_attachment: :blob } ]))
+                                                  person: { avatar_attachment: :blob }))
       filtered = base_scope.search_by_params(params).order(:first_name, :last_name)
       @users_count = filtered.count
       @users = filtered.paginate(page: params[:page], per_page: per_page)

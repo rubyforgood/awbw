@@ -170,23 +170,6 @@ RSpec.describe User do
     it "is false when deactivated" do
       expect(build(:user, confirmed_at: Time.current, inactive: true).has_access?).to be(false)
     end
-
-    it "is false when portal access has lapsed" do
-      person = create(:person)
-      create(:affiliation, person: person, start_date: 2.years.ago, end_date: 1.year.ago)
-
-      expect(person.user.reload.has_access?).to be(false)
-    end
-  end
-
-  describe ".has_access" do
-    it "agrees with #has_access?" do
-      lapsed = create(:person)
-      create(:affiliation, person: lapsed, start_date: 2.years.ago, end_date: 1.year.ago)
-      users = [ create(:user), create(:user, :unconfirmed), create(:user, locked: true), create(:user, inactive: true), lapsed.user ]
-
-      expect(User.has_access.where(id: users).ids).to eq(users.select { |u| u.reload.has_access? }.map(&:id))
-    end
   end
 
   describe "#invited? and .invited" do
@@ -338,30 +321,6 @@ RSpec.describe User do
     it "returns false when locked" do
       user = create(:user, locked: true)
       expect(user.active_for_authentication?).to be false
-    end
-
-    it "returns false when portal access has lapsed" do
-      person = create(:person)
-      create(:membership, :cancelled, person: person)
-
-      expect(person.user.reload.active_for_authentication?).to be false
-    end
-  end
-
-  describe "#inactive_message" do
-    it "is :lapsed when portal access has lapsed" do
-      person = create(:person)
-      create(:membership, :cancelled, person: person)
-
-      expect(person.user.reload.inactive_message).to eq(:lapsed)
-    end
-
-    it "is :inactive when deactivated" do
-      expect(create(:user, inactive: true).inactive_message).to eq(:inactive)
-    end
-
-    it "is :locked when locked" do
-      expect(create(:user, locked: true).inactive_message).to eq(:locked)
     end
   end
 

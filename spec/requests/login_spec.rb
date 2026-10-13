@@ -20,30 +20,6 @@ RSpec.describe "User login", type: :request do
     end
   end
 
-  context "when portal access has lapsed" do
-    let(:user) { create(:user, :with_person, password: password) }
-
-    before do
-      create(:affiliation, person: user.person, start_date: 2.years.ago, end_date: 1.year.ago)
-    end
-
-    it "does not allow login and says access has ended" do
-      log_in(user.email, password)
-
-      expect(response).to redirect_to(new_user_session_path)
-      follow_redirect!
-      expect(response.body).to include("Your portal access has ended.")
-    end
-
-    it "lets the person back in once they hold a membership" do
-      create(:membership, person: user.person)
-
-      log_in(user.email, password)
-
-      expect(response).to redirect_to(root_path)
-    end
-  end
-
   context "when credentials are wrong" do
     let(:user) { create(:user, password: password) }
 
