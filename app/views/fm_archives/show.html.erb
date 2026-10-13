@@ -22,7 +22,7 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
       <% @record.grouped_data.each do |label, subgroups| %>
-        <section class="<%= class_names("rounded-xl bg-white p-6", "lg:col-span-2": label.nil?) %>">
+        <section class="<%= class_names("rounded-xl bg-white p-6", "lg:col-span-2": label.nil?, "lg:row-span-2": @record.class::TALL_GROUPS.include?(label)) %>">
           <% if label %>
             <h2 class="mb-1 text-lg font-semibold"><%= label %></h2>
           <% end %>

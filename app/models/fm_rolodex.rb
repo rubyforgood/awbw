@@ -104,6 +104,7 @@ class FmRolodex < ApplicationRecord
   PHONES = "Phones"
   ADDRESSES = "Addresses"
   LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
+  TALL_GROUPS = [ "Organization & affiliations" ].freeze
 
   FIELD_GROUPS = {
     "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
@@ -121,13 +122,13 @@ class FmRolodex < ApplicationRecord
                                       Settings BBSLicense]
     },
     "Sector & age group" => %w[PrimaryServiceArea OtherServiceArea PrimaryAgeGroup],
+    "Record keeping" => %w[ID Delete DuplicateStatus EnteredBy DateEntered ModifiedBy DateTimeModified UserID Password],
     "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
     "Volunteering" => %w[VolEnrollDate DropDate AvailMon AvailTue AvailWed AvailThu AvailFri AvailSat],
     "Giving" => %w[DonationCount DonationTotal Amount CkNo FunderPotential CallForArtRecord],
     "Personal details" => %w[DateOfBirth BirthMonth BirthDay BirthYear BirthdayFlag Anniversary Children
                              Ethnicity Languages],
-    "Mailing" => %w[AddresseeGreetingStyles ListBy IncludeTitle FamilyCode Private],
-    "Record keeping" => %w[ID Delete DuplicateStatus EnteredBy DateEntered ModifiedBy DateTimeModified UserID Password]
+    "Mailing" => %w[AddresseeGreetingStyles ListBy IncludeTitle FamilyCode Private]
   }.freeze
 
   HAS_MANY = {

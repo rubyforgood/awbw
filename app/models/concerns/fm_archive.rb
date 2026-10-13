@@ -4,6 +4,7 @@ module FmArchive
   FIELD_GROUPS = {}.freeze
   OTHER_FIELDS = "Other fields"
   LISTED_FIELDS = [].freeze
+  TALL_GROUPS = [].freeze
 
   included do
     before_validation :set_defaults

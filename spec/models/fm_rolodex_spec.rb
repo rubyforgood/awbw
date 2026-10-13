@@ -40,9 +40,12 @@ RSpec.describe FmRolodex do
     end
 
     it "leaves the primary phone and address IDs to the lists below" do
-      rolodex = described_class.new(data: { "PrimaryAddrsID" => "AD1", "MailingList" => "Yes" })
+      FmAddress.create!(fm_id: "AD1")
+      rolodex = described_class.new(fm_id: "00901", data: { "PrimaryAddrsID" => "AD1", "MailingList" => "Yes" })
 
-      expect(rolodex.grouped_data).to eq("Phones & addresses" => { "Mailing list" => { "MailingList" => "Yes" } })
+      expect(rolodex.grouped_data).to eq(
+        "Phones & addresses" => { FmRolodex::ADDRESSES => {}, "Mailing list" => { "MailingList" => "Yes" } }
+      )
     end
 
     it "keeps an empty phones subcard when the person has phones on file" do
