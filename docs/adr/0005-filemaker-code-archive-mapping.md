@@ -28,7 +28,7 @@ drive the archive pages' links.
 | `affiliations.filemaker_code` | `fm_personnels` | `PrsnlRecID`, e.g. `PS9999` | dev seed (no UI link yet) |
 | `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | dev seed (no UI link yet) |
 | `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | dev seed (no UI link yet) |
-| `resources.filemaker_code` | none | — | unmapped |
+| `resources.filemaker_code` | `fm_quotations` | `RecordID`, e.g. `Q10215` | no UI link yet |
 
 - **Organization → Project, or → Organization.** An app `Organization` is usually one
   art program site, which is a FileMaker *Project*. FileMaker's own Organization row is
@@ -45,10 +45,11 @@ drive the archive pages' links.
   affiliations almost all carry `P` + 4-digit codes, which could be project ids or
   personnel ids missing their `S` — not yet checked against each row's person and org
   (see "What portal records store" below).
-- **Resource has no counterpart.** No archive table holds resources. Form Letters
-  are mail-merge templates, not resources, and nothing in the app maps to them. The
-  seed leaves `resources.filemaker_code` blank. **Open:** most production resource
-  codes are quotation ids (`Q…`), so some resources may map to `fm_quotations`.
+- **Resource → Quotation.** In production, 116 of 128 resource codes are quotation ids
+  (`Q…`), 115 of them on Leader spotlight resources and one on a Story; 115 of the 116
+  exist in `fm_quotations` (quotes and testimonials, with a `WorkShopLeader` field).
+  Form Letters are mail-merge templates, not resources. The dev seed still leaves
+  `resources.filemaker_code` blank.
 
 ## Archive id patterns
 
@@ -132,7 +133,7 @@ split into single codes). Compare against the grid above.
 | `affiliations` | 1,535 | 1 `PS` (personnel) | 1,531 `P` + 4 digits (project ids, or personnel ids missing the `S` — unverified), plus `ORG05589`, `PP208`, `09856` |
 | `payments` | 0 | — | — |
 | `workshops` | 850 | 849 `W` + 4 digits | `XVI/4` |
-| `resources` | 128 | (unmapped) | 116 `Q` + 4–5 digits (**quotations**), plus bare 2–3 digit numbers, `v`, and a URL |
+| `resources` | 128 | 115 `Q` + 4–5 digits found in quotations (114 Leader spotlight, 1 Story) | 1 `Q` id not in the archive; 10 bare 2–3 digit numbers, `v`, and a URL, all on Leader spotlights |
 
 Outliers get fixed by hand, not backfilled: an admin works from the list of portal
 records whose codes have no row in the archive tables their column maps to. Those
@@ -140,6 +141,6 @@ codes already show struck through in the code field's hint.
 
 ## Consequences
 
-A UI link for affiliations, payments, or workshops includes `FilemakerCoded` on the
+A UI link for affiliations, payments, workshops, or resources includes `FilemakerCoded` on the
 model and declares the archive table above (e.g. `filemaker_archived_in FmPersonnel`);
 `filemaker_code_links` reads it from there.
