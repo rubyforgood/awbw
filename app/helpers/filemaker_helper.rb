@@ -41,6 +41,15 @@ module FilemakerHelper
     link_to text, path, class: button_classes(:primary_outline, size: :sm)
   end
 
+  # An archive field's link to the record it names, struck through when the archive has no such record.
+  def fm_archive_reference_link(fm_id, table)
+    key = table.delete_prefix("fm_")
+    model = FmArchivesController::TABLES.dig(key, :model)
+    return tag.span(fm_id, class: "line-through opacity-60", title: "No FM record found") if model && !model.exists?(fm_id: fm_id)
+
+    link_to fm_id, fm_archive_path(fm_id, table: key), class: "text-primary hover:underline"
+  end
+
   # A code no archive table holds renders struck through, flagging a likely typo —
   # or is dropped with `linked_only`, for nav buttons that must all lead somewhere.
   def filemaker_archive_links(codes, archives:, link_class: nil, label: nil, linked_only: false)

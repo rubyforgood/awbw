@@ -58,6 +58,17 @@ RSpec.describe "FM archives", type: :request do
       expect(reference).to match(/Other fields.*zcSort/m)
     end
 
+    it "strikes through a linked ID with no archive record, and links the rest" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "PrimaryAddrsID" => "74999", "PrimaryPhoneID" => "75001" })
+      FmPhoneNumber.create!(fm_id: "75001")
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(%r{<span[^>]*line-through[^>]*title="No FM record found"[^>]*>74999</span>})
+      expect(response.body).to include(fm_archive_path("75001", table: "phone_numbers"))
+      expect(response.body).not_to include(fm_archive_path("74999", table: "addresses"))
+    end
+
     it "leaves the field reference off tables without field groups" do
       FmProject.create!(fm_id: "P2775")
 

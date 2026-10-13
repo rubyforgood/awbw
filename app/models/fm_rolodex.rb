@@ -105,9 +105,10 @@ class FmRolodex < ApplicationRecord
 
   FIELD_GROUPS = {
     "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
-                     EMail EmailPrimary EmailType EmailNotes WebSite BestTimeToCall],
+                     EMail EmailPrimary EmailType EmailNotes BestTimeToCall],
     PHONES_AND_ADDRESSES => %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID],
-    "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID Mission],
+    "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID
+                                WebSite Mission],
     "Facilitator" => %w[Classification Status FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
                         HowTrained TrainingMotivation LifeExperiences Settings BBSLicense],
     "Sector & age group" => %w[PrimaryServiceArea OtherServiceArea PrimaryAgeGroup],
