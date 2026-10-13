@@ -36,6 +36,22 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include("table=phone_numbers", "table=addresses")
     end
 
+    it "lists every field and association a rolodex record can hold below its cards" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Record keeping.*Available fields &amp; associations.*FacilitatorSinceYear.*OrgID.*Organizations.*Workshops \(Authored\).*AuthorID/m)
+    end
+
+    it "leaves the field reference off tables without field groups" do
+      FmProject.create!(fm_id: "P2775")
+
+      get fm_archive_path("P2775", table: "projects")
+
+      expect(response.body).not_to include("Available fields")
+    end
+
     it "links back to the portal people carrying the archive code" do
       FmRolodex.create!(fm_id: "00006")
       person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")

@@ -2,9 +2,9 @@
   <h3 class="mt-5 mb-1 text-sm font-semibold text-gray-700"><%= heading %> (<%= records.size %>)</h3>
   <ul class="divide-y divide-gray-200">
     <% records.each do |record| %>
-      <li class="grid grid-cols-3 gap-4 py-3 text-sm">
-        <span class="font-medium break-words text-gray-500"><%= record.decorate.kind %></span>
-        <span class="col-span-2 break-words text-gray-900">
+      <li class="grid grid-cols-5 gap-4 py-3 text-sm">
+        <span class="col-span-2 font-medium break-words text-gray-500"><%= record.decorate.kind %></span>
+        <span class="col-span-3 break-words text-gray-900">
           <%= link_to record.decorate.summary.presence || record.fm_id,
                       fm_archive_path(record.fm_id, table: record.class.table_name.delete_prefix("fm_")),
                       class: "text-primary hover:underline" %>

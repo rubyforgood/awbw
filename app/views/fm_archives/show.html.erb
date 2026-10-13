@@ -28,9 +28,9 @@
           <% end %>
           <dl class="divide-y divide-gray-200">
             <% fields.each do |key, value| %>
-              <div class="grid grid-cols-3 gap-4 py-3">
-                <dt class="text-sm font-medium break-words text-gray-500"><%= key %></dt>
-                <dd class="col-span-2 text-sm break-words text-gray-900">
+              <div class="grid grid-cols-5 gap-4 py-3">
+                <dt class="col-span-2 text-sm font-medium break-words text-gray-500"><%= key %></dt>
+                <dd class="col-span-3 text-sm break-words text-gray-900">
                   <% link_target = @record.class::FM_LINKS[key] %>
                   <% if link_target && value.present? %>
                     <%= link_to value, fm_archive_path(value, table: link_target.sub("fm_", "")), class: "text-primary hover:underline" %>
@@ -74,6 +74,10 @@
           <% end %>
         <% end %>
       </div>
+    <% end %>
+
+    <% if @record.class::FIELD_GROUPS.any? %>
+      <%= render "field_reference", model: @record.class %>
     <% end %>
   </div>
 </div>
