@@ -4272,3 +4272,4 @@
     code so admins can see and fix it, the same way people and organizations do.
   pro_tips:
     - "Separate several codes with commas — a record can answer to more than one."
+    - "Each code links to its FileMaker archive record, and that record links back to the payment, workshop, or resource."

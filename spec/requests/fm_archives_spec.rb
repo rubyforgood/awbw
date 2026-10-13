@@ -84,6 +84,37 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include(ERB::Util.html_escape("#{affiliation.person.full_name} at #{affiliation.organization.name}"))
     end
 
+    it "links an archived payment back to its portal payment" do
+      FmPayment.create!(fm_id: "D29186")
+      person = create(:person)
+      payment = create(:payment, person:, amount_cents: 15_000, filemaker_code: "D29186")
+
+      get fm_archive_path("D29186", table: "payments")
+
+      expect(response.body).to include(payment_path(payment))
+      expect(response.body).to include("$150 from #{ERB::Util.html_escape(person.name)}")
+    end
+
+    it "links an archived workshop back to its portal workshop" do
+      FmWorkshop.create!(fm_id: "W0123")
+      workshop = create(:workshop, filemaker_code: "W0123")
+
+      get fm_archive_path("W0123", table: "workshops")
+
+      expect(response.body).to include(workshop_path(workshop))
+      expect(response.body).to include(ERB::Util.html_escape(workshop.title))
+    end
+
+    it "links an archived quotation back to its portal resource" do
+      FmQuotation.create!(fm_id: "Q10215")
+      resource = create(:resource, filemaker_code: "Q10215")
+
+      get fm_archive_path("Q10215", table: "quotations")
+
+      expect(response.body).to include(ERB::Util.html_escape(resource_path(resource, no_redirect: true)))
+      expect(response.body).to include(ERB::Util.html_escape(resource.title))
+    end
+
     it "omits the portal section when nothing carries the code" do
       FmRolodex.create!(fm_id: "00006")
 

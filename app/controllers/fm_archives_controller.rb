@@ -63,7 +63,7 @@ class FmArchivesController < ApplicationController
     { label: "Other", icon: "📎", tables: %w[notes] }
   ]
 
-  PORTAL_MODELS = [ Person, Organization, Affiliation ].freeze
+  PORTAL_MODELS = [ Person, Organization, Affiliation, Payment, Workshop, Resource ].freeze
 
   def index
     authorize! :fm_archive
