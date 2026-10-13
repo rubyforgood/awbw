@@ -24,16 +24,18 @@ RSpec.describe Membership, type: :model do
 
     it "rejects overlapping dates with an existing membership for the same person" do
       person = create(:person)
-      create(:membership, person: person, start_date: Date.current - 1.month, end_date: Date.current + 1.month)
+      create(:membership, :autorenewal_cancelled, person: person,
+        start_date: Date.current - 1.month, end_date: Date.current + 1.month)
 
       overlap = build(:membership, person: person, start_date: Date.current, end_date: Date.current + 2.months)
       expect(overlap).not_to be_valid
       expect(overlap.errors[:base].join).to match(/overlaps/)
     end
 
-    it "allows non-overlapping dates with an existing membership for the same person" do
+    it "allows a new membership with non-overlapping dates when the previous is cancelled" do
       person = create(:person)
-      create(:membership, person: person, start_date: Date.current - 2.months, end_date: Date.current - 1.month)
+      create(:membership, :autorenewal_cancelled, person: person,
+        start_date: Date.current - 2.months, end_date: Date.current - 1.month)
 
       expect(build(:membership, person: person, start_date: Date.current, end_date: Date.current + 1.month)).to be_valid
     end
@@ -145,19 +147,19 @@ RSpec.describe Membership, type: :model do
     end
   end
 
-describe "#end_date" do
-     it "returns the end_date when set" do
-       membership = create(:membership, end_date: Date.current + 11.months)
+  describe "#end_date" do
+       it "returns the end_date when set" do
+         membership = create(:membership, end_date: Date.current + 11.months)
 
-       expect(membership.end_date).to eq(Date.current + 11.months)
+         expect(membership.end_date).to eq(Date.current + 11.months)
+       end
+
+       it "is nil when end_date is not set" do
+         membership = create(:membership, end_date: nil)
+
+         expect(membership.end_date).to be_nil
+       end
      end
-
-     it "is nil when end_date is not set" do
-       membership = create(:membership, end_date: nil)
-
-       expect(membership.end_date).to be_nil
-     end
-   end
 
   describe "#sync_dates_from_invoice" do
     it "sets start_date and end_date from a paid invoice" do

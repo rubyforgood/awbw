@@ -76,7 +76,7 @@ class Membership < ApplicationRecord
     self.cost_cents = value.present? ? (value.to_d * 100).to_i : nil
   end
 
-  
+
 
   def covered_on?(date = Date.current)
     membership_invoices.any? { |invoice| invoice.active_on?(date) }
@@ -199,7 +199,6 @@ class Membership < ApplicationRecord
 
     others = Membership.autorenewal_not_cancelled.where(person_id: person_id)
     others = others.where.not(id: id) if persisted?
-    others = others.where("start_date < ? AND end_date > ?", end_date, start_date) if start_date.present? && end_date.present?
     return unless others.exists?
 
     errors.add(:base, "This person already has a membership that is active")

@@ -59,7 +59,8 @@ RSpec.describe "Memberships", type: :request do
       end
 
       it "lists past subscriptions alongside the current one" do
-        past = create(:membership, :autorenewal_cancelled, person: person, cost_cents: 1_500)
+        past = create(:membership, :autorenewal_cancelled, person: person, cost_cents: 1_500,
+          start_date: Date.current - 3.years, end_date: Date.current - 2.years)
         membership_invoice_for(subscription: past, start_date: Date.current - 3.years)
         create(:membership, person: person)
 
@@ -283,7 +284,8 @@ RSpec.describe "Memberships", type: :request do
 
       it "explains a resume that conflicts with a newer subscription" do
         subscription.update!(autorenewal_cancelled_at: Time.current)
-        create(:membership, person: person)
+        create(:membership, person: person,
+          start_date: subscription.end_date + 1.day, end_date: subscription.end_date + 1.year)
 
         patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "0" } }
 
