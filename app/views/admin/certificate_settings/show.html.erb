@@ -40,9 +40,9 @@
 
             <% if slot[:resource] %>
               <%= link_to edit_resource_path(slot[:resource]), target: "_blank", rel: "noopener",
-                    class: "mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900" do %>
+                    class: "mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 hover:text-gray-900" do %>
                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                Open “<%= slot[:resource].title %>” in a new tab
+                <span class="underline">Open “<%= slot[:resource].title %>” in a new tab</span>
               <% end %>
             <% else %>
               <p class="mt-2 text-xs text-gray-400">
