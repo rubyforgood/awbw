@@ -1,5 +1,6 @@
 module Events
   class RegistrationsController < ApplicationController
+    include AhoyTracking
     include SearchEngineHideable
     before_action :noindex!, only: [ :show, :invoice, :receipt ]
     before_action :authenticate_user!, only: [ :create ]
@@ -35,6 +36,7 @@ module Events
 
       @event = @event_registration.event
       @invoice = EventInvoice.from_registration(@event_registration)
+      track_view("invoices", { event_id: @event.id, registration_id: @event_registration.id })
     end
 
     def receipt
@@ -140,6 +142,7 @@ module Events
 
       NotificationServices::CreateNotification.call(
         noticeable: event_registration,
+        person: event_registration.registrant,
         kind: :event_registration_confirmation,
         recipient_role: :person,
         recipient_email: registrant_email,
@@ -150,7 +153,7 @@ module Events
         noticeable: event_registration,
         kind: :event_registration_confirmation_fyi,
         recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        recipient_email: Organization.programs_email,
         notification_type: 0
       )
     end
@@ -168,7 +171,10 @@ module Events
     end
 
     def create_person_for_current_user
-      person = Person.create!(
+      match = PersonMatcher.call(email: current_user.email, last_name: current_user.last_name,
+                                 first_names: [ current_user.first_name ])
+      person = match unless match&.user
+      person ||= Person.create!(
         first_name: current_user.first_name,
         last_name: current_user.last_name,
         email: current_user.email
@@ -190,14 +196,15 @@ module Events
     def redirect_to_stripe_checkout(registration)
       person = registration.registrant
       amount = registration.remaining_cost
+      metadata = stripe_metadata(event_registration_id: registration.id, event_id: @event.id)
 
       person.set_payment_processor :stripe
 
       checkout_session = person.payment_processor.checkout(
         mode: "payment",
-        metadata: { event_registration_id: registration.id, event_id: @event.id },
+        metadata: metadata,
         payment_intent_data: {
-          metadata: { event_registration_id: registration.id, event_id: @event.id },
+          metadata: metadata,
           description: "Training Fee: #{@event.title}"
         },
         line_items: [ {

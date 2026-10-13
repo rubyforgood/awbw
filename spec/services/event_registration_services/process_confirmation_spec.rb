@@ -136,6 +136,7 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
       it "creates a notification for registration confirmation" do
         expect(NotificationServices::CreateNotification).to receive(:call).with(
           noticeable: registration,
+          person: person,
           kind: "event_registration_confirmation",
           recipient_role: :person,
           recipient_email: person.preferred_email,
@@ -181,7 +182,7 @@ RSpec.describe EventRegistrationServices::ProcessConfirmation do
           noticeable: registration,
           kind: "event_registration_confirmation_fyi",
           recipient_role: :admin,
-          recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+          recipient_email: EmailConfigHelpers::PROGRAMS_EMAIL,
           notification_type: 0
         )
 

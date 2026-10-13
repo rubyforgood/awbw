@@ -12,8 +12,8 @@ RSpec.describe "story_ideas/new", type: :view do
     assign(:organizations, organizations)
     assign(:users, [])
     assign(:sectors, [])
-    assign(:story_population_categories, [])
-    assign(:story_population_type, nil)
+    assign(:story_audience_rows, [])
+    assign(:story_audience_label, nil)
   end
 
   shared_examples "organization dropdown" do

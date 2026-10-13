@@ -12,14 +12,16 @@ module StoryIdeaFormVariables
     users = users.or(User.where(id: @story_idea.created_by_id)) if @story_idea&.created_by_id
     @users = users.distinct.order("people.first_name, people.last_name")
 
-    @story_population_type = CategoryType.find_by(name: "StoryPopulation")
-    @story_population_categories = @story_population_type&.categories&.published&.ordered_by_position_and_name || []
+    @story_audience_label = CategoryType.find_by(name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)&.display_label
+    @story_audience_rows = Category.story_audience_rows
     @sectors = Sector.published.order(:name)
     submitted_sector_ids = Array(params.dig(:story_idea, :sector_ids)).reject(&:blank?)
     submitted_category_ids = Array(params.dig(:story_idea, :category_ids)).reject(&:blank?)
     if submitted_sector_ids.any? || submitted_category_ids.any?
       @preselected_sector_ids = submitted_sector_ids.map(&:to_i)
       @preselected_category_ids = submitted_category_ids.map(&:to_i)
+      @preselected_primary_sector_id = params.dig(:story_idea, :primary_sector_id).presence&.to_i
+      @preselected_primary_category_id = params.dig(:story_idea, :primary_category_id).presence&.to_i
     end
 
     if @story_idea.persisted?
@@ -30,8 +32,10 @@ module StoryIdeaFormVariables
           .order(:position, :name)
           .group_by(&:category_type)
           .select { |type, _| type.nil? || type.published? }
+          .reject { |type, _| type&.name.in?(CategoriesTaggable::AUDIENCE_CATEGORY_TYPES) }
           .sort_by { |type, _| [ type&.story_specific? ? 0 : 1, type&.name.to_s.downcase ] }
     end
+    @story_idea.story_idea_workshops.build if @story_idea.story_idea_workshops.blank?
     @story_idea.build_primary_asset if @story_idea.primary_asset.blank?
     @story_idea.gallery_assets.build
   end

@@ -463,7 +463,7 @@ class EventRegistration < ApplicationRecord
     # a NOT IN list makes the whole comparison return no rows.
     with_user = User.where.not(person_id: nil).select(:person_id)
     has_access = User.has_access.where.not(person_id: nil).select(:person_id)
-    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    invited = User.invited.where.not(person_id: nil).select(:person_id)
     case value
     when "none" then where.not(registrant_id: with_user)
     when "has_access" then where(registrant_id: has_access)
@@ -794,13 +794,6 @@ class EventRegistration < ApplicationRecord
     invoice_available? && remaining_cost.zero? && payment_received?
   end
 
-  # AWBW's own W-9 is only useful to a payer who actually paid us, so it's gated on
-  # a paid event AND an actual payment being on file (cash, check, or card). A
-  # balance cleared purely by scholarship or discount doesn't unlock it.
-  def w9_available?
-    invoice_available? && payment_received?
-  end
-
   # Cost source for the Registerable payment interface: the event's price.
   def cost_cents
     event.cost_cents
@@ -940,6 +933,12 @@ class EventRegistration < ApplicationRecord
     continuing_education_registrations.sum { |c| c.remaining_cost }
   end
 
+  # CE overage across this registration's CE registrations — cents allocated beyond
+  # cost, summed. Positive when a CE payment needs reconciling; 0 otherwise.
+  def ce_over_allocation_cents
+    continuing_education_registrations.sum { |c| c.over_allocation_cents }
+  end
+
   # CE cash collected across this registration's CE registrations (payments only,
   # excluding discounts) — the CE analogue of payments_sum, for revenue reporting.
   def ce_amount_paid_cents
@@ -1045,7 +1044,7 @@ class EventRegistration < ApplicationRecord
     account = registrant&.user
     return "none" if account.nil?
     return "has_access" if account.has_access?
-    return "invited" if account.welcome_instructions_sent_at.present?
+    return "invited" if account.invited?
     "no_access"
   end
 
@@ -1196,17 +1195,23 @@ class EventRegistration < ApplicationRecord
 
     NotificationServices::CreateNotification.call(
       noticeable: self,
+      person: registrant,
       kind: "event_registration_cancelled",
       recipient_role: :person,
       recipient_email: email,
       notification_type: 1
     )
 
+    programs_email = Organization.programs_email
+    # No staff FYI without a configured programs mailbox (e.g. dev/seed with no
+    # address env var); the registrant notice above still goes out.
+    return if programs_email.blank?
+
     NotificationServices::CreateNotification.call(
       noticeable: self,
       kind: "event_registration_cancelled_fyi",
       recipient_role: :admin,
-      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      recipient_email: programs_email,
       notification_type: 1
     )
   end

@@ -46,6 +46,17 @@ module Events
       @signature_file = certificate_signature_file if @event.facilitator_training?
     end
 
+    # CE "Confirmation of Attendance" certificate — a separate document from the
+    # completion/training certificate, one per CE registration (i.e. per professional
+    # license). Shows once that CE registration's certificate is available, otherwise
+    # the pending unlock conditions. The CE administrator's signature comes from its
+    # own admin-managed record (never committed to this public repo).
+    def ce_certificate
+      @ce_registration = ce_certificate_registration
+      return redirect_to(registration_ce_path(@event_registration.slug)) unless @ce_registration
+      @signature_file = Resource.ce_certificate_signature_file
+    end
+
     # Scholarship status: the award (amount, funder, criteria, tasks) once a
     # scholarship exists, or a pending state while it is only requested. Nothing
     # to show when neither requested nor received.
@@ -529,6 +540,15 @@ module Events
       Resource.training_certificate_signatures_file
     end
 
+    # The CE registration this certificate is for. The sample preview has one
+    # in-memory CE registration; a real request names it by id, scoped to this
+    # registration so the slug alone can't reach another registrant's record.
+    def ce_certificate_registration
+      scope = @event_registration.continuing_education_registrations
+      return scope.first if sample_preview?
+      scope.find_by(id: params[:ce_registration_id])
+    end
+
     # This registrant's cards for a callout's linked resources (nil callout → none).
     # Delegates to the shared decorator so every callout surface builds them the
     # same way — subtitle from the materialized join row, linking to the resource
@@ -566,38 +586,36 @@ module Events
     end
 
     # The payment page's Documents section as grey callout cards, rendered through
-    # the shared card partial like every other callout surface: the dynamic
-    # invoice/receipt first, then the payment callout's linked resources (the W-9
-    # by default), each reading its admin-editable subtitle from the materialized
-    # join row. All are payment-event documents, so nothing renders on a free event
-    # — the W-9 is always linked but stays dormant until the event has a cost.
+    # the shared card partial like every other callout surface: the invoice, then
+    # the payment callout's linked resources (the W-9 by default, each reading its
+    # admin-editable subtitle from the materialized join row), and the receipt last
+    # since it only unlocks after payment. All are payment-event documents, so
+    # nothing renders on a free event — the W-9 is always linked but stays dormant
+    # until the event has a cost.
     def payment_document_cards
       return [] unless @event_registration.invoice_available?
 
       slug = @event_registration.slug
       cards = [ document_card(title: "Invoice", subtitle: "Itemized invoice for this registration",
         icon: "fa-solid fa-file-invoice-dollar", href: registration_invoice_path(slug, return_to: "payment")) ]
-      # The receipt is proof money changed hands, so it links once an actual
-      # payment settles the balance in full; until then (balance owing, or a
-      # balance cleared only by scholarship/discount) it's a locked card.
-      if @event_registration.receipt_available?
-        cards << document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
-          icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
-      else
-        cards << locked_document_card(title: "Receipt", icon: "fa-solid fa-receipt",
-          subtitle: "Available once your payment is received in full")
-      end
-      cards + payment_document_resources.map { |link| payment_resource_card(link, slug) }
+      cards += payment_document_resources.map { |link| payment_resource_card(link, slug) }
+      cards << receipt_card(slug)
     end
 
-    # A payment-callout linked resource as a card. The W-9 only applies once an
-    # actual payment is on file, so it renders locked (naming what unlocks it)
-    # until then; every other document links straight through.
+    # The receipt is proof money changed hands, so it links once an actual payment
+    # settles the balance in full; until then (balance owing, or a balance cleared
+    # only by scholarship/discount) it's a locked card.
+    def receipt_card(slug)
+      return locked_document_card(title: "Receipt", icon: "fa-solid fa-receipt",
+        subtitle: "Available once your payment is received in full") unless @event_registration.receipt_available?
+      document_card(title: "Receipt", subtitle: "Paid-in-full receipt for this registration",
+        icon: "fa-solid fa-receipt", href: registration_receipt_path(slug, return_to: "payment"))
+    end
+
+    # A payment-callout linked resource as a card. AWBW's W-9 is available up front
+    # so payers can register us as a vendor before cutting a check; every document
+    # links straight through.
     def payment_resource_card(link, slug)
-      if link.resource&.title == "W-9" && !@event_registration.w9_available?
-        return locked_document_card(title: link.resource.title, icon: "fa-solid fa-file-pdf",
-          subtitle: "Available once your payment is received")
-      end
       link.decorate.to_card(registrant_slug: slug, return_to: "payment",
                             icon: "fa-solid fa-file-pdf", color: "gray")
     end
@@ -632,22 +650,19 @@ module Events
     def redirect_to_ce_stripe_checkout(ce_registration)
       person = @event_registration.registrant
       amount = ce_registration.remaining_cost
+      metadata = stripe_metadata(
+        ce_registration_id: ce_registration.id,
+        event_registration_id: @event_registration.id,
+        event_id: @event.id
+      )
 
       person.set_payment_processor :stripe
 
       checkout_session = person.payment_processor.checkout(
         mode: "payment",
-        metadata: {
-          ce_registration_id: ce_registration.id,
-          event_registration_id: @event_registration.id,
-          event_id: @event.id
-        },
+        metadata: metadata,
         payment_intent_data: {
-          metadata: {
-            ce_registration_id: ce_registration.id,
-            event_registration_id: @event_registration.id,
-            event_id: @event.id
-          },
+          metadata: metadata,
           description: "CE Hours: #{@event.title}"
         },
         line_items: [ {

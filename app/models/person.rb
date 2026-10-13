@@ -1,16 +1,19 @@
 class Person < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable, StaffTaggable
   include Communicable
+  include FilemakerCoded
 
   pay_customer default_payment_processor: :stripe
 
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
-  has_one :user, inverse_of: :person, dependent: :nullify
+  # A merge can leave several logins on one person; show the most recently updated (every sign-in bumps it).
+  has_one :user, -> { order(updated_at: :desc, id: :desc) }, inverse_of: :person, dependent: :nullify
   has_many :affiliations, dependent: :destroy
   has_many :organizations, through: :affiliations
   has_many :professional_licenses, dependent: :destroy
+  has_many :profile_change_requests, dependent: :destroy
   has_many :memberships
   has_many :membership_invoices, through: :memberships
   has_many :communal_reports, through: :organizations, source: :reports
@@ -23,9 +26,12 @@ class Person < ApplicationRecord
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
+  has_many :invoices, as: :invoicee, dependent: :restrict_with_error
   has_many :stories_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "Story",
            dependent: :restrict_with_error
   has_many :stories_as_author, inverse_of: :author, class_name: "Story", foreign_key: :author_id,
+           dependent: :restrict_with_error
+  has_many :stories_as_co_author, inverse_of: :co_author, class_name: "Story", foreign_key: :co_author_id,
            dependent: :restrict_with_error
   has_many :workshop_variations_as_author, inverse_of: :author, class_name: "WorkshopVariation",
            foreign_key: :author_id, dependent: :restrict_with_error
@@ -37,6 +43,10 @@ class Person < ApplicationRecord
            dependent: :restrict_with_error
   has_many :story_ideas_as_author, inverse_of: :author, class_name: "StoryIdea", foreign_key: :author_id,
            dependent: :restrict_with_error
+  has_many :story_ideas_as_co_author, inverse_of: :co_author, class_name: "StoryIdea", foreign_key: :co_author_id,
+           dependent: :restrict_with_error
+  has_many :story_ideas_as_spotlighted_facilitator, inverse_of: :spotlighted_facilitator, class_name: "StoryIdea",
+           foreign_key: :spotlighted_facilitator_id, dependent: :restrict_with_error
   has_many :workshop_ideas_as_author, inverse_of: :author, class_name: "WorkshopIdea", foreign_key: :author_id,
            dependent: :restrict_with_error
   has_many :workshop_variation_ideas_as_author, inverse_of: :author, class_name: "WorkshopVariationIdea",
@@ -65,7 +75,7 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  before_validation :strip_whitespace
+  before_validation :normalize_names_and_emails
   before_destroy :destroy_memberships, prepend: true
 
   # Validations
@@ -88,6 +98,14 @@ class Person < ApplicationRecord
   validates :youtube_url, length: { maximum: 255 }
   validates :twitter_url, length: { maximum: 255 }
   validate :unique_name_and_email_combination
+
+  # Autocorrect and pasted text swap in look-alike dashes; storing a plain hyphen keeps "Smith-Jones" one person.
+  DASH_VARIANTS = /[\u2010-\u2015\u2212]/
+  NAME_AND_EMAIL_INDEX = "index_people_on_name_and_email".freeze
+
+  def self.normalize_name(name)
+    name&.strip&.gsub(DASH_VARIANTS, "-")
+  end
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
   validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
@@ -257,9 +275,11 @@ class Person < ApplicationRecord
     when "formerly_active" then facilitators_formerly_active
     else all
     end }
-  scope :subscribed_to_topic, ->(topic_subscription_type_id) {
+  scope :subscribed_to_topic, ->(type_ids) {
+    ids = Array(type_ids).reject(&:blank?)
+    return all if ids.empty?
     joins(:topic_subscriptions)
-      .where(topic_subscriptions: { topic_subscription_type_id: topic_subscription_type_id, unsubscribed_at: nil })
+      .where(topic_subscriptions: { topic_subscription_type_id: ids, unsubscribed_at: nil })
       .distinct }
   scope :age_range_names_all, ->(name) {
     return all if name.blank?
@@ -401,6 +421,18 @@ class Person < ApplicationRecord
     professional_licenses.filter_map { |license| license.kind.presence&.strip }.uniq.join(", ").presence
   end
 
+  # The credentials suffix anywhere this person is named, respecting their opt-out.
+  def visible_credentials
+    license_credentials if profile_show_credentials?
+  end
+
+  # How this person reads wherever they're credited: the profile's name format plus
+  # any credentials they show, e.g. "Mae Beale, LMFT, MSW".
+  def name_with_credentials
+    return nil if name.blank?
+    [ name, visible_credentials ].compact_blank.join(", ")
+  end
+
   # Monthly reports are deprecated. Only surface the profile section and its
   # visibility toggle for people who already have some (explicit author, or the
   # legacy fallback to their user's creations) — newer users never see it.
@@ -489,14 +521,29 @@ class Person < ApplicationRecord
     preferred_email
   end
 
-  # A person's own page shows their entire communication history — every
-  # notification to any of their addresses (user login, email, email_2). Every
-  # other record instead scopes to comms filed against itself (its `notifications`).
+  # A person's own page shows their entire communication history — communications
+  # bound to them by person_id (stamped at creation, so they survive an email
+  # change) plus, for legacy rows created before that binding, anything addressed
+  # to any of their current addresses (user login, email, email_2). Every other
+  # record instead scopes to comms filed against itself (its `notifications`).
   def communications_scope
     emails = [ user&.email, email, email_2 ].compact_blank.uniq
-    return Notification.none if emails.empty?
+    by_person = Notification.where(person_id: id)
+    return by_person if emails.empty?
 
-    emails.map { |address| Notification.email(address) }.reduce(:or)
+    emails.map { |address| Notification.email(address) }.reduce(by_person, :or)
+  end
+
+  # The person who owns an address, matched exactly across every place we store
+  # one (login email, email, email_2). Used to bind a communication to its
+  # recipient at creation.
+  def self.find_by_any_email(address)
+    return if address.blank?
+
+    normalized = address.strip.downcase
+    left_joins(:user)
+      .where("LOWER(people.email) = :e OR LOWER(people.email_2) = :e OR LOWER(users.email) = :e", e: normalized)
+      .first
   end
 
   remote_searchable_by :first_name, :last_name, :email, :legal_first_name, :email_2
@@ -571,10 +618,10 @@ class Person < ApplicationRecord
       .uniq
   end
 
-  def strip_whitespace
-    self.first_name = first_name&.strip
-    self.last_name = last_name&.strip
-    self.legal_first_name = legal_first_name&.strip
+  def normalize_names_and_emails
+    self.first_name = Person.normalize_name(first_name)
+    self.last_name = Person.normalize_name(last_name)
+    self.legal_first_name = Person.normalize_name(legal_first_name)
     self.email = email&.strip
     self.email_2 = email_2&.strip
   end

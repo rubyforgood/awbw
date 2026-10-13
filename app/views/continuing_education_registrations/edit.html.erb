@@ -49,7 +49,7 @@
 
   <div class="space-y-6">
     <%= simple_form_for @ce_registration, url: continuing_education_registration_path(@ce_registration, return_to: params[:return_to].presence),
-          html: { id: "ce_registration_form", data: { turbo: false } } do |f| %>
+          html: { id: "ce_registration_form" } do |f| %>
       <div class="space-y-6">
         <%= render "details_section", f: f, license: license, ce_registration: @ce_registration, event: registration.event %>
         <%= render "attendance_entries", registration: registration %>
@@ -95,7 +95,7 @@
       <div class="ml-auto flex items-center gap-3">
         <%= link_to "Cancel", ce_registration_return_path(registration), class: button_classes(:secondary_outline) %>
         <%# Submits the CE details form above (which the certificate section sits outside of). %>
-        <button type="submit" form="ce_registration_form" class="<%= button_classes(:primary) %>">Save changes</button>
+        <button type="submit" form="ce_registration_form" class="<%= button_classes(:primary) %>" data-turbo-submits-with="Saving…">Save changes</button>
       </div>
     </div>
   </div>

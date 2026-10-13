@@ -144,15 +144,16 @@ class TopicSubscriptionsController < ApplicationController
   # When the list is filtered to a single topic, the Mark column header takes that
   # topic's configured label; otherwise it stays the generic "Mark".
   def mark_column_label
-    return "Mark" if params[:topic_subscription_type_id].blank?
+    ids = Array(params[:topic_subscription_type_id]).reject(&:blank?)
+    return "Mark" unless ids.one?
 
-    TopicSubscriptionType.where(id: params[:topic_subscription_type_id]).pick(:mark_label).presence || "Mark"
+    TopicSubscriptionType.where(id: ids).pick(:mark_label).presence || "Mark"
   end
 
   def topic_subscription_params
     permitted = params.require(:topic_subscription).permit(:person_id, :topic_subscription_type_id, :interested_event_id, :organization_id, :source, :marked,
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
+      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
       person_attributes: [ :first_name, :last_name, :email ])
 
     # The new-person toggle is CSS-only, so both the person select and the new
@@ -170,7 +171,7 @@ class TopicSubscriptionsController < ApplicationController
   # wins, then a stable key (e.g. "facilitator_trainings"), else the canonical
   # interested_in_more type.
   def new_topic_type_id
-    return params[:topic_subscription_type_id] if params[:topic_subscription_type_id].present?
+    return Array(params[:topic_subscription_type_id]).first if params[:topic_subscription_type_id].present?
 
     type = params[:topic_key].present? ? TopicSubscriptionType.find_by(key: params[:topic_key]) : TopicSubscriptionType.interested_in_more
     type&.id

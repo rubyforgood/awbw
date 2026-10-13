@@ -103,10 +103,13 @@ class ModelDeduper
   # rather than moved — surfaced on the preview so an admin sees the loss.
   LOST_POLYMORPHIC_REFERENCES = { "active_storage_attachments" => %w[record_type record_id] }.freeze
 
-  # Billing links between orgs need a deliberate decision (rubyforgood/awbw#2378);
-  # skipped here so they neither block nor silently move.
+  # pay_customers is a polymorphic `has_many :as` on the billable model, so it's
+  # reassigned to the survivor by the reflection-driven pass (its charges/subscriptions/
+  # payment_methods follow via customer_id) — a merge never orphans billing. The rest
+  # reference a pay_customer/merchant, not a dedupable owner, so they need no handling
+  # here; they stay listed only to keep the safeguard quiet (rubyforgood/awbw#2378).
   DEFERRED_REFERENCE_TABLES = %w[
-    pay_customers pay_merchants pay_subscriptions pay_charges pay_payment_methods pay_webhooks
+    pay_merchants pay_subscriptions pay_charges pay_payment_methods pay_webhooks
   ].freeze
 
   # Framework internals that purge with the record and aren't worth surfacing.
@@ -293,12 +296,16 @@ class ModelDeduper
     scope
   end
 
-  # Columns (other than the FK) of a unique index that includes the FK.
+  # Columns (other than the FK) of a unique index that includes the FK. A
+  # soft-delete index (one containing `deleted_at`) is skipped: MySQL treats NULLs
+  # as distinct, so `[owner, deleted_at]` does NOT bound live rows to one per owner
+  # (pay_customers), and collapsing on it would destroy a row the DB happily keeps.
   def natural_key_columns(join_klass, fk)
     join_klass.connection.indexes(join_klass.table_name)
       .select(&:unique)
       .map { |index| Array(index.columns) }
       .select { |cols| cols.include?(fk) }
+      .reject { |cols| cols.include?("deleted_at") }
       .map { |cols| (cols - [ fk ]).map(&:to_sym) }
       .find(&:present?) || []
   end

@@ -45,8 +45,6 @@ class EventRegistrationImporter
     "organization_name" => :organization
   }.freeze
 
-  ORGANIZATION_NAME_IDENTIFIER = "organization_name".freeze
-
   # metadata key stamped on the submission the import creates, so we can find our
   # own submission on a re-run (idempotency) without ever matching a real one.
   IMPORT_SOURCE_KEY = "imported_from".freeze
@@ -119,7 +117,7 @@ class EventRegistrationImporter
     form = event.registration_form
     return false unless form
 
-    form.form_fields.exists?(field_identifier: ORGANIZATION_NAME_IDENTIFIER)
+    form.form_fields.exists?(field_identifier: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER)
   end
 
   Result = Struct.new(
@@ -274,14 +272,8 @@ class EventRegistrationImporter
     person
   end
 
-  # PublicRegistration's rule, so imports dedupe identically: email + last name,
-  # first name against either the stored first_name or legal_first_name.
   def find_matching_person(values)
-    first_name = values[:first_name].downcase
-    Person
-      .where("LOWER(last_name) = ? AND LOWER(email) = ?", values[:last_name].downcase, values[:email])
-      .where("LOWER(first_name) = ? OR LOWER(COALESCE(legal_first_name, '')) = ?", first_name, first_name)
-      .first
+    PersonMatcher.call(email: values[:email], last_name: values[:last_name], first_names: [ values[:first_name] ])
   end
 
   def resolve_registration(person, preview)

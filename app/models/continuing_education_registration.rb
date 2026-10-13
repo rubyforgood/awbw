@@ -10,6 +10,11 @@ class ContinuingEducationRegistration < ApplicationRecord
   ACCREDITATION_URL = "https://www.camft.org/".freeze
   # AWBW's CAMFT approved-provider number (per awbw.org's CE hours page).
   ACCREDITATION_PROVIDER_NUMBER = "1000151".freeze
+  # AWBW's issuing address, shown on the CE Confirmation of Attendance certificate.
+  ACCREDITATION_ADDRESS = "1029 1/2 West 24th Street, Los Angeles, CA 90007".freeze
+  # The signatory on the CE Confirmation of Attendance certificate.
+  CE_ADMINISTRATOR_NAME = "Christy Turek Rials".freeze
+  CE_ADMINISTRATOR_TITLE = "CE Administrator".freeze
 
   has_paper_trail
 
@@ -179,14 +184,6 @@ class ContinuingEducationRegistration < ApplicationRecord
       target.update!(number: number, kind: kind, issuing_state: issuing_state, expires_on: expires_on)
       self.professional_license = target
     end
-  end
-
-  # True when more is allocated (payments, scholarships, discounts) than the record
-  # costs — e.g. a $0 CE that still carries a payment, which a merge folding two CE
-  # records for one enrollment onto one can produce. Drives the "Check payments" flag
-  # for an admin to reconcile.
-  def over_allocated?
-    allocations_sum > cost_cents.to_i
   end
 
   # Human-readable payment status, mirroring EventRegistration#payment_status_label.

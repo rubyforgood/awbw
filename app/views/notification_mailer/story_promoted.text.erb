@@ -2,12 +2,13 @@ Your story has been shared
 
 Hello <%= @user.first_name_or_email %>,
 
-Wonderful news — the story idea you shared with us has been developed into a story. Thank you for helping others see the healing power of art.
+We are happy to share your story is now live on Story Share! You can check it out at the link below.
+
+We welcome you to share it with friends, colleagues, or others in your network who you think would enjoy reading it.
+
+Thank you for sharing your story with us and helping others see the healing power of art!
 
 <%= @story.title %>
-<% if @story.windows_type.present? %>
-(<%= @story.windows_type.short_name %>)
-<% end %>
 
 <% if @story.published? || @story.publicly_visible? %>
 View story:

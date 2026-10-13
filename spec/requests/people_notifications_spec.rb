@@ -147,5 +147,23 @@ RSpec.describe "Person notifications", type: :request do
       expect(section).not_to include("admin-only")
       expect(response.body).to include("Internal staff note")
     end
+
+    it "shows the follow-up flag on communications in the embedded section" do
+      flagged = create(:notification, :flagged, noticeable: person, recipient_email: person.preferred_email,
+                                                email_subject: "Chase this up", kind: "manual_log",
+                                                channel: "phone", recipient_role: "person", notification_type: 0)
+      unflagged = create(:notification, noticeable: person, recipient_email: person.preferred_email,
+                                        email_subject: "Just an FYI", kind: "manual_log",
+                                        channel: "email", recipient_role: "person", notification_type: 0)
+
+      get edit_person_path(person)
+
+      section = Nokogiri::HTML(response.body).at_css("#comments-section")
+      expect(section.to_s).to include(flagged.email_subject)
+      expect(section.to_s).to include(unflagged.email_subject)
+      # A solid orange flag for the flagged one, an outline flag for the other.
+      expect(section.css("i.fa-flag.fa-solid.text-orange-500")).to be_present
+      expect(section.css("i.fa-flag.fa-regular")).to be_present
+    end
   end
 end

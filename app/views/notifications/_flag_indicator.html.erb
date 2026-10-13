@@ -1,0 +1,7 @@
+<%# Read-only follow-up flag for a communication, shown where the row is a
+    compact whole-card link (the embedded record section) and so can't hold an
+    interactive control. Toggle the flag from the Comments & communications feed,
+    where each row carries the single-click notifications/flag_toggle. Locals:
+    notification. %>
+<i class="fa-flag <%= notification.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-400" %>"
+   title="<%= notification.flagged? ? "Flagged for follow-up" : "Not flagged" %>"></i>

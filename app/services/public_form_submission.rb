@@ -15,6 +15,7 @@ class PublicFormSubmission
   # rather than recorded anonymously.
   IDENTITY_REQUIRED_MESSAGE =
     "This form needs your name and email to complete your submission.".freeze
+  ALREADY_SUBMITTED_MESSAGE = "This form was already submitted.".freeze
 
   def self.call(form:, form_params:)
     new(form:, form_params:).call
@@ -30,10 +31,19 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
-      record_news_subscription(person) if person
-
       submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
+      # Answers first: the agreement linking core reads the submitted org off
+      # them, and a rejected answer (too long, unreadable upload) then aborts
+      # before any of the person's own records have been written.
       save_form_answers(submission)
+
+      if person
+        record_news_subscription(person)
+        organization = capture_organization(submission)
+        PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params,
+                                                   organizations: [ organization ].compact)
+      end
+
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
       register_for_on_demand_training(submission)
@@ -48,6 +58,10 @@ class PublicFormSubmission
     Result.new(success?: false, errors: [ "One of your answers is too long. Please shorten it and try again." ])
   rescue ActiveRecord::RecordInvalid => e
     Result.new(success?: false, errors: [ e.message ])
+  rescue ActiveRecord::RecordNotUnique => e
+    raise unless e.message.include?(Person::NAME_AND_EMAIL_INDEX)
+
+    Result.new(success?: false, errors: [ ALREADY_SUBMITTED_MESSAGE ])
   end
 
   private
@@ -84,13 +98,9 @@ class PublicFormSubmission
     return unless submission.person
 
     answers = submission.answers_by_identifier
-    name = answers["organization_name"].to_s.strip
-    return if name.blank?
+    organization = sole_organization_named(answers[FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER])
+    return unless organization
 
-    matches = Organization.where("LOWER(name) = ?", name.downcase)
-    return unless matches.count == 1
-
-    organization = matches.first
     ended = AffiliationServices::CloseProgram.call(
       person: submission.person,
       organization: organization,
@@ -109,6 +119,60 @@ class PublicFormSubmission
     nil
   end
 
+  # Link + fill the submitted organization. An agreement submission is processed
+  # through the same linking core an admin would run (process_agreement_organization);
+  # any other role runs the same capture an event registration does, so a job
+  # affiliation comes from the typed position either way. Skipped on a
+  # close-program form, whose submission ends affiliations at the org rather than
+  # creating them (process_close_program).
+  def capture_organization(submission)
+    return if @form.role == "close_program"
+    return process_agreement_organization(submission) if submission.agreement_scenario?
+
+    organization = OrganizationServices::CaptureFromSubmission.call(
+      form: @form, form_params: @form_params, person: submission.person
+    ).organization
+    submission.link_organization!(organization.id) if organization
+    organization
+  end
+
+  # An agreement submission whose organization name resolves unambiguously is
+  # processed on arrival, the way a close-program submission already is: the
+  # linking core applies the scenario (a new job ends the person's other orgs'
+  # rows and start-dates the new one), confers the standing Facilitator
+  # affiliation, and fills the org's blank profile fields — identical to an admin
+  # linking it by hand, so the two paths can't drift (ADR-0002). Anything the
+  # core would have to guess at is left for an admin on the submission's linking
+  # page.
+  def process_agreement_organization(submission)
+    organization = sole_organization_named(field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER))
+    return unless organization
+
+    result = OrganizationServices::LinkSubmittedOrganization.call(
+      person: submission.person,
+      organization: organization,
+      entry: submission.org_entry,
+      scenario: submission.linking_scenario,
+      training_date: submission.created_at.to_date
+    )
+
+    submission.link_organization!(organization.id)
+    submission.record_scenario_ended!(result.ended_affiliations.map(&:id))
+    organization
+  end
+
+  # Only an unambiguous name match is auto-processed. Organization names aren't
+  # unique and the column collates case-insensitively, so two orgs can answer to
+  # one submitted name — and picking the wrong one here would end a facilitator's
+  # affiliations at the org they actually work for. Ambiguity goes to an admin.
+  def sole_organization_named(name)
+    name = name.to_s.strip
+    return if name.blank?
+
+    matches = Organization.where("LOWER(name) = ?", name.downcase)
+    matches.first if matches.count == 1
+  end
+
   def field_value(identifier)
     field = @form.form_fields.find_by(field_identifier: identifier)
     return nil unless field
@@ -124,19 +188,18 @@ class PublicFormSubmission
     email = field_value("primary_email")&.strip&.downcase
     return nil if email.blank? || first_name.blank? || last_name.blank?
 
+    # The rest of the profile (pronouns, secondary email, and so on) is filled by
+    # CaptureFromSubmission, which runs for both new and existing people.
     find_matching_person(last_name: last_name, email: email) || Person.create!(
       first_name: first_name,
       last_name: last_name,
-      pronouns: field_value("pronouns")&.strip,
       email: email,
       email_type: field_value("primary_email_type")&.downcase
     )
   end
 
   def find_matching_person(last_name:, email:)
-    Person
-      .where("LOWER(email) = ? AND LOWER(last_name) = ?", email.downcase, last_name.downcase)
-      .first
+    PersonMatcher.call(email:, last_name:)
   end
 
   # An affirmative communication-consent answer subscribes the person to the
@@ -164,6 +227,7 @@ class PublicFormSubmission
     if submission.person
       NotificationServices::CreateNotification.call(
         noticeable: submission,
+        person: submission.person,
         kind: :form_submission_confirmation,
         recipient_role: :person,
         recipient_email: submission.person.preferred_email,
@@ -175,7 +239,7 @@ class PublicFormSubmission
       noticeable: submission,
       kind: :form_submission_confirmation_fyi,
       recipient_role: :admin,
-      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      recipient_email: Organization.programs_email,
       notification_type: 0
     )
   end

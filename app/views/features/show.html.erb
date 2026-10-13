@@ -37,6 +37,12 @@
 
       <p class="mt-2 text-gray-600"><%= @feature.summary %></p>
 
+      <% if @feature.created_by %>
+        <p class="mt-2 text-sm text-gray-500">
+          <i class="fa-regular fa-user"></i> Added by <%= user_link(@feature.created_by) %>
+        </p>
+      <% end %>
+
       <div class="mt-4 flex flex-wrap gap-2">
         <% if @feature.action_path.present? %>
           <%= link_to @feature.resolved_action_url, class: button_classes(:primary) do %>

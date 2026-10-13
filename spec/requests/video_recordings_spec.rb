@@ -99,6 +99,11 @@ RSpec.describe "/video_recordings", type: :request do
         post video_recordings_url, params: { video_recording: valid_attributes }
         expect(response).to redirect_to(video_recording_url(VideoRecording.last))
       end
+
+      it "redirects with 303 See Other so Turbo advances past the form" do
+        post video_recordings_url, params: { video_recording: valid_attributes }
+        expect(response).to have_http_status(:see_other)
+      end
     end
 
     context "with invalid parameters" do

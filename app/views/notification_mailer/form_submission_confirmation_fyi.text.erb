@@ -5,7 +5,7 @@ New form submission
                  .in_time_zone("Pacific Time (US & Canada)")
                  .strftime("%B %-d, %Y at %-l:%M %p %Z") %>
 
-<% @answers.each do |answer| %><% next if answer.submitted_answer.blank? %><%= answer.question_name_when_answered.presence || answer.form_field&.name %>: <%= answer.submitted_answer %>
+<% @answers.each do |answer| %><% next if answer.submitted_answer.blank? %><%= answer.question_name_when_answered.presence || answer.form_field&.name %>: <%= resolve_answer_text(answer.form_field, answer.submitted_answer) %>
 <% end %>
 View submission: <%= form_submission_url(@submission) %>
 <% if @person %>View profile: <%= person_url(@person) %><% end %>

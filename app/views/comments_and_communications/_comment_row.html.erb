@@ -19,9 +19,7 @@
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
   <div data-edit-toggle-target="view" class="rounded-md border <%= comment_card_class(warning: entry.body&.include?("[AGE_RANGE_DATA]")) %> px-3 py-2">
     <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
-      <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none" title="<%= entry.flagged? ? "Flagged for follow-up" : "Not flagged" %>">
-        <i class="fa-flag <%= entry.flagged? ? "fa-solid text-orange-500" : "fa-regular text-gray-400" %>"></i>
-      </span>
+      <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none"><%= render "comments/flag_toggle", comment: entry %></span>
       <%= render "comments/comment_line", comment: entry, truncate: false, leading: source_chip, trailing: edit_button %>
     </div>
   </div>

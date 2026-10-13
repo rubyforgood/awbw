@@ -12,8 +12,8 @@ RSpec.describe "story_ideas/edit", type: :view do
     assign(:organizations, [])
     assign(:users, [])
     assign(:sectors, [])
-    assign(:story_population_categories, [])
-    assign(:story_population_type, nil)
+    assign(:story_audience_rows, [])
+    assign(:story_audience_label, nil)
     assign(:categories_grouped, [])
     allow(view).to receive(:current_user).and_return(user)
     allow(view).to receive(:allowed_to?).and_return(false)
@@ -25,7 +25,7 @@ RSpec.describe "story_ideas/edit", type: :view do
       assert_select "form[action=?][method=?]", story_idea_path(story_idea), "post" do
         assert_select "select[name=?]", "story_idea[windows_type_id]"
         assert_select "select[name=?]", "story_idea[organization_id]"
-        assert_select "select[name=?]", "story_idea[workshop_id]"
+        assert_select "select[name=?]", "story_idea[story_idea_workshops_attributes][0][workshop_id]"
         assert_select "input[name=?][type=?]", "story_idea[rhino_body]", "hidden"
         assert_select "textarea[name=?]", "story_idea[youtube_url]"
       end

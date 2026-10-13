@@ -35,7 +35,8 @@ class SmartFormFields
         [ "first_name", "First name", "Sets the person's first name. Part of the duplicate-match key. If a nickname is also answered, this becomes the legal first name instead." ],
         [ "last_name", "Last name", "Sets the person's last name. Part of the duplicate-match key — matching is skipped entirely when this is blank." ],
         [ "nickname", "Preferred nickname", "Becomes the person's first name, and the answer to First name moves to legal first name. Also accepted when matching a returning registrant, so someone who registered under their legal name is still recognized." ],
-        [ "pronouns", "Pronouns", "Sets the person's pronouns when the person record is first created." ],
+        [ "pronouns", "Pronouns", "Sets the person's pronouns." ],
+        [ "pronunciation", "Name pronunciation", "Sets the admin-only note on the person's profile for how to say their name." ],
         [ "primary_email", "Email", "Sets the person's email, lowercased. Part of the duplicate-match key." ],
         [ "primary_email_type", "Primary email type", "Sets whether the primary email is a work or personal address." ],
         [ "secondary_email", "Secondary email", "Sets the person's second email address." ],
@@ -90,10 +91,12 @@ class SmartFormFields
                "below fill in the organization's profile. Both affiliations are connected to the " \
                "organization's address when it has exactly one; with several addresses the address is " \
                "left blank for an admin to set. When it doesn't match, nothing is written and " \
-               "an admin resolves it on the event registration's Link organization page.",
+               "an admin resolves it on the submission's Link organization page. Agreement forms " \
+               "(on-demand, new job, reinstatement, close program) go a step further: an unambiguous " \
+               "name match is processed on arrival exactly as if an admin had linked it by hand.",
       fields: [
-        [ "organization_name", "Organization name", "Looked up against existing organizations by exact name. A match is linked to the registration; no match leaves the registration unlinked for an admin to resolve." ],
-        [ "organization_position", "Position / title", "Becomes the job title on the registrant's Job Affiliation with that organization." ],
+        [ "organization_name", "Organization name", "Looked up against existing organizations by name, ignoring capitalization. A match is linked to the submission; no match — or two organizations answering to the same name — leaves it unlinked for an admin to resolve." ],
+        [ "organization_position", "Position / title", "Creates a Job Affiliation between the person and that organization, titled with this answer. Works the same on an event registration and a standalone form. A facilitator training (or an agreement form) adds a standing \"Facilitator\" affiliation alongside it." ],
         [ "organization_website", "Organization website", "Sets the organization's website. Replaces what is on file when the registrant submits it; when an admin links it by hand (Link or Create and link) it only fills a blank, and a conflicting answer is flagged instead. Note: a raw URL is saved exactly as entered, so it may not be clickable if it isn't a properly formed URL." ],
         [ "organization_type", "Organization type", "Sets the organization's type. An \"Other\" choice stores the typed text separately and adds it to the Other responses review queue." ],
         [ "organization_street", "Organization street address", "Sets the street of the organization's work address." ],
@@ -108,7 +111,10 @@ class SmartFormFields
       title: "Sector and age group tagging",
       summary: "These answers are record ids, not text: the options come from Sector and Age range " \
                "records rather than from options typed into the form editor. The tags are applied to " \
-               "the registrant and to their linked organization.",
+               "the registrant and to their linked organization. Submitting both a primary and an " \
+               "additional selection overwrites the person's tags with the latest; submitting only a " \
+               "primary reassigns it and leaves their other tags in place. An organization's tags " \
+               "accumulate across its members rather than being overwritten.",
       fields: [
         [ "primary_sector", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
         [ "additional_sectors", "Additional sectors", "Tags the person and organization with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],

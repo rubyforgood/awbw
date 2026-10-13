@@ -228,6 +228,49 @@ RSpec.describe "Events", type: :request do
         expect(response.body).not_to include("Apply &amp; edit")
       end
     end
+
+    context "Pay for Others button styling across templates" do
+      let(:cta_event) { create(:event, :published, :publicly_visible, title: "CTA event", cost_cents: 0) }
+      let(:bulk_form) { create(:form) }
+
+      before do
+        EventForm.create!(event: cta_event, form: bulk_form, role: "bulk_payment")
+        sign_in admin
+      end
+
+      def pay_for_others_classes(template)
+        cta_event.update!(template: template)
+        get event_path(cta_event)
+        expect(response).to have_http_status(:ok), "template #{template} failed to render"
+        link = Nokogiri::HTML(response.body).at_css("a[href='#{new_event_bulk_payment_path(cta_event)}']")
+        expect(link).to be_present, "Pay for Others button missing on template #{template}"
+        link["class"]
+      end
+
+      it "pairs it as an orange outline on the legacy none template" do
+        classes = pay_for_others_classes("none")
+        expect(classes).to include("border-2 border-accent text-accent hover:bg-accent hover:text-white")
+      end
+
+      it "pairs it as a navy-label gold outline on the branded light templates" do
+        %w[centered editorial sidebar].each do |key|
+          classes = pay_for_others_classes(key)
+          expect(classes).to include("border-brand-yellow-400", "text-brand-navy-900", "whitespace-nowrap", "text-xl"), "template #{key}"
+          expect(classes).not_to include("text-brand-yellow-400"), "template #{key} should keep the navy label, not the dark-background gold one"
+        end
+      end
+
+      it "flips the label to gold on the navy hero so it stays visible on the dark background" do
+        classes = pay_for_others_classes("hero")
+        expect(classes).to include("text-brand-yellow-400", "hover:text-brand-navy-900")
+      end
+
+      it "stays a secondary outline (never the solid CTA) on every template" do
+        Event::TEMPLATE_KEYS.each do |key|
+          expect(pay_for_others_classes(key)).not_to include("shadow-brand-cta"), "template #{key} should stay a secondary outline"
+        end
+      end
+    end
   end
 
   describe "GET /templates_gallery" do
@@ -999,6 +1042,7 @@ RSpec.describe "Events", type: :request do
       "certificate" => :sample_certificate_event_path,
       "scholarship" => :sample_scholarship_event_path,
       "ce" => :sample_ce_event_path,
+      "ce_certificate" => :sample_ce_certificate_event_path,
       "videoconference" => :sample_videoconference_event_path,
       "staff" => :sample_staff_event_path
     }
@@ -1149,6 +1193,11 @@ RSpec.describe "Events", type: :request do
       it "redirects to the created event" do
         post events_path, params: valid_params
         expect(response).to redirect_to(event_url(Event.last))
+      end
+
+      it "redirects with 303 See Other so Turbo advances past the form" do
+        post events_path, params: valid_params
+        expect(response).to have_http_status(:see_other)
       end
 
       it "persists edited built-in callouts from the new form without duplicating them" do
@@ -1499,6 +1548,30 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).to include(edit_continuing_education_registration_path(ce, return_to: "registrants"))
+      end
+    end
+
+    context "over-allocated payment badge" do
+      let(:event) { create(:event, cost_cents: 1_000) }
+
+      it "flags an over-allocated registration in the payment column" do
+        create(:allocation, allocatable: registration, amount: 1_000,
+          source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+        event.update_columns(cost_cents: 600)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Check payments")
+        expect(response.body).to include("$4 over-allocated")
+      end
+
+      it "does not flag a normally-paid registration" do
+        create(:allocation, allocatable: registration, amount: 1_000,
+          source: create(:payment, amount_cents: 1_000, amount_cents_remaining: 1_000))
+
+        get registrants_event_path(event)
+
+        expect(response.body).not_to include("Check payments")
       end
     end
 

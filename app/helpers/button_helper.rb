@@ -62,6 +62,14 @@ module ButtonHelper
     tokens.join(" ")
   end
 
+  # Admin-only action buttons (Edit/User/Activity on the people index, the profile
+  # admin dossier) carry the blue admin tint. Wraps button_classes with that fill
+  # so call sites just pick a size; pass `size: nil` to supply your own padding.
+  def admin_button_classes(size: :sm, extra: nil)
+    fill = "admin-only border border-blue-300 bg-blue-100 text-blue-800 hover:bg-blue-200"
+    button_classes(nil, size: size, extra: [ fill, extra ].compact.join(" "))
+  end
+
   # The AWBW brand CTA button (marketing "Donate" / "Explore" style): gold fill,
   # navy label, with a raised darker-gold bottom edge that presses on click. The
   # edge comes from the --shadow-brand-cta theme token so it tracks the gold.
@@ -69,7 +77,21 @@ module ButtonHelper
   BRAND_CTA = "inline-flex items-center justify-center gap-2 rounded-lg bg-brand-yellow-400 font-bold text-brand-navy-900 shadow-brand-cta transition hover:bg-brand-yellow-300 active:translate-y-0.5 active:shadow-brand-cta-pressed".freeze
   BRAND_CTA_REGISTER = "font-display tracking-wide uppercase".freeze
 
-  def brand_cta_classes(register: false, extra: nil)
-    [ BRAND_CTA, (BRAND_CTA_REGISTER if register), extra ].compact.join(" ")
+  # Outline sibling of the brand CTA for a secondary action beside the solid
+  # Register button: transparent with a gold border that fills on hover. Shares
+  # the brand look so the pair reads as a family while the page keeps a single
+  # dominant call to action. The `on_dark` variant carries a gold label (the
+  # navy one would vanish on a navy template) that flips to navy as the fill
+  # goes gold on hover.
+  BRAND_CTA_OUTLINE = "inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-yellow-400 bg-transparent font-bold text-brand-navy-900 transition hover:bg-brand-yellow-400 active:translate-y-0.5".freeze
+  BRAND_CTA_OUTLINE_ON_DARK = "inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand-yellow-400 bg-transparent font-bold text-brand-yellow-400 transition hover:bg-brand-yellow-400 hover:text-brand-navy-900 active:translate-y-0.5".freeze
+
+  def brand_cta_classes(register: false, outline: false, on_dark: false, extra: nil)
+    base = if outline
+      on_dark ? BRAND_CTA_OUTLINE_ON_DARK : BRAND_CTA_OUTLINE
+    else
+      BRAND_CTA
+    end
+    [ base, (BRAND_CTA_REGISTER if register), extra ].compact.join(" ")
   end
 end

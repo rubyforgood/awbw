@@ -13,6 +13,21 @@ RSpec.describe Category do
     end
   end
 
+  describe ".story_share_audience_nav" do
+    it "lists published featured age ranges, then story populations, each in its own order" do
+      age_range = create(:category_type, name: "AgeRange")
+      population = create(:category_type, name: "StoryPopulation")
+      self_category = create(:category, :published, name: "Self", category_type: population, story_share_position: 1)
+      teens = create(:category, :published, name: "Teens", category_type: age_range, story_share_position: 2)
+      children = create(:category, :published, name: "Children", category_type: age_range, story_share_position: 1)
+      community = create(:category, :published, name: "Community", category_type: population, story_share_position: 2)
+      create(:category, name: "Children_", category_type: population, story_share_position: 3)
+      create(:category, :published, name: "Clay", story_share_position: 1)
+
+      expect(Category.story_share_audience_nav).to eq([ children, teens, self_category, community ])
+    end
+  end
+
   describe 'associations' do
     it { should belong_to(:category_type) }
     it { should have_many(:categorizable_items).dependent(:destroy) }

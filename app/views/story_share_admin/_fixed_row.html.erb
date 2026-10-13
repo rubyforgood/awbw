@@ -1,0 +1,7 @@
+<%# A fixed nav item that admins can't reorder, remove, or toggle. Locals: item { label, dot }. %>
+<div class="flex items-center gap-3 px-4 py-3 text-gray-500">
+  <span class="size-4 shrink-0 rounded-full <%= item[:dot] %>"></span>
+  <i class="fa-solid fa-lock text-gray-300"></i>
+  <span class="flex-1"><%= item[:label] %></span>
+  <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">Always shown</span>
+</div>

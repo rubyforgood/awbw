@@ -68,6 +68,18 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#chip_label" do
+    it "returns the abbreviation when present" do
+      event = build(:event, title: "Trauma-Informed Onsite", abbreviation: "TOS205").decorate
+      expect(event.chip_label).to eq("TOS205")
+    end
+
+    it "falls back to the title with the start date when abbreviation is blank" do
+      event = build(:event, title: "Trauma-Informed Onsite", abbreviation: "", start_date: Time.zone.local(2026, 10, 8)).decorate
+      expect(event.chip_label).to eq("Trauma-Informed Onsite · Oct 8, 2026")
+    end
+  end
+
   describe "#title_with_month_year" do
     it "appends the start month and year in parentheses" do
       event = build(:event, title: "Facilitator Training", start_date: Time.zone.local(2026, 10, 3)).decorate
@@ -230,6 +242,21 @@ RSpec.describe EventDecorator do
     it "adds a thousands separator for large amounts" do
       event = build(:event, cost_cents: 150_000).decorate
       expect(event.labelled_cost).to eq("Cost: $1,500")
+    end
+
+    it "shows the net cost when a discount is applied" do
+      event = build(:event, cost_cents: 10_000).decorate
+      expect(event.labelled_cost(discount_cents: 2500)).to eq("Cost: $75")
+    end
+
+    it "shows $0 when the discount covers the whole cost" do
+      event = build(:event, cost_cents: 10_000).decorate
+      expect(event.labelled_cost(discount_cents: 10_000)).to eq("Cost: $0")
+    end
+
+    it "floors the net cost at $0 when the discount exceeds the cost" do
+      event = build(:event, cost_cents: 5_000).decorate
+      expect(event.labelled_cost(discount_cents: 10_000)).to eq("Cost: $0")
     end
   end
 

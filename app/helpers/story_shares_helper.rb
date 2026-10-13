@@ -98,10 +98,10 @@ module StorySharesHelper
     end
   end
 
-  # Audience categories (StoryPopulation) shown in the navbar's second row.
+  # Featured age ranges, then story populations, shown as one row in the navbar.
   def story_share_audience_categories
     Rails.cache.fetch("story_share_audience_categories", expires_in: 1.hour) do
-      Category.story_share_featured.to_a
+      Category.story_share_audience_nav
     end
   end
 
@@ -113,6 +113,17 @@ module StorySharesHelper
       Sector.published.excluding_other.where.not(id: featured)
             .joins(:stories).merge(Story.publicly_visible)
             .distinct.order(:name).to_a
+    end
+  end
+
+  # Portal filter for a story's lead tag — its primary (else first) sector, or
+  # its primary (else first) audience category when it has no sector. Nil when
+  # the story carries neither.
+  def story_tag_home_path(story)
+    if (sector = story.primary_sector || story.sectors.first)
+      story_shares_path(sector_names_all: sector.name)
+    elsif (category = story.primary_category || story.audience_categories.first)
+      story_shares_path(category_names_all: category.name)
     end
   end
 

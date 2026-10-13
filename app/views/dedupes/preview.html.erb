@@ -43,6 +43,23 @@
       </div>
     <% end %>
 
+    <!-- Model-specific blocks: conditions that make this particular merge unsafe (e.g. both people carry an active pay subscription) -->
+    <% if @merge_blocks.present? %>
+      <div class="rounded-xl border border-red-300 bg-red-50 p-4">
+        <div class="flex items-start gap-3">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500"></i>
+          <div class="text-sm text-red-800">
+            <p class="font-semibold text-red-900">Merge blocked</p>
+            <ul class="mt-1 list-inside list-disc">
+              <% @merge_blocks.each do |block| %>
+                <li><%= block %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
     <!-- Model-specific heads-up notes (non-blocking): e.g. the kept person will have two logins -->
     <% if @merge_notes.present? %>
       <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
@@ -141,7 +158,7 @@
       </div>
 
       <!-- Actions -->
-      <% blocked = @unhandled_references.any? %>
+      <% blocked = @unhandled_references.any? || @merge_blocks.any? %>
       <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
         <% if blocked %>
           <span class="text-sm text-red-700">

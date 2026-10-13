@@ -9,8 +9,10 @@ class StoriesController < ApplicationController
     @author = Person.find_by(id: params[:author_id]) if params[:author_id].present?
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
-      base_scope = authorized_scope(Story.includes(:windows_type, :organization, :workshop,
-                                                   :author, :bookmarks, :primary_asset,
+      base_scope = authorized_scope(Story.with_author_credit
+                                         .includes(:windows_type, :organization, :workshop,
+                                                   { story_workshops: :workshop },
+                                                   :bookmarks, :primary_asset,
                                                    :story_idea, created_by: :person))
       filtered = base_scope.search_by_params(params)
       sortable = %w[title updated_at created_at windows_type workshop author organization]
@@ -46,6 +48,9 @@ class StoriesController < ApplicationController
       @story = Story.new
     end
     authorize! @story
+    if params[:workshop_id].present? && @story.story_workshops.empty?
+      @story.story_workshops.build(workshop_id: params[:workshop_id])
+    end
     @story.decorate
     set_form_variables
   end
@@ -69,13 +74,14 @@ class StoriesController < ApplicationController
 
     Story.transaction do
       if @story.save
+        just_published = @story.saved_change_to_published?(to: true)
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@story)
         end
-        notify_story_promoted if @story.story_idea.present?
+        notify_story_promoted if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -84,7 +90,7 @@ class StoriesController < ApplicationController
     end
 
     if success
-      redirect_to @story, notice: "Story was successfully created."
+      redirect_to @story, notice: "Story was successfully created.", status: :see_other
     else
       @story = @story.decorate
       set_form_variables
@@ -99,10 +105,12 @@ class StoriesController < ApplicationController
     Story.transaction do
       @story.assign_attributes(story_params.except(:images, :category_ids, :sector_ids))
       if @story.save
+        just_published = @story.saved_change_to_published?(to: true)
         assign_associations(@story)
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
         end
+        notify_story_promoted if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -134,7 +142,6 @@ class StoriesController < ApplicationController
                             .references(:users)
                             .order(:created_at)
     @windows_types = WindowsType.all
-    @workshops = authorized_scope(Workshop.all).includes(:windows_type).order(:title)
     @categories_grouped =
       Category
         .includes(:category_type)
@@ -142,39 +149,51 @@ class StoriesController < ApplicationController
         .order(:position, :name)
         .group_by(&:category_type)
         .select { |type, _| type.nil? || type.published? }
+        .reject { |type, _| type&.name.in?(CategoriesTaggable::AUDIENCE_CATEGORY_TYPES) }
         .sort_by { |type, _| [ type&.story_specific? ? 0 : 1, type&.name.to_s.downcase ] }
+    @story_audience_label = CategoryType.find_by(name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)&.display_label
+    @story_audience_rows = Category.story_audience_rows
     @sectors = Sector.published.order(:name)
     submitted_sector_ids = Array(params.dig(:story, :sector_ids)).reject(&:blank?)
     submitted_category_ids = Array(params.dig(:story, :category_ids)).reject(&:blank?)
     if submitted_sector_ids.any? || submitted_category_ids.any?
       @preselected_sector_ids = submitted_sector_ids.map(&:to_i)
       @preselected_category_ids = submitted_category_ids.map(&:to_i)
+      @preselected_primary_sector_id = params.dig(:story, :primary_sector_id).presence&.to_i
+      @preselected_primary_category_id = params.dig(:story, :primary_category_id).presence&.to_i
     elsif @story_idea
       @preselected_sector_ids = @story_idea.sector_ids
       @preselected_category_ids = @story_idea.category_ids
+      @preselected_primary_sector_id = @story_idea.primary_sector&.id
+      @preselected_primary_category_id = @story_idea.primary_category&.id
     end
+    @story.story_workshops.build if @story.story_workshops.blank?
     @story.build_primary_asset if @story.primary_asset.blank?
     @story.gallery_assets.build
   end
 
   private
 
-  # Promoting a story idea into a story emails the idea's submitter and an admin FYI.
   def notify_story_promoted
-    NotificationServices::CreateNotification.call(
-      noticeable: @story,
-      kind: :story_promoted,
-      recipient_role: :person,
-      recipient_email: @story.story_idea.created_by.email,
-      notification_type: 0)
+    return unless @story.story_idea
+    return if @story.notifications.exists?(kind: %w[story_promoted story_promoted_fyi])
+
+    if (submitter = @story.story_idea.created_by)
+      NotificationServices::CreateNotification.call(
+        noticeable: @story,
+        person: submitter.person,
+        kind: :story_promoted,
+        recipient_role: :person,
+        recipient_email: submitter.email,
+        notification_type: 0)
+    end
     NotificationServices::CreateNotification.call(
       noticeable: @story,
       kind: :story_promoted_fyi,
       recipient_role: :admin,
-      recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+      recipient_email: Organization.programs_email,
       notification_type: 0)
   end
-
 
   def set_story
     # Accepts both the bare id ("23") and the slugged param ("23-my-great-story");
@@ -191,8 +210,21 @@ class StoriesController < ApplicationController
       scope.left_joins(:windows_type)
            .reorder(WindowsType.arel_table[:short_name].public_send(dir))
     when "workshop"
+      # Sorts on the same text the column displays: a link's typed-in title wins
+      # over its workshop's, and un-migrated stories fall back to the legacy
+      # stories.workshop_id / stories.external_workshop_title pair.
+      workshop_title = <<~SQL.squish
+        COALESCE(
+          (SELECT MIN(COALESCE(sw.external_workshop_title, w.title))
+           FROM stories_workshops sw
+           LEFT JOIN workshops w ON w.id = sw.workshop_id
+           WHERE sw.story_id = stories.id),
+          workshops.title,
+          stories.external_workshop_title
+        )
+      SQL
       scope.left_joins(:workshop)
-           .reorder(Workshop.arel_table[:title].public_send(dir))
+           .reorder(Arel.sql("#{workshop_title} #{dir == :asc ? "ASC" : "DESC"}"))
     when "author"
       scope.order_by_author(direction)
     when "organization"
@@ -206,15 +238,17 @@ class StoriesController < ApplicationController
   # Strong parameters
   def story_params
     params.require(:story).permit(
-      :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :youtube_url, :website_url,
-      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
-      :author_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id, :author_credit_preference,
+      :title, :rhino_body, :featured, :published, :publicly_visible, :publicly_featured, :funder_only, :story_share_carousel_position, :youtube_url, :website_url,
+      :windows_type_id, :organization_id,
+      :author_id, :co_author_id, :updated_by_id, :story_idea_id, :spotlighted_facilitator_id,
+      :author_credit_preference, :co_author_credit_preference,
       category_ids: [],
       sector_ids: [],
+      story_workshops_attributes: [ :id, :workshop_id, :external_workshop_title, :position, :_destroy ],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
+      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
     )
   end
 
@@ -225,10 +259,29 @@ class StoriesController < ApplicationController
       organization_id: idea.organization.id,
       workshop_id: idea.workshop_id,
       external_workshop_title: idea.external_workshop_title,
+      story_workshops_attributes: story_workshops_attributes_from(idea),
       windows_type_id: idea.windows_type_id,
       youtube_url: idea.youtube_url,
-      author_id: idea.created_by&.person_id,
-      author_credit_preference: idea.author_credit_preference
+      author_id: idea.author_id || idea.created_by&.person_id,
+      author_credit_preference: idea.author_credit_preference,
+      co_author_id: idea.co_author_id,
+      co_author_credit_preference: idea.co_author_credit_preference,
+      spotlighted_facilitator_id: idea.spotlighted_facilitator_id,
+      funder_only: idea.funder_only
     }
+  end
+
+  def story_workshops_attributes_from(idea)
+    return direct_story_workshops_attributes_from(idea) if idea.story_idea_workshops.empty?
+    idea.story_idea_workshops.map do |siw|
+      { workshop_id: siw.workshop_id, external_workshop_title: siw.external_workshop_title, position: siw.position }
+    end
+  end
+
+  def direct_story_workshops_attributes_from(idea)
+    rows = []
+    rows << { workshop_id: idea.workshop_id } if idea.workshop_id.present?
+    rows << { external_workshop_title: idea.external_workshop_title } if idea.external_workshop_title.present?
+    rows
   end
 end

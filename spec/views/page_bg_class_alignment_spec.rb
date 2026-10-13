@@ -88,6 +88,8 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/people/workshop_logs.html.erb"          => "admin-or-owner",
 
     "app/views/notifications/show.html.erb"            => "admin-or-owner",
+    "app/views/profile_change_requests/new.html.erb"   => "admin-or-owner",
+    "app/views/profile_change_requests/edit.html.erb"  => "admin-or-owner",
     "app/views/organizations/show.html.erb"            => "admin-or-auth",
     "app/views/people/show.html.erb"                   => "admin-or-owner-or-authsearchable",
     "app/views/organizations/edit.html.erb"            => "admin-or-owner",
@@ -109,6 +111,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/bookmarks/tally.html.erb"               => "admin-only bg-blue-100",
     "app/views/users/flow_diagram.html.erb"            => "admin-only bg-blue-100",
     "app/views/dedupes/index.html.erb"                 => "admin-only bg-blue-100",
+    "app/views/profile_change_requests/index.html.erb" => "admin-only bg-blue-100",
     "app/views/dedupes/preview.html.erb"               => "admin-only bg-blue-100",
     "app/views/taggings/matrix.html.erb"               => "admin-only bg-blue-100",
     "app/views/story_share_admin/show.html.erb"        => "admin-only bg-blue-100",
@@ -278,6 +281,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/events/callouts/payment.html.erb"          => "public",
     "app/views/events/callouts/certificate.html.erb"      => "public",
     "app/views/events/callouts/ce.html.erb"               => "public",
+    "app/views/events/callouts/ce_certificate.html.erb"   => "public",
     "app/views/events/callouts/handouts.html.erb"         => "public",
     "app/views/events/callouts/resource.html.erb"         => "public",
     "app/views/events/callouts/videoconference.html.erb"  => "public",
@@ -306,7 +310,13 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── FileMaker archive viewer (FmArchivePolicy: admin-only) ───
     "app/views/fm_archives/index.html.erb"               => "admin-only bg-blue-100",
-    "app/views/fm_archives/show.html.erb"                => "admin-only bg-blue-100"
+    "app/views/fm_archives/show.html.erb"                => "admin-only bg-blue-100",
+
+    # ─── invoice CRUD (InvoicePolicy: admin-only) ───
+    "app/views/invoices/index.html.erb"                  => "admin-only bg-blue-100",
+    "app/views/invoices/show.html.erb"                   => "admin-only bg-blue-100",
+    "app/views/invoices/new.html.erb"                    => "admin-only bg-blue-100",
+    "app/views/invoices/edit.html.erb"                   => "admin-only bg-blue-100"
   }.freeze
 
   EXPECTED_MAPPINGS.each do |view_path, expected_bg_class|

@@ -7,6 +7,11 @@
     <%= f.hidden_field :updated_by_id, value: (@user || current_user)&.id %>
     <% selected_sector_ids = @preselected_sector_ids || @story_idea.sector_ids %>
     <% selected_category_ids = @preselected_category_ids || @story_idea.category_ids %>
+    <% primary_sector_id = @preselected_sector_ids ? @preselected_primary_sector_id : @story_idea.primary_sector&.id %>
+    <% primary_category_id = @preselected_category_ids ? @preselected_primary_category_id : @story_idea.primary_category&.id %>
+    <%# Blank defaults precede the stars so a starred chip's value wins, and unstarring clears the primary. %>
+    <%= hidden_field_tag "story_idea[primary_sector_id]", "" %>
+    <%= hidden_field_tag "story_idea[primary_category_id]", "" %>
     <% promoted_to_story = f.object.stories.any? %>
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
@@ -16,6 +21,7 @@
       <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
       <%= f.hidden_field :youtube_url, value: f.object.youtube_url %>
       <%= f.hidden_field :permission_given, value: f.object.permission_given %>
+      <%= f.hidden_field :funder_only, value: f.object.funder_only %>
     <% end %>
     <%= render 'shared/errors', resource: story_idea if story_idea.errors.any? %>
 
@@ -59,41 +65,6 @@
                       onchange: select_caret_onchange
                     } %>
       </div>
-      <div class="mb-4 flex-1 md:mb-0">
-        <%= f.input :workshop_id,
-          collection: f.object.workshop.present? ? [[ f.object.workshop.remote_search_label[:label], f.object.workshop.id]] : [],
-          include_blank: true,
-          required: true,
-          input_html: {
-            class: "w-full px-3 py-2 border border-gray-300 rounded-lg",
-            data: {
-              controller: "remote-select",
-              remote_select_model_value: "workshop"
-            }
-          },
-          prompt: "Type to search workshops…",
-          label: "Workshop",
-          wrapper_html: { class: "mb-0" },
-          label_html: { class: "block font-medium mb-1 text-gray-700 #{ 'readonly' if promoted_to_story }" } %>
-
-        <%# Native <details> reveals the optional custom-title field on click — no JS.
-            Sits right under the field like a hint. Auto-opens when a title is
-            already set so it isn't hidden on edit. %>
-        <details class="group mt-1"<%= " open".html_safe if f.object.external_workshop_title.present? %>>
-          <summary class="text-sm text-purple-700 hover:underline cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-            Enter custom title
-          </summary>
-          <%= f.input :external_workshop_title,
-                      as: :text,
-                      label: "Workshop title (if different or unlisted)",
-                      wrapper_html: { class: "mt-2" },
-                      label_html: { class: "block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1" },
-                      input_html: {
-                        rows: 1,
-                        class: ("readonly" if promoted_to_story)
-                      } %>
-        </details>
-      </div>
       <div class="flex-1 mb-4 md:mb-0">
         <% default_org = default_organization_for_form(f.object) %>
         <% if @organizations.size == 1 %>
@@ -105,7 +76,8 @@
                       label_method: :type_name,
                       value_method: :id,
                       label: "Organization",
-                      required: true,
+                      required: !current_user&.super_user?,
+                      include_blank: (current_user&.super_user? || nil),
                       disabled: promoted_to_story,
                       hint: "Please contact AWBW if your organization is not listed.",
                       prompt: "Select organization",
@@ -118,6 +90,34 @@
                       label_html: { class: "block font-medium mb-1 text-gray-700" } %>
         <% end %>
       </div>
+    </div>
+
+    <div class="my-6 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <label class="block text-base font-semibold text-gray-800">Workshops</label>
+      <p class="mb-3 text-sm text-gray-500">
+        Link each workshop in the curriculum, or type a name for one that isn't listed.
+      </p>
+      <% legacy_workshop = f.object.persisted? ? f.object.decorate.legacy_workshop_reference : nil %>
+      <% if legacy_workshop.present? %>
+        <div class="mb-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
+          <span class="block text-xs font-medium text-gray-500">Previously linked (read-only)</span>
+          <span class="text-sm text-gray-800"><%= legacy_workshop %></span>
+        </div>
+      <% end %>
+      <% if promoted_to_story %>
+        <p class="text-sm text-gray-700"><%= story_idea.workshop_title.presence || "—" %></p>
+      <% else %>
+        <div id="story-idea-workshops-fields">
+          <%= f.fields_for :story_idea_workshops do |story_idea_workshop| %>
+            <%= render "story_ideas/story_idea_workshop_fields", f: story_idea_workshop %>
+          <% end %>
+        </div>
+        <%= link_to_add_association "Add workshop", f, :story_idea_workshops,
+                                    partial: "story_ideas/story_idea_workshop_fields",
+                                    data: { association_insertion_node: "#story-idea-workshops-fields",
+                                            association_insertion_method: "append" },
+                                    class: button_classes(:secondary_outline) %>
+      <% end %>
     </div>
 
     <% if promoted_to_story %>
@@ -167,30 +167,19 @@
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
               <h3 class="text-base font-semibold text-gray-800 mb-3">
                 <%= Sector::STORY_DISPLAY_TEXT %>
-                <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+                <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
               </h3>
 
-              <div class="flex flex-wrap gap-3">
+              <div class="flex flex-wrap gap-3" <%= tag.attributes(data: primary_tag_grid_data) %>>
                 <% @sectors.each do |sector| %>
-                  <% id = "story_idea_sector_ids_#{sector.id}" %>
-
-                  <label
-                    for="<%= id %>"
-                    class="
-                      flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                      rounded-lg shadow-sm hover:bg-gray-100 transition">
-                    <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
-                    <%= check_box_tag "story_idea[sector_ids][]",
-                                      sector.id,
-                                      selected_sector_ids.include?(sector.id),
-                                      id: id,
-                                      class: "h-4 w-4 text-blue-600 rounded" %>
-
-                    <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
-                  </label>
+                  <%= render "shared/primary_tag_checkbox", param_key: "story_idea", kind: :sector, value: sector.id, label: sector.name,
+                             checked: selected_sector_ids.include?(sector.id), primary: primary_sector_id == sector.id %>
                 <% end %>
               </div>
             </div>
+
+            <%= render "shared/story_audience_tags", param_key: "story_idea", rows: @story_audience_rows, label: @story_audience_label,
+                       selected_category_ids: selected_category_ids, primary_category_id: primary_category_id %>
 
             <div class="form-group space-y-6">
               <% @categories_grouped.each do |type, cats| %>
@@ -202,22 +191,8 @@
 
                   <div class="flex flex-wrap gap-3">
                     <% cats.each do |category| %>
-                      <% id = "story_idea_category_ids_#{category.id}" %>
-
-                      <label
-                        for="<%= id %>"
-                        class="
-                          flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                          border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                        <%= hidden_field_tag "story_idea[category_ids][]", "" %>
-                        <%= check_box_tag "story_idea[category_ids][]",
-                                          category.id,
-                                          selected_category_ids.include?(category.id),
-                                          id: id,
-                                          class: "h-4 w-4 text-blue-600 rounded" %>
-
-                        <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.name %></span>
-                      </label>
+                      <%= render "shared/primary_tag_checkbox", param_key: "story_idea", kind: :category, value: category.id, label: category.name,
+                                 checked: selected_category_ids.include?(category.id), starrable: false %>
                     <% end %>
                   </div>
                 </div>
@@ -231,60 +206,19 @@
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
         <h3 class="text-base font-semibold text-gray-800 mb-3">
           <%= Sector::STORY_DISPLAY_TEXT %>
-          <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
+          <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply, star the primary)</span>
         </h3>
 
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3" <%= tag.attributes(data: primary_tag_grid_data) %>>
           <% @sectors.each do |sector| %>
-            <% id = "story_idea_sector_ids_#{sector.id}" %>
-
-            <label
-              for="<%= id %>"
-              class="
-                flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border border-gray-200
-                rounded-lg shadow-sm hover:bg-gray-100 transition">
-              <%= hidden_field_tag "story_idea[sector_ids][]", "" %>
-              <%= check_box_tag "story_idea[sector_ids][]",
-                                sector.id,
-                                selected_sector_ids.include?(sector.id),
-                                id: id,
-                                class: "h-4 w-4 text-blue-600 rounded" %>
-
-              <span class="text-sm text-gray-700 whitespace-nowrap"><%= sector.name %></span>
-            </label>
+            <%= render "shared/primary_tag_checkbox", param_key: "story_idea", kind: :sector, value: sector.id, label: sector.name,
+                       checked: selected_sector_ids.include?(sector.id), primary: primary_sector_id == sector.id %>
           <% end %>
         </div>
       </div>
 
-      <% if @story_population_categories.present? %>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm mb-6">
-          <h3 class="text-base font-semibold text-gray-800 mb-3">
-            <%= @story_population_type.display_label %>
-            <span class="text-sm font-normal italic text-gray-500 ml-1">(check all that apply)</span>
-          </h3>
-
-          <div class="flex flex-wrap gap-3">
-            <% @story_population_categories.each do |category| %>
-              <% id = "story_idea_category_ids_#{category.id}" %>
-
-              <label
-                for="<%= id %>"
-                class="
-                  flex items-center gap-2 p-3 cursor-pointer w-auto min-w-[180px] bg-white border
-                  border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                <%= hidden_field_tag "story_idea[category_ids][]", "" %>
-                <%= check_box_tag "story_idea[category_ids][]",
-                                  category.id,
-                                  selected_category_ids.include?(category.id),
-                                  id: id,
-                                  class: "h-4 w-4 text-blue-600 rounded" %>
-
-                <span class="text-sm text-gray-700 whitespace-nowrap"><%= category.decorate.display_name %></span>
-              </label>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
+      <%= render "shared/story_audience_tags", param_key: "story_idea", rows: @story_audience_rows, label: @story_audience_label,
+                 selected_category_ids: selected_category_ids, primary_category_id: primary_category_id %>
     <% end %>
 
     <div id="attachments">
@@ -302,6 +236,53 @@
                                 class: ("readonly" if promoted_to_story)
                                 } %>
     </div>
+
+    <% if allowed_to?(:manage?, StoryIdea) %>
+      <div class="admin-only bg-blue-100 rounded p-3 flex flex-col md:flex-row md:space-x-4">
+        <div class="flex-1 mb-4 md:mb-0">
+          <% idea_co_author = f.object.co_author %>
+          <%= f.input :co_author_id,
+                      collection: idea_co_author.present? ? [[ idea_co_author.remote_search_label[:label], idea_co_author.id ]] : [],
+                      prompt: "Select a second author",
+                      selected: idea_co_author&.id,
+                      hint: "Optional. Credits a second author alongside the first.",
+                      label: (f.object.co_author ? (
+                        link_to "Second author",
+                                person_path(f.object.co_author),
+                                class: "hover:underline") : "Second author").html_safe,
+                      label_html: { class: "block font-medium mb-1 text-gray-700" },
+                      input_html: {
+                        data: { controller: "remote-select",
+                                remote_select_model_value: "person" }
+                      } %>
+        </div>
+
+        <div class="flex-1 mb-4 md:mb-0">
+          <%= render "shared/author_credit_field", f: f,
+                     attribute: :co_author_credit_preference, label: "Second author credit preference",
+                     hint: "The second author's profile decides what renders." %>
+        </div>
+
+        <div class="flex-1 mb-4 md:mb-0">
+          <% idea_spotlight = f.object.spotlighted_facilitator %>
+          <%= f.input :spotlighted_facilitator_id,
+                      collection: idea_spotlight.present? ? [[ idea_spotlight.remote_search_label[:label], idea_spotlight.id ]] : [],
+                      prompt: "Select a facilitator",
+                      selected: idea_spotlight&.id,
+                      hint: "Optional. Carries over when the idea is promoted to a story.",
+                      label: (idea_spotlight ? (
+                        link_to "Spotlighted facilitator",
+                                person_path(idea_spotlight),
+                                class: "hover:underline") : "Spotlighted facilitator").html_safe,
+                      label_html: { class: "block font-medium mb-1 text-gray-700" },
+                      input_html: {
+                        data: { controller: "remote-select",
+                                remote_select_model_value: "person" }
+                      } %>
+        </div>
+      </div>
+    <% end %>
+
     <div class="my-12">
       <%= f.input :permission_given,
                   as: :boolean,
@@ -312,6 +293,17 @@
                     "Windows Facilitators. If there is any identifying information in my images, " +
                     "such as names or faces, I certify that I have received permission from the subject, " +
                     "or their caregiver, to display their likeness online.",
+                  input_html: {
+                    class: ("readonly" if promoted_to_story)
+                  } %>
+    </div>
+
+    <div class="my-12 rounded-lg border <%= DomainTheme.border_class_for(:scholarships, intensity: 200) %> <%= DomainTheme.bg_class_for(:scholarships, intensity: 50) %> p-4">
+      <%= f.input :funder_only,
+                  as: :boolean,
+                  disabled: promoted_to_story,
+                  label: "Share my story only with the funder who provided my training scholarship and not on Story Share.",
+                  hint: "Check this if your story is a training-scholarship deliverable. It won't appear on Story Share — only A Window Between Worlds staff and the funder will see it.",
                   input_html: {
                     class: ("readonly" if promoted_to_story)
                   } %>

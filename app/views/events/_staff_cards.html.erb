@@ -10,7 +10,7 @@
       <% active_affiliation = person.affiliations.find { |a| !a.inactive? } %>
       <% org = active_affiliation&.organization %>
       <% bio = event_staff.public_bio %>
-      <% credentials = person.profile_show_credentials? ? person.license_credentials : nil %>
+      <% credentials = person.visible_credentials %>
       <%# Sectors and age ranges, each gated by its own profile toggle. The card
           leads with the primary sector and primary age range (primary sorts first);
           any remaining sectors/age ranges collapse into a "+N" chip that lists them

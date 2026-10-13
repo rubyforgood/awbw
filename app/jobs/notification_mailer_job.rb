@@ -1,6 +1,11 @@
 class NotificationMailerJob < ApplicationJob
   queue_as :default
 
+  # Belt-and-suspenders against the enqueue-before-commit race (also covers
+  # replica lag): a find that misses retries rather than failing silently, since
+  # a missing-at-first-read notification is almost always just not-yet-visible.
+  retry_on ActiveRecord::RecordNotFound, wait: :polynomially_longer, attempts: 3
+
   def perform(notification_id, persist_delivered_email: true)
     notification = Notification.find(notification_id)
 
@@ -22,7 +27,10 @@ class NotificationMailerJob < ApplicationJob
       "bulk_payment_confirmation_fyi" => ->(n) { NotificationMailer.bulk_payment_confirmation_fyi(n) },
       "form_submission_confirmation" => ->(n) { NotificationMailer.form_submission_confirmation(n) },
       "form_submission_confirmation_fyi" => ->(n) { NotificationMailer.form_submission_confirmation_fyi(n) },
-      "form_link_request" => ->(n) { NotificationMailer.form_link_request(n) }
+      "form_link_request" => ->(n) { NotificationMailer.form_link_request(n) },
+      "profile_change_requested" => ->(n) { NotificationMailer.profile_change_requested(n) },
+      "profile_change_requested_fyi" => ->(n) { NotificationMailer.profile_change_requested_fyi(n) },
+      "profile_change_reviewed" => ->(n) { NotificationMailer.profile_change_reviewed(n) }
     }
 
     mailer = mailer_map[notification.kind]&.call(notification)

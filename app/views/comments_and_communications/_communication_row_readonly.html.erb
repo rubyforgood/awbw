@@ -13,5 +13,6 @@
    end %>
 <% trailing = content_tag(:span, render("notifications/responded_checkbox", notification: entry), class: "ml-auto shrink-0") %>
 <div id="<%= dom_id(entry) %>">
-  <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, leading: source_chip, trailing: trailing %>
+  <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false,
+             leading: source_chip, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
 </div>

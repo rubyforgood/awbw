@@ -5,6 +5,7 @@ module Events
     before_action :noindex!, only: [ :new, :create, :show ]
     before_action :set_event
     before_action :ensure_registerable, only: [ :new, :create ]
+    before_action :set_discount, only: [ :new, :create ]
 
     def new
       authorize! :public_registration, to: :new?
@@ -15,7 +16,6 @@ module Events
         return
       end
 
-      @discount_code = params[:discount_code] if @event.discount_code? && params[:discount_code].present?
       @form_fields = visible_form_fields
       @scholarship = scholarship_mode?
       @scholarship_form = @event.scholarship_form if @scholarship
@@ -148,12 +148,20 @@ module Events
 
     private
 
+    def set_discount
+      @discount_code = params[:discount_code] if @event.discount_code? && params[:discount_code].present?
+      @discount_cents = valid_discount_code? ? @event.discount_amount_cents : 0
+    end
+
     def apply_discount_code(registration)
-      code = params[:discount_code].to_s.strip
-      return unless @event.discount_code? && code.casecmp?(@event.discount_code)
+      return unless valid_discount_code?
 
       discount = Discount.create!(amount_cents: @event.discount_amount_cents)
       Allocation.create!(source: discount, allocatable: registration, amount: @event.discount_amount_cents)
+    end
+
+    def valid_discount_code?
+      @event.discount_code? && params[:discount_code].to_s.strip.casecmp?(@event.discount_code)
     end
 
     # A file input can't be repopulated, so a form re-rendered after a validation
@@ -185,6 +193,7 @@ module Events
 
       metadata = { event_registration_id: registration.id, event_id: @event.id }
       metadata[:form_submission_id] = submission.id if submission
+      metadata = stripe_metadata(metadata)
 
       person.set_payment_processor :stripe
 
@@ -301,48 +310,46 @@ module Events
           end
         end
 
-        if @registration_form.hide_answered_form_questions?
-          answered_field_ids = []
+        answered_field_ids = []
 
-          # One-time fields: hide if answered on ANY form submission for this person
-          one_time_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: true)
+        # One-time fields: hide if answered on ANY form submission for this person
+        one_time_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: true)
+                                 .where.not(answer_type: :group_header).ids
+        if one_time_field_ids.any?
+          answered_one_time = FormAnswer.joins(:form_submission)
+                                       .where(form_submissions: { person_id: person.id })
+                                       .where(form_field_id: one_time_field_ids)
+                                       .where.not(submitted_answer: [ nil, "" ])
+                                       .pluck(:form_field_id)
+          answered_field_ids.concat(answered_one_time)
+        end
+
+        # Regular fields: hide if answered on a submission for this event
+        event_submissions = FormSubmission.where(person: person, event_id: @event.id)
+        if event_submissions.exists?
+          regular_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: false)
                                    .where.not(answer_type: :group_header).ids
-          if one_time_field_ids.any?
-            answered_one_time = FormAnswer.joins(:form_submission)
-                                         .where(form_submissions: { person_id: person.id })
-                                         .where(form_field_id: one_time_field_ids)
-                                         .where.not(submitted_answer: [ nil, "" ])
-                                         .pluck(:form_field_id)
-            answered_field_ids.concat(answered_one_time)
+          if regular_field_ids.any?
+            answered_regular = FormAnswer.where(form_submission: event_submissions)
+                                        .where(form_field_id: regular_field_ids)
+                                        .where.not(submitted_answer: [ nil, "" ])
+                                        .pluck(:form_field_id)
+            answered_field_ids.concat(answered_regular)
           end
+        end
 
-          # Regular fields: hide if answered on a submission for this event
-          event_submissions = FormSubmission.where(person: person, event_id: @event.id)
-          if event_submissions.exists?
-            regular_field_ids = @registration_form.form_fields.where(visibility: :answers_on_file, one_time: false)
-                                     .where.not(answer_type: :group_header).ids
-            if regular_field_ids.any?
-              answered_regular = FormAnswer.where(form_submission: event_submissions)
-                                          .where(form_field_id: regular_field_ids)
-                                          .where.not(submitted_answer: [ nil, "" ])
-                                          .pluck(:form_field_id)
-              answered_field_ids.concat(answered_regular)
-            end
-          end
+        answered_field_ids.uniq!
+        if answered_field_ids.any?
+          scope = scope.where.not(id: answered_field_ids)
 
-          answered_field_ids.uniq!
-          if answered_field_ids.any?
-            scope = scope.where.not(id: answered_field_ids)
-
-            # Hide section headers when all their non-header fields are answered
-            answered_sections = @registration_form.form_fields.where(id: answered_field_ids)
-                                    .pluck(:section).uniq.compact
-            answered_sections.each do |sect|
-              section_field_ids = @registration_form.form_fields.where(section: sect, visibility: :answers_on_file)
-                                      .where.not(answer_type: :group_header).ids
-              if section_field_ids.any? && (section_field_ids - answered_field_ids).empty?
-                scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :answers_on_file)
-              end
+          # Hide section headers when all their non-header fields are answered
+          answered_sections = @registration_form.form_fields.where(id: answered_field_ids)
+                                  .pluck(:section).uniq.compact
+          answered_sections.each do |sect|
+            section_field_ids = @registration_form.form_fields.where(section: sect, visibility: :answers_on_file)
+                                    .where.not(answer_type: :group_header).ids
+            if section_field_ids.any? && (section_field_ids - answered_field_ids).empty?
+              scope = scope.where.not(section: sect, answer_type: :group_header, visibility: :answers_on_file)
             end
           end
         end

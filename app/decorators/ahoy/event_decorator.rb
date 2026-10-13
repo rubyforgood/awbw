@@ -423,7 +423,7 @@ module Ahoy
       type = item["type"] || item["record_type"]
       id = item["id"] || item["record_id"]
       record = find_referenced_record(type, id)
-      text = safe_label(record) || "#{type} ##{id}"
+      text = safe_label(record) || item["label"].presence || "#{type} ##{id}"
       { label: label, depth: depth, action: item["action"],
         link: { text: text, path: show_path_for(record) } }
     end

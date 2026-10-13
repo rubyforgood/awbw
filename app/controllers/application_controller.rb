@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::Base
+  include StripeMetadata
+
   before_action :authenticate_user! # ensures only logged-in users can access pages
   before_action :track_user_with_ahoy, unless: :devise_controller?
   before_action :set_current_user # for AhoyTrackable in models

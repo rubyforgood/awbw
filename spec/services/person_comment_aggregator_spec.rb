@@ -38,6 +38,21 @@ RSpec.describe PersonCommentAggregator do
       )
     end
 
+    it "includes comments on grants the person funds" do
+      grant = create(:grant, :donated_by_person, funder: person)
+      grant_comment = create(:comment, commentable: grant)
+
+      expect(aggregator.comments).to include(grant_comment)
+    end
+
+    it "excludes comments on a grant the person is only a scholarship recipient of" do
+      grant = create(:grant)
+      create(:scholarship, recipient: person, grant: grant)
+      grant_comment = create(:comment, commentable: grant)
+
+      expect(aggregator.comments).not_to include(grant_comment)
+    end
+
     it "excludes comments left on unrelated records" do
       other_person = create(:person)
       create(:comment, commentable: other_person)

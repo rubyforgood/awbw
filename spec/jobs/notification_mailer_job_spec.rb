@@ -94,9 +94,9 @@ RSpec.describe NotificationMailerJob, type: :job do
         described_class.new.perform(notification.id)
 
         mail = ActionMailer::Base.deliveries.last
-        expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "no-reply@awbw.org") ])
+        expect(mail.from).to eq([ EmailConfigHelpers::NO_REPLY_EMAIL ])
         expect(mail[:from].display_names.compact).to eq([ ApplicationMailer::FROM_NAME ])
-        expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+        expect(mail.reply_to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
       end
 
       it "never names the sender in any header" do
@@ -111,6 +111,22 @@ RSpec.describe NotificationMailerJob, type: :job do
 
         expect(notification.reload.sender).to eq(admin)
         expect(notification.decorate.sender_name).to eq("Dana Sender")
+      end
+    end
+  end
+
+  describe "transactional enqueuing" do
+    include ActiveJob::TestHelper
+
+    it "is configured to enqueue only after the surrounding transaction commits" do
+      expect(described_class.enqueue_after_transaction_commit).to be(true)
+    end
+
+    it "does not enqueue while the enclosing transaction is still open" do
+      ActiveRecord::Base.transaction do
+        described_class.perform_later(123)
+
+        expect(enqueued_jobs).to be_empty
       end
     end
   end

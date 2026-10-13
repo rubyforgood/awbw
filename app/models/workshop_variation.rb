@@ -41,6 +41,8 @@ class WorkshopVariation < ApplicationRecord
   belongs_to :workshop_variation_idea, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :nullify
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Asset associations
   has_one :primary_asset, -> { where(type: "PrimaryAsset") },

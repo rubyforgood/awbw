@@ -1,0 +1,9 @@
+<% if params[:combined] %>
+  <%= turbo_stream.replace dom_id(@notification) do %>
+    <%= render "comments_and_communications/communication_row", entry: @notification %>
+  <% end %>
+<% else %>
+  <%= turbo_stream.replace dom_id(@notification, :flag) do %>
+    <%= render "notifications/flag_toggle", notification: @notification %>
+  <% end %>
+<% end %>

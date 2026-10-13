@@ -17,7 +17,7 @@ RSpec.describe ScholarshipMailer, type: :mailer do
     end
 
     it "sends to the trainings/programs team" do
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it "names the recipient in the subject" do
@@ -41,7 +41,7 @@ RSpec.describe ScholarshipMailer, type: :mailer do
 
     it "renders without raising and sends to the trainings/programs team" do
       expect { mail.deliver_now }.not_to raise_error
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it "names the recipient and the decline in the subject, with the reason in the body" do

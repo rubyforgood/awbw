@@ -34,6 +34,18 @@ class EventRegistrationDecorator < ApplicationDecorator
     classes: "text-purple-600"
   )
 
+  Badge = Struct.new(:label, :icon, :classes, keyword_init: true)
+
+  # Warning pill when more is allocated than the registration costs — an overpayment
+  # an admin needs to reconcile (a merge folding two paid records, a payment left on a
+  # now-free event) — nil otherwise. Mirrors the CE decorator's badge so both surfaces
+  # signal an overpayment the same way.
+  def overpayment_badge
+    return unless over_allocated?
+
+    Badge.new(label: "Check payments", icon: "fa-solid fa-triangle-exclamation", classes: "bg-amber-50 text-amber-700 border-amber-200")
+  end
+
   # Nil when CE isn't in play (so the index can show a "Create" affordance instead).
   # `simulate_paid:` lets the CE callout's ?admin=true preview the post-payment state
   # without recording a payment.

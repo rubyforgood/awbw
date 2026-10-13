@@ -312,10 +312,27 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(described_class.story_promoted(notification).to).to eq([ submitter.email ])
     end
 
-    it "names the story and greets the submitter" do
+    it "uses the story-idea subject" do
+      expect(described_class.story_promoted(notification).subject).to eq("AWBW Portal: Your story idea is now a story")
+    end
+
+    it "names the story and greets the submitter by first name" do
       body = described_class.story_promoted(notification).body.encoded
       expect(body).to include("A Healing Story")
-      expect(body).to include(submitter.first_name_or_email)
+      expect(body).to include("Hello #{submitter.first_name_or_email}")
+      expect(body).to include("now live on Story Share")
+    end
+
+    it "links to the story when it is published" do
+      expect(described_class.story_promoted(notification).body.encoded).to include("View story")
+    end
+
+    context "when the story is neither published nor publicly visible" do
+      let(:story) { create(:story, :unpublished, story_idea: story_idea, title: "A Healing Story", publicly_visible: false) }
+
+      it "omits the story link" do
+        expect(described_class.story_promoted(notification).body.encoded).not_to include("View story")
+      end
     end
   end
 
@@ -326,7 +343,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     let(:notification) do
       create(:notification, kind: "story_promoted_fyi", noticeable: story,
              recipient_role: "admin",
-             recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"))
+             recipient_email: EmailConfigHelpers::PROGRAMS_EMAIL)
     end
 
     it "renders without raising" do
@@ -334,7 +351,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
 
     it "goes to the admin mailbox" do
-      expect(described_class.story_promoted_fyi(notification).to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(described_class.story_promoted_fyi(notification).to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it "names the story in the subject" do
@@ -353,9 +370,9 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(mail.subject).to include("AWBW Portal:")
       expect(mail.subject).to include("password reset")
       expect(mail.subject).to include(notification.noticeable.full_name)
-      expect(mail.to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
-      expect(mail.from).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
-      expect(mail.reply_to).to eq([ ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") ])
+      expect(mail.to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
+      expect(mail.from).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
+      expect(mail.reply_to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
     it "renders the body" do
@@ -427,6 +444,15 @@ RSpec.describe NotificationMailer, type: :mailer do
         expect(mail.subject).to include("New form submission")
         expect(mail.subject).to include("Dana Volunteer")
         expect(mail.body.encoded).to include("I care about the mission.")
+      end
+
+      it "shows sector names instead of the stored ids" do
+        sector = create(:sector, name: "Domestic violence")
+        field = create(:form_field, form: form, name: "Primary sector", field_identifier: "primary_sector")
+        submission.persist_answer(field, sector.id.to_s)
+
+        expect(mail.body.encoded).to include("Domestic violence")
+        expect(mail.body.encoded).not_to match(/>\s*#{sector.id}\s*</)
       end
     end
   end

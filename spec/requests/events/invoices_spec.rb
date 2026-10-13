@@ -17,6 +17,12 @@ RSpec.describe "Events::Invoices", type: :request do
         expect(response.body).to include("$1,500")
       end
 
+      it "tracks a view event carrying the event" do
+        expect(Analytics::AhoyTracker).to receive(:track_event)
+          .with(anything, "view.invoices", { event_id: event.id })
+        get event_invoice_path(event)
+      end
+
       context "with a submission_id" do
         let(:form) { create(:form) }
         let(:payer) { create(:person) }
@@ -30,7 +36,7 @@ RSpec.describe "Events::Invoices", type: :request do
         before do
           add_answer("first_name", "Helena")
           add_answer("last_name", "Lopez")
-          add_answer("organization_name", "A Greater Hope")
+          add_answer("organization_name", "Example Family Services")
           add_answer("number_of_attendees", "8")
         end
 
@@ -38,10 +44,16 @@ RSpec.describe "Events::Invoices", type: :request do
           get event_invoice_path(event, submission_id: submission.id)
 
           expect(response).to have_http_status(:success)
-          expect(response.body).to include("A Greater Hope")
+          expect(response.body).to include("Example Family Services")
           expect(response.body).to include("Helena Lopez")
           # 8 attendees × $1,500 = $12,000
           expect(response.body).to include("$12,000")
+        end
+
+        it "tracks a view event carrying the event and submission" do
+          expect(Analytics::AhoyTracker).to receive(:track_event)
+            .with(anything, "view.invoices", { event_id: event.id, submission_id: submission.id })
+          get event_invoice_path(event, submission_id: submission.id)
         end
       end
     end

@@ -32,6 +32,13 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#routable_path" do
+    it "sends a profile change request to the admin queue (it has no show route)" do
+      request = create(:profile_change_request)
+      expect(helper.routable_path(request)).to eq(profile_change_requests_path)
+    end
+  end
+
   describe "#credited_author_link" do
     let(:person) { create(:person, first_name: "Ada", last_name: "Lovelace") }
 
@@ -60,6 +67,23 @@ RSpec.describe ApplicationHelper, type: :helper do
       allow(workshop).to receive(:author).and_return(person)
 
       expect(helper.credited_author_link(workshop)).to eq("AWBW Staff")
+    end
+
+    it "renders each author's credited name, joined by the shared separator" do
+      create(:professional_license, person: person, kind: "LMFT")
+      allow(person).to receive(:profile_is_searchable).and_return(true)
+      co_author = create(:person, first_name: "Cathy", last_name: "Smith",
+                                  display_name_preference: "first_name_last_initial")
+      allow(co_author).to receive(:profile_is_searchable).and_return(false)
+      story = create(:story, author_credit_preference: "full_name")
+      allow(story).to receive(:author).and_return(person)
+      allow(story).to receive(:co_author).and_return(co_author)
+
+      html = helper.credited_author_link(story)
+      expect(html).to include("Ada Lovelace, LMFT")
+      expect(html).to include("Cathy S.")
+      expect(html).to include(AuthorCreditable::CREDIT_SEPARATOR)
+      expect(Nokogiri::HTML.fragment(html).css("a").length).to eq(1)
     end
 
     it "renders a legacy free-text author as plain text with no link" do
@@ -101,8 +125,8 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     before { allow(workshop).to receive(:author).and_return(person) }
 
-    it "links to the person edit page when the viewer can edit people" do
-      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(true)
+    it "links to the person edit page when the viewer is an admin" do
+      allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(true)
 
       html = helper.credited_author_edit_button(workshop)
       expect(html).to include("<a")
@@ -110,8 +134,8 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(html).to include("Ada Lovelace")
     end
 
-    it "falls back to the profile byline when the viewer cannot edit people" do
-      allow(helper).to receive(:allowed_to?).with(:edit?, person).and_return(false)
+    it "falls back to the profile byline when the viewer is not an admin" do
+      allow(helper).to receive(:allowed_to?).with(:manage?, person).and_return(false)
       allow(person).to receive(:profile_is_searchable).and_return(true)
 
       html = helper.credited_author_edit_button(workshop)
@@ -303,6 +327,44 @@ RSpec.describe ApplicationHelper, type: :helper do
 
     it "returns an html_safe string" do
       expect(helper.form_label_html("<br>")).to be_html_safe
+    end
+  end
+
+  describe "#form_label_inline_html" do
+    it "preserves inline formatting and link tags" do
+      input = %(Visit <a href="https://example.com">our site</a><br>line two <strong>bold</strong>)
+      expect(helper.form_label_inline_html(input)).to eq(input)
+    end
+
+    it "strips block tags but keeps their text" do
+      expect(helper.form_label_inline_html("<ul><li>one</li><li>two</li></ul>")).to eq("onetwo")
+      expect(helper.form_label_inline_html("<h2>Section</h2>")).to eq("Section")
+      expect(helper.form_label_inline_html("<p>para</p>")).to eq("para")
+    end
+
+    it "keeps font styling and scrubs dangerous schemes" do
+      expect(helper.form_label_inline_html(%(<font size="5">x</font>))).to eq(%(<font size="5">x</font>))
+      expect(helper.form_label_inline_html(%(<a href="javascript:alert(1)">x</a>))).not_to include("javascript:")
+    end
+
+    it "returns an html_safe string" do
+      expect(helper.form_label_inline_html("<br>")).to be_html_safe
+    end
+  end
+
+  describe "#event_fee_label" do
+    it "returns the formatted cost, Free when zero, and nil when unset" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 150_000))).to eq("$1,500")
+      expect(helper.event_fee_label(build(:event, cost_cents: 0))).to eq("Free")
+      expect(helper.event_fee_label(build(:event, cost_cents: nil))).to be_nil
+    end
+
+    it "shows the net cost when a discount is applied" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 10_000), discount_cents: 2500)).to eq("$75")
+    end
+
+    it "shows $0 when the discount covers the whole cost" do
+      expect(helper.event_fee_label(build(:event, cost_cents: 10_000), discount_cents: 10_000)).to eq("$0")
     end
   end
 

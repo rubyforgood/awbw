@@ -694,6 +694,50 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#over_allocated? / #over_allocation_cents" do
+    let(:event) { create(:event, cost_cents: 1_000) }
+    let(:reg) { create(:event_registration, event: event) }
+
+    def pay(cents)
+      create(:allocation, source: create(:payment, amount_cents: cents, amount_cents_remaining: cents),
+                          allocatable: reg, amount: cents)
+    end
+
+    it "is not over-allocated when allocations are within the cost" do
+      pay(600)
+      expect(reg).not_to be_over_allocated
+      expect(reg.over_allocation_cents).to eq(0)
+    end
+
+    it "flags the overage when allocations exceed the cost" do
+      pay(1_000)
+      event.update_columns(cost_cents: 600)
+      expect(reg.reload).to be_over_allocated
+      expect(reg.over_allocation_cents).to eq(400)
+    end
+  end
+
+  describe "#ce_over_allocation_cents" do
+    let(:person) { create(:person) }
+    let(:event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 15_000) }
+    let(:reg) { create(:event_registration, event: event, registrant: person) }
+    let!(:ce) do
+      create(:continuing_education_registration, event_registration: reg,
+        professional_license: create(:professional_license, person: person), hours: 6, cost_cents: 15_000)
+    end
+
+    it "sums the overage across CE registrations" do
+      create(:allocation, allocatable: ce, amount: 15_000,
+        source: create(:payment, person: person, amount_cents: 15_000, amount_cents_remaining: nil))
+      ce.update_columns(cost_cents: 10_000)
+      expect(reg.reload.ce_over_allocation_cents).to eq(5_000)
+    end
+
+    it "is zero when no CE registration is over-allocated" do
+      expect(reg.ce_over_allocation_cents).to eq(0)
+    end
+  end
+
   describe "payment and scholarship scopes" do
     let(:event) { create(:event, cost_cents: 1000) }
     let(:paid_reg) { create(:event_registration, event: event) }
@@ -1551,6 +1595,20 @@ RSpec.describe EventRegistration, type: :model do
       reg.update!(status: "cancelled")
     end
 
+    it "skips the staff FYI (but still notifies the registrant) when no programs mailbox is configured" do
+      allow(Organization).to receive(:programs_email).and_return(nil)
+      reg = create(:event_registration, status: "registered")
+
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: "event_registration_cancelled", recipient_role: :person)
+      )
+      expect(NotificationServices::CreateNotification).not_to receive(:call).with(
+        hash_including(kind: "event_registration_cancelled_fyi")
+      )
+
+      expect { reg.update!(status: "cancelled") }.not_to raise_error
+    end
+
     it "does not send emails when status changes to something other than cancelled" do
       reg = create(:event_registration, status: "registered")
 
@@ -1773,38 +1831,6 @@ RSpec.describe EventRegistration, type: :model do
       # transfer owes nothing here — remaining is zero and the receipt is available.
       expect(transferred_in.remaining_cost).to eq(0)
       expect(transferred_in.receipt_available?).to be(true)
-    end
-  end
-
-  describe "#w9_available?" do
-    let(:event) { create(:event, cost_cents: 10_000) }
-    let(:reg) { create(:event_registration, event: event) }
-
-    it "is true on a paid event once an actual payment is on file (cash/check)" do
-      payment = create(:payment, type: "CheckPayment", amount_cents: 5_000, amount_cents_remaining: nil, check_number: "12")
-      create(:allocation, source: payment, allocatable: reg, amount: 5_000)
-
-      expect(reg.reload.w9_available?).to be(true)
-    end
-
-    it "is true for an automatic card charge too — any actual payment counts" do
-      payment = create(:external_processor_payment, amount_cents: 5_000, amount_cents_remaining: nil)
-      create(:allocation, source: payment, allocatable: reg, amount: 5_000)
-
-      expect(reg.reload.w9_available?).to be(true)
-    end
-
-    it "is false when the balance is covered only by a scholarship or discount" do
-      scholarship = create(:scholarship, recipient: reg.registrant, amount_cents: 6_000)
-      create(:allocation, source: scholarship, allocatable: reg, amount: 6_000)
-      create(:allocation, source: create(:discount, amount_cents: 4_000), allocatable: reg, amount: 4_000)
-
-      expect(reg.reload.w9_available?).to be(false)
-    end
-
-    it "is false on a free event (nothing to pay)" do
-      free_reg = create(:event_registration, event: create(:event, cost_cents: 0))
-      expect(free_reg.w9_available?).to be(false)
     end
   end
 

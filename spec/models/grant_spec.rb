@@ -135,6 +135,19 @@ RSpec.describe Grant, type: :model do
     end
   end
 
+  describe "#funder_name" do
+    it "uses the linked funder's name when no display name is set" do
+      organization = create(:organization, name: "Acme Foundation")
+      expect(build(:grant, funder: organization).funder_name).to eq("Acme Foundation")
+    end
+
+    it "prefers the funder display name when present" do
+      person = create(:person, first_name: "Jane", last_name: "Doe")
+      grant = build(:grant, funder: person, funder_display_name: "The Doe Family Fund")
+      expect(grant.funder_name).to eq("The Doe Family Fund")
+    end
+  end
+
   describe "list accessors" do
     let(:grant) { build(:grant, eligibility_criteria: "One\n\n  Two  \n", tasks: "A\nB") }
 
@@ -281,6 +294,22 @@ RSpec.describe Grant, type: :model do
       scholarship = create(:scholarship, grant:, amount_cents: 10_000)
 
       expect(Grant.selectable_for(scholarship).count(grant)).to eq(1)
+    end
+  end
+
+  describe "#communications_email" do
+    it "uses an organization funder's email" do
+      org = create(:organization, email: "grants@acme.org")
+      grant = create(:grant, funder: org)
+
+      expect(grant.communications_email).to eq("grants@acme.org")
+    end
+
+    it "uses a person funder's preferred email" do
+      person = create(:person)
+      grant = create(:grant, :donated_by_person, funder: person)
+
+      expect(grant.communications_email).to eq(person.preferred_email)
     end
   end
 end

@@ -80,7 +80,7 @@ class CommunityNewsController < ApplicationController
 
     if success
       redirect_to @community_news,
-                  notice: "Community news was successfully created."
+                  notice: "Community news was successfully created.", status: :see_other
     else
       @community_news = @community_news.decorate
       set_form_variables

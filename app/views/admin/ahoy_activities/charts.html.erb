@@ -122,7 +122,7 @@
               <%= bar_chart @top_users_by_logins, library: { indexAxis: "y" } %>
             <% end %>
 
-            <%= chart_card("Top users by activities") do %>
+            <%= chart_card("Top users by activity") do %>
               <%= bar_chart @top_engaged_users, library: { indexAxis: "y" } %>
             <% end %>
 
@@ -148,7 +148,7 @@
 
             <%= link_to admin_activities_events_path, class: "group relative bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all" do %>
               <i class="fa-solid fa-arrow-up-right-from-square text-2xs absolute top-3.5 right-3.5 text-gray-400 transition-colors group-hover:text-blue-600"></i>
-              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Total activities</h3>
+              <h3 class="mb-2 pr-4 text-sm font-semibold text-gray-700">Total activity</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 tabular-nums transition-colors group-hover:text-blue-600"><%= number_with_delimiter(scoped_events.count) %></div>
                 <div class="mt-2 text-xs text-gray-400">Actions in selected period</div>
@@ -159,7 +159,7 @@
             <% end %>
 
             <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
-              <h3 class="mb-2 text-sm font-semibold text-gray-700">Avg activities per visit</h3>
+              <h3 class="mb-2 text-sm font-semibold text-gray-700">Avg activity per visit</h3>
               <div class="flex flex-col items-center justify-center py-4">
                 <div class="text-5xl font-bold text-gray-900 tabular-nums"><%= @avg_events_per_visit %></div>
                 <div class="mt-2 text-xs text-gray-400">Actions per session</div>
@@ -200,10 +200,10 @@
                 </div>
               </div>
               <div class="border-primary/10 flex-1 rounded-2xl border bg-white p-4 shadow-sm">
-                <h3 class="mb-1 text-sm font-semibold text-gray-700">Public activities</h3>
+                <h3 class="mb-1 text-sm font-semibold text-gray-700">Public activity</h3>
                 <div class="flex flex-col items-center justify-center py-2">
                   <div class="text-3xl font-bold text-gray-900 tabular-nums"><%= @public_events_pct %>%</div>
-                  <div class="mt-1 text-xs text-gray-400">Activities from public visitors</div>
+                  <div class="mt-1 text-xs text-gray-400">Activity from public visitors</div>
                   <div class="mt-1 text-xs text-gray-400"><%= @public_visits_pct %>% of visits are public</div>
                 </div>
               </div>
@@ -225,7 +225,7 @@
           </div>
 
           <div class="mt-8">
-            <%= chart_card("Activities by time-of-week heatmap (#{@user_tz_abbr})") do %>
+            <%= chart_card("Activity by time-of-week heatmap (#{@user_tz_abbr})") do %>
               <% days = %w[Sun Mon Tue Wed Thu Fri Sat] %>
               <% max_val = @heatmap_data.values.max.to_i %>
               <% max_val = 1 if max_val == 0 %>

@@ -1,5 +1,7 @@
 class NotificationMailer < ApplicationMailer
-  default to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+  helper EventHelper
+
+  default to: -> { Organization.programs_email }
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
@@ -215,6 +217,37 @@ class NotificationMailer < ApplicationMailer
     submitter = @person&.full_name || "an anonymous respondent"
     mail(
       subject: "#{FYI_PREFIX} New form submission: #{@form.display_name} by #{submitter}"
+    )
+  end
+
+  def profile_change_requested_fyi(notification)
+    @request = notification.noticeable
+    @person = @request.person
+    @requester = @request.requested_by
+
+    mail(
+      subject: "#{FYI_PREFIX} #{@person.full_name} requested a change to their #{@request.field_label.downcase}"
+    )
+  end
+
+  def profile_change_requested(notification)
+    @request = notification.noticeable
+    @person = @request.person
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} We received your change request"
+    )
+  end
+
+  def profile_change_reviewed(notification)
+    @request = notification.noticeable
+    @person = @request.person
+    @outcome = @request.declined? ? "declined" : "completed"
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Update on your change request"
     )
   end
 

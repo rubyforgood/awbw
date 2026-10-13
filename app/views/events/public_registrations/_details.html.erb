@@ -9,11 +9,12 @@
     Shown above the form's header intro. Locals: event. %>
 <%
   multi_day = event.multi_day?
+  discount_cents = local_assigns.fetch(:discount_cents, 0)
   parenthetical = ->(text) { text.present? ? "(#{text})" : nil }
   detail_rows = [
     { label: multi_day ? "Dates" : "Date", value: event_dates_detail_label(event), note: parenthetical.call(event.hint_dates) },
     { label: multi_day ? "Times" : "Time", value: event_times_label(event), note: parenthetical.call(event.hint_times) },
-    { label: "Fee", value: event_fee_label(event), note: parenthetical.call(event.hint_registration_cost) },
+    { label: "Fee", value: event_fee_label(event, discount_cents: discount_cents), note: parenthetical.call(event.hint_registration_cost) },
     { label: "Platform", value: event_platform_label(event) },
     { label: "Location", value: event_location_label(event) },
     { label: "Registration closes", value: event_registration_close_date_label(event), note: "(#{event_registration_close_time_label(event)})" }

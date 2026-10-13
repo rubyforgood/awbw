@@ -11,6 +11,8 @@ class WorkshopLog < ApplicationRecord
   belongs_to :workshop, optional: true
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :nullify, autosave: false
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :report_form_field_answers,
            foreign_key: :workshop_log_id, inverse_of: :workshop_log,

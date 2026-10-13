@@ -41,9 +41,14 @@ RSpec.describe SmartFormFields do
       expect(special_cased - documented).to be_empty
     end
 
-    it "documents every identifier the registration pipeline reads" do
-      source = Rails.root.join("app/services/event_registration_services/public_registration.rb").read
-      read_identifiers = source.scan(/field_value\("([a-z0-9_]+)"\)/).flatten.uniq
+    it "documents every identifier the submission pipelines read" do
+      sources = %w[
+        app/services/event_registration_services/public_registration.rb
+        app/services/person_services/capture_from_submission.rb
+        app/services/organization_services/capture_from_submission.rb
+        app/services/public_form_submission.rb
+      ].map { |path| Rails.root.join(path).read }.join("\n")
+      read_identifiers = sources.scan(/field_value\("([a-z0-9_]+)"\)/).flatten.uniq
       documented = described_class.identifiers + described_class::ANSWER_ONLY_IDENTIFIERS
 
       # Guards the guard: a regex that stopped matching would pass vacuously.

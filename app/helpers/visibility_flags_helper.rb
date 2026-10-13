@@ -26,6 +26,11 @@ module VisibilityFlagsHelper
       hint: "On the public homepage",
       description: "Shows this on the homepage for visitors who are not logged in. (Requires both Published and Publicly visible to take effect.)"
     },
+    funder_only: {
+      label: "Funder-only",
+      hint: "Shared only with the scholarship funder; off Story Share",
+      description: "Restricts this story to the funder who paid for the author's training scholarship. It stays off Story Share and out of search — only admins and the author can see it. (Can be combined with a draft while you finish it.)"
+    },
     hidden_from_search: {
       label: "Hidden from search",
       hint: "Hidden from search; link still works",

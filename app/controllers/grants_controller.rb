@@ -156,12 +156,14 @@ class GrantsController < ApplicationController
 
   def grant_params
     params.require(:grant).permit(
-      :name, :description, :amount_dollars, :amount_cents, :funder_sgid,
+      :name, :description, :amount_dollars, :amount_cents, :funder_sgid, :funder_display_name,
       :funds_allocation_deadline, :funds_received_on, :eligibility_criteria, :tasks,
       :planned_giving, :in_memoriam,
       sector_ids: [], category_ids: [],
       primary_asset_attributes: [ :id, :file, :_destroy ],
-      gallery_assets_attributes: [ :id, :file, :_destroy ]
+      gallery_assets_attributes: [ :id, :file, :_destroy ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
     )
   end
 end

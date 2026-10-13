@@ -4,7 +4,7 @@ class WorkshopIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(WorkshopIdea.includes(:workshops))
+    base_scope = authorized_scope(WorkshopIdea.with_author_credit.includes(:workshops))
     filtered = base_scope.search(params.slice(:title, :author_name))
     filtered = filtered.created_by_person(params[:created_by_person_id]) if params[:created_by_person_id].present?
     @workshop_ideas_count = filtered.size
@@ -31,6 +31,7 @@ class WorkshopIdeasController < ApplicationController
     if @workshop_idea.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_idea,
+        person: @workshop_idea.created_by&.person,
         kind: :idea_submitted,
         recipient_role: :person,
         recipient_email: @workshop_idea.created_by.email,
@@ -39,7 +40,7 @@ class WorkshopIdeasController < ApplicationController
         noticeable: @workshop_idea,
         kind: :idea_submitted_fyi,
         recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        recipient_email: Organization.programs_email,
         notification_type: 0)
 
       flash[:notice] = "Workshop idea was successfully created."

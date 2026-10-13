@@ -16,7 +16,6 @@ class User < ApplicationRecord
   after_update :track_welcome_completion, if: :welcome_token_cleared?
   after_update :track_login_event
   after_update :track_email_change
-  after_update :sync_email_to_person
   after_update :track_lock_change
   after_update :track_admin_change
   after_update :track_inactive_change
@@ -24,6 +23,8 @@ class User < ApplicationRecord
   after_update :track_password_changed
 
   after_commit :create_email_changed_notification, on: :update
+  after_commit :sync_email_to_person, on: [ :create, :update ],
+    if: -> { saved_change_to_email? || saved_change_to_person_id? }
 
   before_destroy :track_account_deleted
 
@@ -92,6 +93,7 @@ class User < ApplicationRecord
   end
 
   scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
+  scope :invited, -> { where.not(welcome_instructions_sent_at: nil) }
 
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
@@ -102,7 +104,7 @@ class User < ApplicationRecord
     elsif params[:access] == "false"
       results = results.where("users.inactive = ? OR users.locked_at IS NOT NULL OR users.confirmed_at IS NULL", true)
     end
-    results = results.where.not(welcome_instructions_sent_at: nil) if params[:invited] == "true"
+    results = results.invited if params[:invited] == "true"
     results = results.where.not(confirmed_at: nil) if params[:confirmed] == "true"
     results = results.where("users.sign_in_count > 0") if params[:authenticated] == "true"
     results
@@ -240,6 +242,10 @@ class User < ApplicationRecord
     send_devise_notification(:confirmation_instructions, @raw_confirmation_token, opts)
   end
 
+  def invited?
+    welcome_instructions_sent_at.present?
+  end
+
   def set_welcome_instructions_token!
     loop do
       self.welcome_instructions_token = Devise.friendly_token
@@ -253,8 +259,7 @@ class User < ApplicationRecord
   def clear_welcome_instructions_token!
     update_columns(
       welcome_instructions_token: nil,
-      welcome_instructions_created_at: nil,
-      welcome_instructions_sent_at: nil
+      welcome_instructions_created_at: nil
     )
   end
 
@@ -394,9 +399,7 @@ class User < ApplicationRecord
   end
 
   def sync_email_to_person
-    return unless saved_change_to_email? && person.present?
-
-    person.update(email: email)
+    PersonLoginEmailSync.call(self)
   end
 
   def create_email_changed_notification
@@ -405,6 +408,7 @@ class User < ApplicationRecord
     _from, to = previous_changes["email"]
     NotificationServices::CreateNotification.call(
       noticeable: self,
+      person: person,
       recipient_role: :person,
       recipient_email: to,
       kind: :account_email_changed,

@@ -5,16 +5,20 @@
 <%= render layout: "shared/show_page", locals: { domain: :stories } do %>
       <!-- Top Right Utility Links -->
       <div class="mb-4 flex flex-wrap justify-end gap-2">
-        <%= link_to "Home", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-        <%= link_to "Stories", stories_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "Portal", root_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "Story share home", story_shares_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <%= link_to "All stories", stories_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% if (tag_home = story_tag_home_path(@story)) %>
+          <%= link_to "Tag home", tag_home, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <% end %>
         <% if allowed_to?(:edit?, @story) %>
           <%= link_to "Edit", edit_story_path(@story.id),
                       class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
         <% end %>
+        <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
         <span class="inline-block text-sm">
           <%= render "bookmarks/editable_bookmark_button", resource: @story %>
         </span>
-        <%= print_button(@story, printable_type: "Story", button_text: "Print page") %>
       </div>
 
       <!-- Story Card -->
@@ -35,19 +39,12 @@
                         organization_path(@story.organization),
                         class: "hover:underline" %>
           </p>
-          <% if @story.decorate.workshop_title.present? %>
-            <p><strong>Workshop:</strong>
-              <% if @story.workshop %>
-                <%= link_to @story.workshop.title, workshop_path(@story.workshop), class: "hover:underline" %>
-                <% if @story.external_workshop_title.present? %>
-                  / <%= @story.external_workshop_title %>
-                <% end %>
-              <% else %>
-                <%= @story.decorate.workshop_title %>
-              <% end %>
-            </p>
+          <% if @story.decorate.workshop_links.present? %>
+            <p><strong><%= @story.decorate.workshop_reference_count > 1 ? "Workshops" : "Workshop" %>:</strong> <%= @story.decorate.workshop_links %></p>
           <% end %>
         </div>
+
+        <%= render "story_shares/tag_chips", story: @story %>
 
         <div id="upload-progress" class="mt-2 hidden h-1 w-full overflow-hidden rounded bg-gray-200">
           <div id="upload-progress-bar" class="h-full w-0 bg-blue-500 transition-[width] duration-200 ease-out"></div>

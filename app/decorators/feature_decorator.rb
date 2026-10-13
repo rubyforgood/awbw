@@ -59,6 +59,10 @@ class FeatureDecorator < ApplicationDecorator
     released_on&.strftime("%b %-d, %Y")
   end
 
+  def logged_label
+    created_at&.strftime("%b %-d, %Y")
+  end
+
   def area_badge
     badge(area_icon, area_label, area_color)
   end

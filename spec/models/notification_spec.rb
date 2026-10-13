@@ -44,6 +44,32 @@ RSpec.describe Notification do
     end
   end
 
+  describe "binding to the recipient person" do
+    it "resolves person from the recipient email on create" do
+      person = create(:person, user: nil, email: "recip@example.com", email_2: nil)
+
+      notification = create(:notification, recipient_email: "recip@example.com")
+
+      expect(notification.person).to eq(person)
+    end
+
+    it "leaves person nil when no one owns the recipient email" do
+      notification = create(:notification, recipient_email: "stranger@example.com")
+
+      expect(notification.person).to be_nil
+    end
+
+    it "keeps an explicitly assigned person instead of overwriting from the email" do
+      owner = create(:person, user: nil, email: "recip@example.com", email_2: nil)
+      explicit = create(:person, user: nil, email: "other@example.com", email_2: nil)
+
+      notification = create(:notification, recipient_email: "recip@example.com", person: explicit)
+
+      expect(notification.person).to eq(explicit)
+      expect(notification.person).not_to eq(owner)
+    end
+  end
+
   describe "Ahoy lifecycle tracking" do
     after { Current.reset }
 
@@ -238,6 +264,44 @@ RSpec.describe Notification do
       all = [ fyi_responded, fyi_not_responded, incoming_responded, incoming_not_responded, contact_us, other ]
       expect(Notification.responded_status("")).to contain_exactly(*all)
       expect(Notification.responded_status("bogus")).to contain_exactly(*all)
+    end
+  end
+
+  describe ".delivery_status" do
+    let!(:delivered) { create(:notification, delivered_at: Time.current, error_at: nil) }
+    let!(:failed)    { create(:notification, delivered_at: nil, error_at: Time.current) }
+    let!(:pending)   { create(:notification, delivered_at: nil, error_at: nil) }
+
+    it "returns delivered notifications for 'delivered'" do
+      expect(Notification.delivery_status("delivered")).to contain_exactly(delivered)
+    end
+
+    it "returns failed notifications for 'failed'" do
+      expect(Notification.delivery_status("failed")).to contain_exactly(failed)
+    end
+
+    it "returns pending notifications for 'pending'" do
+      expect(Notification.delivery_status("pending")).to contain_exactly(pending)
+    end
+
+    it "returns pre-launch undelivered rows for 'archived', and excludes them from 'pending'" do
+      archived = create(:notification, delivered_at: nil, error_at: nil, created_at: Notification::LAUNCHED_ON - 1.day)
+
+      expect(Notification.delivery_status("archived")).to contain_exactly(archived)
+      expect(Notification.delivery_status("pending")).to contain_exactly(pending)
+    end
+
+    it "returns the original and its resends for 'resent', not unrelated rows" do
+      root = create(:notification)
+      child = create(:notification, parent_notification_id: root.id, root_notification_id: root.id)
+
+      expect(Notification.delivery_status("resent")).to contain_exactly(root, child)
+    end
+
+    it "returns all notifications for blank/unknown values" do
+      all = [ delivered, failed, pending ]
+      expect(Notification.delivery_status("")).to contain_exactly(*all)
+      expect(Notification.delivery_status("bogus")).to contain_exactly(*all)
     end
   end
 
@@ -585,6 +649,32 @@ RSpec.describe Notification do
         results = Notification.search_by_params(record_type: "")
         expect(results).to include(notification_story, notification_user)
       end
+    end
+
+    context "flagged" do
+      let!(:flagged) { create(:notification, :flagged, recipient_email: "flag@example.com") }
+      let!(:unflagged) { create(:notification, recipient_email: "plain@example.com") }
+
+      it "returns only flagged communications when flagged is '1'" do
+        results = Notification.search_by_params(flagged: "1")
+        expect(results).to include(flagged)
+        expect(results).not_to include(unflagged)
+      end
+
+      it "returns all when flagged is not '1'" do
+        results = Notification.search_by_params(flagged: "")
+        expect(results).to include(flagged, unflagged)
+      end
+    end
+  end
+
+  describe ".flagged" do
+    it "returns only flagged communications" do
+      flagged = create(:notification, :flagged)
+      unflagged = create(:notification)
+
+      expect(Notification.flagged).to include(flagged)
+      expect(Notification.flagged).not_to include(unflagged)
     end
   end
 

@@ -30,6 +30,8 @@ class Feature < ApplicationRecord
   }.freeze
   DISPLAY_STATUS_KEYS = DISPLAY_STATUSES.keys.freeze
   ADMIN_ONLY_STATUS = "admin_facing".freeze
+  # Absorbs ActionText touching the record a moment after it's created with a description.
+  EDIT_GRACE_PERIOD = 1.minute
 
   validates :name, presence: true, length: { maximum: 150 }
   validates :summary, presence: true, length: { maximum: 300 }
@@ -45,6 +47,7 @@ class Feature < ApplicationRecord
   scope :published, -> { where(published: true) }
   scope :readable_by_non_admins, -> { where.not(display_status: ADMIN_ONLY_STATUS) }
   scope :by_release, -> { order(released_on: :desc, name: :asc) }
+  scope :created_by_admins, -> { joins(:created_by).where(users: { super_user: true }) }
 
   def pro_tips_list
     pro_tips.to_s.split("\n").map(&:strip).reject(&:blank?)
@@ -52,5 +55,9 @@ class Feature < ApplicationRecord
 
   def admin_only?
     display_status == ADMIN_ONLY_STATUS
+  end
+
+  def edited?
+    updated_at > created_at + EDIT_GRACE_PERIOD
   end
 end

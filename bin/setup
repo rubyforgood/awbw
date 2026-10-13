@@ -70,6 +70,11 @@ end
 # Main setup sequence
 # ------------------------------------------------------------------------------
 FileUtils.chdir APP_ROOT do
+  unless File.exist?(".env")
+    puts "== Creating .env from .env.sample =="
+    FileUtils.cp(".env.sample", ".env")
+  end
+
   require_relative "../config/environment"
 
   puts "== Installing dependencies =="

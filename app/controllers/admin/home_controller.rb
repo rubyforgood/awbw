@@ -11,6 +11,7 @@ module Admin
       @additional_data_cards = additional_data_cards
       @deduper_cards         = deduper_cards
       @deprecated_data_cards = deprecated_data_cards
+      @pending_change_requests_count = ProfileChangeRequest.pending.count
     end
   end
 end

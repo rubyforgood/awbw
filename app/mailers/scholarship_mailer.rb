@@ -1,5 +1,5 @@
 class ScholarshipMailer < ApplicationMailer
-  default to: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org")
+  default to: -> { Organization.programs_email }
 
   # Trainings-team heads-up when a recipient asks for more support instead of
   # accepting or declining — the award stays live, so staff can revisit the amount.

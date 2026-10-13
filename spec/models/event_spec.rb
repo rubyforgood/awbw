@@ -593,6 +593,24 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#facilitator_event_staffs" do
+    let(:event) { create(:event) }
+
+    it "returns only staff whose title names them a facilitator, case-insensitively" do
+      lead = create(:event_staff, event: event, person: create(:person, first_name: "Rudy"), title: "Lead Facilitator")
+      co = create(:event_staff, event: event, person: create(:person, first_name: "Kat"), title: "facilitator")
+      create(:event_staff, event: event, person: create(:person, first_name: "Sam"), title: "Greeter")
+
+      expect(event.facilitator_event_staffs).to contain_exactly(lead, co)
+    end
+
+    it "is empty when no staff are titled as facilitators" do
+      create(:event_staff, event: event, title: "Greeter")
+
+      expect(event.facilitator_event_staffs).to be_empty
+    end
+  end
+
   describe "ce_payment_due_deadline date/time fields" do
     it "merges the date and time inputs into the datetime column on save" do
       event = create(:event,

@@ -81,6 +81,11 @@ module TitleDisplayHelper
       )
     end
 
+    # --- Funder-only badge (scholarship deliverable shared only with the funder) ---
+    if (funder_badge = funder_only_badge(record))
+      fragments << funder_badge
+    end
+
     # --- Promoted from story idea badge ---
     if record.respond_to?(:story_idea) && record.story_idea.present?
       icon = content_tag(:span, content_tag(:i, "", class: "fa-solid fa-arrow-up-from-bracket"), class: "inline-flex justify-center w-4")
@@ -116,6 +121,20 @@ module TitleDisplayHelper
       # No badges: just return the title with no empty div wrapper
       title_row
     end
+  end
+
+  # Pill marking a story/story idea restricted to its training-scholarship funder.
+  # Returns nil unless the record is funder-only, so callers can `<%= %>` it freely.
+  def funder_only_badge(record)
+    return unless record.respond_to?(:funder_only?) && record.funder_only?
+    icon = content_tag(:span, content_tag(:i, "", class: "fa-solid fa-lock"), class: "inline-flex justify-center w-4")
+    content_tag(
+      :span,
+      icon + content_tag(:span, "Funder-only", class: "ml-1"),
+      class: "inline-flex items-center pl-1.5 pr-2.5 py-0.5 rounded-full text-xs font-medium " \
+             "#{DomainTheme.bg_class_for(:scholarships, intensity: 100)} #{DomainTheme.text_class_for(:scholarships, intensity: 800)} whitespace-nowrap",
+      title: "Shared only with the training-scholarship funder — kept off Story Share"
+    )
   end
 
   private

@@ -1,19 +1,17 @@
 <% content_for(:page_bg_class, "admin-or-auth") %>
 <% intro = capture do %>
-    At A Window Between Worlds, we value every story you share. Your voice helps paint a picture of the positive impact
-    of art on people and communities, inspiring others to use art in similarly powerful and far reaching ways.
+    Thank you for sharing your story with us! We read every story that comes in with care and look forward to
+    spending time with your submission. Please give us 2-4 weeks to contact you about your story.
     <br><br>
-    Thank you for considering submitting to our
-    <%= link_to "Story Share", "https://www.awbw.org/stories",
-                target: "_blank", class: "text-blue-600 hover:text-blue-800" %>.
-    Stories are typically short (200-400 words) and describe an art workshop you did and the impact it had on someone.
-    You can write about art workshops you've done with clients, family, friends, colleagues, community members,
-    volunteers, and yourself. To help your stories make the greatest impact, check out these
-    <%= link_to "tips for stories", resource_path(1084), class: "text-blue-600 hover:text-blue-800" %>
+    We encourage you to check out our
+    <%= link_to "tips for sharing stories handout", resource_path(1084), class: "text-blue-600 hover:text-blue-800" %>
+    as it might be helpful to reference as you prepare to submit your story.
+    <br><br>
+    For each checkbox you select below, we ask that you write about that in your story. For example, if you select
+    Education and Teens, describe how art workshop participants were high school students.
     <br><br>
     <span class="italic">
-      Please note: edits may be made, and not all stories
-      will be published to the site, but may still be used in other places.
+      Note: edits may be made, and not all stories will be published to the site, but may still be used in other places.
     </span>
 <% end %>
 <%= render layout: "shared/form_page",

@@ -41,6 +41,7 @@ class NotificationsController < ApplicationController
 
     if @person
       @notification.noticeable = noticeable_target || @person
+      @notification.person = @person
       @notification.recipient_email = @person.communications_email.presence || "n/a"
     else
       @notification.errors.add(:base, "Select a person to log this communication against")
@@ -68,12 +69,9 @@ class NotificationsController < ApplicationController
     track_responded_change(responded_was)
     track_incoming_body_change(body_was)
 
-    if params[:combined].present?
-      render turbo_stream: turbo_stream.replace(
-        helpers.dom_id(@notification), partial: "comments_and_communications/communication_row", locals: { entry: @notification }
-      )
-    else
-      head :ok
+    respond_to do |format|
+      format.turbo_stream
+      format.any { head :ok }
     end
   end
 
@@ -90,6 +88,7 @@ class NotificationsController < ApplicationController
     # individual action, not part of the original batch) reflects the resend itself.
     new_notification = NotificationServices::CreateNotification.call(
       noticeable: @notification.noticeable,
+      person: @notification.person,
       kind: @notification.kind,
       recipient_email: @notification.recipient_email,
       recipient_role: @notification.recipient_role,
@@ -160,6 +159,6 @@ class NotificationsController < ApplicationController
   end
 
   def notification_params
-    params.require(:notification).permit(:responded, :channel, :email_subject, :email_body_text, :direction)
+    params.require(:notification).permit(:responded, :flagged, :channel, :email_subject, :email_body_text, :direction, :created_at)
   end
 end

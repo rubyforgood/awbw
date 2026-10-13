@@ -88,11 +88,79 @@ RSpec.describe "/features", type: :request do
         expect(response.body).not_to include("Facilitator feature")
       end
 
+      it "sorts by date released, newest first, by default" do
+        user_facing.update!(released_on: 2.days.ago)
+        admin_facing.update!(released_on: 1.day.ago)
+        get features_path, headers: frame_headers
+        expect(response.body.index("Admin-only feature")).to be < response.body.index("Facilitator feature")
+      end
+
+      it "sorts by date logged when chosen, ahead of date released" do
+        user_facing.update!(released_on: 1.day.ago, created_at: 3.days.ago)
+        admin_facing.update!(released_on: 2.days.ago, created_at: 1.day.ago)
+        get features_path, params: { logged_direction: "desc" }, headers: frame_headers
+        expect(response.body.index("Admin-only feature")).to be < response.body.index("Facilitator feature")
+
+        get features_path, params: { logged_direction: "asc" }, headers: frame_headers
+        expect(response.body.index("Facilitator feature")).to be < response.body.index("Admin-only feature")
+      end
+
+      it "shows the logged date and labels the release date when sorting by date logged" do
+        user_facing.update!(released_on: Date.new(2026, 10, 5), created_at: Time.zone.local(2026, 10, 8, 12))
+        get features_path, params: { logged_direction: "desc" }, headers: frame_headers
+        expect(response.body).to include("Logged Oct 8, 2026")
+        expect(response.body).to match(/Released\s+Oct 5, 2026/)
+      end
+
+      it "shows only the unlabeled release date when sorting by date released" do
+        user_facing.update!(released_on: Date.new(2026, 10, 5))
+        get features_path, headers: frame_headers
+        expect(response.body).to include("Oct 5, 2026")
+        expect(response.body).not_to include("Logged ")
+        expect(response.body).not_to match(/Released\s+Oct 5, 2026/)
+      end
+
+      it "ignores an unrecognized date-logged direction" do
+        get features_path, params: { logged_direction: "sideways" }, headers: frame_headers
+        expect(response).to have_http_status(:ok)
+      end
+
       it "filters by audience" do
         get features_path, params: { display_status: "admin_facing" }, headers: frame_headers
         expect(response.body).to include("Admin-only feature")
         expect(response.body).not_to include("Facilitator feature")
       end
+
+      context "filtering by creator" do
+        let(:other_admin) { create(:user, :admin) }
+        let!(:by_admin) { create(:feature, name: "Logged by admin", created_by: admin) }
+        let!(:by_other_admin) { create(:feature, name: "Logged by other admin", created_by: other_admin) }
+        let!(:by_regular_user) { create(:feature, name: "Logged by regular user", created_by: regular_user) }
+
+        it "narrows to one creator" do
+          get features_path, params: { created_by: admin.id }, headers: frame_headers
+          expect(response.body).to include("Logged by admin")
+          expect(response.body).not_to include("Logged by other admin")
+          expect(response.body).not_to include("Facilitator feature")
+        end
+
+        it "narrows to features any admin created" do
+          get features_path, params: { created_by: "admins" }, headers: frame_headers
+          expect(response.body).to include("Logged by admin", "Logged by other admin")
+          expect(response.body).not_to include("Logged by regular user")
+          expect(response.body).not_to include("Facilitator feature")
+        end
+      end
+    end
+  end
+
+  describe "the creator filter dropdown" do
+    let!(:by_admin) { create(:feature, name: "Logged by admin", created_by: admin) }
+
+    it "offers Any, Admins, and each creator" do
+      sign_in regular_user
+      get features_path
+      expect(response.body).to include('name="created_by"', ">Any<", ">Admins<", admin.full_name)
     end
   end
 
@@ -119,6 +187,22 @@ RSpec.describe "/features", type: :request do
         get feature_path(admin_facing)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Admin-only feature")
+      end
+    end
+
+    context "the creator" do
+      let!(:with_creator) { create(:feature, name: "Has a creator", created_by: admin) }
+
+      it "is shown on the detail page" do
+        sign_in regular_user
+        get feature_path(with_creator)
+        expect(response.body).to include("Added by", admin.full_name)
+      end
+
+      it "is omitted when the feature has no creator" do
+        sign_in regular_user
+        get feature_path(user_facing)
+        expect(response.body).not_to include("Added by")
       end
     end
 
@@ -165,6 +249,16 @@ RSpec.describe "/features", type: :request do
       sign_in admin
       expect { post import_features_path }.to change(Feature, :count)
       expect(response).to redirect_to(features_path)
+    end
+
+    it "reports seeded features it left alone because they were edited in-app" do
+      sign_in admin
+      FeatureCatalog.new.import!
+      Feature.update_all(area: "reporting", created_at: 2.days.ago, updated_at: 1.day.ago)
+
+      post import_features_path
+
+      expect(flash[:notice]).to match(/Kept \d+ edited in-app features as-is/)
     end
 
     it "blocks a regular user" do

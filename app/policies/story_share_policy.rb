@@ -6,18 +6,22 @@ class StorySharePolicy < ApplicationPolicy
   end
 
   def show?
+    return false if record.funder_only?
     admin? || record.publicly_visible? || (authenticated? && record.published?)
   end
 
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
   #
+  # Funder-only stories never belong on the Story Share showcase — excluded for
+  # every audience, admins included.
   relation_scope do |relation|
-    next relation if admin?
+    scope = relation.not_funder_only
+    next scope if admin?
     if authenticated?
-      relation.published
+      scope.published
     else
-      relation.publicly_visible
+      scope.publicly_visible
     end
   end
 end

@@ -45,6 +45,8 @@ en:
     resent: "Communication has been resent successfully."
     section_title: "Comments & communications"
     section_edit: "Edit"
+    group_by_subject: "Group by subject"
+    no_subject: "No subject"
     add_comment: "Add comment"
     section_none: "No comments or communications yet."
     section_none_comms_only: "No communications yet."

@@ -216,6 +216,13 @@ RSpec.describe "/grants", type: :request do
         get edit_grant_url(create(:grant))
         expect(response).to be_successful
       end
+
+      it "renders the combined comments and communications section" do
+        get edit_grant_url(create(:grant))
+        expect(response.body).to include("Comments &amp; communications")
+        expect(response.body).to include("Add comment")
+        expect(response.body).to include("Add communication")
+      end
     end
 
     describe "POST /create" do
@@ -325,6 +332,32 @@ RSpec.describe "/grants", type: :request do
 
         expect(grant.reload.sectors).to contain_exactly(new_sector)
         expect(grant.categories).to contain_exactly(category)
+      end
+
+      it "saves a new comment with its topic, authored by the current user" do
+        grant = create(:grant)
+        expect {
+          patch grant_url(grant),
+                params: { grant: { comments_attributes: { "0" => { topic: "Follow-up", body: "Confirmed funds received" } } } }
+        }.to change { grant.comments.count }.by(1)
+
+        comment = grant.comments.order(:created_at).last
+        expect(comment.body).to eq("Confirmed funds received")
+        expect(comment.topic).to eq("Follow-up")
+        expect(comment.created_by).to eq(admin)
+      end
+
+      it "logs a communication addressed to the grant's funder" do
+        grant = create(:grant, funder: organization)
+        expect {
+          patch grant_url(grant),
+                params: { grant: { notifications_attributes: { "0" => { email_subject: "Emailed the funder" } } } }
+        }.to change { grant.notifications.count }.by(1)
+
+        note = grant.notifications.last
+        expect(note.noticeable).to eq(grant)
+        expect(note.email_subject).to eq("Emailed the funder")
+        expect(note.recipient_email).to eq(organization.email.presence || "n/a")
       end
     end
 

@@ -11,7 +11,13 @@
       <i class="fa-solid fa-lock"></i>
     </span>
     <h2 class="font-display text-2xl text-gray-900">Admin details</h2>
-    <span class="ml-auto"><%= render "people/admin_only_badge" %></span>
+    <div class="ml-auto flex items-center gap-2">
+      <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+        <%= link_to "Activity", admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
+                    class: admin_button_classes %>
+      <% end %>
+      <%= render "people/admin_only_badge" %>
+    </div>
   </div>
   <div class="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
     <% program_categories = person.categorizable_items.filter_map(&:category).select { |c| c.category_type&.profile_specific? && c.category_type.name != "AgeRange" }.group_by(&:category_type) %>
@@ -92,13 +98,8 @@
         <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt class="font-medium text-gray-500">FileMaker code</dt>
           <dd class="text-gray-900">
-            <% if person.filemaker_code.present? %>
-              <% if FmRolodex.exists?(fm_id: person.filemaker_code) %>
-                <%= link_to person.filemaker_code, fm_archive_path(person.filemaker_code, table: "rolodexes"), class: "text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
-              <% else %>
-                <%= person.filemaker_code %>
-              <% end %>
-            <% else %>—<% end %>
+            <%= filemaker_code_links(person, archive: FmRolodex, table: "rolodexes",
+                                     link_class: "text-blue-600 underline hover:text-blue-800") || "—" %>
           </dd>
           <dt class="font-medium text-gray-500">Racial/ethnic identity</dt>
           <dd class="text-gray-900"><%= person.racial_ethnic_identity.presence || "—" %></dd>

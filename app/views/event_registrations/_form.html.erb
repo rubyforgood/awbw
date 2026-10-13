@@ -1,3 +1,7 @@
+<%# turbo: false is deliberate here: EventRegistrationsController#update responds
+    to format.turbo_stream for inline roster badge toggles. If this form used Turbo,
+    submissions would match format.turbo_stream instead of format.html, preventing
+    the redirect/flash flow on save and returning a blank 422 on validation error. %>
 <%= simple_form_for(event_registration, data: { turbo: false, controller: "dirty-form" }) do |f| %>
   <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
   <%= render "shared/errors", resource: event_registration if event_registration.errors.any? %>

@@ -32,6 +32,136 @@ RSpec.describe Story, type: :model do
     end
   end
 
+  describe "a second author" do
+    let(:first_author) { create(:person, first_name: "Ada", last_name: "Lovelace", display_name_preference: "full_name") }
+    let(:second_author) { create(:person, first_name: "Grace", last_name: "Hopper", display_name_preference: "full_name") }
+
+    def two_author_story(**attrs)
+      create(:story, author: first_author, co_author: second_author,
+                     author_credit_preference: "full_name", co_author_credit_preference: "full_name", **attrs)
+    end
+
+    describe "#author_credit" do
+      it "joins both named authors" do
+        expect(two_author_story.author_credit).to eq("Ada Lovelace and Grace Hopper")
+      end
+
+      it "appends each author's visible credentials" do
+        create(:professional_license, person: first_author, kind: "LMFT")
+        create(:professional_license, person: first_author, kind: "MSW")
+        second_author.update!(display_name_preference: "first_name_last_initial")
+        expect(two_author_story.author_credit).to eq("Ada Lovelace, LMFT, MSW and Grace H.")
+      end
+
+      it "omits credentials the author hides on their profile" do
+        create(:professional_license, person: first_author, kind: "LMFT")
+        first_author.update!(profile_show_credentials: false)
+        expect(two_author_story.author_credit).to eq("Ada Lovelace and Grace Hopper")
+      end
+
+      it "drops the anonymous co-author and shows only the first author" do
+        story = two_author_story(co_author_credit_preference: "anonymous")
+        expect(story.author_credit).to eq("Ada Lovelace")
+      end
+
+      it "drops the anonymous first author and shows only the co-author" do
+        story = two_author_story(author_credit_preference: "anonymous")
+        expect(story.author_credit).to eq("Grace Hopper")
+      end
+
+      it "falls back to the generic label when both authors are anonymous" do
+        story = two_author_story(author_credit_preference: "anonymous", co_author_credit_preference: "anonymous")
+        expect(story.author_credit).to eq("AWBW Facilitator")
+      end
+
+      it "honors each author's own profile display preference" do
+        second_author.update!(display_name_preference: "first_name_only")
+        story = create(:story, author: first_author, co_author: second_author,
+                               author_credit_preference: nil, co_author_credit_preference: nil)
+        expect(story.author_credit).to eq("Ada Lovelace and Grace")
+      end
+    end
+
+    describe "#credited_author_people" do
+      it "returns both credited people in order" do
+        expect(two_author_story.credited_author_people).to eq([ first_author, second_author ])
+      end
+
+      it "omits an anonymous co-author" do
+        story = two_author_story(co_author_credit_preference: "anonymous")
+        expect(story.credited_author_people).to eq([ first_author ])
+      end
+    end
+
+    describe "#credit_anonymous_for?" do
+      it "is true for the co-author when their credit is suppressed" do
+        story = two_author_story(co_author_credit_preference: "anonymous")
+        expect(story.credit_anonymous_for?(second_author)).to be(true)
+        expect(story.credit_anonymous_for?(first_author)).to be(false)
+      end
+    end
+
+    describe "validation" do
+      it "rejects the same person as both authors" do
+        story = build(:story, author: first_author, co_author: first_author)
+        expect(story).not_to be_valid
+        expect(story.errors[:co_author_id]).to be_present
+      end
+
+      # Every author_id-is-null fallback (the profile listing's creator credit, the
+      # divergences page's creator and unattributed sections) would treat a story
+      # with only a second author as having no author at all.
+      it "rejects a second author with no first author" do
+        story = build(:story, author: nil, co_author: second_author)
+        expect(story).not_to be_valid
+        expect(story.errors[:author_id]).to be_present
+      end
+
+      it "rejects an invalid co-author credit preference" do
+        story = build(:story, author: first_author, co_author: second_author, co_author_credit_preference: "sideways")
+        expect(story).not_to be_valid
+        expect(story.errors[:co_author_credit_preference]).to be_present
+      end
+    end
+
+    describe "the co-author consent snapshot" do
+      it "records the co-author's profile preference on create" do
+        second_author.update!(display_name_preference: "first_name_only")
+        story = create(:story, author: first_author, co_author: second_author, co_author_credit_preference: nil)
+        expect(story.reload.co_author_credit_preference).to eq("first_name_only")
+      end
+    end
+
+    describe "search and filtering" do
+      let!(:story) { two_author_story(title: "Two Authors") }
+
+      it "finds the story by the co-author's name" do
+        expect(Story.by_credited_person_name("Hopper")).to include(story)
+      end
+
+      # The credit renders "Grace H." — pasting that back into the search box has to
+      # find it, so the period can't be a mismatch.
+      it "finds the story by the initialled name as it displays" do
+        second_author.update!(display_name_preference: "first_name_last_initial")
+        expect(Story.by_credited_person_name("Grace H.")).to include(story)
+      end
+
+      it "matches nothing by the co-author name when they are anonymous" do
+        story.update!(co_author_credit_preference: "anonymous")
+        expect(Story.by_credited_person_name("Hopper")).not_to include(story)
+      end
+
+      it "filters to stories by either author via authored_by" do
+        expect(Story.authored_by(second_author.id)).to include(story)
+        expect(Story.authored_by(first_author.id)).to include(story)
+      end
+
+      it "lists the story under the co-author via credited_to_person" do
+        expect(Story.credited_to_person(second_author)).to include(story)
+      end
+    end
+  end
+
   describe "#attach_assets_from_idea!" do
     let(:idea) { create(:story_idea) }
     let(:story) { create(:story, story_idea: idea) }
@@ -198,6 +328,16 @@ RSpec.describe Story, type: :model do
     end
   end
 
+  describe ".not_funder_only" do
+    it "excludes funder-only stories and keeps the rest" do
+      regular = create(:story)
+      funder_only = create(:story, :funder_only)
+
+      expect(Story.not_funder_only).to include(regular)
+      expect(Story.not_funder_only).not_to include(funder_only)
+    end
+  end
+
   describe "#to_param" do
     it "is the id followed by the title slugged with hyphens, stripping bad URL characters" do
       story = create(:story, title: "My Great Story! #2 (2026)")
@@ -217,16 +357,19 @@ RSpec.describe Story, type: :model do
   end
 
   describe "#audience_categories" do
-    it "returns only StoryPopulation categories" do
+    it "returns only AgeRange and StoryPopulation categories" do
       story = create(:story)
       population = create(:category_type, name: "StoryPopulation")
+      age_range = create(:category_type, name: "AgeRange")
       other_type = create(:category_type, name: "ArtType")
-      teens = create(:category, name: "Teens", category_type: population)
+      self_category = create(:category, name: "Self", category_type: population)
+      teens = create(:category, name: "Teens", category_type: age_range)
       clay = create(:category, name: "Clay", category_type: other_type)
+      story.categorizable_items.create!(category: self_category)
       story.categorizable_items.create!(category: teens)
       story.categorizable_items.create!(category: clay)
 
-      expect(story.audience_categories).to contain_exactly(teens)
+      expect(story.audience_categories).to contain_exactly(self_category, teens)
     end
   end
 
@@ -235,6 +378,67 @@ RSpec.describe Story, type: :model do
       match = create(:story, title: "Watercolor journey")
       create(:story, title: "Something else")
       expect(Story.search_by_params(query: "Watercolor")).to contain_exactly(match)
+    end
+  end
+
+  describe "linked workshops" do
+    let(:story) { create(:story, workshop: nil) }
+    let(:workshop) { create(:workshop) }
+
+    it "rejects the same workshop submitted twice in one save" do
+      story.assign_attributes(story_workshops_attributes: [ { workshop_id: workshop.id },
+                                                           { workshop_id: workshop.id } ])
+
+      expect(story).not_to be_valid
+      expect(story.errors.full_messages.join).to include("is already linked to this story")
+    end
+
+    it "accepts the same workshop twice when the titles differ" do
+      story.assign_attributes(story_workshops_attributes: [
+        { workshop_id: workshop.id },
+        { workshop_id: workshop.id, external_workshop_title: "Teen variant" }
+      ])
+
+      expect(story).to be_valid
+      expect { story.save! }.not_to raise_error
+      expect(story.reload.story_workshops.map(&:external_workshop_title)).to contain_exactly(nil, "Teen variant")
+    end
+
+    it "allows removing a row and re-adding the same workshop in one save" do
+      existing = story.story_workshops.create!(workshop: workshop)
+      story.assign_attributes(story_workshops_attributes: [
+        { id: existing.id, _destroy: "1" },
+        { workshop_id: workshop.id, external_workshop_title: "Retyped" }
+      ])
+
+      expect(story).to be_valid
+      expect { story.save! }.not_to raise_error
+      expect(story.reload.story_workshops.sole.external_workshop_title).to eq("Retyped")
+    end
+
+    it "rejects the same workshop submitted twice before the story is saved" do
+      unsaved = Story.new(story_workshops_attributes: [ { workshop_id: workshop.id },
+                                                        { workshop_id: workshop.id } ])
+
+      expect(unsaved).not_to be_valid
+      expect(unsaved.errors.full_messages.join).to include("is already linked to this story")
+    end
+
+    it "allows several rows with no workshop of their own" do
+      story.assign_attributes(story_workshops_attributes: [ { external_workshop_title: "One" },
+                                                           { external_workshop_title: "Two" } ])
+
+      expect(story).to be_valid
+    end
+  end
+
+  describe ".story_share_carousel" do
+    it "returns only stories with a carousel position, ordered by it ascending" do
+      second = create(:story, story_share_carousel_position: 2)
+      first = create(:story, story_share_carousel_position: 1)
+      create(:story, story_share_carousel_position: nil)
+
+      expect(Story.story_share_carousel.to_a).to eq([ first, second ])
     end
   end
 end

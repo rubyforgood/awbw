@@ -25,7 +25,468 @@
 #                   expand this in the WYSIWYG with screenshots.
 #   external_url:   Optional link to a full process doc (e.g. a Google/Word doc).
 
+# ── 2026-10 ─────────────────────────────────────────────────────────────────
+
+- name: "Registration forms skip questions you've already answered"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-10-08
+  summary: >-
+    Signed-in registrants no longer re-answer questions already on file — the
+    form hides them automatically. Form editors no longer need to tick a box to
+    turn this on; each question's own "answers on file" setting drives it.
+
+- name: "Friendlier \"your story has been shared\" email"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-08
+  pr_number: 2621
+  summary: >-
+    When a story idea becomes a story, the submitter's email now tells them it's
+    live on Story Share and invites them to share it with friends and colleagues.
+
+- name: "Story idea emails wait until the story is published"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-08
+  pr_number: 2620
+  summary: >-
+    When a story idea becomes a story, the submitter's "your story has been
+    shared" email and the admin FYI now go out the first time the story is
+    published, so the submitter gets a working link to their live story.
+  pro_tips:
+    - "Saving a promoted story as unpublished sends nothing; check Published when it's ready to go live."
+    - "Both emails go out only once per story, so unpublishing and republishing won't send them again."
+
+- name: "See a story's tags at a glance"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-10-05
+  summary: >-
+    Story pages now show a story's sectors and audience categories as colored tag
+    chips under a "Tags:" label, and each chip filters the story library to that tag.
+  action_path: "/story_share"
+  pr_number: 2601
+  description: >-
+    Sectors come first, then audience categories, each in alphabetical order.
+    Related-story cards in the sidebar show the same chips in a compact size, so you
+    can tell what each one is about before clicking.
+
+- name: "Filter communications by delivery status"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-05
+  summary: >-
+    The Communications list has a new Status filter — Delivered, Pending,
+    Failed, Resent, or Archived — so you can quickly find messages that didn't
+    go out, or ones that have already been resent.
+  action_path: "/notifications"
+  pro_tips:
+    - "A resent email stays under the Pending filter on purpose — it still hasn't been delivered, so it keeps showing up as pending; the Resent tag just records that a resend was sent."
+
+- name: "Resend a stuck or failed communication from the list"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-05
+  summary: >-
+    A pending or failed communication now has a Resend button right on the
+    communications list, so you can re-send a stuck email without opening it first.
+  pro_tips:
+    - "Resending takes you to that communication's page with a confirmation; Devise emails (password resets, confirmations) have no button because they carry a one-time security token."
+
+- name: "See which communications have been resent"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-05
+  summary: >-
+    Any communication that's part of a resend chain now shows a small "Resent N
+    times" or "Resend #N" tag next to its status, whatever its own delivery
+    state — so you can tell at a glance which ones have already been handled.
+
+- name: "Choose which sections appear on the Story Share home"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-10-04
+  summary: >-
+    The Story Share home now has audience columns (Children, Adults, …) next to the
+    focus-area sectors and Facilitator Spotlights, so visitors can jump to stories by age
+    group. Admins pick which sectors and audiences appear with the new "Add to Story Share home" button.
+  action_path: "/story_share"
+  description: >-
+    Admins control the Story Share home grid from the Story Share admin page. Each featured sector
+    and audience has an "Add to Story Share home" button; the ones set to "Show on Story Share home"
+    get their own box of stories on the Story Share home, shown in the same order as the nav.
+  pro_tips:
+    - "A sector or audience can stay in the nav without getting a box on the Story Share home — just set it to \"Menu only\"."
+    - "Story Share home boxes follow the nav order, so drag to reorder once and both update."
+
+- name: "Credit a second author on a story idea"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-04
+  summary: >-
+    Story ideas can now credit a second author and a second-author credit
+    preference, matching stories. Admins set them on the idea's edit page, and both
+    — along with the first author — carry over when the idea is promoted to a story.
+  action_path: "/story_ideas"
+
+- name: "Spotlight a facilitator on a story idea"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-04
+  summary: >-
+    Story ideas now carry a spotlighted facilitator, matching stories. Admins set
+    it on the idea's edit page, and it carries over when the idea is promoted to a
+    story.
+  action_path: "/story_ideas"
+
+- name: "Share a story idea with or without an organization"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-04
+  pr_number: 2604
+  summary: >-
+    When facilitators share a story idea, picking an organization is required —
+    it tells us where the story came from. Admins can leave it blank and add the
+    organization later, so an idea never gets stuck waiting on one.
+  action_path: "/story_ideas"
+
+- name: "Change log on stories and story ideas"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-07
+  pr_number: 2617
+  summary: >-
+    Story and story idea edit pages now have the same Change log toggle as people
+    and organizations, including tags added or removed and the primary sector or
+    story population moving.
+  pro_tips:
+    - "Tags removed since keep their name in the log, even after the tag itself is deleted."
+  action_path: "/stories"
+
+- name: "Star a primary sector and story population on stories"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-07
+  pr_number: 2617
+  summary: >-
+    When sharing a story idea or tagging a story, star one sector and one story
+    population as its primary — like a person's sectors and age ranges. Story
+    Share shows just those two on each story's picture.
+  pro_tips:
+    - "Starring a tag also checks it, and unchecking a starred tag clears the star."
+    - "Promoting a story idea into a story carries its starred sector and story population over."
+    - "A story with no starred sector shows its first sector on its picture."
+    - "A story's full tag list leads with its starred tags, marked with a star."
+  action_path: "/story_share"
+
+- name: "Cleaner story page layout"
+  area: stories
+  display_status: public_facing
+  released_on: 2026-10-05
+  action_path: "/story_share"
+  summary: >-
+    On a Story Share story, Print and Bookmark now sit in the top-right of the
+    story itself, next to the title. Getting around uses the page's top menu, so
+    the old separate row of navigation buttons is gone.
+
+- name: "Share a story only with its scholarship funder"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-03
+  summary: >-
+    Recipients can now mark a required training-scholarship story "Funder-only": it's
+    shared only with the funder who paid for the training and stays off Story Share,
+    search, and the home page. Staff and the author still see it, flagged with a chip,
+    with a matching filter on the stories list.
+  action_path: "/stories"
+  pr_number: 2596
+
+- name: "Choose which stories lead the Story Share carousel"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-04
+  summary: >-
+    Set a "carousel order" number on a story to hand-pick the Story Share home
+    carousel (lowest leads); blank falls back to featured, then newest. Story Share
+    pages now lead with featured, then newest stories, and the home story list is
+    newest-first.
+  action_path: "/story_share"
+  pr_number: 2600
+
+- name: "Credit two authors on a story"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-03
+  summary: >-
+    A story can now credit a second author alongside the first, and bylines include
+    each author's credentials — "Mae Beale, LMFT, MSW and Cathy S." Name search and
+    the author filter find either one, the story shows on both profiles, and home
+    page cards now name their author(s).
+  action_path: "/stories"
+
+- name: "Download a CSV template for the stories import"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-01
+  action_path: "/stories/import/new"
+  pr_number: 2591
+  summary: >-
+    The stories import page now offers a downloadable CSV template — a header-only
+    file listing every column the import reads, so you can see the expected format
+    before uploading.
+
 # ── 2026-09 ─────────────────────────────────────────────────────────────────
+
+- name: "Show a ticket callout only after someone attends"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-09-30
+  action_path: "/registration/sample"
+  summary: >-
+    Ticket callouts can now be gated on attendance — check "Only show if marked
+    attended" and the callout stays hidden until the registrant's status is
+    Attended, joining the existing payment and CE-payment gates. Useful for
+    post-event material like a certificate, evaluation, or thank-you.
+
+- name: "Link stories and workshops both ways"
+  area: content
+  display_status: user_facing
+  released_on: 2026-09-30
+  summary: >-
+    A story can now reference several workshops (each linked to the curriculum, or
+    typed in for one that isn't listed), and a workshop's page lists the stories
+    that use it — connect them from either side.
+  action_path: "/workshops"
+
+- name: "Standalone forms fill in profiles too"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-30
+  action_path: "/forms"
+  pr_number: 2609
+  summary: >-
+    Contact and profile smart fields (secondary email, phone, address, pronouns, name
+    pronunciation, sectors, age groups) and the submitted organization now save from a
+    standalone form the same way as on an event registration, for new and existing
+    people. The latest answer wins.
+  pro_tips:
+    - The changes land on the person's "What this submission changed" audit, so you can
+      see exactly what a submission updated — including a tag it removed or reassigned.
+    - An agreement form (on-demand, new job, reinstatement, close program) whose
+      organization name matches exactly is now processed the moment it arrives, exactly
+      as if you had clicked "Link organization" yourself. If the name matches nothing,
+      or matches two organizations, it stays in your queue to resolve.
+    - Any other form fills in the organization's details and adds the job affiliation
+      from the position they typed, exactly as an event registration does.
+
+- name: "W-9 available before paying"
+  area: payments
+  display_status: public_facing
+  released_on: 2026-09-30
+  action_path: "/registration/sample"
+  summary: >-
+    AWBW's W-9 is now downloadable from the payment callout right away, before any
+    payment is made — so payers who need it to set AWBW up as a vendor can grab it
+    before they cut a check.
+
+- name: "Funder display name on grants"
+  area: scholarships
+  display_status: admin_facing
+  released_on: 2026-09-30
+  summary: >-
+    Grants now have an optional "Funder display name" — set it to how the funder
+    should read on scholarship tickets (e.g. a foundation or family fund) instead
+    of one named individual. The linked funder still tracks the real contact; the
+    display name is just the public label.
+  action_path: "/grants"
+
+- name: "Over-allocated payments flagged in red"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-09-29
+  summary: >-
+    When more is allocated to a registration or CE record than it costs, the
+    amount-due totals turn red and read "$X over" instead of showing "Paid", and a
+    warning icon flags it in the registrations index and event registrants roster —
+    so an overpayment that needs reconciling is easy to spot.
+  action_path: "/event_registrations"
+
+- name: "Form subtitles keep their formatting"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-09-25
+  pr_number: 2560
+  action_path: "/forms"
+  summary: >-
+    Form subtitles that contain bullet lists, headings, or paragraphs now render
+    as written on both the live form and the builder preview, instead of losing
+    their bullets and heading sizes.
+
+- name: "Create and manage standalone invoices"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-09-25
+  pr_number: 2558
+  action_path: "/invoices"
+  summary: >-
+    Admins can now create, edit, and delete one-off invoices right in the portal
+    — each with its own billed-to details and any number of line items — from a
+    new Invoices page, for charges that don't come from an event registration.
+
+- name: "Log a note or communication against any of a person's records"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-23
+  pr_number: 2555
+  action_path: "/comments_and_communications"
+  summary: >-
+    The "Log it against" picker in the comment and communication composer now
+    offers every record a person is tied to — form submissions, affiliations,
+    staff tags, reports, and the workshops and stories they're credited on — not
+    just a handful, so a note can hang off whatever it's actually about.
+
+- name: "Communications stay attached after an email change"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-23
+  pr_number: 2547
+  action_path: "/comments_and_communications"
+  summary: >-
+    A person's message history now stays linked to them even after they change
+    their email address, so messages sent to a former address keep showing in
+    their comments & communications feed instead of dropping off.
+- name: "Filter by several staff tags or topics at once"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-08
+  summary: >-
+    The staff tag and topic subscription filters now let you pick more than one
+    at a time — on the People directory, the Subscriptions list, the attendees
+    index, and the bulk email recipient picker — so you can pull everyone in
+    any of several tags or topics in one search.
+  action_path: "/people"
+  pro_tips:
+    - "Start typing in the box to search the list, then click to add each tag or topic; click the × on a chip to drop it."
+
+- name: "Clearer comments & communications feed"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The staff comments & communications feed is easier to follow: separate
+    "Add", "Search", and "Results" sections, plainer labels, a green Add
+    button, and the extra filters tucked behind "More filters" so you aren't
+    met by a wall of fields.
+  action_path: "/comments_and_communications"
+  pr_number: 2556
+  pro_tips:
+    - "Use the cyan \"See one person…\" box by the title to jump to just one person's history."
+    - "Keyword searches the text of both comments and communications; \"More filters\" narrows by date, sender, follow-up and more."
+
+- name: "Group comments & communications by subject"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    A new "Group by subject" toggle clusters items that share a subject line — a
+    comment's topic or an email's subject — instead of one flat list. Off by
+    default, on both the full feed and each record's section.
+  action_path: "/comments_and_communications"
+
+- name: "Turn payment methods on or off per form"
+  area: payments
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The Payment method question in the form builder now shows each method
+    (credit card now, credit card later, check) as a checkbox you can turn on
+    or off — so a form can drop "pay later" and offer only check and credit
+    card. The labels stay fixed because they're wired to payment processing.
+  action_path: "/forms"
+
+- name: "Flag communications for follow-up"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    Communications can now be flagged for follow-up just like comments. On the
+    Comments & communications feed, click the flag on any comment or
+    communication to toggle it — no need to open Edit first — and filter the
+    feed to just the flagged items.
+  action_path: "/comments_and_communications"
+  pr_number: 2549
+
+- name: "Invoice opens are tracked in analytics"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-18
+  pr_number: 2540
+  action_path: "/admin/activities/events"
+  summary: >-
+    Opening a registrant or bulk-payment invoice now records a view in Ahoy
+    analytics, so admins can see invoice activity in the Activity feed. Printing
+    or downloading the PDF happens in the browser and isn't tracked.
+
+- name: "Saving no longer creates duplicate records"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-09-18
+  pr_number: 2536
+  summary: >-
+    Creating community news, a story, event, workshop, resource, or video
+    recording now advances to the saved record instead of leaving you on the
+    form — so an extra click no longer saves a second, duplicate copy.
+
+- name: "School-district chart reads the registration's affiliation"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-14
+  pr_number: 2534
+  action_path: "/events"
+  summary: >-
+    The registrant "School districts" breakdown now comes from the organization
+    each person registered under (their affiliation) instead of their home
+    address — a school district describes where someone facilitates, not where
+    they live. The address "District" field is now labeled "School district".
+
+- name: "Reach the registration deduper from the admin home"
+  area: registration
+  display_status: admin_facing
+  released_on: 2026-09-14
+  pr_number: 2537
+  action_path: "/event_registrations/dedupe_index"
+  summary: >-
+    The admin home Dedupers section now has a "Dedupe event registrations" card,
+    so admins can jump straight to the registration deduper alongside the people,
+    organizations, categories, and sectors dedupers.
+
+- name: "Request a change to your profile's locked details"
+  area: people
+  display_status: user_facing
+  released_on: 2026-09-18
+  summary: >-
+    On your own profile, the details only AWBW staff can edit — your primary
+    email, organization name, and affiliation history — now have a "Request a
+    change" link right beside them. Send us what should change and staff review
+    it, so you can get a correction made without hunting for who to email.
+  pro_tips:
+    - >-
+      The form shows the current value and pre-fills what you're asking about —
+      just add the correction and send.
+  pr_number: 2543
+
+- name: "Review profile change requests in one place"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-18
+  summary: >-
+    A new "Changes requested" page (linked from the admin home) collects the
+    profile corrections facilitators ask for. Approve applies the change where it
+    can; otherwise update manually and mark it resolved, or decline. Pending
+    requests also show on the person's edit page.
+  action_path: "/profile_change_requests"
+  pr_number: 2543
 
 - name: "Email addresses respect the people filter"
   area: people
@@ -46,6 +507,18 @@
     image-based newsletter) with no typed text — it's no longer rejected as
     blank. A truly empty body is still required to have content.
   action_path: "/community_news/new"
+
+- name: "Browse the legacy FileMaker archive"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-10
+  pr_number: 2532
+  action_path: "/fm_archives"
+  summary: >-
+    Admins can browse the data migrated from AWBW's old FileMaker system in a
+    read-only archive — rolodex, organizations, events, payments, participants,
+    invoices, campaigns, committees, donors, and more — so historical records
+    stay reachable without opening FileMaker.
 
 - name: "Activities feed defaults to admins in, interactions hidden"
   area: reporting
@@ -443,6 +916,18 @@
     Each staff tag on a person now opens its own page (the gear on the tag chip, or "Comments"
     from the staff tag's people list) with the combined "Comments & communications" section, so
     you can record why someone carries a tag and log calls or emails about it.
+
+- name: "Comments & communications on grants"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-30
+  summary: >-
+    A grant's edit page now has the same combined "Comments & communications" section as
+    scholarships and people, so you can record notes about a grant and log calls or emails
+    with its funder right on the grant.
+  pro_tips:
+    - "A logged communication is addressed to the grant's funder, so you never type the email."
+    - "When the funder is a person, the grant's comments also show in that person's combined feed."
 
 - name: "Comments & communications on every record that had comments"
   area: communications
@@ -3368,6 +3853,16 @@
   action_path: /events
   pr_number: 2504
 
+- name: "Unique certificate design for on-demand trainings"
+  area: events
+  display_status: user_facing
+  released_on: 2026-10-07
+  summary: >-
+    On-demand facilitator training completions now download their own painted
+    certificate frame, distinct from the scheduled-training design. The
+    recipient's name, course title, and dates still print live over it.
+  action_path: /events
+  pr_number: 2606
 - name: "Slider questions on forms"
   area: registration
   display_status: admin_facing
@@ -3425,3 +3920,304 @@
   pro_tips:
     - "If folding two paid CE records onto one enrollment leaves more paid than it costs, the CE registration shows a \"Check payments\" flag so you can reconcile the payments — the cost is never inflated to hide it."
     - "The preview tells you what will move before you merge. It still can't be undone."
+
+- name: "Your communications history shows the portal emails sent to you"
+  area: communications
+  display_status: public_facing
+  released_on: 2026-09-20
+  summary: >-
+    When you view your own communications history, you see the emails the portal
+    sent you — registration confirmations, receipts, and reminders.
+
+- name: "People see portal emails they received, not internal staff notes"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    People can see "autoemail" communications sent to them by and through the
+    portal. Internal staff communications (logged calls, emails, texts, and
+    other hand-recorded comms) stay private to staff.
+
+- name: "Activity buttons for a person's timeline"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-20
+  pr_number: 2551
+  summary: >-
+    Admins can jump to a person's activity from more places: a button in each
+    people-index row and on every profile's Admin details section, plus a
+    portal-wide activity button on the people index.
+
+- name: "Log a communication after the fact with the date it happened"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    When you log a call, text, or email by hand, you can now set the date and
+    time it actually happened — so a contact recorded days later still lands in
+    the right spot on the person's timeline.
+
+- name: "\"Activity\" is the single name for the portal timeline"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    The portal timeline is now called "Activity" everywhere — the admin home
+    tile, the section and its tabs, and every "History" button on a person's
+    record. One consistent word, and it no longer collides with the app's other
+    histories (payment, participation, CE, communications).
+  action_path: "/admin/activities/counts"
+
+- name: "Merges keep billing records and block a double-subscription merge"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  pr_number: 2531
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two people now carries their Stripe billing onto the kept person and
+    settles it on one active payment record, and invoices follow the merge instead
+    of stopping it.
+  description: >-
+    Payment history from both people — customers, charges, and subscriptions —
+    moves to the kept person. One payment record stays active (the one carrying a
+    live subscription, so membership autopay keeps working); the redundant one is
+    hidden rather than deleted, so its charge history is still on file. Invoices
+    addressed to either person or organization now move to the kept record; before
+    this they blocked the merge entirely.
+  pro_tips:
+    - "If both people have a live subscription, the merge is blocked on purpose — cancel one in Stripe first, or the kept person would be billed twice. The preview tells you before you commit."
+    - "A subscription that's already canceled and just running out its paid period doesn't block anything."
+
+- name: "Event pages have one clear button to click"
+  area: registration
+  display_status: public_facing
+  released_on: 2026-09-30
+  pr_number: 2571
+  summary: >-
+    On event pages the "Register" and "Pay for Other(s)" buttons are now a
+    matched pair — Register stands out as the one button to click, and Pay for
+    Others sits beside it in the same style but lighter, so it's easy to find
+    without competing for attention.
+
+- name: "Separate CE Confirmation of Attendance certificate"
+  area: registration
+  display_status: public_facing
+  released_on: 2026-10-04
+  summary: >-
+    A trainee who earns continuing education credit now gets a dedicated CE
+    Confirmation of Attendance — a separate printable document from the training
+    certificate — with their license number, the facilitators, and the CAMFT
+    provider details a licensing board wants to see.
+  description: >-
+    The CE confirmation is reached from the registrant's CE page, one per
+    professional license, and unlocks on the same conditions as the CE credit
+    (training ended, attendance confirmed, CE paid in full, and any CE form
+    complete). It replaces the CE line that used to sit on the completion
+    certificate, so the training certificate and the CE confirmation are now two
+    clean, separate documents.
+  pro_tips:
+    - "When an event grants CE and you have a CE registration, the Certificate of completion tab lists both documents to choose from, like the payment documents list."
+    - "The facilitators listed are the event staff whose title says \"facilitator\" — set their titles on the event's staff page."
+    - "The signature comes from an admin-managed, search-hidden resource titled \"Training CE certificate signatures\" (just the CE administrator); upload it there and it appears on the signature line."
+
+- name: "Event tag on communications and comments about an event"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-09-20
+  summary: >-
+    Comments and communications tied to an event now show a small event tag
+    before the subject — the event's abbreviation (or its name and date) — so you
+    can tell at a glance which event a feed row is about.
+  pro_tips:
+    - "Click the tag to jump straight to that event registration."
+    - "It covers registration and reminder emails, hand-logged calls and notes attached to a registration, and comments on registrations, CE registrations, and scholarships."
+
+- name: "Age ranges and populations together in \"Who is this story about?\""
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-08
+  pr_number: 2627
+  summary: >-
+    When sharing a story idea or tagging a story, "Who is this story about?" now
+    offers age ranges (Children, Teens, Adults, Elders) on the first row and
+    populations (Families, Community, Self, Colleagues) on the second, as one set
+    of tags.
+  pro_tips:
+    - "Star any one of them — an age range or a population — as the story's primary."
+  action_path: "/story_ideas/new"
+
+- name: "Story Share audience menu: age ranges, then populations"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-08
+  pr_number: 2628
+  summary: >-
+    The Story Share audience menu now lists featured age ranges, then featured
+    story populations, as one row. The Story Share admin page manages each group
+    separately, and you can drag to reorder within a group.
+  pro_tips:
+    - "Only age ranges and story populations can be added to the audience menu."
+    - "An unpublished category stays on the admin list, marked as hidden from the menu."
+    - "The home page's audience sections follow the same order."
+  action_path: "/story_share/admin"
+
+- name: "Sort features by date logged"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-08
+  action_path: "/features"
+  pr_number: 2624
+  summary: >-
+    The Features & tips page can now sort by the date a feature was logged on the
+    page, alongside the existing sort by release date.
+  pro_tips:
+    - "Pick a direction under \"Sort: logged\" to see the most recently added entries first; release date then breaks ties."
+    - "While sorting by date logged, each card shows both dates, labeled Logged and Released."
+    - "Set it back to \"—\" (or click Clear filters) to return to sorting by release date."
+
+- name: "See and filter features by who added them"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-09
+  action_path: "/features"
+  pr_number: 2634
+  summary: >-
+    Each feature's detail page now shows who added it, and the Features & tips
+    page can be filtered to features added by a specific person or by any admin.
+  pro_tips:
+    - "Pick \"Admins\" under \"Created by\" to see every entry an admin logged."
+    - "Set it back to \"Any\" (or click Clear filters) to see everything again."
+
+- name: "Merges tidy up duplicate addresses and phone numbers"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two people now folds identical addresses and phone numbers into one
+    instead of leaving the kept person with duplicates, and keeps a single primary.
+  description: >-
+    When two people share the same address or phone number, the merge now keeps
+    just one copy and moves anything attached to the duplicate (like a phone tied
+    to an address) onto the survivor. The copy it keeps is the one still in use —
+    an active address or phone always wins over one marked inactive — and any
+    detail only the other copy had (a phone number on an address, for example) is
+    filled in rather than lost. It also settles a single primary — the kept
+    person's own if they had one, otherwise the other person's — so you never end
+    up with two "primary" addresses or phones. Addresses or phones that genuinely
+    differ are all kept.
+
+- name: "Heads-up when a person has more than one membership"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-09-29
+  action_path: "/people"
+  summary: >-
+    A person who has more than one active membership is now flagged, so you can
+    spot and consolidate them — a person should have just one.
+  description: >-
+    When someone ends up with more than one active membership — usually a leftover
+    from a merge — a warning now appears on their profile and their edit page. It
+    tells you how many memberships they have and links straight to the membership
+    list so you can review and consolidate.
+  pro_tips:
+    - "This usually turns up after a merge, since the extra membership rides along from the other person. Keeping one membership per person keeps billing and reporting clean."
+
+- name: "Fewer duplicate people from registrations and forms"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-09
+  pr_number: 2632
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Registrations and public forms now recognize a returning person when their
+    email is their secondary or login email, or when a hyphenated name is typed
+    with a different dash. Two people can no longer share the same first name,
+    last name, and email.
+  pro_tips:
+    - "Double-clicking Register no longer creates a second person; the extra click shows \"You are already registered.\""
+    - "Use Dedupe on the People page to combine records that already exist twice."
+
+- name: "Linking a login updates the person's primary email"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-09
+  pr_number: 2633
+  summary: >-
+    When a login is linked to a person, or a linked login's email changes, the
+    person's primary email now becomes the login email. The address it replaces is
+    kept as the secondary email, so registrations still recognize the person by it.
+  pro_tips:
+    - "If the secondary email already holds a different address, the replaced one is saved as a comment on the person instead."
+
+- name: "Syncing features & tips keeps your edits"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2640
+  action_path: "/features"
+  summary: >-
+    Sync features & tips on the admin home no longer changes a feature you've
+    edited in the portal. It still adds newly shipped features and fills in
+    details on ones nobody has touched.
+  pro_tips:
+    - "After syncing, the message tells you how many edited features were kept as-is."
+
+- name: "Merging people keeps both FileMaker codes"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2647
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two people who each came from FileMaker now keeps both of their
+    FileMaker codes on the kept person instead of dropping one.
+  pro_tips:
+    - "A record can answer to several codes — they're shown as a comma-separated list, and each one links to its own row in the archive."
+    - "The duplicate list now reads two records as a match when their codes overlap, rather than flagging them as conflicting."
+
+- name: "Image carousels loop back to the start"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-12
+  pr_number: 2651
+  summary: >-
+    The image carousel on workshop variations and stories now loops: the right
+    arrow on the last image goes back to the first, and the left arrow on the
+    first image goes to the last.
+
+- name: "Merging takes over a login's email"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2644
+  action_path: "/people/dedupe_index"
+  summary: >-
+    When the person you keep has no login but the other person does, the kept
+    person takes over that login and their primary email becomes the login email,
+    the same as linking a login.
+  pro_tips:
+    - "The merge preview warns you when this will happen. The email you chose there is kept as the secondary email."
+    - "If the kept person already has their own login, their primary email is left as you chose it."
+
+- name: "A person with two logins shows the one they use"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-13
+  action_path: "/people/dedupe_index"
+  pr_number: 2639
+  summary: >-
+    When a merge leaves a person with two logins, their profile now shows the
+    login used most recently, so the email you see is the one they sign in with.
+
+- name: "FileMaker archive tables grouped by area"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2660
+  action_path: "/fm_archives"
+  summary: >-
+    The FileMaker archive now sorts its 44 tables into labeled groups — people,
+    organizations, events, payments, funding and more — so the table you want
+    is easier to find.

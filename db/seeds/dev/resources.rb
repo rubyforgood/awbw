@@ -113,3 +113,21 @@ SurveyFormSeeder::FANOUT_RESOURCES.flat_map { |entry| entry[:resources] }.uniq.e
     created_by_id: User.all.sample&.id)
 end
 SurveyFormSeeder.new.link_fanout_resources
+
+# Link AWBW's W-9 to every paid event's payment callout so registrants can
+# download it from the payment page before paying (they often need it to register
+# AWBW as a vendor first). The payment callout materializes in events_management,
+# which seeds before this file creates the W-9, so the link is healed here.
+# Idempotent: skips a callout that already carries the W-9.
+puts "Linking the W-9 to paid events' payment callouts…"
+w9 = Resource.find_by(title: "W-9")
+if w9
+  Event.where("cost_cents > ?", 0).find_each do |paid_event|
+    payment = paid_event.registration_ticket_callouts.find_by(builtin_key: "payment")
+    next unless payment
+    next if payment.resources.exists?(id: w9.id)
+    payment.registration_ticket_callout_resources.create!(
+      resource: w9, subtitle: "AWBW's W-9 tax form for your records"
+    )
+  end
+end

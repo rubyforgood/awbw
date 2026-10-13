@@ -92,6 +92,127 @@ RSpec.describe "Notifications", type: :request do
       end
     end
 
+    context "a pending notification that has been resent" do
+      it "keeps the Pending status and flags that it was resent" do
+        root = create(:notification, recipient_email: "stuck@example.com")
+        create(:notification, recipient_email: "stuck@example.com",
+               parent_notification_id: root.id, root_notification_id: root.id)
+
+        get notifications_path, params: { email: "stuck@example.com" }, headers: turbo_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Pending")
+        expect(response.body).to include("Resent 1 time")
+      end
+    end
+
+    context "filtering by status" do
+      let!(:delivered) { create(:notification, recipient_email: "delivered@example.com", delivered_at: Time.current) }
+      let!(:pending)   { create(:notification, recipient_email: "pending@example.com") }
+      let!(:failed)    { create(:notification, recipient_email: "failed@example.com", error_at: Time.current) }
+      let!(:archived)  { create(:notification, recipient_email: "archived@example.com", created_at: Notification::LAUNCHED_ON - 1.day) }
+
+      it "pending returns undelivered post-launch rows, including resent ones" do
+        create(:notification, recipient_email: "pending@example.com",
+               parent_notification_id: pending.id, root_notification_id: pending.id)
+
+        get notifications_path, params: { delivery_status: "pending" }, headers: turbo_headers
+
+        expect(response.body).to include("pending@example.com")
+        expect(response.body).to include("Resent 1 time")
+        expect(response.body).not_to include("delivered@example.com")
+        expect(response.body).not_to include("failed@example.com")
+        expect(response.body).not_to include("archived@example.com")
+      end
+
+      it "delivered returns only delivered rows" do
+        get notifications_path, params: { delivery_status: "delivered" }, headers: turbo_headers
+
+        expect(response.body).to include("delivered@example.com")
+        expect(response.body).not_to include("pending@example.com")
+        expect(response.body).not_to include("failed@example.com")
+        expect(response.body).not_to include("archived@example.com")
+      end
+
+      it "failed returns only errored, undelivered rows" do
+        get notifications_path, params: { delivery_status: "failed" }, headers: turbo_headers
+
+        expect(response.body).to include("failed@example.com")
+        expect(response.body).not_to include("pending@example.com")
+        expect(response.body).not_to include("delivered@example.com")
+        expect(response.body).not_to include("archived@example.com")
+      end
+
+      it "archived returns only pre-launch undelivered rows" do
+        get notifications_path, params: { delivery_status: "archived" }, headers: turbo_headers
+
+        expect(response.body).to include("archived@example.com")
+        expect(response.body).not_to include("pending@example.com")
+        expect(response.body).not_to include("delivered@example.com")
+        expect(response.body).not_to include("failed@example.com")
+      end
+
+      it "explains the Archived status with an info tooltip" do
+        get notifications_path, params: { email: "archived@example.com" }, headers: turbo_headers
+
+        expect(response.body).to include(Notification::ARCHIVED_HELP)
+      end
+
+      it "resent returns rows in a resend chain, not unrelated statuses" do
+        create(:notification, recipient_email: "pending@example.com",
+               parent_notification_id: pending.id, root_notification_id: pending.id)
+
+        get notifications_path, params: { delivery_status: "resent" }, headers: turbo_headers
+
+        expect(response.body).to include("pending@example.com")
+        expect(response.body).not_to include("delivered@example.com")
+        expect(response.body).not_to include("failed@example.com")
+        expect(response.body).not_to include("archived@example.com")
+      end
+    end
+
+    context "resend indicator across statuses" do
+      it "shows the resent indicator on a delivered row, but offers no resend button" do
+        delivered_root = create(:notification, recipient_email: "delivered-resent@example.com", delivered_at: Time.current)
+        create(:notification, recipient_email: "child@example.com",
+               parent_notification_id: delivered_root.id, root_notification_id: delivered_root.id)
+
+        get notifications_path, params: { email: "delivered-resent@example.com" }, headers: turbo_headers
+
+        expect(response.body).to include("Resent 1 time")
+        expect(response.body).not_to include(resend_notification_path(delivered_root))
+      end
+    end
+
+    context "resend button on a pending row" do
+      it "offers a resend button that breaks out of the results frame" do
+        pending = create(:notification, recipient_email: "resend-me@example.com")
+
+        get notifications_path, params: { email: "resend-me@example.com" }, headers: turbo_headers
+
+        form = Capybara.string(response.body).find("form[action='#{resend_notification_path(pending)}']")
+        expect(form["data-turbo-frame"]).to eq("_top")
+      end
+
+      it "offers a resend button on a failed row too" do
+        failed = create(:notification, recipient_email: "failed-resend@example.com", error_at: Time.current)
+
+        get notifications_path, params: { email: "failed-resend@example.com" }, headers: turbo_headers
+
+        expect(response.body).to include("Failed")
+        expect(response.body).to include(resend_notification_path(failed))
+      end
+
+      it "omits the resend button for a non-resendable Devise email" do
+        devise = create(:notification, kind: "account_confirmation", recipient_email: "devise@example.com")
+
+        get notifications_path, params: { email: "devise@example.com" }, headers: turbo_headers
+
+        expect(response.body).to include("Pending")
+        expect(response.body).not_to include(resend_notification_path(devise))
+      end
+    end
+
     it "wraps results in a turbo frame" do
       get notifications_path, headers: turbo_headers
       expect(response.body).to include('id="notifications_results"')
@@ -213,6 +334,16 @@ RSpec.describe "Notifications", type: :request do
         expect(notification.email_subject).to eq("Called about registration")
         expect(notification.kind).to eq("manual_log")
         expect(response).to redirect_to(notifications_path)
+      end
+
+      it "binds the logged communication to the person even with no email on file" do
+        emailless = create(:person, user: nil, email: nil, email_2: nil)
+
+        post notifications_path, params: valid_params.merge(person_id: emailless.id)
+
+        notification = Notification.last
+        expect(notification.person).to eq(emailless)
+        expect(notification.recipient_email).to eq("n/a")
       end
 
       it "defaults a logged communication to outgoing" do
@@ -438,6 +569,28 @@ RSpec.describe "Notifications", type: :request do
           .with(anything, "update.notification.body", anything)
 
         patch notification_path(outgoing), params: { notification: { email_body_text: "Changed" } }
+      end
+
+      context "flagging for follow-up" do
+        let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html" } }
+
+        it "raises the flag and re-renders the toggle as flagged" do
+          patch notification_path(contact_notification), params: { notification: { flagged: "1" } }, headers: turbo_headers
+
+          expect(response).to have_http_status(:ok)
+          expect(contact_notification.reload).to be_flagged
+          expect(response.body).to include("flag_notification_#{contact_notification.id}")
+          expect(response.body).to include("text-orange-500")
+        end
+
+        it "clears the flag" do
+          contact_notification.update!(flagged: true)
+
+          patch notification_path(contact_notification), params: { notification: { flagged: "0" } }, headers: turbo_headers
+
+          expect(response).to have_http_status(:ok)
+          expect(contact_notification.reload).not_to be_flagged
+        end
       end
     end
 

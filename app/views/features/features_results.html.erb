@@ -15,7 +15,8 @@
     </div>
 
     <div class="grid grid-cols-1 gap-4">
-      <%= render partial: "feature", collection: @features, as: :feature %>
+      <%= render partial: "feature", collection: @features, as: :feature,
+                 locals: { show_logged: @sorted_by_logged } %>
     </div>
 
     <% if @features.empty? %>

@@ -9,13 +9,10 @@
       <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
     </div>
 
-    <% if @stories.any? %>
-      <%# Sector pages get one big lead hero; category / spotlight / additional /
-          search pages get an autoplay carousel (like the home page). %>
-      <% single_hero = params[:sector_names_all].present? %>
-
-      <% if single_hero %>
-        <% lead = @stories.first %>
+    <% if @lead_stories.any? || @stories.any? %>
+      <%# Lead spot (first page only): featured, then newest. Cards below: newest. %>
+      <% if single_hero? && @lead_stories.any? %>
+        <% lead = @lead_stories.first %>
         <div class="ring-brand-navy-900/10 mb-12 overflow-hidden rounded-2xl shadow-md ring-1">
           <%= link_to story_share_path(lead), class: "block" do %>
             <%= render "story_image", story: lead, aspect: "aspect-[16/6]" %>
@@ -27,15 +24,12 @@
             </div>
           <% end %>
         </div>
-        <% grid_stories = @stories.drop(1).first(3) %>
-        <% row_stories = @stories.drop(4) %>
-      <% else %>
-        <% hero_stories = @stories.first(5) %>
+      <% elsif @lead_stories.any? %>
         <div data-controller="carousel"
              class="swiper ring-brand-navy-900/10 relative mb-12 overflow-hidden rounded-2xl shadow-lg ring-1"
              data-carousel-options-value='{ "autoplay": { "delay": 5000, "pauseOnMouseEnter": true }, "slidesPerView": 1, "breakpoints": {} }'>
           <div class="swiper-wrapper">
-            <% hero_stories.each do |story| %>
+            <% @lead_stories.each do |story| %>
               <div class="swiper-slide">
                 <%= link_to story_share_path(story), class: "block relative" do %>
                   <%= render "story_image", story: story, aspect: "aspect-[16/6]" %>
@@ -56,27 +50,30 @@
             <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
-        <% grid_stories = @stories.drop(5).first(3) %>
-        <% row_stories = @stories.drop(8) %>
       <% end %>
+      <% grid_stories = @stories.first(3) %>
+      <% row_stories = @stories.drop(3) %>
 
+      <%# Pagination anchors to the first story's title (#stories) so paging
+          lands on the results, not the hero. Falls to the first row when the
+          grid is empty (short pages). %>
       <!-- 3-up featured grid -->
       <% if grid_stories.any? %>
         <div class="mb-16 grid grid-cols-1 gap-8 md:grid-cols-3">
-          <% grid_stories.each do |story| %>
-            <%= render "browse_card", story: story %>
+          <% grid_stories.each_with_index do |story, i| %>
+            <%= render "browse_card", story: story, anchor_id: (i.zero? ? "stories" : nil) %>
           <% end %>
         </div>
       <% end %>
 
       <!-- Remaining stories as rows -->
       <div class="space-y-16">
-        <% row_stories.each do |story| %>
-          <%= render "browse_row", story: story %>
+        <% row_stories.each_with_index do |story, i| %>
+          <%= render "browse_row", story: story, anchor_id: (grid_stories.empty? && i.zero? ? "stories" : nil) %>
         <% end %>
       </div>
 
-      <div class="pagination mt-10"><%= tailwind_paginate @stories %></div>
+      <div class="pagination mt-10"><%= tailwind_paginate @stories, anchor: "stories" %></div>
     <% else %>
       <div class="py-20 text-center text-gray-600">
         No stories found.

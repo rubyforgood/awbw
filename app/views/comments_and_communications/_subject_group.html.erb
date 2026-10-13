@@ -1,0 +1,15 @@
+<%# One subject-line group on the combined feed (grouping toggle on). Header shows
+    the shared subject and item count; entries render newest-first below. Locals:
+    group (a PersonCommentAndCommunicationAggregator::Group). %>
+<div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+  <div class="mb-2 flex items-center gap-2">
+    <i class="fa-solid fa-layer-group text-xs text-gray-400" aria-hidden="true"></i>
+    <h3 class="text-sm font-semibold text-gray-700"><%= group.subject.presence || "No subject" %></h3>
+    <span class="text-xs text-gray-400"><%= pluralize(group.entries.size, "item") %></span>
+  </div>
+  <div class="space-y-2">
+    <% group.entries.each do |entry| %>
+      <%= render "comments_and_communications/entry_row", entry: entry %>
+    <% end %>
+  </div>
+</div>

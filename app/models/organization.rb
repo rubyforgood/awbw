@@ -1,6 +1,7 @@
 class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
   include Communicable
+  include FilemakerCoded
   belongs_to :organization_status
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -15,6 +16,7 @@ class Organization < ApplicationRecord
   has_many :addresses, as: :addressable, dependent: :destroy
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
+  has_many :invoices, as: :invoicee, dependent: :restrict_with_error
   has_many :affiliations, dependent: :restrict_with_error, inverse_of: :organization
   has_many :event_registration_organizations, dependent: :restrict_with_error
   has_many :event_registrations, through: :event_registration_organizations
@@ -60,6 +62,22 @@ class Organization < ApplicationRecord
   # created mid-process (seeds, tests).
   def self.awbw
     find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
+  end
+
+  # The staffed programs mailbox: what facilitators are told to write to, and the
+  # reply_to on portal mail. REPLY_TO_EMAIL is the retiring name for it.
+  def self.programs_email
+    ENV["PROGRAMS_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
+  end
+
+  # The unattended sending mailbox, for mail whose from: should not invite a reply.
+  def self.no_reply_email
+    ENV["NO_REPLY_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
+  end
+
+  # The public contact mailbox printed on invoices, receipts, and portal contact info.
+  def self.info_email
+    ENV["INFO_EMAIL"].presence || programs_email
   end
 
   # Validations
@@ -336,23 +354,6 @@ class Organization < ApplicationRecord
   end
 
   remote_searchable_by :name
-
-  # FileMaker is the source of truth, and a record can carry more than one
-  # FileMaker code (e.g. when two orgs that each mapped to a FileMaker record are
-  # merged). The `filemaker_code` column holds them as a trimmed, comma-separated
-  # list; these are the seam for reading and combining them.
-  def filemaker_codes
-    Organization.split_filemaker_codes(filemaker_code)
-  end
-
-  def self.split_filemaker_codes(value)
-    value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
-  end
-
-  # A single normalized column value from any mix of code strings/lists.
-  def self.join_filemaker_codes(*values)
-    values.flatten.flat_map { |value| split_filemaker_codes(value) }.uniq.sort.join(", ").presence
-  end
 
   # Returns the website as a clickable, scheme-qualified URL — prepending
   # https:// to a bare domain like "awbw.org" — or nil when the value is blank or

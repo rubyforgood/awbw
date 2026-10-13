@@ -39,9 +39,7 @@
                    admin: allowed_to?(:manage?, VideoRecording),
                    authenticated: user_signed_in?,
                    button_text: "All" %></div>
-      <div><%= render "shared/search_clear",
-                  url: video_recordings_path(video_type: @video_type),
-                  action: "searchable-checkbox#clear collection#clearAndSubmit" %></div>
+      <div><%= render "shared/search_clear", url: video_recordings_path(video_type: @video_type) %></div>
     </div>
 
     <div class="flex flex-col gap-4 sm:flex-row">

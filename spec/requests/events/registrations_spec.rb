@@ -135,6 +135,12 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include("$1,500")
     end
 
+    it "tracks a view event carrying the event and registration" do
+      expect(Analytics::AhoyTracker).to receive(:track_event)
+        .with(anything, "view.invoices", { event_id: event.id, registration_id: registration.id })
+      get registration_invoice_path(registration.slug)
+    end
+
     it "shows the balance due once a scholarship or payment is applied" do
       scholarship = create(:scholarship, recipient: registration.registrant, amount_cents: 60_000)
       create(:allocation, source: scholarship, allocatable: registration, amount: 60_000)
@@ -350,24 +356,13 @@ RSpec.describe "Events::Registrations", type: :request do
       expect(response.body).to include(registration_invoice_path(registration.slug, return_to: "payment"))
     end
 
-    it "links the W-9 to its resource page once a payment is on file, returning to payment" do
+    it "links the W-9 to its resource page before any payment, returning to payment" do
       w9 = create(:resource, title: "W-9", kind: "Form")
       BuiltinCallouts.seed(event)
-      payment = create(:payment, type: "CashPayment", amount_cents: event.cost_cents, amount_cents_remaining: nil)
-      create(:allocation, source: payment, allocatable: registration, amount: event.cost_cents)
 
       get registration_payment_path(registration.slug)
       expect(response.body).to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
       expect(response.body).not_to include("/documents/awbw-w9.pdf")
-    end
-
-    it "locks the W-9 (no link) until a payment is on file" do
-      w9 = create(:resource, title: "W-9", kind: "Form")
-      BuiltinCallouts.seed(event)
-
-      get registration_payment_path(registration.slug)
-      expect(response.body).not_to include(registration_resource_path(registration.slug, w9, return_to: "payment"))
-      expect(response.body).to include("Available once your payment is received")
     end
 
     it "shows a locked receipt card until an actual payment settles the balance" do
@@ -922,6 +917,30 @@ RSpec.describe "Events::Registrations", type: :request do
         expect(Notification.last(2).map(&:kind)).to match_array(
           %w[event_registration_confirmation event_registration_confirmation_fyi]
         )
+      end
+    end
+
+    context "when the user has no linked person" do
+      let(:user) { create(:user, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com") }
+
+      it "links and registers an existing person with the same name and email" do
+        existing = create(:person, user: nil, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+        expect {
+          post event_registrant_registration_path(event_id: event.id), headers: turbo_headers
+        }.not_to change(Person, :count)
+
+        expect(response).to have_http_status(:ok)
+        expect(user.reload.person).to eq(existing)
+        expect(event.event_registrations.last.registrant).to eq(existing)
+      end
+
+      it "creates a person when none matches" do
+        expect {
+          post event_registrant_registration_path(event_id: event.id), headers: turbo_headers
+        }.to change(Person, :count).by(1)
+
+        expect(user.reload.person).to have_attributes(first_name: "Jamie", last_name: "Rivera-Cole")
       end
     end
 

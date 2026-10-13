@@ -2,6 +2,12 @@ require "rails_helper"
 
 RSpec.describe "Saving a workshop log", type: :system do
   def select_tom_select_option(hidden_select_id, value, label)
+    # execute_script doesn't auto-wait like Capybara matchers, so poll until the
+    # remote-select Stimulus controller has stamped TomSelect onto the <select>.
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      sleep 0.05 until page.evaluate_script("!!document.getElementById('#{hidden_select_id}')?.tomselect")
+    end
+
     page.execute_script(<<~JS)
       var el = document.getElementById('#{hidden_select_id}');
       var ts = el.tomselect;

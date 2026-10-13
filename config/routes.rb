@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   resources :primary_assets
   resources :rich_text_assets
+  resources :invoices
+
+  get "/addresses/options", to: "addresses#options"
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
@@ -105,6 +108,7 @@ Rails.application.routes.draw do
   get "registration/:slug/payment", to: "events/callouts#payment", as: :registration_payment
   get "registration/:slug/certificate", to: "events/callouts#certificate", as: :registration_certificate
   get "registration/:slug/ce", to: "events/callouts#ce", as: :registration_ce
+  get "registration/:slug/ce/certificate/:ce_registration_id", to: "events/callouts#ce_certificate", as: :registration_ce_certificate
   post "registration/:slug/ce/license", to: "events/callouts#update_ce_license", as: :registration_ce_license
   post "registration/:slug/ce/request", to: "events/callouts#request_ce", as: :registration_ce_request
   post "registration/:slug/ce/pay", to: "events/callouts#pay_ce", as: :registration_ce_pay
@@ -232,6 +236,7 @@ Rails.application.routes.draw do
       get "sample_ticket/certificate", to: "events/callouts#certificate", defaults: { sample: "1" }, as: :sample_certificate
       get "sample_ticket/scholarship", to: "events/callouts#scholarship", defaults: { sample: "1" }, as: :sample_scholarship
       get "sample_ticket/ce", to: "events/callouts#ce", defaults: { sample: "1" }, as: :sample_ce
+      get "sample_ticket/ce_certificate", to: "events/callouts#ce_certificate", defaults: { sample: "1" }, as: :sample_ce_certificate
       get "sample_ticket/videoconference", to: "events/callouts#videoconference", defaults: { sample: "1" }, as: :sample_videoconference
       get "sample_ticket/staff", to: "events/callouts#staff", defaults: { sample: "1" }, as: :sample_staff
       get :registrants
@@ -316,6 +321,13 @@ Rails.application.routes.draw do
       post :resend
     end
   end
+  resources :profile_change_requests, only: [ :index, :new, :create, :edit, :update ] do
+    member do
+      post :approve
+      post :decline
+      post :resolve
+    end
+  end
   # Friendly alias — the feature is called "Communications" in the UI, but the
   # controller and routes stay :notifications. Redirect, preserving any filters.
   get "communications", to: redirect { |_params, req| [ "/notifications", req.query_string.presence ].compact.join("?") }, as: :communications
@@ -385,6 +397,7 @@ Rails.application.routes.draw do
   resources :story_ideas
   resource :story_import, only: %i[new create], path: "stories/import",
                           controller: "story_imports" do
+    get :template
     post :confirm
   end
   resources :stories
@@ -392,6 +405,7 @@ Rails.application.routes.draw do
   match "story_share/admin/reorder/:id", to: "story_share_admin#reorder", via: [ :put, :patch ], as: :story_share_admin_reorder
   post "story_share/admin/add", to: "story_share_admin#add", as: :story_share_admin_add
   delete "story_share/admin/remove", to: "story_share_admin#remove", as: :story_share_admin_remove
+  match "story_share/admin/toggle_home_section/:id", to: "story_share_admin#toggle_home_section", via: [ :put, :patch ], as: :story_share_admin_toggle_home_section
   resources :story_shares, path: "story_share", only: [ :index, :show, :new ]
   resources :video_recordings
   resources :user_forms

@@ -1,9 +1,9 @@
 <div class="grid items-center gap-8 md:grid-cols-2 md:gap-12">
   <!-- LEFT CONTENT -->
   <div>
-    <h2 class="text-brand-navy-900 font-display text-2xl leading-tight">
+    <%= tag.h2 id: local_assigns[:anchor_id], class: [ "text-brand-navy-900 font-display text-2xl leading-tight", ("scroll-mt-48" if local_assigns[:anchor_id]) ] do %>
       <%= link_to story.title, story_share_path(story), class: "hover:text-brand-magenta-700" %>
-    </h2>
+    <% end %>
 
     <p class="mt-2 text-sm text-gray-500">
       <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>

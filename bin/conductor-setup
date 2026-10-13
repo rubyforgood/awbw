@@ -59,14 +59,6 @@ export WORKSPACE_PORT=${WORKSPACE_PORT:-${CONDUCTOR_PORT:-}}
 
 if [ -z "$CONDUCTOR_ROOT_PATH" ]; then
   echo "Not running inside Conductor. Falling back to normal setup..."
-
-  if [ ! -f .env ]; then
-    echo "Creating .env from .env.sample..."
-    cp .env.sample .env
-  else
-    echo ".env already exists, skipping..."
-  fi
-
   bin/setup "$@"
   exit 0
 fi
@@ -79,17 +71,15 @@ if [ -f "$CONDUCTOR_ROOT_PATH/.env" ]; then
   ln -sf "$CONDUCTOR_ROOT_PATH/.env" .env
 else
   echo "Warning: $CONDUCTOR_ROOT_PATH/.env not found."
-  echo "Create it from .env.sample: cp .env.sample $CONDUCTOR_ROOT_PATH/.env"
+  echo "bin/setup will create a workspace-local .env from .env.sample; to share one"
+  echo "across workspaces instead: cp .env.sample $CONDUCTOR_ROOT_PATH/.env"
 fi
 
-# Copy credential files from repo root
-for key_file in config/credentials.yml config/master.key; do
-  if [ -f "$CONDUCTOR_ROOT_PATH/$key_file" ]; then
-    echo "Copying $key_file from repo root..."
-    mkdir -p "$(dirname "$key_file")"
-    cp "$CONDUCTOR_ROOT_PATH/$key_file" "$key_file"
-  fi
-done
+# Copy only the untracked master key; config/credentials.yml is tracked, so each workspace uses its branch's copy.
+if [ -f "$CONDUCTOR_ROOT_PATH/config/master.key" ]; then
+  echo "Copying config/master.key from repo root..."
+  cp "$CONDUCTOR_ROOT_PATH/config/master.key" config/master.key
+fi
 
 # Copy credential key files if they exist
 if [ -d "$CONDUCTOR_ROOT_PATH/config/credentials" ]; then

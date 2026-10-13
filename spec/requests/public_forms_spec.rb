@@ -156,6 +156,36 @@ RSpec.describe "PublicForms", type: :request do
     end
   end
 
+  # The end-to-end wiring: the tag writes are buffered mid-request and stamped
+  # with the submission id when the controller flushes, so the admin audit page
+  # can find them. A service-level spec can't reach the flush.
+  describe "the submission's audit trail" do
+    BROWSER_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " \
+      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
+
+    let!(:health) { create(:sector, :published, name: "Healthcare") }
+    let!(:housing) { create(:sector, :published, name: "Housing") }
+    let!(:primary_field) { create(:form_field, form: form, name: "Primary sector", field_identifier: "primary_sector") }
+    let!(:additional_field) { create(:form_field, form: form, name: "Additional sectors", field_identifier: "additional_sectors") }
+    let!(:person) { create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: "sam@example.com") }
+
+    it "records the sectors a re-submission dropped and demoted" do
+      person.sectorable_items.create!(sector: housing, is_primary: true)
+
+      params = submission_params
+      params[:public_registration][:form_fields][primary_field.id.to_s] = health.id.to_s
+      params[:public_registration][:form_fields][additional_field.id.to_s] = [ health.id.to_s ]
+      # Ahoy drops bot traffic, and Rack::Test's default agent reads as one — so
+      # without a browser agent nothing is tracked and the assertion passes vacuously.
+      post public_form_path(form.slug), params: params, headers: { "HTTP_USER_AGENT" => BROWSER_USER_AGENT }
+
+      expect(response).to have_http_status(:redirect)
+      changes = FormSubmissionChanges.new(FormSubmission.last).groups
+        .flat_map(&:changes).map { |change| [ change.outcome, change.value ] }
+      expect(changes).to include([ "Removed", "Housing (primary)" ], [ "Added", "Healthcare (primary)" ])
+    end
+  end
+
   describe "GET /f/:slug/thank-you" do
     it "renders a confirmation" do
       get thank_you_public_form_path(form.slug)

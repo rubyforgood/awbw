@@ -1,0 +1,19 @@
+Profile change request
+
+<%= @person.full_name %>
+Requested by <%= @requester.full_name %> on <%= @request.created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+Field: <%= @request.field_label %>
+<% if @request.current_value.present? -%>
+Current value: <%= @request.current_value %>
+<% end -%>
+<% if @request.requested_value.present? -%>
+Requested value: <%= @request.requested_value %>
+<% end -%>
+<% if @request.details.present? -%>
+Details:
+<%= @request.details %>
+<% end -%>
+
+Review change requests: <%= profile_change_requests_url %>
+Edit profile: <%= edit_person_url(@person) %>

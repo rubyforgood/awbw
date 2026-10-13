@@ -141,6 +141,13 @@ class EventDecorator < ApplicationDecorator
     object.abbreviation.presence || object.title
   end
 
+  # Event-chip label for feed rows: the admin-set abbreviation when present,
+  # otherwise the title with its start date so different occurrences of the same
+  # event stay distinguishable.
+  def chip_label
+    object.abbreviation.presence || [ object.title, object.start_date&.strftime("%b %-d, %Y") ].compact_blank.join(" · ")
+  end
+
   # `show_videoconference_details` controls whether the join link/ID/passcode are
   # carried into the calendar entry. Callers with a registration pass that
   # registrant's gate (date + paid/intends); the default falls back to the
@@ -468,8 +475,13 @@ class EventDecorator < ApplicationDecorator
     LEGACY_CTA_FONT unless branded_page?
   end
 
-  def labelled_cost
+  def labelled_cost(discount_cents: 0)
     return if cost_cents.blank?
+
+    if discount_cents.to_i.positive?
+      return "Cost: #{MoneyFormatter.dollars_from_cents([ cost_cents - discount_cents.to_i, 0 ].max)}"
+    end
+
     return "Free event" if cost_cents.zero?
 
     "Cost: #{MoneyFormatter.dollars_from_cents(cost_cents)}"

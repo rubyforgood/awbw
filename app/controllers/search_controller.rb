@@ -59,6 +59,7 @@ class SearchController < ApplicationController
       "person"   => Person,
       "user"     => User,
       "workshop" => Workshop,
+      "story" => Story,
       "organization" => Organization,
       "event" => Event,
       "event_registration" => EventRegistration,

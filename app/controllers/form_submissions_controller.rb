@@ -117,26 +117,8 @@ class FormSubmissionsController < ApplicationController
     ids_by_submission.transform_values { |ids| ids.filter_map { |id| orgs[id] } }
   end
 
-  # The org-related answers on this submission, shaped like a registration
-  # submission entry.
   def submission_org_entry
-    @submission_org_entry ||= begin
-      answers = @form_submission.answers_by_identifier
-      read = ->(identifier) { answers[identifier].presence }
-      {
-        org_name: read.call("organization_name"),
-        position: read.call("organization_position"),
-        website: read.call("organization_website"),
-        organization_type: read.call("organization_type"),
-        address: {
-          street_address: read.call("organization_street"),
-          city: read.call("organization_city"),
-          state: read.call("organization_state"),
-          zip_code: read.call("organization_zip"),
-          country: read.call("organization_country")
-        }
-      }
-    end
+    @submission_org_entry ||= @form_submission.org_entry
   end
 
   def creatable_org_names

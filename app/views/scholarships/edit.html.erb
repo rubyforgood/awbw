@@ -84,10 +84,7 @@
 
   <%= render "event_registrations/transferred_out_caution", registration: (@allocatable if @allocatable.is_a?(EventRegistration)) %>
 
-  <%# turbo: false matches the other cocoon/nested-attributes admin forms (registration,
-      workshops). A plain full-page submit avoids the Turbo + nested-fields double/stale
-      resubmission that surfaced as a save committing yet the request returning 422. %>
-  <%= simple_form_for @scholarship, url: scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence), html: { class: "space-y-6" }, data: { turbo: false, controller: "submit-once", "submit-once-submitting-text-value": "Saving…" } do |f| %>
+  <%= simple_form_for @scholarship, url: scholarship_path(@scholarship, return_to: params[:return_to].presence, participant: params[:participant].presence), html: { class: "space-y-6" } do |f| %>
     <%= render "form", f: f %>
   <% end %>
 

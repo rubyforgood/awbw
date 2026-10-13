@@ -38,6 +38,7 @@ module EventRegistrationServices
       if payer_email.present?
         NotificationServices::CreateNotification.call(
           noticeable: submission,
+          person: person,
           kind: :bulk_payment_confirmation,
           recipient_role: :person,
           recipient_email: payer_email,
@@ -49,7 +50,7 @@ module EventRegistrationServices
         noticeable: submission,
         kind: :bulk_payment_confirmation_fyi,
         recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        recipient_email: Organization.programs_email,
         notification_type: 0
       )
     end
@@ -95,10 +96,7 @@ module EventRegistrationServices
       last_name = field_value("last_name")&.strip
       email = field_value("primary_email")&.strip&.downcase
 
-      person = Person.find_by(
-        "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(email) = ?",
-        first_name&.downcase, last_name&.downcase, email&.downcase
-      )
+      person = PersonMatcher.call(email:, last_name:, first_names: [ first_name ])
       return person if person
 
       Person.create!(

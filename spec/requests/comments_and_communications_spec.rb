@@ -30,6 +30,47 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Welcome aboard")
     end
 
+    it "groups entries by subject in the results frame when the toggle is on" do
+      create(:comment, commentable: person, topic: "Scholarship", body: "A note about it", created_by: admin)
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Scholarship",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+      # An unattached communication exercises the nil-noticeable path under grouping.
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Loose end",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id, group_by_subject: "1"),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("comments_and_communications_results")
+      # The comment and communication that share "Scholarship" sit under one group header.
+      expect(response.body).to include("2 items")
+      expect(response.body).to include("A note about it")
+      expect(response.body).to include("Loose end")
+    end
+
+    it "orders grouped rows newest-first, and groups by their newest row" do
+      create(:comment, commentable: person, topic: "Profile", body: "Middle in profile", created_by: admin, created_at: Time.zone.parse("2026-08-07 13:35"))
+      create(:comment, commentable: person, topic: "Profile", body: "Oldest in profile", created_by: admin, created_at: Time.zone.parse("2021-09-19 17:00"))
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Profile", email_body_text: "Newest in profile",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0, created_at: Time.zone.parse("2026-09-20 19:13"))
+      create(:notification, recipient_email: "primary@example.com", email_subject: "Alpha", email_body_text: "Newest overall",
+                            kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0, created_at: Time.zone.parse("2026-09-25 09:00"))
+
+      get comments_and_communications_path(person_id: person.id, group_by_subject: "1"),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      body = response.body
+      # Groups by newest row: Alpha (9/25) leads Profile (9/20).
+      expect(body.index("Alpha")).to be < body.index("Profile")
+      # Within Profile: newest, middle, oldest, top to bottom.
+      newest = body.index("Newest in profile")
+      middle = body.index("Middle in profile")
+      oldest = body.index("Oldest in profile")
+      expect(newest).to be < middle
+      expect(middle).to be < oldest
+    end
+
     it "starts the comment body flush under its topic instead of truncating it" do
       create(:comment, commentable: person, topic: "Topic line", body: "A note", created_by: admin)
 
@@ -88,6 +129,93 @@ RSpec.describe "Comments and communications", type: :request do
       expect(registration).to be_persisted
     end
 
+    it "offers the person's form submissions, affiliations, and staff tags as targets" do
+      create(:form_submission, person: person)
+      create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"))
+      create(:staff_tagging, staff_taggable: person, staff_tag: create(:staff_tag, name: "VIP"))
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Form ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Affiliation ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Staff tag ·") }).to be(true)
+    end
+
+    it "offers the stories and story ideas the person is credited on" do
+      user = create(:user, person: person)
+      create(:story, author: person)
+      create(:story_idea, created_by: user)
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Story ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Story idea ·") }).to be(true)
+    end
+
+    it "offers the grants the person funds as targets" do
+      create(:grant, :donated_by_person, funder: person, name: "Legacy Circle Fund")
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels).to include("Grant · Legacy Circle Fund")
+    end
+
+    it "offers the reports and workshop records the person is credited on" do
+      create(:monthly_report, author: person)
+      create(:workshop_idea, author: person)
+      create(:workshop_log, author: person)
+      create(:workshop_variation, author: person)
+      create(:workshop_variation_idea, author: person)
+
+      get comments_and_communications_path(person_id: person.id)
+
+      labels = Nokogiri::HTML(response.body).css("select#noticeable_sgid option").map(&:text)
+      expect(labels.any? { |label| label.start_with?("Report ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop idea ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop log ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop variation ·") }).to be(true)
+      expect(labels.any? { |label| label.start_with?("Workshop variation idea ·") }).to be(true)
+    end
+
+    it "files a note against a credited workshop log and surfaces it in the feed" do
+      log = create(:workshop_log, author: person)
+
+      expect {
+        post person_comments_path(person), params: {
+          for_person_id: person.id,
+          commentable_sgid: log.to_sgid.to_s,
+          comment: { body: "Followed up on this workshop log" }
+        }
+      }.to change(Comment, :count).by(1)
+
+      expect(Comment.order(:created_at).last.commentable).to eq(log)
+
+      get comments_and_communications_path(person_id: person.id),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      expect(response.body).to include("Followed up on this workshop log")
+    end
+
+    it "files a note against a form submission and surfaces it in the feed" do
+      submission = create(:form_submission, person: person)
+
+      expect {
+        post person_comments_path(person), params: {
+          for_person_id: person.id,
+          commentable_sgid: submission.to_sgid.to_s,
+          comment: { body: "Reviewed their intake form" }
+        }
+      }.to change(Comment, :count).by(1)
+
+      expect(Comment.order(:created_at).last.commentable).to eq(submission)
+
+      get comments_and_communications_path(person_id: person.id),
+          headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      expect(response.body).to include("Reviewed their intake form")
+    end
+
     it "files a note against the picked record and returns to the person's feed" do
       registration = create(:event_registration, registrant: person)
 
@@ -144,12 +272,14 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path
 
       expect(response).to have_http_status(:ok)
-      # The composers load per-person into a frame, so the index itself carries a
-      # person picker and the empty frame, not the composers inline.
+      # The everyone feed carries no add area — you filter to a person first, then
+      # add from that person's feed. So no composers frame and no add picker here,
+      # just the view-switcher that scopes the page to one person.
       doc = Nokogiri::HTML(response.body)
       expect(doc.at_css("[data-controller='panel-toggle']")).to be_nil
-      expect(doc.at_css("turbo-frame#cc_composers")).to be_present
-      expect(doc.at_css("select#person_id")).to be_present
+      expect(doc.at_css("turbo-frame#cc_composers")).to be_nil
+      expect(doc.at_css("select#person_id")).to be_nil
+      expect(doc.at_css("select#jump_person_id")).to be_present
 
       get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
@@ -199,7 +329,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
       doc = Nokogiri::HTML(response.body)
-      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)} button")&.text).to include("Edit")
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)} button[data-action='edit-toggle#toggle']")&.text).to include("Edit")
 
       patch comment_path(comment), params: { combined: 1, comment: { body: "Updated note" } },
                                     headers: { "Accept" => "text/vnd.turbo-stream.html" }
@@ -216,7 +346,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
       doc = Nokogiri::HTML(response.body)
-      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)} button")&.text).to include("Edit")
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)} button[data-action='edit-toggle#toggle']")&.text).to include("Edit")
 
       patch comment_path(comment), params: { combined: 1, comment: { body: "Updated affiliation note" } },
                                     headers: { "Accept" => "text/vnd.turbo-stream.html" }
@@ -232,7 +362,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
       doc = Nokogiri::HTML(response.body)
-      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)} button")&.text).to include("Edit")
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)} button[data-action='edit-toggle#toggle']")&.text).to include("Edit")
 
       patch notification_path(notification), params: { combined: 1, notification: { email_subject: "Updated subject" } },
                                               headers: { "Accept" => "text/vnd.turbo-stream.html" }
@@ -253,7 +383,7 @@ RSpec.describe "Comments and communications", type: :request do
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(autoemail)}")
       expect(row.text).to include("Welcome!")
-      expect(row.at_css("button")).to be_nil
+      expect(row.at_css("button[data-action='edit-toggle#toggle']")).to be_nil
     end
 
     it "shows a Responded checkbox for an incoming manual communication" do
@@ -280,7 +410,7 @@ RSpec.describe "Comments and communications", type: :request do
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(contact_us_fyi)}")
       expect(row.at_css("[data-controller='autosave'] input[name='notification[responded]'][type=checkbox]")).to be_present
-      expect(row.at_css("button")).to be_nil
+      expect(row.at_css("button[data-action='edit-toggle#toggle']")).to be_nil
     end
 
     it "hides the Responded checkbox for a communication that doesn't need one" do
@@ -294,6 +424,46 @@ RSpec.describe "Comments and communications", type: :request do
       doc = Nokogiri::HTML(response.body)
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
       expect(row.at_css("[data-controller='autosave']")).to be_nil
+    end
+  end
+
+  describe "follow-up flag" do
+    before { sign_in admin }
+
+    let(:turbo_headers) { { "Turbo-Frame" => "comments_and_communications_results" } }
+
+    it "renders a single-click flag toggle on comment and communication rows" do
+      comment = create(:comment, commentable: person, body: "A note")
+      notification = create(:notification, noticeable: person, recipient_email: "primary@example.com",
+                                           email_subject: "A message", kind: "manual_log",
+                                           channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id), headers: turbo_headers
+
+      doc = Nokogiri::HTML(response.body)
+      comment_row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(comment)}")
+      comm_row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
+      expect(comment_row.at_css("form##{ActionView::RecordIdentifier.dom_id(comment, :flag)} button")).to be_present
+      expect(comm_row.at_css("form##{ActionView::RecordIdentifier.dom_id(notification, :flag)} button")).to be_present
+    end
+
+    it "narrows the feed to flagged entries of either kind when the Flagged filter is on" do
+      flagged_comment = create(:comment, commentable: person, body: "Chase this", flagged: true)
+      flagged_comm = create(:notification, :flagged, noticeable: person, recipient_email: "primary@example.com",
+                                                     email_subject: "Follow up call", kind: "manual_log",
+                                                     channel: "phone", recipient_role: "person", notification_type: 0)
+      plain_comment = create(:comment, commentable: person, body: "Just a note")
+      plain_comm = create(:notification, noticeable: person, recipient_email: "primary@example.com",
+                                         email_subject: "Nothing urgent", kind: "manual_log",
+                                         channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id, flagged: "1"), headers: turbo_headers
+
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(flagged_comment)}")).to be_present
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(flagged_comm)}")).to be_present
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(plain_comment)}")).to be_nil
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(plain_comm)}")).to be_nil
     end
   end
 

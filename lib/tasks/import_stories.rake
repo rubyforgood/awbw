@@ -1,5 +1,5 @@
 namespace :import do
-  desc "Import stories from a WordPress Posts Export CSV. " \
+  desc "Import stories from the curated stories spreadsheet CSV. " \
        "Usage: rake 'import:stories[path/to/export.csv,importer@awbw.org]' " \
        "(append ,dry to validate without writing)"
   task :stories, [ :path, :user_email, :dry ] => :environment do |_task, args|

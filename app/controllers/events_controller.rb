@@ -517,6 +517,7 @@ class EventsController < ApplicationController
     registrations.each do |event_registration|
       NotificationServices::CreateNotification.call(
         noticeable: event_registration,
+        person: event_registration.registrant,
         kind: "event_registration_reminder",
         recipient_role: :person,
         recipient_email: event_registration.registrant.preferred_email,
@@ -563,7 +564,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if success
-        format.html { redirect_to @event, notice: "Event was successfully created." }
+        format.html { redirect_to @event, notice: "Event was successfully created.", status: :see_other }
         format.json { render :show, status: :created, location: @event }
       else
         set_form_variables

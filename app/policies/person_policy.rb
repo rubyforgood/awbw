@@ -1,12 +1,35 @@
 class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
+  # Fields a non-admin owner may NOT change about their own profile once profiles
+  # are enabled — privilege- or admin-only data the self-edit form doesn't expose.
+  # Everything else is owner-editable, so add any new admin-only person attribute
+  # here. (professional_licenses_attributes stays owner-editable: the controller's
+  # reject_locked_license_changes! is the per-license backstop that blocks CE-tied ones.)
+  ADMIN_ONLY_FIELDS = %i[
+    email email_type email_2 email_2_type
+    filemaker_code blog_contributor notes member_since
+    created_by_id updated_by_id
+    staff_taggings_attributes affiliations_attributes comments_attributes
+    notifications_attributes user_attributes
+  ].freeze
+
+  # People-index filters only an admin may apply. The index itself is readable by
+  # any signed-in user while profiles preview, but each of these narrows the list
+  # by internal data — so a non-admin passing one by URL would learn which people
+  # carry an admin-only staff tag or subscription. The filter bar renders them
+  # behind the same admin gate the :index params_filter enforces.
+  ADMIN_ONLY_FILTERS = %i[
+    role facilitator_status membership_status
+    staff_tag_ids topic_subscription_type_id
+  ].freeze
+
   def index?
-    admin?
+    admin? || profiles_visible_to_users?
   end
 
   def show?
-    admin? || owner?
+    admin? || owner? || (profiles_visible_to_users? && record.published?)
   end
 
   # Admin, or the profile's own person. The narrow rule for owner-only content
@@ -32,14 +55,14 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
-  # Admin-only for now; flips to `admin? || owner?` at profile launch, when the
-  # owner read-only affiliation view on the edit form goes live.
+  # A person edits their own profile once profiles are enabled; the controller
+  # strips admin-only fields from what a non-admin owner can submit.
   def edit?
-    admin?
+    admin? || (profiles_visible_to_users? && owner?)
   end
 
   def update?
-    admin?
+    admin? || (profiles_visible_to_users? && owner?)
   end
 
   def destroy?
@@ -54,6 +77,87 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
+  # Which person attributes a role may submit. Admins get everything; a non-admin
+  # owner editing their own profile can only *request* changes to the admin-only
+  # fields (primary email, affiliations), so those are dropped here as the
+  # server-side backstop for the read-only form fields.
+  params_filter do |params|
+    permitted = params.permit(
+      :avatar,
+      :first_name, :legal_first_name, :last_name,
+      :email, :email_type,
+      :email_2, :email_2_type,
+      :street_address, :city, :state, :zip, :country, :mailing_address_type,
+      :best_time_to_call,
+      :date_of_birth,
+      :racial_ethnic_identity,
+      :filemaker_code,
+      :blog_contributor,
+      :bio, :shoutout_text, :notes,
+      :display_name_preference,
+      :anonymous_contributions,
+      :pronunciation,
+      :pronouns,
+      :profile_is_searchable,
+      :profile_show_pronouns,
+      :profile_show_credentials,
+      :profile_show_bio,
+      :profile_show_email,
+      :profile_show_phone,
+      :profile_show_member_since,
+      :profile_show_sectors,
+      :profile_show_age_ranges,
+      :profile_show_affiliations,
+      :profile_show_social_media,
+      :profile_show_events_registered,
+      :profile_show_stories,
+      :profile_show_story_ideas,
+      :profile_show_workshop_variations,
+      :profile_show_workshop_variation_ideas,
+      :profile_show_workshops,
+      :profile_show_workshop_ideas,
+      :profile_show_workshop_logs,
+      :profile_show_monthly_reports,
+      :profile_show_resources,
+      :member_since,
+      :linked_in_url,
+      :facebook_url,
+      :instagram_url,
+      :youtube_url,
+      :twitter_url,
+      :created_by_id, :updated_by_id,
+      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
+      staff_taggings_attributes: [ :id, :staff_tag_id, :_destroy ],
+      age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
+      addresses_attributes: [
+        :id, :address_type, :primary, :street_address, :city, :state, :zip_code,
+        :country, :county, :district, :locality, :phone, :inactive, :_destroy
+      ],
+      contact_methods_attributes: [
+        :id, :address_id, :contactable_id, :contactable_type, :contact_type,
+        :kind, :value, :primary, :inactive, :_destroy
+      ],
+      user_attributes: [
+        :id, :person_id, :first_name, :last_name, :email, :birthday, :inactive,
+        :super_user, :phone, :phone2, :phone3, :best_time_to_call, :address,
+        :city, :state, :zip, :address2, :city2, :state2, :zip2, :notes, :time_zone
+      ],
+      affiliations_attributes: [
+        :id, :organization_id, :title, :inactive, :inactive_supplied,
+        :primary_contact, :start_date, :end_date, :organization_address_id, :_destroy
+      ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
+      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :expires_on, :_destroy ]
+    )
+    next permitted if admin?
+
+    permitted.delete(:email)
+    permitted.delete(:affiliations_attributes)
+    permitted[:user_attributes]&.delete(:email)
+    permitted
+  end
+
   # Scoping
   # See https://actionpolicy.evilmartians.io/#/scoping
 
@@ -62,7 +166,142 @@ class PersonPolicy < ApplicationPolicy
     relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
   end
 
+  # The people index's filter params, keeping only the filters this viewer may
+  # apply. Named, because the unnamed params_filter below is the write path.
+  params_filter(:index) do |params|
+    next params if admin?
+    params.except(*ADMIN_ONLY_FILTERS)
+  end
+
+  params_filter do |params|
+    permitted = params.permit(
+      :avatar,
+      :first_name, :legal_first_name, :last_name,
+      :email, :email_type,
+      :email_2, :email_2_type,
+      :street_address, :city, :state, :zip, :country, :mailing_address_type,
+      :best_time_to_call,
+      :date_of_birth,
+      :racial_ethnic_identity,
+      :filemaker_code,
+      :blog_contributor,
+      :bio, :shoutout_text, :notes,
+      :display_name_preference,
+      :anonymous_contributions,
+      :pronunciation,
+      :pronouns,
+      :profile_is_searchable,
+      :profile_show_pronouns,
+      :profile_show_credentials,
+      :profile_show_bio,
+      :profile_show_email,
+      :profile_show_phone,
+      :profile_show_member_since,
+      :profile_show_sectors,
+      :profile_show_age_ranges,
+      :profile_show_affiliations,
+      :profile_show_social_media,
+      :profile_show_events_registered,
+      :profile_show_stories,
+      :profile_show_story_ideas,
+      :profile_show_workshop_variations,
+      :profile_show_workshop_variation_ideas,
+      :profile_show_workshops,
+      :profile_show_workshop_ideas,
+      :profile_show_workshop_logs,
+      :profile_show_monthly_reports,
+      :profile_show_resources,
+      :member_since,
+      :linked_in_url,
+      :facebook_url,
+      :instagram_url,
+      :youtube_url,
+      :twitter_url,
+      :created_by_id, :updated_by_id,
+      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
+      staff_taggings_attributes: [ :id, :staff_tag_id, :_destroy ],
+      age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
+      addresses_attributes: [
+        :id,
+        :address_type,
+        :primary,
+        :street_address,
+        :city,
+        :state,
+        :zip_code,
+        :country,
+        :county,
+        :district,
+        :locality,
+        :phone,
+        :inactive,
+        :_destroy
+      ],
+      contact_methods_attributes: [
+        :id,
+        :address_id,
+        :contactable_id,
+        :contactable_type,
+        :contact_type,
+        :kind,
+        :value,
+        :primary,
+        :inactive,
+        :_destroy
+      ],
+      user_attributes: [
+        :id, :person_id,
+        :first_name,
+        :last_name,
+        :email,
+        :birthday,
+        :inactive,
+        :super_user,
+        :phone,
+        :phone2,
+        :phone3,
+        :best_time_to_call,
+        :address,
+        :city,
+        :state,
+        :zip,
+        :address2,
+        :city2,
+        :state2,
+        :zip2,
+        :notes,
+        :time_zone
+      ],
+      affiliations_attributes: [
+        :id,
+        :organization_id,
+        :title,
+        :inactive,
+        :inactive_supplied,
+        :primary_contact,
+        :start_date,
+        :end_date,
+        :organization_address_id,
+        :_destroy
+      ],
+      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
+      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
+      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :expires_on, :_destroy ]
+    )
+    next permitted if admin?
+
+    permitted.except(*ADMIN_ONLY_FIELDS)
+  end
+
   private
+
+  # Temporary launch gate: signed-in users preview profiles everywhere but
+  # production, where they stay off until launch. Admins always have access; the
+  # public never does. Remove this method at launch (access becomes unconditional
+  # for signed-in users); it mirrors OrganizationPolicy's copy in #2563.
+  def profiles_visible_to_users?
+    authenticated? && !Rails.env.production?
+  end
 
   def owner?
     return false unless authenticated?
@@ -74,6 +313,7 @@ class PersonPolicy < ApplicationPolicy
       record.affiliations.exists? ||
       record.stories_as_spotlighted_facilitator.exists? ||
       record.stories_as_author.exists? ||
+      record.stories_as_co_author.exists? ||
       record.workshop_variations_as_author.exists? ||
       record.workshops_as_author.exists? ||
       record.community_news_as_author.exists? ||

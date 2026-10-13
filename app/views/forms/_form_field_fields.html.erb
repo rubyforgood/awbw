@@ -168,20 +168,20 @@
         </div>
 
         <% unless option_source %>
-          <% options_locked = field.fixed_options? && params[:admin] != "true" %>
+          <% payment_toggles = field.fixed_options? && params[:admin] != "true" %>
           <div class="hidden space-y-2 border-t border-gray-100 pt-3 pl-1" data-answer-options-target="list">
-            <% if options_locked %>
-              <%# Payment-method options drive Stripe charge logic, so they're shown
-                  read-only here. Append ?admin=true to the URL to edit them. %>
-              <% field.form_field_answer_options.each do |option| %>
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                  <i class="fa-solid fa-circle text-gray-300 text-4xs shrink-0"></i>
-                  <span><%= option.option_name %></span>
-                </div>
-              <% end %>
-              <p class="text-xs text-gray-400 italic">
-                These options aren't editable here — they're tied to system logic and must stay in sync with it.
+            <% if payment_toggles %>
+              <%# Fixed labels (wired to Stripe), so admins only toggle each method
+                  on/off; ?admin=true switches to full editing. %>
+              <p class="text-xs text-gray-500">
+                Check which payment methods this form offers. The labels are fixed because they're tied to payment processing.
               </p>
+              <% FormBuilderService::PAYMENT_METHOD_OPTIONS.each_with_index do |label, i| %>
+                <% join = field.answer_option_join_for(label) || FormFieldAnswerOption.new %>
+                <%= f.fields_for :form_field_answer_options, join, child_index: i do |opt| %>
+                  <%= render "forms/form_field_payment_option_fields", opt: opt, label: label, included: join.persisted? %>
+                <% end %>
+              <% end %>
             <% else %>
               <%= f.fields_for :form_field_answer_options do |opt| %>
                 <%= render "form_field_answer_option_fields", f: opt %>

@@ -73,4 +73,56 @@ RSpec.describe CommentDecorator do
       expect(chip).to include("Com&#39;t")
     end
   end
+
+  describe "#event / #event_registration" do
+    it "resolves the event and registration for a registration comment" do
+      registration = create(:event_registration)
+      comment = create(:comment, commentable: registration)
+
+      expect(comment.decorate.event).to eq(registration.event)
+      expect(comment.decorate.event_registration).to eq(registration)
+    end
+
+    it "resolves the event through a CE registration comment" do
+      ce = create(:continuing_education_registration)
+      comment = create(:comment, commentable: ce)
+
+      expect(comment.decorate.event).to eq(ce.event_registration.event)
+      expect(comment.decorate.event_registration).to eq(ce.event_registration)
+    end
+
+    it "resolves the event through an allocated scholarship comment" do
+      registration = create(:event_registration)
+      scholarship = create(:scholarship, recipient: registration.registrant)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 0)
+      comment = create(:comment, commentable: scholarship)
+
+      expect(Comment.find(comment.id).decorate.event).to eq(registration.event)
+    end
+
+    it "is nil for a comment that isn't about an event" do
+      comment = create(:comment, commentable: create(:person))
+
+      expect(comment.decorate.event).to be_nil
+      expect(comment.decorate.event_registration).to be_nil
+    end
+  end
+
+  describe "#event_chip" do
+    it "links to the registration's edit page for an event comment" do
+      registration = create(:event_registration)
+      comment = create(:comment, commentable: registration)
+
+      chip = comment.decorate.event_chip(linked: true)
+
+      expect(chip).to include("<a")
+      expect(chip).to include(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+    end
+
+    it "is blank for a comment that isn't about an event" do
+      comment = create(:comment, commentable: create(:person))
+
+      expect(comment.decorate.event_chip).to eq("")
+    end
+  end
 end

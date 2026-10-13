@@ -5,8 +5,9 @@ class WorkshopLogsController < ApplicationController
     authorize!
     @per_page = params[:number_of_items_per_page].presence || 10
     params[:workshop_id] ||= @workshop&.id
-    base_scope = authorized_scope(WorkshopLog.includes(:workshop, :windows_type, :quotable_item_quotes, :gallery_assets,
-                                                       :author, created_by: :person))
+    base_scope = authorized_scope(WorkshopLog.with_author_credit
+                                             .includes(:workshop, :windows_type,
+                                                       :quotable_item_quotes, :gallery_assets))
     filtered = base_scope.search(params)
     @workshop_logs_unpaginated = filtered
     @workshop_logs = filtered.paginate(page: params[:page], per_page: @per_page)
@@ -45,6 +46,7 @@ class WorkshopLogsController < ApplicationController
     if @workshop_log.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_log,
+        person: @workshop_log.created_by&.person,
         kind: :workshop_log_submitted,
         recipient_role: :person,
         recipient_email: @workshop_log.created_by.email,
@@ -53,7 +55,7 @@ class WorkshopLogsController < ApplicationController
         noticeable: @workshop_log,
         kind: :workshop_log_submitted_fyi,
         recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        recipient_email: Organization.programs_email,
         notification_type: 0)
 
       flash[:notice] = "Thank you for submitting a workshop log. To see all of your completed logs, please view your Profile."

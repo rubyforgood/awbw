@@ -55,8 +55,7 @@
     <!-- Clear filters -->
     <div class="w-full md:ml-auto md:w-auto">
       <span class="<%= search_label_class(extra: "invisible") %>" aria-hidden="true">Clear</span>
-      <%= render "shared/search_clear", url: staff_taggings_path,
-            action: "searchable-checkbox#clear collection#clearAndSubmit" %>
+      <%= render "shared/search_clear", url: staff_taggings_path %>
     </div>
   </div>
 <% end %>

@@ -9,7 +9,7 @@ namespace :db do
       workshops
       quotes
       people_profiles
-      home_page_content
+      story_share_content
       workshop_logs
       monthly_reports
       events_management
@@ -28,6 +28,7 @@ namespace :db do
       public_forms
       form_results_showcase
       annual_evaluation
+      fm_archive
     ]
 
     desc "Generate representative sample data for development"
@@ -58,9 +59,9 @@ namespace :db do
       load Rails.root.join("db/seeds/dev/people_profiles.rb")
     end
 
-    desc "Seed dev home page content (news, ideas, stories)"
-    task home_page_content: :environment do
-      load Rails.root.join("db/seeds/dev/home_page_content.rb")
+    desc "Seed dev Story Share content (news, ideas, stories)"
+    task story_share_content: :environment do
+      load Rails.root.join("db/seeds/dev/story_share_content.rb")
     end
 
     desc "Seed dev workshop logs"
@@ -156,6 +157,11 @@ namespace :db do
     desc "Seed the Annual Evaluation form with sample submissions (dev only)"
     task annual_evaluation: :environment do
       load Rails.root.join("db/seeds/dev/annual_evaluation.rb")
+    end
+
+    desc "Seed three fake FileMaker archive rows per table and link the first people/orgs to them (dev only)"
+    task fm_archive: :environment do
+      load Rails.root.join("db/seeds/dev/fm_archive.rb")
     end
   end
 end

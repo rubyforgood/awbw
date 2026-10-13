@@ -5,7 +5,7 @@ class WorkshopVariationIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = WorkshopVariationIdea.includes(:workshop, :created_by, :updated_by)
+    base_scope = WorkshopVariationIdea.with_author_credit.includes(:workshop, :updated_by)
     filtered = base_scope.search_by_params(params)
     @workshop_variation_ideas_count = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
     @workshop_variation_ideas = filtered.order(created_at: :desc)
@@ -45,6 +45,7 @@ class WorkshopVariationIdeasController < ApplicationController
     if @workshop_variation_idea.save
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation_idea,
+        person: @workshop_variation_idea.created_by&.person,
         kind: :idea_submitted,
         recipient_role: :person,
         recipient_email: @workshop_variation_idea.created_by.email,
@@ -53,7 +54,7 @@ class WorkshopVariationIdeasController < ApplicationController
         noticeable: @workshop_variation_idea,
         kind: :idea_submitted_fyi,
         recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        recipient_email: Organization.programs_email,
         notification_type: 0)
 
       flash[:notice] = "Workshop variation idea was successfully created."

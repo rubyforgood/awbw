@@ -1,0 +1,2 @@
+<%= turbo_stream.replace @request, partial: "profile_change_requests/request", locals: { request: @request } %>
+<%= turbo_stream.replace "flash_now", partial: "shared/flash_messages" %>

@@ -102,9 +102,9 @@
         selected: params[:account_status], blank: "Any account status", field_class: field_class %>
 
   <% if @attendee_topic_types.any? %>
-    <%= render "events/filter_select", param: :topic_subscription, label: "Topic subscription list",
+    <%= render "events/filter_multiselect", param: :topic_subscription, label: "Topic subscription list",
           options: @attendee_topic_types.map { |type| [ type.name, type.id ] },
-          selected: params[:topic_subscription], blank: "Any topic", field_class: field_class %>
+          selected: Array(params[:topic_subscription]).map(&:to_i), placeholder: "Any topic" %>
   <% end %>
 
   <%= render "events/filter_text", param: :city, label: "City",

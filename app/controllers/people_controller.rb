@@ -19,7 +19,8 @@ class PeopleController < ApplicationController
         event_registrations: :event,
         categorizable_items: { category: :category_type }
       ).references(:user))
-      filtered = base_scope.search_by_params(params.to_unsafe_h)
+      filters = authorized_scope(params, as: :index).to_unsafe_h
+      filtered = base_scope.search_by_params(filters)
                            .order(:first_name, :last_name)
       @count_display = filtered.count
       @people = filtered.paginate(page: params[:page], per_page: per_page)
@@ -86,9 +87,15 @@ class PeopleController < ApplicationController
       when "stories"
         # Author (or legacy creator) plus stories they were spotlighted in. The
         # spotlight is a separate credit from authorship, so anonymity doesn't apply.
-        story_ids = visible_authored_content(Story.credited_to_person(@person)).pluck(:id) +
-          @person.stories_as_spotlighted_facilitator.pluck(:id)
-        @stories = Story.where(id: story_ids).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        authored = visible_authored_content(Story.credited_to_person(@person))
+        spotlighted = @person.stories_as_spotlighted_facilitator
+        unless viewing_own_or_admin?
+          authored = authored.not_funder_only
+          spotlighted = spotlighted.not_funder_only
+        end
+        story_ids = authored.pluck(:id) + spotlighted.pluck(:id)
+        @stories = Story.with_author_credit.where(id: story_ids)
+                        .order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "resources"
         # Author, or the legacy fallback to their user's creations (author_person).
@@ -187,12 +194,13 @@ class PeopleController < ApplicationController
     amount = params[:amount].to_i
     amount = (amount * 100).to_i # Convert dollars to cents
     amount = 1000 if amount < 1000 # Minimum $10.00
+    metadata = stripe_metadata(person_id: @person.id)
 
     @checkout_session = @person.payment_processor.checkout(
       mode: "payment",
-      metadata: { person_id: @person.id },
+      metadata: metadata,
       payment_intent_data: {
-        metadata: { person_id: @person.id }
+        metadata: metadata
       },
       line_items: [ {
         price_data: {
@@ -336,6 +344,7 @@ class PeopleController < ApplicationController
 
     NotificationServices::CreateNotification.call(
       noticeable: @person,
+      person: @person,
       kind: :form_link_request,
       recipient_role: :person,
       recipient_email: email,
@@ -377,22 +386,37 @@ class PeopleController < ApplicationController
         first_name legal_first_name last_name email email_type email_2 email_2_type
         date_of_birth pronouns filemaker_code member_since notes
       ],
+      union_columns: %w[filemaker_code],
       # Merging two people who each have a login leaves the kept person with both
-      # (users.person_id has no unique constraint); both logins still sign in to
-      # the one record. Surface it so the admin isn't surprised — it doesn't block.
+      # (users.person_id has no unique constraint); both logins still sign in to the
+      # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        next [] unless keep.user && delete.user
+        next [] unless delete.user
+        next [ "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." ] unless keep.user
 
-        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
+        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently." ]
+      },
+      # Block the merge when both people carry an active pay subscription: the merge
+      # keeps both live (soft-deleting one would strand its billing), so the kept person
+      # would be billed twice. The admin must cancel one before merging.
+      merge_blocks: ->(keep, delete) {
+        next [] unless active_pay_subscription?(keep) && active_pay_subscription?(delete)
+
+        [ "Both people have an active pay subscription. Cancel one before merging so the kept person isn't billed twice." ]
       },
       # Before the merge moves the deleted person's taggings onto the keeper (where
       # they become indistinguishable), capture which primary sector + age range to
       # keep: the survivor's own, or — when it has none — the deleted person's.
       merge_keeper: ->(keep, delete) {
+        keep.filemaker_code = Person.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
         @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id ||
           delete.sectorable_items.find_by(is_primary: true)&.sector_id
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
+        @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
+        @keeper_primary_address_signature = PersonServices::ReconcileAddresses.primary_signature(keep, delete)
+        @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
+        @adopted_login_id = delete.user&.id unless keep.user
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (fold blank-number
@@ -401,18 +425,45 @@ class PeopleController < ApplicationController
       #   * duplicate CE registrations for one event (collapse them, preserving the
       #     loser's payments, so the person isn't billed twice for a single enrollment);
       #   * two "primary" sectors / age ranges (keep the survivor's, demote the rest,
-      #     leaving the single primary Person's single-primary validations require).
+      #     leaving the single primary Person's single-primary validations require);
+      #   * two live Pay customers (keep one default — the subscription-bearing one,
+      #     else the survivor's own — and soft-delete the redundant sibling so
+      #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
+      #   * duplicate addresses / contact methods (fold identical ones into one,
+      #     keeping a single primary — the survivor's own, else the deleted person's);
+      #   * a survivor gaining its first login (adopt the login's email as primary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
         PersonServices::ReconcilePrimaryDesignations.new(keep,
           primary_sector_id: @keeper_primary_sector_id,
           primary_age_category_id: @keeper_primary_age_category_id).call
+        PersonServices::ReconcileDefaultPayCustomer.new(keep,
+          preferred_customer_id: @keeper_default_pay_customer_id).call
+        PersonServices::ReconcileAddresses.new(keep,
+          primary_signature: @keeper_primary_address_signature).call
+        PersonServices::ReconcileContactMethods.new(keep,
+          primary_signatures: @keeper_primary_contact_signatures).call
+        sync_adopted_login_email(keep)
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
       }
     }
+  end
+
+  # Saves the preview's edits first so the sync moves the email the admin picked into
+  # the secondary slot.
+  def sync_adopted_login_email(keep)
+    login = User.find_by(id: @adopted_login_id)
+    return unless login
+
+    keep.save! if keep.changed?
+    PersonLoginEmailSync.call(login)
+  end
+
+  def active_pay_subscription?(person)
+    person.pay_customers.active.any? { |customer| customer.subscriptions.active_uncanceled.exists? }
   end
 
   # Showing anonymous content to anyone but the person and admins would tie an
@@ -653,121 +704,10 @@ class PeopleController < ApplicationController
     end
   end
 
+  # Permit + admin-only filtering lives in PersonPolicy's params_filter, so a
+  # non-admin owner's submission is stripped to the fields they may change.
   def person_params
-    params.require(:person).permit(
-      :avatar,
-      :first_name, :legal_first_name, :last_name,
-      :email, :email_type,
-      :email_2, :email_2_type,
-      :street_address, :city, :state, :zip, :country, :mailing_address_type,
-      :best_time_to_call,
-      :date_of_birth,
-      :racial_ethnic_identity,
-      :filemaker_code,
-      :blog_contributor,
-      :bio, :shoutout_text, :notes,
-      :display_name_preference,
-      :anonymous_contributions,
-      :pronunciation,
-      :pronouns,
-      :profile_is_searchable,
-      :profile_show_pronouns,
-      :profile_show_credentials,
-      :profile_show_bio,
-      :profile_show_email,
-      :profile_show_phone,
-      :profile_show_member_since,
-      :profile_show_sectors,
-      :profile_show_age_ranges,
-      :profile_show_affiliations,
-      :profile_show_social_media,
-      :profile_show_events_registered,
-      :profile_show_stories,
-      :profile_show_story_ideas,
-      :profile_show_workshop_variations,
-      :profile_show_workshop_variation_ideas,
-      :profile_show_workshops,
-      :profile_show_workshop_ideas,
-      :profile_show_workshop_logs,
-      :profile_show_monthly_reports,
-      :profile_show_resources,
-      :member_since,
-      :linked_in_url,
-      :facebook_url,
-      :instagram_url,
-      :youtube_url,
-      :twitter_url,
-      :created_by_id, :updated_by_id,
-      sectorable_items_attributes: [ :id, :sector_id, :is_leader, :is_primary, :_destroy ],
-      staff_taggings_attributes: [ :id, :staff_tag_id, :_destroy ],
-      age_range_categorizable_items_attributes: [ :id, :category_id, :is_primary, :_destroy ],
-      addresses_attributes: [
-        :id,
-        :address_type,
-        :primary,
-        :street_address,
-        :city,
-        :state,
-        :zip_code,
-        :country,
-        :county,
-        :district,
-        :locality,
-        :phone,
-        :inactive,
-        :_destroy
-      ],
-      contact_methods_attributes: [
-        :id,
-        :address_id,
-        :contactable_id,
-        :contactable_type,
-        :contact_type,
-        :kind,
-        :value,
-        :primary,
-        :inactive,
-        :_destroy
-      ],
-      user_attributes: [
-        :id, :person_id,
-        :first_name,
-        :last_name,
-        :email,
-        :birthday,
-        :inactive,
-        :super_user,
-        :phone,
-        :phone2,
-        :phone3,
-        :best_time_to_call,
-        :address,
-        :city,
-        :state,
-        :zip,
-        :address2,
-        :city2,
-        :state2,
-        :zip2,
-        :notes,
-        :time_zone
-      ],
-      affiliations_attributes: [
-        :id,
-        :organization_id,
-        :title,
-        :inactive,
-        :inactive_supplied,
-        :primary_contact,
-        :start_date,
-        :end_date,
-        :organization_address_id,
-        :_destroy
-      ],
-      comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
-      professional_licenses_attributes: [ :id, :number, :kind, :issuing_state, :expires_on, :_destroy ]
-    )
+    authorized(params.require(:person))
   end
 
   def membership_for(person)

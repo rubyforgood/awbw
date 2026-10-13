@@ -1,0 +1,11 @@
+<% if notification.resend? %>
+  <div class="text-2xs mt-0.5 inline-flex items-center gap-1 text-blue-600" title="This is resend #<%= notification.resend_number %> in the chain">
+    <i class="fas fa-redo"></i>
+    Resend #<%= notification.resend_number %>
+  </div>
+<% elsif notification.resend_count > 0 %>
+  <div class="text-2xs mt-0.5 inline-flex items-center gap-1 text-blue-600" title="Resent <%= pluralize(notification.resend_count, "time") %>">
+    <i class="fas fa-redo"></i>
+    Resent <%= pluralize(notification.resend_count, "time") %>
+  </div>
+<% end %>

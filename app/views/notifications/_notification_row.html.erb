@@ -30,6 +30,7 @@
         regardless of name length, without a wide gap before the icon. %>
     <span class="w-[5.5rem] shrink-0 truncate text-xs font-medium text-gray-500" title="<%= decorated.from_title.presence || from_name %>"><%= from_name %></span>
     <span class="min-w-0 flex-1 truncate text-sm">
+      <%= decorated.event_chip %>
       <%= decorated.channel_icon %>
       <%# A regular outgoing message is the norm here — only the exceptions get a flag. %>
       <%= decorated.flag_badges %>

@@ -1,6 +1,7 @@
 class Story < ApplicationRecord
   include AuthorCreditable
-  include Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
+  include CategoriesTaggable, SectorsTaggable
+  include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Communicable
 
   has_rich_text :rhino_body
@@ -15,8 +16,13 @@ class Story < ApplicationRecord
   belongs_to :spotlighted_facilitator, class_name: "Person",
              foreign_key: "spotlighted_facilitator_id", optional: true
   belongs_to :author, class_name: "Person", optional: true
+  belongs_to :co_author, class_name: "Person", optional: true
   belongs_to :story_idea, optional: true
+  # Kept as a legacy safety copy alongside story_workshops during the multi-step
+  # import; the join is the source of truth for display and editing.
   belongs_to :workshop, optional: true
+  has_many :story_workshops, -> { order(:position, :id) }, inverse_of: :story, dependent: :destroy
+  has_many :workshops, through: :story_workshops
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable
@@ -44,8 +50,18 @@ class Story < ApplicationRecord
   validates :external_workshop_title, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
+  normalizes :co_author_credit_preference, with: ->(value) { value.presence }
+  validates :co_author_credit_preference, inclusion: { in: AuthorCreditable::AUTHOR_CREDIT_PREFERENCES }, allow_blank: true
+  # A blank author_id means "nobody named an author" everywhere it's read — the
+  # profile listing credits the submitter instead, and the divergences page offers
+  # the story up for assignment. A second author has to sit behind a first.
+  validates :author_id, presence: { message: "is required when a second author is credited" },
+            if: -> { co_author_id.present? }
+  validate :co_author_differs_from_author
 
   # Nested attributes
+  accepts_nested_attributes_for :story_workshops, allow_destroy: true,
+    reject_if: ->(attrs) { attrs[:workshop_id].blank? && attrs[:external_workshop_title].blank? }
   accepts_nested_attributes_for :primary_asset, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :gallery_assets, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
@@ -69,15 +85,50 @@ class Story < ApplicationRecord
   # Credited-author name search (explicit author + creator fallback) comes from
   # AuthorCreditable#by_credited_person_name, OR-ed into full-text results below.
 
+  # Remote-select typeahead (workshop form's "connect a story" picker)
+  remote_searchable_by :title
+
+  def self.remote_search(query)
+    super.includes(:windows_type)
+  end
+
+  def remote_search_label
+    label = windows_type ? "#{title} (#{windows_type.short_name})" : title
+    { id: id, label: label }
+  end
+
   # Scopes
   # See Featureable, Publishable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   scope :by_year, ->(year) { where(created_at: Date.new(year.to_i)..Date.new(year.to_i).end_of_year) }
   scope :story_name, ->(story_name) { story_name.present? ? where("stories.name LIKE ?", "%#{story_name}%") : all }
+  # Funder-only stories are scholarship deliverables shared solely with the
+  # funder — kept out of every general-audience listing (see StoryPolicy,
+  # StorySharePolicy, HomePolicy). Admins and the author still see them.
+  scope :not_funder_only, -> { where(funder_only: false) }
+
+  # Admin hand-picks the Story Share home carousel: lowest number leads, blank = not in it.
+  scope :story_share_carousel, -> { where.not(story_share_carousel_position: nil).order(:story_share_carousel_position) }
   scope :facilitator_spotlights, ->(value = nil) {
     return where.not(spotlighted_facilitator_id: nil) if value.blank?
     ActiveModel::Type::Boolean.new.cast(value) ?
       where.not(spotlighted_facilitator_id: nil) :
       where(spotlighted_facilitator_id: nil)
+  }
+
+  # A story credits either author, so both the author chip filter and the person
+  # profile listing match on author_id or co_author_id.
+  scope :authored_by, ->(person_id) {
+    where("stories.author_id = :id OR stories.co_author_id = :id", id: person_id) if person_id.present?
+  }
+
+  scope :credited_to_person, ->(person) {
+    if person
+      where(author_id: person.id)
+        .or(where(co_author_id: person.id))
+        .or(where(author_id: nil, created_by_id: User.where(person_id: person.id).select(:id)))
+    else
+      none
+    end
   }
 
   def self.search_by_params(params)
@@ -113,6 +164,7 @@ class Story < ApplicationRecord
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?
+    stories = stories.where(funder_only: true) if ActiveModel::Type::Boolean.new.cast(params[:funder_only])
     stories = stories.authored_by(params[:author_id])
     stories
   end
@@ -150,14 +202,6 @@ class Story < ApplicationRecord
     sectors.pluck(:name)
   end
 
-  # StoryPopulation categories describe who a story is about (Children, Teens,
-  # Adults, …) — the portal's audience facet.
-  AUDIENCE_CATEGORY_TYPE = "StoryPopulation"
-
-  def audience_categories
-    categories.joins(:category_type).where(category_types: { name: AUDIENCE_CATEGORY_TYPE })
-  end
-
   def attach_assets_from_idea!
     return unless story_idea
 
@@ -174,5 +218,14 @@ class Story < ApplicationRecord
     end
 
     save!
+  end
+
+  private
+
+  def co_author_differs_from_author
+    return if co_author_id.blank? || author_id.blank?
+    return if co_author_id != author_id
+
+    errors.add(:co_author_id, "must be different from the first author")
   end
 end

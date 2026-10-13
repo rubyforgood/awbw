@@ -18,6 +18,14 @@ RSpec.describe CategorizableItem do
     it { should validate_uniqueness_of(:category_id).scoped_to([ :categorizable_type, :categorizable_id ]) }
   end
 
+  describe "#title" do
+    it "reads as the category it applied" do
+      tagging = build(:categorizable_item, category: build(:category, name: "Teens"))
+
+      expect(tagging.title).to eq("Teens")
+    end
+  end
+
   # it 'is valid with valid attributes' do
   #   # Note: Factory needs category and categorizable associations uncommented for create
   #   # Example with workshop:

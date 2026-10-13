@@ -1,6 +1,16 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% back = capture do %>
+  <% if params[:return_to] == "workshop" && params[:workshop_id].present? %>
+    <div class="mb-2">
+      <%= link_to workshop_path(params[:workshop_id], anchor: "workshopStories"),
+                  class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Workshop
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
 <%= render layout: "shared/form_page",
-           locals: { domain: :stories, icon: "fas fa-book",
+           locals: { domain: :stories, icon: "fas fa-book", back: back,
                      title: "New #{@story.class.model_name.human.downcase}" } do %>
   <%= render "form" %>
 <% end %>

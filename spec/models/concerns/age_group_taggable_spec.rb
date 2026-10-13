@@ -37,6 +37,26 @@ RSpec.describe AgeGroupTaggable do
       expect(person.additional_age_groups).to contain_exactly(teen)
       expect(person.categories).to include(clinical)
     end
+
+    it "reassigns the primary but keeps other age groups when given only a primary" do
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+
+      person.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
+
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "with replace: true, drops age groups not in the submitted set but leaves non-age categories" do
+      person.categories << clinical
+      person.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
+
+      person.tag_age_groups(primary_ids: [ young.id ], additional_ids: [ teen.id ], replace: true)
+
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+      expect(person.categories).to include(clinical)
+    end
   end
 
   describe "#apply_primary_age_groups!" do

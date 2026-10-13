@@ -79,7 +79,7 @@
         <%= check_box_tag :send_admin_fyi, "1", false, class: "mt-0.5" %>
         <div>
           <span class="text-sm font-medium text-gray-900">Send admin notification email</span>
-          <p class="text-xs text-gray-500">Notifies <%= ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org") %> about this registration</p>
+          <p class="text-xs text-gray-500">Notifies <%= Organization.programs_email %> about this registration</p>
         </div>
       </label>
 

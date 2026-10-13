@@ -3,9 +3,9 @@
     <%= render "story_image", story: story, aspect: "aspect-[4/3]" %>
   <% end %>
   <div class="flex flex-1 flex-col p-5">
-    <h3 class="text-brand-navy-900 font-display text-xl leading-snug">
+    <%= tag.h3 id: local_assigns[:anchor_id], class: [ "text-brand-navy-900 font-display text-xl leading-snug", ("scroll-mt-48" if local_assigns[:anchor_id]) ] do %>
       <%= link_to story.title, story_share_path(story), class: "hover:text-brand-magenta-700" %>
-    </h3>
+    <% end %>
     <p class="mt-1 text-xs text-gray-500">
       <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
     </p>

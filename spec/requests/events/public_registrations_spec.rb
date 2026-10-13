@@ -250,6 +250,25 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("Minimum of 5 words.")
     end
 
+    it "renders a section subtitle's list markup in a div, never inside a <p> (invalid nesting)" do
+      create(:form_field, form: form, answer_type: :group_header, name: "Supplies",
+             subtitle: "<ul><li>Bring glue</li></ul>")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("<li>Bring glue</li>")
+      expect(response.body).not_to match(%r{<p[^>]*rich-label[^>]*>\s*<ul})
+    end
+
+    it "strips block markup from a section-header name that the heading can't hold" do
+      create(:form_field, form: form, answer_type: :group_header, name: "<ul><li>Stripped</li></ul>Supplies")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Supplies")
+      expect(response.body).not_to include("<li>Stripped</li>")
+    end
+
     # A double-click used to fire two POSTs and create duplicate people and
     # registrations — worst on paid events, which opt out of Turbo (turbo: false)
     # and so lose even Turbo's own submitter disabling.
@@ -462,12 +481,12 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       create(:form_field, form: form, answer_type: :group_header,
              name: %(Visit <a href="https://awbw.org">our site</a>))
       create(:form_field, form: form, answer_type: :free_form_input_one_line,
-             name: "<h2>About you</h2>", required: false)
+             name: "<em>About you</em>", required: false)
 
       get new_event_public_registration_path(event)
 
       expect(response.body).to include(%(<a href="https://awbw.org">our site</a>))
-      expect(response.body).to include("<h2>About you</h2>")
+      expect(response.body).to include("<em>About you</em>")
       expect(response.body).to include("rich-label")
     end
 
@@ -1065,6 +1084,65 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect {
         post_with_code(code: "SAVE50")
       }.not_to change(Discount, :count)
+    end
+
+    it "shows the discounted cost on the form when the code matches" do
+      get new_event_public_registration_path(event, discount_code: "SAVE50")
+
+      expect(response.body).to include("Cost: $75")
+      expect(response.body).not_to include("Cost: $100")
+    end
+
+    it "shows the full cost when the code is wrong" do
+      get new_event_public_registration_path(event, discount_code: "WRONG")
+
+      expect(response.body).to include("Cost: $100")
+      expect(response.body).not_to include("Cost: $75")
+    end
+
+    it "shows $0 when the code covers the whole cost" do
+      event.update!(discount_amount_cents: 10_000)
+
+      get new_event_public_registration_path(event, discount_code: "SAVE50")
+
+      expect(response.body).to include("Cost: $0")
+    end
+
+    it "shows the discounted fee in the details panel" do
+      event.update!(autoshow_registration_details: true)
+
+      get new_event_public_registration_path(event, discount_code: "SAVE50")
+
+      expect(response.body).to include("$75")
+      expect(response.body).not_to include("$100")
+    end
+  end
+
+  describe "GET new hides already-answered answers_on_file fields" do
+    let(:user) { create(:user, :with_person) }
+    let(:person) { user.person }
+    let!(:on_file_field) do
+      create(:form_field, form: form, visibility: :answers_on_file, one_time: true,
+             name: "Professional credentials", required: false)
+    end
+
+    before { sign_in user }
+
+    it "hides an answers_on_file field the person already answered — no form-level flag required" do
+      submission = create(:form_submission, person: person, form: form)
+      create(:form_answer, form_submission: submission, form_field: on_file_field, submitted_answer: "LCSW")
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).not_to include("Professional credentials")
+      # The always_ask control field still renders.
+      expect(response.body).to include("Tell us why you'd like to attend")
+    end
+
+    it "still shows an answers_on_file field the person has not answered" do
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Professional credentials")
     end
   end
 end

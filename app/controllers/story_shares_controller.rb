@@ -9,11 +9,12 @@ class StorySharesController < ApplicationController
   FEATURED_CAROUSEL_LIMIT = 10
   RELATED_STORY_LIMIT = 3
   POPULAR_STORY_LIMIT = 4
+  BROWSE_CAROUSEL_LIMIT = 5
   # Any of these params means the visitor is browsing a filtered result set
   # rather than the curated landing page.
   BROWSE_PARAMS = %i[ sector_names_all category_names_all query facilitator_spotlights additional_focus_areas year page ].freeze
 
-  helper_method :browsing?
+  helper_method :browsing?, :single_hero?
 
   def index
     authorize! Story, with: StorySharePolicy
@@ -50,17 +51,25 @@ class StorySharesController < ApplicationController
   end
 
   def preloaded(scope)
-    scope.includes(:sectors, :organization, :primary_asset)
+    scope.includes(:sectors, :organization, :primary_asset, sectorable_items: :sector, categorizable_items: :category)
   end
 
   def browsing?
     BROWSE_PARAMS.any? { |key| params[key].present? }
   end
 
+  # Sector pages lead with one big hero; other browse pages lead with a carousel.
+  def single_hero?
+    params[:sector_names_all].present?
+  end
+
   def load_home
-    @featured_sectors = Sector.story_share_featured.limit(FEATURED_SECTOR_LIMIT).to_a
-    @stories_by_sector = @featured_sectors.index_with do |sector|
+    @home_sectors = Sector.story_share_home_sections.limit(FEATURED_SECTOR_LIMIT).to_a
+    @stories_by_sector = @home_sectors.index_with do |sector|
       section_stories(portal_scope.sector_names_all(sector.name))
+    end
+    @stories_by_audience = Category.story_share_audience_nav.select(&:story_share_home_section).index_with do |category|
+      section_stories(portal_scope.category_names_all(category.name))
     end
     @spotlight_stories = section_stories(portal_scope.facilitator_spotlights(true))
     @featured_stories = carousel_stories
@@ -89,11 +98,13 @@ class StorySharesController < ApplicationController
     preloaded(scope).order(publicly_featured: :desc, created_at: :desc).limit(SECTION_STORY_LIMIT).decorate
   end
 
-  # Prefer publicly featured stories for the hero carousel; fall back to recent.
+  # Hand-picked stories lead the hero carousel (by carousel order); fall back to
+  # publicly featured then most recent so the carousel never empties.
   def carousel_stories
-    featured = preloaded(portal_scope.publicly_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT)
-    featured = preloaded(portal_scope).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if featured.empty?
-    featured.decorate
+    stories = preloaded(portal_scope.story_share_carousel).limit(FEATURED_CAROUSEL_LIMIT)
+    stories = preloaded(portal_scope.publicly_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
+    stories = preloaded(portal_scope).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
+    stories.decorate
   end
 
   def load_browse
@@ -101,9 +112,15 @@ class StorySharesController < ApplicationController
     filtered = portal_scope.search_by_params(params)
     filtered = filtered.where(id: additional_focus_area_story_ids) if params[:additional_focus_areas].present?
     @count_display = filtered.count
-    @stories = preloaded(filtered).order(created_at: :desc)
+    lead_ids = filtered.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
+    @lead_stories = first_page? ? preloaded(Story.where(id: lead_ids)).in_order_of(:id, lead_ids).decorate : []
+    @stories = preloaded(filtered.where.not(id: lead_ids)).order(created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
+  end
+
+  def first_page?
+    params[:page].to_i <= 1
   end
 
   # "Additional focus areas": stories tagged with any published sector beyond the

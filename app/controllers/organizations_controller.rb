@@ -265,7 +265,7 @@ class OrganizationsController < ApplicationController
         :_destroy
       ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ],
+      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES,
       addresses_attributes: [
         :id,
         :address_type,

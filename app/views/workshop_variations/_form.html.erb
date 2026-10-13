@@ -1,5 +1,5 @@
 <div class="rounded-xl bg-white p-6">
-  <%= simple_form_for @workshop_variation, html: { multipart: true }, data: { turbo: false, controller: "submit-once", "submit-once-submitting-text-value": "Saving…" } do |f| %>
+  <%= simple_form_for @workshop_variation, html: { multipart: true } do |f| %>
     <%= hidden_field_tag(:from, params[:from]) %>
 
     <%= render "shared/errors", resource: @workshop_variation if @workshop_variation.errors.any? %>
@@ -207,7 +207,7 @@
       <%= link_to "Cancel",
                   cancel_path,
                   class: button_classes(:secondary_outline) %>
-      <%= f.button :submit, class: button_classes(:primary) %>
+      <%= f.button :submit, class: button_classes(:primary), data: { turbo_submits_with: "Saving…" } %>
     </div>
   <% end %>
 </div>

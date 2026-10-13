@@ -1,0 +1,13 @@
+Thanks — we got your request
+
+We received your request to update your <%= @request.field_label.downcase %>.
+AWBW staff will review it and follow up. There's nothing more you need to do.
+<% if @request.requested_value.present? -%>
+
+You asked us to change it to: <%= @request.requested_value %>
+<% end -%>
+<% if @request.details.present? -%>
+
+Your note:
+<%= @request.details %>
+<% end -%>

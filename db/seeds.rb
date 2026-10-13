@@ -398,24 +398,26 @@ story_population_type = find_or_create_by_name!(CategoryType, "StoryPopulation")
 end
 story_population_type.update!(display_text: "Who is this story about?", story_specific: true, published: true)
 
-# [ target name, legacy clean name, position ]. The underscore names match the
-# earlier clean form so a pre-rename category is renamed in place, not duplicated.
+# [ target name, legacy clean name, position, published ]. The underscore names
+# match the earlier clean form so a pre-rename category is renamed in place, not
+# duplicated. The age twins stay unpublished (taggings preserved) because the story
+# forms offer the AgeRange categories alongside these.
 story_populations = [
-  [ "Colleagues", "Colleagues", 1 ],
-  [ "Community", "Community", 2 ],
-  [ "Self", "Self", 3 ],
-  [ "Teens_", "Teens", 4 ],
-  [ "Children_", "Children", 5 ],
-  [ "Adults_", "Adults", 6 ],
-  [ "Families", "Families", 7 ]
+  [ "Families", "Families", 1, true ],
+  [ "Community", "Community", 2, true ],
+  [ "Self", "Self", 3, true ],
+  [ "Colleagues", "Colleagues", 4, true ],
+  [ "Children_", "Children", 5, false ],
+  [ "Teens_", "Teens", 6, false ],
+  [ "Adults_", "Adults", 7, false ]
 ]
-story_populations.each do |name, legacy, _position|
+story_populations.each do |name, legacy, _position, published|
   cat = story_population_type.categories.where("LOWER(name) = LOWER(?)", name).first ||
         story_population_type.categories.where("LOWER(name) = LOWER(?)", legacy).first ||
         story_population_type.categories.create!(name: name)
-  cat.update!(name: name, published: true)
+  cat.update!(name: name, published: published)
 end
-set_category_positions.(story_population_type, story_populations.map { |name, _, position| [ name, position ] })
+set_category_positions.(story_population_type, story_populations.map { |name, _, position, _| [ name, position ] })
 
 # --- AgeRange --------------------------------------------------------------
 # Clean names with the range moved into the description column (matching the
@@ -446,10 +448,12 @@ age_range_type.categories.reject { |cat| canonical_age_names.include?(cat.name.d
   .each { |cat| cat.update!(published: false) }
 set_category_positions.(age_range_type, age_ranges.map { |name, _, position| [ name, position ] })
 
-# Order the Story Share audience nav. The age groups resolve to the clean-named
-# AgeRange categories; the rest to their StoryPopulation categories.
-%w[Children Teens Adults Families Community Self Colleagues].each_with_index do |name, index|
-  Category.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
+# Order the Story Share audience nav: age ranges, then story populations, each
+# numbered within its own group.
+{ age_range_type => %w[Children Teens Adults Elders], story_population_type => %w[Families Community Self Colleagues] }.each do |type, names|
+  names.each_with_index do |name, index|
+    type.categories.where("LOWER(name) = LOWER(?)", name).first&.update!(story_share_position: index + 1)
+  end
 end
 
 puts "Creating WorkshopEnvironment CategoryType…"

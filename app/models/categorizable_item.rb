@@ -1,4 +1,6 @@
 class CategorizableItem < ApplicationRecord
+  include AhoyTrackable
+
   belongs_to :categorizable, polymorphic: true
   belongs_to :category
   belongs_to :created_by, class_name: "User", optional: true
@@ -7,4 +9,9 @@ class CategorizableItem < ApplicationRecord
   # Validations
   validates_presence_of :categorizable_type, :categorizable_id, :category_id
   validates :category_id, uniqueness: { scope: [ :categorizable_type, :categorizable_id ] }
+
+  # A tagging reads as the category it applied.
+  def title
+    category&.name.to_s
+  end
 end

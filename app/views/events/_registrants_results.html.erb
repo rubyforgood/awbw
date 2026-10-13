@@ -506,6 +506,17 @@
                           href: allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants"),
                           title: badge_title %>
 
+                    <% if (overpayment = registration.decorate.overpayment_badge) %>
+                      <div class="mt-1">
+                        <%= render "shared/badge",
+                              label: overpayment.label,
+                              classes: overpayment.classes,
+                              icon: overpayment.icon,
+                              title: "#{dollars_from_cents(registration.over_allocation_cents)} over-allocated",
+                              href: allocations_path(allocatable_sgid: registration.to_sgid.to_s, return_to: "registrants") %>
+                      </div>
+                    <% end %>
+
                     <% if !is_paid && registration.intends_to_pay? %>
                       <div class="text-2xs mt-1 inline-flex items-center gap-1 font-medium whitespace-nowrap text-blue-600">
                         <i class="fa-solid fa-hand-holding-dollar"></i>

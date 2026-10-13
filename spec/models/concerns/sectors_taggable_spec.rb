@@ -59,6 +59,16 @@ RSpec.describe SectorsTaggable do
 
       expect(person.sectorable_items.find_by(sector: health).is_primary).to be true
     end
+
+    it "with replace: true, drops sectors not in the submitted set (overwrite with latest)" do
+      person.sectorable_items.create!(sector: education, is_primary: true)
+      person.sectorable_items.create!(sector: housing, is_primary: false)
+
+      person.tag_sectors(primary_ids: [ health.id ], additional_ids: [], replace: true)
+
+      expect(person.sectors).to contain_exactly(health)
+      expect(person.sectorable_items.find_by(sector: health).is_primary).to be true
+    end
   end
 
   describe "ordering" do
@@ -79,6 +89,34 @@ RSpec.describe SectorsTaggable do
       names = person.sectorable_items_ordered.map { |item| item.sector.name }
 
       expect(names).to eq([ "Education", "Healthcare", "Housing" ])
+    end
+  end
+
+  describe "single-primary validation on stories and story ideas" do
+    it "rejects two primary sectors on a story" do
+      story = create(:story)
+      story.sectorable_items.build(sector: health, is_primary: true)
+      story.sectorable_items.build(sector: education, is_primary: true)
+
+      expect(story).not_to be_valid
+      expect(story.errors[:base]).to include("Only one sector can be marked as primary")
+    end
+
+    it "rejects two primary sectors on a story idea" do
+      story_idea = create(:story_idea)
+      story_idea.sectorable_items.build(sector: health, is_primary: true)
+      story_idea.sectorable_items.build(sector: education, is_primary: true)
+
+      expect(story_idea).not_to be_valid
+    end
+  end
+
+  describe "#primary_sector" do
+    it "returns the sector marked primary" do
+      person.sectorable_items.create!(sector: education, is_primary: false)
+      person.sectorable_items.create!(sector: health, is_primary: true)
+
+      expect(person.primary_sector).to eq(health)
     end
   end
 end

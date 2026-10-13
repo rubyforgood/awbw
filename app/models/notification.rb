@@ -1,4 +1,5 @@
 class Notification < ApplicationRecord
+  belongs_to :person, optional: true
   belongs_to :sender, class_name: "User", optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
@@ -44,6 +45,10 @@ class Notification < ApplicationRecord
     form_submission_confirmation_fyi
     form_link_request
 
+    profile_change_requested
+    profile_change_requested_fyi
+    profile_change_reviewed
+
     manual_log
   ].freeze
 
@@ -55,6 +60,15 @@ class Notification < ApplicationRecord
   # Channels an admin can pick when logging a communication by hand. "autoemail"
   # is excluded — it is reserved for email this platform sends automatically.
   MANUAL_CHANNELS = (CHANNELS - %w[autoemail]).freeze
+
+  # Attributes an admin may set when logging or editing a manual communication
+  # inline (nested under a parent record's form). `created_at` is editable so a
+  # contact can be logged after the fact with the date/time it actually happened.
+  # Shared by every host controller so they permit the same set.
+  PERMITTED_LOG_ATTRIBUTES = %i[
+    id channel sender_id email_subject email_body_text direction responded
+    created_at noticeable_type noticeable_id _destroy
+  ].freeze
 
   # Devise-originated kinds that require security tokens and cannot be resent
   # through the notification system. Admins should use Devise's own resend
@@ -69,7 +83,9 @@ class Notification < ApplicationRecord
     ContinuingEducationRegistration
     EventRegistration
     FormSubmission
+    Grant
     Person
+    ProfileChangeRequest
     Report
     Scholarship
     Story
@@ -133,12 +149,45 @@ class Notification < ApplicationRecord
   # Scopes
   scope :delivered, -> { where.not(delivered_at: nil) }
   scope :undelivered, -> { where(delivered_at: nil) }
+  # A manual follow-up flag any staff member can raise on any communication —
+  # the same idea as Comment#flagged, and independent of the responded/
+  # requires_response reply-tracking axis.
+  scope :flagged, -> { where(flagged: true) }
+  # Portal-sent emails: everything the platform emails a person (channel
+  # "autoemail") — automated transactional messages and admin bulk sends alike.
+  # Excludes hand-logged staff communications (manual channels). This is the set
+  # a non-admin (the person) may see about themselves.
+  scope :portal_sent, -> { where(channel: "autoemail") }
 
   # The portal launched on this date. Any undelivered email created before it is
   # pre-launch data (imported/legacy) whose delivery job is long gone — it will
   # never send, so we retire it from the "pending" treatment (see #archived?)
   # rather than flagging tens of thousands of old rows as stuck.
   LAUNCHED_ON = Date.new(2026, 1, 1)
+
+  # Plain-language explanation of the Archived status for the status tooltip.
+  ARCHIVED_HELP = "Undelivered messages imported from the Dashboard on Jan 1, 2026".freeze
+
+  # SQL counterparts of the derived status predicates (#failed?/#archived? and
+  # the pending fallback) so the list can filter by a status that isn't stored.
+  # Pending stays inclusive of resent-but-still-undelivered rows on purpose.
+  scope :failed, -> { where.not(error_at: nil).where(delivered_at: nil) }
+  scope :archived, -> { where(delivered_at: nil, error_at: nil).where(created_at: ...LAUNCHED_ON) }
+  scope :pending, -> { where(delivered_at: nil, error_at: nil).where(created_at: LAUNCHED_ON..) }
+  # Every row in a resend chain: a resend itself, or an original that has been
+  # resent — the same rows that carry the "Resent"/"Resend #N" indicator.
+  scope :resent, -> {
+    resent_root_ids = Notification.where.not(root_notification_id: nil).select(:root_notification_id)
+    where.not(parent_notification_id: nil).or(where(id: resent_root_ids))
+  }
+
+  STATUS_FILTER_OPTIONS = [
+    [ "Delivered", "delivered" ],
+    [ "Pending", "pending" ],
+    [ "Failed", "failed" ],
+    [ "Resent", "resent" ],
+    [ "Archived", "archived" ]
+  ].freeze
 
   validates :kind, presence: true, inclusion: { in: KINDS }
   validates :recipient_role, presence: true, inclusion: { in: RECIPIENT_ROLES }
@@ -168,6 +217,10 @@ class Notification < ApplicationRecord
   before_validation :force_manual_log_channel, if: :manual_log?
   # A contact_us_fyi is always something a person sent us — stamp it incoming.
   before_validation :mark_incoming, on: :create, if: -> { kind == "contact_us_fyi" }
+  # Bind the communication to the person who received it, resolved from the
+  # address at creation so it survives that person later changing their email.
+  # Callers that already know the person set it directly; this only fills a blank.
+  before_validation :assign_person_from_recipient_email, on: :create, if: -> { person_id.blank? && recipient_email.present? }
   # A notification's audit stamps follow its sender (the staff member the
   # communication is from), not whoever's request created the row — a bulk send
   # runs in a background job with no Current.user, and a system send has no sender
@@ -231,6 +284,20 @@ class Notification < ApplicationRecord
     end
   }
 
+  # Delivery axis mirroring the per-row status in the index, plus the resend
+  # cross-axis. Each case maps to the matching scope above; "resent" overlaps the
+  # others (a row keeps its own delivery status and may also be in a resend chain).
+  scope :delivery_status, ->(status) {
+    case status.to_s
+    when "delivered" then delivered
+    when "pending" then pending
+    when "failed" then failed
+    when "resent" then resent
+    when "archived" then archived
+    else all
+    end
+  }
+
   # Shared follow-up axis with Comment#follow_up_status: "needed" is an open item
   # on either side ("responded" and "none" only a communication can be).
   scope :follow_up_status, ->(status) {
@@ -261,6 +328,7 @@ class Notification < ApplicationRecord
     stories = stories.email_topic(topic_phrase) if topic_phrase.present?
     stories = stories.record_type(params[:record_type]) if params[:record_type].present?
     stories = stories.responded_status(params[:responded_status]) if params[:responded_status].present?
+    stories = stories.delivery_status(params[:delivery_status]) if params[:delivery_status].present?
     stories = stories.matching(params[:query]) if params[:query].present?
     stories = stories.created_on_or_after(params[:from]) if params[:from].present?
     stories = stories.created_on_or_before(params[:to]) if params[:to].present?
@@ -270,6 +338,7 @@ class Notification < ApplicationRecord
     stories = stories.from_user(params[:author_id]) if params[:author_id].present?
     stories = stories.where(noticeable_type: params[:source]) if params[:source].present?
     stories = stories.follow_up_status(params[:follow_up]) if params[:follow_up].present?
+    stories = stories.flagged if params[:flagged] == "1"
     stories
   end
 
@@ -380,5 +449,9 @@ class Notification < ApplicationRecord
 
   def mark_incoming
     self.direction = "incoming"
+  end
+
+  def assign_person_from_recipient_email
+    self.person = Person.find_by_any_email(recipient_email)
   end
 end

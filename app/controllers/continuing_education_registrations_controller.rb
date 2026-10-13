@@ -117,7 +117,7 @@ class ContinuingEducationRegistrationsController < ApplicationController
 
     nested = params.fetch(:continuing_education_registration, {})
       .permit(comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-              notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ])
+              notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES)
     ce_registration.comments_attributes = nested[:comments_attributes] if nested[:comments_attributes].present?
     ce_registration.notifications_attributes = nested[:notifications_attributes] if nested[:notifications_attributes].present?
   end

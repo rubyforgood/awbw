@@ -76,7 +76,7 @@ RSpec.describe Person, type: :model do
     it { should have_many(:sectorable_items) }
   end
 
-  describe "strip_whitespace" do
+  describe "normalize_names_and_emails" do
     let(:admin) { create(:user, :admin) }
 
     it "strips leading and trailing whitespace from names and emails" do
@@ -89,8 +89,17 @@ RSpec.describe Person, type: :model do
       expect(person.email_2).to eq("jane2@test.org")
     end
 
+    it "stores look-alike dashes in names as a plain hyphen" do
+      person = create(:person, first_name: "Mary\u2011Kate", last_name: "Rivera\u2013Cole",
+                       legal_first_name: "Mary\u2010Katherine", created_by: admin, updated_by: admin)
+
+      expect(person.first_name).to eq("Mary-Kate")
+      expect(person.last_name).to eq("Rivera-Cole")
+      expect(person.legal_first_name).to eq("Mary-Katherine")
+    end
+
     it "handles nil values" do
-      person = create(:person, first_name: "Jane", last_name: "Doe",
+      person = create(:person, user: nil, first_name: "Jane", last_name: "Doe",
                        email: nil, email_2: nil,
                        created_by: admin, updated_by: admin)
       expect(person.email).to be_nil
@@ -148,19 +157,35 @@ RSpec.describe Person, type: :model do
       end
 
       it "allows same email with different name" do
-        create(:person, first_name: "Jane", last_name: "Doe", email: "jane@test.org",
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: "jane@test.org",
                created_by: admin, updated_by: admin)
-        different_name = build(:person, first_name: "John", last_name: "Smith", email: "jane@test.org",
+        different_name = build(:person, user: nil, first_name: "John", last_name: "Smith", email: "jane@test.org",
                                created_by: admin, updated_by: admin)
         expect(different_name).to be_valid
       end
 
       it "treats blank and nil emails as equivalent" do
-        create(:person, first_name: "Jane", last_name: "Doe", email: nil,
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil,
                created_by: admin, updated_by: admin)
         duplicate = build(:person, first_name: "Jane", last_name: "Doe", email: "",
                           created_by: admin, updated_by: admin)
         expect(duplicate).not_to be_valid
+      end
+
+      it "treats an en dash in the name as the same person" do
+        create(:person, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@test.org",
+               created_by: admin, updated_by: admin)
+        duplicate = build(:person, first_name: "Jamie", last_name: "Rivera\u2013Cole", email: "jamie@test.org",
+                          created_by: admin, updated_by: admin)
+        expect(duplicate).not_to be_valid
+      end
+
+      it "is enforced by a unique index when validations are skipped" do
+        create(:person, first_name: "Jane", last_name: "Doe", email: "jane@test.org",
+               created_by: admin, updated_by: admin)
+        duplicate = build(:person, first_name: "jane", last_name: "doe", email: "JANE@test.org",
+                          created_by: admin, updated_by: admin)
+        expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique, /#{Person::NAME_AND_EMAIL_INDEX}/)
       end
 
       it "allows updating the existing record itself" do
@@ -456,6 +481,15 @@ RSpec.describe Person, type: :model do
       person = Person.create!(first_name: "Solo", last_name: "Person",
                               created_by: admin, updated_by: admin)
       expect(person.user).to be_nil
+    end
+
+    it "returns the most recently updated login when several point at the person" do
+      person = create(:person, user: nil)
+      create(:user, person: person, updated_at: 2.days.ago)
+      recent = create(:user, person: person, updated_at: 1.hour.ago)
+      create(:user, person: person, updated_at: 1.week.ago)
+
+      expect(person.reload.user).to eq(recent)
     end
   end
 
@@ -936,11 +970,61 @@ RSpec.describe Person, "scholarship index helpers" do
       expect(person.communications_scope).to contain_exactly(to_login, to_primary, to_secondary)
     end
 
+    it "still includes a communication after the person changes their email" do
+      person = create(:person, user: nil, email: "old@example.com", email_2: nil)
+      notification = create(:notification, recipient_email: "old@example.com")
+      expect(notification.person).to eq(person)
+
+      person.update!(email: "new@example.com")
+
+      expect(person.reload.communications_scope).to include(notification)
+    end
+
     it "returns none when the person has no addresses on file" do
       person = create(:person, user: nil, email: nil, email_2: nil)
       create(:notification, recipient_email: "someone@example.com")
 
       expect(person.communications_scope).to be_empty
+    end
+  end
+
+  describe "FileMaker codes" do
+    it "parses a trimmed, de-duplicated list from the column" do
+      person = build(:person, filemaker_code: " 00006 , 00012,00006 ")
+
+      expect(person.filemaker_codes).to eq(%w[00006 00012])
+    end
+
+    it "is empty when the column is blank" do
+      expect(build(:person, filemaker_code: nil).filemaker_codes).to eq([])
+    end
+
+    it "combines mixed strings and lists into one sorted normalized value" do
+      expect(Person.join_filemaker_codes("00012, 00006", " 00031 ", nil, "00006")).to eq("00006, 00012, 00031")
+    end
+
+    it "returns nil when there is nothing to combine" do
+      expect(Person.join_filemaker_codes(nil, "")).to be_nil
+    end
+  end
+
+  describe ".find_by_any_email" do
+    it "matches on email, email_2, or the login email, case-insensitively" do
+      by_primary = create(:person, user: nil, email: "primary@example.com", email_2: nil)
+      by_secondary = create(:person, user: nil, email: "p2@example.com", email_2: "secondary@example.com")
+      by_login = create(:person)
+
+      expect(Person.find_by_any_email("PRIMARY@example.com")).to eq(by_primary)
+      expect(Person.find_by_any_email("secondary@example.com")).to eq(by_secondary)
+      expect(Person.find_by_any_email(by_login.user.email.upcase)).to eq(by_login)
+    end
+
+    it "returns nil for a blank or unknown address" do
+      create(:person, user: nil, email: "known@example.com", email_2: nil)
+
+      expect(Person.find_by_any_email("")).to be_nil
+      expect(Person.find_by_any_email(nil)).to be_nil
+      expect(Person.find_by_any_email("nobody@example.com")).to be_nil
     end
   end
 end

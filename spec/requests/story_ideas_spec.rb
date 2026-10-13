@@ -72,12 +72,46 @@ RSpec.describe "/story_ideas", type: :request do
         expect(page).to have_link(org.name, href: organization_path(org))
         expect(page).to have_link(creator.name, href: person_path(creator_person))
       end
+
+      it "stars the primary sector and category" do
+        story_idea = create(:story_idea)
+        story_idea.sectorable_items.create!(sector: create(:sector, :published), is_primary: true)
+        population = create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)
+        story_idea.categorizable_items.create!(category: create(:category, :published, category_type: population), is_primary: true)
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("i.fa-star[title='Primary sector']")
+        expect(page).to have_css("i.fa-star[title='Primary category']")
+      end
     end
 
     describe "GET /new" do
       it "renders successfully" do
         get new_story_idea_url
         expect(response).to be_successful
+      end
+    end
+
+    describe "POST /create with a primary sector and category" do
+      let(:health) { create(:sector, :published, name: "Healthcare") }
+      let(:education) { create(:sector, :published, name: "Education") }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE) }
+      let(:children) { create(:category, :published, name: "Children", category_type: population) }
+      let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
+
+      it "marks the starred sector and category primary" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(
+          sector_ids: [ health.id, education.id ], primary_sector_id: health.id,
+          category_ids: [ children.id, teens.id ], primary_category_id: children.id
+        ) }
+
+        story_idea = StoryIdea.last
+        expect(story_idea.primary_sector).to eq(health)
+        expect(story_idea.sectorable_items.where(is_primary: true).count).to eq(1)
+        expect(story_idea.primary_category).to eq(children)
+        expect(story_idea.categorizable_items.where(is_primary: true).count).to eq(1)
       end
     end
 
@@ -146,6 +180,13 @@ RSpec.describe "/story_ideas", type: :request do
         story_idea = StoryIdea.order(:id).last
         expect(story_idea).to be_present
       end
+
+      it "creates a StoryIdea without an organization" do
+        expect {
+          post story_ideas_url, params: { story_idea: valid_attributes.except(:organization_id) }
+        }.to change(StoryIdea, :count).by(1)
+        expect(StoryIdea.order(:id).last.organization).to be_nil
+      end
     end
   end
 
@@ -184,6 +225,23 @@ RSpec.describe "/story_ideas", type: :request do
         expect(StoryIdea.last.created_by).to eq(regular_user)
       end
 
+      it "requires an organization" do
+        expect {
+          post story_ideas_url, params: { story_idea: valid_attributes.except(:organization_id) }
+        }.not_to change(StoryIdea, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it "persists funder_only when the submitter checks the box" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(funder_only: "1") }
+        expect(StoryIdea.last).to be_funder_only
+      end
+
+      it "defaults funder_only to false when the box is left unchecked" do
+        post story_ideas_url, params: { story_idea: valid_attributes }
+        expect(StoryIdea.last).not_to be_funder_only
+      end
+
       it "creates admin and submitter notifications and enqueues mailer jobs" do
         clear_enqueued_jobs
 
@@ -204,6 +262,34 @@ RSpec.describe "/story_ideas", type: :request do
 
         expect(enqueued_jobs.map { |j| j[:job] })
           .to include(NotificationMailerJob)
+      end
+    end
+
+    describe "primary sector and category" do
+      let(:health) { create(:sector, :published, name: "Healthcare") }
+      let(:education) { create(:sector, :published, name: "Education") }
+      let(:population) { create(:category_type, :published, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE) }
+      let(:children) { create(:category, :published, name: "Children", category_type: population) }
+      let(:teens) { create(:category, :published, name: "Teens", category_type: population) }
+
+      it "marks the starred sector and story population primary" do
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(
+          sector_ids: [ health.id, education.id ], primary_sector_id: health.id,
+          category_ids: [ children.id, teens.id ], primary_category_id: children.id
+        ) }
+
+        story_idea = StoryIdea.last
+        expect(story_idea.sectors).to contain_exactly(health, education)
+        expect(story_idea.primary_sector).to eq(health)
+        expect(story_idea.primary_category).to eq(children)
+      end
+
+      it "offers the star on the share form" do
+        sector = create(:sector, :published)
+
+        get new_story_idea_url
+
+        expect(response.body).to include("story_idea_primary_sector_id_#{sector.id}")
       end
     end
 

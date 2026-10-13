@@ -77,13 +77,16 @@ export default class extends Controller {
       });
     // Index 0 is the neutral state only for a select with a placeholder first
     // option. One rendered pre-selected (no include_blank) leads with a real value,
-    // so it says what it clears to via data-clear-to.
+    // so it says what it clears to via data-clear-to. A multiselect clears to no
+    // selection, since its index 0 is a real option.
     this.element.querySelectorAll("select").forEach((select) => {
       const { clearTo } = select.dataset;
-      if (clearTo === undefined) {
-        select.selectedIndex = 0;
-      } else {
+      if (clearTo !== undefined) {
         select.value = clearTo;
+      } else if (select.multiple) {
+        select.selectedIndex = -1;
+      } else {
+        select.selectedIndex = 0;
       }
     });
     this.element

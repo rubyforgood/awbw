@@ -368,6 +368,79 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     end
   end
 
+  describe "billing (Pay) records" do
+    def customer_with_charge(person, processor_id:, default: true)
+      customer = Pay::Customer.create!(owner: person, processor: "fake", processor_id: processor_id, default: default)
+      Pay::Charge.create!(customer: customer, amount: 5_000, processor_id: "ch_#{processor_id}",
+                          object: { "paid" => false, "refunds" => { "data" => [] } })
+      customer
+    end
+
+    it "reassigns the deleted person's Pay customer (and its charges) to the survivor" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      customer = customer_with_charge(delete_rec, processor_id: "cus_delete")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(customer.reload.owner_id).to eq(keep.id)
+      expect(keep.reload.pay_customers).to include(customer)
+      expect(keep.pay_charges.count).to eq(1)
+    end
+
+    it "keeps both people's Pay customers and charges on the survivor, with the redundant one soft-deleted" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      keep_customer = customer_with_charge(keep, processor_id: "cus_keep")
+      delete_customer = customer_with_charge(delete_rec, processor_id: "cus_delete")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.pay_customers).to contain_exactly(keep_customer, delete_customer)
+      expect(keep.pay_charges.count).to eq(2)
+      expect(keep.pay_customers.active).to contain_exactly(keep_customer)
+      expect(delete_customer.reload.deleted_at).to be_present
+    end
+
+    it "leaves the survivor with a single active default customer (its own) when both were default" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      keep_customer = customer_with_charge(keep, processor_id: "cus_keep", default: true)
+      delete_customer = customer_with_charge(delete_rec, processor_id: "cus_delete", default: true)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.pay_customers.active.where(default: true)).to contain_exactly(keep_customer)
+      expect(delete_customer.reload.default).to be false
+      expect(delete_customer.deleted_at).to be_present
+    end
+
+    it "keeps the subscription-bearing customer active and default over the survivor's own empty one" do
+      keep = create(:person)
+      delete_rec = create(:person)
+      keep_customer = customer_with_charge(keep, processor_id: "cus_keep", default: true)
+      delete_customer = Pay::Customer.create!(owner: delete_rec, processor: "fake",
+        processor_id: "cus_sub", default: true)
+      Pay::Subscription.create!(customer: delete_customer, name: "default", processor_id: "sub_1",
+        processor_plan: "membership", status: "active", quantity: 1)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.payment_processor).to eq(delete_customer.reload)
+      expect(delete_customer.default).to be true
+      expect(delete_customer.deleted_at).to be_nil
+      expect(keep_customer.reload.deleted_at).to be_present
+    end
+  end
+
   describe "only the surviving license carries CE (losing placeholder is empty)" do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }
@@ -381,6 +454,103 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       expect(response.body).to include("merged successfully")
       expect(keep.reload.professional_licenses.count).to eq(1)
       expect(keep.professional_licenses.first.continuing_education_registrations.count).to eq(1)
+    end
+  end
+
+  describe "addresses" do
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+
+    def person_address(person, primary: false, **overrides)
+      attrs = {
+        street_address: "1 Main St", city: "Springfield", state: "CA", zip_code: "90001",
+        country: "USA", county: "LA", district: nil, address_type: "work", locality: "LA City"
+      }.merge(overrides)
+      create(:address, addressable: person, primary: primary, **attrs)
+    end
+
+    it "folds identical addresses into one on the survivor" do
+      person_address(keep)
+      person_address(delete_rec)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      expect(keep.reload.addresses.count).to eq(1)
+    end
+
+    it "keeps addresses that differ in any detail" do
+      person_address(keep)
+      person_address(delete_rec, street_address: "2 Other St")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      expect(keep.reload.addresses.count).to eq(2)
+    end
+
+    it "keeps the survivor's primary and demotes the incoming address" do
+      keep_address = person_address(keep, primary: true)
+      person_address(delete_rec, street_address: "2 Other St", primary: true)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      primaries = keep.reload.addresses.where(primary: true)
+      expect(primaries.count).to eq(1)
+      expect(primaries.first.id).to eq(keep_address.id)
+    end
+
+    it "keeps the active address when the survivor's own copy is inactive" do
+      stale = person_address(keep, inactive: true)
+      person_address(delete_rec)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      addresses = keep.reload.addresses
+      expect(addresses.count).to eq(1)
+      expect(addresses.first.id).not_to eq(stale.id)
+      expect(addresses.active.count).to eq(1)
+    end
+
+    it "moves a folded address's contact method onto the surviving address" do
+      keep_address = person_address(keep)
+      dupe_address = person_address(delete_rec)
+      method = create(:contact_method, contactable: delete_rec, address: dupe_address)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      expect(method.reload.address_id).to eq(keep_address.id)
+    end
+  end
+
+  describe "contact methods" do
+    let!(:keep) { create(:person) }
+    let!(:delete_rec) { create(:person) }
+
+    it "folds identical contact methods and keeps one primary per kind" do
+      keep_method = create(:contact_method, contactable: keep, value: "555-1000", kind: "phone", primary: true)
+      create(:contact_method, contactable: delete_rec, value: "555-1000", kind: "phone")
+      create(:contact_method, contactable: delete_rec, value: "555-2000", kind: "phone", primary: true)
+
+      merge!(keep: keep, delete: delete_rec)
+
+      follow_redirect!
+      expect(response.body).to include("merged successfully")
+      methods = keep.reload.contact_methods
+      expect(methods.pluck(:value)).to contain_exactly("555-1000", "555-2000")
+      primaries = methods.where(primary: true)
+      expect(primaries.count).to eq(1)
+      expect(primaries.first.id).to eq(keep_method.id)
+    end
+
+    it "keeps the active phone when the survivor's own copy is inactive" do
+      create(:contact_method, contactable: keep, value: "555-1000", kind: "phone", inactive: true)
+      create(:contact_method, contactable: delete_rec, value: "555-1000", kind: "phone")
+
+      merge!(keep: keep, delete: delete_rec)
+
+      expect(keep.reload.contact_methods.count).to eq(1)
+      expect(keep.phone_number).to eq("555-1000")
     end
   end
 end

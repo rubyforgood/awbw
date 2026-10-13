@@ -7,12 +7,12 @@ RSpec.describe "stories/edit", type: :view do
   before(:each) do
     assign(:story, story.decorate)
     assign(:windows_types, [])
-    assign(:workshops, [])
     assign(:organizations, [])
     assign(:users, [])
     assign(:people, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
+    assign(:story_audience_rows, [])
     allow(view).to receive(:current_user).and_return(user)
   end
 
@@ -24,7 +24,7 @@ RSpec.describe "stories/edit", type: :view do
 
       assert_select "select[name=?]", "story[organization_id]"
 
-      assert_select "select[name=?]", "story[workshop_id]"
+      assert_select "select[name=?]", "story[story_workshops_attributes][0][workshop_id]"
 
       assert_select "input[name=?][type=?]", "story[rhino_body]", "hidden"
 

@@ -1,0 +1,41 @@
+<%# Invoicee picker plus the controls for what actually prints. `invoice` may be a new record. %>
+<div data-controller="invoicee" class="space-y-4">
+  <%= f.input :invoicee_sgid,
+        collection: invoice.invoicee.present? ? [ [ invoice.invoicee.compound_search_label[:label] || "", invoice.invoicee_sgid ] ] : [],
+        selected: invoice.invoicee_sgid,
+        required: true,
+        input_html: {
+          class: "bg-white",
+          data: { controller: "remote-select", invoicee_target: "invoiceeSelect", remote_select_model_value: "person_or_organization" }
+        },
+        prompt: "Search people and organizations",
+        label: "Invoicee",
+        hint: "The person or organization being billed." %>
+
+  <div class="hidden" data-invoicee-target="addressContainer">
+    <%= f.input :bill_to_address_id,
+          as: :select,
+          collection: invoice.bill_to_address.present? ? [ [ invoice.bill_to_address.name, invoice.bill_to_address_id ] ] : [],
+          include_blank: "No address",
+          label: "Address",
+          input_html: { class: "bg-white", data: { invoicee_target: "addressSelect" } } %>
+  </div>
+
+  <%= f.input :hide_invoicee,
+        as: :boolean,
+        label: "Hide invoicee from invoice",
+        hint: "The invoicee is still linked to the invoice, but its name is not printed.",
+        input_html: { class: "h-4 w-4 rounded border-gray-300" } %>
+
+  <%= f.input :hide_address,
+        as: :boolean,
+        label: "Hide address from invoice",
+        hint: "The selected address is still linked to the invoice, but it is not printed.",
+        input_html: { class: "h-4 w-4 rounded border-gray-300" } %>
+
+  <%= f.input :bill_to_additional_info,
+        as: :text,
+        label: "Additional info",
+        required: false,
+        input_html: { rows: 3, class: "bg-white" } %>
+</div>

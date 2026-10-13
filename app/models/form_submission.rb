@@ -1,4 +1,5 @@
 class FormSubmission < ApplicationRecord
+  include Communicable
   # Optional so a public form whose name/email questions are not required can
   # record an anonymous submission with no identity (see PublicFormSubmission).
   belongs_to :person, optional: true
@@ -14,8 +15,10 @@ class FormSubmission < ApplicationRecord
   # outlives the submission — matching how reports and workshop logs keep theirs.
   has_many :quotable_item_quotes, as: :quotable, dependent: :nullify, inverse_of: :quotable
   has_many :quotes, through: :quotable_item_quotes
+  has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
 
   accepts_nested_attributes_for :form_answers
+  accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
 
   # Raised when a file-upload answer's value isn't a usable upload (tampered/stale
   # signed id); callers rescue it into a form error rather than a 500.
@@ -116,8 +119,29 @@ class FormSubmission < ApplicationRecord
   # signal the index filters on.
   def self.org_name_answers
     FormAnswer.joins(:form_field)
-      .where(form_fields: { field_identifier: "organization_name" })
+      .where(form_fields: { field_identifier: FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER })
       .where.not(submitted_answer: [ nil, "" ])
+  end
+
+  # The org-related answers on this submission, shaped the way
+  # OrganizationServices::LinkSubmittedOrganization reads them. Shared by the
+  # admin linking editor and the auto-processing a public submission runs.
+  def org_entry
+    answers = answers_by_identifier
+    read = ->(identifier) { answers[identifier].presence }
+    {
+      org_name: read.call(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER),
+      position: read.call(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
+      website: read.call("organization_website"),
+      organization_type: read.call("organization_type"),
+      address: {
+        street_address: read.call("organization_street"),
+        city: read.call("organization_city"),
+        state: read.call("organization_state"),
+        zip_code: read.call("organization_zip"),
+        country: read.call("organization_country")
+      }
+    }
   end
 
   # The registration-org row a submission is pinned to — the link public
@@ -156,7 +180,7 @@ class FormSubmission < ApplicationRecord
   scope :account_status, ->(value) {
     with_user = User.where.not(person_id: nil).select(:person_id)
     has_access = User.has_access.where.not(person_id: nil).select(:person_id)
-    invited = User.where.not(person_id: nil).where.not(welcome_instructions_sent_at: nil).select(:person_id)
+    invited = User.invited.where.not(person_id: nil).select(:person_id)
     case value
     when "none" then where.not(person_id: with_user)
     when "has_access" then where(person_id: has_access)
@@ -388,6 +412,11 @@ class FormSubmission < ApplicationRecord
   # source via `quotable.title` and `polymorphic_path(quotable)`.
   def title
     "#{form&.display_name} submission ##{id}"
+  end
+
+  # A communication logged on a submission is addressed to whoever submitted it.
+  def communications_email
+    person&.preferred_email
   end
 
   private

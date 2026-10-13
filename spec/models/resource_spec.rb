@@ -135,4 +135,23 @@ RSpec.describe Resource do
       expect(file).to be_attached
     end
   end
+
+  describe ".ce_certificate_signature_file" do
+    it "returns nil when no matching record exists" do
+      expect(Resource.ce_certificate_signature_file).to be_nil
+    end
+
+    it "returns nil when the record exists but has no attached image" do
+      create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE)
+
+      expect(Resource.ce_certificate_signature_file).to be_nil
+    end
+
+    it "returns the attached file when the record has one" do
+      resource = create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE)
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.ce_certificate_signature_file).to be_attached
+    end
+  end
 end

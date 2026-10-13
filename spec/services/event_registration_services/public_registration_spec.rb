@@ -50,9 +50,9 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     def register_with(position:)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands"
       )
-      params[field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER)] = position if position
+      params[field_id(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER)] = position if position
       described_class.call(event: event, registration_form: form, form_params: params)
       Person.find_by(email: "sam@example.com")
     end
@@ -84,8 +84,8 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     it "links the created affiliations to the organization address built from the form" do
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
-        field_id(described_class::ORGANIZATION_POSITION_IDENTIFIER) => "Counselor",
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands",
+        field_id(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER) => "Counselor",
         field_id("organization_street") => "1 Main St",
         field_id("organization_city") => "Austin",
         field_id("organization_state") => "TX",
@@ -132,7 +132,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     def register_with_org(org_name)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => org_name
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => org_name
       )
       described_class.call(event: event, registration_form: form, form_params: params)
       event.event_registrations.find_by!(registrant: Person.find_by(email: "sam@example.com"))
@@ -386,7 +386,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       def register_with_org(extra)
         params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-          field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands"
+          field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands"
         ).merge(extra)
         described_class.call(event: event, registration_form: form, form_params: params)
       end
@@ -508,7 +508,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
     def register_with_organization_type(value)
       params = base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com").merge(
-        field_id(described_class::ORGANIZATION_NAME_IDENTIFIER) => "Helping Hands",
+        field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands",
         field_id("organization_type") => value
       )
       described_class.call(event: event, registration_form: form, form_params: params)
@@ -599,6 +599,56 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(EventRegistration.last.registrant).to eq(existing)
     end
 
+    it "matches a person whose email is stored as their secondary email" do
+      existing = create(:person, first_name: "Jamie", last_name: "Rivera-Cole",
+                                 email: "jamie.work@example.com", email_2: "jamie@example.com")
+
+      params = base_form_params(first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "matches a person whose email is only on their login" do
+      existing = create(:person, user: nil, first_name: "Jamie", last_name: "Rivera-Cole", email: nil)
+      create(:user, person: existing, email: "jamie@example.com")
+
+      params = base_form_params(first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "matches when the registrant types an en dash in a hyphenated last name" do
+      existing = create(:person, first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")
+
+      params = base_form_params(first_name: "Jamie", last_name: "Rivera\u2013Cole", email: "jamie@example.com")
+
+      expect {
+        described_class.call(event: event, registration_form: form, form_params: params)
+      }.not_to change(Person, :count)
+
+      expect(EventRegistration.last.registrant).to eq(existing)
+    end
+
+    it "reports an already-registered error when a simultaneous submission created the person first" do
+      allow(Person).to receive(:create!).and_raise(
+        ActiveRecord::RecordNotUnique, "Duplicate entry for key 'people.#{Person::NAME_AND_EMAIL_INDEX}'"
+      )
+
+      result = described_class.call(event: event, registration_form: form,
+                                    form_params: base_form_params(first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com"))
+
+      expect(result.success?).to be false
+      expect(result.errors).to eq([ "You are already registered for this event." ])
+    end
+
     it "still creates a new person when the email matches but it is a different name" do
       create(:person, first_name: "Bob", last_name: "Smith", email: "shared@example.com")
 
@@ -621,6 +671,22 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       }.not_to change(Person, :count)
 
       expect(Person.where(email: "rae@example.com").count).to eq(1)
+    end
+
+    it "updates the returning registrant's contact details with the latest answers" do
+      existing = create(:person, first_name: "Rae", last_name: "Fox", email: "rae@example.com",
+                                 pronouns: "he/him", email_2: "old@example.com")
+
+      described_class.call(event: event, registration_form: form, form_params: params.merge(
+        field_id("pronouns") => "they/them",
+        field_id("secondary_email") => "rae2@example.com",
+        field_id("secondary_email_type") => "Personal"
+      ))
+
+      existing.reload
+      expect(existing.pronouns).to eq("they/them")
+      expect(existing.email_2).to eq("rae2@example.com")
+      expect(existing.email_2_type).to eq("personal")
     end
 
     it "keeps a single event registration but appends a second form submission" do
@@ -698,7 +764,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
     end
 
-    it "demotes a prior primary that the registrant did not re-select as primary" do
+    it "reassigns the primary but keeps other sectors when only a primary is submitted" do
       person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
       person.sectorable_items.create!(sector: additional_sector, is_primary: true)
 
@@ -713,6 +779,24 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       person.reload
       expect(person.sectorable_items.find_by(sector: primary_sector).is_primary).to be true
       expect(person.sectorable_items.find_by(sector: additional_sector).is_primary).to be false
+    end
+
+    it "overwrites the person's sectors when both a primary and additional set are submitted" do
+      stale = create(:sector, name: "Housing")
+      person = create(:person, first_name: "Pat", last_name: "Lee", email: "pat@example.com")
+      person.sectorable_items.create!(sector: stale, is_primary: false)
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id("primary_sector") => primary_sector.id.to_s,
+          field_id("additional_sectors") => [ additional_sector.id.to_s ]
+        )
+      )
+
+      person.reload
+      expect(person.sectors).to contain_exactly(primary_sector, additional_sector)
     end
   end
 
@@ -733,6 +817,42 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       expect(result.success?).to be true
       person = result.event_registration.registrant
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "reassigns the primary but keeps other age groups when only a primary is submitted" do
+      person = create(:person, first_name: "Al", last_name: "Ng", email: "al@example.com")
+      person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
+          field_id("primary_age_group") => [ young.id.to_s ]
+        )
+      )
+
+      person.reload
+      expect(person.primary_age_groups).to contain_exactly(young)
+      expect(person.additional_age_groups).to contain_exactly(teen)
+    end
+
+    it "overwrites the person's age groups when both a primary and additional set are submitted" do
+      older = create(:category, :published, category_type: age_type, name: "18+")
+      person = create(:person, first_name: "Al", last_name: "Ng", email: "al@example.com")
+      person.tag_age_groups(primary_ids: [ older.id ], additional_ids: [])
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Al", last_name: "Ng", email: "al@example.com").merge(
+          field_id("primary_age_group") => [ young.id.to_s ],
+          field_id("additional_age_groups") => [ teen.id.to_s ]
+        )
+      )
+
+      person.reload
       expect(person.primary_age_groups).to contain_exactly(young)
       expect(person.additional_age_groups).to contain_exactly(teen)
     end

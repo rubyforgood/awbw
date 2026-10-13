@@ -9,6 +9,7 @@ RSpec.describe "stories/new", type: :view do
     assign(:people, [])
     assign(:sectors, [])
     assign(:categories_grouped, [])
+    assign(:story_audience_rows, [])
     assign(:story_ideas, [])
     allow(view).to receive(:current_user).and_return(user)
     allow(view).to receive(:allowed_to?).and_return(false)
@@ -22,7 +23,6 @@ RSpec.describe "stories/new", type: :view do
     assert_select "form[action=?][method=?]", stories_path, "post" do
       assert_select "select[name=?]", "story[windows_type_id]"
       assert_select "select[name=?]", "story[organization_id]"
-      assert_select "select[name=?]", "story[workshop_id]"
       assert_select "input[name=?][type=?]", "story[rhino_body]", "hidden"
       assert_select "textarea[name=?]", "story[youtube_url]"
       assert_select "select[name=?]", "story[author_id]"
@@ -43,10 +43,10 @@ RSpec.describe "stories/new", type: :view do
       Story.new(
         rhino_body: story_idea.body,
         organization_id: story_idea.organization_id,
-        workshop_id: story_idea.workshop_id,
         windows_type_id: story_idea.windows_type_id,
         youtube_url: story_idea.youtube_url,
-        story_idea_id: story_idea.id
+        story_idea_id: story_idea.id,
+        story_workshops_attributes: [ { workshop_id: story_idea.workshop_id } ]
       )
     end
 
@@ -71,7 +71,7 @@ RSpec.describe "stories/new", type: :view do
       render
 
       assert_select "form[action=?]", stories_path do
-        assert_select "select[name=?]", "story[workshop_id]" do
+        assert_select "select[name=?]", "story[story_workshops_attributes][0][workshop_id]" do
           assert_select "option[selected][value=?]", story_idea.workshop_id.to_s
         end
       end
@@ -169,22 +169,23 @@ RSpec.describe "stories/new", type: :view do
 
   context "tags display" do
     let(:story_population_type) do
-      create(:category_type, :published,
-             name: "StoryPopulation",
-             story_specific: true,
-             display_text: "Who is this story about?")
+      create(:category_type, :published, name: "StoryPopulation", story_specific: true)
     end
 
-    let(:general_type) do
-      create(:category_type, :published, name: "AgeRange")
-    end
+    let(:age_range_type) { create(:category_type, :published, name: "AgeRange") }
+
+    let(:general_type) { create(:category_type, :published, name: "ArtType") }
 
     let(:population_category) do
-      create(:category, :published, name: "Adults", category_type: story_population_type)
+      create(:category, :published, name: "Self", category_type: story_population_type)
+    end
+
+    let(:age_range_category) do
+      create(:category, :published, name: "Teens", category_type: age_range_type)
     end
 
     let(:general_category) do
-      create(:category, :published, name: "Children 0-5", category_type: general_type)
+      create(:category, :published, name: "Clay", category_type: general_type)
     end
 
     let(:sector) { create(:sector, :published, name: "Domestic Violence") }
@@ -192,10 +193,9 @@ RSpec.describe "stories/new", type: :view do
     before do
       assign(:story, Story.new)
       assign(:sectors, [ sector ])
-      assign(:categories_grouped, [
-         [ story_population_type, [ population_category ] ],
-        [ general_type, [ general_category ] ]
-      ])
+      assign(:story_audience_label, "Who is this story about?")
+      assign(:story_audience_rows, [ [ age_range_category ], [ population_category ] ])
+      assign(:categories_grouped, [ [ general_type, [ general_category ] ] ])
     end
 
     it "displays sector question text instead of just 'Sectors'" do
@@ -212,40 +212,27 @@ RSpec.describe "stories/new", type: :view do
       expect(rendered).to include("Domestic Violence")
     end
 
-    it "displays story-specific category type with display_label" do
+    it "shows age ranges, then story populations, as one starrable tag set" do
       render
 
       expect(rendered).to include("Who is this story about?")
-    end
-
-    it "displays story-specific category checkboxes" do
-      render
-
-      assert_select "input[type=checkbox][name=?][value=?]",
-                    "story[category_ids][]", population_category.id.to_s
-      expect(rendered).to include("Adults")
+      audience_grid = css_select("[data-controller='primary-tag']").find { |grid| grid.at_css("input[name='story[primary_category_id]']") }
+      rows = audience_grid.css("> div").map { |row| row.css("input[name='story[primary_category_id]']").map { |input| input["value"] } }
+      expect(rows).to eq([ [ age_range_category.id.to_s ], [ population_category.id.to_s ] ])
     end
 
     it "displays general category type with sentence-cased name" do
       render
 
-      expect(rendered).to include("Age range")
+      expect(rendered).to include("Art type")
     end
 
-    it "displays general category checkboxes" do
+    it "displays general category checkboxes without a star" do
       render
 
       assert_select "input[type=checkbox][name=?][value=?]",
                     "story[category_ids][]", general_category.id.to_s
-      expect(rendered).to include("Children 0-5")
-    end
-
-    it "shows story-specific types before general types" do
-      render
-
-      population_pos = rendered.index("Who is this story about?")
-      age_range_pos = rendered.index("Age range")
-      expect(population_pos).to be < age_range_pos
+      assert_select "input[name=?][value=?]", "story[primary_category_id]", general_category.id.to_s, count: 0
     end
   end
 end

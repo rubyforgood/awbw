@@ -1,0 +1,55 @@
+<% content_for(:page_title, "Edit Invoice") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-3xl">
+  <div class="mb-6 flex flex-wrap items-center gap-2">
+    <%= link_to "← Invoices", invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to invoice_path(@invoice), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+      View invoice <i class="fa-solid fa-arrow-right text-xs"></i>
+    <% end %>
+  </div>
+
+  <h1 class="text-primary mb-6 font-display text-2xl font-semibold">Edit Invoice</h1>
+
+  <%= simple_form_for @invoice, url: invoice_path(@invoice) do |f| %>
+    <%= render "shared/errors", resource: f.object %>
+
+    <%= render "invoicee_fields", f: f, invoice: @invoice %>
+
+    <%= f.input :attention_person_id,
+          collection: @invoice.attention_person_id.present? ? [ [ @invoice.attention_person&.compound_search_label&.dig(:label) || "", @invoice.attention_person_id ] ] : [],
+          selected: @invoice.attention_person_id,
+          required: false,
+          input_html: {
+            class: "bg-white",
+            data: {
+              controller: "remote-select",
+              remote_select_model_value: "person"
+            }
+          },
+          prompt: "Search a person for attention",
+          label: "Attention (optional)",
+          hint: "Optional person to receive this invoice." %>
+
+    <%= f.input :date,
+          as: :date,
+          html5: true,
+          label: "Invoice date",
+          required: true,
+          input_html: { class: "bg-white" } %>
+
+    <%= f.input :number,
+          label: "Invoice number",
+          required: true,
+          input_html: { class: "bg-white" } %>
+
+    <%= render "line_items_fields", f: f %>
+
+    <div class="mt-6 flex items-center gap-3 border-t border-gray-200 pt-6">
+      <div class="ml-auto flex items-center gap-3">
+        <%= link_to "Cancel", invoice_path(@invoice), class: button_classes(:secondary_outline) %>
+        <%= f.button :submit, "Update Invoice", class: button_classes(:primary) %>
+      </div>
+    </div>
+  <% end %>
+</div>

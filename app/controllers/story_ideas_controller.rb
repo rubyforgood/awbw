@@ -5,8 +5,8 @@ class StoryIdeasController < ApplicationController
   def index
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
-    base_scope = authorized_scope(StoryIdea.includes(:windows_type, :organization, :workshop, :author, :updated_by,
-                                                     created_by: :person))
+    base_scope = authorized_scope(StoryIdea.with_author_credit
+                                           .includes(:windows_type, :organization, :workshop, :updated_by))
     filtered = base_scope.search_by_params(params)
     @story_ideas = filtered.order(created_at: :desc)
                            .paginate(page: params[:page], per_page: per_page)
@@ -37,6 +37,7 @@ class StoryIdeasController < ApplicationController
     # Credit the submitter as the author, so the idea lists on their profile by
     # authorship like every other content type. An admin can reassign it later.
     @story_idea.author ||= current_user.person
+    @story_idea.organization_required = organization_required?
     authorize! @story_idea
 
     success = false
@@ -46,6 +47,7 @@ class StoryIdeasController < ApplicationController
         assign_associations(@story_idea)
         NotificationServices::CreateNotification.call(
           noticeable: @story_idea,
+          person: @story_idea.created_by&.person,
           kind: :idea_submitted,
           recipient_role: :person,
           recipient_email: @story_idea.created_by.email,
@@ -54,7 +56,7 @@ class StoryIdeasController < ApplicationController
           noticeable: @story_idea,
           kind: :idea_submitted_fyi,
           recipient_role: :admin,
-          recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+          recipient_email: Organization.programs_email,
           notification_type: 0)
         success = true
       end
@@ -85,6 +87,7 @@ class StoryIdeasController < ApplicationController
 
     StoryIdea.transaction do
       @story_idea.assign_attributes(story_idea_params.except(:images, :category_ids, :sector_ids))
+      @story_idea.organization_required = organization_required?
       if @story_idea.save
         assign_associations(@story_idea)
         success = true
@@ -120,18 +123,24 @@ class StoryIdeasController < ApplicationController
     @story_idea = StoryIdea.find(params[:id])
   end
 
+  def organization_required?
+    !current_user&.super_user?
+  end
+
   def story_idea_params
     params.require(:story_idea).permit(
       :title, :rhino_body, :youtube_url,
-      :permission_given, :author_credit_preference,
+      :permission_given, :funder_only, :author_credit_preference,
+      :co_author_id, :co_author_credit_preference, :spotlighted_facilitator_id,
       :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
       :created_by_id, :updated_by_id,
       category_ids: [],
       sector_ids: [],
+      story_idea_workshops_attributes: [ :id, :workshop_id, :external_workshop_title, :position, :_destroy ],
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ],
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
-      notifications_attributes: [ :id, :channel, :sender_id, :email_subject, :email_body_text, :direction, :responded, :noticeable_type, :noticeable_id, :_destroy ]
+      notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
     )
   end
 end

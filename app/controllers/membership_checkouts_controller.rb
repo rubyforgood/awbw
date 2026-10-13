@@ -29,7 +29,7 @@ class MembershipCheckoutsController < ApplicationController
   end
 
   def balance_checkout_session(person, membership, invoice)
-    metadata = { membership_id: membership.id }
+    metadata = stripe_metadata(membership_id: membership.id)
 
     person.payment_processor.checkout(
       mode: "payment",
@@ -49,7 +49,7 @@ class MembershipCheckoutsController < ApplicationController
   end
 
   def subscription_checkout_session(person, membership, invoice)
-    metadata = { membership_id: membership.id }
+    metadata = stripe_metadata(membership_id: membership.id)
     anchor = billing_cycle_anchor(invoice)
 
     person.payment_processor.checkout(

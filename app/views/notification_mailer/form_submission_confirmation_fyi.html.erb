@@ -23,7 +23,7 @@
     <% next if answer.submitted_answer.blank? %>
     <tr>
       <td style="padding: 6px 0; color: #6b7280; font-size: 14px; vertical-align: top;"><%= answer.question_name_when_answered.presence || answer.form_field&.name %></td>
-      <td style="padding: 6px 0; text-align: right; font-weight: 600; white-space: pre-line;"><%= answer.submitted_answer %></td>
+      <td style="padding: 6px 0; text-align: right; font-weight: 600; white-space: pre-line;"><%= resolve_answer_text(answer.form_field, answer.submitted_answer) %></td>
     </tr>
   <% end %>
 </table>

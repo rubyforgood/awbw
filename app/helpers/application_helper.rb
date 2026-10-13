@@ -5,27 +5,45 @@ module ApplicationHelper
     "text-gray-500 hover:text-gray-700"
   end
 
-  # Byline for an AuthorCreditable record. Links to the credited author's person
-  # profile when the credit resolves to a searchable person; otherwise renders
-  # plain text. The text always honors the credit preference (author_credit), so
-  # anonymous and legacy free-text credits never link to a profile.
+  # Hidden inputs carrying a params hash through a GET form, preserving array
+  # values as `key[]` so multi-value filters survive the round-trip (a plain
+  # hidden_field_tag would stringify the whole array into one broken value).
+  def hidden_filter_fields(params_hash)
+    safe_join(params_hash.flat_map do |key, value|
+      if value.is_a?(Array)
+        value.map { |item| hidden_field_tag("#{key}[]", item, id: nil) }
+      else
+        hidden_field_tag(key, value, id: nil)
+      end
+    end)
+  end
+
+  # Byline for an AuthorCreditable record. Links each credited author to their person
+  # profile when it's searchable; a non-searchable author renders as plain text. The
+  # names and the separator come from the record (`credited_name_for_person`,
+  # `CREDIT_SEPARATOR`), so this matches the plain-text credit everywhere else. Falls
+  # back to the plain author_credit label when the credit resolves to nobody linkable
+  # (anonymous, legacy free-text, or unattributed), so those never link to a profile.
   def credited_author_link(record, **link_options)
-    person = record.author_credit_person
-    if person&.profile_is_searchable
-      link_to record.author_credit, person_path(person), **link_options
-    else
-      record.author_credit
-    end
+    people = record.credited_author_people
+    return record.author_credit if people.empty?
+
+    safe_join(people.map { |person|
+      name = record.credited_name_for_person(person)
+      person.profile_is_searchable ? link_to(name, person_path(person), **link_options) : name
+    }, AuthorCreditable::CREDIT_SEPARATOR)
   end
 
   # The credited author as an admin edit-person card, for the workshop log /
   # monthly report / variation idea show pages where an admin wants to jump
-  # straight to editing the person. Falls back to the plain byline for viewers
-  # who can't edit people, and honors the credit preference: an anonymous credit
-  # has no person, so it stays plain text.
+  # straight to editing the person. Falls back to the plain byline (a profile
+  # link for anyone else, including an owner who can edit their own profile), and
+  # honors the credit preference: an anonymous credit has no person, so it stays
+  # plain text. Gated on manage? (admin-only) rather than edit?, which an owner
+  # now also passes.
   def credited_author_edit_button(record)
     person = record.author_credit_person
-    return credited_author_link(record) unless person && allowed_to?(:edit?, person)
+    return credited_author_link(record) unless person && allowed_to?(:manage?, person)
 
     person_edit_button(person,
                        display_name: record.author_credit,
@@ -47,6 +65,13 @@ module ApplicationHelper
   # Anything outside this allowlist is stripped by `sanitize`.
   FORM_LABEL_TAGS = %w[br a p span strong b em i u h1 h2 h3 h4 h5 h6 ul ol li font details summary].freeze
   FORM_LABEL_ATTRIBUTES = %w[href target rel style size color face open].freeze
+
+  # Phrasing-only subset for a field/section *name*, which renders inside a
+  # <label>, <legend>, heading, <span>, or <strong> — elements whose content
+  # model forbids block tags. A <ul>/<ol>/<p>/<h*> there is invalid HTML and the
+  # browser hoists it out, breaking the layout, so those are dropped here; inline
+  # formatting, links, and font styling stay.
+  FORM_LABEL_INLINE_TAGS = %w[br a span strong b em i u font].freeze
 
   # Tint a section-header icon (the rounded square in a card header) with its
   # domain theme colour only when that section actually holds data, falling back
@@ -72,6 +97,12 @@ module ApplicationHelper
   # unsafe properties/values), so admin-authored markup can't inject XSS.
   def form_label_html(text)
     sanitize(text.to_s, tags: FORM_LABEL_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
+  end
+
+  # Like form_label_html but for a name rendered in a phrasing-only context (a
+  # <label>, <legend>, heading, <span>, or <strong>) where block tags are invalid.
+  def form_label_inline_html(text)
+    sanitize(text.to_s, tags: FORM_LABEL_INLINE_TAGS, attributes: FORM_LABEL_ATTRIBUTES)
   end
 
   # Render an admin-authored custom message included in a reminder email with the
@@ -213,8 +244,9 @@ module ApplicationHelper
   end
 
   # Registration fee as plain text ("$1,500" or "Free"), or nil when no cost is set.
-  def event_fee_label(event)
+  def event_fee_label(event, discount_cents: 0)
     return unless event && event.cost_cents.present?
+    return dollars_from_cents([ event.cost_cents - discount_cents.to_i, 0 ].max) if discount_cents.to_i.positive?
     event.cost_cents.zero? ? "Free" : dollars_from_cents(event.cost_cents)
   end
 
@@ -410,6 +442,8 @@ module ApplicationHelper
   # they get a tailored destination via form_submission_link_path.
   def routable_path(record)
     return form_submission_link_path(record) if record.is_a?(FormSubmission)
+    # A profile change request has no show route; send viewers to the admin queue.
+    return profile_change_requests_path if record.is_a?(ProfileChangeRequest)
     polymorphic_path(record)
   rescue NoMethodError
     nil
@@ -655,6 +689,7 @@ module ApplicationHelper
       options << [ "Featured", :featured, false ]             if cols.include?("featured")
       options << [ "Publicly Visible", :publicly_visible, false ] if cols.include?("publicly_visible")
       options << [ "Publicly Featured", :publicly_featured, false ] if cols.include?("publicly_featured")
+      options << [ "Funder-only", :funder_only, true ] if cols.include?("funder_only")
     elsif authenticated
       options << [ "Not Featured", :not_featured, false ]     if cols.include?("featured")
       options << [ "Featured", :featured, false ]             if cols.include?("featured")

@@ -7,6 +7,7 @@ RSpec.describe "workshops/_show_associations", type: :view do
   before do
     assign(:workshop, workshop)
     assign(:workshop_variations, [])
+    assign(:workshop_stories, [])
     assign(:quotes, [])
     assign(:leader_spotlights, [])
     assign(:mentioners, {})

@@ -54,6 +54,9 @@ class Workshop < ApplicationRecord
            foreign_key: "workshop_child_id",
            dependent: :destroy
   has_many :workshop_variations, dependent: :restrict_with_error
+  has_many :story_workshops, inverse_of: :workshop, dependent: :destroy
+  accepts_nested_attributes_for :story_workshops, allow_destroy: true,
+    reject_if: ->(attrs) { attrs[:story_id].blank? }
 
   # has_many through
   has_many :age_ranges, -> { joins(:category_type).where(category_types: { name: "AgeRange" })
@@ -66,6 +69,7 @@ class Workshop < ApplicationRecord
   has_many :quotes, through: :quotable_item_quotes
   has_many :resources, through: :workshop_resources, source: :resource
   has_many :sectors, through: :sectorable_items
+  has_many :stories, through: :story_workshops
 
 
   # Images

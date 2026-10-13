@@ -84,6 +84,7 @@ module EventRegistrationServices
 
       NotificationServices::CreateNotification.call(
         noticeable: @event_registration,
+        person: @person,
         kind: "event_registration_confirmation",
         recipient_role: :person,
         recipient_email: email,
@@ -98,7 +99,7 @@ module EventRegistrationServices
         noticeable: @event_registration,
         kind: "event_registration_confirmation_fyi",
         recipient_role: :admin,
-        recipient_email: ENV.fetch("REPLY_TO_EMAIL", "programs@awbw.org"),
+        recipient_email: Organization.programs_email,
         notification_type: 0
       )
 

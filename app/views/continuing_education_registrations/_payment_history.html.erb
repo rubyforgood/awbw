@@ -47,13 +47,17 @@
         <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Amount allocated</dt>
         <dd class="mt-1 text-sm font-semibold text-gray-900 tabular-nums"><%= dollars_from_cents(paid_cents) %></dd>
       <% end %>
+      <% over_allocated = due_cents < 0 %>
       <% amount_due = due_cents > 0 %>
       <%= link_to allocations_path(allocatable_sgid: ce_registration.to_sgid.to_s, return_to: "ce_registration"),
             target: "_blank", rel: "noopener",
-            class: "rounded-lg border px-4 py-3 block transition hover:shadow-sm #{amount_due ? "border-amber-300 bg-amber-50 hover:border-amber-400" : "border-gray-300 bg-gray-50 hover:border-gray-400"}" do %>
-        <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase">Amount due</dt>
-        <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= amount_due ? "text-amber-700" : "text-gray-500" %>">
-          <% if amount_due %>
+            class: "rounded-lg border px-4 py-3 block transition hover:shadow-sm #{over_allocated ? "border-red-300 bg-red-50 hover:border-red-400" : amount_due ? "border-amber-300 bg-amber-50 hover:border-amber-400" : "border-gray-300 bg-gray-50 hover:border-gray-400"}" do %>
+        <dt class="text-xs font-medium tracking-wide text-gray-400 uppercase"><%= over_allocated ? "Over-allocated" : "Amount due" %></dt>
+        <dd class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums <%= over_allocated ? "text-red-700" : amount_due ? "text-amber-700" : "text-gray-500" %>">
+          <% if over_allocated %>
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <%= dollars_from_cents(-due_cents) %> over
+          <% elsif amount_due %>
             <i class="fa-solid fa-circle-exclamation"></i>
             <%= dollars_from_cents(due_cents) %>
           <% else %>

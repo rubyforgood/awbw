@@ -172,6 +172,37 @@ RSpec.describe User do
     end
   end
 
+  describe "#invited? and .invited" do
+    it "is true once welcome instructions have been sent" do
+      expect(build(:user, welcome_instructions_sent_at: Time.current).invited?).to be(true)
+    end
+
+    it "is false when welcome instructions were never sent" do
+      expect(build(:user, welcome_instructions_sent_at: nil).invited?).to be(false)
+    end
+
+    it ".invited returns only users who were sent welcome instructions" do
+      invited = create(:user, welcome_instructions_sent_at: Time.current)
+      create(:user, welcome_instructions_sent_at: nil)
+      expect(User.invited).to contain_exactly(invited)
+    end
+  end
+
+  describe "#clear_welcome_instructions_token!" do
+    it "clears the token but preserves the invited record" do
+      user = create(:user, welcome_instructions_sent_at: Time.current)
+      user.set_welcome_instructions_token!
+
+      user.clear_welcome_instructions_token!
+
+      user.reload
+      expect(user.welcome_instructions_token).to be_nil
+      expect(user.welcome_instructions_created_at).to be_nil
+      expect(user.welcome_instructions_sent_at).to be_present
+      expect(user.invited?).to be(true)
+    end
+  end
+
   describe '#bookmark_for' do
     let(:user) { create(:user) }
     let(:workshop) { create(:workshop) }
@@ -201,6 +232,33 @@ RSpec.describe User do
     it "delegates organizations through person" do
       person = create(:person, :with_organization)
       expect(person.user.organizations).to eq(person.organizations)
+    end
+  end
+
+  describe "syncing the login email to the person" do
+    let(:person) { create(:person, user: nil, email: "work@example.com") }
+
+    it "syncs when a new user is created for an existing person" do
+      create(:user, email: "login@example.com", person: person)
+
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: "work@example.com")
+    end
+
+    it "syncs when an existing user is linked to the person" do
+      user = create(:user, email: "login@example.com")
+
+      user.update!(person: person)
+
+      expect(person.reload).to have_attributes(email: "login@example.com", email_2: "work@example.com")
+    end
+
+    it "syncs when a linked user's email changes" do
+      user = create(:user, email: "login@example.com", person: person)
+      user.skip_reconfirmation!
+
+      user.update!(email: "new-login@example.com")
+
+      expect(person.reload.email).to eq("new-login@example.com")
     end
   end
 

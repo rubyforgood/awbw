@@ -22,11 +22,11 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
   protected
 
   def url(page)
-    @template.url_for(
-      @template.params.to_unsafe_h
-               .merge(page: page)               # set new page
-               .except(:controller, :action)    # avoid controller/action pollution
-    )
+    params = @template.params.to_unsafe_h
+                      .merge(page: page)               # set new page
+                      .except(:controller, :action)    # avoid controller/action pollution
+    params[:anchor] = @options[:anchor] if @options[:anchor].present?
+    @template.url_for(params)
   end
 
   def html_container(html)
