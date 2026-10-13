@@ -33,10 +33,11 @@
         </ul>
       </div>
       <div>
-        <h3 class="mb-3 text-sm font-semibold text-gray-700">Records pointing here</h3>
+        <h3 class="mb-1 text-sm font-semibold text-gray-700">Records pointing here</h3>
+        <p class="mb-3 text-xs text-gray-500">Tables in yellow aren't shown in the cards above.</p>
         <ul class="space-y-1 text-sm">
           <% model::HAS_MANY.each do |table, config| %>
-            <li>
+            <li class="<%= class_names("-mx-2 rounded px-2 py-0.5", "bg-yellow-100": record.related_only?(table)) %>">
               <%= link_to config[:label], fm_archives_path(table: table.delete_prefix("fm_")), class: "text-primary hover:underline" %>
               <span class="text-gray-400">via</span>
               <span class="rounded bg-white px-2 py-0.5 font-mono text-xs text-gray-700"><%= config[:via] %></span>

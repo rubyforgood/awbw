@@ -95,9 +95,13 @@ RSpec.describe "FM archives", type: :request do
 
       get fm_archive_path("00006", table: "rolodexes")
 
-      expect(response.body).to match(/<turbo-frame[^>]*class="[^"]*bg-amber-50[^"]*"[^>]*id="backlink_fm_fundings"|<turbo-frame[^>]*id="backlink_fm_fundings"[^>]*class="[^"]*bg-amber-50/)
-      expect(response.body).not_to match(/<turbo-frame[^>]*id="backlink_fm_addresses"[^>]*class="[^"]*bg-amber-50/)
-      expect(response.body).not_to match(/<turbo-frame[^>]*class="[^"]*bg-amber-50[^"]*"[^>]*id="backlink_fm_addresses"/)
+      expect(response.body).to match(/<turbo-frame[^>]*class="[^"]*bg-yellow-100[^"]*"[^>]*id="backlink_fm_fundings"|<turbo-frame[^>]*id="backlink_fm_fundings"[^>]*class="[^"]*bg-yellow-100/)
+      expect(response.body).not_to match(/<turbo-frame[^>]*id="backlink_fm_addresses"[^>]*class="[^"]*bg-yellow-100/)
+      expect(response.body).not_to match(/<turbo-frame[^>]*class="[^"]*bg-yellow-100[^"]*"[^>]*id="backlink_fm_addresses"/)
+
+      reference = response.body.split("Records pointing here").last
+      expect(reference).to match(%r{<li class="[^"]*bg-yellow-100[^"]*">\s*<a[^>]*>Funding</a>})
+      expect(reference).not_to match(%r{<li class="[^"]*bg-yellow-100[^"]*">\s*<a[^>]*>Addresses</a>})
     end
 
     it "leaves related records unhighlighted on tables without cards" do
@@ -107,7 +111,7 @@ RSpec.describe "FM archives", type: :request do
       get fm_archive_path("P2775", table: "projects")
 
       expect(response.body).to include("backlink_fm_personnels")
-      expect(response.body).not_to include("bg-amber-50")
+      expect(response.body).not_to include("bg-yellow-100")
     end
 
     it "leaves the field reference off tables without field groups" do
