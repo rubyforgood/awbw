@@ -101,10 +101,12 @@ class FmRolodex < ApplicationRecord
     "WorksiteAddrsID" => "fm_addresses"
   }.freeze
 
+  PHONES_AND_ADDRESSES = "Phones & addresses"
+
   FIELD_GROUPS = {
-    "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c],
-    "Contact" => %w[EMail EmailPrimary EmailType EmailNotes PrimaryPhoneID BestTimeToCall
-                    PrimaryAddrsID WorksiteAddrsID WebSite],
+    "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
+                     EMail EmailPrimary EmailType EmailNotes WebSite],
+    PHONES_AND_ADDRESSES => %w[PrimaryPhoneID BestTimeToCall PrimaryAddrsID WorksiteAddrsID],
     "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID Mission],
     "Facilitator" => %w[Classification Status FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
                         HowTrained TrainingMotivation LifeExperiences Settings BBSLicense],

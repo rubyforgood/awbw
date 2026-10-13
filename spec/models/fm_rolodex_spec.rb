@@ -6,11 +6,10 @@ RSpec.describe FmRolodex do
       rolodex = described_class.new(data: { "Comments" => "Met at training", "LastName" => "Archer", "EMail" => "abe@example.com", "FirstName" => "Abe" })
 
       expect(rolodex.grouped_data).to eq(
-        "Identity" => { "FirstName" => "Abe", "LastName" => "Archer" },
-        "Contact" => { "EMail" => "abe@example.com" },
+        "Identity" => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com" },
         "Notes" => { "Comments" => "Met at training" }
       )
-      expect(rolodex.grouped_data["Identity"].keys).to eq(%w[FirstName LastName])
+      expect(rolodex.grouped_data["Identity"].keys).to eq(%w[FirstName LastName EMail])
     end
 
     it "trails fields no group names under other fields" do

@@ -45,7 +45,7 @@
               </div>
             <% end %>
           </dl>
-          <% if label == "Contact" && @record.is_a?(FmRolodex) %>
+          <% if @record.is_a?(FmRolodex) && label == FmRolodex::PHONES_AND_ADDRESSES %>
             <%= render "contact_records", rolodex: @record.decorate, heading: "Phone numbers", records: @record.phone_numbers %>
             <%= render "contact_records", rolodex: @record.decorate, heading: "Addresses", records: @record.addresses %>
           <% end %>

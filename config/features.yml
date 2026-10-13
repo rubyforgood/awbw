@@ -4282,9 +4282,9 @@
   action_path: "/fm_archives?table=rolodexes"
   summary: >-
     A FileMaker rolodex record now shows its fields in labeled sections —
-    identity, organization, contact, sector and age group, facilitator history,
+    identity and email, phones and addresses, organization, sector and age group,
     and more — with the most useful details first.
   pro_tips:
     - "FileMaker's calculated and summary fields sit at the bottom under Other fields."
-    - "The Contact section lists every phone number and address on file for the person, with the primary ones first and tagged."
+    - "The Phones & addresses section lists every phone number and address on file for the person, with the primary ones first and tagged."
     - "The blue section at the bottom lists every field a rolodex record can hold and every table that links to it, even when this record leaves them blank."
