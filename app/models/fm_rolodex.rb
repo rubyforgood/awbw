@@ -152,7 +152,7 @@ class FmRolodex < ApplicationRecord
     "fm_phone_numbers" => { via: "RolodexID", label: "Phone Numbers" },
     "fm_contacts" => { via: "ContacteeID", label: "Contacts", note: "Data from 2003–2018" },
     "fm_notes" => { via: "RolodexID", label: "Notes" },
-    "fm_activities" => { via: "ID", label: "Activities" },
+    "fm_activities" => { via: "ID", label: "Activities", note: "Data from 2003–2025" },
     "fm_form_letters" => { via: "SignatureID", label: "Form Letters (Signed)" },
     "fm_people_to_organizations" => { via: "PersonID", label: "Org Affiliations" },
     "fm_personnels" => { via: "PersonID", label: "Personnel" },
