@@ -50,10 +50,10 @@ module FilemakerHelper
     link_to fm_id, fm_archive_path(fm_id, table: key), class: "text-primary hover:underline"
   end
 
-  # The portal's name for a related table's counterpart, when it isn't the archive table's own name.
+  # The portal's name for a related table's counterpart, when the archive's label doesn't already lead with it.
   def fm_portal_counterpart_name(record, table, label)
     name = record.portal_counterpart(table)&.model_name&.human&.pluralize
-    name unless name.nil? || name.casecmp?(label.sub(/\s*\(.*\)\z/, ""))
+    name unless name.nil? || label.downcase.start_with?(name.downcase)
   end
 
   # Colors a related table orange when the portal keeps its own records of the same kind.

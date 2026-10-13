@@ -156,7 +156,7 @@ class FmRolodex < ApplicationRecord
     "fm_committee_members" => { via: "MemberID", label: "Committee Memberships" },
     "fm_group_members" => { via: "ContactID", label: "Group Memberships" },
     "fm_workshop_logs" => { via: "LeaderID", label: "Workshop Logs" },
-    "fm_workshops" => { via: "AuthorID", label: "Workshops (Authored)" },
+    "fm_workshops" => { via: "AuthorID", label: "Workshops Authored" },
     "fm_participants" => { via: "ParticipantID", label: "Participations" },
     "fm_volunteers" => { via: "VRecID", label: "Volunteer Records" },
     "fm_payments" => { via: "RolodexID", label: "Payments" },

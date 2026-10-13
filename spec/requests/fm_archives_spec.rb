@@ -61,7 +61,7 @@ RSpec.describe "FM archives", type: :request do
 
       get fm_archive_path("00006", table: "rolodexes")
 
-      expect(response.body).to match(/Record keeping.*Available fields &amp; associations.*FacilitatorSinceYear.*OrgID.*Organizations.*Workshops \(Authored\).*AuthorID/m)
+      expect(response.body).to match(/Record keeping.*Available fields &amp; associations.*FacilitatorSinceYear.*OrgID.*Organizations.*Workshops Authored.*AuthorID/m)
     end
 
     it "hides blank fields from the cards but keeps them, grayed, in the field reference" do

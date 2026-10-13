@@ -107,9 +107,9 @@ RSpec.describe FilemakerHelper, type: :helper do
       expect(helper.fm_portal_counterpart_name(rolodex, "fm_personnels", "Personnel")).to eq("Affiliations")
     end
 
-    it "skips a counterpart sharing the archive's name, ignoring case and a parenthetical" do
+    it "skips a counterpart the archive's label already leads with, ignoring case" do
       expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshop_logs", "Workshop Logs")).to be_nil
-      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshops", "Workshops (Authored)")).to be_nil
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshops", "Workshops Authored")).to be_nil
     end
 
     it "skips a table without a portal counterpart" do
