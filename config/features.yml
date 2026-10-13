@@ -4317,3 +4317,4 @@
   pro_tips:
     - "Each table words its names its own way, so a person's payment, registration, and volunteer shift never look alike, and an art sale reads like \"After the Rain — purchased for $250\"."
     - "Link rows with no name of their own, like committee members, name the FileMaker IDs they connect."
+    - "An ID field that points at another archive record, like a rolodex OrgID, shows that record's name beside the link, and related records list their names beside their IDs."

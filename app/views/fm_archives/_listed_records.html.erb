@@ -16,7 +16,7 @@
         </span>
         <span class="col-span-3 break-words text-gray-900">
           <% if record.persisted? %>
-            <%= link_to record.decorate.summary.presence || record.fm_id,
+            <%= link_to record.decorate.summary.presence || record.name,
                         fm_archive_path(record.fm_id, table: record.class.table_name.delete_prefix("fm_")),
                         class: "text-primary hover:underline" %>
           <% else %>

@@ -15,6 +15,14 @@ RSpec.describe "FM archives", type: :request do
 
         expect(response.body).to include("Funding (1)", "table=fundings")
       end
+
+      it "names each related record beside its ID" do
+        funding.update!(data: funding.data.merge("Purpose" => "Art supplies", "AmountGranted" => "500"))
+
+        get fm_archive_path(rolodex.fm_id, table: "rolodexes")
+
+        expect(response.body).to match(%r{>FND1</span>\s*<span[^>]*>Art supplies — \$500 grant</span>})
+      end
     end
 
     it "shows a rolodex record's fields under group headings, most important first" do

@@ -92,6 +92,18 @@ RSpec.describe FilemakerHelper, type: :helper do
         .to include(%(href="#{fm_archive_path("74001", table: "addresses")}"))
     end
 
+    it "follows the link with the record's name" do
+      FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
+
+      expect(helper.fm_archive_reference_link("ORG1", "fm_organizations")).to match(%r{>ORG1</a><span[^>]*>Sample Shelter</span>})
+    end
+
+    it "leaves the name off a record named only by its ID" do
+      FmAddress.create!(fm_id: "74001")
+
+      expect(helper.fm_archive_reference_link("74001", "fm_addresses")).not_to include("<span")
+    end
+
     it "strikes through an ID the archive has no record for" do
       html = helper.fm_archive_reference_link("74999", "fm_addresses")
 

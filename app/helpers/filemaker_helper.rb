@@ -41,13 +41,18 @@ module FilemakerHelper
     link_to text, path, class: button_classes(:primary)
   end
 
-  # An archive field's link to the record it names, struck through when the archive has no such record.
+  # An archive field's link to the record it names, followed by that record's name; struck through
+  # when the archive has no such record.
   def fm_archive_reference_link(fm_id, table)
     key = table.delete_prefix("fm_")
     model = FmArchivesController::TABLES.dig(key, :model)
-    return tag.span(fm_id, class: "line-through opacity-60", title: "No FM record found") if model && !model.exists?(fm_id: fm_id)
+    target = model&.find_by(fm_id: fm_id)
+    return tag.span(fm_id, class: "line-through opacity-60", title: "No FM record found") if model && !target
 
-    link_to fm_id, fm_archive_path(fm_id, table: key), class: "text-primary hover:underline"
+    link = link_to(fm_id, fm_archive_path(fm_id, table: key), class: "text-primary hover:underline")
+    return link if target.nil? || target.name == fm_id
+
+    safe_join([ link, tag.span(target.name, class: "ml-1 text-gray-500") ])
   end
 
   # The portal's name for a related table's counterpart, when the archive's label doesn't already lead with it.
