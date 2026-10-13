@@ -105,16 +105,6 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include(ERB::Util.html_escape(workshop.title))
     end
 
-    it "links an archived quotation back to its portal resource" do
-      FmQuotation.create!(fm_id: "Q10215")
-      resource = create(:resource, filemaker_code: "Q10215")
-
-      get fm_archive_path("Q10215", table: "quotations")
-
-      expect(response.body).to include(ERB::Util.html_escape(resource_path(resource, no_redirect: true)))
-      expect(response.body).to include(ERB::Util.html_escape(resource.title))
-    end
-
     it "omits the portal section when nothing carries the code" do
       FmRolodex.create!(fm_id: "00006")
 

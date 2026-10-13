@@ -6,7 +6,6 @@ class Resource < ApplicationRecord
   include ActionText::Attachable
   include Mentionable
   include FilemakerCoded
-  filemaker_archived_in FmQuotation
 
   # Define rich text fields for mentions functionality
   def self.mentionable_rich_text_fields
