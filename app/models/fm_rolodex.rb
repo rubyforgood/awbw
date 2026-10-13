@@ -103,13 +103,13 @@ class FmRolodex < ApplicationRecord
 
   FIELD_GROUPS = {
     "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c],
-    "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID Mission],
     "Contact" => %w[EMail EmailPrimary EmailType EmailNotes PrimaryPhoneID BestTimeToCall
                     PrimaryAddrsID WorksiteAddrsID WebSite],
-    "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
+    "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID Mission],
     "Facilitator" => %w[Classification Status FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
                         HowTrained TrainingMotivation LifeExperiences PrimaryAgeGroup PrimaryServiceArea
                         OtherServiceArea Settings BBSLicense],
+    "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
     "Volunteering" => %w[VolEnrollDate DropDate AvailMon AvailTue AvailWed AvailThu AvailFri AvailSat],
     "Giving" => %w[DonationCount DonationTotal Amount CkNo FunderPotential CallForArtRecord],
     "Personal details" => %w[DateOfBirth BirthMonth BirthDay BirthYear BirthdayFlag Anniversary Children

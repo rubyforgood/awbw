@@ -20,32 +20,34 @@
       </div>
     <% end %>
 
-    <% @record.grouped_data.each do |label, fields| %>
-      <section class="rounded-xl bg-white p-6">
-        <% if label %>
-          <h2 class="mb-1 text-lg font-semibold"><%= label %></h2>
-        <% end %>
-        <dl class="divide-y divide-gray-200">
-          <% fields.each do |key, value| %>
-            <div class="grid grid-cols-3 gap-4 py-3">
-              <dt class="text-sm font-medium text-gray-500"><%= key %></dt>
-              <dd class="col-span-2 text-sm break-words text-gray-900">
-                <% link_target = @record.class::FM_LINKS[key] %>
-                <% if link_target && value.present? %>
-                  <%= link_to value, fm_archive_path(value, table: link_target.sub("fm_", "")), class: "text-primary hover:underline" %>
-                <% elsif link_target.nil? && value.present? && @record.class.const_defined?(:CONTEXT_LINK_MAP) && (ctx = @record.data["Context"]) && (ctx_target = @record.class::CONTEXT_LINK_MAP[ctx]) %>
-                  <%= link_to value, fm_archive_path(value, table: ctx_target.sub("fm_", "")), class: "text-primary hover:underline" %>
-                <% elsif link_target.nil? && value.present? && @record.class.const_defined?(:PREFIX_LINK_MAP) && (prefix_target = @record.class::PREFIX_LINK_MAP[value.to_s[0]]) %>
-                  <%= link_to value, fm_archive_path(value, table: prefix_target.sub("fm_", "")), class: "text-primary hover:underline" %>
-                <% else %>
-                  <%= value %>
-                <% end %>
-              </dd>
-            </div>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <% @record.grouped_data.each do |label, fields| %>
+        <section class="<%= class_names("rounded-xl bg-white p-6", "lg:col-span-2": label.nil?) %>">
+          <% if label %>
+            <h2 class="mb-1 text-lg font-semibold"><%= label %></h2>
           <% end %>
-        </dl>
-      </section>
-    <% end %>
+          <dl class="divide-y divide-gray-200">
+            <% fields.each do |key, value| %>
+              <div class="grid grid-cols-3 gap-4 py-3">
+                <dt class="text-sm font-medium break-words text-gray-500"><%= key %></dt>
+                <dd class="col-span-2 text-sm break-words text-gray-900">
+                  <% link_target = @record.class::FM_LINKS[key] %>
+                  <% if link_target && value.present? %>
+                    <%= link_to value, fm_archive_path(value, table: link_target.sub("fm_", "")), class: "text-primary hover:underline" %>
+                  <% elsif link_target.nil? && value.present? && @record.class.const_defined?(:CONTEXT_LINK_MAP) && (ctx = @record.data["Context"]) && (ctx_target = @record.class::CONTEXT_LINK_MAP[ctx]) %>
+                    <%= link_to value, fm_archive_path(value, table: ctx_target.sub("fm_", "")), class: "text-primary hover:underline" %>
+                  <% elsif link_target.nil? && value.present? && @record.class.const_defined?(:PREFIX_LINK_MAP) && (prefix_target = @record.class::PREFIX_LINK_MAP[value.to_s[0]]) %>
+                    <%= link_to value, fm_archive_path(value, table: prefix_target.sub("fm_", "")), class: "text-primary hover:underline" %>
+                  <% else %>
+                    <%= value %>
+                  <% end %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </section>
+      <% end %>
+    </div>
 
     <% if @backlinks.any? %>
       <div class="rounded-xl bg-white p-6">
