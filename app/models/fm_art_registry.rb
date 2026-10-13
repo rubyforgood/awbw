@@ -42,7 +42,6 @@
 class FmArtRegistry < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ItemID"
-  FM_NAME_FIELDS = %w[ArtTitle].freeze
 
   FM_LINKS = {
     "ArtistID" => "fm_rolodexes",
@@ -54,4 +53,8 @@ class FmArtRegistry < ApplicationRecord
     "fm_art_purchases" => { via: "ArtRegistryID", label: "Art Purchases" },
     "fm_exhibited_items" => { via: "ArtRegistryItemID", label: "Exhibited Items" }
   }.freeze
+
+  def name
+    fm_phrase(fm_value("ArtTitle"), fm_with("by", fm_join("ArtistFirstName", "ArtistLastName")))
+  end
 end

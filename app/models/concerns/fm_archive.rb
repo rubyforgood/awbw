@@ -8,8 +8,6 @@ module FmArchive
   PORTAL_COUNTERPARTS = {}.freeze
   PORTAL_FIELDS = {}.freeze
   USER_LOOKUP_FIELDS = [].freeze
-  # Data fields that name a record, tried in order; a nested list joins its parts with a space.
-  FM_NAME_FIELDS = [].freeze
 
   included do
     before_validation :set_defaults
@@ -64,15 +62,39 @@ module FmArchive
     []
   end
 
+  # Each table words its names its own way, so records from different tables never share one.
   def name
-    self.class::FM_NAME_FIELDS.each do |fields|
-      name = Array(fields).filter_map { |field| data&.dig(field).to_s.strip.presence }.join(" ")
-      return name if name.present?
-    end
     fm_id
   end
 
   private
+
+  def fm_value(*fields)
+    fields.lazy.filter_map { |field| data&.dig(field).to_s.squish.presence }.first
+  end
+
+  def fm_join(*fields)
+    fm_words(*fields.map { |field| fm_value(field) })
+  end
+
+  def fm_words(*parts)
+    parts.compact_blank.join(" ").presence
+  end
+
+  def fm_with(preposition, value)
+    "#{preposition} #{value}" if value.present?
+  end
+
+  def fm_dollars(*fields)
+    amounts = fields.filter_map { |field| Float(fm_value(field)&.delete("$,"), exception: false) }
+    MoneyFormatter.dollars_from_cents((amounts.sum * 100).round) if amounts.any?
+  end
+
+  # "Subject — detail", where the detail carries the table's own wording.
+  def fm_phrase(subject, detail)
+    return detail&.upcase_first || fm_id if subject.blank?
+    [ subject, detail ].compact_blank.join(" — ")
+  end
 
   def set_defaults
     self.data ||= {}

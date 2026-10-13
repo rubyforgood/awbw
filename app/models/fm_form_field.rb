@@ -16,7 +16,10 @@
 class FmFormField < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "FieldNo"
-  FM_NAME_FIELDS = %w[FieldNameFM FieldNameWP].freeze
 
   FM_LINKS = {}.freeze
+
+  def name
+    fm_words(fm_value("FieldNameFM", "FieldNameWP"), "form field").upcase_first
+  end
 end

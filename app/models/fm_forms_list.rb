@@ -15,11 +15,14 @@
 class FmFormsList < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "FormID"
-  FM_NAME_FIELDS = %w[FormTitle].freeze
 
   FM_LINKS = {}.freeze
 
   HAS_MANY = {
     "fm_form_submissions" => { via: "FormID", label: "Form Submissions" }
   }.freeze
+
+  def name
+    fm_value("FormTitle") || fm_id
+  end
 end

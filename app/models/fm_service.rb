@@ -24,9 +24,12 @@
 class FmService < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
-  FM_NAME_FIELDS = [ %w[Month Year] ].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects"
   }.freeze
+
+  def name
+    fm_words(fm_value("Month"), fm_value("Year"), "service", fm_with("at", fm_value("ProjectID"))).upcase_first
+  end
 end

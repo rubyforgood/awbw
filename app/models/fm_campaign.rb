@@ -19,7 +19,6 @@
 class FmCampaign < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "CampaignID"
-  FM_NAME_FIELDS = %w[Campaign].freeze
 
   FM_LINKS = {}.freeze
 
@@ -27,4 +26,8 @@ class FmCampaign < ApplicationRecord
     "fm_donor_developers" => { via: "CampaignID", label: "Donor Developers" },
     "fm_solicitations" => { via: "CampaignID", label: "Solicitations" }
   }.freeze
+
+  def name
+    fm_value("Campaign") || fm_id
+  end
 end

@@ -25,10 +25,13 @@
 class FmAddress < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "AddrsID"
-  FM_NAME_FIELDS = %w[AddrsLine1 AddrsCity].freeze
 
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes",
     "OrgID" => "fm_organizations"
   }.freeze
+
+  def name
+    [ fm_value("AddrsLine1"), fm_value("AddrsCity") ].compact.join(", ").presence || fm_id
+  end
 end

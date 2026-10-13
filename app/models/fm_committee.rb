@@ -17,7 +17,6 @@
 class FmCommittee < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "CommitteeID"
-  FM_NAME_FIELDS = %w[CommitteeName].freeze
 
   FM_LINKS = {}.freeze
 
@@ -25,4 +24,8 @@ class FmCommittee < ApplicationRecord
     "fm_committee_meetings" => { via: "CommitteeID", label: "Meetings" },
     "fm_committee_members" => { via: "CommitteeID", label: "Members" }
   }.freeze
+
+  def name
+    fm_value("CommitteeName") || fm_id
+  end
 end

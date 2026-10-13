@@ -20,9 +20,12 @@
 class FmLineItem < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ItemID"
-  FM_NAME_FIELDS = %w[Description].freeze
 
   FM_LINKS = {
     "InvoiceNo" => "fm_invoices"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Description"), fm_words("line item", fm_with("on invoice", fm_value("InvoiceNo"))))
+  end
 end

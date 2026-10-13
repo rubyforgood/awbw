@@ -24,9 +24,12 @@
 class FmFormLetter < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "DocID"
-  FM_NAME_FIELDS = %w[DocumentName].freeze
 
   FM_LINKS = {
     "SignatureID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_value("DocumentName") || fm_id
+  end
 end

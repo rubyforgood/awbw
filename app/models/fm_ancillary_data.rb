@@ -16,9 +16,12 @@
 class FmAncillaryData < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
-  FM_NAME_FIELDS = %w[FlagText Flag].freeze
 
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("FlagText"), fm_words(fm_value("Flag"), "flag"))
+  end
 end

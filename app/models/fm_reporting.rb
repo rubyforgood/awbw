@@ -14,9 +14,12 @@
 class FmReporting < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ReportID"
-  FM_NAME_FIELDS = %w[ReportDescription].freeze
 
   FM_LINKS = {
     "FundingRecordID" => "fm_fundings"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("ReportDescription"), fm_words(fm_with("due", fm_value("ReportDueDate")), fm_with("for", fm_value("FundingRecordID"))) || "funding report")
+  end
 end

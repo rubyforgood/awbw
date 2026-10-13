@@ -17,10 +17,13 @@
 class FmArtPurchase < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "PurchaseID"
-  FM_NAME_FIELDS = %w[ArtTitle].freeze
 
   FM_LINKS = {
     "ArtRegistryID" => "fm_art_registries",
     "BuyerID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("ArtTitle"), fm_words("purchased", fm_with("for", fm_dollars("AmountPaid"))))
+  end
 end

@@ -24,11 +24,14 @@
 class FmGroup < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "GroupID"
-  FM_NAME_FIELDS = %w[GroupName].freeze
 
   FM_LINKS = {}.freeze
 
   HAS_MANY = {
     "fm_group_members" => { via: "GroupID", label: "Members" }
   }.freeze
+
+  def name
+    fm_value("GroupName") || fm_id
+  end
 end

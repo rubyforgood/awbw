@@ -18,10 +18,13 @@
 class FmPhoneNumber < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "PhoneID"
-  FM_NAME_FIELDS = %w[PhoneNumber].freeze
 
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes",
     "OrgID" => "fm_organizations"
   }.freeze
+
+  def name
+    fm_value("PhoneNumber") || fm_id
+  end
 end

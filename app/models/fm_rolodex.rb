@@ -92,7 +92,6 @@
 class FmRolodex < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ID"
-  FM_NAME_FIELDS = [ %w[FirstName LastName], "Organization" ].freeze
 
   FM_LINKS = {
     "OrgID" => "fm_organizations",
@@ -198,6 +197,11 @@ class FmRolodex < ApplicationRecord
     "fm_art_registries" => { via: "ArtistID", label: "Art Registries (Artist)" },
     "fm_ancillary_data" => { via: "RolodexID", label: "Ancillary Data" }
   }.freeze
+
+  def name
+    agency = fm_value("Organization")
+    fm_join("FirstName", "LastName") || (agency && "#{agency} (agency)") || fm_id
+  end
 
   def phone_numbers
     @phone_numbers ||= contact_records(FmPhoneNumber, primary_ids: data.values_at("PrimaryPhoneID"))

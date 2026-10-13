@@ -39,7 +39,6 @@
 class FmPayment < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
-  FM_NAME_FIELDS = %w[Name].freeze
 
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes",
@@ -61,4 +60,8 @@ class FmPayment < ApplicationRecord
     "fm_match_donations" => { via: "RefDonationID", label: "Match Donations" },
     "fm_form_submissions" => { via: "PaymentID", label: "Form Submissions" }
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Name"), fm_words(fm_value("Type") || "Payment", fm_with("of", fm_dollars("Amount"))))
+  end
 end

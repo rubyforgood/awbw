@@ -24,7 +24,6 @@
 class FmNote < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "NoteID"
-  FM_NAME_FIELDS = %w[Subject].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects",
@@ -38,4 +37,8 @@ class FmNote < ApplicationRecord
     "Organizations" => "fm_organizations",
     "Rolodex" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Subject"), fm_words(fm_value("Context")&.singularize, "note"))
+  end
 end

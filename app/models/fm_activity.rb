@@ -34,10 +34,13 @@
 class FmActivity < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ActivityLogID"
-  FM_NAME_FIELDS = %w[Subject FullName].freeze
 
   FM_LINKS = {
     "ID" => "fm_rolodexes",
     "LinkID" => "fm_payments"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Subject"), fm_words(fm_value("Type") || "Activity", fm_with("with", fm_value("FullName") || fm_join("FirstName", "LastName"))))
+  end
 end

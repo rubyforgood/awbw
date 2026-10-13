@@ -45,7 +45,6 @@
 class FmParticipant < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "PRecID"
-  FM_NAME_FIELDS = %w[Name].freeze
 
   FM_LINKS = {
     "ParticipantID" => "fm_rolodexes",
@@ -60,4 +59,8 @@ class FmParticipant < ApplicationRecord
   HAS_MANY = {
     "fm_payments" => { via: "ParticRecID", label: "Payments" }
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Name"), fm_words(fm_value("Role") || "Participant", fm_with("at", fm_value("EventID"))))
+  end
 end

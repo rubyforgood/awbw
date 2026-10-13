@@ -19,9 +19,12 @@
 class FmExpenditure < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ExpendRecID"
-  FM_NAME_FIELDS = %w[Name Description].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Name", "Description"), fm_words(fm_dollars("Amount"), "expense"))
+  end
 end

@@ -39,11 +39,14 @@
 class FmWorkshopLog < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
-  FM_NAME_FIELDS = %w[WorkshopTitle LeaderName].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects",
     "LeaderID" => "fm_rolodexes",
     "AgencyID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("WorkshopTitle"), fm_words("report", fm_with("by", fm_value("LeaderName")), fm_with("on", fm_value("WorkshopDate"))))
+  end
 end

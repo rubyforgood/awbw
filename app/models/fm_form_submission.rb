@@ -44,7 +44,6 @@
 class FmFormSubmission < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
-  FM_NAME_FIELDS = [ %w[FirstName LastName], "OrgName", "FormTitle" ].freeze
 
   FM_LINKS = {
     "FormID" => "fm_forms_lists",
@@ -55,4 +54,8 @@ class FmFormSubmission < ApplicationRecord
     "PaymentID" => "fm_payments",
     "ParticRecID" => "fm_participants"
   }.freeze
+
+  def name
+    fm_phrase(fm_join("FirstName", "LastName") || fm_value("OrgName"), fm_value("FormTitle") || "form submission")
+  end
 end

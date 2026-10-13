@@ -160,6 +160,7 @@ RSpec.describe "FM archives", type: :request do
       get fm_archive_path("P2775", table: "projects")
 
       expect(response.body).not_to include("Available fields")
+    end
 
     it "heads the page with the record's name and table" do
       FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sunrise Shelter" })

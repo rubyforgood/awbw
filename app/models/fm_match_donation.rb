@@ -19,4 +19,8 @@ class FmMatchDonation < ApplicationRecord
     "FundingID" => "fm_fundings",
     "RefDonationID" => "fm_payments"
   }.freeze
+
+  def name
+    fm_words(fm_value("Match"), "match", fm_with("of", fm_dollars("Amount")), fm_with("for", fm_value("DonationID"))).upcase_first
+  end
 end

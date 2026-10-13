@@ -14,9 +14,12 @@
 class FmCommitteeMeeting < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "CtMtgID"
-  FM_NAME_FIELDS = %w[MeetingDate].freeze
 
   FM_LINKS = {
     "CommitteeID" => "fm_committees"
   }.freeze
+
+  def name
+    fm_words("Committee", fm_value("CommitteeID"), "meeting", fm_with("on", fm_value("MeetingDate")))
+  end
 end

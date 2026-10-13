@@ -4315,4 +4315,5 @@
     FileMaker archive lists and record pages now show each record's name — a
     person, organization, event title, or similar — instead of only its ID.
   pro_tips:
-    - "Records with nothing to name them by, like join rows, show their FileMaker ID instead."
+    - "Each table words its names its own way, so a person's payment, registration, and volunteer shift never look alike, and an art sale reads like \"After the Rain — purchased for $250\"."
+    - "Link rows with no name of their own, like committee members, name the FileMaker IDs they connect."

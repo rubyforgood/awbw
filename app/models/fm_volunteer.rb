@@ -22,10 +22,13 @@
 class FmVolunteer < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "VolID"
-  FM_NAME_FIELDS = [ %w[FirstName LastName] ].freeze
 
   FM_LINKS = {
     "VRecID" => "fm_rolodexes",
     "EventID" => "fm_events"
   }.freeze
+
+  def name
+    fm_phrase(fm_join("FirstName", "LastName"), fm_words(fm_value("Role"), "volunteer", fm_with("at", fm_value("EventID"))))
+  end
 end

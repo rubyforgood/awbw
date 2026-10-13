@@ -17,10 +17,13 @@
 class FmCommitteeMember < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "CMRecID"
-  FM_NAME_FIELDS = %w[Role].freeze
 
   FM_LINKS = {
     "CommitteeID" => "fm_committees",
     "MemberID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("MemberID"), fm_words(fm_value("Role") || "Member", "of committee", fm_value("CommitteeID")))
+  end
 end
