@@ -48,4 +48,8 @@ class FmWorkshop < ApplicationRecord
   FM_LINKS = {
     "AuthorID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_value("WorkshopTitle") || fm_id
+  end
 end

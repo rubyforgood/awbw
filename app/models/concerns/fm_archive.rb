@@ -8,6 +8,8 @@ module FmArchive
   PORTAL_COUNTERPARTS = {}.freeze
   PORTAL_FIELDS = {}.freeze
   USER_LOOKUP_FIELDS = [].freeze
+  CONTEXT_LINK_MAP = {}.freeze
+  PREFIX_LINK_MAP = {}.freeze
 
   included do
     before_validation :set_defaults
@@ -62,7 +64,48 @@ module FmArchive
     []
   end
 
+  # The archive table a field's ID points at. A polymorphic field, mapped to nil in FM_LINKS, resolves
+  # by the record's Context or by the ID's prefix.
+  def reference_table(key)
+    value = data[key]
+    return if value.blank? || !self.class::FM_LINKS.key?(key)
+
+    self.class::FM_LINKS[key] || self.class::CONTEXT_LINK_MAP[data["Context"]] || self.class::PREFIX_LINK_MAP[value.to_s[0]]
+  end
+
+  # Each table words its names its own way, so records from different tables never share one.
+  def name
+    fm_id
+  end
+
   private
+
+  def fm_value(*fields)
+    fields.lazy.filter_map { |field| data&.dig(field).to_s.squish.presence }.first
+  end
+
+  def fm_join(*fields)
+    fm_words(*fields.map { |field| fm_value(field) })
+  end
+
+  def fm_words(*parts)
+    parts.compact_blank.join(" ").presence
+  end
+
+  def fm_with(preposition, value)
+    "#{preposition} #{value}" if value.present?
+  end
+
+  def fm_dollars(*fields)
+    amounts = fields.filter_map { |field| Float(fm_value(field)&.delete("$,"), exception: false) }
+    MoneyFormatter.dollars_from_cents((amounts.sum * 100).round) if amounts.any?
+  end
+
+  # "Subject — detail", where the detail carries the table's own wording.
+  def fm_phrase(subject, detail)
+    return detail&.upcase_first || fm_id if subject.blank?
+    [ subject, detail ].compact_blank.join(" — ")
+  end
 
   def set_defaults
     self.data ||= {}

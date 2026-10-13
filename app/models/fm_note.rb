@@ -37,4 +37,8 @@ class FmNote < ApplicationRecord
     "Organizations" => "fm_organizations",
     "Rolodex" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Subject"), fm_words(fm_value("Context")&.singularize, "note"))
+  end
 end

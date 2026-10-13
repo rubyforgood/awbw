@@ -13,7 +13,7 @@ class FmPersonnelDecorator < ApplicationDecorator
     project = FmProject.find_by(fm_id: data["ProjectID"])
     return data["ProjectID"] unless project
 
-    organization = FmOrganization.find_by(fm_id: project.data["OrgID"])&.data&.dig("OrgName")
-    [ project.data["ProjectName"].presence || project.fm_id, organization ].compact_blank.join(" at ")
+    organization = FmOrganization.find_by(fm_id: project.data["OrgID"])&.name
+    [ project.name, organization ].compact_blank.join(" at ")
   end
 end

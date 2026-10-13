@@ -23,4 +23,8 @@ class FmPhoneNumber < ApplicationRecord
     "RolodexID" => "fm_rolodexes",
     "OrgID" => "fm_organizations"
   }.freeze
+
+  def name
+    fm_value("PhoneNumber") || fm_id
+  end
 end

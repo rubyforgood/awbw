@@ -1,18 +1,16 @@
 <dl class="divide-y divide-gray-200">
   <% fields.each do |key, value| %>
+    <% table = record.reference_table(key) %>
+    <% target = fm_archive_record(value, table) if table %>
     <div class="grid grid-cols-5 gap-4 py-3">
-      <dt class="col-span-2 text-sm font-medium break-words text-gray-500"><%= key %></dt>
-      <dd class="col-span-3 text-sm break-words text-gray-900">
-        <% link_target = record.class::FM_LINKS[key] %>
-        <% if link_target && value.present? %>
-          <%= fm_archive_reference_link(value, link_target) %>
-        <% elsif link_target.nil? && value.present? && record.class.const_defined?(:CONTEXT_LINK_MAP) && (ctx = record.data["Context"]) && (ctx_target = record.class::CONTEXT_LINK_MAP[ctx]) %>
-          <%= fm_archive_reference_link(value, ctx_target) %>
-        <% elsif link_target.nil? && value.present? && record.class.const_defined?(:PREFIX_LINK_MAP) && (prefix_target = record.class::PREFIX_LINK_MAP[value.to_s[0]]) %>
-          <%= fm_archive_reference_link(value, prefix_target) %>
-        <% else %>
-          <%= value %>
+      <dt class="col-span-2 text-sm font-medium break-words text-gray-500">
+        <%= key %>
+        <% if target %>
+          <%= fm_archive_id_tag(target) %>
         <% end %>
+      </dt>
+      <dd class="col-span-3 text-sm break-words text-gray-900">
+        <%= target ? fm_archive_summary_tag(target) : value %>
       </dd>
     </div>
   <% end %>

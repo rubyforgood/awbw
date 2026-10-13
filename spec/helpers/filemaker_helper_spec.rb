@@ -84,19 +84,50 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
-  describe "#fm_archive_reference_link" do
-    it "links an ID the archive holds to its record" do
-      FmAddress.create!(fm_id: "74001")
+  describe "#fm_archive_record" do
+    it "finds the record an ID points at" do
+      organization = FmOrganization.create!(fm_id: "ORG1")
 
-      expect(helper.fm_archive_reference_link("74001", "fm_addresses"))
-        .to include(%(href="#{fm_archive_path("74001", table: "addresses")}"))
+      expect(helper.fm_archive_record("ORG1", "fm_organizations")).to eq(organization)
+    end
+
+    it "stands in an unsaved placeholder for an ID the archive lacks" do
+      record = helper.fm_archive_record("ORG9", "fm_organizations")
+
+      expect([ record.class, record.fm_id, record.persisted? ]).to eq([ FmOrganization, "ORG9", false ])
+    end
+  end
+
+  describe "#fm_archive_id_tag" do
+    it "links a record's ID to its archive page" do
+      html = helper.fm_archive_id_tag(FmAddress.create!(fm_id: "74001"))
+
+      expect(html).to match(%r{<a[^>]*href="#{Regexp.escape(fm_archive_path("74001", table: "addresses"))}"[^>]*>74001</a>})
     end
 
     it "strikes through an ID the archive has no record for" do
-      html = helper.fm_archive_reference_link("74999", "fm_addresses")
+      html = helper.fm_archive_id_tag(FmAddress.new(fm_id: "74999"))
 
       expect(html).to include("line-through", %(title="No FM record found"), "74999")
       expect(html).not_to include("href")
+    end
+  end
+
+  describe "#fm_archive_summary_tag" do
+    it "links a record by its decorator's summary" do
+      address = FmAddress.create!(fm_id: "74001", data: { "AddrsLine1" => "88 Rose Ave", "AddrsCity" => "Venice" })
+
+      expect(helper.fm_archive_summary_tag(address)).to include(">88 Rose Ave, Venice</a>")
+    end
+
+    it "links a record without a decorator by its name" do
+      organization = FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
+
+      expect(helper.fm_archive_summary_tag(organization)).to include(">Sample Shelter</a>")
+    end
+
+    it "notes a record the archive lacks as not found" do
+      expect(helper.fm_archive_summary_tag(FmOrganization.new(fm_id: "ORG9"))).to include("Not found in FM data")
     end
   end
 

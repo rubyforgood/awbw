@@ -41,13 +41,31 @@ module FilemakerHelper
     link_to text, path, class: button_classes(:primary)
   end
 
-  # An archive field's link to the record it names, struck through when the archive has no such record.
-  def fm_archive_reference_link(fm_id, table)
-    key = table.delete_prefix("fm_")
-    model = FmArchivesController::TABLES.dig(key, :model)
-    return tag.span(fm_id, class: "line-through opacity-60", title: "No FM record found") if model && !model.exists?(fm_id: fm_id)
+  # The archive record an ID field points at, or an unsaved placeholder when the archive has none.
+  def fm_archive_record(fm_id, table)
+    model = FmArchivesController::TABLES.fetch(table.delete_prefix("fm_"))[:model]
+    model.find_by(fm_id: fm_id) || model.new(fm_id: fm_id, data: {})
+  end
 
-    link_to fm_id, fm_archive_path(fm_id, table: key), class: "text-primary hover:underline"
+  # A record's FileMaker ID, linked to its archive page, or struck through when the archive lacks it.
+  def fm_archive_id_tag(record)
+    unless record.persisted?
+      return tag.span(record.fm_id, class: "ml-1 font-mono text-xs font-normal text-gray-400 line-through", title: "No FM record found")
+    end
+
+    link_to record.fm_id, fm_archive_record_path(record), class: "ml-1 font-mono text-xs font-normal text-primary hover:underline"
+  end
+
+  # What a record is, linked to its archive page, or a not-found note when the archive lacks it.
+  def fm_archive_summary_tag(record)
+    return tag.span("Not found in FM data", class: "text-gray-500 italic") unless record.persisted?
+
+    summary = record.class.decorator_class? ? record.decorate.try(:summary).presence : nil
+    link_to summary || record.name, fm_archive_record_path(record), class: "text-primary hover:underline"
+  end
+
+  def fm_archive_record_path(record)
+    fm_archive_path(record.fm_id, table: record.class.table_name.delete_prefix("fm_"))
   end
 
   # The portal's name for a related table's counterpart, when the archive's label doesn't already lead with it.

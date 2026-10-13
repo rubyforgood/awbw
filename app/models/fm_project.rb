@@ -68,4 +68,8 @@ class FmProject < ApplicationRecord
     "fm_form_submissions" => { via: "ProjectID", label: "Form Submissions" },
     "fm_quotations" => { via: "ProjectID", label: "Quotations" }
   }.freeze
+
+  def name
+    fm_value("ProjectName") || fm_id
+  end
 end

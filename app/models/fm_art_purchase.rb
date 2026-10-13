@@ -22,4 +22,8 @@ class FmArtPurchase < ApplicationRecord
     "ArtRegistryID" => "fm_art_registries",
     "BuyerID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("ArtTitle"), fm_words("purchased", fm_with("for", fm_dollars("AmountPaid"))))
+  end
 end

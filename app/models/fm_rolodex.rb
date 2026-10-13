@@ -198,6 +198,11 @@ class FmRolodex < ApplicationRecord
     "fm_ancillary_data" => { via: "RolodexID", label: "Ancillary Data" }
   }.freeze
 
+  def name
+    agency = fm_value("Organization")
+    fm_join("FirstName", "LastName") || (agency && "#{agency} (agency)") || fm_id
+  end
+
   def phone_numbers
     @phone_numbers ||= contact_records(FmPhoneNumber, primary_ids: data.values_at("PrimaryPhoneID"))
   end

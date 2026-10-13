@@ -15,6 +15,14 @@ RSpec.describe "FM archives", type: :request do
 
         expect(response.body).to include("Funding (1)", "table=fundings")
       end
+
+      it "names each related record beside its ID" do
+        funding.update!(data: funding.data.merge("Purpose" => "Art supplies", "AmountGranted" => "500"))
+
+        get fm_archive_path(rolodex.fm_id, table: "rolodexes")
+
+        expect(response.body).to match(%r{>FND1</span>\s*<span[^>]*>Art supplies — \$500 grant</span>})
+      end
     end
 
     it "shows a rolodex record's fields under group headings, most important first" do
@@ -162,6 +170,52 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).not_to include("Available fields")
     end
 
+    it "links a note's LinkID by its context, leaving its other fields unlinked" do
+      FmProject.create!(fm_id: "P1", data: { "ProjectName" => "Adult Windows" })
+      FmNote.create!(fm_id: "N1", data: { "Context" => "Project", "LinkID" => "P1", "Subject" => "Site visit" })
+
+      get fm_archive_path("N1", table: "notes")
+
+      expect(response.body).to include(fm_archive_path("P1", table: "projects"))
+      expect(response.body).not_to include("Site visit</span>", "line-through")
+    end
+
+    it "links a payment's RefID to the table its prefix names" do
+      FmEvent.create!(fm_id: "E1", data: { "Title" => "Spring Art Auction" })
+      FmPayment.create!(fm_id: "D1", data: { "RefID" => "E1" })
+
+      get fm_archive_path("D1", table: "payments")
+
+      expect(response.body).to include(fm_archive_path("E1", table: "events"))
+    end
+
+    it "shows a linked field's ID beside its label and the record's name as the link" do
+      FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
+      FmProject.create!(fm_id: "P1", data: { "OrgID" => "ORG1" })
+
+      get fm_archive_path("P1", table: "projects")
+
+      path = Regexp.escape(fm_archive_path("ORG1", table: "organizations"))
+      expect(response.body).to match(%r{OrgID\s*<a[^>]*href="#{path}"[^>]*>ORG1</a>\s*</dt>\s*<dd[^>]*>\s*<a[^>]*href="#{path}"[^>]*>Sample Shelter</a>})
+    end
+
+    it "marks a linked field whose record the archive lacks as not found" do
+      FmProject.create!(fm_id: "P1", data: { "OrgID" => "ORG9" })
+
+      get fm_archive_path("P1", table: "projects")
+
+      expect(response.body).to match(%r{OrgID\s*<span[^>]*line-through[^>]*>ORG9</span>.*Not found in FM data}m)
+    end
+
+    it "heads the page with the record's name and table" do
+      FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sunrise Shelter" })
+
+      get fm_archive_path("ORG1", table: "organizations")
+
+      expect(response.body).to match(%r{<h1[^>]*>Sunrise Shelter</h1>})
+      expect(response.body).to include("Organizations &middot; FM ID: ORG1")
+    end
+
     it "links back to the portal people carrying the archive code" do
       FmRolodex.create!(fm_id: "00006")
       person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")
@@ -289,6 +343,14 @@ RSpec.describe "FM archives", type: :request do
         expect(response.body).to include(CGI.escapeHTML(group[:label]))
       end
       expect(response.body).to include("People to organizations")
+    end
+
+    it "lists each record by name" do
+      FmRolodex.create!(fm_id: "ROL1", data: { "FirstName" => "Archie", "LastName" => "Coded" })
+
+      get fm_archives_path(table: "rolodexes")
+
+      expect(response.body).to include("Archie Coded")
     end
 
     it "marks the selected table as the current page" do

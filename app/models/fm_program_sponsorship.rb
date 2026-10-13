@@ -28,4 +28,8 @@ class FmProgramSponsorship < ApplicationRecord
     "FundingID" => "fm_fundings",
     "ProgramID" => "fm_projects"
   }.freeze
+
+  def name
+    fm_words("Sponsorship", fm_with("of", fm_value("ProgramID")), fm_with("by", fm_value("FunderID")))
+  end
 end

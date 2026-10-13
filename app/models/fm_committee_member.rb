@@ -22,4 +22,8 @@ class FmCommitteeMember < ApplicationRecord
     "CommitteeID" => "fm_committees",
     "MemberID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("MemberID"), fm_words(fm_value("Role") || "Member", "of committee", fm_value("CommitteeID")))
+  end
 end

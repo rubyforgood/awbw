@@ -44,4 +44,8 @@ class FmInvoice < ApplicationRecord
   HAS_MANY = {
     "fm_line_items" => { via: "InvoiceNo", label: "Line Items" }
   }.freeze
+
+  def name
+    fm_phrase(fm_words("Invoice", fm_value("InvoiceNo")), fm_value("Name", "Company"))
+  end
 end

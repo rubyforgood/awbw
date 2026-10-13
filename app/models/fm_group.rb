@@ -30,4 +30,8 @@ class FmGroup < ApplicationRecord
   HAS_MANY = {
     "fm_group_members" => { via: "GroupID", label: "Members" }
   }.freeze
+
+  def name
+    fm_value("GroupName") || fm_id
+  end
 end

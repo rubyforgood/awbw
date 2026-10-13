@@ -59,4 +59,8 @@ class FmParticipant < ApplicationRecord
   HAS_MANY = {
     "fm_payments" => { via: "ParticRecID", label: "Payments" }
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Name"), fm_words(fm_value("Role") || "Participant", fm_with("at", fm_value("EventID"))))
+  end
 end

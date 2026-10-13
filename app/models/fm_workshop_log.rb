@@ -45,4 +45,8 @@ class FmWorkshopLog < ApplicationRecord
     "LeaderID" => "fm_rolodexes",
     "AgencyID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("WorkshopTitle"), fm_words("report", fm_with("by", fm_value("LeaderName")), fm_with("on", fm_value("WorkshopDate"))))
+  end
 end

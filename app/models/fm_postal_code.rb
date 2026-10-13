@@ -24,4 +24,8 @@ class FmPostalCode < ApplicationRecord
   FM_KEY_COLUMN = "Zipcode"
 
   FM_LINKS = {}.freeze
+
+  def name
+    fm_words([ fm_value("City"), fm_value("State") ].compact.join(", "), fm_id)
+  end
 end

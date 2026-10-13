@@ -18,4 +18,8 @@ class FmCommitteeMeeting < ApplicationRecord
   FM_LINKS = {
     "CommitteeID" => "fm_committees"
   }.freeze
+
+  def name
+    fm_words("Committee", fm_value("CommitteeID"), "meeting", fm_with("on", fm_value("MeetingDate")))
+  end
 end

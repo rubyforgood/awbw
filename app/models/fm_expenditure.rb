@@ -23,4 +23,8 @@ class FmExpenditure < ApplicationRecord
   FM_LINKS = {
     "ProjectID" => "fm_projects"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Name", "Description"), fm_words(fm_dollars("Amount"), "expense"))
+  end
 end
