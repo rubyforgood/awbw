@@ -54,11 +54,8 @@
           <% @featured_stories.each do |story| %>
             <div class="swiper-slide">
               <%= link_to story_share_path(story), class: "block relative" do %>
-                <div class="bg-brand-navy-100 h-72 overflow-hidden sm:h-96">
-                  <%= render "assets/display_image",
-                             resource: story,
-                             extra_image_classes: "!w-full h-full object-cover",
-                             variant: :hero %>
+                <div class="bg-brand-navy-100 relative h-72 overflow-hidden sm:h-96">
+                  <%= render "assets/fitted_image", file: story.display_image, alt: story.title %>
                 </div>
                 <%= render "story_shares/primary_tag_pills", story: story, pad: "px-4 py-1.5",
                            wrapper_class: "absolute top-5 left-5 right-5 z-10" %>
@@ -124,8 +121,8 @@
         <% @recent_stories.each_with_index do |story, index| %>
           <% theme = story_share_slot_theme(index) %>
           <%= link_to story_share_path(story), class: "group relative block aspect-[3/4] overflow-hidden rounded-2xl shadow-sm transition-all duration-200 hover:-translate-y-1.5 hover:shadow-2xl" do %>
-            <%= image_tag story.display_image, loading: "lazy", alt: story.title,
-                          class: "absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" %>
+            <%= render "assets/fitted_image", file: story.display_image, alt: story.title, loading: "lazy",
+                       image_class: "transition-transform duration-700 ease-out group-hover:scale-110" %>
             <div class="absolute inset-0 <%= theme[:overlay] %> mix-blend-multiply"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
             <div class="absolute inset-x-0 bottom-0 p-5">

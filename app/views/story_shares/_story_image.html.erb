@@ -2,7 +2,7 @@
     Locals: story; aspect (default "aspect-[4/3]"). %>
 <% aspect = local_assigns.fetch(:aspect, "aspect-[4/3]") %>
 <div class="relative <%= aspect %> overflow-hidden bg-gray-200">
-  <%= image_tag story.display_image, alt: story.title, loading: "lazy", class: "w-full h-full object-cover" %>
+  <%= render "assets/fitted_image", file: story.display_image, alt: story.title, loading: "lazy" %>
   <%= render "story_shares/primary_tag_pills", story: story, wrapper_class: "absolute top-3 left-3 right-3" %>
   <% if story.youtube_url.present? %>
     <div class="pointer-events-none absolute inset-0 flex items-center justify-center">

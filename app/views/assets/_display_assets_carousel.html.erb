@@ -12,11 +12,14 @@
     <div class="swiper-wrapper">
       <% assets.each_with_index do |asset, idx| %>
         <div class="swiper-slide">
-          <div class="aspect-[3/2] overflow-hidden rounded-lg bg-gray-100">
+          <% portrait = portrait_image?(asset.file) %>
+          <div class="relative aspect-[3/2] overflow-hidden rounded-lg bg-gray-100">
+            <%= render "assets/blurred_backdrop", file: asset.file if portrait %>
             <%= render "assets/display_image",
                        item: asset, idx: idx,
                        variant: :index, width: "full", height: "full",
-                       link: true, item_type: asset.class.name %>
+                       link: true, item_type: asset.class.name,
+                       extra_image_classes: portrait ? "relative object-contain!" : "" %>
           </div>
         </div>
       <% end %>
