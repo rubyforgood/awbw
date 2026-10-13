@@ -137,9 +137,24 @@ split into single codes). Compare against the grid above.
 | `workshops` | 850 | 849 `W` + 4 digits | `XVI/4` |
 | `resources` | 128 | 115 `Q` + 4–5 digits found in quotations (114 Leader spotlight, 1 Story) | 1 `Q` id not in the archive; 10 bare 2–3 digit numbers, `v`, and a URL, all on Leader spotlights |
 
-Outliers get fixed by hand, not backfilled: an admin works from the list of portal
-records whose codes have no row in the archive tables their column maps to. Those
-codes already show struck through in the code field's hint.
+Outliers get fixed by hand, not backfilled. Those codes already show struck through
+in the code field's hint.
+
+### Records to fix by hand
+
+Ids only, by issue. Nothing here names a record or repeats its code; open the record by
+id to see the code. Look the right id up in the archive, then fix the record's
+FileMaker code field.
+
+| Issue | Fix |
+|---|---|
+| Well-formed code with no archive record | Likely a digit typo. Find the record in the archive by name and replace the code, or clear it if FileMaker has no such record. |
+| Number without its prefix, or the wrong kind of id | Add the missing prefix and padding (e.g. `P` + 4 digits for a project), or, if it's another table's id (a 5-digit Rolodex id on an org), move it to the right record and clear it here. |
+| Malformed code | Fix the letters (a letter `O` for a zero, a doubled prefix), drop extra digits, or clear placeholders and pasted text. |
+| Unreadable value | The stored value has characters that can't be split into codes. Retype the code. |
+| Project code differs from its org's code (affiliations) | Either the affiliation is on the wrong org (move it), or the org is missing that project code (add it to the org). |
+
+Ids: _pending the next production run._
 
 ## Consequences
 
