@@ -179,16 +179,11 @@
     <% if allowed_to?(:manage?, Organization) %>
       <div class="admin-only bg-blue-100">
         <%= f.input :filemaker_code,
-                    label: "FileMaker Project ID",
+                    label: "FileMaker project or organization ID",
+                    hint: filemaker_code_hint(f.object),
                     input_html: {
                       class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     } %>
-        <%- if params[:admin] == "true" %>
-          <p class="mt-1 text-xs">
-            <%= filemaker_code_links(f.object, archive: FmProject, table: "projects", label: "View archive",
-                                     link_class: "text-blue-600 hover:text-blue-800 underline") %>
-          </p>
-        <% end %>
         <% high_profile_gem = tag.i(class: "fa-solid fa-gem text-purple-600", aria: { hidden: true }) %>
         <%= f.input :high_profile,
                     label: "High profile",

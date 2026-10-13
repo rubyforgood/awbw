@@ -3,21 +3,92 @@ require "rails_helper"
 RSpec.describe "FM archives", type: :request do
   let(:admin) { create(:user, :admin) }
 
-  before { sign_in admin }
-
   describe "GET /fm_archives/:id" do
-    let!(:rolodex) { FmRolodex.create!(fm_id: "ROL1", data: { "ID" => "ROL1" }) }
-    let!(:funding) { FmFunding.create!(fm_id: "FND1", data: { "RecordID" => "FND1", "FunderID" => "ROL1" }) }
+    before { sign_in admin }
 
-    it "lists a rolodex record's funding under related records" do
-      get fm_archive_path(rolodex.fm_id, table: "rolodexes")
+    context "with related records" do
+      let!(:rolodex) { FmRolodex.create!(fm_id: "ROL1", data: { "ID" => "ROL1" }) }
+      let!(:funding) { FmFunding.create!(fm_id: "FND1", data: { "RecordID" => "FND1", "FunderID" => "ROL1" }) }
 
-      expect(response.body).to include("Funding (1)", "table=fundings")
+      it "lists a rolodex record's funding under related records" do
+        get fm_archive_path(rolodex.fm_id, table: "rolodexes")
+
+        expect(response.body).to include("Funding (1)", "table=fundings")
+      end
+    end
+
+    it "links back to the portal people carrying the archive code" do
+      FmRolodex.create!(fm_id: "00006")
+      person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")
+      create(:person, filemaker_code: "000066")
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(person_path(person))
+      expect(response.body).to include("Archie Coded")
+      expect(response.body.scan(%r{href="/people/\d+"}).size).to eq(1)
+    end
+
+    it "links an archived project back to its portal organization" do
+      FmProject.create!(fm_id: "P2775")
+      organization = create(:organization, filemaker_code: "P2775")
+
+      get fm_archive_path("P2775", table: "projects")
+
+      expect(response.body).to include(organization_path(organization))
+    end
+
+    it "links an archived FM organization back to the portal organization carrying its code" do
+      FmOrganization.create!(fm_id: "ORG00023")
+      organization = create(:organization, filemaker_code: "ORG00023")
+      create(:organization, filemaker_code: "P00023")
+
+      get fm_archive_path("ORG00023", table: "organizations")
+
+      expect(response.body).to include(organization_path(organization))
+      expect(response.body.scan(%r{href="/organizations/\d+"}).size).to eq(1)
+    end
+
+    it "links an archived FM organization back to the portal organizations its projects belong to" do
+      FmOrganization.create!(fm_id: "ORG07206")
+      FmProject.create!(fm_id: "P2775", data: { "OrgID" => "ORG07206" })
+      FmProject.create!(fm_id: "P2776", data: { "OrgID" => "ORG07206" })
+      FmProject.create!(fm_id: "P9000", data: { "OrgID" => "ORG09999" })
+      via_project = create(:organization, filemaker_code: "P2775")
+      via_both = create(:organization, filemaker_code: "P2776, ORG07206")
+      create(:organization, filemaker_code: "P9000")
+
+      get fm_archive_path("ORG07206", table: "organizations")
+
+      expect(response.body).to include(organization_path(via_project), organization_path(via_both))
+      expect(response.body.scan(%r{href="/organizations/\d+"}).size).to eq(2)
+    end
+
+    it "omits the portal section when nothing carries the code" do
+      FmRolodex.create!(fm_id: "00006")
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).not_to include("In the portal")
+    end
+  end
+
+  describe "GET /fm_archives/:id as a non-admin" do
+    it "is not allowed" do
+      FmRolodex.create!(fm_id: "00006")
+      sign_in create(:user)
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response).to redirect_to(root_path)
     end
   end
 
   describe "GET /fm_archives" do
     let!(:funding) { FmFunding.create!(fm_id: "FND1", data: { "RecordID" => "FND1" }) }
+
+    before { sign_in admin }
 
     it "lists funding records at the table name a funding record's back link uses" do
       get fm_archives_path(table: FmFunding.table_name.delete_prefix("fm_"))
