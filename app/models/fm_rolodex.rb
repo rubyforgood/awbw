@@ -108,7 +108,6 @@ class FmRolodex < ApplicationRecord
   LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
   TALL_GROUPS = [ "Organization & affiliations" ].freeze
   PORTAL_FIELDS = {
-    "ID" => "people.filemaker_code",
     "FirstName" => "people.first_name",
     "LastName" => "people.last_name",
     "Pronouns" => "people.pronouns",
@@ -121,7 +120,11 @@ class FmRolodex < ApplicationRecord
     "Title" => "affiliations.title",
     "PrimaryServiceArea" => "the person's primary sector",
     "OtherServiceArea" => "the person's additional sectors",
-    "PrimaryAgeGroup" => "the person's primary age group"
+    "PrimaryAgeGroup" => "the person's primary age group",
+    "DateEntered" => "people.created_at",
+    "DateTimeModified" => "people.updated_at",
+    "EnteredBy" => "people.created_by_id (matched to a portal user)",
+    "ModifiedBy" => "people.updated_by_id (matched to a portal user)"
   }.freeze
 
   PORTAL_COUNTERPARTS = {

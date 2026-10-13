@@ -146,6 +146,8 @@ RSpec.describe "FM archives", type: :request do
       reference = response.body.split("Available fields &amp; associations").last
       expect(reference).to match(%r{<span class="[^"]*bg-orange-100[^"]*" title="Imports to people.first_name">FirstName</span>})
       expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">Gender</span>})
+      expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">ID</span>})
+      expect(reference).to match(%r{<span class="[^"]*bg-orange-100[^"]*" title="Imports to people.created_at">DateEntered</span>})
     end
 
     it "leaves the field reference off tables without field groups" do
