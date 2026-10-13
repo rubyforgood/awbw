@@ -93,19 +93,22 @@ RSpec.describe "FM archives", type: :request do
       FmWorkshopLog.create!(fm_id: "76001", data: { "LeaderID" => "00006" })
       FmAddress.create!(fm_id: "74001", data: { "RolodexID" => "00006" })
       FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
+      FmNote.create!(fm_id: "N1", data: { "RolodexID" => "00006" })
 
       get fm_archive_path("00006", table: "rolodexes")
 
       frame = ->(table) { response.body[/<turbo-frame[^>]*id="backlink_#{table}".*?<\/turbo-frame>/m] }
       expect(frame.call("fm_workshop_logs")).to include("bg-orange-100", "In the portal as workshop logs")
       expect(frame.call("fm_addresses")).to include("bg-orange-100", "In the portal as addresses")
-      expect(frame.call("fm_fundings")).not_to include("bg-orange-100", "In the portal")
+      expect(frame.call("fm_fundings")).to include("bg-orange-100", "In the portal as scholarships")
+      expect(frame.call("fm_notes")).not_to include("bg-orange-100", "In the portal")
 
       reference = response.body.split("Records pointing here").last
       expect(reference).to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Workshop Logs</a>})
       expect(reference).to match(%r{>Personnel</a>\s*<span[^>]*>\(Affiliations\)</span>})
       expect(reference).not_to include("(Workshop logs)")
-      expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Funding</a>})
+      expect(reference).to match(%r{>Funding</a>\s*<span[^>]*>\(Scholarships\)</span>})
+      expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Notes</a>})
     end
 
     it "leaves related records unhighlighted on tables without cards" do

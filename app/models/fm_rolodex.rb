@@ -114,6 +114,7 @@ class FmRolodex < ApplicationRecord
     "fm_workshops" => "Workshop",
     "fm_participants" => "EventRegistration",
     "fm_payments" => "Payment",
+    "fm_fundings" => "Scholarship",
     "fm_invoices" => "Invoice",
     "fm_quotations" => "Quote"
   }.freeze

@@ -113,7 +113,7 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
 
     it "skips a table without a portal counterpart" do
-      expect(helper.fm_portal_counterpart_name(rolodex, "fm_fundings", "Funding")).to be_nil
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_notes", "Notes")).to be_nil
     end
   end
 
@@ -125,7 +125,7 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
 
     it "leaves a table with no portal counterpart uncolored" do
-      expect(helper.fm_related_table_highlight(rolodex, "fm_fundings")).to be_nil
+      expect(helper.fm_related_table_highlight(rolodex, "fm_notes")).to be_nil
     end
   end
 
