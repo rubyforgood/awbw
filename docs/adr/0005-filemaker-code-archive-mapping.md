@@ -25,7 +25,7 @@ drive the archive pages' links.
 |---|---|---|---|
 | `people.filemaker_code` | `fm_rolodexes` | `ID`, e.g. `00006` | `filemaker_code_links` on person edit + admin details |
 | `organizations.filemaker_code` | `fm_projects`, then `fm_organizations` | `ProjectID`, e.g. `P2775`; `OrgID`, e.g. `ORG07206` | `filemaker_code_links` on org form; `filemaker_project_links` / `filemaker_organization_links` on org edit |
-| `affiliations.filemaker_code` | `fm_personnels` | `PrsnlRecID`, e.g. `PS9999` | dev seed (no UI link yet) |
+| `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels` | `ProjectID`, e.g. `P2775`; rarely `PrsnlRecID`, e.g. `PS9999` | no UI link yet |
 | `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | dev seed (no UI link yet) |
 | `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | dev seed (no UI link yet) |
 | `resources.filemaker_code` | `fm_quotations` | `RecordID`, e.g. `Q10215` | no UI link yet |
@@ -40,11 +40,13 @@ drive the archive pages' links.
 - **Codes match in full, never by number alone.** `P00023` and `ORG00023` are different
   records, and a bare `00023` matches neither. The prefix is part of the id, and
   prefixes aren't unique to one table (see below), so nothing strips or routes by it.
-- **Affiliation → Personnel.** Personnel is a person on a project with a role and
-  agreement status. With orgs = projects, that's an affiliation. **Open:** production
-  affiliations almost all carry `P` + 4-digit codes, which could be project ids or
-  personnel ids missing their `S` — not yet checked against each row's person and org
-  (see "What portal records store" below).
+- **Affiliation → Project.** Production affiliations carry their org's project id,
+  not a Personnel id. Of 1,531 `P` + 4-digit codes, all 1,531 are real projects and
+  1,518 equal the affiliation's own org code. Reading them as Personnel ids missing the
+  `S` matched the affiliation's person once and its org never; as participant ids,
+  never its org. One affiliation carries a real `PS` Personnel id, so Personnel stays
+  as the second table. The 13 that differ from the org's code are worth a look: the
+  affiliation may sit on the wrong org, or the org may be missing that code.
 - **Resource → Quotation.** In production, 116 of 128 resource codes are quotation ids
   (`Q…`), 115 of them on Leader spotlight resources and one on a Story; 115 of the 116
   exist in `fm_quotations` (quotes and testimonials, with a `WorkShopLeader` field).
@@ -130,7 +132,7 @@ split into single codes). Compare against the grid above.
 |---|---|---|---|
 | `organizations` | 1,987 | 1,965 `P` + 4 digits (projects) | 22: unpadded `P622`; no prefix `627`, `628`, `2781`, `9530`; letter O for zero `PO296`; extra digit `P03484`; `PP256`; placeholder `F0000` ×2; bare 5-digit numbers ×9 (Rolodex-shaped); 2 unreadable values |
 | `people` | 1 | 1 Rolodex-shaped (`39853`) | — the column is effectively unused |
-| `affiliations` | 1,535 | 1 `PS` (personnel) | 1,531 `P` + 4 digits (project ids, or personnel ids missing the `S` — unverified), plus `ORG05589`, `PP208`, `09856` |
+| `affiliations` | 1,535 | 1,531 `P` + 4 digits (projects; 1,518 equal the org's code), 1 `PS` (personnel) | `ORG05589`, `PP208`, `09856` |
 | `payments` | 0 | — | — |
 | `workshops` | 850 | 849 `W` + 4 digits | `XVI/4` |
 | `resources` | 128 | 115 `Q` + 4–5 digits found in quotations (114 Leader spotlight, 1 Story) | 1 `Q` id not in the archive; 10 bare 2–3 digit numbers, `v`, and a URL, all on Leader spotlights |
