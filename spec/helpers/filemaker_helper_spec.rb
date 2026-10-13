@@ -100,6 +100,23 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
+  describe "#fm_portal_counterpart_name" do
+    let(:rolodex) { FmRolodex.new }
+
+    it "names the portal counterpart when it differs from the archive's name" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_personnels", "Personnel")).to eq("Affiliations")
+    end
+
+    it "skips a counterpart sharing the archive's name, ignoring case and a parenthetical" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshop_logs", "Workshop Logs")).to be_nil
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshops", "Workshops (Authored)")).to be_nil
+    end
+
+    it "skips a table without a portal counterpart" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_fundings", "Funding")).to be_nil
+    end
+  end
+
   describe "#fm_related_table_highlight" do
     let(:rolodex) { FmRolodex.new }
 

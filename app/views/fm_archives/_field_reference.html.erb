@@ -39,6 +39,9 @@
           <% model::HAS_MANY.each do |table, config| %>
             <li class="<%= class_names("-mx-2 rounded px-2 py-0.5", fm_related_table_highlight(record, table)) %>">
               <%= link_to config[:label], fm_archives_path(table: table.delete_prefix("fm_")), class: "text-primary hover:underline" %>
+              <% if (portal_name = fm_portal_counterpart_name(record, table, config[:label])) %>
+                <span class="text-gray-600">(<%= portal_name %>)</span>
+              <% end %>
               <span class="text-gray-400">via</span>
               <span class="rounded bg-white px-2 py-0.5 font-mono text-xs text-gray-700"><%= config[:via] %></span>
             </li>

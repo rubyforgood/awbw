@@ -103,6 +103,8 @@ RSpec.describe "FM archives", type: :request do
 
       reference = response.body.split("Records pointing here").last
       expect(reference).to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Workshop Logs</a>})
+      expect(reference).to match(%r{>Personnel</a>\s*<span[^>]*>\(Affiliations\)</span>})
+      expect(reference).not_to include("(Workshop logs)")
       expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Funding</a>})
     end
 
