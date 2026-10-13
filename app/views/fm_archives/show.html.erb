@@ -51,7 +51,7 @@
     <% if @backlinks.any? %>
       <div class="rounded-xl bg-white p-6">
         <h2 class="mb-1 text-lg font-semibold">Related Records</h2>
-        <% if @record.class::FIELD_GROUPS.any? %>
+        <% if @record.class::PORTAL_COUNTERPARTS.any? %>
           <%= render "related_legend" %>
         <% end %>
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

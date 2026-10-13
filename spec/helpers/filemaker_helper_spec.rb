@@ -107,12 +107,8 @@ RSpec.describe FilemakerHelper, type: :helper do
       expect(helper.fm_related_table_highlight(rolodex, "fm_workshop_logs")).to include("bg-orange-100")
     end
 
-    it "colors a table with no portal counterpart yellow" do
-      expect(helper.fm_related_table_highlight(rolodex, "fm_fundings")).to include("bg-yellow-100")
-    end
-
-    it "leaves a table the cards already show uncolored" do
-      expect(helper.fm_related_table_highlight(rolodex, "fm_addresses")).to be_nil
+    it "leaves a table with no portal counterpart uncolored" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_fundings")).to be_nil
     end
   end
 

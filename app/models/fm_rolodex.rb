@@ -106,6 +106,8 @@ class FmRolodex < ApplicationRecord
   LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
   TALL_GROUPS = [ "Organization & affiliations" ].freeze
   PORTAL_COUNTERPARTS = {
+    "fm_addresses" => "Address",
+    "fm_phone_numbers" => "ContactMethod",
     "fm_people_to_organizations" => "Affiliation",
     "fm_personnels" => "Affiliation",
     "fm_workshop_logs" => "WorkshopLog",
@@ -173,10 +175,6 @@ class FmRolodex < ApplicationRecord
 
   def addresses
     @addresses ||= contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
-  end
-
-  def tables_shown_in_cards
-    [ FmPhoneNumber.table_name, FmAddress.table_name ]
   end
 
   def records_listed_under(label)

@@ -88,32 +88,22 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).not_to include(fm_archive_path("ORG90999", table: "organizations"))
     end
 
-    it "highlights related records the cards above don't show" do
+    it "marks related tables the portal has its own records for in orange, naming the counterpart" do
       FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+      FmWorkshopLog.create!(fm_id: "76001", data: { "LeaderID" => "00006" })
       FmAddress.create!(fm_id: "74001", data: { "RolodexID" => "00006" })
       FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
 
       get fm_archive_path("00006", table: "rolodexes")
 
-      expect(response.body).to match(/<turbo-frame[^>]*class="[^"]*bg-yellow-100[^"]*"[^>]*id="backlink_fm_fundings"|<turbo-frame[^>]*id="backlink_fm_fundings"[^>]*class="[^"]*bg-yellow-100/)
-      expect(response.body).not_to match(/<turbo-frame[^>]*id="backlink_fm_addresses"[^>]*class="[^"]*bg-yellow-100/)
-      expect(response.body).not_to match(/<turbo-frame[^>]*class="[^"]*bg-yellow-100[^"]*"[^>]*id="backlink_fm_addresses"/)
+      frame = ->(table) { response.body[/<turbo-frame[^>]*id="backlink_#{table}".*?<\/turbo-frame>/m] }
+      expect(frame.call("fm_workshop_logs")).to include("bg-orange-100", "In the portal as workshop logs")
+      expect(frame.call("fm_addresses")).to include("bg-orange-100", "In the portal as addresses")
+      expect(frame.call("fm_fundings")).not_to include("bg-orange-100", "In the portal")
 
       reference = response.body.split("Records pointing here").last
-      expect(reference).to match(%r{<li class="[^"]*bg-yellow-100[^"]*">\s*<a[^>]*>Funding</a>})
-      expect(reference).not_to match(%r{<li class="[^"]*bg-yellow-100[^"]*">\s*<a[^>]*>Addresses</a>})
-    end
-
-    it "marks related tables the portal has its own records for in orange, naming the counterpart" do
-      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
-      FmWorkshopLog.create!(fm_id: "76001", data: { "LeaderID" => "00006" })
-      FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
-
-      get fm_archive_path("00006", table: "rolodexes")
-
-      logs = response.body[/<turbo-frame[^>]*id="backlink_fm_workshop_logs".*?<\/turbo-frame>/m]
-      expect(logs).to include("bg-orange-100", "In the portal as workshop logs")
-      expect(response.body[/<turbo-frame[^>]*id="backlink_fm_fundings".*?<\/turbo-frame>/m]).to include("bg-yellow-100")
+      expect(reference).to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Workshop Logs</a>})
+      expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Funding</a>})
     end
 
     it "leaves related records unhighlighted on tables without cards" do
@@ -123,7 +113,7 @@ RSpec.describe "FM archives", type: :request do
       get fm_archive_path("P2775", table: "projects")
 
       expect(response.body).to include("backlink_fm_personnels")
-      expect(response.body).not_to include("bg-yellow-100")
+      expect(response.body).not_to include("bg-orange-100")
     end
 
     it "leaves the field reference off tables without field groups" do

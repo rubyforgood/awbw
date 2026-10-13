@@ -50,11 +50,9 @@ module FilemakerHelper
     link_to fm_id, fm_archive_path(fm_id, table: key), class: "text-primary hover:underline"
   end
 
-  # Colors a related table the cards leave out: orange when the portal keeps its own such records, else yellow.
+  # Colors a related table orange when the portal keeps its own records of the same kind.
   def fm_related_table_highlight(record, table)
-    return unless record.related_only?(table)
-
-    record.portal_counterpart(table) ? "border-orange-200 bg-orange-100" : "border-yellow-200 bg-yellow-100"
+    "border-orange-200 bg-orange-100" if record.portal_counterpart(table)
   end
 
   # A code no archive table holds renders struck through, flagging a likely typo —
