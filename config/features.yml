@@ -4273,3 +4273,16 @@
   pro_tips:
     - "Separate several codes with commas — a record can answer to more than one."
     - "Each code links to its FileMaker archive record, and that record links back to the payment or workshop."
+
+- name: "FileMaker rolodex records grouped by topic"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2665
+  action_path: "/fm_archives?table=rolodexes"
+  summary: >-
+    A FileMaker rolodex record now shows its fields in labeled sections —
+    identity, organization, contact, notes, facilitator history and more — with
+    the most useful details first.
+  pro_tips:
+    - "FileMaker's calculated and summary fields sit at the bottom under Other fields."
