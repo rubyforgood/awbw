@@ -3,10 +3,10 @@
   <div class="space-y-6">
     <div class="mb-6 flex items-center justify-between">
       <div>
-        <h1 class="text-primary font-display text-2xl font-semibold"><%= @record.class.name %></h1>
-        <p class="text-sm text-gray-500">FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
+        <h1 class="text-primary font-display text-2xl font-semibold"><%= @record.name %></h1>
+        <p class="text-sm text-gray-500"><%= @table_label %> &middot; FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
       </div>
-      <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: button_classes(:primary_outline) %>
+      <%= link_to "Back to list", fm_archives_path(table: @table_key), class: button_classes(:primary_outline) %>
     </div>
 
     <% if @portal_records.any? %>
@@ -65,9 +65,14 @@
               <% end %>
               <div class="mt-2 flex flex-wrap gap-1">
                 <% info[:records].each do |record| %>
-                  <%= link_to record.fm_id, fm_archive_path(record.fm_id, table: info[:table].sub("fm_", "")),
-                        class: "text-xs font-mono text-primary hover:underline bg-gray-50 px-2 py-1 rounded",
-                        data: { turbo_frame: "_top" } %>
+                  <%= link_to fm_archive_path(record.fm_id, table: info[:table].sub("fm_", "")),
+                        class: "text-xs text-primary hover:underline bg-gray-50 px-2 py-1 rounded",
+                        title: record.name, data: { turbo_frame: "_top" } do %>
+                    <span class="font-mono"><%= record.fm_id %></span>
+                    <% if record.name != record.fm_id %>
+                      <span class="text-gray-700"><%= truncate(record.name, length: 40) %></span>
+                    <% end %>
+                  <% end %>
                 <% end %>
               </div>
               <% if info[:records].total_pages > 1 %>

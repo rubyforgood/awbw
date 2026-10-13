@@ -36,4 +36,8 @@ class FmSolicitation < ApplicationRecord
     "DonorDevRecID" => "fm_donor_developers",
     "DonorID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("NameListing"), fm_words("solicitation", fm_with("for", fm_value("CampaignID"))))
+  end
 end

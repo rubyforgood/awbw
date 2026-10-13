@@ -60,4 +60,10 @@ class FmFunding < ApplicationRecord
     "fm_match_donations" => { via: "FundingID", label: "Match Donations" },
     "fm_reportings" => { via: "FundingRecordID", label: "Reporting Obligations" }
   }.freeze
+
+  def name
+    granted = fm_dollars("AmountGranted")
+    detail = granted ? "#{granted} grant" : fm_words(fm_dollars("RequestAmount"), "funding request")
+    fm_phrase(fm_value("NameTemp", "Purpose"), detail)
+  end
 end

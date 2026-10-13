@@ -45,10 +45,10 @@ class FmPayment < ApplicationRecord
     "OrgID" => "fm_organizations",
     "ProjectID" => "fm_projects",
     "ParticRecID" => "fm_participants",
-    "RefID" => nil # polymorphic — resolved by prefix via REFID_PREFIX_MAP
+    "RefID" => nil # polymorphic — resolved by prefix via PREFIX_LINK_MAP
   }.freeze
 
-  REFID_PREFIX_MAP = {
+  PREFIX_LINK_MAP = {
     "E" => "fm_events",
     "F" => "fm_fundings",
     "e" => "fm_events"
@@ -60,4 +60,8 @@ class FmPayment < ApplicationRecord
     "fm_match_donations" => { via: "RefDonationID", label: "Match Donations" },
     "fm_form_submissions" => { via: "PaymentID", label: "Form Submissions" }
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Name"), fm_words(fm_value("Type") || "Payment", fm_with("of", fm_dollars("Amount"))))
+  end
 end

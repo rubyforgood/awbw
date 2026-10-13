@@ -27,4 +27,8 @@ class FmVolunteer < ApplicationRecord
     "VRecID" => "fm_rolodexes",
     "EventID" => "fm_events"
   }.freeze
+
+  def name
+    fm_phrase(fm_join("FirstName", "LastName"), fm_words(fm_value("Role"), "volunteer", fm_with("at", fm_value("EventID"))))
+  end
 end

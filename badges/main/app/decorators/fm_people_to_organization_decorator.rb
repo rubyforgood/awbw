@@ -5,6 +5,6 @@ class FmPeopleToOrganizationDecorator < ApplicationDecorator
 
   def summary
     org_id = data["OrgID"]
-    FmOrganization.find_by(fm_id: org_id)&.data&.dig("OrgName").presence || org_id
+    FmOrganization.find_by(fm_id: org_id)&.name || org_id
   end
 end

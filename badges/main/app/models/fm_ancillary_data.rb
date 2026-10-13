@@ -20,4 +20,8 @@ class FmAncillaryData < ApplicationRecord
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("FlagText"), fm_words(fm_value("Flag"), "flag"))
+  end
 end

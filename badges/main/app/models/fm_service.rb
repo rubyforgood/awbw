@@ -28,4 +28,8 @@ class FmService < ApplicationRecord
   FM_LINKS = {
     "ProjectID" => "fm_projects"
   }.freeze
+
+  def name
+    fm_words(fm_value("Month"), fm_value("Year"), "service", fm_with("at", fm_value("ProjectID"))).upcase_first
+  end
 end

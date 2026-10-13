@@ -23,4 +23,8 @@ class FmExhibitedItem < ApplicationRecord
     "ArtRegistryItemID" => "fm_art_registries",
     "EventID" => "fm_events"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("ItemName"), fm_words("exhibited", fm_with("at", fm_value("EventID"))))
+  end
 end

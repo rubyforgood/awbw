@@ -18,4 +18,8 @@ class FmFormField < ApplicationRecord
   FM_KEY_COLUMN = "FieldNo"
 
   FM_LINKS = {}.freeze
+
+  def name
+    fm_words(fm_value("FieldNameFM", "FieldNameWP"), "form field").upcase_first
+  end
 end
