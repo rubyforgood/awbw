@@ -106,6 +106,7 @@ RSpec.describe "FM archives", type: :request do
       FmAddress.create!(fm_id: "74001", data: { "RolodexID" => "00006" })
       FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
       FmNote.create!(fm_id: "N1", data: { "RolodexID" => "00006" })
+      FmVolunteer.create!(fm_id: "V1", data: { "VRecID" => "00006" })
       FmActivity.create!(fm_id: "A1", data: { "ID" => "00006" })
 
       get fm_archive_path("00006", table: "rolodexes")
@@ -115,7 +116,8 @@ RSpec.describe "FM archives", type: :request do
       expect(frame.call("fm_addresses")).to include("bg-orange-100", "In the portal as addresses")
       expect(frame.call("fm_fundings")).to include("bg-orange-100", "In the portal as scholarships")
       expect(frame.call("fm_activities")).to include("bg-orange-100", "In the portal as communications")
-      expect(frame.call("fm_notes")).not_to include("bg-orange-100", "In the portal")
+      expect(frame.call("fm_notes")).to include("bg-orange-100", "In the portal as comments")
+      expect(frame.call("fm_volunteers")).not_to include("bg-orange-100", "In the portal")
 
       reference = response.body.split("Records pointing here").last
       expect(reference).to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Workshop Logs</a>})
@@ -123,7 +125,7 @@ RSpec.describe "FM archives", type: :request do
       expect(reference).not_to include("(Workshop logs)")
       expect(reference).to match(%r{>Contacts</a>.*ContacteeID</span>\s*<span[^>]*>Data from 2003–2018</span>}m)
       expect(reference).to match(%r{>Funding</a>\s*<span[^>]*>\(Scholarships\)</span>})
-      expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Notes</a>})
+      expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Volunteer Records</a>})
     end
 
     it "leaves related records unhighlighted on tables without cards" do

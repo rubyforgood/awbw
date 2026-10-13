@@ -110,6 +110,7 @@ class FmRolodex < ApplicationRecord
   PORTAL_COUNTERPARTS = {
     "fm_addresses" => "Addresses",
     "fm_phone_numbers" => "Contact methods",
+    "fm_notes" => "Comments",
     "fm_activities" => "Communications",
     "fm_people_to_organizations" => "Affiliations",
     "fm_personnels" => "Affiliations",
