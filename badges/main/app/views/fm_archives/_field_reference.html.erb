@@ -1,0 +1,68 @@
+<% model = record.class %>
+<section class="rounded-xl border border-blue-200 bg-blue-50 p-6">
+  <h2 class="mb-1 text-lg font-semibold">Available fields &amp; associations</h2>
+  <p class="mb-5 text-sm text-gray-600">Every field on a <%= model.name %> record. Grayed-out fields are blank on this one, so the cards above leave them out.</p>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      <h3 class="mb-1 text-sm font-semibold text-gray-700">Fields</h3>
+      <div class="mb-3 space-y-1 text-xs text-gray-600">
+        <p class="flex items-center gap-1">
+          <span class="size-3 rounded-sm border border-orange-200 bg-orange-100"></span>Imports straight into a portal field (hover to see which)
+        </p>
+        <% if model::USER_LOOKUP_FIELDS.any? %>
+          <p>* Needs a FileMaker staff → portal user lookup</p>
+        <% end %>
+      </div>
+      <dl class="space-y-3">
+        <% model.flat_field_groups.merge(FmArchive::OTHER_FIELDS => record.ungrouped_keys).compact_blank.each do |label, keys| %>
+          <div>
+            <dt class="text-xs font-medium text-gray-500"><%= label %></dt>
+            <dd class="mt-1 flex flex-wrap gap-1">
+              <% keys.each do |key| %>
+                <% portal_field = model::PORTAL_FIELDS[key] %>
+                <%= tag.span "#{key}#{"*" if model::USER_LOOKUP_FIELDS.include?(key)}", class: class_names("rounded px-2 py-0.5 font-mono text-xs",
+                                                     portal_field ? "bg-orange-100" : "bg-white",
+                                                     record.data[key].present? ? "text-gray-700" : "text-gray-400"),
+                                  title: portal_field && "Imports to #{portal_field}" %>
+              <% end %>
+            </dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+    <div class="space-y-6">
+      <div>
+        <h3 class="mb-3 text-sm font-semibold text-gray-700">Linked from this record</h3>
+        <ul class="space-y-1 text-sm">
+          <% model::FM_LINKS.each do |key, table| %>
+            <li>
+              <span class="rounded bg-white px-2 py-0.5 font-mono text-xs text-gray-700"><%= key %></span>
+              <span class="text-gray-400">→</span>
+              <%= link_to FmArchivesController::TABLES.dig(table.delete_prefix("fm_"), :label), fm_archives_path(table: table.delete_prefix("fm_")),
+                          class: "text-primary hover:underline" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+      <div>
+        <h3 class="mb-1 text-sm font-semibold text-gray-700">Records pointing here</h3>
+        <%= render "related_legend" %>
+        <ul class="space-y-1 text-sm">
+          <% model::HAS_MANY.each do |table, config| %>
+            <li class="<%= class_names("-mx-2 rounded px-2 py-0.5", fm_related_table_highlight(record, table)) %>">
+              <%= link_to config[:label], fm_archives_path(table: table.delete_prefix("fm_")), class: "text-primary hover:underline" %>
+              <% if (portal_name = fm_portal_counterpart_name(record, table, config[:label])) %>
+                <span class="text-gray-600">(<%= portal_name %>)</span>
+              <% end %>
+              <span class="text-gray-400">via</span>
+              <span class="rounded bg-white px-2 py-0.5 font-mono text-xs text-gray-700"><%= config[:via] %></span>
+              <% if config[:note] %>
+                <span class="text-xs text-gray-500 italic"><%= config[:note] %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

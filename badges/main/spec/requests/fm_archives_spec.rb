@@ -17,6 +17,151 @@ RSpec.describe "FM archives", type: :request do
       end
     end
 
+    it "shows a rolodex record's fields under group headings, most important first" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "Comments" => "Met at training", "LastName" => "Archer" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Identity.*LastName.*Notes.*Comments.*Record keeping/m)
+    end
+
+    it "lists a rolodex record's phones and addresses in their own card" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "EMail" => "abe@example.com", "PrimaryPhoneID" => "PH1" })
+      FmPhoneNumber.create!(fm_id: "PH1", data: { "RolodexID" => "00006", "PhoneType" => "Work", "PhoneNumber" => "(213) 555-0101" })
+      FmAddress.create!(fm_id: "AD1", data: { "RolodexID" => "00006", "AddrsLine1" => "88 Rose Ave", "AddrsCity" => "Venice" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Phones &amp; addresses.*Phones.*\(213\) 555-0101.*Addresses.*88 Rose Ave, Venice.*Record keeping/m)
+      expect(response.body).to include("table=phone_numbers", "table=addresses")
+      expect(response.body).to match(%r{Work\s*<a[^>]*href="#{Regexp.escape(fm_archive_path("PH1", table: "phone_numbers"))}"[^>]*>PH1</a>\s*<span[^>]*>Primary</span>})
+      expect(response.body).not_to include("PrimaryPhoneID</dt>")
+    end
+
+    it "shows a one-field subcard as a single row, its heading beside the value" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "MailingList" => "Yes" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(%r{<h3[^>]*>Mailing list</h3>\s*<span[^>]*>Yes</span>})
+      expect(response.body).not_to include("MailingList</dt>")
+    end
+
+    it "lists a rolodex person's job and facilitator affiliations in their subcards" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+      FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
+      FmProject.create!(fm_id: "P1", data: { "ProjectName" => "Adult Windows", "OrgID" => "ORG1" })
+      FmPeopleToOrganization.create!(fm_id: "R1", data: { "PersonID" => "00006", "OrgID" => "ORG1", "Title" => "Case Manager" })
+      FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00006", "ProjectID" => "P1", "Role" => "Facilitator" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Job affiliation.*Case Manager.*R1.*Sample Shelter.*Facilitator affiliation.*Facilitator.*PS1.*Adult Windows at Sample Shelter/m)
+    end
+
+    it "lists a primary phone or address the archive lacks as not found" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "PrimaryPhoneID" => "75999", "WorksiteAddrsID" => "74999" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(%r{<span[^>]*line-through[^>]*title="No FM record found"[^>]*>75999</span>\s*<span[^>]*>Primary</span>.*Not found in FM data}m)
+      expect(response.body).to match(%r{>74999</span>\s*<span[^>]*>Worksite</span>.*Not found in FM data}m)
+    end
+
+    it "lists every field and association a rolodex record can hold below its cards" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Record keeping.*Available fields &amp; associations.*FacilitatorSinceYear.*OrgID.*Organizations.*Workshops Authored.*AuthorID/m)
+    end
+
+    it "hides blank fields from the cards but keeps them, grayed, in the field reference" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "LastName" => "Archer", "MiddleName" => "", "zcSort" => "" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      cards, reference = response.body.split("Available fields &amp; associations")
+      expect(cards).to include("LastName")
+      expect(cards).not_to include("MiddleName", "zcSort")
+      expect(reference).to match(/<span class="[^"]*text-gray-400[^"]*"[^>]*>MiddleName</)
+      expect(reference).to match(/<span class="[^"]*text-gray-700[^"]*"[^>]*>LastName</)
+      expect(reference).to match(/Other fields.*zcSort/m)
+    end
+
+    it "strikes through a linked ID with no archive record, and links the rest" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "OrgID" => "ORG90999", "PrimaryContactID" => "00007" })
+      FmRolodex.create!(fm_id: "00007")
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(%r{<span[^>]*line-through[^>]*title="No FM record found"[^>]*>ORG90999</span>})
+      expect(response.body).to include(fm_archive_path("00007", table: "rolodexes"))
+      expect(response.body).not_to include(fm_archive_path("ORG90999", table: "organizations"))
+    end
+
+    it "marks related tables the portal has its own records for in orange, naming the counterpart" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+      FmWorkshopLog.create!(fm_id: "76001", data: { "LeaderID" => "00006" })
+      FmAddress.create!(fm_id: "74001", data: { "RolodexID" => "00006" })
+      FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
+      FmNote.create!(fm_id: "N1", data: { "RolodexID" => "00006" })
+      FmVolunteer.create!(fm_id: "V1", data: { "VRecID" => "00006" })
+      FmActivity.create!(fm_id: "A1", data: { "ID" => "00006" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      frame = ->(table) { response.body[/<turbo-frame[^>]*id="backlink_#{table}".*?<\/turbo-frame>/m] }
+      expect(frame.call("fm_workshop_logs")).to include("bg-orange-100", "In the portal as workshop logs")
+      expect(frame.call("fm_addresses")).to include("bg-orange-100", "In the portal as addresses")
+      expect(frame.call("fm_fundings")).to include("bg-orange-100", "In the portal as scholarships")
+      expect(frame.call("fm_activities")).to include("bg-orange-100", "In the portal as communications")
+      expect(frame.call("fm_notes")).to include("bg-orange-100", "In the portal as comments")
+      expect(frame.call("fm_volunteers")).not_to include("bg-orange-100", "In the portal")
+
+      reference = response.body.split("Records pointing here").last
+      expect(reference).to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Workshop Logs</a>})
+      expect(reference).to match(%r{>Personnel</a>\s*<span[^>]*>\(Affiliations\)</span>})
+      expect(reference).not_to include("(Workshop logs)")
+      expect(reference).to match(%r{>Contacts</a>.*ContacteeID</span>\s*<span[^>]*>Data from 2003–2018</span>}m)
+      expect(reference).to match(%r{>Funding</a>\s*<span[^>]*>\(Scholarships\)</span>})
+      expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Volunteer Records</a>})
+    end
+
+    it "leaves related records unhighlighted on tables without cards" do
+      FmProject.create!(fm_id: "P2775")
+      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P2775" })
+
+      get fm_archive_path("P2775", table: "projects")
+
+      expect(response.body).to include("backlink_fm_personnels")
+      expect(response.body).not_to include("bg-orange-100")
+    end
+
+    it "marks fields that import straight into a portal column orange, naming the column" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "FirstName" => "Abe", "Gender" => "F" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      reference = response.body.split("Available fields &amp; associations").last
+      expect(reference).to match(%r{<span class="[^"]*bg-orange-100[^"]*" title="Imports to people.first_name">FirstName</span>})
+      expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">Gender</span>})
+      expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">ID</span>})
+      expect(reference).to match(%r{<span class="[^"]*bg-orange-100[^"]*" title="Imports to people.created_at">DateEntered</span>})
+      expect(reference).to match(%r{title="Imports to people.created_by_id">EnteredBy\*</span>})
+      expect(reference).to include("* Needs a FileMaker staff → portal user lookup")
+      expect(reference).to match(%r{title="Imports to people.email">EmailPrimary</span>})
+      expect(reference).to match(%r{title="Imports to people.email">EMail</span>})
+    end
+
+    it "leaves the field reference off tables without field groups" do
+      FmProject.create!(fm_id: "P2775")
+
+      get fm_archive_path("P2775", table: "projects")
+
+      expect(response.body).not_to include("Available fields")
+    end
+
     it "links back to the portal people carrying the archive code" do
       FmRolodex.create!(fm_id: "00006")
       person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")
@@ -82,6 +227,27 @@ RSpec.describe "FM archives", type: :request do
 
       expect(response.body).to include(edit_affiliation_path(affiliation))
       expect(response.body).to include(ERB::Util.html_escape("#{affiliation.person.full_name} at #{affiliation.organization.name}"))
+    end
+
+    it "links an archived payment back to its portal payment" do
+      FmPayment.create!(fm_id: "D29186")
+      person = create(:person)
+      payment = create(:payment, person:, amount_cents: 15_000, filemaker_code: "D29186")
+
+      get fm_archive_path("D29186", table: "payments")
+
+      expect(response.body).to include(payment_path(payment))
+      expect(response.body).to include("$150 from #{ERB::Util.html_escape(person.name)}")
+    end
+
+    it "links an archived workshop back to its portal workshop" do
+      FmWorkshop.create!(fm_id: "W0123")
+      workshop = create(:workshop, filemaker_code: "W0123")
+
+      get fm_archive_path("W0123", table: "workshops")
+
+      expect(response.body).to include(workshop_path(workshop))
+      expect(response.body).to include(ERB::Util.html_escape(workshop.title))
     end
 
     it "omits the portal section when nothing carries the code" do

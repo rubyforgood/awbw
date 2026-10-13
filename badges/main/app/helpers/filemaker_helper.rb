@@ -34,9 +34,31 @@ module FilemakerHelper
     when Person then [ record.full_name, person_path(record) ]
     when Organization then [ record.name, organization_path(record) ]
     when Affiliation then [ "#{record.person&.full_name} at #{record.organization&.name}", edit_affiliation_path(record) ]
+    when Payment then [ [ dollars_from_cents(record.amount_cents), record.payer&.name ].compact.join(" from "), payment_path(record) ]
+    when Workshop then [ record.title, workshop_path(record) ]
     end
 
-    link_to text, path, class: button_classes(:primary_outline, size: :sm)
+    link_to text, path, class: button_classes(:primary)
+  end
+
+  # An archive field's link to the record it names, struck through when the archive has no such record.
+  def fm_archive_reference_link(fm_id, table)
+    key = table.delete_prefix("fm_")
+    model = FmArchivesController::TABLES.dig(key, :model)
+    return tag.span(fm_id, class: "line-through opacity-60", title: "No FM record found") if model && !model.exists?(fm_id: fm_id)
+
+    link_to fm_id, fm_archive_path(fm_id, table: key), class: "text-primary hover:underline"
+  end
+
+  # The portal's name for a related table's counterpart, when the archive's label doesn't already lead with it.
+  def fm_portal_counterpart_name(record, table, label)
+    name = record.portal_counterpart(table)
+    name unless name.nil? || label.downcase.start_with?(name.downcase)
+  end
+
+  # Colors a related table orange when the portal keeps its own records of the same kind.
+  def fm_related_table_highlight(record, table)
+    "border-orange-200 bg-orange-100" if record.portal_counterpart(table)
   end
 
   # A code no archive table holds renders struck through, flagging a likely typo —

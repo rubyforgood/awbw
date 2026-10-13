@@ -5,6 +5,7 @@ class Resource < ApplicationRecord
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include Mentionable
+  include FilemakerCoded
 
   # Define rich text fields for mentions functionality
   def self.mentionable_rich_text_fields

@@ -84,6 +84,51 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
+  describe "#fm_archive_reference_link" do
+    it "links an ID the archive holds to its record" do
+      FmAddress.create!(fm_id: "74001")
+
+      expect(helper.fm_archive_reference_link("74001", "fm_addresses"))
+        .to include(%(href="#{fm_archive_path("74001", table: "addresses")}"))
+    end
+
+    it "strikes through an ID the archive has no record for" do
+      html = helper.fm_archive_reference_link("74999", "fm_addresses")
+
+      expect(html).to include("line-through", %(title="No FM record found"), "74999")
+      expect(html).not_to include("href")
+    end
+  end
+
+  describe "#fm_portal_counterpart_name" do
+    let(:rolodex) { FmRolodex.new }
+
+    it "names the portal counterpart when it differs from the archive's name" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_personnels", "Personnel")).to eq("Affiliations")
+    end
+
+    it "skips a counterpart the archive's label already leads with, ignoring case" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshop_logs", "Workshop Logs")).to be_nil
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshops", "Workshops Authored")).to be_nil
+    end
+
+    it "skips a table without a portal counterpart" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_volunteers", "Volunteer Records")).to be_nil
+    end
+  end
+
+  describe "#fm_related_table_highlight" do
+    let(:rolodex) { FmRolodex.new }
+
+    it "colors a table the portal has its own records for orange" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_workshop_logs")).to include("bg-orange-100")
+    end
+
+    it "leaves a table with no portal counterpart uncolored" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_volunteers")).to be_nil
+    end
+  end
+
   describe "#filemaker_code_hint" do
     before { FmRolodex.create!(fm_id: "00006") }
 
