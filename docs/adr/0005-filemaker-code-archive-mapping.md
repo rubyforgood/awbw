@@ -46,60 +46,73 @@ drive the archive pages' links.
 
 ## Archive id patterns
 
-What each archive table's `fm_id` looks like, as far as we know. Add to it as we
-learn more from the export. Evidence is each `app/models/fm_*.rb` header (PK and FK
-examples); "?" means we haven't seen one yet.
+What each archive table's `fm_id` looks like in production, profiled 2026-10-12 with a
+digits-as-`9` shape query over every archive table. Every table came back with a
+single prefix and fixed-width digits unless noted. Re-run it and update this grid
+when a new export lands.
 
-| Archive table | FileMaker key | Id pattern | Example | Portal column |
-|---|---|---|---|---|
-| `fm_activities` | `ActivityLogID` | ? | | |
-| `fm_addresses` | `AddrsID` | ? | | |
-| `fm_allocations` | `AllocRecID` | ? | | |
-| `fm_ancillary_data` | `RecordID` | ? | | |
-| `fm_art_purchases` | `PurchaseID` | ? | | |
-| `fm_art_registries` | `ItemID` | ? | | |
-| `fm_campaigns` | `CampaignID` | ? | | |
-| `fm_committee_meetings` | `CtMtgID` | ? | | |
-| `fm_committee_members` | `CMRecID` | ? | | |
-| `fm_committees` | `CommitteeID` | ? | | |
-| `fm_contacts` | `ContactID` | ? | | |
-| `fm_donor_developers` | `DonorDevRecID` | ? | | |
-| `fm_email_addresses` | `EmailAddrsID` | ? | | |
-| `fm_events` | `EventID` | `E` + digits | `E4037` | |
-| `fm_exhibited_items` | `RecordID` | ? | | |
-| `fm_expenditures` | `ExpendRecID` | `X` + digits | `X5510` | |
-| `fm_form_fields` | `FieldNo` | ? | | |
-| `fm_form_letters` | `DocID` | ? | | |
-| `fm_form_submissions` | `RecordID` | likely `FSB` + 5 digits (seen only as refs from payments/personnel) | `FSB03117` | |
-| `fm_forms_lists` | `FormID` | ? | | |
-| `fm_fundings` | `RecordID` | `F` + digits | `F1581` | |
-| `fm_group_members` | `RecordID` | ? | | |
-| `fm_groups` | `GroupID` | ? | | |
-| `fm_invoices` | `RecordID` | ? | | |
-| `fm_line_items` | `ItemID` | ? | | |
-| `fm_match_donations` | `RecordID` | ? | | |
-| `fm_notes` | `NoteID` | `N` + 5 digits | `N00643` | |
-| `fm_organizations` | `OrgID` | `ORG` + 5 digits | `ORG07206` | `organizations` |
-| `fm_participants` | `PRecID` | `P` + digits (same prefix as projects) | `P52646` | |
-| `fm_payments` | `RecordID` | `D` + digits | `D29186` | `payments` |
-| `fm_people_to_organizations` | `RecordID` | ? | | |
-| `fm_personnels` | `PrsnlRecID` | `PS` + digits | `PS9999`, `PS10005` | `affiliations` |
-| `fm_phone_numbers` | `PhoneID` | ? | | |
-| `fm_postal_codes` | `Zipcode` | the ZIP code | | |
-| `fm_program_sponsorships` | `RecordID` | `PSP` + 4 digits | `PSP0901` | |
-| `fm_projects` | `ProjectID` | `P` + digits | `P2775` | `organizations` |
-| `fm_quotations` | `RecordID` | ? | | |
-| `fm_reportings` | `ReportID` | ? | | |
-| `fm_rolodexes` | `ID` | digits only, zero-padded to 5 (`6` ≠ `00006`) | `00006` | `people` |
-| `fm_services` | `RecordID` | ? | | |
-| `fm_solicitations` | `SolicitationID` | ? | | |
-| `fm_volunteers` | `VolID` | ? | | |
-| `fm_workshop_logs` | `RecordID` | ? | | |
-| `fm_workshops` | `WorkshopID` | `W` + 4 digits | `W0421` | `workshops` |
+| Archive table | FileMaker key | Id pattern | Range in prod | Rows | Portal column |
+|---|---|---|---|---|---|
+| `fm_activities` | `ActivityLogID` | 5 digits | `00011`–`30061` | 29,185 |  |
+| `fm_addresses` | `AddrsID` | 1–5 digits, unpadded | `1`–`30808` | 28,556 |  |
+| `fm_allocations` | `AllocRecID` | 4 digits | `0001`–`3508` | 3,098 |  |
+| `fm_ancillary_data` | `RecordID` | 1–3 digits, unpadded | `1`–`559` | 556 |  |
+| `fm_art_purchases` | `PurchaseID` | 4 digits | `0001`–`0226` | 226 |  |
+| `fm_art_registries` | `ItemID` | `A` + 4 digits | `A0001`–`A4405` | 3,902 |  |
+| `fm_campaigns` | `CampaignID` | `CMP` + 3 digits | `CMP002`–`CMP011` | 10 |  |
+| `fm_committee_meetings` | `CtMtgID` | `CMT` + 4 digits | `CMT0001` | 1 |  |
+| `fm_committee_members` | `CMRecID` | `CM` + 4 digits | `CM0001`–`CM0741` | 689 |  |
+| `fm_committees` | `CommitteeID` | `CT` + 3 digits | `CT001`–`CT060` | 28 |  |
+| `fm_contacts` | `ContactID` | 5 digits | `00030`–`35548` | 248 |  |
+| `fm_donor_developers` | `DonorDevRecID` | `SLR` + 4 digits | `SLR0001`–`SLR0172` | 164 |  |
+| `fm_email_addresses` | `EmailAddrsID` | 1–2 digits, unpadded | `1`–`29` | 29 |  |
+| `fm_events` | `EventID` | `E` + 4 digits | `E0002`–`E4048` | 3,478 |  |
+| `fm_exhibited_items` | `RecordID` | `X` + 5 digits | `X00002`–`X03154` | 2,693 |  |
+| `fm_expenditures` | `ExpendRecID` | `X` + 4 digits | `X0001`–`X5510` | 5,314 |  |
+| `fm_form_fields` | `FieldNo` | 1–3 digits, optional `.` + 1–2 digits | `1.3`–`125.4` | 318 |  |
+| `fm_form_letters` | `DocID` | `D` + 3 digits | `D064`–`D658` | 272 |  |
+| `fm_form_submissions` | `RecordID` | `FSB` + 5 digits | `FSB00001`–`FSB03265` | 3,265 |  |
+| `fm_forms_lists` | `FormID` | 2–3 digits, unpadded | `48`–`307` | 9 |  |
+| `fm_fundings` | `RecordID` | `F` + 4 digits | `F0004`–`F1581` | 1,391 |  |
+| `fm_group_members` | `RecordID` | `GM` + 5 digits | `GM00001`–`GM00017` | 16 |  |
+| `fm_groups` | `GroupID` | `GP` + 5 digits | `GP00004`–`GP00273` | 245 |  |
+| `fm_invoices` | `RecordID` | `INV` + 5 digits | `INV00003`–`INV02247` | 2,064 |  |
+| `fm_line_items` | `ItemID` | `LIT` + 5 digits | `LIT01001`–`LIT01103` | 103 |  |
+| `fm_match_donations` | `RecordID` | `MDN` + 4 digits | `MDN0001`–`MDN3454` | 3,250 |  |
+| `fm_notes` | `NoteID` | `N` + 5 digits | `N00007`–`N00643` | 616 |  |
+| `fm_organizations` | `OrgID` | `ORG` + 5 digits | `ORG00001`–`ORG07256` | 7,240 | `organizations` |
+| `fm_participants` | `PRecID` | `P` + 4–5 digits | `P0001`–`P79284` | 68,850 |  |
+| `fm_payments` | `RecordID` | `D` + 5 digits | `D00001`–`D29263` | 27,220 | `payments` |
+| `fm_people_to_organizations` | `RecordID` | 1–4 digits, unpadded | `1`–`1128` | 1,128 |  |
+| `fm_personnels` | `PrsnlRecID` | `PS` + 4–5 digits | `PS0028`–`PS10667` | 9,037 | `affiliations` |
+| `fm_phone_numbers` | `PhoneID` | 2–5 digits, unpadded | `22`–`35946` | 34,040 |  |
+| `fm_postal_codes` | `Zipcode` | 5-digit ZIP | `00501`–`99950` | 41,685 |  |
+| `fm_program_sponsorships` | `RecordID` | `PSP` + 4 digits | `PSP0035`–`PSP0901` | 608 |  |
+| `fm_projects` | `ProjectID` | `P` + 4 digits | `P0001`–`P2806` | 2,007 | `organizations` |
+| `fm_quotations` | `RecordID` | `Q` + 4–5 digits | `Q0880`–`Q65300` | 62,611 |  |
+| `fm_reportings` | `ReportID` | 5 digits | `00001`–`00791` | 727 |  |
+| `fm_rolodexes` | `ID` | 5 digits, zero-padded | `00006`–`43871` | 39,795 | `people` |
+| `fm_services` | `RecordID` | 5 digits | `00001`–`73063` | 69,590 |  |
+| `fm_solicitations` | `SolicitationID` | `SLN` + 5 digits | `SLN00001`–`SLN12043` | 11,815 |  |
+| `fm_volunteers` | `VolID` | 5 digits | `00001`–`37788` | 2,845 |  |
+| `fm_workshop_logs` | `RecordID` | 5 digits | `45920`–`56833` | 10,859 |  |
+| `fm_workshops` | `WorkshopID` | `W` + 4 digits | `W0002`–`W0830` | 713 | `workshops` |
 
-Prefixes overlap: `P` is both projects and participants, and `P` / `PS` / `PSP` nest.
-That's why a code is only ever looked up, in full, in the tables its portal column
-declares.
+### Where ids collide across tables
+
+The same string can be a valid id in more than one table, so a code is only ever
+looked up, in full, in the tables its portal column declares — never routed by prefix
+or shape.
+
+- **`P` + 4 digits is both a project and a participant.** Projects run `P0001`–`P2806`;
+  participants run `P0001`–`P79284`, so every project id is also a participant id.
+- **`X`:** exhibited items are `X` + 5 digits, expenditures `X` + 4 digits.
+- **`D`:** form letters are `D` + 3 digits, payments `D` + 5 digits.
+- **Nested prefixes:** `P` / `PS` / `PSP`, `CM` / `CMP` / `CMT`, and `SLR` / `SLN`.
+- **Bare 5-digit numbers** are Rolodex ids and also activities, contacts, services,
+  volunteers, reportings, workshop logs, and ZIP codes, with overlapping ranges.
+- **Unpadded numbers** (addresses, phones, ancillary data, people-to-organizations,
+  email addresses, forms lists) overlap each other from `1` up.
 
 ## Consequences
 
