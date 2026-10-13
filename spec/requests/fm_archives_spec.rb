@@ -34,6 +34,7 @@ RSpec.describe "FM archives", type: :request do
 
       expect(response.body).to match(/Phones &amp; addresses.*Phone numbers \(1\).*\(213\) 555-0101.*Primary.*Addresses \(1\).*88 Rose Ave, Venice.*Record keeping/m)
       expect(response.body).to include("table=phone_numbers", "table=addresses")
+      expect(response.body).to match(%r{Work\s*<span[^>]*>PH1</span>})
     end
 
     it "lists every field and association a rolodex record can hold below its cards" do
