@@ -362,4 +362,33 @@ RSpec.describe PersonPolicy, type: :policy do
       expect(index_filters_for(nil).keys).to contain_exactly("contact_info")
     end
   end
+
+  describe "default params_filter" do
+    let(:submitted_attributes) do
+      ActionController::Parameters.new(
+        first_name: "Ada",
+        email: "changed@example.com",
+        email_2: "second@example.com",
+        notes: "Internal note",
+        user_attributes: { id: "1", email: "changed@example.com", super_user: "1" },
+        affiliations_attributes: { "0" => { id: "1", title: "Changed title" } },
+        professional_licenses_attributes: { "0" => { kind: "LCSW", number: "123" } }
+      )
+    end
+
+    def write_params_for(user)
+      policy_for(record: owned_person, user: user)
+        .apply_scope(submitted_attributes, type: :action_controller_params)
+    end
+
+    it "strips admin-only fields while retaining owner-editable profile fields" do
+      filtered = write_params_for(owner_user)
+
+      expect(filtered.keys).to contain_exactly("first_name", "professional_licenses_attributes")
+    end
+
+    it "retains the permitted fields for an admin" do
+      expect(write_params_for(admin_user).keys).to match_array(submitted_attributes.keys)
+    end
+  end
 end
