@@ -39,10 +39,13 @@ drive the archive pages' links.
   records, and a bare `00023` matches neither. The prefix is part of the id, and
   prefixes aren't unique to one table (see below), so nothing strips or routes by it.
 - **Affiliation → Personnel.** Personnel is a person on a project with a role and
-  agreement status. With orgs = projects, that's an affiliation.
+  agreement status. With orgs = projects, that's an affiliation. **Open:** production
+  affiliations almost all carry a *project* code instead (see "What portal records
+  store" below).
 - **Resource has no counterpart.** No archive table holds resources. Form Letters
   are mail-merge templates, not resources, and nothing in the app maps to them. The
-  seed leaves `resources.filemaker_code` blank.
+  seed leaves `resources.filemaker_code` blank. **Open:** most production resource
+  codes are quotation ids (`Q…`), so some resources may map to `fm_quotations`.
 
 ## Archive id patterns
 
@@ -113,6 +116,24 @@ or shape.
   volunteers, reportings, workshop logs, and ZIP codes, with overlapping ranges.
 - **Unpadded numbers** (addresses, phones, ancillary data, people-to-organizations,
   email addresses, forms lists) overlap each other from `1` up.
+
+## What portal records store
+
+Shapes of the codes on portal records in production, profiled 2026-10-12 (comma lists
+split into single codes). Compare against the grid above.
+
+| Portal column | Codes | Matches its mapping | Outliers |
+|---|---|---|---|
+| `organizations` | 1,987 | 1,965 `P` + 4 digits (projects) | 22: unpadded `P622`; no prefix `627`, `628`, `2781`, `9530`; letter O for zero `PO296`; extra digit `P03484`; `PP256`; placeholder `F0000` ×2; bare 5-digit numbers ×9 (Rolodex-shaped); 2 unreadable values |
+| `people` | 1 | 1 Rolodex-shaped (`39853`) | — the column is effectively unused |
+| `affiliations` | 1,535 | 1 `PS` (personnel) | 1,531 `P` + 4 digits (**projects**), plus `ORG05589`, `PP208`, `09856` |
+| `payments` | 0 | — | — |
+| `workshops` | 850 | 849 `W` + 4 digits | `XVI/4` |
+| `resources` | 128 | (unmapped) | 116 `Q` + 4–5 digits (**quotations**), plus bare 2–3 digit numbers, `v`, and a URL |
+
+Outliers get fixed by hand, not backfilled: an admin works from the list of portal
+records whose codes have no row in the archive tables their column maps to. Those
+codes already show struck through in the code field's hint.
 
 ## Consequences
 
