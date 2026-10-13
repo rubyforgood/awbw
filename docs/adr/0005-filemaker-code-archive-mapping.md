@@ -150,11 +150,26 @@ FileMaker code field.
 |---|---|
 | Well-formed code with no archive record | Likely a digit typo. Find the record in the archive by name and replace the code, or clear it if FileMaker has no such record. |
 | Number without its prefix, or the wrong kind of id | Add the missing prefix and padding (e.g. `P` + 4 digits for a project), or, if it's another table's id (a 5-digit Rolodex id on an org), move it to the right record and clear it here. |
-| Malformed code | Fix the letters (a letter `O` for a zero, a doubled prefix), drop extra digits, or clear placeholders and pasted text. |
+| Malformed code | Fix the letters (a letter `O` for a zero, a doubled prefix), drop extra digits, or clear placeholders and pasted text. An `ORG…` code on an affiliation belongs on its org instead. |
 | Unreadable value | The stored value has characters that can't be split into codes. Retype the code. |
 | Project code differs from its org's code (affiliations) | Either the affiliation is on the wrong org (move it), or the org is missing that project code (add it to the org). |
 
-Ids: _pending the next production run._
+Production, 2026-10-12: 84 records (41 organizations, 16 affiliations, 14 workshops,
+13 resources, no people). A record listed under two issues has two bad codes.
+
+| Portal table | Issue | Count | Record ids |
+|---|---|---|---|
+| `organizations` | Well-formed code with no archive record | 19 | 66, 247, 270, 283, 297, 365, 425, 437, 443, 499, 665, 668, 670, 814, 973, 1046, 1091, 1107, 1398 |
+| `organizations` | Number without its prefix, or the wrong kind of id | 14 | 233, 364, 388, 439, 593, 614, 640, 641, 822, 838, 865, 877, 978, 2043 |
+| `organizations` | Malformed code | 8 | 108, 136, 241, 941, 1088, 1089, 1550, 1891 |
+| `affiliations` | Number without its prefix, or the wrong kind of id | 1 | 4424 |
+| `affiliations` | Malformed code | 2 | 5236, 6385 |
+| `affiliations` | Project code differs from its org's code | 13 | 2656, 3649, 3730, 5042, 5043, 5164, 5461, 5857, 5920, 6178, 6234, 6284, 6387 |
+| `workshops` | Well-formed code with no archive record | 13 | 215, 294, 357, 501, 708, 756, 797, 865, 926, 954, 982, 1010, 6302 |
+| `workshops` | Malformed code | 1 | 521 |
+| `resources` | Well-formed code with no archive record | 1 | 624 |
+| `resources` | Number without its prefix, or the wrong kind of id | 10 | 572, 573, 574, 575, 588, 592, 593, 594, 595, 596 |
+| `resources` | Malformed code | 2 | 550, 580 |
 
 ## Consequences
 
