@@ -252,7 +252,7 @@ class PaymentsController < ApplicationController
   end
 
   def edit_payment_params
-    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid)
+    params.require(:payment).permit(:person_id, :organization_id, :form_submission_id, :payer_sgid, :additional_designation_sgid, :filemaker_code)
   end
 
   def redirect_path_for(allocatable)
