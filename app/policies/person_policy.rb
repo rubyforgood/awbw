@@ -1,11 +1,6 @@
 class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
-  # Fields a non-admin owner may NOT change about their own profile once profiles
-  # are enabled — privilege- or admin-only data the self-edit form doesn't expose.
-  # Everything else is owner-editable, so add any new admin-only person attribute
-  # here. (professional_licenses_attributes stays owner-editable: the controller's
-  # reject_locked_license_changes! is the per-license backstop that blocks CE-tied ones.)
   ADMIN_ONLY_FIELDS = %i[
     email email_type email_2 email_2_type
     filemaker_code blog_contributor notes member_since
@@ -32,9 +27,6 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner? || (profiles_visible_to_users? && record.published?)
   end
 
-  # Admin, or the profile's own person. The narrow rule for owner-only content
-  # (submitted ideas, workshop logs) — kept separate from `show?` so opening
-  # `show?` up to public profile viewing later can't expose it.
   def own_record?
     admin? || owner?
   end
@@ -55,8 +47,6 @@ class PersonPolicy < ApplicationPolicy
     admin?
   end
 
-  # A person edits their own profile once profiles are enabled; the controller
-  # strips admin-only fields from what a non-admin owner can submit.
   def edit?
     admin? || (profiles_visible_to_users? && owner?)
   end
@@ -85,8 +75,6 @@ class PersonPolicy < ApplicationPolicy
     relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
   end
 
-  # The people index's filter params, keeping only the filters this viewer may
-  # apply. Named, because the unnamed params_filter below is the write path.
   params_filter(:index) do |params|
     next params if admin?
     params.except(*ADMIN_ONLY_FILTERS)
@@ -214,10 +202,6 @@ class PersonPolicy < ApplicationPolicy
 
   private
 
-  # Temporary launch gate: signed-in users preview profiles everywhere but
-  # production, where they stay off until launch. Admins always have access; the
-  # public never does. Remove this method at launch (access becomes unconditional
-  # for signed-in users); it mirrors OrganizationPolicy's copy in #2563.
   def profiles_visible_to_users?
     authenticated? && !Rails.env.production?
   end
