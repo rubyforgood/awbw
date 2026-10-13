@@ -4236,3 +4236,15 @@
     - "Separate several codes with commas. Spaces, tabs, and line breaks are ignored, and the list saves sorted."
     - "An organization's edit page also links the FileMaker organization its project belongs to."
     - "An organization's code can be a FileMaker project ID (like P2775) or organization ID (like ORG07206). Type the whole code, letters included."
+
+- name: "Open a Leader spotlight's original FileMaker quote"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2663
+  summary: >-
+    A resource's edit page now shows its FileMaker quotation ID and links it to the
+    quote in the FileMaker archive, and each archived quote links back to the
+    resource that carries it.
+  pro_tips:
+    - "The ID sits in the admin box beside the visibility flags. A struck-through ID means the archive has no such quote — check it for a typo."

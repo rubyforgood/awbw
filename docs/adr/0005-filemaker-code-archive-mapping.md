@@ -28,7 +28,7 @@ drive the archive pages' links.
 | `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels` | `ProjectID`, e.g. `P2775`; rarely `PrsnlRecID`, e.g. `PS9999` | no UI link yet |
 | `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | dev seed (no UI link yet) |
 | `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | dev seed (no UI link yet) |
-| `resources.filemaker_code` | `fm_quotations` | `RecordID`, e.g. `Q10215` | no UI link yet |
+| `resources.filemaker_code` | `fm_quotations` | `RecordID`, e.g. `Q10215` | `filemaker_code_hint` on the resource form (admin box) |
 
 - **Organization → Project, or → Organization.** An app `Organization` is usually one
   art program site, which is a FileMaker *Project*. FileMaker's own Organization row is
@@ -50,8 +50,8 @@ drive the archive pages' links.
 - **Resource → Quotation.** In production, 116 of 128 resource codes are quotation ids
   (`Q…`), 115 of them on Leader spotlight resources and one on a Story; 115 of the 116
   exist in `fm_quotations` (quotes and testimonials, with a `WorkShopLeader` field).
-  Form Letters are mail-merge templates, not resources. The dev seed still leaves
-  `resources.filemaker_code` blank.
+  Form Letters are mail-merge templates, not resources. The dev seed gives Leader
+  spotlights quotation codes first.
 
 ## Archive id patterns
 
@@ -173,6 +173,6 @@ Production, 2026-10-12: 84 records (41 organizations, 16 affiliations, 14 worksh
 
 ## Consequences
 
-A UI link for affiliations, payments, workshops, or resources includes `FilemakerCoded` on the
+A UI link for affiliations, payments, or workshops includes `FilemakerCoded` on the
 model and declares the archive table above (e.g. `filemaker_archived_in FmPersonnel`);
 `filemaker_code_links` reads it from there.

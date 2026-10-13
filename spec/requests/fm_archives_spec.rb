@@ -65,6 +65,15 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body.scan(%r{href="/organizations/\d+"}).size).to eq(2)
     end
 
+    it "links an archived quotation back to the resource carrying its code" do
+      FmQuotation.create!(fm_id: "Q10215")
+      resource = create(:resource, kind: "LeaderSpotlight", title: "Spotlight on a leader", filemaker_code: "Q10215")
+
+      get fm_archive_path("Q10215", table: "quotations")
+
+      expect(response.body).to include(resource_path(resource), "Spotlight on a leader")
+    end
+
     it "omits the portal section when nothing carries the code" do
       FmRolodex.create!(fm_id: "00006")
 

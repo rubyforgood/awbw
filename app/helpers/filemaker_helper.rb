@@ -33,6 +33,7 @@ module FilemakerHelper
     text, path = case record
     when Person then [ record.full_name, person_path(record) ]
     when Organization then [ record.name, organization_path(record) ]
+    when Resource then [ record.title, resource_path(record) ]
     end
 
     link_to text, path, class: button_classes(:primary_outline, size: :sm)

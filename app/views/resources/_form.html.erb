@@ -51,6 +51,11 @@
             <%= visibility_flag_input f, :publicly_featured %>
             <%= visibility_flag_input f, :hidden_from_search %>
           </div>
+          <%= f.input :filemaker_code,
+                      label: "FileMaker quotation ID",
+                      hint: filemaker_code_hint(f.object),
+                      wrapper_html: { class: "mt-4" },
+                      input_html: { class: "w-full rounded border-gray-300 bg-blue-100" } %>
         </div>
       <% end %>
     </div>

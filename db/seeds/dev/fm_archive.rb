@@ -68,6 +68,7 @@ affiliations = Affiliation.joins(:person).where(person: people).or(Affiliation.j
 payments = (Payment.where(person: people).or(Payment.where(organization: organizations)).order(:id).first(3) +
             Payment.order(:id).limit(3)).uniq.first(3)
 workshops = Workshop.order(:title).first(3)
+resources = (Resource.where(kind: "LeaderSpotlight").order(:title).first(3) + Resource.order(:title).first(3)).uniq.first(3)
 
 workshop_titles = [ workshops[0]&.title || "Comfort Journals", workshops[1]&.title || "Watercolor Windows", "Story Dolls" ]
 payment_amounts = [ payments[0], payments[1] ].map { |payment| payment && format("%.2f", payment.amount_cents / 100.0) }
@@ -729,3 +730,4 @@ link_codes.call(organizations, fm_ids[:project])
 link_codes.call(affiliations, fm_ids[:personnel])
 link_codes.call(payments, fm_ids[:payment])
 link_codes.call(workshops, fm_ids[:workshop])
+link_codes.call(resources, fm_ids[:quotation])

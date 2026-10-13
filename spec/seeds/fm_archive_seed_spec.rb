@@ -34,6 +34,16 @@ RSpec.describe "dev seed: fm_archive" do
     expect(FmRolodex.find_by!(fm_id: "00901").data.values_at("FirstName", "LastName")).to eq(%w[Abe Archer])
   end
 
+  it "gives Leader spotlights quotation codes ahead of other resources" do
+    other = create(:resource, kind: "Toolkit", title: "Aaa toolkit")
+    spotlight = create(:resource, kind: "LeaderSpotlight", title: "Zed spotlight")
+
+    load seed
+
+    expect(spotlight.reload.filemaker_code).to eq("Q90001")
+    expect(other.reload.filemaker_code).to eq("Q90002, Q90008")
+  end
+
   it "is idempotent" do
     load seed
     expect { load seed }.not_to change(FmPayment, :count)
