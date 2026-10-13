@@ -44,6 +44,11 @@ module FmArchive
     data.keys - self.class.flat_field_groups.values.flatten
   end
 
+  # A subcard of exactly one field, which reads as a single labeled row.
+  def single_field_group?(label)
+    self.class.flat_field_groups[label]&.one? && records_listed_under(label).none?
+  end
+
   # Related records a subcard lists below its fields.
   def records_listed_under(_label)
     []

@@ -28,13 +28,20 @@
           <% end %>
           <div class="space-y-4">
             <% subgroups.each do |sub_label, fields| %>
-              <div class="<%= class_names("rounded-lg border border-gray-200 px-4 pt-3 pb-1": sub_label) %>">
-                <% if sub_label %>
-                  <h3 class="text-sm font-semibold text-gray-700"><%= sub_label %></h3>
-                <% end %>
-                <%= render "fields", record: @record, fields: fields %>
-                <%= render "contact_records", owner: @record, records: @record.records_listed_under(sub_label) %>
-              </div>
+              <% if sub_label && @record.single_field_group?(sub_label) %>
+                <div class="grid grid-cols-5 gap-4 rounded-lg border border-gray-200 px-4 py-3 text-sm">
+                  <h3 class="col-span-2 font-semibold text-gray-700"><%= sub_label %></h3>
+                  <span class="col-span-3 break-words text-gray-900"><%= fields.values.first %></span>
+                </div>
+              <% else %>
+                <div class="<%= class_names("rounded-lg border border-gray-200 px-4 pt-3 pb-1": sub_label) %>">
+                  <% if sub_label %>
+                    <h3 class="text-sm font-semibold text-gray-700"><%= sub_label %></h3>
+                  <% end %>
+                  <%= render "fields", record: @record, fields: fields %>
+                  <%= render "contact_records", owner: @record, records: @record.records_listed_under(sub_label) %>
+                </div>
+              <% end %>
             <% end %>
           </div>
         </section>

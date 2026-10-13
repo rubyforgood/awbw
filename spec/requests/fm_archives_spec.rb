@@ -34,8 +34,17 @@ RSpec.describe "FM archives", type: :request do
 
       expect(response.body).to match(/Phones &amp; addresses.*Phones.*\(213\) 555-0101.*Addresses.*88 Rose Ave, Venice.*Record keeping/m)
       expect(response.body).to include("table=phone_numbers", "table=addresses")
-      expect(response.body).to match(%r{Work\s*<span[^>]*>PH1</span>\s*<span[^>]*>Primary</span>})
+      expect(response.body).to match(%r{Work\s*<a[^>]*href="#{Regexp.escape(fm_archive_path("PH1", table: "phone_numbers"))}"[^>]*>PH1</a>\s*<span[^>]*>Primary</span>})
       expect(response.body).not_to include("PrimaryPhoneID</dt>")
+    end
+
+    it "shows a one-field subcard as a single row, its heading beside the value" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "MailingList" => "Yes" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(%r{<h3[^>]*>Mailing list</h3>\s*<span[^>]*>Yes</span>})
+      expect(response.body).not_to include("MailingList</dt>")
     end
 
     it "lists a primary phone or address the archive lacks as not found" do
