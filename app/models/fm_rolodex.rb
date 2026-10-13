@@ -112,7 +112,7 @@ class FmRolodex < ApplicationRecord
     "LastName" => "people.last_name",
     "Pronouns" => "people.pronouns",
     "EmailPrimary" => "people.email",
-    "EMail" => "people.email_2",
+    "EMail" => "people.email",
     "EmailType" => "people.email_type",
     "BestTimeToCall" => "people.best_time_to_call",
     "DateOfBirth" => "people.date_of_birth",
