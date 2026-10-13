@@ -79,11 +79,13 @@ RSpec.describe "Workshops", type: :system do
         # Also check a sector checkbox
         click_on "Sector"
         check("sectors_#{sector.id}")
-        expect(page).to have_content(workshop_adult.title)
+        expect(page).to have_css("#filters_applied", text: "Health")
 
         # Also check a windows type checkbox
         click_on "Windows audience"
         check("windows_types_#{adult_window.id}")
+        # Let this filter's response land first, or it can arrive after Clear filters and restore them.
+        expect(page).to have_css("#filters_applied", text: "Adult, Health")
         expect(page).to have_content(workshop_adult.title)
 
         # Clear all filters

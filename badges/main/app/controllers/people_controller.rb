@@ -405,7 +405,7 @@ class PeopleController < ApplicationController
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
-        @keeper_primary_address_signature = PersonServices::ReconcileAddresses.primary_signature(keep, delete)
+        @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
         @adopted_login_id = delete.user&.id unless keep.user
       },
@@ -431,7 +431,7 @@ class PeopleController < ApplicationController
           primary_age_category_id: @keeper_primary_age_category_id).call
         PersonServices::ReconcileDefaultPayCustomer.new(keep,
           preferred_customer_id: @keeper_default_pay_customer_id).call
-        PersonServices::ReconcileAddresses.new(keep,
+        AddressDeduper.new(keep,
           primary_signature: @keeper_primary_address_signature).call
         PersonServices::ReconcileContactMethods.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
