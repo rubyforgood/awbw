@@ -43,7 +43,7 @@ class ResourcesController < ApplicationController
 
   def new
     authorize!
-    @resource = Resource.new.decorate
+    @resource = Resource.new(title: params[:title]).decorate
     set_form_variables
   end
 

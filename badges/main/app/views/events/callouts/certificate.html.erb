@@ -79,19 +79,20 @@
   <%# Facilitator trainings get a branded painted-border certificate (full-bleed
       in print so the painted border reaches the paper edge) — on-demand trainings
       use their own frame, live trainings the scheduled-training frame; every other
-      event keeps the default CSS-drawn completion certificate, inset from the edge. %>
-  <% training = @event.facilitator_training? %>
-  <% certificate_partial = if @event.on_demand_facilitator_training?
-       "ondemand_certificate"
-     elsif training
-       "training_certificate"
-     else
-       "completion_certificate"
+      event keeps the default CSS-drawn completion certificate, inset from the edge,
+      unless an admin uploaded a frame for it, in which case it's full-bleed too. %>
+  <% category = @event.certificate_category %>
+  <% certificate_partial = case category
+     when :on_demand then "ondemand_certificate"
+     when :training then "training_certificate"
+     else "completion_certificate"
      end %>
-  <div class="px-4 py-6 sm:px-8 <%= training ? "print:p-0" : "print:p-[0.4in]" %>">
+  <% full_bleed = category != :other || @frame_file.present? %>
+  <div class="px-4 py-6 sm:px-8 <%= full_bleed ? "print:p-0" : "print:p-[0.4in]" %>">
     <%= render certificate_partial,
           event: event,
           recipient: @event_registration.registrant.full_name,
+          frame_file: @frame_file,
           signature_file: @signature_file %>
   </div>
 <% else %>

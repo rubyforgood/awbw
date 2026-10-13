@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_09_032758) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_160225) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1944,7 +1944,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_032758) do
     t.string "url"
     t.integer "windows_type_id"
     t.integer "workshop_id"
+    t.string "certificate_artwork_role"
     t.index ["author_id"], name: "index_resources_on_author_id"
+    t.index ["certificate_artwork_role"], name: "index_resources_on_certificate_artwork_role", unique: true
     t.index ["created_by_id"], name: "index_resources_on_created_by_id"
     t.index ["organization_id"], name: "index_resources_on_organization_id"
     t.index ["published"], name: "index_resources_on_published"

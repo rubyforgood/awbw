@@ -184,6 +184,23 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#certificate_category" do
+    it "is :on_demand for an on-demand facilitator training" do
+      event = build(:event, facilitator_training: true, on_demand: true)
+      expect(event.certificate_category).to eq(:on_demand)
+    end
+
+    it "is :training for a live facilitator training" do
+      event = build(:event, facilitator_training: true, on_demand: false)
+      expect(event.certificate_category).to eq(:training)
+    end
+
+    it "is :other for a non-training event" do
+      event = build(:event, facilitator_training: false)
+      expect(event.certificate_category).to eq(:other)
+    end
+  end
+
   describe "#shown_as_card?" do
     it "is true for a published event that has not ended" do
       event = build(:event, :published, end_date: 1.day.from_now)

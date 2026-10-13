@@ -46,7 +46,7 @@
     </button>
   </div>
 
-  <div class="px-4 py-6 sm:px-8 print:p-[0.4in]">
+  <div class="px-4 py-6 sm:px-8 <%= @frame_file.present? ? "print:p-0" : "print:p-[0.4in]" %>">
     <%= render "events/callouts/ce_confirmation_certificate",
           event: event,
           recipient: @event_registration.registrant.full_name,
@@ -54,6 +54,7 @@
           hours_label: hours_label,
           facilitator_names: facilitator_names,
           signature_file: @signature_file,
+          frame_file: @frame_file,
           issued_on: issued_on %>
   </div>
 <% else %>
