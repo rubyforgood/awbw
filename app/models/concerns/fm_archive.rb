@@ -8,6 +8,8 @@ module FmArchive
   PORTAL_COUNTERPARTS = {}.freeze
   PORTAL_FIELDS = {}.freeze
   USER_LOOKUP_FIELDS = [].freeze
+  CONTEXT_LINK_MAP = {}.freeze
+  PREFIX_LINK_MAP = {}.freeze
 
   included do
     before_validation :set_defaults
@@ -60,6 +62,15 @@ module FmArchive
   # Related records a subcard lists below its fields.
   def records_listed_under(_label)
     []
+  end
+
+  # The archive table a field's ID points at. A polymorphic field, mapped to nil in FM_LINKS, resolves
+  # by the record's Context or by the ID's prefix.
+  def reference_table(key)
+    value = data[key]
+    return if value.blank? || !self.class::FM_LINKS.key?(key)
+
+    self.class::FM_LINKS[key] || self.class::CONTEXT_LINK_MAP[data["Context"]] || self.class::PREFIX_LINK_MAP[value.to_s[0]]
   end
 
   # Each table words its names its own way, so records from different tables never share one.
