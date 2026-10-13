@@ -100,6 +100,22 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
+  describe "#fm_related_table_highlight" do
+    let(:rolodex) { FmRolodex.new }
+
+    it "colors a table the portal has its own records for orange" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_workshop_logs")).to include("bg-orange-100")
+    end
+
+    it "colors a table with no portal counterpart yellow" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_fundings")).to include("bg-yellow-100")
+    end
+
+    it "leaves a table the cards already show uncolored" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_addresses")).to be_nil
+    end
+  end
+
   describe "#filemaker_code_hint" do
     before { FmRolodex.create!(fm_id: "00006") }
 

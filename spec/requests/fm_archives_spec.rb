@@ -104,6 +104,18 @@ RSpec.describe "FM archives", type: :request do
       expect(reference).not_to match(%r{<li class="[^"]*bg-yellow-100[^"]*">\s*<a[^>]*>Addresses</a>})
     end
 
+    it "marks related tables the portal has its own records for in orange, naming the counterpart" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+      FmWorkshopLog.create!(fm_id: "76001", data: { "LeaderID" => "00006" })
+      FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      logs = response.body[/<turbo-frame[^>]*id="backlink_fm_workshop_logs".*?<\/turbo-frame>/m]
+      expect(logs).to include("bg-orange-100", "In the portal as workshop logs")
+      expect(response.body[/<turbo-frame[^>]*id="backlink_fm_fundings".*?<\/turbo-frame>/m]).to include("bg-yellow-100")
+    end
+
     it "leaves related records unhighlighted on tables without cards" do
       FmProject.create!(fm_id: "P2775")
       FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P2775" })

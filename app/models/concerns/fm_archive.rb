@@ -5,6 +5,7 @@ module FmArchive
   OTHER_FIELDS = "Other fields"
   LISTED_FIELDS = [].freeze
   TALL_GROUPS = [].freeze
+  PORTAL_COUNTERPARTS = {}.freeze
 
   included do
     before_validation :set_defaults
@@ -56,6 +57,11 @@ module FmArchive
 
   def tables_shown_in_cards
     []
+  end
+
+  # The portal model holding its own records of what a related archive table holds.
+  def portal_counterpart(table)
+    self.class::PORTAL_COUNTERPARTS[table]&.constantize
   end
 
   # Related records a subcard lists below its fields.

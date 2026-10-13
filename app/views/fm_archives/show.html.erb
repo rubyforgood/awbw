@@ -52,15 +52,18 @@
       <div class="rounded-xl bg-white p-6">
         <h2 class="mb-1 text-lg font-semibold">Related Records</h2>
         <% if @record.class::FIELD_GROUPS.any? %>
-          <p class="mb-3 text-sm text-gray-500">Tables in yellow aren't shown in the cards above.</p>
+          <%= render "related_legend" %>
         <% end %>
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <% @backlinks.each do |label, info| %>
             <%= turbo_frame_tag "backlink_#{info[:table]}",
                   class: class_names("block min-w-0 overflow-x-auto rounded-lg border p-3",
-                                     @record.related_only?(info[:table]) ? "border-yellow-200 bg-yellow-100" : "border-gray-200") do %>
-              <h3 class="mb-2 text-sm font-medium text-gray-500"><%= label %> (<%= info[:records].total_entries %>)</h3>
-              <div class="flex flex-wrap gap-1">
+                                     fm_related_table_highlight(@record, info[:table]) || "border-gray-200") do %>
+              <h3 class="text-sm font-medium text-gray-500"><%= label %> (<%= info[:records].total_entries %>)</h3>
+              <% if (counterpart = @record.portal_counterpart(info[:table])) %>
+                <p class="text-xs text-gray-600">In the portal as <%= counterpart.model_name.human.pluralize.downcase %></p>
+              <% end %>
+              <div class="mt-2 flex flex-wrap gap-1">
                 <% info[:records].each do |record| %>
                   <%= link_to record.fm_id, fm_archive_path(record.fm_id, table: info[:table].sub("fm_", "")),
                         class: "text-xs font-mono text-primary hover:underline bg-gray-50 px-2 py-1 rounded",

@@ -105,6 +105,16 @@ class FmRolodex < ApplicationRecord
   ADDRESSES = "Addresses"
   LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
   TALL_GROUPS = [ "Organization & affiliations" ].freeze
+  PORTAL_COUNTERPARTS = {
+    "fm_people_to_organizations" => "Affiliation",
+    "fm_personnels" => "Affiliation",
+    "fm_workshop_logs" => "WorkshopLog",
+    "fm_workshops" => "Workshop",
+    "fm_participants" => "EventRegistration",
+    "fm_payments" => "Payment",
+    "fm_invoices" => "Invoice",
+    "fm_quotations" => "Quote"
+  }.freeze
 
   FIELD_GROUPS = {
     "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
