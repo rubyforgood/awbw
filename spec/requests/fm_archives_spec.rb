@@ -88,6 +88,28 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).not_to include(fm_archive_path("ORG90999", table: "organizations"))
     end
 
+    it "highlights related records the cards above don't show" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+      FmAddress.create!(fm_id: "74001", data: { "RolodexID" => "00006" })
+      FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/<turbo-frame[^>]*class="[^"]*bg-amber-50[^"]*"[^>]*id="backlink_fm_fundings"|<turbo-frame[^>]*id="backlink_fm_fundings"[^>]*class="[^"]*bg-amber-50/)
+      expect(response.body).not_to match(/<turbo-frame[^>]*id="backlink_fm_addresses"[^>]*class="[^"]*bg-amber-50/)
+      expect(response.body).not_to match(/<turbo-frame[^>]*class="[^"]*bg-amber-50[^"]*"[^>]*id="backlink_fm_addresses"/)
+    end
+
+    it "leaves related records unhighlighted on tables without cards" do
+      FmProject.create!(fm_id: "P2775")
+      FmPersonnel.create!(fm_id: "PS1", data: { "ProjectID" => "P2775" })
+
+      get fm_archive_path("P2775", table: "projects")
+
+      expect(response.body).to include("backlink_fm_personnels")
+      expect(response.body).not_to include("bg-amber-50")
+    end
+
     it "leaves the field reference off tables without field groups" do
       FmProject.create!(fm_id: "P2775")
 

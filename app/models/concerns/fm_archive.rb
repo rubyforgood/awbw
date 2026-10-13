@@ -49,6 +49,15 @@ module FmArchive
     self.class.flat_field_groups[label]&.one? && records_listed_under(label).none?
   end
 
+  # A related table none of the cards show, so Related records is the only place to find it.
+  def related_only?(table)
+    self.class::FIELD_GROUPS.any? && !tables_shown_in_cards.include?(table)
+  end
+
+  def tables_shown_in_cards
+    []
+  end
+
   # Related records a subcard lists below its fields.
   def records_listed_under(_label)
     []

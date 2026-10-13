@@ -50,9 +50,14 @@
 
     <% if @backlinks.any? %>
       <div class="rounded-xl bg-white p-6">
-        <h2 class="mb-4 text-lg font-semibold">Related Records</h2>
+        <h2 class="mb-1 text-lg font-semibold">Related Records</h2>
+        <% if @record.class::FIELD_GROUPS.any? %>
+          <p class="mb-3 text-sm text-gray-500">Highlighted tables aren't shown in the cards above.</p>
+        <% end %>
         <% @backlinks.each do |label, info| %>
-          <%= turbo_frame_tag "backlink_#{info[:table]}", class: "block py-3 border-b border-gray-200 last:border-0" do %>
+          <%= turbo_frame_tag "backlink_#{info[:table]}",
+                class: class_names("block py-3 border-b border-gray-200 last:border-0",
+                                   "-mx-3 px-3 rounded-lg bg-amber-50": @record.related_only?(info[:table])) do %>
             <h3 class="mb-2 text-sm font-medium text-gray-500"><%= label %> (<%= info[:records].total_entries %>)</h3>
             <div class="flex flex-wrap gap-1">
               <% info[:records].each do |record| %>

@@ -165,6 +165,10 @@ class FmRolodex < ApplicationRecord
     @addresses ||= contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
   end
 
+  def tables_shown_in_cards
+    [ FmPhoneNumber.table_name, FmAddress.table_name ]
+  end
+
   def records_listed_under(label)
     case label
     when PHONES then phone_numbers
