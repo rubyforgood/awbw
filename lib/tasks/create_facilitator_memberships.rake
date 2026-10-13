@@ -66,7 +66,7 @@ namespace :data do
         bucket = buckets.max
         multi_bucket << [ person, buckets ] if buckets.size > 1
 
-        if person.memberships.not_cancelled.exists?
+        if person.memberships.autorenewal_not_cancelled.exists?
           skipped_membership += 1
           puts "  - #{person.id} #{person.full_name}: already has an uncancelled membership — skipped"
           next
