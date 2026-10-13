@@ -107,6 +107,23 @@ class FmRolodex < ApplicationRecord
   FACILITATOR_AFFILIATION = "Facilitator affiliation"
   LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
   TALL_GROUPS = [ "Organization & affiliations" ].freeze
+  PORTAL_FIELDS = {
+    "ID" => "people.filemaker_code",
+    "FirstName" => "people.first_name",
+    "LastName" => "people.last_name",
+    "Pronouns" => "people.pronouns",
+    "EMail" => "people.email",
+    "EmailType" => "people.email_type",
+    "BestTimeToCall" => "people.best_time_to_call",
+    "DateOfBirth" => "people.date_of_birth",
+    "Ethnicity" => "people.racial_ethnic_identity",
+    "Comments" => "people.notes",
+    "Title" => "affiliations.title",
+    "PrimaryServiceArea" => "the person's primary sector",
+    "OtherServiceArea" => "the person's additional sectors",
+    "PrimaryAgeGroup" => "the person's primary age group"
+  }.freeze
+
   PORTAL_COUNTERPARTS = {
     "fm_addresses" => "Addresses",
     "fm_phone_numbers" => "Contact methods",

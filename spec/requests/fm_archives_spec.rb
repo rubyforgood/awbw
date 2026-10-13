@@ -84,8 +84,8 @@ RSpec.describe "FM archives", type: :request do
       cards, reference = response.body.split("Available fields &amp; associations")
       expect(cards).to include("LastName")
       expect(cards).not_to include("MiddleName", "zcSort")
-      expect(reference).to match(/text-gray-400">MiddleName</)
-      expect(reference).to match(/text-gray-700">LastName</)
+      expect(reference).to match(/<span class="[^"]*text-gray-400[^"]*"[^>]*>MiddleName</)
+      expect(reference).to match(/<span class="[^"]*text-gray-700[^"]*"[^>]*>LastName</)
       expect(reference).to match(/Other fields.*zcSort/m)
     end
 
@@ -136,6 +136,16 @@ RSpec.describe "FM archives", type: :request do
 
       expect(response.body).to include("backlink_fm_personnels")
       expect(response.body).not_to include("bg-orange-100")
+    end
+
+    it "marks fields that import straight into a portal column orange, naming the column" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "FirstName" => "Abe", "Gender" => "F" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      reference = response.body.split("Available fields &amp; associations").last
+      expect(reference).to match(%r{<span class="[^"]*bg-orange-100[^"]*" title="Imports to people.first_name">FirstName</span>})
+      expect(reference).to match(%r{<span class="[^"]*bg-white[^"]*">Gender</span>})
     end
 
     it "leaves the field reference off tables without field groups" do

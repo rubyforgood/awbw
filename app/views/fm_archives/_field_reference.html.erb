@@ -4,14 +4,21 @@
   <p class="mb-5 text-sm text-gray-600">Every field on a <%= model.name %> record. Grayed-out fields are blank on this one, so the cards above leave them out.</p>
   <div class="grid gap-8 lg:grid-cols-2">
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-gray-700">Fields</h3>
+      <h3 class="mb-1 text-sm font-semibold text-gray-700">Fields</h3>
+      <p class="mb-3 flex items-center gap-1 text-xs text-gray-600">
+        <span class="size-3 rounded-sm border border-orange-200 bg-orange-100"></span>Imports straight into a portal field (hover to see which)
+      </p>
       <dl class="space-y-3">
         <% model.flat_field_groups.merge(FmArchive::OTHER_FIELDS => record.ungrouped_keys).compact_blank.each do |label, keys| %>
           <div>
             <dt class="text-xs font-medium text-gray-500"><%= label %></dt>
             <dd class="mt-1 flex flex-wrap gap-1">
               <% keys.each do |key| %>
-                <span class="<%= class_names("rounded bg-white px-2 py-0.5 font-mono text-xs", record.data[key].present? ? "text-gray-700" : "text-gray-400") %>"><%= key %></span>
+                <% portal_field = model::PORTAL_FIELDS[key] %>
+                <%= tag.span key, class: class_names("rounded px-2 py-0.5 font-mono text-xs",
+                                                     portal_field ? "bg-orange-100" : "bg-white",
+                                                     record.data[key].present? ? "text-gray-700" : "text-gray-400"),
+                                  title: portal_field && "Imports to #{portal_field}" %>
               <% end %>
             </dd>
           </div>
