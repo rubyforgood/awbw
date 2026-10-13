@@ -50,6 +50,21 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body.scan(%r{href="/organizations/\d+"}).size).to eq(1)
     end
 
+    it "links an archived FM organization back to the portal organizations its projects belong to" do
+      FmOrganization.create!(fm_id: "ORG07206")
+      FmProject.create!(fm_id: "P2775", data: { "OrgID" => "ORG07206" })
+      FmProject.create!(fm_id: "P2776", data: { "OrgID" => "ORG07206" })
+      FmProject.create!(fm_id: "P9000", data: { "OrgID" => "ORG09999" })
+      via_project = create(:organization, filemaker_code: "P2775")
+      via_both = create(:organization, filemaker_code: "P2776, ORG07206")
+      create(:organization, filemaker_code: "P9000")
+
+      get fm_archive_path("ORG07206", table: "organizations")
+
+      expect(response.body).to include(organization_path(via_project), organization_path(via_both))
+      expect(response.body.scan(%r{href="/organizations/\d+"}).size).to eq(2)
+    end
+
     it "omits the portal section when nothing carries the code" do
       FmRolodex.create!(fm_id: "00006")
 

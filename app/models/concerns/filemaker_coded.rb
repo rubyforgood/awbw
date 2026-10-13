@@ -27,6 +27,10 @@ module FilemakerCoded
       where("FIND_IN_SET(?, REGEXP_REPLACE(filemaker_code, '[[:space:]]', ''))", strip_filemaker_code(code))
     end
 
+    def with_any_filemaker_code(codes)
+      codes.map { |code| with_filemaker_code(code) }.reduce(:or) || none
+    end
+
     def split_filemaker_codes(value)
       value.to_s.split(",").map { |code| strip_filemaker_code(code) }.reject(&:empty?).uniq
     end

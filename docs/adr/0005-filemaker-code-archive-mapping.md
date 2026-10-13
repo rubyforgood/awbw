@@ -33,8 +33,10 @@ drive the archive pages' links.
 - **Organization → Project, or → Organization.** An app `Organization` is usually one
   art program site, which is a FileMaker *Project*. FileMaker's own Organization row is
   the umbrella above it, and maps to the parent in the nested-org tree (ADR-0004); an
-  app org can carry that `ORG…` code directly too. The org edit page also links the
-  FM organization each of its projects sits under (`Project.OrgID`).
+  app org can carry that `ORG…` code directly too. Links run both ways through
+  `Project.OrgID`: the org edit page links the FM organization each of its projects
+  sits under, and an FM organization's archive page lists the orgs carrying its code
+  or one of its projects' codes.
 - **Codes match in full, never by number alone.** `P00023` and `ORG00023` are different
   records, and a bare `00023` matches neither. The prefix is part of the id, and
   prefixes aren't unique to one table (see below), so nothing strips or routes by it.

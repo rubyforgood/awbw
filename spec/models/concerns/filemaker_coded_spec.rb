@@ -20,6 +20,22 @@ RSpec.describe FilemakerCoded do
     end
   end
 
+  describe ".with_any_filemaker_code" do
+    it "matches records carrying any of the codes" do
+      first = create(:person, filemaker_code: "00006")
+      second = create(:person, filemaker_code: "00012, 00099")
+      create(:person, filemaker_code: "00013")
+
+      expect(Person.with_any_filemaker_code(%w[00006 00012])).to contain_exactly(first, second)
+    end
+
+    it "matches nothing for no codes" do
+      create(:person, filemaker_code: "00006")
+
+      expect(Person.with_any_filemaker_code([])).to be_empty
+    end
+  end
+
   describe "#filemaker_codes" do
     it "splits on commas only, dropping every kind of whitespace" do
       person = build(:person)
