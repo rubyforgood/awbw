@@ -6,10 +6,11 @@ RSpec.describe FmRolodex do
       rolodex = described_class.new(data: { "Comments" => "Met at training", "Classification" => "Donor", "LastName" => "Archer", "EMail" => "abe@example.com", "FirstName" => "Abe" })
 
       expect(rolodex.grouped_data).to eq(
-        "Identity" => { nil => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com", "Classification" => "Donor" } },
+        "Identity" => { nil => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com" } },
+        "Organization & affiliations" => { "Classification & status" => { "Classification" => "Donor" } },
         "Notes" => { nil => { "Comments" => "Met at training" } }
       )
-      expect(rolodex.grouped_data.dig("Identity", nil).keys).to eq(%w[FirstName LastName EMail Classification])
+      expect(rolodex.grouped_data.dig("Identity", nil).keys).to eq(%w[FirstName LastName EMail])
     end
 
     it "splits a card into its subcards" do
@@ -17,9 +18,9 @@ RSpec.describe FmRolodex do
 
       expect(rolodex.grouped_data).to eq(
         "Organization & affiliations" => {
+          "Classification & status" => { "Status" => "Active" },
           "Organization" => { "Organization" => "Shelter" },
-          "Job affiliation" => { "Title" => "Director" },
-          "Facilitator affiliation" => { "Status" => "Active" }
+          "Job affiliation" => { "Title" => "Director" }
         }
       )
     end

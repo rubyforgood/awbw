@@ -121,16 +121,17 @@ class FmRolodex < ApplicationRecord
 
   FIELD_GROUPS = {
     "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
-                     EMail EmailPrimary EmailType EmailNotes Classification BestTimeToCall],
+                     EMail EmailPrimary EmailType EmailNotes BestTimeToCall],
     "Phones & addresses" => {
       PHONES => %w[PrimaryPhoneID],
       ADDRESSES => %w[PrimaryAddrsID WorksiteAddrsID],
       "Mailing list" => %w[MailingList]
     },
     "Organization & affiliations" => {
+      "Classification & status" => %w[Classification Status],
       "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID],
       "Job affiliation" => %w[Title Department Dept2ndName],
-      "Facilitator affiliation" => %w[Status FacilitatorSinceMonth FacilitatorSinceYear
+      "Facilitator affiliation" => %w[FacilitatorSinceMonth FacilitatorSinceYear
                                       FacilitatorStatusPending HowTrained TrainingMotivation LifeExperiences
                                       Settings BBSLicense]
     },
