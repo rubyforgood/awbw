@@ -17,6 +17,14 @@ RSpec.describe "FM archives", type: :request do
       end
     end
 
+    it "shows a rolodex record's fields under group headings, most important first" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "Comments" => "Met at training", "LastName" => "Archer" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Identity &amp; status.*LastName.*Notes.*Comments.*Record keeping/m)
+    end
+
     it "links back to the portal people carrying the archive code" do
       FmRolodex.create!(fm_id: "00006")
       person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")

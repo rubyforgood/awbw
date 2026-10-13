@@ -101,6 +101,24 @@ class FmRolodex < ApplicationRecord
     "WorksiteAddrsID" => "fm_addresses"
   }.freeze
 
+  FIELD_GROUPS = {
+    "Identity & status" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson
+                              isAgency__c Classification Status Delete DuplicateStatus],
+    "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID Mission],
+    "Contact" => %w[EMail EmailPrimary EmailType EmailNotes PrimaryPhoneID BestTimeToCall
+                    PrimaryAddrsID WorksiteAddrsID WebSite],
+    "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
+    "Facilitator" => %w[FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending HowTrained
+                        TrainingMotivation LifeExperiences PrimaryAgeGroup PrimaryServiceArea OtherServiceArea
+                        Settings BBSLicense],
+    "Volunteering" => %w[VolEnrollDate DropDate AvailMon AvailTue AvailWed AvailThu AvailFri AvailSat],
+    "Giving" => %w[DonationCount DonationTotal Amount CkNo FunderPotential CallForArtRecord],
+    "Personal details" => %w[DateOfBirth BirthMonth BirthDay BirthYear BirthdayFlag Anniversary Children
+                             Ethnicity Languages],
+    "Mailing" => %w[MailingList AddresseeGreetingStyles ListBy IncludeTitle FamilyCode Private],
+    "Record keeping" => %w[ID EnteredBy DateEntered ModifiedBy DateTimeModified UserID Password]
+  }.freeze
+
   HAS_MANY = {
     "fm_addresses" => { via: "RolodexID", label: "Addresses" },
     "fm_phone_numbers" => { via: "RolodexID", label: "Phone Numbers" },
