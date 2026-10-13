@@ -107,8 +107,8 @@ class FmRolodex < ApplicationRecord
                     PrimaryAddrsID WorksiteAddrsID WebSite],
     "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID Mission],
     "Facilitator" => %w[Classification Status FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
-                        HowTrained TrainingMotivation LifeExperiences PrimaryAgeGroup PrimaryServiceArea
-                        OtherServiceArea Settings BBSLicense],
+                        HowTrained TrainingMotivation LifeExperiences Settings BBSLicense],
+    "Sector & age group" => %w[PrimaryServiceArea OtherServiceArea PrimaryAgeGroup],
     "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
     "Volunteering" => %w[VolEnrollDate DropDate AvailMon AvailTue AvailWed AvailThu AvailFri AvailSat],
     "Giving" => %w[DonationCount DonationTotal Amount CkNo FunderPotential CallForArtRecord],

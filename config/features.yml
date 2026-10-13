@@ -4282,7 +4282,7 @@
   action_path: "/fm_archives?table=rolodexes"
   summary: >-
     A FileMaker rolodex record now shows its fields in labeled sections —
-    identity, organization, contact, notes, facilitator status and history,
+    identity, organization, contact, sector and age group, facilitator history,
     and more — with the most useful details first.
   pro_tips:
     - "FileMaker's calculated and summary fields sit at the bottom under Other fields."
