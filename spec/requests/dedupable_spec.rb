@@ -414,6 +414,64 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("merged successfully")
         expect(invoice.reload.invoicee).to eq(keep)
       end
+
+      describe "addresses" do
+        def org_address(organization, primary: false, **overrides)
+          attrs = {
+            street_address: "1 Main St", city: "Springfield", state: "CA", zip_code: "90001",
+            country: "USA", county: "LA", district: nil, address_type: "work", locality: "LA City"
+          }.merge(overrides)
+          create(:address, addressable: organization, primary: primary, **attrs)
+        end
+
+        def merge!
+          post dedupe_perform_organizations_path, params: {
+            organization_to_delete_id: delete_rec.id,
+            organization_to_keep_id: keep.id
+          }
+        end
+
+        it "folds identical addresses into one on the keeper" do
+          org_address(keep)
+          org_address(delete_rec)
+
+          merge!
+
+          follow_redirect!
+          expect(response.body).to include("merged successfully")
+          expect(keep.reload.addresses.count).to eq(1)
+        end
+
+        it "keeps addresses that differ in any detail" do
+          org_address(keep)
+          org_address(delete_rec, street_address: "2 Other St")
+
+          merge!
+
+          expect(keep.reload.addresses.count).to eq(2)
+        end
+
+        it "keeps the keeper's primary and demotes the incoming address" do
+          keep_address = org_address(keep, primary: true)
+          org_address(delete_rec, street_address: "2 Other St", primary: true)
+
+          merge!
+
+          primaries = keep.reload.addresses.where(primary: true)
+          expect(primaries.pluck(:id)).to eq([ keep_address.id ])
+        end
+
+        it "repoints an affiliation's organization address onto the surviving address" do
+          keep_address = org_address(keep)
+          dupe_address = org_address(delete_rec)
+          affiliation = create(:affiliation, organization: delete_rec, organization_address: dupe_address)
+
+          merge!
+
+          expect(affiliation.reload.organization_id).to eq(keep.id)
+          expect(affiliation.organization_address_id).to eq(keep_address.id)
+        end
+      end
     end
   end
 
