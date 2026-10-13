@@ -101,23 +101,31 @@ class FmRolodex < ApplicationRecord
     "WorksiteAddrsID" => "fm_addresses"
   }.freeze
 
-  PHONES_AND_ADDRESSES = "Phones & addresses"
+  PHONES = "Phones"
+  ADDRESSES = "Addresses"
+  LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
 
   FIELD_GROUPS = {
     "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
                      EMail EmailPrimary EmailType EmailNotes BestTimeToCall],
-    PHONES_AND_ADDRESSES => %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID],
-    "Organization & role" => %w[Organization OrgID Title Department Dept2ndName PrimaryContact PrimaryContactID
-                                WebSite Mission],
-    "Facilitator" => %w[Classification Status FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
-                        HowTrained TrainingMotivation LifeExperiences Settings BBSLicense],
+    "Phones & addresses" => {
+      PHONES => %w[PrimaryPhoneID],
+      ADDRESSES => %w[PrimaryAddrsID WorksiteAddrsID MailingList]
+    },
+    "Organization & affiliations" => {
+      "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID],
+      "Job affiliation" => %w[Title Department Dept2ndName],
+      "Facilitator affiliation" => %w[Classification Status FacilitatorSinceMonth FacilitatorSinceYear
+                                      FacilitatorStatusPending HowTrained TrainingMotivation LifeExperiences
+                                      Settings BBSLicense]
+    },
     "Sector & age group" => %w[PrimaryServiceArea OtherServiceArea PrimaryAgeGroup],
     "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
     "Volunteering" => %w[VolEnrollDate DropDate AvailMon AvailTue AvailWed AvailThu AvailFri AvailSat],
     "Giving" => %w[DonationCount DonationTotal Amount CkNo FunderPotential CallForArtRecord],
     "Personal details" => %w[DateOfBirth BirthMonth BirthDay BirthYear BirthdayFlag Anniversary Children
                              Ethnicity Languages],
-    "Mailing" => %w[MailingList AddresseeGreetingStyles ListBy IncludeTitle FamilyCode Private],
+    "Mailing" => %w[AddresseeGreetingStyles ListBy IncludeTitle FamilyCode Private],
     "Record keeping" => %w[ID Delete DuplicateStatus EnteredBy DateEntered ModifiedBy DateTimeModified UserID Password]
   }.freeze
 
@@ -155,16 +163,22 @@ class FmRolodex < ApplicationRecord
     @addresses ||= contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
   end
 
-  private
-
-  def keep_empty_group?(label)
-    label == PHONES_AND_ADDRESSES && (phone_numbers.any? || addresses.any?)
+  def records_listed_under(label)
+    case label
+    when PHONES then phone_numbers
+    when ADDRESSES then addresses
+    else []
+    end
   end
 
-  # Ones this record points at are listed first, even when their RolodexID names someone else.
+  private
+
+  # Ones this record points at are listed first, even when their RolodexID names someone else; one the
+  # archive lacks stands in as an unsaved placeholder.
   def contact_records(model, primary_ids:)
-    primary_ids = primary_ids.compact_blank
+    primary_ids = primary_ids.compact_blank.uniq
     records = model.find_by_data("RolodexID", fm_id).or(model.where(fm_id: primary_ids)).order(:fm_id).to_a
+    records += (primary_ids - records.map(&:fm_id)).map { |id| model.new(fm_id: id, data: {}) }
     records.sort_by { |record| primary_ids.index(record.fm_id) || primary_ids.size }
   end
 end

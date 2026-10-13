@@ -6,7 +6,7 @@
     <div>
       <h3 class="mb-3 text-sm font-semibold text-gray-700">Fields</h3>
       <dl class="space-y-3">
-        <% model::FIELD_GROUPS.merge(FmArchive::OTHER_FIELDS => record.ungrouped_keys).compact_blank.each do |label, keys| %>
+        <% model.flat_field_groups.merge(FmArchive::OTHER_FIELDS => record.ungrouped_keys).compact_blank.each do |label, keys| %>
           <div>
             <dt class="text-xs font-medium text-gray-500"><%= label %></dt>
             <dd class="mt-1 flex flex-wrap gap-1">

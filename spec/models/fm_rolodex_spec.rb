@@ -6,37 +6,55 @@ RSpec.describe FmRolodex do
       rolodex = described_class.new(data: { "Comments" => "Met at training", "LastName" => "Archer", "EMail" => "abe@example.com", "FirstName" => "Abe" })
 
       expect(rolodex.grouped_data).to eq(
-        "Identity" => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com" },
-        "Notes" => { "Comments" => "Met at training" }
+        "Identity" => { nil => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com" } },
+        "Notes" => { nil => { "Comments" => "Met at training" } }
       )
-      expect(rolodex.grouped_data["Identity"].keys).to eq(%w[FirstName LastName EMail])
+      expect(rolodex.grouped_data.dig("Identity", nil).keys).to eq(%w[FirstName LastName EMail])
+    end
+
+    it "splits a card into its subcards" do
+      rolodex = described_class.new(data: { "Status" => "Active", "Title" => "Director", "Organization" => "Shelter" })
+
+      expect(rolodex.grouped_data).to eq(
+        "Organization & affiliations" => {
+          "Organization" => { "Organization" => "Shelter" },
+          "Job affiliation" => { "Title" => "Director" },
+          "Facilitator affiliation" => { "Status" => "Active" }
+        }
+      )
     end
 
     it "trails fields no group names under other fields" do
       rolodex = described_class.new(data: { "zcFullName" => "Abe Archer", "ID" => "00901" })
 
       expect(rolodex.grouped_data).to eq(
-        "Record keeping" => { "ID" => "00901" },
-        "Other fields" => { "zcFullName" => "Abe Archer" }
+        "Record keeping" => { nil => { "ID" => "00901" } },
+        "Other fields" => { nil => { "zcFullName" => "Abe Archer" } }
       )
     end
 
     it "leaves out blank fields and the groups they empty" do
       rolodex = described_class.new(data: { "FirstName" => "Abe", "MiddleName" => "", "Comments" => nil, "zcFullName" => "" })
 
-      expect(rolodex.grouped_data).to eq("Identity" => { "FirstName" => "Abe" })
+      expect(rolodex.grouped_data).to eq("Identity" => { nil => { "FirstName" => "Abe" } })
     end
 
-    it "keeps an empty phones and addresses group when the person has phones on file" do
+    it "leaves the primary phone and address IDs to the lists below" do
+      rolodex = described_class.new(data: { "PrimaryAddrsID" => "AD1", "MailingList" => "Yes" })
+
+      expect(rolodex.grouped_data).to eq("Phones & addresses" => { FmRolodex::ADDRESSES => { "MailingList" => "Yes" } })
+    end
+
+    it "keeps an empty phones subcard when the person has phones on file" do
       rolodex = described_class.create!(fm_id: "00901", data: { "PrimaryPhoneID" => "" })
       FmPhoneNumber.create!(fm_id: "PH1", data: { "RolodexID" => "00901" })
 
-      expect(rolodex.grouped_data).to eq(FmRolodex::PHONES_AND_ADDRESSES => {})
+      expect(rolodex.grouped_data).to eq("Phones & addresses" => { FmRolodex::PHONES => {} })
     end
 
     it "groups every documented FileMaker field exactly once" do
       documented = File.read(Rails.root.join("app/models/fm_rolodex.rb")).scan(/^#   (\w+)/).flatten
-      grouped = described_class::FIELD_GROUPS.values.flatten
+      grouped = described_class.flat_field_groups.values.flatten
 
       expect(grouped).to match_array(documented)
     end
@@ -63,11 +81,17 @@ RSpec.describe FmRolodex do
     it "lists primary, then worksite, then other addresses, including a worksite filed under someone else" do
       expect(rolodex.addresses.map(&:fm_id)).to eq(%w[AD3 AD9 AD1])
     end
+
+    it "stands in an unsaved placeholder for a primary ID the archive lacks" do
+      rolodex.data["PrimaryPhoneID"] = "PH9"
+
+      expect(rolodex.phone_numbers.map { |phone| [ phone.fm_id, phone.persisted? ] }).to eq([ [ "PH9", false ], [ "PH1", true ], [ "PH2", true ] ])
+    end
   end
 
   it "leaves tables without field groups as one unlabeled group" do
     organization = FmOrganization.new(data: { "OrgName" => "Shelter" })
 
-    expect(organization.grouped_data).to eq(nil => { "OrgName" => "Shelter" })
+    expect(organization.grouped_data).to eq(nil => { nil => { "OrgName" => "Shelter" } })
   end
 end

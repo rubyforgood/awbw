@@ -38,7 +38,7 @@ module FilemakerHelper
     when Workshop then [ record.title, workshop_path(record) ]
     end
 
-    link_to text, path, class: button_classes(:primary_outline, size: :sm)
+    link_to text, path, class: button_classes(:primary)
   end
 
   # An archive field's link to the record it names, struck through when the archive has no such record.

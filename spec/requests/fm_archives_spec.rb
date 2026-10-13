@@ -32,9 +32,19 @@ RSpec.describe "FM archives", type: :request do
 
       get fm_archive_path("00006", table: "rolodexes")
 
-      expect(response.body).to match(/Phones &amp; addresses.*Phone numbers \(1\).*\(213\) 555-0101.*Primary.*Addresses \(1\).*88 Rose Ave, Venice.*Record keeping/m)
+      expect(response.body).to match(/Phones &amp; addresses.*Phones.*\(213\) 555-0101.*Addresses.*88 Rose Ave, Venice.*Record keeping/m)
       expect(response.body).to include("table=phone_numbers", "table=addresses")
-      expect(response.body).to match(%r{Work\s*<span[^>]*>PH1</span>})
+      expect(response.body).to match(%r{Work\s*<span[^>]*>PH1</span>\s*<span[^>]*>Primary</span>})
+      expect(response.body).not_to include("PrimaryPhoneID</dt>")
+    end
+
+    it "lists a primary phone or address the archive lacks as not found" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "PrimaryPhoneID" => "75999", "WorksiteAddrsID" => "74999" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(%r{<span[^>]*line-through[^>]*title="No FM record found"[^>]*>75999</span>\s*<span[^>]*>Primary</span>.*Not found in FM data}m)
+      expect(response.body).to match(%r{>74999</span>\s*<span[^>]*>Worksite</span>.*Not found in FM data}m)
     end
 
     it "lists every field and association a rolodex record can hold below its cards" do
@@ -59,14 +69,14 @@ RSpec.describe "FM archives", type: :request do
     end
 
     it "strikes through a linked ID with no archive record, and links the rest" do
-      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "PrimaryAddrsID" => "74999", "PrimaryPhoneID" => "75001" })
-      FmPhoneNumber.create!(fm_id: "75001")
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "OrgID" => "ORG90999", "PrimaryContactID" => "00007" })
+      FmRolodex.create!(fm_id: "00007")
 
       get fm_archive_path("00006", table: "rolodexes")
 
-      expect(response.body).to match(%r{<span[^>]*line-through[^>]*title="No FM record found"[^>]*>74999</span>})
-      expect(response.body).to include(fm_archive_path("75001", table: "phone_numbers"))
-      expect(response.body).not_to include(fm_archive_path("74999", table: "addresses"))
+      expect(response.body).to match(%r{<span[^>]*line-through[^>]*title="No FM record found"[^>]*>ORG90999</span>})
+      expect(response.body).to include(fm_archive_path("00007", table: "rolodexes"))
+      expect(response.body).not_to include(fm_archive_path("ORG90999", table: "organizations"))
     end
 
     it "leaves the field reference off tables without field groups" do

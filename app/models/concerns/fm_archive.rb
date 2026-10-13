@@ -3,6 +3,7 @@ module FmArchive
 
   FIELD_GROUPS = {}.freeze
   OTHER_FIELDS = "Other fields"
+  LISTED_FIELDS = [].freeze
 
   included do
     before_validation :set_defaults
@@ -16,29 +17,38 @@ module FmArchive
     def find_by_data(column, value)
       where("JSON_UNQUOTE(JSON_EXTRACT(data, CONCAT('$.', ?))) = ?", column.to_s, value)
     end
+
+    # FIELD_GROUPS with each card's subcards lifted to the top level.
+    def flat_field_groups
+      self::FIELD_GROUPS.flat_map { |label, keys| keys.is_a?(Hash) ? keys.to_a : [ [ label, keys ] ] }.to_h
+    end
   end
 
-  # The filled-in data fields clustered under FIELD_GROUPS headings, in their listed order; fields no group
-  # names trail under "Other fields". Ungrouped tables come back whole, as one unlabeled group.
+  # The filled-in data fields as cards of subcards, { card => { subcard => fields } }, in FIELD_GROUPS order.
+  # A card listing its fields directly holds one unlabeled subcard; fields no group names trail under
+  # "Other fields". Ungrouped tables come back whole, as one unlabeled card.
   def grouped_data
     groups = self.class::FIELD_GROUPS
-    return { nil => data } if groups.empty?
+    return { nil => { nil => data } } if groups.empty?
 
-    filled = data.compact_blank
-    groups.transform_values { |keys| filled.slice(*keys) }
-      .merge(OTHER_FIELDS => filled.slice(*ungrouped_keys))
-      .select { |label, fields| fields.any? || keep_empty_group?(label) }
+    filled = data.compact_blank.except(*self.class::LISTED_FIELDS)
+    groups.merge(OTHER_FIELDS => ungrouped_keys).to_h do |label, keys|
+      subgroups = keys.is_a?(Hash) ? keys : { nil => keys }
+      [ label, subgroups.transform_values { |sub_keys| filled.slice(*sub_keys) }
+                        .select { |sub_label, fields| fields.any? || records_listed_under(sub_label).any? } ]
+    end.compact_blank
   end
 
   def ungrouped_keys
-    data.keys - self.class::FIELD_GROUPS.values.flatten
+    data.keys - self.class.flat_field_groups.values.flatten
+  end
+
+  # Related records a subcard lists below its fields.
+  def records_listed_under(_label)
+    []
   end
 
   private
-
-  def keep_empty_group?(_label)
-    false
-  end
 
   def set_defaults
     self.data ||= {}
