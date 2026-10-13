@@ -40,8 +40,9 @@ drive the archive pages' links.
   prefixes aren't unique to one table (see below), so nothing strips or routes by it.
 - **Affiliation → Personnel.** Personnel is a person on a project with a role and
   agreement status. With orgs = projects, that's an affiliation. **Open:** production
-  affiliations almost all carry a *project* code instead (see "What portal records
-  store" below).
+  affiliations almost all carry `P` + 4-digit codes, which could be project ids or
+  personnel ids missing their `S` — not yet checked against each row's person and org
+  (see "What portal records store" below).
 - **Resource has no counterpart.** No archive table holds resources. Form Letters
   are mail-merge templates, not resources, and nothing in the app maps to them. The
   seed leaves `resources.filemaker_code` blank. **Open:** most production resource
@@ -126,7 +127,7 @@ split into single codes). Compare against the grid above.
 |---|---|---|---|
 | `organizations` | 1,987 | 1,965 `P` + 4 digits (projects) | 22: unpadded `P622`; no prefix `627`, `628`, `2781`, `9530`; letter O for zero `PO296`; extra digit `P03484`; `PP256`; placeholder `F0000` ×2; bare 5-digit numbers ×9 (Rolodex-shaped); 2 unreadable values |
 | `people` | 1 | 1 Rolodex-shaped (`39853`) | — the column is effectively unused |
-| `affiliations` | 1,535 | 1 `PS` (personnel) | 1,531 `P` + 4 digits (**projects**), plus `ORG05589`, `PP208`, `09856` |
+| `affiliations` | 1,535 | 1 `PS` (personnel) | 1,531 `P` + 4 digits (project ids, or personnel ids missing the `S` — unverified), plus `ORG05589`, `PP208`, `09856` |
 | `payments` | 0 | — | — |
 | `workshops` | 850 | 849 `W` + 4 digits | `XVI/4` |
 | `resources` | 128 | (unmapped) | 116 `Q` + 4–5 digits (**quotations**), plus bare 2–3 digit numbers, `v`, and a URL |
