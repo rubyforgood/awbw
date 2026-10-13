@@ -93,6 +93,31 @@ RSpec.describe FmRolodex do
     end
   end
 
+  describe "#job_affiliations and #facilitator_affiliations" do
+    let(:rolodex) { described_class.create!(fm_id: "00901", data: {}) }
+
+    before do
+      FmPeopleToOrganization.create!(fm_id: "R2", data: { "PersonID" => "00901" })
+      FmPeopleToOrganization.create!(fm_id: "R1", data: { "PersonID" => "00901" })
+      FmPeopleToOrganization.create!(fm_id: "R9", data: { "PersonID" => "00777" })
+      FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00901" })
+    end
+
+    it "lists the person's organization affiliation rows" do
+      expect(rolodex.job_affiliations.map(&:fm_id)).to eq(%w[R1 R2])
+    end
+
+    it "lists the person's personnel rows" do
+      expect(rolodex.facilitator_affiliations.map(&:fm_id)).to eq(%w[PS1])
+    end
+
+    it "keeps an affiliation subcard when the person has affiliation rows but no affiliation fields" do
+      expect(rolodex.grouped_data).to eq(
+        "Organization & affiliations" => { FmRolodex::JOB_AFFILIATION => {}, FmRolodex::FACILITATOR_AFFILIATION => {} }
+      )
+    end
+  end
+
   it "leaves tables without field groups as one unlabeled group" do
     organization = FmOrganization.new(data: { "OrgName" => "Shelter" })
 

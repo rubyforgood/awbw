@@ -39,7 +39,7 @@
                     <h3 class="text-sm font-semibold text-gray-700"><%= sub_label %></h3>
                   <% end %>
                   <%= render "fields", record: @record, fields: fields %>
-                  <%= render "contact_records", owner: @record, records: @record.records_listed_under(sub_label) %>
+                  <%= render "listed_records", owner: @record, records: @record.records_listed_under(sub_label) %>
                 </div>
               <% end %>
             <% end %>
@@ -61,7 +61,7 @@
                                      fm_related_table_highlight(@record, info[:table]) || "border-gray-200") do %>
               <h3 class="text-sm font-medium text-gray-500"><%= label %> (<%= info[:records].total_entries %>)</h3>
               <% if (counterpart = @record.portal_counterpart(info[:table])) %>
-                <p class="text-xs text-gray-600">In the portal as <%= counterpart.model_name.human.pluralize.downcase %></p>
+                <p class="text-xs text-gray-600">In the portal as <%= counterpart.downcase %></p>
               <% end %>
               <div class="mt-2 flex flex-wrap gap-1">
                 <% info[:records].each do |record| %>

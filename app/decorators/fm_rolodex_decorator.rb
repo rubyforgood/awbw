@@ -5,6 +5,6 @@ class FmRolodexDecorator < ApplicationDecorator
   }.freeze
 
   def contact_tags(record)
-    CONTACT_TAGS.fetch(record.class).select { |_, key| data[key] == record.fm_id }.keys
+    CONTACT_TAGS.fetch(record.class, {}).select { |_, key| data[key] == record.fm_id }.keys
   end
 end

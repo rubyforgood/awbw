@@ -47,6 +47,18 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).not_to include("MailingList</dt>")
     end
 
+    it "lists a rolodex person's job and facilitator affiliations in their subcards" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006" })
+      FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
+      FmProject.create!(fm_id: "P1", data: { "ProjectName" => "Adult Windows", "OrgID" => "ORG1" })
+      FmPeopleToOrganization.create!(fm_id: "R1", data: { "PersonID" => "00006", "OrgID" => "ORG1", "Title" => "Case Manager" })
+      FmPersonnel.create!(fm_id: "PS1", data: { "PersonID" => "00006", "ProjectID" => "P1", "Role" => "Facilitator" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Job affiliation.*Case Manager.*R1.*Sample Shelter.*Facilitator affiliation.*Facilitator.*PS1.*Adult Windows at Sample Shelter/m)
+    end
+
     it "lists a primary phone or address the archive lacks as not found" do
       FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "PrimaryPhoneID" => "75999", "WorksiteAddrsID" => "74999" })
 
@@ -94,6 +106,7 @@ RSpec.describe "FM archives", type: :request do
       FmAddress.create!(fm_id: "74001", data: { "RolodexID" => "00006" })
       FmFunding.create!(fm_id: "FND1", data: { "FunderID" => "00006" })
       FmNote.create!(fm_id: "N1", data: { "RolodexID" => "00006" })
+      FmActivity.create!(fm_id: "A1", data: { "ID" => "00006" })
 
       get fm_archive_path("00006", table: "rolodexes")
 
@@ -101,6 +114,7 @@ RSpec.describe "FM archives", type: :request do
       expect(frame.call("fm_workshop_logs")).to include("bg-orange-100", "In the portal as workshop logs")
       expect(frame.call("fm_addresses")).to include("bg-orange-100", "In the portal as addresses")
       expect(frame.call("fm_fundings")).to include("bg-orange-100", "In the portal as scholarships")
+      expect(frame.call("fm_activities")).to include("bg-orange-100", "In the portal as communications")
       expect(frame.call("fm_notes")).not_to include("bg-orange-100", "In the portal")
 
       reference = response.body.split("Records pointing here").last

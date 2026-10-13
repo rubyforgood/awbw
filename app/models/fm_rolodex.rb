@@ -103,20 +103,23 @@ class FmRolodex < ApplicationRecord
 
   PHONES = "Phones"
   ADDRESSES = "Addresses"
+  JOB_AFFILIATION = "Job affiliation"
+  FACILITATOR_AFFILIATION = "Facilitator affiliation"
   LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
   TALL_GROUPS = [ "Organization & affiliations" ].freeze
   PORTAL_COUNTERPARTS = {
-    "fm_addresses" => "Address",
-    "fm_phone_numbers" => "ContactMethod",
-    "fm_people_to_organizations" => "Affiliation",
-    "fm_personnels" => "Affiliation",
-    "fm_workshop_logs" => "WorkshopLog",
-    "fm_workshops" => "Workshop",
-    "fm_participants" => "EventRegistration",
-    "fm_payments" => "Payment",
-    "fm_fundings" => "Scholarship",
-    "fm_invoices" => "Invoice",
-    "fm_quotations" => "Quote"
+    "fm_addresses" => "Addresses",
+    "fm_phone_numbers" => "Contact methods",
+    "fm_activities" => "Communications",
+    "fm_people_to_organizations" => "Affiliations",
+    "fm_personnels" => "Affiliations",
+    "fm_workshop_logs" => "Workshop logs",
+    "fm_workshops" => "Workshops",
+    "fm_participants" => "Event registrations",
+    "fm_payments" => "Payments",
+    "fm_fundings" => "Scholarships",
+    "fm_invoices" => "Invoices",
+    "fm_quotations" => "Quotes"
   }.freeze
 
   FIELD_GROUPS = {
@@ -130,10 +133,9 @@ class FmRolodex < ApplicationRecord
     "Organization & affiliations" => {
       "Classification & status" => %w[Classification Status],
       "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID],
-      "Job affiliation" => %w[Title Department Dept2ndName],
-      "Facilitator affiliation" => %w[FacilitatorSinceMonth FacilitatorSinceYear
-                                      FacilitatorStatusPending HowTrained TrainingMotivation LifeExperiences
-                                      Settings BBSLicense]
+      JOB_AFFILIATION => %w[Title Department Dept2ndName],
+      FACILITATOR_AFFILIATION => %w[FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
+                                    HowTrained TrainingMotivation LifeExperiences Settings BBSLicense]
     },
     "Sector & age group" => %w[PrimaryServiceArea OtherServiceArea PrimaryAgeGroup],
     "Record keeping" => %w[ID Delete DuplicateStatus EnteredBy DateEntered ModifiedBy DateTimeModified UserID Password],
@@ -179,10 +181,20 @@ class FmRolodex < ApplicationRecord
     @addresses ||= contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
   end
 
+  def job_affiliations
+    @job_affiliations ||= FmPeopleToOrganization.find_by_data("PersonID", fm_id).order(:fm_id).to_a
+  end
+
+  def facilitator_affiliations
+    @facilitator_affiliations ||= FmPersonnel.find_by_data("PersonID", fm_id).order(:fm_id).to_a
+  end
+
   def records_listed_under(label)
     case label
     when PHONES then phone_numbers
     when ADDRESSES then addresses
+    when JOB_AFFILIATION then job_affiliations
+    when FACILITATOR_AFFILIATION then facilitator_affiliations
     else []
     end
   end

@@ -50,9 +50,9 @@ module FmArchive
     self.class.flat_field_groups[label]&.one? && records_listed_under(label).none?
   end
 
-  # The portal model holding its own records of what a related archive table holds.
+  # What the portal calls its own records of the kind a related archive table holds.
   def portal_counterpart(table)
-    self.class::PORTAL_COUNTERPARTS[table]&.constantize
+    self.class::PORTAL_COUNTERPARTS[table]
   end
 
   # Related records a subcard lists below its fields.
