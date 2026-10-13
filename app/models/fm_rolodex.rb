@@ -143,4 +143,21 @@ class FmRolodex < ApplicationRecord
     "fm_volunteers" => { via: "VRecID", label: "Volunteer Records" },
     "fm_workshops" => { via: "AuthorID", label: "Workshops (Authored)" }
   }.freeze
+
+  def phone_numbers
+    contact_records(FmPhoneNumber, primary_ids: data.values_at("PrimaryPhoneID"))
+  end
+
+  def addresses
+    contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
+  end
+
+  private
+
+  # Ones this record points at are listed first, even when their RolodexID names someone else.
+  def contact_records(model, primary_ids:)
+    primary_ids = primary_ids.compact_blank
+    records = model.find_by_data("RolodexID", fm_id).or(model.where(fm_id: primary_ids)).order(:fm_id).to_a
+    records.sort_by { |record| primary_ids.index(record.fm_id) || primary_ids.size }
+  end
 end

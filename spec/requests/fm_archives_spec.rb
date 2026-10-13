@@ -25,6 +25,17 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to match(/Identity.*LastName.*Notes.*Comments.*Record keeping/m)
     end
 
+    it "lists a rolodex record's phones and addresses under contact" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "EMail" => "abe@example.com", "PrimaryPhoneID" => "PH1" })
+      FmPhoneNumber.create!(fm_id: "PH1", data: { "RolodexID" => "00006", "PhoneType" => "Work", "PhoneNumber" => "(213) 555-0101" })
+      FmAddress.create!(fm_id: "AD1", data: { "RolodexID" => "00006", "AddrsLine1" => "88 Rose Ave", "AddrsCity" => "Venice" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      expect(response.body).to match(/Contact.*Phone numbers \(1\).*\(213\) 555-0101.*Primary.*Addresses \(1\).*88 Rose Ave, Venice.*Record keeping/m)
+      expect(response.body).to include("table=phone_numbers", "table=addresses")
+    end
+
     it "links back to the portal people carrying the archive code" do
       FmRolodex.create!(fm_id: "00006")
       person = create(:person, first_name: "Archie", last_name: "Coded", filemaker_code: "00012, 00006")

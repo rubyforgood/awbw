@@ -30,6 +30,29 @@ RSpec.describe FmRolodex do
     end
   end
 
+  describe "#phone_numbers and #addresses" do
+    let(:rolodex) do
+      described_class.create!(fm_id: "00901", data: { "PrimaryPhoneID" => "PH2", "PrimaryAddrsID" => "AD3", "WorksiteAddrsID" => "AD9" })
+    end
+
+    before do
+      FmPhoneNumber.create!(fm_id: "PH1", data: { "RolodexID" => "00901" })
+      FmPhoneNumber.create!(fm_id: "PH2", data: { "RolodexID" => "00901" })
+      FmPhoneNumber.create!(fm_id: "PH5", data: { "RolodexID" => "00777" })
+      FmAddress.create!(fm_id: "AD1", data: { "RolodexID" => "00901" })
+      FmAddress.create!(fm_id: "AD3", data: { "RolodexID" => "00901" })
+      FmAddress.create!(fm_id: "AD9", data: { "RolodexID" => "00777" })
+    end
+
+    it "lists every phone carrying this record's ID, primary first" do
+      expect(rolodex.phone_numbers.map(&:fm_id)).to eq(%w[PH2 PH1])
+    end
+
+    it "lists primary, then worksite, then other addresses, including a worksite filed under someone else" do
+      expect(rolodex.addresses.map(&:fm_id)).to eq(%w[AD3 AD9 AD1])
+    end
+  end
+
   it "leaves tables without field groups as one unlabeled group" do
     organization = FmOrganization.new(data: { "OrgName" => "Shelter" })
 
