@@ -121,6 +121,7 @@ RSpec.describe "FM archives", type: :request do
       expect(reference).to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Workshop Logs</a>})
       expect(reference).to match(%r{>Personnel</a>\s*<span[^>]*>\(Affiliations\)</span>})
       expect(reference).not_to include("(Workshop logs)")
+      expect(reference).to match(%r{>Contacts</a>.*ContacteeID</span>\s*<span[^>]*>Data from 2003–2018</span>}m)
       expect(reference).to match(%r{>Funding</a>\s*<span[^>]*>\(Scholarships\)</span>})
       expect(reference).not_to match(%r{<li class="[^"]*bg-orange-100[^"]*">\s*<a[^>]*>Notes</a>})
     end

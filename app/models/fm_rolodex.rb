@@ -150,7 +150,7 @@ class FmRolodex < ApplicationRecord
   HAS_MANY = {
     "fm_addresses" => { via: "RolodexID", label: "Addresses" },
     "fm_phone_numbers" => { via: "RolodexID", label: "Phone Numbers" },
-    "fm_contacts" => { via: "ContacteeID", label: "Contacts" },
+    "fm_contacts" => { via: "ContacteeID", label: "Contacts", note: "Data from 2003–2018" },
     "fm_notes" => { via: "RolodexID", label: "Notes" },
     "fm_activities" => { via: "ID", label: "Activities" },
     "fm_form_letters" => { via: "SignatureID", label: "Form Letters (Signed)" },

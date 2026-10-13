@@ -44,6 +44,9 @@
               <% end %>
               <span class="text-gray-400">via</span>
               <span class="rounded bg-white px-2 py-0.5 font-mono text-xs text-gray-700"><%= config[:via] %></span>
+              <% if config[:note] %>
+                <span class="text-xs text-gray-500 italic"><%= config[:note] %></span>
+              <% end %>
             </li>
           <% end %>
         </ul>
