@@ -44,6 +44,7 @@
 class FmWorkshop < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "WorkshopID"
+  FM_NAME_FIELDS = %w[WorkshopTitle].freeze
 
   FM_LINKS = {
     "AuthorID" => "fm_rolodexes"

@@ -4304,3 +4304,15 @@
     - "Wide images still fill their space edge to edge, as before."
     - "This covers the carousels, the story cards on the home and browse pages, the related stories on each story page, and the image carousel on each story."
     - "Cards in the home page topic sections now all stay the same size, whatever the shape of the image."
+
+- name: "FileMaker archive records show their names"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2664
+  action_path: "/fm_archives"
+  summary: >-
+    FileMaker archive lists and record pages now show each record's name — a
+    person, organization, event title, or similar — instead of only its ID.
+  pro_tips:
+    - "Records with nothing to name them by, like join rows, show their FileMaker ID instead."

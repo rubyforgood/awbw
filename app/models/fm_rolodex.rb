@@ -92,6 +92,7 @@
 class FmRolodex < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ID"
+  FM_NAME_FIELDS = [ %w[FirstName LastName], "Organization" ].freeze
 
   FM_LINKS = {
     "OrgID" => "fm_organizations",

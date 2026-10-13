@@ -42,6 +42,7 @@
 class FmArtRegistry < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ItemID"
+  FM_NAME_FIELDS = %w[ArtTitle].freeze
 
   FM_LINKS = {
     "ArtistID" => "fm_rolodexes",

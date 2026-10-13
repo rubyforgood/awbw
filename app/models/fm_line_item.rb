@@ -20,6 +20,7 @@
 class FmLineItem < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ItemID"
+  FM_NAME_FIELDS = %w[Description].freeze
 
   FM_LINKS = {
     "InvoiceNo" => "fm_invoices"

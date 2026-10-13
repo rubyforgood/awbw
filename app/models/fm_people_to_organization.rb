@@ -16,6 +16,7 @@
 class FmPeopleToOrganization < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = %w[Title].freeze
 
   FM_LINKS = {
     "PersonID" => "fm_rolodexes",

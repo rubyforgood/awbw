@@ -30,6 +30,7 @@
 class FmSolicitation < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "SolicitationID"
+  FM_NAME_FIELDS = %w[NameListing].freeze
 
   FM_LINKS = {
     "CampaignID" => "fm_campaigns",

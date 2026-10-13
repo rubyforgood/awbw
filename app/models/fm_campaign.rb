@@ -19,6 +19,7 @@
 class FmCampaign < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "CampaignID"
+  FM_NAME_FIELDS = %w[Campaign].freeze
 
   FM_LINKS = {}.freeze
 

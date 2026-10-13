@@ -47,6 +47,7 @@
 class FmProject < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ProjectID"
+  FM_NAME_FIELDS = %w[ProjectName].freeze
 
   FM_LINKS = {
     "OrgID" => "fm_organizations",

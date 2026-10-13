@@ -15,6 +15,7 @@
 class FmFormsList < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "FormID"
+  FM_NAME_FIELDS = %w[FormTitle].freeze
 
   FM_LINKS = {}.freeze
 

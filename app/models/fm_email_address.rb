@@ -14,6 +14,7 @@
 class FmEmailAddress < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "EmailAddrsID"
+  FM_NAME_FIELDS = %w[EmailAddress].freeze
 
   FM_LINKS = {
     "OrgID" => "fm_organizations"

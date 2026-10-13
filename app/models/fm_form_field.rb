@@ -16,6 +16,7 @@
 class FmFormField < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "FieldNo"
+  FM_NAME_FIELDS = %w[FieldNameFM FieldNameWP].freeze
 
   FM_LINKS = {}.freeze
 end

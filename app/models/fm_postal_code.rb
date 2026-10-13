@@ -22,6 +22,7 @@
 class FmPostalCode < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "Zipcode"
+  FM_NAME_FIELDS = [ %w[City State] ].freeze
 
   FM_LINKS = {}.freeze
 end

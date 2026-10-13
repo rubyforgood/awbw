@@ -35,6 +35,7 @@
 class FmInvoice < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = %w[Name Company InvoiceNo].freeze
 
   FM_LINKS = {
     "OrgID" => "fm_organizations",

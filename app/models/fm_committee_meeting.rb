@@ -14,6 +14,7 @@
 class FmCommitteeMeeting < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "CtMtgID"
+  FM_NAME_FIELDS = %w[MeetingDate].freeze
 
   FM_LINKS = {
     "CommitteeID" => "fm_committees"

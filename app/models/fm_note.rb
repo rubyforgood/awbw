@@ -24,6 +24,7 @@
 class FmNote < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "NoteID"
+  FM_NAME_FIELDS = %w[Subject].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects",

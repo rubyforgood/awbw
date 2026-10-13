@@ -16,6 +16,7 @@
 class FmAncillaryData < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = %w[FlagText Flag].freeze
 
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes"

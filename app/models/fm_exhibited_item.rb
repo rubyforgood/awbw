@@ -18,6 +18,7 @@
 class FmExhibitedItem < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = %w[ItemName].freeze
 
   FM_LINKS = {
     "ArtRegistryItemID" => "fm_art_registries",

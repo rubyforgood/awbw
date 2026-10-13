@@ -8,6 +8,8 @@ module FmArchive
   PORTAL_COUNTERPARTS = {}.freeze
   PORTAL_FIELDS = {}.freeze
   USER_LOOKUP_FIELDS = [].freeze
+  # Data fields that name a record, tried in order; a nested list joins its parts with a space.
+  FM_NAME_FIELDS = [].freeze
 
   included do
     before_validation :set_defaults
@@ -60,6 +62,14 @@ module FmArchive
   # Related records a subcard lists below its fields.
   def records_listed_under(_label)
     []
+  end
+
+  def name
+    self.class::FM_NAME_FIELDS.each do |fields|
+      name = Array(fields).filter_map { |field| data&.dig(field).to_s.strip.presence }.join(" ")
+      return name if name.present?
+    end
+    fm_id
   end
 
   private

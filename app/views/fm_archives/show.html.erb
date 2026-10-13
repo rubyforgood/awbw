@@ -3,10 +3,10 @@
   <div class="space-y-6">
     <div class="mb-6 flex items-center justify-between">
       <div>
-        <h1 class="text-primary font-display text-2xl font-semibold"><%= @record.class.name %></h1>
-        <p class="text-sm text-gray-500">FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
+        <h1 class="text-primary font-display text-2xl font-semibold"><%= @record.name %></h1>
+        <p class="text-sm text-gray-500"><%= @table_label %> &middot; FM ID: <%= @record.fm_id %> &middot; Key: <%= @record.fm_key_name %></p>
       </div>
-      <%= link_to "Back to list", fm_archives_path(table: @record.class.table_name.sub("fm_", "")), class: button_classes(:primary_outline) %>
+      <%= link_to "Back to list", fm_archives_path(table: @table_key), class: button_classes(:primary_outline) %>
     </div>
 
     <% if @portal_records.any? %>

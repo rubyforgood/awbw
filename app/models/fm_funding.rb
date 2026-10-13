@@ -49,6 +49,7 @@
 class FmFunding < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = %w[NameTemp Purpose].freeze
 
   FM_LINKS = {
     "FunderID" => "fm_rolodexes"

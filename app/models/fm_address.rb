@@ -25,6 +25,7 @@
 class FmAddress < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "AddrsID"
+  FM_NAME_FIELDS = %w[AddrsLine1 AddrsCity].freeze
 
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes",

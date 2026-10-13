@@ -45,6 +45,7 @@
 class FmParticipant < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "PRecID"
+  FM_NAME_FIELDS = %w[Name].freeze
 
   FM_LINKS = {
     "ParticipantID" => "fm_rolodexes",

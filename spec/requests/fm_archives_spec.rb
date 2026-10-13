@@ -160,6 +160,14 @@ RSpec.describe "FM archives", type: :request do
       get fm_archive_path("P2775", table: "projects")
 
       expect(response.body).not_to include("Available fields")
+
+    it "heads the page with the record's name and table" do
+      FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sunrise Shelter" })
+
+      get fm_archive_path("ORG1", table: "organizations")
+
+      expect(response.body).to match(%r{<h1[^>]*>Sunrise Shelter</h1>})
+      expect(response.body).to include("Organizations &middot; FM ID: ORG1")
     end
 
     it "links back to the portal people carrying the archive code" do
@@ -289,6 +297,14 @@ RSpec.describe "FM archives", type: :request do
         expect(response.body).to include(CGI.escapeHTML(group[:label]))
       end
       expect(response.body).to include("People to organizations")
+    end
+
+    it "lists each record by name" do
+      FmRolodex.create!(fm_id: "ROL1", data: { "FirstName" => "Archie", "LastName" => "Coded" })
+
+      get fm_archives_path(table: "rolodexes")
+
+      expect(response.body).to include("Archie Coded")
     end
 
     it "marks the selected table as the current page" do

@@ -18,6 +18,7 @@
 class FmPhoneNumber < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "PhoneID"
+  FM_NAME_FIELDS = %w[PhoneNumber].freeze
 
   FM_LINKS = {
     "RolodexID" => "fm_rolodexes",

@@ -14,6 +14,7 @@
 class FmReporting < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ReportID"
+  FM_NAME_FIELDS = %w[ReportDescription].freeze
 
   FM_LINKS = {
     "FundingRecordID" => "fm_fundings"

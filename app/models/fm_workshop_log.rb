@@ -39,6 +39,7 @@
 class FmWorkshopLog < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = %w[WorkshopTitle LeaderName].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects",

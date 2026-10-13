@@ -19,6 +19,7 @@
 class FmExpenditure < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ExpendRecID"
+  FM_NAME_FIELDS = %w[Name Description].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects"

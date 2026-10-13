@@ -34,6 +34,7 @@
 class FmActivity < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "ActivityLogID"
+  FM_NAME_FIELDS = %w[Subject FullName].freeze
 
   FM_LINKS = {
     "ID" => "fm_rolodexes",

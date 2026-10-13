@@ -44,6 +44,7 @@
 class FmFormSubmission < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = [ %w[FirstName LastName], "OrgName", "FormTitle" ].freeze
 
   FM_LINKS = {
     "FormID" => "fm_forms_lists",

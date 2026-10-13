@@ -37,6 +37,7 @@
 class FmEvent < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "EventID"
+  FM_NAME_FIELDS = %w[Title].freeze
 
   FM_LINKS = {}.freeze
 

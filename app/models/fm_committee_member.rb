@@ -17,6 +17,7 @@
 class FmCommitteeMember < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "CMRecID"
+  FM_NAME_FIELDS = %w[Role].freeze
 
   FM_LINKS = {
     "CommitteeID" => "fm_committees",

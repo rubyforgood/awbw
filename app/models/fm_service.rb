@@ -24,6 +24,7 @@
 class FmService < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "RecordID"
+  FM_NAME_FIELDS = [ %w[Month Year] ].freeze
 
   FM_LINKS = {
     "ProjectID" => "fm_projects"

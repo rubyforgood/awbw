@@ -22,6 +22,7 @@
 class FmVolunteer < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "VolID"
+  FM_NAME_FIELDS = [ %w[FirstName LastName] ].freeze
 
   FM_LINKS = {
     "VRecID" => "fm_rolodexes",

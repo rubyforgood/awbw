@@ -32,6 +32,7 @@
 class FmOrganization < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "OrgID"
+  FM_NAME_FIELDS = %w[OrgName].freeze
 
   FM_LINKS = {
     "ParentID" => "fm_organizations"
