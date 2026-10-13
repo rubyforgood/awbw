@@ -377,13 +377,15 @@ class PeopleController < ApplicationController
         first_name legal_first_name last_name email email_type email_2 email_2_type
         date_of_birth pronouns filemaker_code member_since notes
       ],
+      union_columns: %w[filemaker_code],
       # Merging two people who each have a login leaves the kept person with both
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        next [] unless keep.user && delete.user
+        next [] unless delete.user
+        next [ "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." ] unless keep.user
 
-        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost." ]
+        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently." ]
       },
       # Block the merge when both people carry an active pay subscription: the merge
       # keeps both live (soft-deleting one would strand its billing), so the kept person
@@ -397,6 +399,7 @@ class PeopleController < ApplicationController
       # they become indistinguishable), capture which primary sector + age range to
       # keep: the survivor's own, or — when it has none — the deleted person's.
       merge_keeper: ->(keep, delete) {
+        keep.filemaker_code = Person.join_filemaker_codes(keep.filemaker_code, delete.filemaker_code)
         @keeper_primary_sector_id = keep.sectorable_items.find_by(is_primary: true)&.sector_id ||
           delete.sectorable_items.find_by(is_primary: true)&.sector_id
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
@@ -404,6 +407,7 @@ class PeopleController < ApplicationController
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
         @keeper_primary_address_signature = PersonServices::ReconcileAddresses.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
+        @adopted_login_id = delete.user&.id unless keep.user
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (fold blank-number
@@ -417,7 +421,8 @@ class PeopleController < ApplicationController
       #     else the survivor's own — and soft-delete the redundant sibling so
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (fold identical ones into one,
-      #     keeping a single primary — the survivor's own, else the deleted person's).
+      #     keeping a single primary — the survivor's own, else the deleted person's);
+      #   * a survivor gaining its first login (adopt the login's email as primary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
@@ -430,11 +435,22 @@ class PeopleController < ApplicationController
           primary_signature: @keeper_primary_address_signature).call
         PersonServices::ReconcileContactMethods.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
+        sync_adopted_login_email(keep)
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
       }
     }
+  end
+
+  # Saves the preview's edits first so the sync moves the email the admin picked into
+  # the secondary slot.
+  def sync_adopted_login_email(keep)
+    login = User.find_by(id: @adopted_login_id)
+    return unless login
+
+    keep.save! if keep.changed?
+    PersonLoginEmailSync.call(login)
   end
 
   def active_pay_subscription?(person)

@@ -110,7 +110,7 @@ class FmRolodex < ApplicationRecord
     "fm_personnels" => { via: "PersonID", label: "Personnel" },
     "fm_workshop_logs" => { via: "LeaderID", label: "Workshop Logs" },
     "fm_participants" => { via: "ParticipantID", label: "Participations" },
-    "fm_funding" => { via: "FunderID", label: "Funding" },
+    "fm_fundings" => { via: "FunderID", label: "Funding" },
     "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" },
     "fm_ancillary_data" => { via: "RolodexID", label: "Ancillary Data" },
     "fm_art_registries" => { via: "ArtistID", label: "Art Registries (Artist)" },

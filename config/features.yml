@@ -27,6 +27,20 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "Certificate of completion settings"
+  area: events
+  display_status: admin_facing
+  released_on: 2026-10-08
+  summary: >-
+    A new admin page to connect certificate artwork: a full-bleed frame for the
+    facilitator-training, on-demand, CE, and other-events certificates, plus the
+    facilitator-training and CE signature strips. Upload each as a Resource, then
+    connect it here.
+  action_path: "/admin/certificate_settings"
+  pro_tips:
+    - "Leave a slot empty to use the built-in design for that certificate type."
+    - "The facilitator-training signature shows on live training certificates only — never on-demand or other events."
+
 - name: "Registration forms skip questions you've already answered"
   area: registration
   display_status: user_facing
@@ -110,15 +124,15 @@
   summary: >-
     The Story Share home now has audience columns (Children, Adults, …) next to the
     focus-area sectors and Facilitator Spotlights, so visitors can jump to stories by age
-    group. Admins pick which sectors and audiences appear with the new "On home" toggle.
+    group. Admins pick which sectors and audiences appear with the new "Add to Story Share home" button.
   action_path: "/story_share"
   description: >-
-    Admins control the home grid from the Story Share admin page. Each featured sector
-    and audience has an "On home" dropdown; the ones set to "On home" get a full section
-    on the portal home, shown in the same order as the nav.
+    Admins control the Story Share home grid from the Story Share admin page. Each featured sector
+    and audience has an "Add to Story Share home" button; the ones set to "Show on Story Share home"
+    get their own box of stories on the Story Share home, shown in the same order as the nav.
   pro_tips:
-    - "A sector or audience can stay in the nav without getting a home box — just set its \"On home\" dropdown to \"Not on home\"."
-    - "Home sections follow the nav order, so drag to reorder once and both update."
+    - "A sector or audience can stay in the nav without getting a box on the Story Share home — just set it to \"Menu only\"."
+    - "Story Share home boxes follow the nav order, so drag to reorder once and both update."
 
 - name: "Credit a second author on a story idea"
   area: stories
@@ -4163,3 +4177,87 @@
     details on ones nobody has touched.
   pro_tips:
     - "After syncing, the message tells you how many edited features were kept as-is."
+
+- name: "Merging people keeps both FileMaker codes"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2647
+  action_path: "/people/dedupe_index"
+  summary: >-
+    Merging two people who each came from FileMaker now keeps both of their
+    FileMaker codes on the kept person instead of dropping one.
+  pro_tips:
+    - "A record can answer to several codes — they're shown as a comma-separated list, and each one links to its own row in the archive."
+    - "The duplicate list now reads two records as a match when their codes overlap, rather than flagging them as conflicting."
+
+- name: "Image carousels loop back to the start"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-12
+  pr_number: 2651
+  summary: >-
+    The image carousel on workshop variations and stories now loops: the right
+    arrow on the last image goes back to the first, and the left arrow on the
+    first image goes to the last.
+
+- name: "Merging takes over a login's email"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2644
+  action_path: "/people/dedupe_index"
+  summary: >-
+    When the person you keep has no login but the other person does, the kept
+    person takes over that login and their primary email becomes the login email,
+    the same as linking a login.
+  pro_tips:
+    - "The merge preview warns you when this will happen. The email you chose there is kept as the secondary email."
+    - "If the kept person already has their own login, their primary email is left as you chose it."
+
+- name: "A person with two logins shows the one they use"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-13
+  action_path: "/people/dedupe_index"
+  pr_number: 2639
+  summary: >-
+    When a merge leaves a person with two logins, their profile now shows the
+    login used most recently, so the email you see is the one they sign in with.
+
+- name: "FileMaker archive tables grouped by area"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2660
+  action_path: "/fm_archives"
+  summary: >-
+    The FileMaker archive now sorts its 44 tables into labeled groups — people,
+    organizations, events, payments, funding and more — so the table you want
+    is easier to find.
+
+- name: "Jump between people, orgs, and the FileMaker archive"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2648
+  summary: >-
+    Each FileMaker code on person and organization edit pages links to its
+    archive record, and each archive record links back to the portal person or
+    organization that carries its code.
+  pro_tips:
+    - "A struck-through code means the archive has no record for that code — check it for a typo."
+    - "Separate several codes with commas. Spaces, tabs, and line breaks are ignored, and the list saves sorted."
+    - "An organization's edit page also links the FileMaker organization its project belongs to."
+    - "An organization's code can be a FileMaker project ID (like P2775) or organization ID (like ORG07206). Type the whole code, letters included."
+
+- name: "Open an affiliation's FileMaker record"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2649
+  summary: >-
+    An affiliation's edit page now links its FileMaker code to the archive, and
+    the archive record links back to the affiliation.
+  pro_tips:
+    - "An affiliation's code is usually its program's FileMaker project ID (like P2775), and occasionally a personnel ID (like PS9999)."

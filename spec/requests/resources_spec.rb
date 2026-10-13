@@ -115,6 +115,12 @@ RSpec.describe "/resources", type: :request do
 
       expect(response).to have_http_status(:ok)
     end
+
+    it "prefills the title from the query param" do
+      get new_resource_url(title: "Training certificate frame")
+
+      expect(response.body).to include("Training certificate frame")
+    end
   end
 
   describe "GET /edit" do

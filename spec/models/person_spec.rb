@@ -482,6 +482,15 @@ RSpec.describe Person, type: :model do
                               created_by: admin, updated_by: admin)
       expect(person.user).to be_nil
     end
+
+    it "returns the most recently updated login when several point at the person" do
+      person = create(:person, user: nil)
+      create(:user, person: person, updated_at: 2.days.ago)
+      recent = create(:user, person: person, updated_at: 1.hour.ago)
+      create(:user, person: person, updated_at: 1.week.ago)
+
+      expect(person.reload.user).to eq(recent)
+    end
   end
 
   describe '.search_by_params' do
@@ -976,6 +985,26 @@ RSpec.describe Person, "scholarship index helpers" do
       create(:notification, recipient_email: "someone@example.com")
 
       expect(person.communications_scope).to be_empty
+    end
+  end
+
+  describe "FileMaker codes" do
+    it "parses a trimmed, de-duplicated list from the column" do
+      person = build(:person, filemaker_code: " 00006 , 00012,00006 ")
+
+      expect(person.filemaker_codes).to eq(%w[00006 00012])
+    end
+
+    it "is empty when the column is blank" do
+      expect(build(:person, filemaker_code: nil).filemaker_codes).to eq([])
+    end
+
+    it "combines mixed strings and lists into one sorted normalized value" do
+      expect(Person.join_filemaker_codes("00012, 00006", " 00031 ", nil, "00006")).to eq("00006, 00012, 00031")
+    end
+
+    it "returns nil when there is nothing to combine" do
+      expect(Person.join_filemaker_codes(nil, "")).to be_nil
     end
   end
 

@@ -98,13 +98,7 @@
         <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt class="font-medium text-gray-500">FileMaker code</dt>
           <dd class="text-gray-900">
-            <% if person.filemaker_code.present? %>
-              <% if FmRolodex.exists?(fm_id: person.filemaker_code) %>
-                <%= link_to person.filemaker_code, fm_archive_path(person.filemaker_code, table: "rolodexes"), class: "text-blue-600 underline hover:text-blue-800", target: "_blank", rel: "noopener" %>
-              <% else %>
-                <%= person.filemaker_code %>
-              <% end %>
-            <% else %>—<% end %>
+            <%= filemaker_code_links(person, link_class: "text-blue-600 underline hover:text-blue-800") || "—" %>
           </dd>
           <dt class="font-medium text-gray-500">Racial/ethnic identity</dt>
           <dd class="text-gray-900"><%= person.racial_ethnic_identity.presence || "—" %></dd>

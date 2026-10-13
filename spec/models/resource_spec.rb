@@ -154,4 +154,85 @@ RSpec.describe Resource do
       expect(Resource.ce_certificate_signature_file).to be_attached
     end
   end
+
+  describe ".certificate_frame_file" do
+    it "returns nil when no record exists for the category" do
+      expect(Resource.certificate_frame_file(:training)).to be_nil
+    end
+
+    it "returns nil for an unknown category" do
+      expect(Resource.certificate_frame_file(:nonsense)).to be_nil
+    end
+
+    it "returns the attached frame for the matching category" do
+      resource = create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:on_demand])
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.certificate_frame_file(:on_demand)).to be_attached
+    end
+
+    it "matches the category by title, not across categories" do
+      resource = create(:resource, title: Resource::CERTIFICATE_FRAME_TITLES[:training])
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.certificate_frame_file(:training)).to be_attached
+      expect(Resource.certificate_frame_file(:other)).to be_nil
+    end
+  end
+
+  describe ".ce_certificate_frame_file" do
+    it "returns nil when no record exists" do
+      expect(Resource.ce_certificate_frame_file).to be_nil
+    end
+
+    it "returns the attached frame when the record has one" do
+      resource = create(:resource, title: Resource::CE_CERTIFICATE_FRAME_TITLE)
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.ce_certificate_frame_file).to be_attached
+    end
+  end
+
+  describe "certificate_artwork_role connections" do
+    it "resolves a slot from the connected resource (role), not just the legacy title" do
+      connected = create(:resource, title: "Any signature art", certificate_artwork_role: "training_signatures")
+      create(:primary_asset, :with_file, owner: connected)
+
+      expect(Resource.training_certificate_signatures_file).to be_attached
+      expect(Resource.certificate_artwork("training_signatures")).to eq(connected)
+    end
+
+    it "prefers the connected resource over a legacy title-matched record" do
+      create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      connected = create(:resource, title: "Newer signature art", certificate_artwork_role: "training_signatures")
+
+      expect(Resource.certificate_artwork("training_signatures", Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)).to eq(connected)
+    end
+
+    it "resolves a connected frame by category role" do
+      frame = create(:resource, certificate_artwork_role: "on_demand_frame")
+      create(:primary_asset, :with_file, owner: frame)
+
+      expect(Resource.certificate_frame_file(:on_demand)).to be_attached
+    end
+
+    it "rejects a role outside the known set" do
+      resource = build(:resource, certificate_artwork_role: "bogus")
+
+      expect(resource).not_to be_valid
+      expect(resource.errors[:certificate_artwork_role]).to be_present
+    end
+
+    it "normalizes a blank role to nil (not connected)" do
+      resource = create(:resource, certificate_artwork_role: "")
+
+      expect(resource.certificate_artwork_role).to be_nil
+    end
+
+    it "forbids two resources sharing a role" do
+      create(:resource, certificate_artwork_role: "ce_frame")
+
+      expect { create(:resource, certificate_artwork_role: "ce_frame") }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
 end

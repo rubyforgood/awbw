@@ -11,45 +11,65 @@ class FmArchivesController < ApplicationController
     "activities" => { model: FmActivity, label: "Activity" },
     "notes" => { model: FmNote, label: "Notes" },
     "addresses" => { model: FmAddress, label: "Addresses" },
-    "phone_numbers" => { model: FmPhoneNumber, label: "Phone Numbers" },
-    "workshop_logs" => { model: FmWorkshopLog, label: "Workshop Logs" },
+    "phone_numbers" => { model: FmPhoneNumber, label: "Phone numbers" },
+    "workshop_logs" => { model: FmWorkshopLog, label: "Workshop logs" },
     "expenditures" => { model: FmExpenditure, label: "Expenditure" },
-    "funding" => { model: FmFunding, label: "Funding" },
+    "fundings" => { model: FmFunding, label: "Funding" },
     "allocations" => { model: FmAllocation, label: "Allocations" },
-    "program_sponsorships" => { model: FmProgramSponsorship, label: "Program Sponsorships" },
-    "postal_codes" => { model: FmPostalCode, label: "Postal Codes" },
-    "ancillary_data" => { model: FmAncillaryData, label: "Ancillary Data" },
-    "art_purchases" => { model: FmArtPurchase, label: "Art Purchases" },
-    "art_registries" => { model: FmArtRegistry, label: "Art Registries" },
+    "program_sponsorships" => { model: FmProgramSponsorship, label: "Program sponsorships" },
+    "postal_codes" => { model: FmPostalCode, label: "Postal codes" },
+    "ancillary_data" => { model: FmAncillaryData, label: "Ancillary data" },
+    "art_purchases" => { model: FmArtPurchase, label: "Art purchases" },
+    "art_registries" => { model: FmArtRegistry, label: "Art registries" },
     "campaigns" => { model: FmCampaign, label: "Campaigns" },
-    "committee_meetings" => { model: FmCommitteeMeeting, label: "Committee Meetings" },
-    "committee_members" => { model: FmCommitteeMember, label: "Committee Members" },
+    "committee_meetings" => { model: FmCommitteeMeeting, label: "Committee meetings" },
+    "committee_members" => { model: FmCommitteeMember, label: "Committee members" },
     "committees" => { model: FmCommittee, label: "Committees" },
     "contacts" => { model: FmContact, label: "Contacts" },
-    "donor_developers" => { model: FmDonorDeveloper, label: "Donor Developers" },
-    "email_addresses" => { model: FmEmailAddress, label: "Email Addresses" },
-    "exhibited_items" => { model: FmExhibitedItem, label: "Exhibited Items" },
-    "form_fields" => { model: FmFormField, label: "Form Fields" },
-    "form_letters" => { model: FmFormLetter, label: "Form Letters" },
-    "forms_lists" => { model: FmFormsList, label: "Forms List" },
-    "form_submissions" => { model: FmFormSubmission, label: "Form Submissions" },
-    "group_members" => { model: FmGroupMember, label: "Group Members" },
+    "donor_developers" => { model: FmDonorDeveloper, label: "Donor developers" },
+    "email_addresses" => { model: FmEmailAddress, label: "Email addresses" },
+    "exhibited_items" => { model: FmExhibitedItem, label: "Exhibited items" },
+    "form_fields" => { model: FmFormField, label: "Form fields" },
+    "form_letters" => { model: FmFormLetter, label: "Form letters" },
+    "forms_lists" => { model: FmFormsList, label: "Forms list" },
+    "form_submissions" => { model: FmFormSubmission, label: "Form submissions" },
+    "group_members" => { model: FmGroupMember, label: "Group members" },
     "groups" => { model: FmGroup, label: "Groups" },
     "invoices" => { model: FmInvoice, label: "Invoices" },
-    "line_items" => { model: FmLineItem, label: "Line Items" },
-    "match_donations" => { model: FmMatchDonation, label: "Match Donations" },
-    "people_to_organizations" => { model: FmPeopleToOrganization, label: "People to Organizations" },
+    "line_items" => { model: FmLineItem, label: "Line items" },
+    "match_donations" => { model: FmMatchDonation, label: "Match donations" },
+    "people_to_organizations" => { model: FmPeopleToOrganization, label: "People to organizations" },
     "quotations" => { model: FmQuotation, label: "Quotations" },
-    "reporting" => { model: FmReporting, label: "Reporting" },
+    "reportings" => { model: FmReporting, label: "Reporting" },
     "solicitations" => { model: FmSolicitation, label: "Solicitations" },
     "volunteers" => { model: FmVolunteer, label: "Volunteers" },
     "workshops" => { model: FmWorkshop, label: "Workshops" }
   }
 
+  TABLE_GROUPS = [
+    { label: "People", icon: "👥", tables: %w[rolodexes activities ancillary_data contacts group_members groups] },
+    { label: "Organizations & programs", icon: "🏫", tables: %w[organizations people_to_organizations projects expenditures personnels services] },
+    { label: "Contact details", icon: "📇", tables: %w[addresses email_addresses phone_numbers postal_codes] },
+    { label: "Events", icon: "📆", tables: %w[events participants volunteers] },
+    { label: "Workshops", icon: "🎨", tables: %w[workshops workshop_logs] },
+    { label: "Quotes", icon: "💬", tables: %w[quotations] },
+    { label: "Art", icon: "🖼️", tables: %w[art_registries art_purchases exhibited_items] },
+    { label: "Payments & donations", icon: "💳", tables: %w[payments match_donations] },
+    { label: "Invoicing", icon: "🧾", tables: %w[invoices line_items] },
+    { label: "Donor campaigns", icon: "🤝", tables: %w[campaigns donor_developers solicitations] },
+    { label: "Grants & funding", icon: "💰", tables: %w[fundings allocations program_sponsorships reportings] },
+    { label: "Forms & letters", icon: "📋", tables: %w[forms_lists form_fields form_letters form_submissions] },
+    { label: "Committees", icon: "🏛️", tables: %w[committees committee_meetings committee_members] },
+    { label: "Other", icon: "📎", tables: %w[notes] }
+  ]
+
+  PORTAL_MODELS = [ Person, Organization, Affiliation ].freeze
+
   def index
     authorize! :fm_archive
 
     @tables = TABLES
+    @table_groups = TABLE_GROUPS
     @selected = params[:table]
 
     if @selected && (config = TABLES[@selected])
@@ -74,9 +94,23 @@ class FmArchivesController < ApplicationController
     end
 
     load_backlinks
+    load_portal_records
   end
 
   private
+
+  def load_portal_records
+    @portal_records = PORTAL_MODELS
+      .select { |model| model.filemaker_archives.include?(@record.class) }
+      .flat_map { |model| model.with_filemaker_code(@record.fm_id).to_a }
+    @portal_records |= organizations_via_projects if @record.is_a?(FmOrganization)
+  end
+
+  # Most orgs carry a project code, reaching their FM organization through Project.OrgID.
+  def organizations_via_projects
+    project_ids = FmProject.where("data->>'$.OrgID' = ?", @record.fm_id).pluck(:fm_id)
+    Organization.with_any_filemaker_code(project_ids).to_a
+  end
 
   def load_backlinks
     @backlinks = {}

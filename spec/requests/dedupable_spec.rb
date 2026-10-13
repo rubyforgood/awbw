@@ -489,6 +489,18 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.reload.notes).to eq("Canonical record")
       end
 
+      it "combines both people's FileMaker codes onto the keeper" do
+        keep.update!(filemaker_code: "00006")
+        delete_rec.update!(filemaker_code: "00012")
+
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.filemaker_code).to eq("00006, 00012")
+      end
+
       # invoicee is polymorphic, so it carries no DB foreign key for the schema scan to
       # find — without Person's `has_many :invoices, as: :invoicee` the safeguard sees an
       # unhandled reference and refuses the merge outright.
@@ -518,6 +530,7 @@ RSpec.describe "Dedupable concern", type: :request do
         )
 
         expect(response.body).to include("Both people have a login")
+        expect(response.body).to include("shows whichever login was used most recently")
         expect(response.body).not_to include("Merge blocked")
       end
 
@@ -535,6 +548,75 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(Person.exists?(delete_rec.id)).to be false
         expect(keep_user.reload.person_id).to eq(keep.id)
         expect(delete_user.reload.person_id).to eq(keep.id)
+      end
+
+      it "shows the most recently updated of the two logins on the kept person" do
+        keep.user.update_columns(updated_at: 1.week.ago)
+        delete_rec.user.update_columns(email: "recent.login@example.com", updated_at: 1.hour.ago)
+
+        post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+        expect(keep.reload.user.email).to eq("recent.login@example.com")
+      end
+
+      it "leaves the kept person's primary email alone" do
+        keep.update!(email: "chosen@example.com")
+
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.email).to eq("chosen@example.com")
+      end
+    end
+
+    describe "when only the deleted person has a linked login" do
+      let!(:keep) { create(:person, first_name: "No", last_name: "Login", email: "keeper@example.com", user: nil) }
+      let!(:delete_rec) { create(:person, first_name: "Has", last_name: "Login", email: "login@example.com") }
+
+      it "warns on the preview that the login's email becomes the primary email" do
+        get dedupe_preview_people_path(
+          person_to_keep_id: keep.id,
+          person_to_delete_id: delete_rec.id
+        )
+
+        expect(response.body).to include("takes over the other person&#39;s login", "login@example.com")
+        expect(response.body).not_to include("Merge blocked")
+      end
+
+      it "makes the moved login's email the kept person's primary email" do
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.email).to eq("login@example.com")
+        expect(keep.email_2).to eq("keeper@example.com")
+      end
+
+      it "still combines both people's FileMaker codes" do
+        keep.update!(filemaker_code: "FM-100")
+        delete_rec.update!(filemaker_code: "FM-273")
+
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.filemaker_code).to eq("FM-100, FM-273")
+        expect(keep.email).to eq("login@example.com")
+      end
+
+      it "keeps an email picked in the preview as the secondary email" do
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id,
+          person_to_keep: { email: "picked@example.com" }
+        }
+
+        expect(keep.reload.email).to eq("login@example.com")
+        expect(keep.email_2).to eq("picked@example.com")
       end
     end
 
