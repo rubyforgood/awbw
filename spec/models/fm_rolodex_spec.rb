@@ -3,13 +3,13 @@ require "rails_helper"
 RSpec.describe FmRolodex do
   describe "#grouped_data" do
     it "clusters fields under their group headings in the listed order" do
-      rolodex = described_class.new(data: { "Comments" => "Met at training", "LastName" => "Archer", "EMail" => "abe@example.com", "FirstName" => "Abe" })
+      rolodex = described_class.new(data: { "Comments" => "Met at training", "Classification" => "Donor", "LastName" => "Archer", "EMail" => "abe@example.com", "FirstName" => "Abe" })
 
       expect(rolodex.grouped_data).to eq(
-        "Identity" => { nil => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com" } },
+        "Identity" => { nil => { "FirstName" => "Abe", "LastName" => "Archer", "EMail" => "abe@example.com", "Classification" => "Donor" } },
         "Notes" => { nil => { "Comments" => "Met at training" } }
       )
-      expect(rolodex.grouped_data.dig("Identity", nil).keys).to eq(%w[FirstName LastName EMail])
+      expect(rolodex.grouped_data.dig("Identity", nil).keys).to eq(%w[FirstName LastName EMail Classification])
     end
 
     it "splits a card into its subcards" do

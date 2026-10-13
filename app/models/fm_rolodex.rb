@@ -108,7 +108,7 @@ class FmRolodex < ApplicationRecord
 
   FIELD_GROUPS = {
     "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
-                     EMail EmailPrimary EmailType EmailNotes BestTimeToCall],
+                     EMail EmailPrimary EmailType EmailNotes Classification BestTimeToCall],
     "Phones & addresses" => {
       PHONES => %w[PrimaryPhoneID],
       ADDRESSES => %w[PrimaryAddrsID WorksiteAddrsID],
@@ -117,7 +117,7 @@ class FmRolodex < ApplicationRecord
     "Organization & affiliations" => {
       "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID],
       "Job affiliation" => %w[Title Department Dept2ndName],
-      "Facilitator affiliation" => %w[Classification Status FacilitatorSinceMonth FacilitatorSinceYear
+      "Facilitator affiliation" => %w[Status FacilitatorSinceMonth FacilitatorSinceYear
                                       FacilitatorStatusPending HowTrained TrainingMotivation LifeExperiences
                                       Settings BBSLicense]
     },
