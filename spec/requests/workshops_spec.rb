@@ -64,11 +64,11 @@ RSpec.describe "/workshops", type: :request do
       expect(response.body).to include("workshop[filemaker_code]")
     end
 
-    it "links an archived code to the FileMaker workshops archive in admin mode" do
+    it "links an archived code to the FileMaker workshops archive" do
       FmWorkshop.create!(fm_id: "W123", data: {})
       workshop.update!(filemaker_code: "W123")
 
-      get edit_workshop_url(workshop, admin: "true")
+      get edit_workshop_url(workshop)
 
       expect(response.body).to include(fm_archive_path("W123", table: "workshops"))
     end

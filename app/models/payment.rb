@@ -1,5 +1,6 @@
 class Payment < ApplicationRecord
   include FilemakerCoded
+  filemaker_archived_in FmPayment
   has_paper_trail
   PAYER_TYPES = %w[Person Organization].freeze
 

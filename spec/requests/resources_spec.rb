@@ -146,6 +146,14 @@ RSpec.describe "/resources", type: :request do
 
       expect(response.body).to include('name="resource[filemaker_code]"')
     end
+
+    it "links an archived code to the FileMaker quotations archive" do
+      FmQuotation.create!(fm_id: "Q10215", data: {})
+      resource = Resource.create! valid_attributes.merge(filemaker_code: "Q10215")
+      get edit_resource_url(resource)
+
+      expect(response.body).to include(fm_archive_path("Q10215", table: "quotations"))
+    end
   end
 
   describe "POST /create" do

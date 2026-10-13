@@ -103,17 +103,10 @@
                           } %>
             </div>
           </div>
-          <div>
-            <%= f.input :filemaker_code,
-                        label: "FileMaker code",
-                        input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
-            <%- if params[:admin] == "true" %>
-              <p class="mt-1 text-xs">
-                <%= filemaker_code_links(f.object, archive: FmWorkshop, table: "workshops", label: "View archive",
-                                         link_class: "text-blue-600 hover:text-blue-800 underline") %>
-              </p>
-            <% end %>
-          </div>
+          <%= f.input :filemaker_code,
+                      label: "FileMaker code",
+                      hint: filemaker_code_hint(f.object),
+                      input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" } %>
         </div>
         <div class="admin-only bg-blue-100 p-3">
           <%= render "shared/visibility_info", flags: %i[published featured publicly_visible publicly_featured] %>

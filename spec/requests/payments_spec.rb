@@ -181,14 +181,14 @@ RSpec.describe "Payments", type: :request do
       expect(response.body).to include("payment[filemaker_code]")
     end
 
-    it "links each archived code to the FileMaker payments archive in admin mode" do
+    it "links each archived code to the FileMaker payments archive" do
       FmPayment.create!(fm_id: "D29186", data: {})
       payment = create(:payment, person:, filemaker_code: "D29186, D99999")
 
-      get edit_payment_path(payment, admin: "true")
+      get edit_payment_path(payment)
 
       expect(response.body).to include(fm_archive_path("D29186", table: "payments"))
-      expect(response.body).to include("View archive D99999")
+      expect(response.body).to include("No FileMaker archive record for D99999")
       expect(response.body).not_to include(fm_archive_path("D99999", table: "payments"))
     end
   end

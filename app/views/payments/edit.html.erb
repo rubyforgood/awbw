@@ -47,13 +47,8 @@
           <div class="admin-only rounded-md bg-blue-100 px-3 pt-3">
             <%= f.input :filemaker_code,
               input_html: { class: "bg-white" },
-              label: "FileMaker code" %>
-            <%- if params[:admin] == "true" %>
-              <p class="-mt-3 pb-3 text-xs">
-                <%= filemaker_code_links(f.object, archive: FmPayment, table: "payments", label: "View archive",
-                                         link_class: "text-blue-600 hover:text-blue-800 underline") %>
-              </p>
-            <% end %>
+              label: "FileMaker code",
+              hint: filemaker_code_hint(f.object) %>
           </div>
         </div>
       </div>

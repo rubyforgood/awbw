@@ -4,6 +4,7 @@ class Workshop < ApplicationRecord
   include Featureable, Publishable, RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, RichTextSearchable
   include Communicable
   include FilemakerCoded
+  filemaker_archived_in FmWorkshop
   include PunctuationStrippable
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
