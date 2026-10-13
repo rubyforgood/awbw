@@ -4287,4 +4287,4 @@
   pro_tips:
     - "FileMaker's calculated and summary fields sit at the bottom under Other fields."
     - "The Phones & addresses section lists every phone number and address on file for the person, with the primary ones first and tagged."
-    - "The blue section at the bottom lists every field a rolodex record can hold and every table that links to it, even when this record leaves them blank."
+    - "Blank fields are left out of the cards. The blue section at the bottom still lists every field, grayed out when blank, plus every table that links to the person."

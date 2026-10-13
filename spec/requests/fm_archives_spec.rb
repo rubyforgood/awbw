@@ -44,6 +44,19 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to match(/Record keeping.*Available fields &amp; associations.*FacilitatorSinceYear.*OrgID.*Organizations.*Workshops \(Authored\).*AuthorID/m)
     end
 
+    it "hides blank fields from the cards but keeps them, grayed, in the field reference" do
+      FmRolodex.create!(fm_id: "00006", data: { "ID" => "00006", "LastName" => "Archer", "MiddleName" => "", "zcSort" => "" })
+
+      get fm_archive_path("00006", table: "rolodexes")
+
+      cards, reference = response.body.split("Available fields &amp; associations")
+      expect(cards).to include("LastName")
+      expect(cards).not_to include("MiddleName", "zcSort")
+      expect(reference).to match(/text-gray-400">MiddleName</)
+      expect(reference).to match(/text-gray-700">LastName</)
+      expect(reference).to match(/Other fields.*zcSort/m)
+    end
+
     it "leaves the field reference off tables without field groups" do
       FmProject.create!(fm_id: "P2775")
 

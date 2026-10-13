@@ -77,7 +77,7 @@
     <% end %>
 
     <% if @record.class::FIELD_GROUPS.any? %>
-      <%= render "field_reference", model: @record.class %>
+      <%= render "field_reference", record: @record %>
     <% end %>
   </div>
 </div>

@@ -21,6 +21,19 @@ RSpec.describe FmRolodex do
       )
     end
 
+    it "leaves out blank fields and the groups they empty" do
+      rolodex = described_class.new(data: { "FirstName" => "Abe", "MiddleName" => "", "Comments" => nil, "zcFullName" => "" })
+
+      expect(rolodex.grouped_data).to eq("Identity" => { "FirstName" => "Abe" })
+    end
+
+    it "keeps an empty phones and addresses group when the person has phones on file" do
+      rolodex = described_class.create!(fm_id: "00901", data: { "PrimaryPhoneID" => "" })
+      FmPhoneNumber.create!(fm_id: "PH1", data: { "RolodexID" => "00901" })
+
+      expect(rolodex.grouped_data).to eq(FmRolodex::PHONES_AND_ADDRESSES => {})
+    end
+
     it "groups every documented FileMaker field exactly once" do
       documented = File.read(Rails.root.join("app/models/fm_rolodex.rb")).scan(/^#   (\w+)/).flatten
       grouped = described_class::FIELD_GROUPS.values.flatten

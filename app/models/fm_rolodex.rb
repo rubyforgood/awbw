@@ -147,14 +147,18 @@ class FmRolodex < ApplicationRecord
   }.freeze
 
   def phone_numbers
-    contact_records(FmPhoneNumber, primary_ids: data.values_at("PrimaryPhoneID"))
+    @phone_numbers ||= contact_records(FmPhoneNumber, primary_ids: data.values_at("PrimaryPhoneID"))
   end
 
   def addresses
-    contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
+    @addresses ||= contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
   end
 
   private
+
+  def keep_empty_group?(label)
+    label == PHONES_AND_ADDRESSES && (phone_numbers.any? || addresses.any?)
+  end
 
   # Ones this record points at are listed first, even when their RolodexID names someone else.
   def contact_records(model, primary_ids:)
