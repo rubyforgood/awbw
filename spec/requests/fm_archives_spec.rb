@@ -207,6 +207,37 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to match(%r{OrgID\s*<span[^>]*line-through[^>]*>ORG9</span>.*Not found in FM data}m)
     end
 
+    it "links each ID in a field that lists several" do
+      FmRolodex.create!(fm_id: "00901", data: { "FirstName" => "Avery", "LastName" => "Sample" })
+      FmRolodex.create!(fm_id: "00902", data: { "FirstName" => "Blake", "LastName" => "Sample" })
+      FmActivity.create!(fm_id: "A1", data: { "ID" => "00901\r00902\n00999" })
+
+      get fm_archive_path("A1", table: "activities")
+
+      expect(response.body).to include(fm_archive_path("00901", table: "rolodexes"), fm_archive_path("00902", table: "rolodexes"))
+      expect(response.body).to include("Avery Sample", "Blake Sample")
+      expect(response.body).to match(%r{<span[^>]*line-through[^>]*>00999</span>\s*<span[^>]*>Not found in FM data</span>})
+    end
+
+    it "tucks a long list of IDs behind a toggle after the first few" do
+      ids = (1..15).map { |i| format("%05d", i) }
+      FmActivity.create!(fm_id: "A1", data: { "ID" => ids.join("\n") })
+
+      get fm_archive_path("A1", table: "activities")
+
+      expect(response.body).to match(%r{>00010</span>.*<details.*Show 5 more.*>00011</span>}m)
+    end
+
+    it "links each rolodex ID a group lists as its members" do
+      FmRolodex.create!(fm_id: "00901")
+      FmGroup.create!(fm_id: "G1", data: { "GroupMemberIDs" => "00901¶00902" })
+
+      get fm_archive_path("G1", table: "groups")
+
+      expect(response.body).to include(fm_archive_path("00901", table: "rolodexes"))
+      expect(response.body).to match(%r{line-through[^>]*>00902</span>})
+    end
+
     it "heads the page with the record's name and table" do
       FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sunrise Shelter" })
 

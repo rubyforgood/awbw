@@ -1,4 +1,8 @@
 module FilemakerHelper
+  # FileMaker separates the IDs in a multi-value field with line breaks or pilcrows.
+  FM_ID_SEPARATOR = /[\r\n\v¶]+/
+  FM_REFERENCES_SHOWN = 10
+
   # One archive link per FileMaker code a record carries, since a record can answer to
   # several (see FilemakerCoded). A `label` names the button, adding each code only when
   # there are several to tell apart.
@@ -41,10 +45,13 @@ module FilemakerHelper
     link_to text, path, class: button_classes(:primary)
   end
 
-  # The archive record an ID field points at, or an unsaved placeholder when the archive has none.
-  def fm_archive_record(fm_id, table)
+  # The archive records an ID field points at, one per ID it lists, with an unsaved placeholder
+  # for each ID the archive has no record for.
+  def fm_archive_records(value, table)
     model = FmArchivesController::TABLES.fetch(table.delete_prefix("fm_"))[:model]
-    model.find_by(fm_id: fm_id) || model.new(fm_id: fm_id, data: {})
+    ids = value.to_s.split(FM_ID_SEPARATOR).map(&:strip).compact_blank.uniq
+    found = model.where(fm_id: ids).index_by(&:fm_id)
+    ids.map { |id| found[id] || model.new(fm_id: id, data: {}) }
   end
 
   # A record's FileMaker ID, linked to its archive page, or struck through when the archive lacks it.
