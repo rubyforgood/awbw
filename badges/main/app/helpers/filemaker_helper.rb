@@ -33,6 +33,7 @@ module FilemakerHelper
     text, path = case record
     when Person then [ record.full_name, person_path(record) ]
     when Organization then [ record.name, organization_path(record) ]
+    when Affiliation then [ "#{record.person&.full_name} at #{record.organization&.name}", edit_affiliation_path(record) ]
     end
 
     link_to text, path, class: button_classes(:primary_outline, size: :sm)

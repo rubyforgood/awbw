@@ -66,6 +66,22 @@ RSpec.describe FilemakerHelper, type: :helper do
         expect(helper.filemaker_code_links(person)).to be_nil
       end
     end
+
+    context "with a record archived in more than one table" do
+      let(:affiliation) { build(:affiliation, filemaker_code: "P2775, PS9999") }
+
+      before do
+        FmProject.create!(fm_id: "P2775")
+        FmPersonnel.create!(fm_id: "PS9999")
+      end
+
+      it "links each code to whichever table holds it" do
+        html = helper.filemaker_code_links(affiliation)
+
+        expect(html).to include(fm_archive_path("P2775", table: "projects"))
+        expect(html).to include(fm_archive_path("PS9999", table: "personnels"))
+      end
+    end
   end
 
   describe "#filemaker_code_hint" do

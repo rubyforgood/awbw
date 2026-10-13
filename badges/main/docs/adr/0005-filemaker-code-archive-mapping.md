@@ -25,7 +25,7 @@ drive the archive pages' links.
 |---|---|---|---|
 | `people.filemaker_code` | `fm_rolodexes` | `ID`, e.g. `00006` | `filemaker_code_links` on person edit + admin details |
 | `organizations.filemaker_code` | `fm_projects`, then `fm_organizations` | `ProjectID`, e.g. `P2775`; `OrgID`, e.g. `ORG07206` | `filemaker_code_links` on org form; `filemaker_project_links` / `filemaker_organization_links` on org edit |
-| `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels` | `ProjectID`, e.g. `P2775`; rarely `PrsnlRecID`, e.g. `PS9999` | no UI link yet |
+| `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels` | `ProjectID`, e.g. `P2775`; rarely `PrsnlRecID`, e.g. `PS9999` | `filemaker_code_links` on affiliation edit |
 | `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | dev seed (no UI link yet) |
 | `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | dev seed (no UI link yet) |
 | `resources.filemaker_code` | `fm_quotations` | `RecordID`, e.g. `Q10215` | no UI link yet |
@@ -173,6 +173,6 @@ Production, 2026-10-12: 84 records (41 organizations, 16 affiliations, 14 worksh
 
 ## Consequences
 
-A UI link for affiliations, payments, workshops, or resources includes `FilemakerCoded` on the
+A UI link for payments, workshops, or resources includes `FilemakerCoded` on the
 model and declares the archive table above (e.g. `filemaker_archived_in FmPersonnel`);
 `filemaker_code_links` reads it from there.
