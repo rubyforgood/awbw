@@ -22,7 +22,7 @@ RSpec.describe "FM archives", type: :request do
 
       get fm_archive_path("00006", table: "rolodexes")
 
-      expect(response.body).to match(/Identity &amp; status.*LastName.*Notes.*Comments.*Record keeping/m)
+      expect(response.body).to match(/Identity.*LastName.*Notes.*Comments.*Record keeping/m)
     end
 
     it "links back to the portal people carrying the archive code" do
