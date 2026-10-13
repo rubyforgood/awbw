@@ -110,7 +110,8 @@ class FmRolodex < ApplicationRecord
                      EMail EmailPrimary EmailType EmailNotes BestTimeToCall],
     "Phones & addresses" => {
       PHONES => %w[PrimaryPhoneID],
-      ADDRESSES => %w[PrimaryAddrsID WorksiteAddrsID MailingList]
+      ADDRESSES => %w[PrimaryAddrsID WorksiteAddrsID],
+      "Mailing list" => %w[MailingList]
     },
     "Organization & affiliations" => {
       "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID],
