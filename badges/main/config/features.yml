@@ -4290,3 +4290,17 @@
     - "The Phones & addresses section lists every phone number and address on file for the person, with the primary ones first and tagged."
     - "A struck-through ID points at a FileMaker record the archive doesn't have — hover it to confirm."
     - "Blank fields are left out of the cards. The blue section at the bottom still lists every field, grayed out when blank, plus every table that links to the person."
+
+- name: "Tall story images show in full"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2650
+  action_path: "/story_share"
+  summary: >-
+    Portrait (tall) photos and artwork across Story Share now show in full
+    instead of being cropped, framed by a soft blurred copy of the image.
+  pro_tips:
+    - "Wide images still fill their space edge to edge, as before."
+    - "This covers the carousels, the story cards on the home and browse pages, the related stories on each story page, and the image carousel on each story."
+    - "Cards in the home page topic sections now all stay the same size, whatever the shape of the image."
