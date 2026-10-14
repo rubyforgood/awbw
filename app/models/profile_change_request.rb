@@ -15,7 +15,7 @@ class ProfileChangeRequest < ApplicationRecord
     "secondary_email" => "Secondary email",
     "organization_name" => "Organization name",
     "affiliation" => "Affiliation details",
-    OTHER_FIELD => "Profile"
+    OTHER_FIELD => "Profile data"
   }.freeze
   # Fields whose new value is concrete enough for "Approve" to write directly.
   AUTO_APPLIABLE_FIELDS = [ *EMAIL_FIELDS, "organization_name" ].freeze

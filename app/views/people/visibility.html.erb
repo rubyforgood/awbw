@@ -16,7 +16,8 @@
     <div class="<%= card_class %>">
       <h2 class="mb-4 font-display text-2xl text-gray-900">Your name</h2>
       <fieldset class="px-3 pb-2">
-        <legend class="mb-3 text-lg text-gray-800">Show my name as</legend>
+        <legend class="text-lg text-gray-800">Show my name as</legend>
+        <p class="mb-3 text-sm text-gray-500">This is how your name shows throughout the site.</p>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <% current_preference = @person.display_name_preference.presence || "full_name" %>
           <% Person::DISPLAY_NAME_PREFERENCE_LABELS.each do |preference, label| %>

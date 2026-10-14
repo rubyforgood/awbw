@@ -20,7 +20,7 @@
       <i class="fa-solid fa-building"></i> Change my organizations
     <% end %>
     <%= link_to new_profile_change_request_path(person_id: person, field: ProfileChangeRequest::OTHER_FIELD), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-comment"></i> Ask for another change
+      <i class="fa-solid fa-comment"></i> <%= ProfileChangeRequestDecorator::OTHER_LABEL %>
     <% end %>
     <%= link_to visibility_person_path(person), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-eye-slash"></i> Choose what others see

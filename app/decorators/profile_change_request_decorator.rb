@@ -7,8 +7,11 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     ProfileChangeRequest::AFFILIATION_CHANGE_OTHER => { label: "Something else", icon: "fa-solid fa-comment" },
     ProfileChangeRequest::AFFILIATION_CHANGE_ADD => { label: "Add an organization", icon: "fa-solid fa-plus" }
   }.freeze
+  OTHER_LABEL = "Request a profile data change".freeze
 
   def heading
+    return OTHER_LABEL if other?
+
     AFFILIATION_CHANGE_CHOICES.dig(requested_value, :label) if field == "affiliation"
   end
 

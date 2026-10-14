@@ -254,7 +254,7 @@
   <% end %>
   <p class="mt-6 text-center text-lg text-gray-700">
     Can't change something here?
-    <%= link_to "Ask AWBW staff to change it", new_profile_change_request_path(person_id: @person, field: ProfileChangeRequest::OTHER_FIELD),
+    <%= link_to ProfileChangeRequestDecorator::OTHER_LABEL, new_profile_change_request_path(person_id: @person, field: ProfileChangeRequest::OTHER_FIELD),
                 class: "font-medium text-blue-600 underline hover:text-blue-800" %>
   </p>
 </div>

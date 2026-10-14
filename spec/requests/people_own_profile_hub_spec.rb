@@ -81,7 +81,7 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       expect(response.body).to include("Edit my profile")
       expect(response.body).to match(/href="#{person_path(person)}"[^>]*>\s*<i[^>]*><\/i>\s*My profile/)
       expect(response.body).to match(/href="#{person_path(person)}"[^>]*>Cancel/)
-      expect(response.body).to include("Ask AWBW staff to change it")
+      expect(response.body).to include("Request a profile data change")
     end
   end
 
