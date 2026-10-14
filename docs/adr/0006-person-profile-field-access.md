@@ -128,5 +128,6 @@ membership status, staff tags, and mailing list.
 
 These places don't yet follow the tiers above:
 
-- **Unused submitted-content columns.** The `profile_show_*` columns for ideas, workshop
-  logs, and monthly reports no longer drive anything and can be dropped.
+- **Unused submitted-content columns.** The person `profile_show_workshop_logs` and
+  `profile_show_monthly_reports` columns no longer drive anything and can be dropped (the
+  idea columns went in rubyforgood/awbw#2680).
