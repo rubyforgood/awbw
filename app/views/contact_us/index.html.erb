@@ -5,6 +5,7 @@
      case @return_to
      when "person_edit" then edit_person_path(current_user.person, anchor: "affiliations")
      when "person_details" then details_person_path(current_user.person)
+     when "person_profile" then person_path(current_user.person)
      end
    end %>
 <% profile_return_label = @return_to == "person_details" ? "Back to editing my profile" : "Back to my profile" %>

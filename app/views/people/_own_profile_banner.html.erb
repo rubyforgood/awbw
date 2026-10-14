@@ -25,6 +25,9 @@
     <%= link_to visibility_person_path(person), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-eye-slash"></i> Choose what others see
     <% end %>
+    <%= link_to contact_us_path(subject: "Question about my profile", return_to: "person_profile"), class: button_classes(:secondary_outline) do %>
+      <i class="fa-solid fa-circle-question"></i> Ask a question
+    <% end %>
   </div>
   <% if pending_requests.any? %>
     <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900">
