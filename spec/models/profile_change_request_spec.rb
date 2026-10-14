@@ -34,6 +34,31 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(build(:profile_change_request, :secondary_email)).to be_valid
     end
 
+    describe "adding an organization that isn't in the portal" do
+      let(:add) { { field: "affiliation", requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, proposed_title: "Counselor", details: nil } }
+
+      it "accepts a typed organization name instead of a picked one" do
+        request = build(:profile_change_request, **add, proposed_organization_name: "Hillside Shelter")
+        expect(request).to be_valid
+        expect(request).to be_new_organization
+        expect(request).not_to be_auto_appliable
+        expect(request.proposed_change_summary).to include("Hillside Shelter (not in the portal yet)")
+      end
+
+      it "needs either a picked organization or a typed name" do
+        request = build(:profile_change_request, **add)
+        expect(request).not_to be_valid
+        expect(request.errors[:base].join).to include("type its name")
+      end
+
+      it "drops the typed name when an organization is picked" do
+        request = build(:profile_change_request, **add, organization: create(:organization), proposed_organization_name: "Typo")
+        request.validate
+        expect(request.proposed_organization_name).to be_nil
+        expect(request).to be_auto_appliable
+      end
+    end
+
     it "rejects an unknown field" do
       request = build(:profile_change_request, field: "shoe_size")
       expect(request).not_to be_valid

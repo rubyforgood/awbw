@@ -89,6 +89,20 @@ RSpec.describe "Choosing which organization to change", type: :request do
     expect(person.profile_change_requests.last).to have_attributes(affiliation: sunrise, proposed_end_date: Date.new(2026, 6, 30))
   end
 
+  it "sends an add request for an organization that isn't listed" do
+    new_affiliation_request(add: 1)
+    expect(response.body).to include("Not on the list? Type the organization")
+
+    post profile_change_requests_path(person_id: person), params: {
+      profile_change_request: {
+        field: "affiliation", requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD,
+        proposed_organization_name: "Hillside Shelter", proposed_title: "Counselor"
+      }
+    }
+
+    expect(person.profile_change_requests.last).to have_attributes(proposed_organization_name: "Hillside Shelter", organization_id: nil)
+  end
+
   it "starts an add request from the add card" do
     new_affiliation_request(add: 1)
 

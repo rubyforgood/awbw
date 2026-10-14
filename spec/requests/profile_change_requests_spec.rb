@@ -79,6 +79,16 @@ RSpec.describe "Profile change requests", type: :request do
       expect(person.reload.email_2).to eq("second@example.com")
     end
 
+    it "offers no Approve for an organization that isn't in the portal yet" do
+      create(:profile_change_request, person: person, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD,
+                                      proposed_organization_name: "Hillside Shelter", proposed_title: "Counselor", details: nil)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("Hillside Shelter (not in the portal yet)")
+      expect(response.body).not_to include(">Approve<")
+    end
+
     it "approves an organization name request by renaming the org" do
       org = create(:organization, name: "Old Name")
       create(:affiliation, person: person, organization: org, inactive: false, start_date: 1.year.ago, end_date: nil)

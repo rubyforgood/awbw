@@ -68,7 +68,12 @@ class ProfileChangeRequest < ApplicationRecord
 
   def auto_appliable?
     return true if field.in?(AUTO_APPLIABLE_FIELDS)
-    field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES)
+    field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES) && !new_organization?
+  end
+
+  # An add request for an organization that isn't in the portal yet — staff create it by hand.
+  def new_organization?
+    requested_value == AFFILIATION_CHANGE_ADD && organization_id.blank? && proposed_organization_name.present?
   end
 
   def field_label
@@ -84,8 +89,12 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_DATES then proposed_dates_label
     when AFFILIATION_CHANGE_ORGANIZATION then proposed_organization_name
     when AFFILIATION_CHANGE_REMOVE then "End-date and mark inactive"
-    when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name, proposed_dates_label ].compact_blank.join(" · ")
+    when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name || new_organization_label, proposed_dates_label ].compact_blank.join(" · ")
     end
+  end
+
+  def new_organization_label
+    "#{proposed_organization_name} (not in the portal yet)" if new_organization?
   end
 
   def proposed_dates_label
@@ -149,7 +158,8 @@ class ProfileChangeRequest < ApplicationRecord
       self.proposed_start_date = nil
       self.proposed_end_date = nil
     end
-    self.proposed_organization_name = nil unless requested_value == AFFILIATION_CHANGE_ORGANIZATION
+    self.proposed_organization_name = nil unless requested_value.in?([ AFFILIATION_CHANGE_ORGANIZATION, AFFILIATION_CHANGE_ADD ])
+    self.proposed_organization_name = nil if requested_value == AFFILIATION_CHANGE_ADD && organization_id.present?
   end
 
   def affiliation_belongs_to_person
@@ -172,7 +182,7 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_ORGANIZATION
       errors.add(:proposed_organization_name, "can't be blank") if proposed_organization_name.blank?
     when AFFILIATION_CHANGE_ADD
-      errors.add(:organization_id, "must be selected") if organization_id.blank?
+      errors.add(:base, "Pick an organization, or type its name if it's not on the list") if organization_id.blank? && proposed_organization_name.blank?
       errors.add(:proposed_title, "can't be blank") if proposed_title.blank?
     end
   end

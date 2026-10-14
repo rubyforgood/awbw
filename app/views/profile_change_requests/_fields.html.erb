@@ -29,9 +29,11 @@
   <% if change == ProfileChangeRequest::AFFILIATION_CHANGE_ADD %>
     <%= f.input :organization_id,
                 include_blank: true,
-                label: "Organization",
+                label: "Find your organization",
                 prompt: "Search organizations…",
                 input_html: { class: "w-full", data: { controller: "remote-select", remote_select_model_value: "organization" } } %>
+    <%= f.input :proposed_organization_name, label: "Not on the list? Type the organization's name",
+                hint: "AWBW staff will add it to the portal.", input_html: { class: "w-full text-lg" } %>
     <%= f.input :proposed_title, label: "Your title or role", input_html: { class: "w-full text-lg" } %>
   <% else %>
     <%= f.hidden_field :affiliation_id %>

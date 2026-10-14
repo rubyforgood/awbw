@@ -35,7 +35,7 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
   # "Primary email: new@example.com" or "Title or role: Riverside Center".
   def requester_summary
     parts = if field == "affiliation"
-      [ requested_value, (affiliation&.organization || organization)&.name ]
+      [ requested_value, (affiliation&.organization || organization)&.name || proposed_organization_name ]
     else
       [ field_label, requested_value.presence || details&.truncate(60) ]
     end
