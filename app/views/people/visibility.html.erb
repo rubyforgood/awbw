@@ -35,9 +35,9 @@
     <div class="<%= card_class %>">
       <h2 class="mb-2 font-display text-2xl text-gray-900">Your privacy</h2>
       <div class="divide-y divide-gray-100">
-        <%= render "people/visibility_switch", f: f, attribute: :profile_is_searchable,
+        <%= render "people/switch_row", f: f, attribute: :profile_is_searchable,
                    label: "Let other AWBW facilitators find and see my profile", on_text: "Yes", off_text: "No" %>
-        <%= render "people/visibility_switch", f: f, attribute: :anonymous_contributions,
+        <%= render "people/switch_row", f: f, attribute: :anonymous_contributions,
                    label: "Stay anonymous on stories, workshops, and variations I write", on_text: "Yes", off_text: "No" %>
       </div>
     </div>
@@ -46,7 +46,7 @@
         <h2 class="mb-2 font-display text-2xl text-gray-900"><%= heading %></h2>
         <div class="divide-y divide-gray-100">
           <% fields.each do |attribute, label| %>
-            <%= render "people/visibility_switch", f: f, attribute: attribute, label: label %>
+            <%= render "people/switch_row", f: f, attribute: attribute, label: label %>
           <% end %>
         </div>
       </div>
