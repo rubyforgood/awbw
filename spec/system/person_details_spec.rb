@@ -26,12 +26,14 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
     fill_in "How to say your name", with: "JOR-dan"
     fill_in "Bio", with: "I teach art."
     find("label", text: "Remove this phone").click
-    find("summary", text: "Add another phone").click
-    within(find("[data-primary-tag-target='chip']", text: "Another phone number")) do
-      fill_in "Another phone number", with: "555-0199"
+    first("summary", text: "Add another phone").click
+    within(all("#phones [data-primary-tag-target='chip']").last) do
+      fill_in "Phone number", with: "555-0199"
       find("label[title='Make this my main phone']").click
     end
-    find("summary", text: "Add another address").click
+    first("summary", text: "Add another phone").click
+    within(all("#phones [data-primary-tag-target='chip']").last) { fill_in "Phone number", with: "555-0188" }
+    first("summary", text: "Add another address").click
     within(all("[data-primary-tag-target='chip']", text: "Street address").last) do
       fill_in "Street address", with: "9 Elm St"
       fill_in "City", with: "Pasadena"
@@ -62,7 +64,7 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
     expect(person).to have_attributes(first_name: "Jordan", last_name: "Rivera", pronouns: "they/them",
                                       pronunciation: "JOR-dan", bio: "I teach art.",
                                       linked_in_url: "https://linkedin.com/in/jordan")
-    expect(person.contact_methods.map { |phone| [ phone.value, phone.primary ] }).to eq([ [ "555-0199", true ] ])
+    expect(person.contact_methods.map { |phone| [ phone.value, phone.primary ] }).to contain_exactly([ "555-0199", true ], [ "555-0188", false ])
     expect(person.addresses.order(:id).map { |a| [ a.street_address, a.city, a.state, a.zip_code.presence, a.locality, a.primary ] })
       .to eq([ [ "1 Main St", "Los Angeles", "CA", "90001", "LA City", false ], [ "9 Elm St", "Pasadena", "CA", nil, "LA County", true ] ])
     expect(person.sectors).to contain_exactly(health)

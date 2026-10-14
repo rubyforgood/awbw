@@ -11,18 +11,15 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
   describe "viewing their own profile" do
     before { sign_in owner_user }
 
-    it "shows the edit button and the ask-for-a-change buttons" do
+    it "shows the edit and sharing buttons" do
       get person_path(person)
 
-      expect(response.body).to include("This is your profile")
-      expect(response.body).to include("Edit my profile")
-      expect(response.body).to include("field=primary_email")
-      expect(response.body).to include("field=affiliation")
-      expect(response.body).to include("field=other")
-      expect(response.body).to include(visibility_person_path(person))
+      expect(response.body).to include("This is your profile", "Edit my data", "Choose what others can see")
+      expect(response.body).to include(details_person_path(person), visibility_person_path(person))
+      expect(response.body).not_to include("Change my email", "Ask for another change")
     end
 
-    it "sends the hidden card's sharing link to Choose what others see" do
+    it "sends the hidden card's sharing link to Choose what others can see" do
       person.update!(profile_show_bio: false, bio: "Hidden bio")
 
       get person_path(person)

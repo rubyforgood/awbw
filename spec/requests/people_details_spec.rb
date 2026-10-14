@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# The simple "Edit my profile" page saves through PeopleController#update as
+# The simple "Edit my data" page saves through PeopleController#update as
 # the owner, so it must survive the owner params filter, skip its blank add-new
 # rows, and land on the person's change log.
 RSpec.describe "Editing your own profile details", type: :request do
@@ -53,10 +53,10 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect {
       save_details(
         first_name: person.first_name,
-        contact_methods_attributes: { "999" => { kind: "phone", value: "", contact_type: "" } },
+        contact_methods_attributes: { "900" => { kind: "phone", value: "", contact_type: "" } },
         addresses_attributes: { "0" => { street_address: "", city: "", state: "", zip_code: "", locality: "" } },
         sectorable_items_attributes: { "0" => { sector_id: arts.id, _destroy: "1" } },
-        professional_licenses_attributes: { "999" => { kind: "", number: "", issuing_state: "", expires_on: "" } }
+        professional_licenses_attributes: { "900" => { kind: "", number: "", issuing_state: "", expires_on: "" } }
       )
     }.not_to change { [ person.contact_methods.count, person.addresses.count, person.sectorable_items.count, person.professional_licenses.count ] }
 
@@ -160,6 +160,15 @@ RSpec.describe "Editing your own profile details", type: :request do
     let(:organization) { create(:organization, name: "Sunrise Center") }
     let!(:affiliation) { create(:affiliation, person: person, organization: organization, title: "Facilitator") }
 
+    it "names an organization once with each title nested under it" do
+      create(:affiliation, person: person, organization: organization, title: "Program Coordinator")
+
+      get details_person_path(person)
+
+      expect(response.body.scan("Sunrise Center").size).to eq(1)
+      expect(response.body).to include("AWBW Facilitator", "Program Coordinator")
+    end
+
     it "lists each organization with a request-a-change button and an add button" do
       get details_person_path(person)
 
@@ -189,6 +198,32 @@ RSpec.describe "Editing your own profile details", type: :request do
     end
   end
 
+  describe "adding several at once" do
+    it "offers a chain of add buttons for phones, addresses, and licenses" do
+      get details_person_path(person)
+
+      expect(response.body).to include("Add a phone", "Add an address", "Add a license", "Add another phone")
+      %w[contact_methods addresses professional_licenses].each do |association|
+        (900..902).each { |index| expect(response.body).to include("person[#{association}_attributes][#{index}]") }
+      end
+    end
+
+    it "saves two new phones from the chain" do
+      save_details(contact_methods_attributes: {
+        "900" => { kind: "phone", value: "555-0101", primary: "1", _destroy: "0" },
+        "901" => { kind: "phone", value: "555-0102", primary: "0", _destroy: "0" }
+      })
+
+      expect(person.reload.contact_methods.map(&:value)).to contain_exactly("555-0101", "555-0102")
+    end
+
+    it "skips a new row marked Remove" do
+      save_details(contact_methods_attributes: { "900" => { kind: "phone", value: "555-0101", _destroy: "1" } })
+
+      expect(person.reload.contact_methods).to be_empty
+    end
+  end
+
   describe "phones" do
     it "offers a main-phone star, starring the first phone when none is main" do
       create(:contact_method, contactable: person, value: "555-0100")
@@ -197,7 +232,7 @@ RSpec.describe "Editing your own profile details", type: :request do
 
       expect(response.body).to include("Add another phone", "Make this my main phone", "Mark as main")
       expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[contact_methods_attributes\]\[0\]\[primary\]"/)
-      expect(response.body).to include("person[contact_methods_attributes][999][value]")
+      expect(response.body).to include("person[contact_methods_attributes][900][value]")
     end
 
     it "adds a second phone and moves the main flag to it" do
@@ -205,7 +240,7 @@ RSpec.describe "Editing your own profile details", type: :request do
 
       save_details(contact_methods_attributes: {
         "0" => { id: first.id, kind: "phone", value: "555-0100", primary: "0" },
-        "999" => { kind: "phone", value: "555-0199", primary: "1" }
+        "900" => { kind: "phone", value: "555-0199", primary: "1" }
       })
 
       expect(person.reload.contact_methods.find_by(primary: true).value).to eq("555-0199")
@@ -220,14 +255,14 @@ RSpec.describe "Editing your own profile details", type: :request do
       get details_person_path(person)
 
       expect(response.body).to include("Add another address", "Make this my main address", "Mark as main")
-      expect(response.body).to include("person[addresses_attributes][999][street_address]")
+      expect(response.body).to include("person[addresses_attributes][900][street_address]")
       expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[addresses_attributes\]\[0\]\[primary\]"/)
     end
 
     it "stars a person's first address as main" do
       get details_person_path(person)
 
-      expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[addresses_attributes\]\[0\]\[primary\]"/)
+      expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[addresses_attributes\]\[900\]\[primary\]"/)
     end
 
     it "adds a second address and moves the main flag to it" do
@@ -235,7 +270,7 @@ RSpec.describe "Editing your own profile details", type: :request do
 
       save_details(addresses_attributes: {
         "0" => { id: home.id, street_address: home.street_address, city: home.city, state: home.state, locality: home.locality, primary: "0" },
-        "999" => { street_address: "2 Oak Ave", city: "Pasadena", state: "CA", zip_code: "91101", locality: "LA County", primary: "1" }
+        "900" => { street_address: "2 Oak Ave", city: "Pasadena", state: "CA", zip_code: "91101", locality: "LA County", primary: "1" }
       })
 
       expect(person.reload.addresses.find_by(primary: true).street_address).to eq("2 Oak Ave")
@@ -266,7 +301,7 @@ RSpec.describe "Editing your own profile details", type: :request do
   end
 
   it "adds a license from the add row" do
-    save_details(professional_licenses_attributes: { "999" => { kind: "LMFT", number: "12345", issuing_state: "CA", expires_on: "2027-01-31" } })
+    save_details(professional_licenses_attributes: { "900" => { kind: "LMFT", number: "12345", issuing_state: "CA", expires_on: "2027-01-31" } })
 
     expect(person.reload.professional_licenses.map(&:number)).to eq([ "12345" ])
   end
@@ -285,7 +320,7 @@ RSpec.describe "Editing your own profile details", type: :request do
     save_details(first_name: "")
 
     expect(response).to have_http_status(:unprocessable_content)
-    expect(response.body).to include("Edit my profile", "Sectors you work in")
+    expect(response.body).to include("Edit my data", "Sectors you work in")
   end
 
   it "logs field and sector changes to the person's change log as the owner" do

@@ -72,7 +72,7 @@ What each audience gets today, as of rubyforgood/awbw#2673. "Index" is the peopl
 (`people_results`). Non-admins only see published people there, and on their own row the
 owner sees hidden pieces like an admin does. "Profile" is `people#show`. "Edit · admin" is
 the person form. "Edit · owner" is the set of pages an owner reaches from their profile:
-"Edit my profile" (`people#details`), "Choose what others see" (`people#visibility`, the
+"Edit my data" (`people#details`), "Choose what others can see" (`people#visibility`, the
 `profile_show_*` toggles plus search, display-name, and anonymity preferences), and the
 change-request pages for 📨 fields. Owners aren't linked to the person form.
 

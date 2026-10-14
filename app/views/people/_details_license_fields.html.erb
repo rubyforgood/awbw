@@ -1,0 +1,15 @@
+<%# locals: (f:) %>
+<% input_class = "w-full text-lg" %>
+<div class="rounded-xl border border-gray-200 p-4">
+  <% if f.object.new_record? || f.object.removable? %>
+    <div class="mb-2 flex justify-end">
+      <%= render "people/remove_toggle", f: f, label: "Remove this license" %>
+    </div>
+  <% end %>
+  <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
+    <%= f.input :kind, label: "Type", placeholder: "For example: LMFT", input_html: { class: input_class } %>
+    <%= f.input :number, label: "License number", input_html: { class: input_class } %>
+    <%= f.input :issuing_state, label: "State", collection: us_states, include_blank: true, input_html: { class: input_class } %>
+    <%= f.input :expires_on, label: "Expires", as: :date, html5: true, input_html: { class: input_class } %>
+  </div>
+</div>

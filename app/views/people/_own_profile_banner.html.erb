@@ -1,28 +1,21 @@
 <%# locals: (person:) %>
 <% pending_requests = person.profile_change_requests.pending.newest_first.includes(affiliation: :organization).decorate %>
 <div id="own-profile" class="border-primary/10 mb-4 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
-  <div class="space-y-1 text-base text-gray-700">
-    <h2 class="text-primary font-display text-2xl font-semibold">This is your profile</h2>
-    <p>To update your details, click <strong>Edit my profile</strong>.</p>
-    <p>AWBW staff keep your email and organizations up to date. Use the buttons below to ask us for a change, or for anything you can't change yourself.</p>
-  </div>
-  <div class="mt-4 flex flex-wrap items-center gap-3">
-    <%= link_to visibility_person_path(person), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-eye-slash"></i> Choose what others see
-    <% end %>
-    <%= link_to new_profile_change_request_path(person_id: person, field: "primary_email"), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-envelope"></i> Change my email
-    <% end %>
-    <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation"), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-building"></i> Change my organizations
-    <% end %>
-    <%= link_to new_profile_change_request_path(person_id: person, field: ProfileChangeRequest::OTHER_FIELD), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-comment"></i> Ask for another change
-    <% end %>
-    <%= link_to details_person_path(person),
-                  class: "text-primary inline-flex items-center justify-center gap-2 rounded-full bg-brand-yellow-400 px-6 py-3 text-lg font-semibold shadow-sm transition hover:bg-brand-yellow-500 sm:ml-auto" do %>
-      <i class="fa-solid fa-pen"></i> Edit my profile
-    <% end %>
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="space-y-1 text-base text-gray-700">
+      <h2 class="text-primary font-display text-2xl font-semibold">This is your profile</h2>
+      <p>To update your details, click <strong>Edit my data</strong>.</p>
+    </div>
+    <div class="flex shrink-0 flex-wrap items-center gap-3">
+      <%= link_to visibility_person_path(person),
+                    class: "text-primary inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-6 py-3 text-lg font-semibold shadow-sm transition hover:bg-gray-50" do %>
+        <i class="fa-solid fa-eye-slash"></i> Choose what others can see
+      <% end %>
+      <%= link_to details_person_path(person),
+                    class: "text-primary inline-flex items-center justify-center gap-2 rounded-full bg-brand-yellow-400 px-6 py-3 text-lg font-semibold shadow-sm transition hover:bg-brand-yellow-500" do %>
+        <i class="fa-solid fa-pen"></i> Edit my data
+      <% end %>
+    </div>
   </div>
   <% if pending_requests.any? %>
     <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900">

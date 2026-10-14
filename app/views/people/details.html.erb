@@ -2,14 +2,13 @@
 <% card_class = "border-primary/10 scroll-mt-4 rounded-2xl border bg-white p-5 shadow-sm sm:p-6" %>
 <% heading_class = "mb-4 font-display text-2xl text-gray-900" %>
 <% input_class = "w-full text-lg" %>
-<% checkbox_class = "text-primary h-5 w-5 rounded border-gray-300 focus:ring-blue-200" %>
 <div class="mx-auto w-full max-w-4xl px-4 py-6">
   <div class="mb-2">
     <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class}" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
     <% end %>
   </div>
-  <h1 class="text-primary font-display text-3xl font-semibold">Edit my profile</h1>
+  <h1 class="text-primary font-display text-3xl font-semibold">Edit my data</h1>
   <p class="mt-2 text-lg text-gray-700">
     Change anything below, then click <strong>Save</strong>.
   </p>
@@ -31,7 +30,7 @@
       </div>
     </div>
     <div id="emails" class="<%= card_class %>">
-      <h2 class="mb-1 font-display text-2xl text-gray-900">Email</h2>
+      <h2 class="mb-1 font-display text-2xl text-gray-900">Emails</h2>
       <p class="mb-4 text-gray-600">AWBW staff change your email addresses for you. You can pick each one's type.</p>
       <% pending_email_requests = @person.profile_change_requests.pending.where(field: ProfileChangeRequest::EMAIL_FIELDS).index_by(&:field) %>
       <% emails = [
@@ -88,47 +87,33 @@
       <% end %>
     </div>
     <div id="phones" class="<%= card_class %>">
-      <h2 class="mb-1 font-display text-2xl text-gray-900">Phone</h2>
+      <h2 class="mb-1 font-display text-2xl text-gray-900">Phones</h2>
       <% phones = @person.contact_methods.reject(&:inactive?) %>
       <p class="mb-4 text-gray-600">Tap the <i class="fa-solid fa-star text-amber-400"></i> star on the number we should call first.</p>
       <% no_main_phone = phones.none?(&:primary?) %>
       <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_16rem]">
       <div class="space-y-4" data-controller="primary-tag" data-primary-tag-primary-class="bg-brand-cream">
-        <%= f.simple_fields_for :contact_methods, phones.presence || [ ContactMethod.new(kind: "phone") ] do |phone| %>
+        <%= f.simple_fields_for :contact_methods, phones do |phone| %>
           <%= render "people/details_phone_fields", f: phone, main_by_default: no_main_phone && phone.index.zero? %>
         <% end %>
-        <% if phones.any? %>
-          <details class="group">
-            <summary class="<%= button_classes(:secondary_outline) %> w-fit cursor-pointer list-none group-open:hidden [&::-webkit-details-marker]:hidden">
-              <i class="fa-solid fa-plus"></i> Add another phone
-            </summary>
-            <%= f.simple_fields_for :contact_methods, ContactMethod.new(kind: "phone"), child_index: 999 do |phone| %>
-              <%= render "people/details_phone_fields", f: phone, label: "Another phone number" %>
-            <% end %>
-          </details>
-        <% end %>
+        <%= render "people/add_more_chain", f: f, association: :contact_methods, fields_partial: "people/details_phone_fields",
+                   build: -> { ContactMethod.new(kind: "phone") }, label: phones.any? ? "Add another phone" : "Add a phone",
+                   next_label: "Add another phone", first_locals: { main_by_default: phones.empty? } %>
       </div>
       <%= f.input :best_time_to_call, label: "Best time to call", hint: "For example: weekday mornings", input_html: { class: input_class } %>
       </div>
     </div>
     <div id="addresses" class="<%= card_class %>">
-      <h2 class="mb-1 font-display text-2xl text-gray-900">Mailing address</h2>
+      <h2 class="mb-1 font-display text-2xl text-gray-900">Mailing addresses</h2>
       <% addresses = @person.addresses.reject(&:inactive?) %>
       <p class="mb-4 text-gray-600">Tap the <i class="fa-solid fa-star text-amber-400"></i> star on the address we should mail things to.</p>
       <div class="space-y-4" data-controller="primary-tag" data-primary-tag-primary-class="bg-brand-cream">
-        <%= f.simple_fields_for :addresses, addresses.presence || [ Address.new ] do |address| %>
-          <%= render "people/details_address_fields", f: address, main_by_default: addresses.empty? %>
+        <%= f.simple_fields_for :addresses, addresses do |address| %>
+          <%= render "people/details_address_fields", f: address %>
         <% end %>
-        <% if addresses.any? %>
-          <details class="group">
-            <summary class="<%= button_classes(:secondary_outline) %> w-fit cursor-pointer list-none group-open:hidden [&::-webkit-details-marker]:hidden">
-              <i class="fa-solid fa-plus"></i> Add another address
-            </summary>
-            <%= f.simple_fields_for :addresses, Address.new, child_index: 999 do |address| %>
-              <%= render "people/details_address_fields", f: address %>
-            <% end %>
-          </details>
-        <% end %>
+        <%= render "people/add_more_chain", f: f, association: :addresses, fields_partial: "people/details_address_fields",
+                   build: -> { Address.new }, label: addresses.any? ? "Add another address" : "Add an address",
+                   next_label: "Add another address", first_locals: { main_by_default: addresses.empty? } %>
       </div>
     </div>
     <div id="social" class="<%= card_class %>">
@@ -147,22 +132,28 @@
       <% affiliations = @person.affiliations.select(&:organization).sort_by { |a| [ a.active? ? 0 : 1, a.organization.name.downcase ] } %>
       <% pending_affiliation_requests = @person.profile_change_requests.pending.where(field: "affiliation").index_by(&:affiliation_id) %>
       <div class="divide-y divide-gray-100">
-        <% affiliations.each do |affiliation| %>
-          <% decorated = affiliation.decorate %>
-          <% pending = pending_affiliation_requests[affiliation.id] %>
-          <div class="flex flex-col gap-3 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
-            <div class="min-w-0">
-              <p class="text-lg font-medium text-gray-900"><%= affiliation.organization.name %></p>
-              <p class="text-gray-700"><%= decorated.display_title %></p>
-              <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500"><%= decorated.status_badge %> <%= decorated.period_label %></p>
-            </div>
-            <div class="flex shrink-0 flex-col items-start gap-1 sm:items-end">
-              <%= link_to (pending ? edit_profile_change_request_path(pending, return_to: "details") : new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: affiliation.id, return_to: "details")),
-                          target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
-                <%= pending ? "See your request" : "Request a change" %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-              <% end %>
-              <% if pending %>
-                <span class="inline-flex items-center gap-1 text-sm text-amber-800"><i class="fa-solid fa-clock"></i> Change requested</span>
+        <% affiliations.group_by(&:organization).each do |organization, org_affiliations| %>
+          <div class="py-4 first:pt-0">
+            <p class="text-lg font-medium text-gray-900"><%= organization.name %></p>
+            <div class="mt-2 space-y-3 border-l-2 border-gray-100 pl-4">
+              <% org_affiliations.each do |affiliation| %>
+                <% decorated = affiliation.decorate %>
+                <% pending = pending_affiliation_requests[affiliation.id] %>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="min-w-0">
+                    <p class="text-gray-800"><%= decorated.display_title %></p>
+                    <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500"><%= decorated.status_badge %> <%= decorated.period_label %></p>
+                  </div>
+                  <div class="flex shrink-0 flex-col items-start gap-1 sm:items-end">
+                    <%= link_to (pending ? edit_profile_change_request_path(pending, return_to: "details") : new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: affiliation.id, return_to: "details")),
+                                target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
+                      <%= pending ? "See your request" : "Request a change" %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                    <% end %>
+                    <% if pending %>
+                      <span class="inline-flex items-center gap-1 text-sm text-amber-800"><i class="fa-solid fa-clock"></i> Change requested</span>
+                    <% end %>
+                  </div>
+                </div>
               <% end %>
             </div>
           </div>
@@ -246,17 +237,7 @@
         <% @person.professional_licenses.each_with_index do |license, index| %>
           <% if allowed_to?(:edit?, license) %>
             <%= f.simple_fields_for :professional_licenses, license, child_index: index do |lf| %>
-              <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
-                <%= lf.input :kind, label: "Type", placeholder: "For example: LMFT", input_html: { class: input_class } %>
-                <%= lf.input :number, label: "License number", input_html: { class: input_class } %>
-                <%= lf.input :issuing_state, label: "State", collection: us_states, include_blank: true, input_html: { class: input_class } %>
-                <%= lf.input :expires_on, label: "Expires", as: :date, html5: true, input_html: { class: input_class } %>
-              </div>
-              <% if license.removable? %>
-                <label class="mt-2 flex items-center gap-2 text-gray-700">
-                  <%= lf.check_box :_destroy, class: checkbox_class %> Remove this license
-                </label>
-              <% end %>
+              <%= render "people/details_license_fields", f: lf %>
             <% end %>
           <% else %>
             <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -268,21 +249,9 @@
             </div>
           <% end %>
         <% end %>
-        <details class="group">
-          <summary class="<%= button_classes(:secondary_outline) %> w-fit cursor-pointer list-none group-open:hidden [&::-webkit-details-marker]:hidden">
-            <i class="fa-solid fa-plus"></i> <%= @person.professional_licenses.any? ? "Add another license" : "Add a license" %>
-          </summary>
-          <%= f.simple_fields_for :professional_licenses, ProfessionalLicense.new, child_index: 999 do |lf| %>
-            <div class="rounded-xl border border-gray-200 p-4">
-              <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
-                <%= lf.input :kind, label: "Type", placeholder: "For example: LMFT", input_html: { class: input_class } %>
-                <%= lf.input :number, label: "License number", input_html: { class: input_class } %>
-                <%= lf.input :issuing_state, label: "State", collection: us_states, include_blank: true, input_html: { class: input_class } %>
-                <%= lf.input :expires_on, label: "Expires", as: :date, html5: true, input_html: { class: input_class } %>
-              </div>
-            </div>
-          <% end %>
-        </details>
+        <%= render "people/add_more_chain", f: f, association: :professional_licenses, fields_partial: "people/details_license_fields",
+                   build: -> { ProfessionalLicense.new }, label: @person.professional_licenses.any? ? "Add another license" : "Add a license",
+                   next_label: "Add another license" %>
       </div>
     </div>
     <div class="sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-3 border-t border-gray-200 bg-white/95 py-4 pr-20 pl-4 backdrop-blur sm:pr-4">

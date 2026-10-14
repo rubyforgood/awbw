@@ -4490,14 +4490,15 @@
   released_on: 2026-10-14
   pr_number: 2671
   summary: >-
-    Your own profile page is now the place to keep your details up to date. A
-    big "Edit my profile" button sits at the top, along with buttons to ask
-    AWBW staff to change your email, your organizations, or anything else.
+    Your own profile page is now the place to keep your details up to date.
+    Click "Edit my data" at the top to change them, or "Choose what others can
+    see" to decide what other facilitators see.
   pro_tips:
     - "Open it from \"My profile\" in the menu under your picture."
-    - "\"Edit my profile\" opens one simple page for your photo, name, emails, bio, phone, address, social media, sectors, ages, and licenses."
-    - "Your emails show on that page too. Pick each one's type there, or ask AWBW staff to change the address."
+    - "\"Edit my data\" opens one simple page for your photo, name, emails, phones, addresses, bio, social media, organizations, sectors, ages, and licenses."
+    - "Emails and organizations are kept by AWBW staff. Use \"Request a change\" beside each one, and staff will update it."
+    - "You can add several phones, addresses, or licenses before saving, and star the main phone and address."
     - "Each section of your profile has its own Edit button that jumps straight to that part of the page."
     - "To change an organization, pick it, then pick what to change — dates use a date picker."
     - "Any change you've asked for shows at the top until staff have looked at it."
-    - "\"Choose what others see\" opens a short page of on/off switches for what other AWBW facilitators can see, plus how your name shows."
+    - "\"Choose what others can see\" opens a short page of on/off switches for what other AWBW facilitators can see, plus how your name shows."

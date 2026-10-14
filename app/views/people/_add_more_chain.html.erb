@@ -1,0 +1,14 @@
+<%# locals: (f:, association:, fields_partial:, build:, label:, next_label:, index: 900, remaining: 3, first_locals: {}) %>
+<%# Each opened slot reveals the next "Add another" button, so several can be added before saving — native <details>, no JS. %>
+<details class="space-y-4">
+  <summary class="<%= button_classes(:secondary_outline) %> w-fit cursor-pointer list-none [&::-webkit-details-marker]:hidden [[open]>&]:hidden">
+    <i class="fa-solid fa-plus"></i> <%= label %>
+  </summary>
+  <%= f.simple_fields_for association, build.call, child_index: index do |new_fields| %>
+    <%= render fields_partial, f: new_fields, **first_locals %>
+  <% end %>
+  <% if remaining > 1 %>
+    <%= render "people/add_more_chain", f: f, association: association, fields_partial: fields_partial, build: build,
+               label: next_label, next_label: next_label, index: index + 1, remaining: remaining - 1 %>
+  <% end %>
+</details>
