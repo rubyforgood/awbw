@@ -1087,32 +1087,55 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       )
     end
 
-    it "sends admins a duplicate FYI and no registrant confirmation" do
-      expect(NotificationServices::CreateNotification).to receive(:call).once.with(
-        hash_including(kind: :event_registration_duplicate_fyi, recipient_role: :admin,
-                       noticeable: active_registration, custom_message: nil)
+    def expect_duplicate_notifications(custom_message:)
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :event_registration_duplicate, recipient_role: :person,
+                       recipient_email: "jane@example.com", noticeable: active_registration,
+                       custom_message: custom_message)
       )
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :event_registration_duplicate_fyi, recipient_role: :admin,
+                       noticeable: active_registration, custom_message: custom_message)
+      )
+    end
+
+    it "sends the registrant and admins duplicate emails, with no change notes when nothing changed" do
+      expect_duplicate_notifications(custom_message: nil)
 
       resubmit
     end
 
-    it "notes a newly requested scholarship on the duplicate FYI" do
-      expect(NotificationServices::CreateNotification).to receive(:call).once.with(
-        hash_including(kind: :event_registration_duplicate_fyi,
-                       custom_message: described_class::SCHOLARSHIP_ADDED_NOTE)
-      )
+    it "notes a newly requested scholarship" do
+      expect_duplicate_notifications(custom_message: "Scholarship now requested")
 
       resubmit(scholarship_requested: true)
     end
 
-    it "leaves the note off when the registration already requested a scholarship" do
+    it "leaves the scholarship off when the registration already requested one" do
       active_registration.update!(scholarship_requested: true)
 
-      expect(NotificationServices::CreateNotification).to receive(:call).once.with(
-        hash_including(kind: :event_registration_duplicate_fyi, custom_message: nil)
-      )
+      expect_duplicate_notifications(custom_message: nil)
 
       resubmit(scholarship_requested: true)
+    end
+
+    it "notes every change the resubmission made" do
+      active_registration.update!(expected_payment_method: "Check")
+      additional_forms = form.form_fields.create!(
+        name: "Additional forms", answer_type: :multi_select_checkbox, status: :active,
+        position: form.form_fields.maximum(:position) + 1, required: false, visibility: :always_ask,
+        field_identifier: described_class::ADDITIONAL_FORMS_IDENTIFIER, section: "additional_forms"
+      )
+      params = base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com").merge(
+        field_id("payment_method") => "Credit card",
+        additional_forms.id.to_s => [ "W-9" ]
+      )
+
+      expect_duplicate_notifications(
+        custom_message: "Scholarship now requested\nW-9 now requested\nPayment method changed from Check to Credit card"
+      )
+
+      described_class.call(event: event, registration_form: form, scholarship_requested: true, form_params: params)
     end
   end
 

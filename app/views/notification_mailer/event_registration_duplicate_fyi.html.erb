@@ -15,10 +15,6 @@
   The answers were added to the existing registration.
 </p>
 
-<% if @scholarship_note %>
-  <p style="background-color: #fef3c7; border-radius: 6px; padding: 12px 16px; margin: 0 0 16px; font-weight: bold; color: #92400e;">
-    <%= @scholarship_note %>
-  </p>
-<% end %>
+<%= render "shared/resubmission_changes", notes: @change_notes %>
 
 <%= render "event_registration_fyi_details" %>

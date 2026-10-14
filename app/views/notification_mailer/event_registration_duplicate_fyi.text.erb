@@ -10,10 +10,8 @@ Originally registered on
 <%= @event_registration.created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%B %-d, %Y at %-l:%M %p %Z") %>
 
 The answers were added to the existing registration.
-<% if @scholarship_note %>
 
-*** <%= @scholarship_note %> ***
-<% end %>
+<%= render "shared/resubmission_changes", notes: @change_notes %>
 
 ------------------------------------------------------------
 

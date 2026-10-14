@@ -88,8 +88,10 @@ RSpec.describe NotificationMailer, type: :mailer do
 
   describe "#event_registration_duplicate_fyi" do
     let(:event_registration) { create(:event_registration, scholarship_requested: false) }
+    let(:custom_message) { nil }
     let(:notification) do
-      create(:notification, kind: "event_registration_duplicate_fyi", noticeable: event_registration)
+      create(:notification, kind: "event_registration_duplicate_fyi", noticeable: event_registration,
+                            custom_message: custom_message)
     end
     let(:mail) { described_class.event_registration_duplicate_fyi(notification) }
 
@@ -99,23 +101,31 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(mail.text_part.body.decoded).to include("DUPLICATE event registration")
     end
 
-    it "leaves out the scholarship note when the resubmission didn't add one" do
-      expect(mail.subject).not_to include("scholarship")
-      expect(mail.html_part.body.decoded).not_to include(EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
+    it "leaves out the changes box when the resubmission changed nothing" do
+      expect(mail.subject).not_to include("(")
+      expect(mail.html_part.body.decoded).not_to include("This submission changed the registration")
     end
 
     context "when the resubmission newly requested a scholarship" do
       let(:event_registration) { create(:event_registration, scholarship_requested: true) }
-      let(:notification) do
-        create(:notification, kind: "event_registration_duplicate_fyi", noticeable: event_registration,
-                              custom_message: EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
-      end
+      let(:custom_message) { "Scholarship now requested\nW-9 now requested" }
 
-      it "calls out the scholarship request in the subject and body" do
+      it "calls out the scholarship in the subject and lists every change in the body" do
         expect(mail.subject).to include("DUPLICATE event scholarship registration by")
         expect(mail.subject).to end_with("(scholarship now requested)")
-        expect(mail.html_part.body.decoded).to include(EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
-        expect(mail.text_part.body.decoded).to include(EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
+        [ mail.html_part, mail.text_part ].each do |part|
+          expect(part.body.decoded).to include("This submission changed the registration")
+          expect(part.body.decoded).to include("Scholarship now requested")
+          expect(part.body.decoded).to include("W-9 now requested")
+        end
+      end
+    end
+
+    context "when the resubmission changed something other than the scholarship" do
+      let(:custom_message) { "Invoice now requested" }
+
+      it "flags the subject generically" do
+        expect(mail.subject).to end_with("(registration changed)")
       end
     end
   end

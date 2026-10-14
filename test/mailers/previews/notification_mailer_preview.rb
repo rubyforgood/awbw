@@ -34,7 +34,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         kind: "event_registration_duplicate_fyi",
         recipient_role: "admin",
         recipient_email: programs_email,
-        custom_message: EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE
+        custom_message: "Scholarship now requested\nW-9 now requested"
       )
 
     NotificationMailer.event_registration_duplicate_fyi(notification)

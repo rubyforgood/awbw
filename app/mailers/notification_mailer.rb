@@ -23,12 +23,12 @@ class NotificationMailer < ApplicationMailer
     @event = @event_registration.event.decorate
     @person = @event_registration.registrant
     @resubmitted_at = notification.created_at
-    @scholarship_note = notification.custom_message.presence
+    changes = EventRegistrationServices::ResubmissionChanges.from_message(notification.custom_message)
+    @change_notes = changes.notes
     @notification_type = "Duplicate event registration"
 
-    scholarship_suffix = " (scholarship now requested)" if @scholarship_note
     mail(
-      subject: "#{FYI_PREFIX} DUPLICATE #{@event_registration.registration_subject_noun} by #{@person.full_name} to #{@event.title}#{scholarship_suffix}"
+      subject: "#{FYI_PREFIX} DUPLICATE #{@event_registration.registration_subject_noun} by #{@person.full_name} to #{@event.title}#{changes.subject_suffix}"
     )
   end
 

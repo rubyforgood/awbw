@@ -36,8 +36,6 @@ module EventRegistrationServices
     # and specs agree.
     SOMEONE_ELSE_WILL_PAY_IDENTIFIER = "someone_else_will_pay".freeze
 
-    SCHOLARSHIP_ADDED_NOTE = "This submission requested a scholarship; the original registration did not.".freeze
-
     def self.call(event:, registration_form:, form_params:, scholarship_requested: false, person: nil,
                   scholarship_form: nil, scholarship_params: {},
                   continuing_education_form: nil, continuing_education_params: {})
@@ -94,7 +92,7 @@ module EventRegistrationServices
         )
 
         if existing
-          scholarship_added = @scholarship_requested && !existing.scholarship_requested?
+          before_resubmission = ResubmissionChanges.snapshot(existing)
           existing.update!(scholarship_requested: true) if @scholarship_requested
           create_ce_registration(existing, person)
           existing.update!(w9_requested: true) if w9_requested?
@@ -107,7 +105,8 @@ module EventRegistrationServices
             existing.update!(status: "registered")
             send_notifications(existing)
           else
-            send_duplicate_notification(existing, scholarship_added:)
+            changes = ResubmissionChanges.between(before_resubmission, ResubmissionChanges.snapshot(existing))
+            send_duplicate_notifications(existing, changes)
           end
           organization_link = connect_organization(existing, organization)
           submission = create_form_submission(person)
@@ -407,14 +406,23 @@ module EventRegistrationServices
       )
     end
 
-    # custom_message carries what the resubmission changed, for the mailer to call out.
-    def send_duplicate_notification(event_registration, scholarship_added:)
+    def send_duplicate_notifications(event_registration, changes)
+      NotificationServices::CreateNotification.call(
+        noticeable: event_registration,
+        person: event_registration.registrant,
+        kind: :event_registration_duplicate,
+        recipient_role: :person,
+        recipient_email: event_registration.registrant.preferred_email,
+        custom_message: changes.to_message,
+        notification_type: 1
+      )
+
       NotificationServices::CreateNotification.call(
         noticeable: event_registration,
         kind: :event_registration_duplicate_fyi,
         recipient_role: :admin,
         recipient_email: Organization.programs_email,
-        custom_message: (SCHOLARSHIP_ADDED_NOTE if scholarship_added),
+        custom_message: changes.to_message,
         notification_type: 1
       )
     end
