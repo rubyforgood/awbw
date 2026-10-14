@@ -1,5 +1,5 @@
 <%# A lazily loaded profile section (PeopleController#show ?section=). %>
-<%# locals: (person:, section:, hidden: false, id: nil) %>
+<%# locals: (person:, section:, id: nil) %>
 <% title, noun = {
      affiliations: [ "Affiliations", "affiliations" ],
      workshops: [ "Workshops authored", "workshops" ],
@@ -13,11 +13,8 @@
      workshop_logs: [ "Workshop logs submitted", "workshop logs" ],
      monthly_reports: [ "Monthly reports submitted", "monthly reports" ]
    }.fetch(section) %>
-<%= tag.div id: id, class: [ "scroll-mt-4", (profile_hidden_section_class if hidden) ] do %>
-  <div class="mb-3 flex flex-wrap items-center gap-2">
-    <h3 class="font-display text-xl text-gray-900"><%= title %></h3>
-    <%= render "people/hidden_from_profile", person: person if hidden %>
-  </div>
+<%= tag.div id: id, class: "scroll-mt-4" do %>
+  <h3 class="mb-3 font-display text-xl text-gray-900"><%= title %></h3>
   <%= turbo_frame_tag "person_#{section}_section", src: person_path(person, section: section), loading: :lazy do %>
     <p class="text-gray-500 italic">Loading <%= noun %>...</p>
   <% end %>

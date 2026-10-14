@@ -1,6 +1,5 @@
-<%# locals: (person:, hidden: false) %>
 <% email = person.profile_email %>
 <% email_type = person.email_type.presence || person.user&.email_type %>
-<span class="<%= hidden ? profile_hidden_chip_class : "inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700" %>" title="<%= "Hidden from profile" if hidden %>">
-  <i class="fa-solid <%= hidden ? "fa-eye-slash #{profile_hidden_icon_class}" : "fa-envelope #{DomainTheme.text_class_for(:people, intensity: 600)}" %> text-xs"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on--><% if email_type.present? %> <span class="text-2xs uppercase <%= hidden ? profile_hidden_icon_class : "text-gray-500" %>">(<%= email_type %>)</span><% end %>
+<span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+  <i class="fa-solid fa-envelope text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <!--email_off--><%= mail_to email, email, class: "hover:text-primary" %><!--email_on--><% if email_type.present? %> <span class="text-2xs text-gray-500 uppercase">(<%= email_type %>)</span><% end %>
 </span>

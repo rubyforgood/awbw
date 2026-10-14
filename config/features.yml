@@ -4476,11 +4476,10 @@
   action_path: "/people"
   summary: >-
     Details you turn off in your profile's sharing settings stay hidden from
-    other people on the people list and your profile. You still see them in
-    their usual spot on your own profile, marked with a blue "Hidden from
-    profile" wash.
+    other people on the people list and your profile. You still see them
+    yourself in a collapsed "Hidden from profile" section on your profile.
   pro_tips:
     - "On the people list, an eye-slash icon marks your own details that only you and admins can see."
-    - "If every section in a card is turned off, the whole card is marked instead of each section."
+    - "Use \"Change sharing settings\" in the Hidden from profile section to turn something back on."
     - "Submitted content (your ideas, workshop logs, and monthly reports) is always private to you and admins, so it has no sharing setting."
-    - "Admins see the same blue markers."
+    - "Admins see the same Hidden from profile section on anyone's profile."
