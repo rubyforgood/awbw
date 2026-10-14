@@ -4496,3 +4496,17 @@
     - "Use \"Change sharing settings\" in the Hidden from profile section to turn something back on."
     - "Submitted content (your ideas, workshop logs, and monthly reports) is always private to you and admins, so it has no sharing setting."
     - "Admins see the same Hidden from profile section on anyone's profile."
+
+- name: "Clearer contact us page"
+  area: communications
+  display_status: public_facing
+  released_on: 2026-10-14
+  pr_number: 2683
+  action_path: "/contact_us"
+  summary: >-
+    The contact us page leads with the message form, and the email, phone, and
+    social links sit in a side panel. When you're logged in, the form shows who
+    it's from and puts your cursor right where you start typing.
+  pro_tips:
+    - "Logged in, your name and reply email fill in for you under \"From\", so you only write a subject and message."
+    - "Links that pre-fill a subject (like an affiliation change request) drop you straight into the message box."
