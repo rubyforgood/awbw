@@ -1,14 +1,20 @@
 <% content_for(:page_bg_class, "public") %>
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
-<% profile_return_path = (edit_person_path(current_user.person, anchor: "affiliations") if @return_to == "person_edit" && current_user&.person) %>
+<% profile_return_path = if current_user&.person
+     case @return_to
+     when "person_edit" then edit_person_path(current_user.person, anchor: "affiliations")
+     when "person_details" then details_person_path(current_user.person)
+     end
+   end %>
+<% profile_return_label = @return_to == "person_details" ? "Back to editing my profile" : "Back to my profile" %>
 <div class="border-primary/10 mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border bg-white shadow-sm" id="contact-us-container">
   <%= render accent_strip_partial %>
   <div class="p-6">
       <% if profile_return_path %>
         <div class="mb-3">
           <%= link_to profile_return_path, class: "text-sm #{eyebrow_link_class}" do %>
-            <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
+            <i class="fa-solid fa-arrow-left text-xs"></i> <%= profile_return_label %>
           <% end %>
         </div>
       <% end %>
@@ -110,7 +116,7 @@
                 </div>
               <% elsif profile_return_path %>
                 <div class="pt-2">
-                  <%= link_to "Back to my profile", profile_return_path, class: button_classes(:primary) %>
+                  <%= link_to profile_return_label, profile_return_path, class: button_classes(:primary) %>
                 </div>
               <% end %>
             </div>

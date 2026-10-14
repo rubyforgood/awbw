@@ -9,7 +9,13 @@
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
     <% end %>
   </div>
-  <h1 class="text-primary font-display text-3xl font-semibold">Edit my profile</h1>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-primary font-display text-3xl font-semibold">Edit my profile</h1>
+    <%= link_to contact_us_path(subject: "Question about my profile", return_to: "person_details"),
+                class: button_classes(:secondary_outline) do %>
+      <i class="fa-solid fa-circle-question"></i> Ask a question
+    <% end %>
+  </div>
   <p class="mt-2 text-lg text-gray-700">
     Change anything below, then click <strong>Save</strong>. To change your organizations, use the button on your profile.
   </p>
