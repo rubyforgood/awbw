@@ -295,6 +295,48 @@ RSpec.describe "People search", type: :request do
         expect(response.body).not_to include("Quietage")
       end
     end
+
+    describe "organization filters" do
+      let(:org) { create(:organization, name: "Quietorg") }
+
+      before { create(:affiliation, person: marked, organization: org, title: "Facilitator", start_date: 1.year.ago, inactive: false) }
+
+      it "matches a shared affiliation by organization name" do
+        get people_path, params: { organization_name: "Quietorg" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips affiliations the person hides by organization name" do
+        marked.update!(profile_show_affiliations: false)
+        get people_path, params: { organization_name: "Quietorg" }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "matches a shared affiliation by organization id" do
+        get people_path, params: { organization_id: org.id }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips affiliations the person hides by organization id" do
+        marked.update!(profile_show_affiliations: false)
+        get people_path, params: { organization_id: org.id }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "shows shared affiliations in the row" do
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Quietorg")
+      end
+
+      it "leaves hidden affiliations out of the row" do
+        marked.update!(profile_show_affiliations: false)
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Quietorg")
+      end
+    end
   end
 
   describe "GET /people (turbo frame) contact info search as an admin" do
@@ -373,6 +415,28 @@ RSpec.describe "People search", type: :request do
       get people_path, headers: turbo_headers
       expect(response.body).to include("Quietsector")
       expect(response.body).to include("Quietage")
+    end
+  end
+
+  describe "GET /people (turbo frame) organization filters as an admin" do
+    let(:org) { create(:organization, name: "Quietorg") }
+    let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_affiliations: false) }
+
+    before { create(:affiliation, person: person, organization: org) }
+
+    it "matches affiliations the person hides by organization name" do
+      get people_path, params: { organization_name: "Quietorg" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "matches affiliations the person hides by organization id" do
+      get people_path, params: { organization_id: org.id }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "shows hidden affiliations in the row" do
+      get people_path, headers: turbo_headers
+      expect(response.body).to include("Quietorg")
     end
   end
 

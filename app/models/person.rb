@@ -317,6 +317,8 @@ class Person < ApplicationRecord
       .distinct }
   scope :shared_sector_names_all, ->(names) { where(profile_show_sectors: true).sector_names_all(names) }
   scope :shared_age_range_names_all, ->(name) { where(profile_show_age_ranges: true).age_range_names_all(name) }
+  scope :shared_organization_name, ->(name) { where(profile_show_affiliations: true).organization_name(name) }
+  scope :shared_organization_id, ->(organization_id) { where(profile_show_affiliations: true).organization_id(organization_id) }
   scope :by_role, ->(role) {
     case role
     when "story_author" then story_authors
@@ -388,7 +390,9 @@ class Person < ApplicationRecord
     results = results.shared_age_range_names_all(params[:shared_age_range_names_all]) if params[:shared_age_range_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
+    results = results.shared_organization_name(params[:shared_organization_name]) if params[:shared_organization_name].present?
     results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
+    results = results.shared_organization_id(params[:shared_organization_id]) if params[:shared_organization_id].present?
     results = results.staff_tagged_with(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results
