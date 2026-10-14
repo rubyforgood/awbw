@@ -186,6 +186,73 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Markedone")
       expect(response.body).not_to include("Plainone")
     end
+
+    describe "contact info search" do
+      def search(term)
+        get people_path, params: { contact_info: term }, headers: turbo_headers
+        response.body
+      end
+
+      it "matches a shared email" do
+        marked.update!(email: "marked@example.com")
+        expect(search("marked@example")).to include("Markedone")
+      end
+
+      it "skips an email the person hides" do
+        marked.update!(email: "marked@example.com", profile_show_email: false)
+        expect(search("marked@example")).not_to include("Markedone")
+      end
+
+      it "skips the secondary email" do
+        marked.update!(email_2: "second@example.com")
+        expect(search("second@example")).not_to include("Markedone")
+      end
+
+      it "skips the legal first name" do
+        marked.update!(legal_first_name: "Legalname")
+        expect(search("Legalname")).not_to include("Markedone")
+      end
+
+      it "skips addresses" do
+        create(:address, addressable: marked, street_address: "123 Hiddenway")
+        expect(search("Hiddenway")).not_to include("Markedone")
+      end
+
+      it "matches a shared phone" do
+        create(:contact_method, contactable: marked, value: "555-0142")
+        expect(search("555-0142")).to include("Markedone")
+      end
+
+      it "skips a phone the person hides" do
+        marked.update!(profile_show_phone: false)
+        create(:contact_method, contactable: marked, value: "555-0142")
+        expect(search("555-0142")).not_to include("Markedone")
+      end
+
+      it "skips an inactive phone" do
+        create(:contact_method, contactable: marked, value: "555-0142", inactive: true)
+        expect(search("555-0142")).not_to include("Markedone")
+      end
+    end
+  end
+
+  describe "GET /people (turbo frame) contact info search as an admin" do
+    let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_email: false, profile_show_phone: false) }
+
+    def search(term)
+      get people_path, params: { contact_info: term }, headers: turbo_headers
+      response.body
+    end
+
+    it "matches the contact info the person hides from their profile" do
+      person.update!(email: "hidden@example.com", email_2: "second@example.com", legal_first_name: "Legalname")
+      create(:contact_method, contactable: person, value: "555-0142")
+      create(:address, addressable: person, street_address: "123 Hiddenway")
+
+      %w[hidden@example second@example Legalname 555-0142 Hiddenway].each do |term|
+        expect(search(term)).to include("Hiddenfacts")
+      end
+    end
   end
 
   describe "GET /people?organization_id=X (full page)" do

@@ -24,6 +24,7 @@ class Person < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
+  has_many :active_phones, -> { phone.where(inactive: false) }, as: :contactable, class_name: "ContactMethod"
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
@@ -183,6 +184,30 @@ class Person < ApplicationRecord
                       "addresses.street_address", "addresses.city", "addresses.state",
                       "addresses.zip_code", "addresses.phone" ]
     options :all, type: :text, default: true, default_operator: :or
+  end
+
+  search_scope :shared_name_search do
+    attributes all: [ :first_name, :last_name ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  search_scope :shared_email_search do
+    scope { left_joins(:user) }
+    attributes all: [ :email, "user.email" ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  search_scope :shared_phone_search do
+    scope { left_joins(:user, :active_phones) }
+    attributes all: [ "user.phone", "contact_methods.value" ]
+    options :all, type: :text, default: true, default_operator: :or
+  end
+
+  # Contact-info search for non-admins: matches only what the person's profile shows.
+  def self.shared_contact_search(query)
+    where(id: unscoped.shared_name_search(query).select(:id))
+      .or(where(id: unscoped.where(profile_show_email: true).shared_email_search(query).select(:id)))
+      .or(where(id: unscoped.where(profile_show_phone: true).shared_phone_search(query).select(:id)))
   end
 
   scope :organization_ids, ->(organization_ids)  { joins(:affiliations)
@@ -347,6 +372,7 @@ class Person < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
+    results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
     results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?

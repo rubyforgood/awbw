@@ -534,6 +534,31 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_alice)
     end
 
+    it 'filters by shared_contact_info matching a full name' do
+      results = Person.search_by_params(shared_contact_info: 'Alice Smith')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+
+    it 'filters by shared_contact_info matching a shared email but not a hidden one' do
+      person_alice.update!(email: 'alice@example.com', profile_show_email: false)
+
+      expect(Person.search_by_params(shared_contact_info: 'bob@example')).to include(person_bob)
+      expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
+    end
+
+    it 'filters by shared_contact_info matching a shared login phone' do
+      person_bob.user.update!(phone: '555-0199')
+
+      expect(Person.search_by_params(shared_contact_info: '555-0199')).to include(person_bob)
+    end
+
+    it 'chains shared_contact_info and organization_name' do
+      results = Person.search_by_params(shared_contact_info: 'Alice', organization_name: 'Alpha')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+
     it 'filters by organization_name' do
       results = Person.search_by_params(organization_name: 'Alpha')
       expect(results).to include(person_alice)
