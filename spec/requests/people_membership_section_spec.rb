@@ -108,12 +108,12 @@ RSpec.describe "Person profile membership section", type: :request do
       expect(response.body).to include(year.decorate.period_range)
     end
 
-    it "shows the card in the admin-or-owner wash, labeled as visible only to them" do
+    it "shows the card in the admin-or-owner wash, labeled as visible to them and admins" do
       get person_path(person)
 
       header = Nokogiri::HTML(response.body).at_xpath("//h2[normalize-space()='Annual membership']").parent
       expect(header.parent["class"]).to include("admin-or-owner")
-      expect(header.text).to include("Only visible to you")
+      expect(header.text).to include("Only visible to you and admins")
     end
 
     it "offers the option to set up an annual membership" do
