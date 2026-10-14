@@ -19,6 +19,12 @@ class PersonPolicy < ApplicationPolicy
     staff_tag_ids topic_subscription_type_id
   ].freeze
 
+  SHARED_ONLY_FILTERS = {
+    contact_info: :shared_contact_info,
+    sector_names_all: :shared_sector_names_all,
+    age_range_names_all: :shared_age_range_names_all
+  }.freeze
+
   def index?
     admin? || profiles_visible_to_users?
   end
@@ -75,11 +81,11 @@ class PersonPolicy < ApplicationPolicy
     relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
   end
 
-  # A non-admin's contact-info search matches only what each profile shares.
+  # A non-admin's search and filters match only what each profile shares.
   params_filter(:index) do |params|
     next params if admin?
-    filters = params.except(*ADMIN_ONLY_FILTERS, :contact_info)
-    filters[:shared_contact_info] = params[:contact_info] if params[:contact_info].present?
+    filters = params.except(*ADMIN_ONLY_FILTERS, *SHARED_ONLY_FILTERS.keys)
+    SHARED_ONLY_FILTERS.each { |filter, shared_filter| filters[shared_filter] = params[filter] if params[filter].present? }
     filters
   end
 

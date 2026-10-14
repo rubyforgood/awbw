@@ -246,6 +246,55 @@ RSpec.describe "People search", type: :request do
         expect(search("Markedone")).not_to include("Shownsurname")
       end
     end
+
+    describe "sector and age range filters" do
+      let(:sector) { create(:sector, :published, name: "Quietsector") }
+      let(:age_type) { create(:category_type, :published, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE) }
+      let(:age_range) { create(:category, :published, category_type: age_type, name: "Quietage") }
+
+      before do
+        create(:sectorable_item, sectorable: marked, sector: sector, is_primary: true)
+        create(:categorizable_item, categorizable: marked, category: age_range, is_primary: true)
+      end
+
+      it "matches shared sectors" do
+        get people_path, params: { sector_names_all: "Quietsector" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips sectors the person hides" do
+        marked.update!(profile_show_sectors: false)
+        get people_path, params: { sector_names_all: "Quietsector" }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "matches shared age ranges" do
+        get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips age ranges the person hides" do
+        marked.update!(profile_show_age_ranges: false)
+        get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "shows shared sectors and age ranges in the row" do
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Quietsector")
+        expect(response.body).to include("Quietage")
+      end
+
+      it "leaves hidden sectors and age ranges out of the row" do
+        marked.update!(profile_show_sectors: false, profile_show_age_ranges: false)
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Quietsector")
+        expect(response.body).not_to include("Quietage")
+      end
+    end
   end
 
   describe "GET /people (turbo frame) contact info search as an admin" do
@@ -296,6 +345,34 @@ RSpec.describe "People search", type: :request do
     it "matches the first name when the display preference is last_name_only" do
       person.update!(last_name: "Shownsurname", display_name_preference: "last_name_only")
       expect(search("Hiddenfacts")).to include("Shownsurname")
+    end
+  end
+
+  describe "GET /people (turbo frame) sector and age range filters as an admin" do
+    let(:sector) { create(:sector, :published, name: "Quietsector") }
+    let(:age_type) { create(:category_type, :published, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE) }
+    let(:age_range) { create(:category, :published, category_type: age_type, name: "Quietage") }
+    let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_sectors: false, profile_show_age_ranges: false) }
+
+    before do
+      create(:sectorable_item, sectorable: person, sector: sector, is_primary: true)
+      create(:categorizable_item, categorizable: person, category: age_range, is_primary: true)
+    end
+
+    it "matches sectors the person hides" do
+      get people_path, params: { sector_names_all: "Quietsector" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "matches age ranges the person hides" do
+      get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "shows hidden sectors and age ranges in the row" do
+      get people_path, headers: turbo_headers
+      expect(response.body).to include("Quietsector")
+      expect(response.body).to include("Quietage")
     end
   end
 

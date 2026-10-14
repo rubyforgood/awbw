@@ -46,7 +46,8 @@
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <%# Index stays scannable: show only the primary sector(s) as the
                       darker-green starred chip; the full set lives on the profile. %>
-                  <% sectors = person.sectorable_items.select(&:is_primary?).sort_by { |si| si.sector&.name.to_s.downcase } %>
+                  <% show_sectors = person.profile_show_sectors? || allowed_to?(:manage?, Person) %>
+                  <% sectors = show_sectors ? person.sectorable_items.select(&:is_primary?).sort_by { |si| si.sector&.name.to_s.downcase } : [] %>
                   <% if sectors.any? %>
                     <div class="flex flex-wrap gap-2">
                       <% sectors.each do |si| %>
@@ -65,7 +66,8 @@
                 </td>
                 <!-- Age groups -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% primary_age = person.primary_age_groups.to_a %>
+                  <% show_age = person.profile_show_age_ranges? || allowed_to?(:manage?, Person) %>
+                  <% primary_age = show_age ? person.primary_age_groups.to_a : [] %>
                   <% if primary_age.any? %>
                     <%= render "shared/age_group_tags", primary: primary_age, additional: [], compact: true %>
                   <% else %>

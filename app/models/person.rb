@@ -315,6 +315,8 @@ class Person < ApplicationRecord
       .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
       .where("LOWER(categories.name) = ?", name.to_s.strip.downcase)
       .distinct }
+  scope :shared_sector_names_all, ->(names) { where(profile_show_sectors: true).sector_names_all(names) }
+  scope :shared_age_range_names_all, ->(name) { where(profile_show_age_ranges: true).age_range_names_all(name) }
   scope :by_role, ->(role) {
     case role
     when "story_author" then story_authors
@@ -381,7 +383,9 @@ class Person < ApplicationRecord
     results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?
     results = results.subscribed_to_topic(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    results = results.shared_sector_names_all(params[:shared_sector_names_all]) if params[:shared_sector_names_all].present?
     results = results.age_range_names_all(params[:age_range_names_all]) if params[:age_range_names_all].present?
+    results = results.shared_age_range_names_all(params[:shared_age_range_names_all]) if params[:shared_age_range_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
     results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
