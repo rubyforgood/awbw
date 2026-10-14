@@ -26,6 +26,10 @@ Every person field sits in exactly one access tier:
 | **Admin-set** | sees read-only, no request path | per its share toggle, or never | see + edit |
 | **Admin-only** | never sees | never see | see + edit |
 
+**Badges are always public, whatever the share toggles say.** "Sector Leader" shows with
+sectors hidden, author badges show with anonymous contributions on, and "Events Attended"
+shows with registrations hidden.
+
 ### Placing a new field
 
 Ask in order, and stop at the first yes:
@@ -118,8 +122,6 @@ These places don't yet follow the tiers above:
   email shown is `preferred_email`, which falls back to the admin-set `email_2`.
 - **Search matches hidden data.** The contact-info search matches the secondary email,
   phones, addresses, and legal name, whatever the toggles say.
-- **Badges ignore share toggles.** Examples: "Sector Leader" with sectors hidden, author
-  badges with anonymous contributions on, and "Events Attended" with registrations hidden.
 - **Owners can't preview what they've hidden.** The "hidden from profile" marker shows only
   to admins. An owner who turns a piece off sees what other users see.
 - **Private-section toggles also hide the section from the owner and admins.** Ideas, logs,
