@@ -41,18 +41,10 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect(response.body).not_to include("person[email]", "person[filemaker_code]", "person[profile_show_email]")
   end
 
-  it "links to a contact form prefilled for a profile question" do
+  it "leaves Ask a question to the profile banner" do
     get details_person_path(person)
 
-    expect(response.body).to include("Ask a question")
-    expect(response.body).to include(contact_us_path(subject: "Question about my profile", return_to: "person_details").gsub("&", "&amp;"))
-  end
-
-  it "has the contact form lead back to the edit page" do
-    get contact_us_path(subject: "Question about my profile", return_to: "person_details")
-
-    expect(response.body).to include(%(value="Question about my profile"))
-    expect(response.body).to include("Back to editing my profile", details_person_path(person))
+    expect(response.body).not_to include("Ask a question")
   end
 
   it "saves and returns to the profile" do
