@@ -580,6 +580,18 @@
     <%= render "shared/comments_and_communications", f: f, view_all_person: @person %>
   <% end %>
 
+  <% if params[:admin] && allowed_to?(:manage?, Person) %>
+    <div class="admin-only mb-6 bg-blue-100">
+      <%= f.input :notes,
+                  as: :text,
+                  label: "Internal notes",
+                  input_html: {
+                    rows: 3,
+                    class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
+                  } %>
+    </div>
+  <% end %>
+
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @person, class: button_classes(:danger_outline),

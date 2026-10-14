@@ -79,4 +79,21 @@ RSpec.describe "people/edit", type: :view do
       expect(rendered).to have_select('Primary email type')
     end
   end
+
+  it "hides the internal notes field without the admin param" do
+    expect(rendered).not_to have_field("Internal notes")
+  end
+
+  context "when params[:admin] is present" do
+    let(:person) { create(:person, notes: "Met at the spring training") }
+
+    before do
+      allow(view).to receive(:params).and_return(ActionController::Parameters.new(admin: "true"))
+      render
+    end
+
+    it "shows the internal notes field" do
+      expect(rendered).to have_field("Internal notes", with: "Met at the spring training")
+    end
+  end
 end
