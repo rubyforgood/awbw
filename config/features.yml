@@ -27,6 +27,19 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "Choose the default W-9 and training handouts from the admin"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-10-14
+  summary: >-
+    The certificate settings page is now "Resource roles": besides certificate
+    artwork, admins pick the default W-9 and training handouts new events start
+    with. Renaming a connected Resource no longer breaks the link.
+  action_path: "/admin/resource_roles"
+  pr_number: 2679
+  pro_tips:
+    - "A slot marked \"Auto-matched by title\" still works, but connect it so a rename can't unlink it."
+
 - name: "Certificate of completion settings"
   area: events
   display_status: admin_facing
@@ -36,7 +49,7 @@
     facilitator-training, on-demand, CE, and other-events certificates, plus the
     facilitator-training and CE signature strips. Upload each as a Resource, then
     connect it here.
-  action_path: "/admin/certificate_settings"
+  action_path: "/admin/resource_roles"
   pro_tips:
     - "Leave a slot empty to use the built-in design for that certificate type."
     - "The facilitator-training signature shows on live training certificates only — never on-demand or other events."

@@ -537,7 +537,7 @@ module Events
 
     # The certificate's signature strip: the certificate callout's first linked
     # resource when an admin connected one (attached overrides the default), else
-    # the title-matched record. Mirrors the payment callout's W-9 resolution.
+    # the training_signatures role default. Mirrors the payment callout's W-9 resolution.
     def certificate_signature_file
       connected = @builtin_callout&.resources&.first
       return connected.signature_file if connected
@@ -633,7 +633,7 @@ module Events
       payment_callout = @event.registration_ticket_callouts.find_by(builtin_key: "payment")
       return payment_callout.registration_ticket_callout_resources.ordered.includes(:resource).to_a if payment_callout
       return [] unless @event.cost_cents.to_i.positive?
-      Resource.where(title: "W-9").map { |resource| RegistrationTicketCalloutResource.new(resource:) }
+      Resource.for_roles(%w[w9]).map { |resource| RegistrationTicketCalloutResource.new(resource:) }
     end
 
     # A grey document card for a non-resource payment document (the dynamic
