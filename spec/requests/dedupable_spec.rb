@@ -340,6 +340,32 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Website url")
         expect(response.body).not_to include("Profile show age ranges")
       end
+
+      it "leaves a blank status blank instead of preselecting one" do
+        keep.update_column(:organization_status_id, nil)
+
+        get dedupe_preview_organizations_path(
+          organization_to_keep_id: keep.id,
+          organization_to_delete_id: delete_rec.id
+        )
+
+        status_select = Nokogiri::HTML(response.body).at_css("select[name$='[organization_status_id]']")
+        expect(status_select.at_css("option[selected]")).to be_nil
+        expect(status_select.at_css("option[value='']")).to be_present
+      end
+    end
+
+    describe "PATCH dedupe_update_keep" do
+      it "autosaves a keeper that has no status" do
+        keep = create(:organization, name: "Keep Org")
+        keep.update_column(:organization_status_id, nil)
+
+        patch dedupe_update_keep_organizations_path,
+              params: { id: keep.id, organization_to_keep: { name: "Renamed Org" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(keep.reload.name).to eq("Renamed Org")
+      end
     end
 
     describe "POST dedupe_perform" do
@@ -399,6 +425,22 @@ RSpec.describe "Dedupable concern", type: :request do
         }
 
         expect(keep.reload.filemaker_code).to eq("FM-100, FM-273")
+      end
+
+      it "merges when neither organization has a status" do
+        keep.update_column(:organization_status_id, nil)
+        delete_rec.update_column(:organization_status_id, nil)
+
+        expect {
+          post dedupe_perform_organizations_path, params: {
+            organization_to_delete_id: delete_rec.id,
+            organization_to_keep_id: keep.id,
+            organization_to_keep: { name: "Canonical Org", organization_status_id: "" }
+          }
+        }.to change(Organization, :count).by(-1)
+
+        expect(response).to redirect_to(organizations_path)
+        expect(keep.reload).to have_attributes(name: "Canonical Org", organization_status_id: nil)
       end
 
       it "reassigns the duplicate's invoices instead of blocking the merge" do

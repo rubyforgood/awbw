@@ -4,6 +4,8 @@ module Dedupable
   extend ActiveSupport::Concern
 
   CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
+  # Lets a model relax a rule for merges (`except_on: :dedupe`) while :update rules still run.
+  DEDUPE_VALIDATION_CONTEXT = %i[update dedupe].freeze
 
   def dedupe_index
     authorize! :dedupe, to: :dedupe?
@@ -61,7 +63,10 @@ module Dedupable
     record = mc.find(params[:id])
     keep_param_key = "#{mn}_to_keep"
 
-    record.update!(params.require(keep_param_key).permit(dedupe_editable_columns(config))) if params[keep_param_key].present?
+    if params[keep_param_key].present?
+      record.assign_attributes(params.require(keep_param_key).permit(dedupe_editable_columns(config)))
+      record.save!(context: DEDUPE_VALIDATION_CONTEXT)
+    end
 
     head :ok
   rescue ActionPolicy::Unauthorized
@@ -124,7 +129,7 @@ module Dedupable
       # need it (e.g. re-crediting a moved scholarship to the keeper's registrant).
       # Runs inside the transaction so a failure rolls the whole merge back.
       config[:after_merge]&.call(record_to_keep)
-      record_to_keep.save! if record_to_keep.changed?
+      record_to_keep.save!(context: DEDUPE_VALIDATION_CONTEXT) if record_to_keep.changed?
     end
 
     label = mc.model_name.human.pluralize

@@ -6,7 +6,7 @@ RSpec.describe Organization do
   describe 'associations' do
     it { should belong_to(:location).optional }
     it { should belong_to(:windows_type).optional }
-    it { should belong_to(:organization_status) }
+    it { should belong_to(:organization_status).optional }
     it { should belong_to(:parent).class_name("Organization").optional }
     it { should have_many(:children).class_name("Organization").with_foreign_key(:parent_id).dependent(:nullify) }
     it { should have_many(:affiliations) }
@@ -19,6 +19,13 @@ RSpec.describe Organization do
     subject { build(:organization) }
     it { should validate_presence_of(:name) }
     it { should validate_presence_of(:organization_status_id) }
+
+    it "allows a blank status when saved for a dedupe merge" do
+      organization = create(:organization)
+      organization.organization_status_id = nil
+
+      expect(organization.valid?(Dedupable::DEDUPE_VALIDATION_CONTEXT)).to be true
+    end
 
     it { should allow_value("info@example.com").for(:email) }
     it { should allow_value("").for(:email) }
