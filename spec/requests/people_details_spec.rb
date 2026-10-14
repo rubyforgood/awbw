@@ -106,6 +106,28 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect(response.body).to include("Only one sector can be marked as primary")
   end
 
+  it "saves the time zone and best time to call" do
+    save_details(best_time_to_call: "Weekday mornings", user_attributes: { id: owner_user.id, time_zone: "Eastern Time (US & Canada)" })
+
+    expect(person.reload.best_time_to_call).to eq("Weekday mornings")
+    expect(owner_user.reload.time_zone).to eq("Eastern Time (US & Canada)")
+  end
+
+  it "saves program settings without dropping age ranges" do
+    settings_type = create(:category_type, :published, name: "WorkshopSetting", profile_specific: true)
+    setting = create(:category, :published, category_type: settings_type, name: "Shelter")
+    age_type = create(:category_type, :published, name: "AgeRange")
+    teens = create(:category, :published, category_type: age_type, name: "Teens (13-17)")
+    create(:categorizable_item, categorizable: person, category: teens)
+
+    get details_person_path(person)
+    expect(response.body).to include("Shelter")
+
+    save_details(category_ids: [ "", setting.id.to_s ], managed_category_type_ids: [ "", settings_type.id.to_s ])
+
+    expect(person.reload.categories).to contain_exactly(setting, teens)
+  end
+
   it "adds a license from the add row" do
     save_details(professional_licenses_attributes: { "999" => { kind: "LMFT", number: "12345", issuing_state: "CA", expires_on: "2027-01-31" } })
 

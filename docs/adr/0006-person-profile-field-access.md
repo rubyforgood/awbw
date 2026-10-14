@@ -70,8 +70,11 @@ Ask in order, and stop at the first yes:
 
 What each audience gets today, as of rubyforgood/awbw#2673. "Index" is the people index
 (`people_results`). Non-admins only see published people there, and on their own row the
-owner sees hidden pieces like an admin does. "Profile" is `people#show`. "Edit" is the
-person form.
+owner sees hidden pieces like an admin does. "Profile" is `people#show`. "Edit · admin" is
+the person form. "Edit · owner" is the set of pages an owner reaches from their profile:
+"Edit my profile" (`people#details`), "Choose what others see" (`people#visibility`, the
+`profile_show_*` toggles plus search, display-name, and anonymity preferences), and the
+change-request pages for 📨 fields. Owners aren't linked to the person form.
 
 **Hidden pieces stay visible to the owner and admins.** When a `profile_show_*` toggle is
 off, the index marks that cell with an eye-slash, and the profile moves the piece into a
@@ -128,6 +131,8 @@ membership status, staff tags, and mailing list.
 
 These places don't yet follow the tiers above:
 
+- **Owners can't reach the email type fields.** Primary and secondary email type are
+  owner-editable but only appear on the person form, which owners aren't linked to.
 - **Unused submitted-content columns.** The person `profile_show_workshop_logs` and
   `profile_show_monthly_reports` columns no longer drive anything and can be dropped (the
   idea columns went in rubyforgood/awbw#2680).

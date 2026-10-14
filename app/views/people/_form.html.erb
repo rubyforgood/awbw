@@ -580,7 +580,7 @@
     <%= render "shared/comments_and_communications", f: f, view_all_person: @person %>
   <% end %>
 
-  <% if allowed_to?(:edit_own_profile?, f.object) %>
+  <% if allowed_to?(:edit_own_profile?, f.object) && !allowed_to?(:manage?, Person) %>
     <p class="mt-8 text-center text-gray-700">
       Can't change something here?
       <%= link_to "Ask AWBW staff to change it", new_profile_change_request_path(person_id: f.object, field: ProfileChangeRequest::OTHER_FIELD),
@@ -593,7 +593,7 @@
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
 
-    <%= link_to "Cancel", (allowed_to?(:edit_own_profile?, f.object) ? person_path(f.object) : people_path), class: button_classes(:secondary_outline),
+    <%= link_to "Cancel", ((allowed_to?(:edit_own_profile?, f.object) && !allowed_to?(:manage?, Person)) ? person_path(f.object) : people_path), class: button_classes(:secondary_outline),
                 data: { action: "click->dirty-form#confirmCancel" } %>
     <%= f.button :submit, class: button_classes(:primary) %>
   </div>

@@ -37,6 +37,13 @@
       <%= f.input :date_of_birth, label: "Birthday", as: :date, html5: true,
                   hint: "Only AWBW staff see this. Your profile never shows the year.",
                   wrapper_html: { class: "mt-4 sm:w-64" }, input_html: { class: input_class } %>
+      <% if @person.user %>
+        <%= f.fields_for :user do |user_form| %>
+          <%= user_form.input :time_zone, label: "Your time zone", collection: us_time_zone_fundamentals,
+                              selected: user_form.object.time_zone.presence || "Pacific Time (US & Canada)", include_blank: false,
+                              hint: "Dates and times show in this time zone.", wrapper_html: { class: "mt-4 sm:w-96" }, input_html: { class: input_class } %>
+        <% end %>
+      <% end %>
     </div>
     <div id="phones" class="<%= card_class %>">
       <h2 class="<%= heading_class %>">Phone</h2>
@@ -61,6 +68,8 @@
           </div>
         <% end %>
       </div>
+      <%= f.input :best_time_to_call, label: "Best time to call", hint: "For example: weekday mornings",
+                  wrapper_html: { class: "mt-4 sm:w-96" }, input_html: { class: input_class } %>
     </div>
     <div id="addresses" class="<%= card_class %>">
       <h2 class="<%= heading_class %>">Mailing address</h2>
@@ -132,6 +141,29 @@
           <% end %>
         </div>
       </div>
+    <% end %>
+    <% program_setting_types = (@person_categories_grouped || {}).reject { |type, _| type.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE } %>
+    <% if program_setting_types.present? %>
+      <%= hidden_field_tag "person[category_ids][]", "" %>
+      <%= hidden_field_tag "person[managed_category_type_ids][]", "" %>
+      <% @managed_category_type_ids.each do |type_id| %>
+        <%= hidden_field_tag "person[managed_category_type_ids][]", type_id %>
+      <% end %>
+      <% program_setting_types.each do |type, categories| %>
+        <div class="<%= card_class %>">
+          <h2 class="mb-1 font-display text-2xl text-gray-900"><%= type.display_label %></h2>
+          <p class="mb-4 text-gray-600">Turn on every one that fits.</p>
+          <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+            <% categories.each do |category| %>
+              <div class="border-b border-gray-100">
+                <%= render "people/switch_row", label: category.name, on_text: nil,
+                           input: check_box_tag("person[category_ids][]", category.id, @selected_category_ids.include?(category.id),
+                                                id: "person_category_ids_#{category.id}", class: "peer sr-only") %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     <% end %>
     <div id="professional-licenses" class="<%= card_class %>">
       <h2 class="mb-1 font-display text-2xl text-gray-900">Professional licenses</h2>

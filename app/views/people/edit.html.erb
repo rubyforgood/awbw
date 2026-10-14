@@ -1,5 +1,5 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<% own_profile = allowed_to?(:edit_own_profile?, @person) %>
+<% own_profile = allowed_to?(:edit_own_profile?, @person) && !allowed_to?(:manage?, Person) %>
 <% back = capture do %>
   <% if params[:return_to] == "onboarding" && params[:event_id].present? %>
     <div class="mb-2">
