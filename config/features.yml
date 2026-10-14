@@ -4477,7 +4477,7 @@
   summary: >-
     Details you turn off in your profile's sharing settings stay hidden from
     other people on the people list and your profile. You still see them
-    yourself in a collapsed "Hidden from profile" section on your profile.
+    yourself in a collapsible "Hidden from profile" section on your profile.
   pro_tips:
     - "On the people list, an eye-slash icon marks your own details that only you and admins can see."
     - "Use \"Change sharing settings\" in the Hidden from profile section to turn something back on."

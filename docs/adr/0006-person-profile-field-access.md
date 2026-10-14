@@ -20,7 +20,7 @@ Every person field sits in exactly one access tier:
 | Tier | Owner | Other signed-in users | Admins |
 |---|---|---|---|
 | **Always public** | edits | always see | see + edit |
-| **Shared by choice** | edits, decides whether to share it with a `profile_show_*` toggle, and still sees it in the collapsed "Hidden from profile" card when off | see only when the toggle is on | always see, in the same card when off |
+| **Shared by choice** | edits, decides whether to share it with a `profile_show_*` toggle, and still sees it in the collapsible "Hidden from profile" card when off | see only when the toggle is on | always see, in the same card when off |
 | **Private** | edits | never see | see + edit |
 | **Request a change** | sees read-only, files a `ProfileChangeRequest` | per its share toggle | see + edit, approve requests |
 | **Admin-set** | sees read-only, no request path | per its share toggle, or never | see + edit |
@@ -75,7 +75,7 @@ person form.
 
 **Hidden pieces stay visible to the owner and admins.** When a `profile_show_*` toggle is
 off, the index marks that cell with an eye-slash, and the profile moves the piece into a
-collapsed "Hidden from profile" card (`people/_hidden_from_profile_card`) under the lilac
+collapsible "Hidden from profile" card (`people/_hidden_from_profile_card`) under the lilac
 `admin-or-owner` wash (`DomainTheme` key `admin_or_owner`). The lazy `?section=` frames for
 hidden sections authorize on `own_record?`.
 

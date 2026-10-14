@@ -46,7 +46,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
           expect(hidden_card).to be_nil
         end
 
-        it "shows content to the owner in the collapsed hidden-from-profile card" do
+        it "shows content to the owner in the hidden-from-profile card" do
           sign_in owner_user
           get person_path(person)
           expect(hidden_card).to be_present
@@ -54,7 +54,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
           expect(response.body).to include("Only visible to you and admins")
         end
 
-        it "shows content to an admin in the collapsed hidden-from-profile card" do
+        it "shows content to an admin in the hidden-from-profile card" do
           sign_in admin
           get person_path(person)
           expect(hidden_card.native.to_html).to include(hidden_text)
@@ -255,6 +255,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
       get person_path(person)
       expect(hidden_card[:class]).to include("admin-or-owner", DomainTheme.bg_class_for(:admin_or_owner, intensity: 100))
       expect(hidden_card.text).to include("Hidden from profile")
+    end
+
+    it "starts open and can be collapsed" do
+      sign_in owner_user
+      get person_path(person)
+      expect(hidden_card["data-expandable-card-expanded-value"]).to eq("true")
+      expect(hidden_card.find("[data-expandable-card-target='body']", visible: :all)[:class]).not_to include("hidden")
     end
 
     it "is absent when nothing is hidden" do
