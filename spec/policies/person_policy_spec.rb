@@ -372,7 +372,10 @@ RSpec.describe PersonPolicy, type: :policy do
         email_2: "second@example.com",
         email_2_type: "personal",
         notes: "Internal note",
-        user_attributes: { id: "1", email: "changed@example.com", super_user: "1", time_zone: "Hawaii" },
+        user_attributes: {
+          id: "1", person_id: "2", email: "changed@example.com", super_user: "1", inactive: "1",
+          notes: "Internal note", phone: "555-0100", time_zone: "Hawaii"
+        },
         affiliations_attributes: { "0" => { id: "1", title: "Changed title" } },
         professional_licenses_attributes: { "0" => { kind: "LCSW", number: "123" } }
       )
@@ -386,11 +389,12 @@ RSpec.describe PersonPolicy, type: :policy do
     it "strips admin-only fields while retaining owner-editable profile fields" do
       filtered = write_params_for(owner_user)
 
-      expect(filtered.keys).to contain_exactly("first_name", "email_type", "user_attributes", "professional_licenses_attributes")
+      expect(filtered.keys).to contain_exactly("first_name", "email_type", "email_2_type", "user_attributes", "professional_licenses_attributes")
     end
 
-    it "narrows an owner's user attributes to their time zone" do
-      expect(write_params_for(owner_user)[:user_attributes].to_h).to eq("time_zone" => "Hawaii")
+    it "strips admin-only user attributes while retaining the rest" do
+      expect(write_params_for(owner_user)[:user_attributes].to_h)
+        .to eq("id" => "1", "phone" => "555-0100", "time_zone" => "Hawaii")
     end
 
     it "retains the permitted fields for an admin" do

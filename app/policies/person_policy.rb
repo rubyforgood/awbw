@@ -3,14 +3,14 @@ class PersonPolicy < ApplicationPolicy
 
   # email_2 is matched as an identity (PersonMatcher, duplicate finders), so only admins set it.
   ADMIN_ONLY_FIELDS = %i[
-    email email_2 email_2_type
+    email email_2
     filemaker_code blog_contributor notes member_since
     created_by_id updated_by_id
     staff_taggings_attributes affiliations_attributes comments_attributes
-    notifications_attributes user_attributes
+    notifications_attributes
   ].freeze
 
-  OWNER_USER_FIELDS = %i[time_zone].freeze
+  ADMIN_ONLY_USER_FIELDS = %i[person_id email inactive super_user notes].freeze
 
   # People-index filters only an admin may apply. The index itself is readable by
   # any signed-in user while profiles preview, but each of these narrows the list
@@ -201,8 +201,7 @@ class PersonPolicy < ApplicationPolicy
     next permitted if admin?
 
     owner_params = permitted.except(*ADMIN_ONLY_FIELDS)
-    owner_user_params = permitted[:user_attributes]&.slice(*OWNER_USER_FIELDS)
-    owner_params[:user_attributes] = owner_user_params if owner_user_params.present?
+    owner_params[:user_attributes] = owner_params[:user_attributes].except(*ADMIN_ONLY_USER_FIELDS) if owner_params[:user_attributes]
     owner_params
   end
 

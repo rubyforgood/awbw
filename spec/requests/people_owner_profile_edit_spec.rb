@@ -48,24 +48,26 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(person.reload.bio).to eq("Facilitator since 2015")
     end
 
-    it "updates their email type and time zone" do
+    it "updates their email types and time zone" do
       patch person_path(person), params: { person: {
         email_type: "work",
+        email_2_type: "personal",
         user_attributes: { id: owner_user.id, time_zone: "Hawaii" }
       } }
 
       expect(person.reload.email_type).to eq("work")
+      expect(person.email_2_type).to eq("personal")
       expect(owner_user.reload.time_zone).to eq("Hawaii")
     end
 
-    it "shows the secondary email read-only on the edit form" do
+    it "shows the secondary email read-only with an editable type" do
       person.update!(email_2: "second@example.com")
 
       get edit_person_path(person)
 
       expect(response.body).to include("second@example.com")
       expect(response.body).not_to include('name="person[email_2]"')
-      expect(response.body).not_to include('name="person[email_2_type]"')
+      expect(response.body).to include('name="person[email_2_type]"')
       expect(response.body).to include('name="person[email_type]"')
       expect(response.body).to include('name="person[user_attributes][time_zone]"')
     end
