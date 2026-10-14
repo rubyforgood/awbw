@@ -22,6 +22,14 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       expect(response.body).to include(visibility_person_path(person))
     end
 
+    it "sends the hidden card's sharing link to Choose what others see" do
+      person.update!(profile_show_bio: false, bio: "Hidden bio")
+
+      get person_path(person)
+
+      expect(response.body).to match(/href="#{visibility_person_path(person)}"[^>]*>Change sharing settings/m)
+    end
+
     it "offers to ask for a change on affiliations and to edit sectors" do
       get person_path(person)
 

@@ -26,7 +26,9 @@
     <% if allowed_to?(:edit?, person) %>
       <p class="text-sm text-gray-600">
         These are turned off in the profile's sharing settings.
-        <%= link_to "Change sharing settings", edit_person_path(person, anchor: "profile-preferences"), class: "font-medium underline hover:text-primary" %>
+        <%= link_to "Change sharing settings",
+                    (allowed_to?(:edit_own_profile?, person) ? visibility_person_path(person) : edit_person_path(person, anchor: "profile-preferences")),
+                    class: "font-medium underline hover:text-primary" %>
       </p>
     <% end %>
     <% if contact_pieces.any? %>
