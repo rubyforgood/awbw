@@ -4483,3 +4483,18 @@
     - "Use \"Change sharing settings\" in the Hidden from profile section to turn something back on."
     - "Submitted content (your ideas, workshop logs, and monthly reports) is always private to you and admins, so it has no sharing setting."
     - "Admins see the same Hidden from profile section on anyone's profile."
+
+- name: "Update your details from your profile"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-14
+  pr_number: 2671
+  summary: >-
+    Your own profile page is now the place to keep your details up to date. A
+    big "Edit my profile" button sits at the top, along with buttons to ask
+    AWBW staff to change your email or organizations.
+  pro_tips:
+    - "Open it from \"My profile\" in the menu under your picture."
+    - "Each section has its own Edit button that jumps straight to that part of the form."
+    - "Any change you've asked for shows at the top until staff have looked at it."
+    - "Use \"Choose what others see\" to hide parts of your profile."

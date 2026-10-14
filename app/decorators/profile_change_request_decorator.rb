@@ -18,6 +18,21 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     created_at.strftime("%b %-d, %Y")
   end
 
+  # One plain line the requester recognizes their request by, e.g.
+  # "Primary email: new@example.com" or "Title or role: Riverside Center".
+  def requester_summary
+    parts = if field == "affiliation"
+      [ requested_value, (affiliation&.organization || organization)&.name ]
+    else
+      [ field_label, requested_value ]
+    end
+    parts.compact_blank.join(": ")
+  end
+
+  def profile_return_path
+    h.person_path(person, anchor: ("affiliations" if field == "affiliation"))
+  end
+
   # Confirmation prompt for "Approve", spelling out the blast radius where the
   # change reaches beyond this one person (renaming a shared organization).
   def approve_confirm

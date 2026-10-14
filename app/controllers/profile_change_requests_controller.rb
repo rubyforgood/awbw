@@ -34,7 +34,7 @@ class ProfileChangeRequestsController < ApplicationController
 
     if @request.save
       notify_admins_and_submitter(@request)
-      redirect_to edit_person_path(@person, anchor: "affiliations"), status: :see_other,
+      redirect_to @request.decorate.profile_return_path, status: :see_other,
                   notice: "Thanks — we've sent your change request to AWBW staff."
     else
       @person = @request.person
@@ -51,7 +51,7 @@ class ProfileChangeRequestsController < ApplicationController
     authorize! @request
 
     if @request.update(profile_change_request_params)
-      redirect_to edit_person_path(@request.person, anchor: "affiliations"), status: :see_other,
+      redirect_to @request.decorate.profile_return_path, status: :see_other,
                   notice: "Your change request was updated."
     else
       @person = @request.person

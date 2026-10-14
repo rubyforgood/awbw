@@ -145,7 +145,7 @@
   <% (@managed_category_type_ids || []).each do |type_id| %>
     <%= hidden_field_tag "person[managed_category_type_ids][]", type_id %>
   <% end %>
-  <div class="flex flex-wrap gap-4 items-stretch">
+  <div id="sectors" class="flex scroll-mt-4 flex-wrap items-stretch gap-4">
     <!-- Sectors -->
     <div class="form-group flex flex-col flex-1 min-w-[20rem]">
       <div class="font-semibold text-gray-700 mb-2">
@@ -392,7 +392,7 @@
   </div>
 
   <!-- PERSON FIELDS -->
-  <div class="form-group space-y-4">
+  <div id="bio" class="form-group scroll-mt-4 space-y-4">
     <div class="mb-2 font-semibold text-gray-700">
       Background
     </div>
@@ -586,7 +586,7 @@
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
 
-    <%= link_to "Cancel", people_path, class: button_classes(:secondary_outline),
+    <%= link_to "Cancel", (allowed_to?(:edit_own_profile?, f.object) ? person_path(f.object) : people_path), class: button_classes(:secondary_outline),
                 data: { action: "click->dirty-form#confirmCancel" } %>
     <%= f.button :submit, class: button_classes(:primary) %>
   </div>

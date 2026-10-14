@@ -67,6 +67,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || (profiles_visible_to_users? && owner?)
   end
 
+  def edit_own_profile?
+    profiles_visible_to_users? && owner?
+  end
+
   def destroy?
     admin? && record.persisted? && !has_associated_data?
   end
