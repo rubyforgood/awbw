@@ -588,6 +588,26 @@ RSpec.describe Person, type: :model do
       expect(Person.search_by_params(shared_contact_info: 'Smith')).to include(person_alice)
     end
 
+    it 'filters by contact_info matching an email the person hides' do
+      person_alice.update!(email: 'alice@example.com', profile_show_email: false)
+
+      expect(Person.search_by_params(contact_info: 'alice@example')).to include(person_alice)
+    end
+
+    %w[first_name_last_initial first_name_only].each do |preference|
+      it "filters by contact_info matching the last name when the display preference is #{preference}" do
+        person_alice.update!(display_name_preference: preference)
+
+        expect(Person.search_by_params(contact_info: 'Smith')).to include(person_alice)
+      end
+    end
+
+    it 'filters by contact_info matching the first name when the display preference is last_name_only' do
+      person_alice.update!(display_name_preference: 'last_name_only', profile_show_email: false)
+
+      expect(Person.search_by_params(contact_info: 'Alice')).to include(person_alice)
+    end
+
     it 'chains shared_contact_info and organization_name' do
       results = Person.search_by_params(shared_contact_info: 'Alice', organization_name: 'Alpha')
       expect(results).to include(person_alice)

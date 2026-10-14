@@ -233,6 +233,18 @@ RSpec.describe "People search", type: :request do
         create(:contact_method, contactable: marked, value: "555-0142", inactive: true)
         expect(search("555-0142")).not_to include("Markedone")
       end
+
+      %w[first_name_last_initial first_name_only].each do |preference|
+        it "skips the last name when the display preference is #{preference}" do
+          marked.update!(last_name: "Hiddensurname", display_name_preference: preference)
+          expect(search("Hiddensurname")).not_to include("Markedone")
+        end
+      end
+
+      it "skips the first name when the display preference is last_name_only" do
+        marked.update!(last_name: "Shownsurname", display_name_preference: "last_name_only")
+        expect(search("Markedone")).not_to include("Shownsurname")
+      end
     end
   end
 
@@ -244,20 +256,46 @@ RSpec.describe "People search", type: :request do
       response.body
     end
 
-    it "matches the contact info the person hides from their profile" do
-      person.update!(email: "hidden@example.com", email_2: "second@example.com", legal_first_name: "Legalname")
-      create(:contact_method, contactable: person, value: "555-0142")
-      create(:address, addressable: person, street_address: "123 Hiddenway")
+    it "matches an email the person hides" do
+      person.update!(email: "hidden@example.com")
+      expect(search("hidden@example")).to include("Hiddenfacts")
+    end
 
-      %w[hidden@example second@example Legalname 555-0142 Hiddenway].each do |term|
-        expect(search(term)).to include("Hiddenfacts")
+    it "matches the secondary email" do
+      person.update!(email_2: "second@example.com")
+      expect(search("second@example")).to include("Hiddenfacts")
+    end
+
+    it "matches the legal first name" do
+      person.update!(legal_first_name: "Legalname")
+      expect(search("Legalname")).to include("Hiddenfacts")
+    end
+
+    it "matches addresses" do
+      create(:address, addressable: person, street_address: "123 Hiddenway")
+      expect(search("Hiddenway")).to include("Hiddenfacts")
+    end
+
+    it "matches a phone the person hides" do
+      create(:contact_method, contactable: person, value: "555-0142")
+      expect(search("555-0142")).to include("Hiddenfacts")
+    end
+
+    it "matches an inactive phone" do
+      create(:contact_method, contactable: person, value: "555-0142", inactive: true)
+      expect(search("555-0142")).to include("Hiddenfacts")
+    end
+
+    %w[first_name_last_initial first_name_only].each do |preference|
+      it "matches the last name when the display preference is #{preference}" do
+        person.update!(last_name: "Hiddensurname", display_name_preference: preference)
+        expect(search("Hiddensurname")).to include("Hiddenfacts")
       end
     end
 
-    it "matches the last name a person hides through their display preference" do
-      person.update!(last_name: "Hiddensurname", display_name_preference: "first_name_only")
-
-      expect(search("Hiddensurname")).to include("Hiddenfacts")
+    it "matches the first name when the display preference is last_name_only" do
+      person.update!(last_name: "Shownsurname", display_name_preference: "last_name_only")
+      expect(search("Hiddenfacts")).to include("Shownsurname")
     end
   end
 
