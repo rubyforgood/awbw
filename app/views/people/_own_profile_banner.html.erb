@@ -7,7 +7,7 @@
       <p>To update your details, click <strong>Edit my profile</strong>.</p>
       <p>AWBW staff keep your email and organizations up to date. Use the buttons below to ask us for a change, or for anything you can't change yourself.</p>
     </div>
-    <%= link_to edit_person_path(person),
+    <%= link_to details_person_path(person),
                   class: "text-primary inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow-400 px-6 py-3 text-lg font-semibold shadow-sm transition hover:bg-brand-yellow-500" do %>
       <i class="fa-solid fa-pen"></i> Edit my profile
     <% end %>

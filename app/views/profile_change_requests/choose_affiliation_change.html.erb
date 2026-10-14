@@ -5,7 +5,7 @@
       <i class="fa-solid fa-arrow-left text-xs"></i> <%= @back_label %>
     <% end %>
   </div>
-  <h1 class="font-display text-primary text-3xl font-semibold">What would you like to change?</h1>
+  <h1 class="text-primary font-display text-3xl font-semibold">What would you like to change?</h1>
   <p class="mt-2 text-lg text-gray-700"><%= @request.affiliation_summary %></p>
   <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
     <% ProfileChangeRequestDecorator::AFFILIATION_CHANGE_CHOICES.except(ProfileChangeRequest::AFFILIATION_CHANGE_ADD).each do |change, choice| %>
@@ -14,7 +14,7 @@
         <span class="bg-brand-cream text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl">
           <i class="<%= choice[:icon] %>"></i>
         </span>
-        <span class="font-display text-primary text-xl font-semibold"><%= choice[:label] %></span>
+        <span class="text-primary font-display text-xl font-semibold"><%= choice[:label] %></span>
       <% end %>
     <% end %>
   </div>

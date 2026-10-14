@@ -1,0 +1,183 @@
+<% content_for(:page_bg_class, "admin-or-owner") %>
+<% card_class = "border-primary/10 scroll-mt-4 rounded-2xl border bg-white p-5 shadow-sm sm:p-6" %>
+<% heading_class = "mb-4 font-display text-2xl text-gray-900" %>
+<% input_class = "w-full text-lg" %>
+<% pill_class = "has-checked:border-primary has-checked:bg-brand-cream has-checked:ring-primary has-checked:ring-1 flex cursor-pointer items-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 text-lg text-gray-800 shadow-sm transition hover:border-gray-400" %>
+<% checkbox_class = "text-primary h-5 w-5 rounded border-gray-300 focus:ring-blue-200" %>
+<div class="mx-auto w-full max-w-4xl px-4 py-6">
+  <div class="mb-2">
+    <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class}" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
+    <% end %>
+  </div>
+  <h1 class="font-display text-primary text-3xl font-semibold">Edit my profile</h1>
+  <p class="mt-2 text-lg text-gray-700">
+    Change anything below, then click <strong>Save</strong>. To change your email or organizations, use the buttons on your profile.
+  </p>
+  <%= simple_form_for @person, html: { multipart: true, class: "mt-6 space-y-6" } do |f| %>
+    <%= hidden_field_tag :return_to, "details" %>
+    <%= render "shared/errors", resource: @person if @person.errors.any? %>
+    <div id="photo" class="<%= card_class %>">
+      <h2 class="<%= heading_class %>">Your photo</h2>
+      <%= render "shared/form_image_field", f: f, field_name: :avatar, label: "Photo", rounded: true %>
+    </div>
+    <div id="name" class="<%= card_class %>">
+      <h2 class="<%= heading_class %>">Your name</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <%= f.input :first_name, label: "First name", input_html: { class: input_class } %>
+        <%= f.input :last_name, label: "Last name", input_html: { class: input_class } %>
+        <%= f.input :pronouns, label: "Pronouns", hint: "For example: she/her, he/him, they/them", input_html: { class: input_class } %>
+        <%= f.input :pronunciation, label: "How to say your name", hint: "For example: Oom-BEAR-toh", input_html: { class: input_class } %>
+        <%= f.input :legal_first_name, label: "Legal first name", hint: "Only if it's different from your first name", input_html: { class: input_class } %>
+      </div>
+    </div>
+    <div id="bio" class="<%= card_class %>">
+      <h2 class="<%= heading_class %>">About you</h2>
+      <%= f.input :bio, as: :text, label: "Bio", hint: "A few sentences about you and your work.",
+                  input_html: { rows: 5, maxlength: 1650, class: input_class } %>
+      <%= f.input :date_of_birth, label: "Birthday", as: :date, html5: true,
+                  hint: "Only AWBW staff see this. Your profile never shows the year.",
+                  wrapper_html: { class: "mt-4 sm:w-64" }, input_html: { class: input_class } %>
+    </div>
+    <div id="phones" class="<%= card_class %>">
+      <h2 class="<%= heading_class %>">Phone</h2>
+      <div class="space-y-4">
+        <%= f.simple_fields_for :contact_methods, @person.contact_methods.reject(&:inactive?) do |phone| %>
+          <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_12rem_auto]">
+            <%= phone.input :value, label: "Phone number", input_html: { class: input_class } %>
+            <%= phone.input :contact_type, label: "Type", collection: ContactMethod::CONTACT_TYPES.compact.map { |type| [ type.humanize, type ] },
+                            include_blank: true, input_html: { class: input_class } %>
+            <label class="mb-4 flex items-center gap-2 text-gray-700">
+              <%= phone.check_box :_destroy, class: checkbox_class %> Remove
+            </label>
+          </div>
+        <% end %>
+        <%= f.simple_fields_for :contact_methods, ContactMethod.new(kind: "phone"), child_index: 999 do |phone| %>
+          <%= phone.hidden_field :kind %>
+          <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_12rem_auto]">
+            <%= phone.input :value, label: @person.contact_methods.reject(&:inactive?).any? ? "Add another phone number" : "Phone number",
+                            required: false, input_html: { class: input_class } %>
+            <%= phone.input :contact_type, label: "Type", collection: ContactMethod::CONTACT_TYPES.compact.map { |type| [ type.humanize, type ] },
+                            include_blank: true, input_html: { class: input_class } %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div id="addresses" class="<%= card_class %>">
+      <h2 class="<%= heading_class %>">Mailing address</h2>
+      <% addresses = @person.addresses.reject(&:inactive?).presence || [ Address.new ] %>
+      <div class="space-y-6">
+        <%= f.simple_fields_for :addresses, addresses do |address| %>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-6">
+            <%= address.input :street_address, label: "Street address", wrapper_html: { class: "sm:col-span-6" }, input_html: { class: input_class } %>
+            <%= address.input :city, label: "City", required: false, wrapper_html: { class: "sm:col-span-3" }, input_html: { class: input_class } %>
+            <%= address.input :state, label: "State", required: false, wrapper_html: { class: "sm:col-span-1" }, input_html: { class: input_class } %>
+            <%= address.input :zip_code, label: "Zip code", wrapper_html: { class: "sm:col-span-2" }, input_html: { class: input_class } %>
+            <%= address.input :locality, label: "Area", required: false, collection: Address::LOCALITIES, include_blank: true,
+                              wrapper_html: { class: "sm:col-span-3" }, input_html: { class: input_class } %>
+            <% if address.object.persisted? %>
+              <label class="flex items-center gap-2 text-gray-700 sm:col-span-3 sm:self-end sm:pb-4">
+                <%= address.check_box :_destroy, class: checkbox_class %> Remove this address
+              </label>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div id="social" class="<%= card_class %>">
+      <h2 class="<%= heading_class %>">Social media</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <%= f.input :linked_in_url, label: "LinkedIn", placeholder: "https://", input_html: { class: input_class } %>
+        <%= f.input :instagram_url, label: "Instagram", placeholder: "https://", input_html: { class: input_class } %>
+        <%= f.input :facebook_url, label: "Facebook", placeholder: "https://", input_html: { class: input_class } %>
+        <%= f.input :youtube_url, label: "YouTube", placeholder: "https://", input_html: { class: input_class } %>
+        <%= f.input :twitter_url, label: "X (Twitter)", placeholder: "https://", input_html: { class: input_class } %>
+      </div>
+    </div>
+    <div id="sectors" class="<%= card_class %>">
+      <h2 class="mb-1 font-display text-2xl text-gray-900">Sectors you work in</h2>
+      <p class="mb-4 text-gray-600">Check every one that fits.</p>
+      <% items_by_sector = @person.sectorable_items.index_by(&:sector_id) %>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <% @sectors_collection.each_with_index do |(name, sector_id), index| %>
+          <% existing = items_by_sector[sector_id] %>
+          <%= f.fields_for :sectorable_items, existing || SectorableItem.new(sector_id: sector_id), child_index: index do |sector| %>
+            <%= sector.hidden_field :sector_id %>
+            <label class="<%= pill_class %>">
+              <%= sector.check_box :_destroy, { checked: existing.present? && !existing.marked_for_destruction?, class: checkbox_class }, "0", "1" %>
+              <span><%= name %></span>
+            </label>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+    <% if @age_ranges_collection.present? %>
+      <div id="age-ranges" class="<%= card_class %>">
+        <h2 class="mb-1 font-display text-2xl text-gray-900">Ages you work with</h2>
+        <p class="mb-4 text-gray-600">Check every one that fits.</p>
+        <% items_by_category = @person.age_range_categorizable_items.index_by(&:category_id) %>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <% @age_ranges_collection.each_with_index do |(name, category_id), index| %>
+            <% existing = items_by_category[category_id] %>
+            <%= f.fields_for :age_range_categorizable_items, existing || CategorizableItem.new(category_id: category_id), child_index: index do |age| %>
+              <%= age.hidden_field :category_id %>
+              <label class="<%= pill_class %>">
+                <%= age.check_box :_destroy, { checked: existing.present? && !existing.marked_for_destruction?, class: checkbox_class }, "0", "1" %>
+                <span><%= name %></span>
+              </label>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <div id="professional-licenses" class="<%= card_class %>">
+      <h2 class="mb-1 font-display text-2xl text-gray-900">Professional licenses</h2>
+      <p class="mb-4 text-gray-600">Used for continuing education credit.</p>
+      <div class="space-y-6">
+        <% @person.professional_licenses.each_with_index do |license, index| %>
+          <% if allowed_to?(:edit?, license) %>
+            <%= f.simple_fields_for :professional_licenses, license, child_index: index do |lf| %>
+              <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
+                <%= lf.input :kind, label: "Type", placeholder: "For example: LMFT", input_html: { class: input_class } %>
+                <%= lf.input :number, label: "License number", input_html: { class: input_class } %>
+                <%= lf.input :issuing_state, label: "State", collection: us_states, include_blank: true, input_html: { class: input_class } %>
+                <%= lf.input :expires_on, label: "Expires", as: :date, html5: true, input_html: { class: input_class } %>
+              </div>
+              <% if license.removable? %>
+                <label class="mt-2 flex items-center gap-2 text-gray-700">
+                  <%= lf.check_box :_destroy, class: checkbox_class %> Remove this license
+                </label>
+              <% end %>
+            <% end %>
+          <% else %>
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <p class="text-lg text-gray-800">
+                <%= [ license.kind, license.number, license.issuing_state ].compact_blank.join(" · ") %>
+                <% if license.expires_on %><span class="text-gray-600">· expires <%= license.expires_on.to_fs(:long) %></span><% end %>
+              </p>
+              <p class="mt-1 text-sm text-gray-600">This license has continuing education credits, so only AWBW staff can change it.</p>
+            </div>
+          <% end %>
+        <% end %>
+        <%= f.simple_fields_for :professional_licenses, ProfessionalLicense.new, child_index: 999 do |lf| %>
+          <p class="font-medium text-gray-800"><%= @person.professional_licenses.any? ? "Add another license" : "Add a license" %></p>
+          <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
+            <%= lf.input :kind, label: "Type", placeholder: "For example: LMFT", input_html: { class: input_class } %>
+            <%= lf.input :number, label: "License number", input_html: { class: input_class } %>
+            <%= lf.input :issuing_state, label: "State", collection: us_states, include_blank: true, input_html: { class: input_class } %>
+            <%= lf.input :expires_on, label: "Expires", as: :date, html5: true, input_html: { class: input_class } %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div class="sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-3 border-t border-gray-200 bg-white/95 py-4 pr-20 pl-4 backdrop-blur sm:pr-4">
+      <%= link_to "Cancel", person_path(@person), class: button_classes(:secondary_outline) %>
+      <%= f.button :submit, "Save", class: button_classes(:primary, extra: "px-10 text-lg") %>
+    </div>
+  <% end %>
+  <p class="mt-6 text-center text-lg text-gray-700">
+    Can't change something here?
+    <%= link_to "Ask AWBW staff to change it", new_profile_change_request_path(person_id: @person, field: ProfileChangeRequest::OTHER_FIELD),
+                class: "font-medium text-blue-600 underline hover:text-blue-800" %>
+  </p>
+</div>

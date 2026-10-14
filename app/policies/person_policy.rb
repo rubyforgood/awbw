@@ -71,6 +71,10 @@ class PersonPolicy < ApplicationPolicy
     edit?
   end
 
+  def details?
+    edit?
+  end
+
   def edit_own_profile?
     profiles_visible_to_users? && owner?
   end

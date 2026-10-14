@@ -1,6 +1,6 @@
 class PeopleController < ApplicationController
   include AhoyTracking, TagAssignable, Dedupable
-  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link visibility ]
+  before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link visibility details ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
@@ -247,6 +247,11 @@ class PeopleController < ApplicationController
     authorize! @person
   end
 
+  def details
+    authorize! @person
+    set_form_variables
+  end
+
   def create
     @person = Person.new(person_params.except(:user_attributes))
     authorize! @person
@@ -307,7 +312,7 @@ class PeopleController < ApplicationController
       redirect_to person_update_return_path, notice: "Person was successfully updated."
     else
       set_form_variables
-      render(params[:return_to] == "visibility" ? :visibility : :edit, status: :unprocessable_content)
+      render(params[:return_to].presence_in(%w[visibility details]) || :edit, status: :unprocessable_content)
     end
   end
 

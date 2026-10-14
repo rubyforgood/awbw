@@ -136,7 +136,9 @@ class Person < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
-  accepts_nested_attributes_for :contact_methods, allow_destroy: true, reject_if: :all_blank
+  # A new row's hidden kind is always filled in, so a row counts as blank by its number.
+  accepts_nested_attributes_for :contact_methods, allow_destroy: true,
+                                reject_if: proc { |attrs| attrs["id"].blank? && attrs["value"].blank? }
   accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["sector_id"].blank? }
   # Age ranges edit through cocoon nested fields like sectors. A scoped view of

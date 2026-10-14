@@ -26,7 +26,7 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       get person_path(person)
 
       expect(response.body).to include("Ask for a change")
-      expect(response.body).to include(edit_person_path(person, anchor: "sectors"))
+      expect(response.body).to include(details_person_path(person, anchor: "sectors"))
     end
 
     it "prompts for a bio when there isn't one" do
@@ -35,7 +35,7 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       get person_path(person)
 
       expect(response.body).to include("Add a bio")
-      expect(response.body).to include(edit_person_path(person, anchor: "bio"))
+      expect(response.body).to include(details_person_path(person, anchor: "bio"))
     end
 
     it "lists pending change requests" do

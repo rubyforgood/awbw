@@ -300,6 +300,7 @@ Rails.application.routes.draw do
       get :bio
       get :all_comments
       get :visibility
+      get :details
       post :send_form_link
     end
     resources :comments, only: [ :create, :update ]

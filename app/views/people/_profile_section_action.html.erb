@@ -5,7 +5,7 @@
     <i class="fa-solid fa-comment"></i> Ask for a change
   <% end %>
 <% elsif allowed_to?(:edit?, person) %>
-  <%= link_to edit_person_path(person, anchor: anchor), class: pill_class do %>
+  <%= link_to (allowed_to?(:edit_own_profile?, person) ? details_person_path(person, anchor: anchor) : edit_person_path(person, anchor: anchor)), class: pill_class do %>
     <i class="fa-solid fa-pen text-xs"></i> <%= label %>
   <% end %>
 <% end %>

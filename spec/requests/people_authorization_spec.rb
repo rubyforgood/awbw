@@ -98,8 +98,9 @@ RSpec.describe "People authorization", type: :request do
         get person_path(regular_user.person)
       end
 
-      it "shows the Edit link outside production" do
-        expect(response.body).to include(edit_person_path(regular_user.person))
+      it "links to the simple edit page, not the full form, outside production" do
+        expect(response.body).to include(details_person_path(regular_user.person))
+        expect(response.body).not_to include(%(href="#{edit_person_path(regular_user.person)}"))
       end
 
       it "shows the Submitted content section" do
