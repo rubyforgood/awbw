@@ -23,33 +23,38 @@
             <% @people.each do |person| %>
               <% cache [ person, current_user.super_user?, current_user.person_id == person.id ] do %>
               <tr class="transition-colors duration-150 <%= person.published? ? "hover:bg-gray-100" : "admin-only bg-blue-100 hover:bg-blue-200" %>">
+                <% decorated = person.decorate %>
                 <td class="px-4 py-2">
-                  <% show_email = person.profile_show_email? || allowed_to?(:manage?, Person) %>
+                  <% email = allowed_to?(:manage?, Person) ? person.preferred_email : (decorated.profile_email if person.profile_show_email?) %>
                   <% if allowed_to?(:show?, person) %>
-                    <%= person_profile_button(person, subtitle: (person.preferred_email if show_email), data: { turbo_frame: "_top" }, width_class: "w-56 max-w-full") %>
+                    <%= person_profile_button(person, subtitle: email, data: { turbo_frame: "_top" }, width_class: "w-56 max-w-full") %>
                   <% else %>
                     <span class="font-semibold"><%= person.name %></span>
-                    <% if show_email && person.preferred_email.present? %>
-                      <div class="text-xs text-gray-500"><!--email_off--><%= person.preferred_email %><!--email_on--></div>
+                    <% if email.present? %>
+                      <div class="text-xs text-gray-500"><!--email_off--><%= email %><!--email_on--></div>
                     <% end %>
                   <% end %>
                 </td>
                 <td class="px-4 py-2 text-center text-sm text-gray-800">
-                  <% decorated = person.decorate %>
-                  <%= decorated.facilitator_since_year || "--" %>
-                  <% status = decorated.facilitator_status_label %>
-                  <% if status && status != "Active" %>
-                    <div class="text-xs text-blue-700"><%= status %></div>
+                  <% if profile_piece_shown?(person, :profile_show_member_since) %>
+                    <%= profile_hidden_icon if profile_piece_hidden_for_viewer?(person, :profile_show_member_since) %>
+                    <%= decorated.facilitator_since_year || "--" %>
+                    <% status = decorated.facilitator_status_label %>
+                    <% if status && status != "Active" %>
+                      <div class="text-xs text-blue-700"><%= status %></div>
+                    <% end %>
+                  <% else %>
+                    <span>--</span>
                   <% end %>
                 </td>
                 <!-- Sectors -->
                 <td class="px-4 py-2 text-sm text-gray-800">
                   <%# Index stays scannable: show only the primary sector(s) as the
                       darker-green starred chip; the full set lives on the profile. %>
-                  <% show_sectors = person.profile_show_sectors? || allowed_to?(:manage?, Person) %>
-                  <% sectors = show_sectors ? person.sectorable_items.select(&:is_primary?).sort_by { |si| si.sector&.name.to_s.downcase } : [] %>
-                  <% if sectors.any? %>
-                    <div class="flex flex-wrap gap-2">
+                  <% sectors = person.sectorable_items.select(&:is_primary?).sort_by { |si| si.sector&.name.to_s.downcase } %>
+                  <% if sectors.any? && profile_piece_shown?(person, :profile_show_sectors) %>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <%= profile_hidden_icon if profile_piece_hidden_for_viewer?(person, :profile_show_sectors) %>
                       <% sectors.each do |si| %>
                         <%= render "sectors/tagging_label",
                                    sector: si.sector,
@@ -66,26 +71,28 @@
                 </td>
                 <!-- Age groups -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% show_age = person.profile_show_age_ranges? || allowed_to?(:manage?, Person) %>
-                  <% primary_age = show_age ? person.primary_age_groups.to_a : [] %>
-                  <% if primary_age.any? %>
-                    <%= render "shared/age_group_tags", primary: primary_age, additional: [], compact: true %>
+                  <% primary_age = person.primary_age_groups.to_a %>
+                  <% if primary_age.any? && profile_piece_shown?(person, :profile_show_age_ranges) %>
+                    <div class="flex items-center gap-2">
+                      <%= profile_hidden_icon if profile_piece_hidden_for_viewer?(person, :profile_show_age_ranges) %>
+                      <%= render "shared/age_group_tags", primary: primary_age, additional: [], compact: true %>
+                    </div>
                   <% else %>
                     <span>--</span>
                   <% end %>
                 </td>
                 <!-- Affiliations -->
                 <td class="px-4 py-2 text-sm text-gray-800">
-                  <% show_affiliations = person.profile_show_affiliations? || allowed_to?(:manage?, Person) %>
-                  <% affiliations = (show_affiliations ? person.affiliations : [])
+                  <% affiliations = person.affiliations
                                           .select { |a| a.organization.present? && (a.active? || a.upcoming?) }
                                           .group_by(&:organization_id)
                                           .map { |_, affs| affs.find { |a| !a.facilitator? && a.title.present? } || affs.first } %>
-                  <% if affiliations.any? %>
+                  <% if affiliations.any? && profile_piece_shown?(person, :profile_show_affiliations) %>
                     <%# Org names are long and multi-word, so a stacked list of
                         truncated links reads better than chips, which squeeze the
                         name into a tall vertically-wrapped box. Full name on hover;
                         non-facilitator roles show their title in muted text. %>
+                    <%= profile_hidden_icon if profile_piece_hidden_for_viewer?(person, :profile_show_affiliations) %>
                     <ul class="flex flex-col gap-1">
                       <% affiliations.first(3).each do |affiliation| %>
                         <li class="min-w-0">
@@ -120,7 +127,12 @@
                 </td>
                 <!-- Socials -->
                 <td class="px-4 py-2 text-sm whitespace-nowrap text-gray-800">
-                  <%= render "social_media_buttons", person: person %>
+                  <% if profile_piece_shown?(person, :profile_show_social_media) %>
+                    <div class="flex items-center gap-2">
+                      <%= profile_hidden_icon if profile_piece_hidden_for_viewer?(person, :profile_show_social_media) %>
+                      <%= render "social_media_buttons", person: person %>
+                    </div>
+                  <% end %>
                 </td>
                 <!-- Actions -->
                 <% if allowed_to?(:manage?, Person) %>

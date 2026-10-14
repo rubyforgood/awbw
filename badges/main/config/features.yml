@@ -4467,3 +4467,17 @@
     - "Names follow the display preference: someone shown as \"First L.\" can't be found by their last name."
     - "Sector, age range, and organization filters skip people who hid their sectors, age ranges, or affiliations, and those columns stay blank for them."
     - "To check what a non-admin sees, compare against an admin search: admins still match hidden details."
+
+- name: "See your own hidden profile details"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-14
+  pr_number: 2672
+  action_path: "/people"
+  summary: >-
+    Details you turn off in your profile's sharing settings stay hidden from
+    other people on the people list and your profile, but you still see them
+    yourself in a collapsed "Hidden from public" section on your profile.
+  pro_tips:
+    - "On the people list, an eye-slash icon marks your own details that only you and admins can see."
+    - "Use \"Change sharing settings\" in the Hidden from public section to turn something back on."

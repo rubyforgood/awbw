@@ -5,6 +5,14 @@ class PeopleController < ApplicationController
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
   PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs monthly_reports ].freeze
+  SECTION_SHARE_FLAGS = {
+    "affiliations" => :profile_show_affiliations,
+    "workshops" => :profile_show_workshops,
+    "workshop_variations" => :profile_show_workshop_variations,
+    "stories" => :profile_show_stories,
+    "resources" => :profile_show_resources,
+    "events" => :profile_show_events_registered
+  }.freeze
 
   def index
     authorize!
@@ -60,10 +68,11 @@ class PeopleController < ApplicationController
       per_page = params[:section] == "stories" ? 8 : 9
       section = params[:section]
 
-      # Re-authorize the private sections on the narrow owner/admin rule, so a
-      # crafted ?section= frame request can't reach them once show? is widened
-      # to let non-owners view the public profile.
-      authorize! @person, to: :own_record? if PRIVATE_SECTIONS.include?(section)
+      # Re-authorize the private sections, and any section the person hid from
+      # public view, on the narrow owner/admin rule, so a crafted ?section= frame
+      # request can't reach them once show? lets non-owners view the profile.
+      share_flag = SECTION_SHARE_FLAGS[section]
+      authorize! @person, to: :own_record? if PRIVATE_SECTIONS.include?(section) || (share_flag && !@person.public_send(share_flag))
 
       case section
       when "workshops"
