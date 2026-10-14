@@ -156,6 +156,30 @@ RSpec.describe "Editing your own profile details", type: :request do
     end
   end
 
+  describe "phones" do
+    it "offers a main-phone star, starring the first phone when none is main" do
+      create(:contact_method, contactable: person, value: "555-0100")
+
+      get details_person_path(person)
+
+      expect(response.body).to include("Add another phone", "Make this my main phone", "Mark as main")
+      expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[contact_methods_attributes\]\[0\]\[primary\]"/)
+      expect(response.body).to include("person[contact_methods_attributes][999][value]")
+    end
+
+    it "adds a second phone and moves the main flag to it" do
+      first = create(:contact_method, contactable: person, value: "555-0100", primary: true)
+
+      save_details(contact_methods_attributes: {
+        "0" => { id: first.id, kind: "phone", value: "555-0100", primary: "0" },
+        "999" => { kind: "phone", value: "555-0199", primary: "1" }
+      })
+
+      expect(person.reload.contact_methods.find_by(primary: true).value).to eq("555-0199")
+      expect(person.contact_methods.count).to eq(2)
+    end
+  end
+
   describe "addresses" do
     it "offers a main-address star and a way to add another address" do
       create(:address, addressable: person, locality: "LA City", primary: true)

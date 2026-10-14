@@ -1,0 +1,18 @@
+<%# locals: (f:, label: "Phone number", main_by_default: false) %>
+<% input_class = "w-full text-lg" %>
+<div class="rounded-xl border border-gray-200 p-4" data-primary-tag-target="chip">
+  <%= f.hidden_field :kind %>
+  <div class="mb-2 flex items-center justify-between gap-4">
+    <%= render "people/main_star", f: f, kind: "phone", attribute: :primary, checked: (f.object.primary? || main_by_default), prompt: "Mark as main", inset: false %>
+    <% if f.object.persisted? %>
+      <label class="flex items-center gap-2 text-gray-700">
+        <%= f.check_box :_destroy, class: "text-primary h-5 w-5 rounded border-gray-300 focus:ring-blue-200" %> Remove this phone
+      </label>
+    <% end %>
+  </div>
+  <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-[1fr_12rem]">
+    <%= f.input :value, label: label, required: false, input_html: { class: input_class } %>
+    <%= f.input :contact_type, label: "Type", collection: ContactMethod::CONTACT_TYPES.compact.map { |type| [ type.humanize, type ] },
+                include_blank: true, input_html: { class: input_class } %>
+  </div>
+</div>

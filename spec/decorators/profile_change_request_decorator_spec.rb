@@ -22,6 +22,21 @@ RSpec.describe ProfileChangeRequestDecorator do
     end
   end
 
+  describe "#heading" do
+    it "titles the free-text request form as a profile data change" do
+      expect(build_stubbed(:profile_change_request, :other).decorate.heading).to eq("Request a profile data change")
+    end
+
+    it "leaves the email form on the default title" do
+      expect(build_stubbed(:profile_change_request, :primary_email).decorate.heading).to be_nil
+    end
+
+    it "titles an organization request by the chosen change" do
+      request = build_stubbed(:profile_change_request, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_DATES)
+      expect(request.decorate.heading).to eq("Fix my start or end date")
+    end
+  end
+
   describe "#profile_return_path" do
     it "returns to the profile's affiliations for an affiliation request" do
       request = build_stubbed(:profile_change_request).decorate

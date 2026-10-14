@@ -88,30 +88,27 @@
       <% end %>
     </div>
     <div id="phones" class="<%= card_class %>">
-      <h2 class="<%= heading_class %>">Phone</h2>
+      <h2 class="mb-1 font-display text-2xl text-gray-900">Phone</h2>
+      <% phones = @person.contact_methods.reject(&:inactive?) %>
+      <p class="mb-4 text-gray-600">Tap the <i class="fa-solid fa-star text-amber-400"></i> star on the number we should call first.</p>
+      <% no_main_phone = phones.none?(&:primary?) %>
       <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_16rem]">
-        <div class="space-y-4">
-          <%= f.simple_fields_for :contact_methods, @person.contact_methods.reject(&:inactive?) do |phone| %>
-            <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_10rem_6rem]">
-              <%= phone.input :value, label: "Phone number", input_html: { class: input_class } %>
-              <%= phone.input :contact_type, label: "Type", collection: ContactMethod::CONTACT_TYPES.compact.map { |type| [ type.humanize, type ] },
-                              include_blank: true, input_html: { class: input_class } %>
-              <label class="mb-4 flex items-center gap-2 text-gray-700">
-                <%= phone.check_box :_destroy, class: checkbox_class %> Remove
-              </label>
-            </div>
-          <% end %>
-          <%= f.simple_fields_for :contact_methods, ContactMethod.new(kind: "phone"), child_index: 999 do |phone| %>
-            <%= phone.hidden_field :kind %>
-            <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_10rem_6rem]">
-              <%= phone.input :value, label: @person.contact_methods.reject(&:inactive?).any? ? "Add another phone number" : "Phone number",
-                              required: false, input_html: { class: input_class } %>
-              <%= phone.input :contact_type, label: "Type", collection: ContactMethod::CONTACT_TYPES.compact.map { |type| [ type.humanize, type ] },
-                              include_blank: true, input_html: { class: input_class } %>
-            </div>
-          <% end %>
-        </div>
-        <%= f.input :best_time_to_call, label: "Best time to call", hint: "For example: weekday mornings", input_html: { class: input_class } %>
+      <div class="space-y-4" data-controller="primary-tag" data-primary-tag-primary-class="bg-brand-cream">
+        <%= f.simple_fields_for :contact_methods, phones.presence || [ ContactMethod.new(kind: "phone") ] do |phone| %>
+          <%= render "people/details_phone_fields", f: phone, main_by_default: no_main_phone && phone.index.zero? %>
+        <% end %>
+        <% if phones.any? %>
+          <details class="group">
+            <summary class="<%= button_classes(:secondary_outline) %> w-fit cursor-pointer list-none group-open:hidden [&::-webkit-details-marker]:hidden">
+              <i class="fa-solid fa-plus"></i> Add another phone
+            </summary>
+            <%= f.simple_fields_for :contact_methods, ContactMethod.new(kind: "phone"), child_index: 999 do |phone| %>
+              <%= render "people/details_phone_fields", f: phone, label: "Another phone number" %>
+            <% end %>
+          </details>
+        <% end %>
+      </div>
+      <%= f.input :best_time_to_call, label: "Best time to call", hint: "For example: weekday mornings", input_html: { class: input_class } %>
       </div>
     </div>
     <div id="addresses" class="<%= card_class %>">
@@ -260,7 +257,7 @@
   <% end %>
   <p class="mt-6 text-center text-lg text-gray-700">
     Can't change something here?
-    <%= link_to ProfileChangeRequestDecorator::OTHER_LABEL, new_profile_change_request_path(person_id: @person, field: ProfileChangeRequest::OTHER_FIELD),
+    <%= link_to "Ask AWBW staff to change it", new_profile_change_request_path(person_id: @person, field: ProfileChangeRequest::OTHER_FIELD),
                 class: "font-medium text-blue-600 underline hover:text-blue-800" %>
   </p>
 </div>
