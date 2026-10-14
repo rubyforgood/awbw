@@ -19,6 +19,27 @@ class NotificationMailerPreview < ActionMailer::Preview
     NotificationMailer.event_registration_confirmation_fyi(notification)
   end
 
+  def event_registration_duplicate_fyi
+    event_registration =
+      EventRegistration.first ||
+        EventRegistration.create!(
+          event: Event.first || raise("Need an Event"),
+          registrant: User.first || raise("Need a User")
+        )
+
+    notification = find_valid_notification("event_registration_duplicate_fyi") ||
+      Notification.create!(
+        noticeable: event_registration,
+        notification_type: 1,
+        kind: "event_registration_duplicate_fyi",
+        recipient_role: "admin",
+        recipient_email: programs_email,
+        custom_message: EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE
+      )
+
+    NotificationMailer.event_registration_duplicate_fyi(notification)
+  end
+
   def callout_form_submitted_fyi
     submission = FormSubmission.order(:id).last ||
       FormSubmission.create!(

@@ -86,6 +86,40 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#event_registration_duplicate_fyi" do
+    let(:event_registration) { create(:event_registration, scholarship_requested: false) }
+    let(:notification) do
+      create(:notification, kind: "event_registration_duplicate_fyi", noticeable: event_registration)
+    end
+    let(:mail) { described_class.event_registration_duplicate_fyi(notification) }
+
+    it "flags the subject and body as a duplicate" do
+      expect(mail.subject).to include("[FYI] DUPLICATE event registration by")
+      expect(mail.html_part.body.decoded).to include("DUPLICATE event registration")
+      expect(mail.text_part.body.decoded).to include("DUPLICATE event registration")
+    end
+
+    it "leaves out the scholarship note when the resubmission didn't add one" do
+      expect(mail.subject).not_to include("scholarship")
+      expect(mail.html_part.body.decoded).not_to include(EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
+    end
+
+    context "when the resubmission newly requested a scholarship" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: true) }
+      let(:notification) do
+        create(:notification, kind: "event_registration_duplicate_fyi", noticeable: event_registration,
+                              custom_message: EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
+      end
+
+      it "calls out the scholarship request in the subject and body" do
+        expect(mail.subject).to include("DUPLICATE event scholarship registration by")
+        expect(mail.subject).to end_with("(scholarship now requested)")
+        expect(mail.html_part.body.decoded).to include(EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
+        expect(mail.text_part.body.decoded).to include(EventRegistrationServices::PublicRegistration::SCHOLARSHIP_ADDED_NOTE)
+      end
+    end
+  end
+
   describe "#report_submitted_fyi" do
     let(:notification) { create(:notification, kind: :report_submitted_fyi) }
 

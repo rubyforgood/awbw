@@ -1070,17 +1070,49 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
     end
+  end
 
-    it "does not send notifications for an already-active registration" do
-      cancelled_registration.update!(status: "registered")
+  describe "duplicate submission for an active registration" do
+    let(:person) { create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com") }
+    let!(:active_registration) do
+      create(:event_registration, event: event, registrant: person, scholarship_requested: false)
+    end
 
-      expect(NotificationServices::CreateNotification).not_to receive(:call)
-
+    def resubmit(scholarship_requested: false)
       described_class.call(
         event: event,
         registration_form: form,
+        scholarship_requested: scholarship_requested,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
+    end
+
+    it "sends admins a duplicate FYI and no registrant confirmation" do
+      expect(NotificationServices::CreateNotification).to receive(:call).once.with(
+        hash_including(kind: :event_registration_duplicate_fyi, recipient_role: :admin,
+                       noticeable: active_registration, custom_message: nil)
+      )
+
+      resubmit
+    end
+
+    it "notes a newly requested scholarship on the duplicate FYI" do
+      expect(NotificationServices::CreateNotification).to receive(:call).once.with(
+        hash_including(kind: :event_registration_duplicate_fyi,
+                       custom_message: described_class::SCHOLARSHIP_ADDED_NOTE)
+      )
+
+      resubmit(scholarship_requested: true)
+    end
+
+    it "leaves the note off when the registration already requested a scholarship" do
+      active_registration.update!(scholarship_requested: true)
+
+      expect(NotificationServices::CreateNotification).to receive(:call).once.with(
+        hash_including(kind: :event_registration_duplicate_fyi, custom_message: nil)
+      )
+
+      resubmit(scholarship_requested: true)
     end
   end
 

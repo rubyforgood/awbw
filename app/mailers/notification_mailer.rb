@@ -18,6 +18,20 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def event_registration_duplicate_fyi(notification)
+    @event_registration = notification.noticeable
+    @event = @event_registration.event.decorate
+    @person = @event_registration.registrant
+    @resubmitted_at = notification.created_at
+    @scholarship_note = notification.custom_message.presence
+    @notification_type = "Duplicate event registration"
+
+    scholarship_suffix = " (scholarship now requested)" if @scholarship_note
+    mail(
+      subject: "#{FYI_PREFIX} DUPLICATE #{@event_registration.registration_subject_noun} by #{@person.full_name} to #{@event.title}#{scholarship_suffix}"
+    )
+  end
+
   # Takes the FormSubmission directly (not a Notification record, unlike the others).
   # `updated:` distinguishes an edit to an existing submission from a first one.
   def callout_form_submitted_fyi(form_submission, updated: false)
