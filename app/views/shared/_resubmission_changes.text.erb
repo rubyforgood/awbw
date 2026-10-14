@@ -1,0 +1,6 @@
+<% if notes.any? %>
+This submission changed the registration:
+<% notes.each do |note| %>
+* <%= note %>
+<% end %>
+<% end %>

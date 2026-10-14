@@ -4510,3 +4510,19 @@
   pro_tips:
     - "Logged in, your name and reply email fill in for you under \"From\", so you only write a subject and message."
     - "Links that pre-fill a subject (like an affiliation change request) drop you straight into the message box."
+
+- name: "Duplicate registration emails"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-10-14
+  pr_number: 2684
+  summary: >-
+    When someone who is already registered for an event submits the registration
+    form again, they get a "DUPLICATE" confirmation email and programs gets a
+    "[FYI] DUPLICATE" email. Both list anything the new submission changed, such
+    as a new scholarship request.
+  pro_tips:
+    - "The new answers are added to the existing registration, so the person still has just one registration."
+    - "Changes that get called out: a new scholarship, CE credit, W-9, or invoice request, a different payment method, a change in whether someone else is paying, a newly linked organization, and any answer (name, address, sectors, and so on) that differs from their previous submission."
+    - "If the resubmission adds a scholarship request, the subject ends with \"(scholarship now requested)\"."
+    - "Filter the Communications page by \"Admin FYI: duplicate event registration\" or \"Duplicate event registration received\" to find these emails."
