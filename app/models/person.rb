@@ -196,9 +196,13 @@ class Person < ApplicationRecord
     OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
   SQL
 
+  # Same term syntax as SearchCop: a quoted phrase is one term, otherwise split on whitespace.
+  SEARCH_TERM_PATTERN = /"([^"]*)"|'([^']*)'|(\S+)/
+
   # Contact-info search for non-admins: every term must match something the person's profile shows.
   def self.shared_contact_search(query)
-    query.split.reduce(all) do |relation, term|
+    terms = query.scan(SEARCH_TERM_PATTERN).map { |groups| groups.compact.first }.compact_blank
+    terms.reduce(all) do |relation, term|
       matches = unscoped.left_joins(:user, :active_phones).where(
         SHARED_CONTACT_MATCH_SQL,
         pattern: "%#{sanitize_sql_like(term)}%",

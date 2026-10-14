@@ -561,6 +561,13 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_bob)
     end
 
+    it 'filters by shared_contact_info treating a quoted phrase as one term' do
+      person_mary = create(:person, first_name: 'Mary Ann', last_name: 'Lee')
+
+      expect(Person.search_by_params(shared_contact_info: '"Mary Ann"')).to contain_exactly(person_mary)
+      expect(Person.search_by_params(shared_contact_info: "'Mary Ann' Lee")).to contain_exactly(person_mary)
+    end
+
     it 'filters by shared_contact_info requiring every term to match' do
       expect(Person.search_by_params(shared_contact_info: 'Alice Jones')).to be_empty
     end

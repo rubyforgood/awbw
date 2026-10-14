@@ -253,6 +253,12 @@ RSpec.describe "People search", type: :request do
         expect(search(term)).to include("Hiddenfacts")
       end
     end
+
+    it "matches the last name a person hides through their display preference" do
+      person.update!(last_name: "Hiddensurname", display_name_preference: "first_name_only")
+
+      expect(search("Hiddensurname")).to include("Hiddenfacts")
+    end
   end
 
   describe "GET /people?organization_id=X (full page)" do
