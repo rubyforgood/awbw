@@ -82,6 +82,8 @@ RSpec.describe "People with profiles enabled", type: :request do
         email_2: "hijacked-2@example.com",
         filemaker_code: "HACK-999",
         notes: "self-added note",
+        racial_ethnic_identity: "self-set identity",
+        sectorable_items_attributes: [ { sector_id: create(:sector).id, is_leader: true } ],
         staff_taggings_attributes: [ { staff_tag_id: create(:staff_tag).id } ],
         user_attributes: { id: owner_user.id, super_user: true }
       } }
@@ -92,6 +94,8 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(person.email_2).not_to eq("hijacked-2@example.com")
       expect(person.filemaker_code).to eq(original_code)
       expect(person.notes).not_to eq("self-added note")
+      expect(person.racial_ethnic_identity).not_to eq("self-set identity")
+      expect(person.sectorable_items.sole.is_leader).to be(false)
       expect(person.staff_taggings).to be_empty
       expect(owner_user.reload.super_user?).to be(false)
     end
