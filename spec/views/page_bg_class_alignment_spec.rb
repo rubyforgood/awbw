@@ -94,6 +94,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/people/show.html.erb"                   => "admin-or-owner-or-authsearchable",
     "app/views/organizations/edit.html.erb"            => "admin-or-owner",
     "app/views/people/edit.html.erb"                   => "admin-or-owner",
+    "app/views/people/visibility.html.erb"             => "admin-or-owner",
 
     "app/views/reports/show.html.erb"                  => "admin-or-owner-or-member",
     "app/views/workshop_logs/show.html.erb"            => "admin-or-owner-or-member",

@@ -3,7 +3,7 @@
 <div id="own-profile" class="border-primary/10 mb-4 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
     <div class="space-y-1 text-base text-gray-700">
-      <h2 class="font-display text-primary text-2xl font-semibold">This is your profile</h2>
+      <h2 class="text-primary font-display text-2xl font-semibold">This is your profile</h2>
       <p>To update your details, click <strong>Edit my profile</strong>.</p>
       <p>AWBW staff keep your email and organizations up to date. Use the buttons below to ask us for a change.</p>
     </div>
@@ -19,7 +19,7 @@
     <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation"), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-building"></i> Change my organizations
     <% end %>
-    <%= link_to edit_person_path(person, anchor: "profile-preferences"), class: button_classes(:secondary_outline) do %>
+    <%= link_to visibility_person_path(person), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-eye-slash"></i> Choose what others see
     <% end %>
   </div>

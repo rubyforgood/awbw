@@ -299,6 +299,7 @@ Rails.application.routes.draw do
       get :checkout
       get :bio
       get :all_comments
+      get :visibility
       post :send_form_link
     end
     resources :comments, only: [ :create, :update ]
