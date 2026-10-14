@@ -24,6 +24,7 @@ class Person < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
+  has_many :active_phones, -> { phone.where(inactive: false) }, as: :contactable, class_name: "ContactMethod"
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
@@ -183,6 +184,33 @@ class Person < ApplicationRecord
                       "addresses.street_address", "addresses.city", "addresses.state",
                       "addresses.zip_code", "addresses.phone" ]
     options :all, type: :text, default: true, default_operator: :or
+  end
+
+  FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
+  LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
+
+  SHARED_CONTACT_MATCH_SQL = <<~SQL.squish
+    (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
+    OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
+    OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
+    OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
+  SQL
+
+  # Same term syntax as SearchCop: a quoted phrase is one term, otherwise split on whitespace.
+  SEARCH_TERM_PATTERN = /"([^"]*)"|'([^']*)'|(\S+)/
+
+  # Contact-info search for non-admins: every term must match something the person's profile shows.
+  def self.shared_contact_search(query)
+    terms = query.scan(SEARCH_TERM_PATTERN).map { |groups| groups.compact.first }.compact_blank
+    terms.reduce(all) do |relation, term|
+      matches = unscoped.left_joins(:user, :active_phones).where(
+        SHARED_CONTACT_MATCH_SQL,
+        pattern: "%#{sanitize_sql_like(term)}%",
+        first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
+        last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES
+      )
+      relation.where(id: matches.select(:id))
+    end
   end
 
   scope :organization_ids, ->(organization_ids)  { joins(:affiliations)
@@ -347,6 +375,7 @@ class Person < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
+    results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
     results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?

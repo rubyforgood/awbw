@@ -355,11 +355,15 @@ RSpec.describe PersonPolicy, type: :policy do
     end
 
     it "drops the admin-only filters for a regular user" do
-      expect(index_filters_for(regular_user).keys).to contain_exactly("contact_info")
+      expect(index_filters_for(regular_user).keys).to contain_exactly("shared_contact_info")
     end
 
     it "drops the admin-only filters for a visitor" do
-      expect(index_filters_for(nil).keys).to contain_exactly("contact_info")
+      expect(index_filters_for(nil).keys).to contain_exactly("shared_contact_info")
+    end
+
+    it "narrows a non-admin's contact-info search to shared contact info" do
+      expect(index_filters_for(regular_user)[:shared_contact_info]).to eq("ada")
     end
   end
 
