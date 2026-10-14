@@ -156,6 +156,36 @@ RSpec.describe "Editing your own profile details", type: :request do
     end
   end
 
+  describe "addresses" do
+    it "offers a main-address star and a way to add another address" do
+      create(:address, addressable: person, locality: "LA City", primary: true)
+
+      get details_person_path(person)
+
+      expect(response.body).to include("Add another address", "Make this my main address")
+      expect(response.body).to include("person[addresses_attributes][999][street_address]")
+      expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[addresses_attributes\]\[0\]\[primary\]"/)
+    end
+
+    it "stars a person's first address as main" do
+      get details_person_path(person)
+
+      expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[addresses_attributes\]\[0\]\[primary\]"/)
+    end
+
+    it "adds a second address and moves the main flag to it" do
+      home = create(:address, addressable: person, locality: "LA City", primary: true)
+
+      save_details(addresses_attributes: {
+        "0" => { id: home.id, street_address: home.street_address, city: home.city, state: home.state, locality: home.locality, primary: "0" },
+        "999" => { street_address: "2 Oak Ave", city: "Pasadena", state: "CA", zip_code: "91101", locality: "LA County", primary: "1" }
+      })
+
+      expect(person.reload.addresses.find_by(primary: true).street_address).to eq("2 Oak Ave")
+      expect(person.addresses.count).to eq(2)
+    end
+  end
+
   it "saves the time zone and best time to call" do
     save_details(best_time_to_call: "Weekday mornings", user_attributes: { id: owner_user.id, time_zone: "Eastern Time (US & Canada)" })
 

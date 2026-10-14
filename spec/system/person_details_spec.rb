@@ -9,6 +9,7 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
   let!(:children) { create(:category, :published, category_type: age_type, name: "Children (0-12)") }
   let!(:teens) { create(:category, :published, category_type: age_type, name: "Teens (13-17)") }
   let!(:old_phone) { create(:contact_method, contactable: person, value: "555-0100") }
+  let!(:home) { create(:address, addressable: person, locality: "Unknown", primary: true) }
 
   before do
     create(:sectorable_item, sectorable: person, sector: arts)
@@ -26,11 +27,21 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
     fill_in "Bio", with: "I teach art."
     find("label", text: "Remove", exact_text: true).click
     fill_in "Add another phone number", with: "555-0199"
-    fill_in "Street address", with: "1 Main St"
-    fill_in "City", with: "Los Angeles"
-    fill_in "State", with: "CA"
-    fill_in "Zip code", with: "90001"
-    select "LA City", from: "Area"
+    find("summary", text: "Add another address").click
+    within(all("[data-primary-tag-target='chip']", text: "Street address").last) do
+      fill_in "Street address", with: "9 Elm St"
+      fill_in "City", with: "Pasadena"
+      fill_in "State", with: "CA"
+      select "LA County", from: "Area"
+      find("label[title='Make this my main address']").click
+    end
+    within(all("[data-primary-tag-target='chip']", text: "Street address").first) do
+      fill_in "Street address", with: "1 Main St"
+      fill_in "City", with: "Los Angeles"
+      fill_in "State", with: "CA"
+      fill_in "Zip code", with: "90001"
+      select "LA City", from: "Area"
+    end
     fill_in "LinkedIn", with: "https://linkedin.com/in/jordan"
     find("label", text: "Arts").click
     find("label[title='Make this my main sector']", match: :first) # stars render
@@ -47,8 +58,8 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
                                       pronunciation: "JOR-dan", bio: "I teach art.",
                                       linked_in_url: "https://linkedin.com/in/jordan")
     expect(person.contact_methods.map(&:value)).to eq([ "555-0199" ])
-    expect(person.addresses.map { |a| [ a.street_address, a.city, a.state, a.zip_code, a.locality ] })
-      .to eq([ [ "1 Main St", "Los Angeles", "CA", "90001", "LA City" ] ])
+    expect(person.addresses.order(:id).map { |a| [ a.street_address, a.city, a.state, a.zip_code.presence, a.locality, a.primary ] })
+      .to eq([ [ "1 Main St", "Los Angeles", "CA", "90001", "LA City", false ], [ "9 Elm St", "Pasadena", "CA", nil, "LA County", true ] ])
     expect(person.sectors).to contain_exactly(health)
     expect(person.primary_sector).to eq(health)
     expect(person.age_range_categorizable_items.map(&:category)).to contain_exactly(teens)

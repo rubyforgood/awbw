@@ -1,0 +1,20 @@
+<%# locals: (f:, main_by_default: false) %>
+<% input_class = "w-full text-lg" %>
+<div class="rounded-xl border border-gray-200 p-4" data-primary-tag-target="chip">
+  <div class="mb-2 flex items-center justify-between gap-4">
+    <%= render "people/main_star", f: f, kind: "address", attribute: :primary, checked: (f.object.primary? || main_by_default) %>
+    <% if f.object.persisted? %>
+      <label class="flex items-center gap-2 text-gray-700">
+        <%= f.check_box :_destroy, class: "text-primary h-5 w-5 rounded border-gray-300 focus:ring-blue-200" %> Remove this address
+      </label>
+    <% end %>
+  </div>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-6">
+    <%= f.input :street_address, label: "Street address", wrapper_html: { class: "sm:col-span-6" }, input_html: { class: input_class } %>
+    <%= f.input :city, label: "City", required: false, wrapper_html: { class: "sm:col-span-3" }, input_html: { class: input_class } %>
+    <%= f.input :state, label: "State", required: false, wrapper_html: { class: "sm:col-span-1" }, input_html: { class: input_class } %>
+    <%= f.input :zip_code, label: "Zip code", wrapper_html: { class: "sm:col-span-2" }, input_html: { class: input_class } %>
+    <%= f.input :locality, label: "Area", required: false, collection: Address::LOCALITIES, include_blank: true,
+                wrapper_html: { class: "sm:col-span-3" }, input_html: { class: input_class } %>
+  </div>
+</div>
