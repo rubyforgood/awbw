@@ -13,6 +13,9 @@
     <% end %>
   </div>
   <div class="mt-4 flex flex-wrap gap-3">
+    <%= link_to visibility_person_path(person), class: button_classes(:secondary_outline) do %>
+      <i class="fa-solid fa-eye-slash"></i> Choose what others see
+    <% end %>
     <%= link_to new_profile_change_request_path(person_id: person, field: "primary_email"), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-envelope"></i> Change my email
     <% end %>
@@ -21,9 +24,6 @@
     <% end %>
     <%= link_to new_profile_change_request_path(person_id: person, field: ProfileChangeRequest::OTHER_FIELD), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-comment"></i> Ask for another change
-    <% end %>
-    <%= link_to visibility_person_path(person), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-eye-slash"></i> Choose what others see
     <% end %>
     <%= link_to contact_us_path(subject: "Question about my profile", return_to: "person_profile"), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-circle-question"></i> Ask a question
