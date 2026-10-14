@@ -212,13 +212,10 @@
         </div>
         <%= render "people/profile_pieces/bio", person: @person %>
       </div>
-    <% elsif @person.bio.blank? && own_profile %>
+    <% elsif @person.bio.blank? && @person.profile_show_bio? && own_profile %>
       <div class="rounded-2xl border-2 border-dashed p-5 sm:p-6 <%= DomainTheme.border_class_for(:person_bio) %>">
-        <h2 class="font-display text-2xl text-gray-900">Bio</h2>
-        <p class="mt-2 text-gray-700">You haven't added a bio yet. A few sentences about you and your work helps others get to know you.</p>
-        <div class="mt-3">
-          <%= render "people/profile_section_action", person: @person, anchor: "bio", label: "Add a bio" %>
-        </div>
+        <h2 class="mb-2 font-display text-2xl text-gray-900">Bio</h2>
+        <%= render "people/profile_pieces/bio_prompt", person: @person %>
       </div>
     <% end %>
     <!-- AUTHORED SECTION -->

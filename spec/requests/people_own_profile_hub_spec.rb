@@ -43,6 +43,16 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       expect(response.body).to include(details_person_path(person, anchor: "bio"))
     end
 
+    it "prompts for a hidden bio inside the hidden card, not as its own section" do
+      person.update!(bio: nil, profile_show_bio: false)
+
+      get person_path(person)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("#hidden_from_profile", text: "Add a bio")
+      expect(page).to have_text("Add a bio", count: 1)
+    end
+
     it "lists pending change requests" do
       request = create(:profile_change_request, :primary_email, person: person,
                                                 requested_by: owner_user, requested_value: "new@example.com")
