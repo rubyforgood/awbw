@@ -16,7 +16,7 @@
 #   Description
 #   Note
 #   GroupMemberCount
-#   GroupMemberIDs
+#   GroupMemberIDs        FK list → FmRolodex, ¶-separated
 #   CreatedBy
 #   ModifiedBy
 #   CreationDate
@@ -25,7 +25,9 @@ class FmGroup < ApplicationRecord
   include FmArchive
   FM_KEY_COLUMN = "GroupID"
 
-  FM_LINKS = {}.freeze
+  FM_LINKS = {
+    "GroupMemberIDs" => "fm_rolodexes"
+  }.freeze
 
   HAS_MANY = {
     "fm_group_members" => { via: "GroupID", label: "Members" }

@@ -84,17 +84,26 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
-  describe "#fm_archive_record" do
+  describe "#fm_archive_records" do
     it "finds the record an ID points at" do
       organization = FmOrganization.create!(fm_id: "ORG1")
 
-      expect(helper.fm_archive_record("ORG1", "fm_organizations")).to eq(organization)
+      expect(helper.fm_archive_records("ORG1", "fm_organizations")).to eq([ organization ])
     end
 
     it "stands in an unsaved placeholder for an ID the archive lacks" do
-      record = helper.fm_archive_record("ORG9", "fm_organizations")
+      record = helper.fm_archive_records("ORG9", "fm_organizations").sole
 
       expect([ record.class, record.fm_id, record.persisted? ]).to eq([ FmOrganization, "ORG9", false ])
+    end
+
+    it "splits a list on line breaks and pilcrows, keeping its order and dropping repeats" do
+      FmRolodex.create!(fm_id: "00902")
+
+      records = helper.fm_archive_records("00902\r\n00901¶ 00903\v00902\n", "fm_rolodexes")
+
+      expect(records.map(&:fm_id)).to eq(%w[00902 00901 00903])
+      expect(records.map(&:persisted?)).to eq([ true, false, false ])
     end
   end
 
