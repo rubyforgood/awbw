@@ -20,7 +20,7 @@ Every person field sits in exactly one access tier:
 | Tier | Owner | Other signed-in users | Admins |
 |---|---|---|---|
 | **Always public** | edits | always see | see + edit |
-| **Shared by choice** | edits, and decides whether to share it with a `profile_show_*` toggle | see only when the toggle is on | always see, marked "hidden from profile" when off |
+| **Shared by choice** | edits, decides whether to share it with a `profile_show_*` toggle, and still sees it when off | see only when the toggle is on | always see |
 | **Private** | edits | never see | see + edit |
 | **Request a change** | sees read-only, files a `ProfileChangeRequest` | per its share toggle | see + edit, approve requests |
 | **Admin-set** | sees read-only, no request path | per its share toggle, or never | see + edit |
@@ -68,32 +68,38 @@ Ask in order, and stop at the first yes:
 
 ## Field grid
 
-What each audience gets today, as of rubyforgood/awbw#2670. "Index" is the people index
-(`people_results`). Non-admins only see published people there, and the owner is treated
-like any other user. "Profile" is `people#show`. "Edit" is the person form.
+What each audience gets today, as of rubyforgood/awbw#2672. "Index" is the people index
+(`people_results`). Non-admins only see published people there, and on their own row the
+owner sees hidden pieces like an admin does. "Profile" is `people#show`. "Edit" is the
+person form.
 
-Key: ✅ shown or editable · 🔀 shown only if the owner's `profile_show_*` toggle is on · 🔒
-read-only · 📨 read-only with a "Request a change" link · 🔵 admin-only (admin styling) ·
-— not shown
+**Hidden pieces stay visible to the owner and admins.** When a `profile_show_*` toggle is
+off, the index marks that cell with an eye-slash, and the profile moves the piece into a
+collapsed "Hidden from public" card (`people/_hidden_from_public`). The lazy `?section=`
+frames for hidden sections authorize on `own_record?`.
+
+Key: ✅ shown or editable · 🔀 shown only if the owner's `profile_show_*` toggle is on · 👁
+shown, or in the "Hidden from public" card when the toggle is off · 🔒 read-only · 📨
+read-only with a "Request a change" link · 🔵 admin-only (admin styling) · — not shown
 
 | Field | Tier | Index · user | Index · admin | Profile · other user | Profile · owner | Profile · admin | Edit · owner | Edit · admin |
 |---|---|---|---|---|---|---|---|---|
 | First and last name, avatar | Always public | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Badges (years, author, sector leader, …) | Always public (derived) | — | — | ✅ | ✅ | ✅ | — | — |
-| Pronouns | Shared by choice | — | — | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Primary email | Request a change | 🔀 | ✅ | 🔀 | 🔀 | ✅ | 📨 | 🔒 edited on the user |
-| Primary email type | Shared by choice (with the email) | 🔀 | ✅ | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Primary phone | Shared by choice | — | — | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Social media links | Shared by choice | ✅ | ✅ | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Bio | Shared by choice | — | — | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Sectors, incl. primary ⭐ | Shared by choice | primary | primary | 🔀 | 🔀 | ✅ | ✅ | ✅ |
+| Pronouns | Shared by choice | — | — | 🔀 | 👁 | 👁 | ✅ | ✅ |
+| Primary email | Request a change | 🔀 | ✅ | 🔀 | 👁 | 👁 | 📨 | 🔒 edited on the user |
+| Primary email type | Shared by choice (with the email) | 🔀 | ✅ | 🔀 | 👁 | 👁 | ✅ | ✅ |
+| Primary phone | Shared by choice | — | — | 🔀 | 👁 | 👁 | ✅ | ✅ |
+| Social media links | Shared by choice | 🔀 | ✅ | 🔀 | 👁 | 👁 | ✅ | ✅ |
+| Bio | Shared by choice | — | — | 🔀 | 👁 | 👁 | ✅ | ✅ |
+| Sectors, incl. primary ⭐ | Shared by choice | 🔀 primary | primary | 🔀 | 👁 | 👁 | ✅ | ✅ |
 | Sector leader 👑 | Admin-set (shown as a badge) | drives the chip | drives the chip | badge | badge | badge | — | 🔵 |
-| Age ranges, incl. primary ⭐ | Shared by choice | primary | primary | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Professional licenses | Shared by choice (credentials suffix) | — | — | 🔀 suffix | 🔀 suffix | 🔵 full list | ✅, 🔒 once tied to CE | ✅ |
-| Affiliations, organization name | Request a change | ✅ | ✅ | 🔀 | 🔀 | ✅ | 📨 | ✅ |
-| Facilitator since (derived) | Shared by choice | year | year | 🔀 | 🔀 | ✅ | 🔒 | 🔒 |
+| Age ranges, incl. primary ⭐ | Shared by choice | 🔀 primary | primary | 🔀 | 👁 | 👁 | ✅ | ✅ |
+| Professional licenses | Shared by choice (credentials suffix) | — | — | 🔀 suffix | 👁 suffix | 🔵 full list | ✅, 🔒 once tied to CE | ✅ |
+| Affiliations, organization name | Request a change | 🔀 | ✅ | 🔀 | 👁 | 👁 | 📨 | ✅ |
+| Facilitator since (derived) | Shared by choice | 🔀 year | year | 🔀 | 👁 | 👁 | 🔒 | 🔒 |
 | Member since (override) | Admin-set | as the year | as the year | via facilitator since | via facilitator since | ✅ | — | 🔵 with `?admin` |
-| Authored work, registrations | Shared by choice | — | admin quick links | 🔀 | 🔀 | ✅ | — | — |
+| Authored work, registrations | Shared by choice | — | admin quick links | 🔀 | 👁 | 👁 | — | — |
 | Ideas, workshop logs, monthly reports | Private (own section) | — | — | — | 🔀 | 🔀 | — | — |
 | Profile search, display-name, and anonymity preferences | Private | — | — | effects only | effects only | 🔵 | ✅ | ✅ |
 | `profile_show_*` toggles | Private | — | — | — | — | — | ✅ | ✅ |
@@ -117,16 +123,5 @@ membership status, staff tags, and mailing list.
 
 These places don't yet follow the tiers above:
 
-- **Hidden sections load anyway.** The lazy profile sections (workshops, variations,
-  stories, resources, events, affiliations) check `show?` but not the owner's
-  `profile_show_*` toggle. A crafted `?section=` frame request returns a section the owner
-  hid.
-- **The index ignores most share toggles.** The primary sector, primary age range,
-  affiliations, social links, and facilitator-since year all show regardless of toggle. The
-  email shown is `preferred_email`, which falls back to the admin-set `email_2`.
-- **Search matches hidden data.** The contact-info search matches the secondary email,
-  phones, addresses, and legal name, whatever the toggles say.
-- **Owners can't preview what they've hidden.** The "hidden from profile" marker shows only
-  to admins. An owner who turns a piece off sees what other users see.
 - **Private-section toggles also hide the section from the owner and admins.** Ideas, logs,
   and reports are never shown to other users, so those toggles have no effect on them.
