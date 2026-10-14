@@ -17,6 +17,32 @@ RSpec.describe EventMailer, type: :mailer do
       expect(mail.subject).to include(event_registration.event.title)
     end
 
+    context "for a duplicate submission" do
+      let(:event_registration) { create(:event_registration, scholarship_requested: true) }
+      let(:mail) do
+        described_class.event_registration_confirmation(event_registration, duplicate: true,
+                                                                            changes_message: "Scholarship now requested")
+      end
+
+      it "flags the subject and body as a duplicate and lists what changed" do
+        expect(mail.subject).to eq("AWBW Portal: DUPLICATE event scholarship registration received for #{event_registration.event.title} (scholarship now requested)")
+        [ mail.html_part, mail.text_part ].each do |part|
+          expect(part.body.decoded).to include("DUPLICATE event registration received")
+          expect(part.body.decoded).to include("still registered just once")
+          expect(part.body.decoded).to include("Scholarship now requested")
+        end
+      end
+
+      it "still sends to the registrant" do
+        expect(mail.to).to eq([ event_registration.registrant.preferred_email ])
+      end
+    end
+
+    it "doesn't mention a duplicate on a first registration" do
+      expect(mail.subject).not_to include("DUPLICATE")
+      expect(mail.html_part.body.decoded).not_to include("DUPLICATE")
+    end
+
     context "when a scholarship was not requested" do
       let(:event_registration) { create(:event_registration, scholarship_requested: false) }
 

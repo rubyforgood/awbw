@@ -27,6 +27,8 @@ class Notification < ApplicationRecord
 
     event_registration_confirmation
     event_registration_confirmation_fyi
+    event_registration_duplicate
+    event_registration_duplicate_fyi
     event_registration_cancelled
     event_registration_cancelled_fyi
     event_registration_reminder
@@ -102,6 +104,7 @@ class Notification < ApplicationRecord
     [ "Admin FYI (all)", "[FYI]" ],
     [ "Admin FYI: event registration confirmed", "[FYI] New event registration" ],
     [ "Admin FYI: event scholarship registration confirmed", "[FYI] New event scholarship registration" ],
+    [ "Admin FYI: duplicate event registration", "[FYI] DUPLICATE event" ],
     [ "Admin FYI: event registration cancelled", "[FYI] Event registration cancelled" ],
     [ "Admin FYI: event scholarship registration cancelled", "[FYI] Event scholarship registration cancelled" ],
     [ "Admin FYI: bulk payment", "[FYI] New bulk payment" ],
@@ -118,6 +121,7 @@ class Notification < ApplicationRecord
     [ "Event scholarship registration cancelled", "Event scholarship registration cancelled" ],
     [ "Event registration received", "Event registration received" ],
     [ "Event scholarship registration received", "Event scholarship registration received" ],
+    [ "Duplicate event registration received", "AWBW Portal: DUPLICATE event" ],
     [ "Bulk payment: confirmation", "Bulk payment received" ],
     [ "Idea: confirmation (all)", "has been received" ],
     [ "Story: promotion confirmation", "is now a story" ],

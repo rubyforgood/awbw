@@ -1,8 +1,13 @@
 class EventMailer < ApplicationMailer
-  def event_registration_confirmation(event_registration)
+  # `duplicate:` marks a resubmission merged into an existing registration; its
+  # `changes_message` lists what that resubmission changed (see ResubmissionChanges).
+  def event_registration_confirmation(event_registration, duplicate: false, changes_message: nil)
     @event_registration = event_registration
     @event = event_registration.event.decorate
     @person = event_registration.registrant
+    @duplicate = duplicate
+    changes = EventRegistrationServices::ResubmissionChanges.from_message(changes_message)
+    @change_notes = changes.notes
 
     @notification_type = "Event registration confirmation"
 
@@ -14,7 +19,7 @@ class EventMailer < ApplicationMailer
       to: @person.preferred_email,
       from: self.class.sender(Organization.no_reply_email),
       reply_to: Organization.programs_email,
-      subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} received for #{@event.title}"
+      subject: confirmation_subject(changes)
     )
   end
 
@@ -124,5 +129,14 @@ class EventMailer < ApplicationMailer
       reply_to: Organization.programs_email,
       subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} cancelled for #{@event.title}"
     )
+  end
+
+  private
+
+  def confirmation_subject(changes)
+    noun = @event_registration.registration_subject_noun
+    return "AWBW Portal: #{noun.capitalize} received for #{@event.title}" unless @duplicate
+
+    "AWBW Portal: DUPLICATE #{noun} received for #{@event.title}#{changes.subject_suffix}"
   end
 end

@@ -1,6 +1,12 @@
-Event registration received
+<%= @duplicate ? "DUPLICATE event registration received" : "Event registration received" %>
 
 Hello <%= @person.first_name %>,
+<% if @duplicate %>
+
+We received another registration from you for this event. Your new answers were added to your existing registration, so you're still registered just once.
+
+<%= render "shared/resubmission_changes", notes: @change_notes %>
+<% end %>
 
 This message confirms your registration for the following event:
 
