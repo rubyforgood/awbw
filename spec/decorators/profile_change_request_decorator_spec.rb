@@ -7,6 +7,11 @@ RSpec.describe ProfileChangeRequestDecorator do
       expect(request.requester_summary).to eq("Primary email: new@example.com")
     end
 
+    it "quotes the details for an other request" do
+      request = build_stubbed(:profile_change_request, :other, details: "Fix my last name").decorate
+      expect(request.requester_summary).to eq("Profile: Fix my last name")
+    end
+
     it "names the change and organization for an affiliation request" do
       person = create(:person)
       affiliation = create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"))

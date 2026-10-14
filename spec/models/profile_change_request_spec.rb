@@ -19,6 +19,16 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(request.errors[:details]).to be_present
     end
 
+    it "accepts an other request with only details" do
+      expect(build(:profile_change_request, :other)).to be_valid
+    end
+
+    it "requires details for an other request" do
+      request = build(:profile_change_request, :other, details: nil)
+      expect(request).not_to be_valid
+      expect(request.errors[:details]).to be_present
+    end
+
     it "rejects an unknown field" do
       request = build(:profile_change_request, field: "shoe_size")
       expect(request).not_to be_valid
@@ -37,6 +47,7 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(build(:profile_change_request, :primary_email)).to be_auto_appliable
       expect(build(:profile_change_request, :organization_name)).to be_auto_appliable
       expect(build(:profile_change_request, field: "affiliation")).not_to be_auto_appliable
+      expect(build(:profile_change_request, :other)).not_to be_auto_appliable
     end
   end
 

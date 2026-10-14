@@ -4492,9 +4492,9 @@
   summary: >-
     Your own profile page is now the place to keep your details up to date. A
     big "Edit my profile" button sits at the top, along with buttons to ask
-    AWBW staff to change your email or organizations.
+    AWBW staff to change your email, your organizations, or anything else.
   pro_tips:
     - "Open it from \"My profile\" in the menu under your picture."
     - "Each section has its own Edit button that jumps straight to that part of the form."
     - "Any change you've asked for shows at the top until staff have looked at it."
-    - "\"Choose what others see\" opens a short checklist of what other facilitators can see on your profile."
+    - "\"Choose what others see\" opens a short page of on/off switches for what other facilitators can see, plus how your name shows."

@@ -580,6 +580,13 @@
     <%= render "shared/comments_and_communications", f: f, view_all_person: @person %>
   <% end %>
 
+  <% if allowed_to?(:edit_own_profile?, f.object) %>
+    <p class="mt-8 text-center text-gray-700">
+      Can't change something here?
+      <%= link_to "Ask AWBW staff to change it", new_profile_change_request_path(person_id: f.object, field: ProfileChangeRequest::OTHER_FIELD),
+                  class: "font-medium text-blue-600 underline hover:text-blue-800" %>
+    </p>
+  <% end %>
   <div class="action-buttons mt-8 flex justify-center gap-3">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @person, class: button_classes(:danger_outline),

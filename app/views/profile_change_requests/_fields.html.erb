@@ -8,7 +8,13 @@
   </div>
 <% end %>
 
-<% if request.auto_appliable? %>
+<% if request.other? %>
+  <%= f.input :details,
+              as: :text,
+              label: "What would you like us to change?",
+              hint: "For example: \"Please fix the spelling of my last name.\"",
+              input_html: { rows: 5, class: "w-full text-lg" } %>
+<% elsif request.auto_appliable? %>
   <%= f.input :requested_value,
               label: "Change #{request.field_label.downcase} to",
               input_html: { class: "w-full" } %>

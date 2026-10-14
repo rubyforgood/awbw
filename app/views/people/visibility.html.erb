@@ -1,47 +1,54 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
-<% checkbox_row_class = "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-lg text-gray-800 hover:bg-gray-50" %>
-<% checkbox_class = "h-6 w-6 rounded border-gray-300 text-primary focus:border-blue-500 focus:ring-blue-200" %>
 <% card_class = "border-primary/10 rounded-2xl border bg-white p-5 shadow-sm sm:p-6" %>
-<div class="mx-auto w-full max-w-2xl px-4 py-6">
+<div class="mx-auto w-full max-w-4xl px-4 py-6">
   <div class="mb-2">
     <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class}" do %>
       <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
     <% end %>
   </div>
-  <h1 class="font-display text-primary text-3xl font-semibold">Choose what others see</h1>
+  <h1 class="text-primary font-display text-3xl font-semibold">Choose what others see</h1>
   <p class="mt-2 text-lg text-gray-700">
-    Check the parts of your profile other facilitators can see. AWBW staff can always see everything.
+    Turn on the parts of your profile other facilitators can see. AWBW staff can always see everything.
   </p>
   <%= simple_form_for @person, html: { class: "mt-6 space-y-6" } do |f| %>
     <%= hidden_field_tag :return_to, "visibility" %>
     <%= render "shared/errors", resource: @person if @person.errors.any? %>
     <div class="<%= card_class %>">
-      <h2 class="font-display mb-2 text-2xl text-gray-900">Your profile and name</h2>
-      <label class="<%= checkbox_row_class %>">
-        <%= f.check_box :profile_is_searchable, class: checkbox_class %>
-        <span>Let other facilitators find and see my profile</span>
-      </label>
-      <label class="<%= checkbox_row_class %>">
-        <%= f.check_box :anonymous_contributions, class: checkbox_class %>
-        <span>Leave my name off stories and workshops I write</span>
-      </label>
-      <div class="px-3 py-3">
-        <%= f.label :display_name_preference, "Show my name as", class: "mb-1 block text-lg text-gray-800" %>
-        <%= f.select :display_name_preference,
-                     Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
-                     { selected: @person.display_name_preference || "full_name" },
-                     class: "w-full rounded-md border-gray-300 text-lg shadow-sm focus:border-blue-500 focus:ring-blue-200" %>
+      <h2 class="mb-4 font-display text-2xl text-gray-900">Your name</h2>
+      <fieldset class="px-3 pb-2">
+        <legend class="mb-3 text-lg text-gray-800">Show my name as</legend>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <% current_preference = @person.display_name_preference.presence || "full_name" %>
+          <% Person::DISPLAY_NAME_PREFERENCE_LABELS.each do |preference, label| %>
+            <label class="has-checked:border-primary has-checked:bg-brand-cream has-checked:ring-primary flex cursor-pointer items-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition hover:border-gray-400 has-checked:ring-1">
+              <%= f.radio_button :display_name_preference, preference, checked: preference == current_preference,
+                                 class: "text-primary h-5 w-5 border-gray-300 focus:ring-blue-200" %>
+              <span class="flex min-w-0 flex-col">
+                <span class="text-primary truncate font-display text-xl font-semibold"><%= @person.name_for(preference).presence || label %></span>
+                <span class="text-sm text-gray-500"><%= label %></span>
+              </span>
+            </label>
+          <% end %>
+        </div>
+      </fieldset>
+    </div>
+    <div class="<%= card_class %>">
+      <h2 class="mb-2 font-display text-2xl text-gray-900">Your privacy</h2>
+      <div class="divide-y divide-gray-100">
+        <%= render "people/visibility_switch", f: f, attribute: :profile_is_searchable,
+                   label: "Let other facilitators find and see my profile", on_text: "Yes", off_text: "No" %>
+        <%= render "people/visibility_switch", f: f, attribute: :anonymous_contributions,
+                   label: "Stay anonymous on stories, workshops, and variations I write", on_text: "Yes", off_text: "No" %>
       </div>
     </div>
     <% PersonDecorator::PROFILE_VISIBILITY_GROUPS.each do |heading, fields| %>
       <div class="<%= card_class %>">
-        <h2 class="font-display mb-2 text-2xl text-gray-900"><%= heading %></h2>
-        <% fields.each do |attribute, label| %>
-          <label class="<%= checkbox_row_class %>">
-            <%= f.check_box attribute, class: checkbox_class %>
-            <span><%= label %></span>
-          </label>
-        <% end %>
+        <h2 class="mb-2 font-display text-2xl text-gray-900"><%= heading %></h2>
+        <div class="divide-y divide-gray-100">
+          <% fields.each do |attribute, label| %>
+            <%= render "people/visibility_switch", f: f, attribute: attribute, label: label %>
+          <% end %>
+        </div>
       </div>
     <% end %>
     <div class="flex justify-end gap-3">

@@ -24,7 +24,7 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     parts = if field == "affiliation"
       [ requested_value, (affiliation&.organization || organization)&.name ]
     else
-      [ field_label, requested_value ]
+      [ field_label, requested_value.presence || details&.truncate(60) ]
     end
     parts.compact_blank.join(": ")
   end
@@ -73,6 +73,8 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
       person.user ? h.edit_user_path(person.user) : h.edit_person_path(person)
     when "organization_name"
       person.primary_organization ? h.edit_organization_path(person.primary_organization) : h.edit_person_path(person, anchor: "affiliations")
+    when ProfileChangeRequest::OTHER_FIELD
+      h.edit_person_path(person)
     else
       anchor = affiliation ? h.dom_id(affiliation) : "affiliations"
       h.edit_person_path(person, anchor: anchor)

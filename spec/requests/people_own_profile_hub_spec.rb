@@ -18,6 +18,7 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       expect(response.body).to include("Edit my profile")
       expect(response.body).to include("field=primary_email")
       expect(response.body).to include("field=affiliation")
+      expect(response.body).to include("field=other")
       expect(response.body).to include(visibility_person_path(person))
     end
 
@@ -80,46 +81,7 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       expect(response.body).to include("Edit my profile")
       expect(response.body).to match(/href="#{person_path(person)}"[^>]*>\s*<i[^>]*><\/i>\s*My profile/)
       expect(response.body).to match(/href="#{person_path(person)}"[^>]*>Cancel/)
-    end
-  end
-
-  describe "choosing what others see" do
-    before { sign_in owner_user }
-
-    it "shows only the visibility choices" do
-      get visibility_person_path(person)
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Choose what others see")
-      expect(response.body).to include("Let other facilitators find and see my profile")
-      expect(response.body).not_to include("person[bio]")
-    end
-
-    it "saves and returns to the profile" do
-      patch person_path(person), params: {
-        return_to: "visibility",
-        person: { profile_show_email: "0", profile_show_bio: "1", display_name_preference: "first_name_only" }
-      }
-
-      expect(response).to redirect_to(person_path(person))
-      person.reload
-      expect(person.profile_show_email).to be(false)
-      expect(person.display_name_preference).to eq("first_name_only")
-    end
-
-    it "re-renders the visibility page when the save fails" do
-      patch person_path(person), params: { return_to: "visibility", person: { first_name: "" } }
-
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).to include("Choose what others see")
-    end
-
-    it "is closed to other people" do
-      sign_in create(:user)
-
-      get visibility_person_path(person)
-
-      expect(response).to redirect_to(root_path)
+      expect(response.body).to include("Ask AWBW staff to change it")
     end
   end
 
@@ -132,6 +94,18 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
       }
 
       expect(response).to redirect_to(person_path(person))
+    end
+
+    it "accepts a free-text request for anything else" do
+      get new_profile_change_request_path(person_id: person, field: ProfileChangeRequest::OTHER_FIELD)
+      expect(response.body).to include("What would you like us to change?")
+
+      post profile_change_requests_path(person_id: person), params: {
+        profile_change_request: { field: ProfileChangeRequest::OTHER_FIELD, details: "Please fix my last name." }
+      }
+
+      expect(response).to redirect_to(person_path(person))
+      expect(person.profile_change_requests.last).to have_attributes(field: "other", details: "Please fix my last name.")
     end
 
     it "returns to the profile's affiliations after an affiliation request" do

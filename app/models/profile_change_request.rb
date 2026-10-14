@@ -7,11 +7,13 @@ class ProfileChangeRequest < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :affiliation, optional: true
 
-  FIELDS = %w[primary_email organization_name affiliation].freeze
+  OTHER_FIELD = "other".freeze
+  FIELDS = [ "primary_email", "organization_name", "affiliation", OTHER_FIELD ].freeze
   FIELD_LABELS = {
     "primary_email" => "Primary email",
     "organization_name" => "Organization name",
-    "affiliation" => "Affiliation details"
+    "affiliation" => "Affiliation details",
+    OTHER_FIELD => "Profile"
   }.freeze
   # Fields whose new value is concrete enough for "Approve" to write directly.
   AUTO_APPLIABLE_FIELDS = %w[primary_email organization_name].freeze
@@ -40,7 +42,7 @@ class ProfileChangeRequest < ApplicationRecord
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
   validates :resolution_method, inclusion: { in: RESOLUTION_METHODS }, allow_nil: true
-  validates :requested_value, presence: true
+  validates :requested_value, presence: true, unless: :other?
   validates :requested_value, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
                               if: -> { field == "primary_email" && requested_value.present? }
   validates :details, presence: true, if: :requires_details?
@@ -60,6 +62,7 @@ class ProfileChangeRequest < ApplicationRecord
   def pending? = status == "pending"
   def resolved? = status == "resolved"
   def declined? = status == "declined"
+  def other? = field == OTHER_FIELD
 
   def auto_appliable?
     return true if field.in?(AUTO_APPLIABLE_FIELDS)
@@ -130,7 +133,7 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   def requires_details?
-    field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER
+    other? || (field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER)
   end
 
   # A category's hidden sibling inputs still post their (stale) values; drop the
