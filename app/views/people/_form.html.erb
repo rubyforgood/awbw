@@ -64,13 +64,24 @@
                       selected: f.object.email_type || f.object.user&.email_type,
                       include_blank: true %>
 
-          <%= f.input :email_2, label: "Secondary email" %>
+          <% if allowed_to?(:manage?, Person) %>
+            <%= f.input :email_2, label: "Secondary email" %>
 
-          <%= f.input :email_2_type,
-                      label: "Secondary email type",
-                      as: :select,
-                      collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                      include_blank: true %>
+            <%= f.input :email_2_type,
+                        label: "Secondary email type",
+                        as: :select,
+                        collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                        include_blank: true %>
+          <% elsif f.object.email_2.present? %>
+            <div>
+              <label class="mb-1 block text-md font-medium text-gray-700">Secondary email</label>
+              <span class="font-medium text-gray-900"><%= f.object.email_2 %></span>
+              <% if f.object.email_2_type.present? %>
+                <span class="text-2xs text-gray-500 uppercase">(<%= f.object.email_2_type %>)</span>
+              <% end %>
+              <p class="mt-1 text-sm text-gray-500">Only editable by admins.</p>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>

@@ -48,6 +48,28 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(person.reload.bio).to eq("Facilitator since 2015")
     end
 
+    it "updates their email type and time zone" do
+      patch person_path(person), params: { person: {
+        email_type: "work",
+        user_attributes: { id: owner_user.id, time_zone: "Hawaii" }
+      } }
+
+      expect(person.reload.email_type).to eq("work")
+      expect(owner_user.reload.time_zone).to eq("Hawaii")
+    end
+
+    it "shows the secondary email read-only on the edit form" do
+      person.update!(email_2: "second@example.com")
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("second@example.com")
+      expect(response.body).not_to include('name="person[email_2]"')
+      expect(response.body).not_to include('name="person[email_2_type]"')
+      expect(response.body).to include('name="person[email_type]"')
+      expect(response.body).to include('name="person[user_attributes][time_zone]"')
+    end
+
     it "ignores admin-only fields a non-admin owner tries to submit" do
       original_code = person.filemaker_code
       original_email = person.email
@@ -55,6 +77,7 @@ RSpec.describe "People with profiles enabled", type: :request do
       patch person_path(person), params: { person: {
         bio: "New bio",
         email: "hijacked@example.com",
+        email_2: "hijacked-2@example.com",
         filemaker_code: "HACK-999",
         notes: "self-added note",
         staff_taggings_attributes: [ { staff_tag_id: create(:staff_tag).id } ],
@@ -64,6 +87,7 @@ RSpec.describe "People with profiles enabled", type: :request do
       person.reload
       expect(person.bio).to eq("New bio")
       expect(person.email).to eq(original_email)
+      expect(person.email_2).not_to eq("hijacked-2@example.com")
       expect(person.filemaker_code).to eq(original_code)
       expect(person.notes).not_to eq("self-added note")
       expect(person.staff_taggings).to be_empty
