@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+  include AhoyTracking, Dedupable
+
   before_action :set_user, only: [ :show, :edit, :update, :destroy,
                                    :toggle_lock_status, :confirm_email,
                                    :send_welcome_instructions, :send_reset_password_instructions,
@@ -320,6 +322,46 @@ class UsersController < ApplicationController
   # =========================================================
 
   private
+
+  def dedupe_config
+    {
+      model_class: User,
+      domain: :users,
+      candidate_finder: -> { UserServices::DuplicateFinder.new.groups },
+      record_label: ->(user) { user.full_name_with_email },
+      search_model: SearchController::USER_ANY_STATUS_MODEL,
+      read_only_columns: %w[email super_user confirmed_at last_sign_in_at sign_in_count inactive locked_at],
+      editable_columns: %w[time_zone notes],
+      # Audit stamps and analytics carry no DB foreign key to users, so name them for the merge to move.
+      reference_columns: %w[user_id created_by_id updated_by_id welcome_instructions_sent_by_id],
+      record_extras: ->(user) {
+        last_sign_in = user.last_sign_in_at ? "last signed in #{user.last_sign_in_at.to_date}" : "never signed in"
+        [ user.super_user? && "Admin", *user.decorate.access_statuses, last_sign_in ].compact_blank.join(" · ")
+      },
+      merge_notes: ->(keep, delete) {
+        notes = [ "Signing in as #{delete.email} stops working after the merge — #{keep.email} stays the login. Swap to keep the other address." ]
+        notes << "#{delete.email} is an admin login and #{keep.email} isn't, so admin access ends with the merge." if delete.super_user? && !keep.super_user?
+        notes << "The kept login has no person, so it takes over #{delete.person.full_name}'s profile." if delete.person && !keep.person
+        notes
+      },
+      merge_blocks: ->(keep, delete) {
+        blocks = []
+        blocks << "You're signed in as #{delete.email}. Swap to keep it — you can't merge away your own login." if delete == current_user
+        if keep.person && delete.person && keep.person_id != delete.person_id
+          blocks << "These logins belong to different people (#{keep.person.full_name} and #{delete.person.full_name}). Merge the people first, then their logins."
+        end
+        blocks
+      },
+      merge_keeper: ->(keep, delete) {
+        keep.person_id ||= delete.person_id
+        @merged_login_id = delete.id
+      },
+      # paper_trail records the acting login as a string id, outside the foreign-key scan.
+      after_merge: ->(keep) {
+        PaperTrail::Version.where(whodunnit: @merged_login_id.to_s).update_all(whodunnit: keep.id.to_s)
+      }
+    }
+  end
 
   def set_user
     @user = User.find(params[:id])

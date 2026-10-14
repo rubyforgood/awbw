@@ -5,12 +5,16 @@ require "set"
 class ModelDeduper
   attr_reader :model_class, :logger, :dry_run, :min_usage
 
-  def initialize(model_class:, logger: Logger.new($stdout), dry_run: true, min_usage: 0, movable_attachments: [])
+  # reference_columns: column names that point at this model in any table that has them,
+  # for references that carry no DB foreign key (e.g. a user's created_by_id stamps).
+  def initialize(model_class:, logger: Logger.new($stdout), dry_run: true, min_usage: 0, movable_attachments: [],
+                 reference_columns: [])
     @model_class = model_class
     @logger = logger
     @dry_run = dry_run
     @min_usage = min_usage
     @movable_attachments = Array(movable_attachments).map(&:to_s)
+    @reference_columns = Array(reference_columns).map(&:to_s)
   end
 
   def call
@@ -45,7 +49,7 @@ class ModelDeduper
       count = join_references(join, record.id).count
       next if count.zero?
 
-      counts[join_label(join[:join_class])] = count
+      counts[join_label(join)] = count
     end
   end
 
@@ -62,7 +66,7 @@ class ModelDeduper
       next if count.zero?
 
       {
-        label: join_label(join[:join_class]),
+        label: join_label(join),
         count: count,
         names: scope.limit(NAME_LIMIT).map { |related| record_display(related) }
       }
@@ -213,7 +217,7 @@ class ModelDeduper
   def reassignable_joins
     @reassignable_joins ||= begin
       seen = Set.new
-      (has_many_joins + belongs_to_joins).select do |join|
+      (has_many_joins + belongs_to_joins + reference_column_joins).select do |join|
         seen.add?([ join[:join_class].table_name, join[:foreign_key] ])
       end
     end
@@ -244,12 +248,11 @@ class ModelDeduper
   # Schema-driven: every DB foreign key pointing at this model's table, so a child
   # with an organization_id but no inverse has_many (payments, stories, …) is still
   # reassigned. Reading the schema avoids eager-loading every model (which would
-  # touch databases not configured in every environment).
+  # touch databases not configured in every environment). Includes the model's own
+  # table, so a sibling referencing the duplicate (users.created_by_id) follows the keeper.
   def belongs_to_joins
     connection = model_class.connection
     connection.tables.flat_map do |table|
-      next [] if table == model_class.table_name
-
       connection.foreign_keys(table).filter_map do |fk_def|
         next unless fk_def.to_table == model_class.table_name
 
@@ -258,6 +261,16 @@ class ModelDeduper
     end
   rescue NotImplementedError
     []
+  end
+
+  def reference_column_joins
+    return [] if @reference_columns.empty?
+
+    connection = model_class.connection
+    connection.tables.flat_map do |table|
+      column_names = connection.columns(table).map(&:name)
+      (@reference_columns & column_names).map { |column| join_for(model_for_table(table), column) }
+    end
   end
 
   # The model backing a table, or an anonymous one bound to it. Guards against a
@@ -314,8 +327,14 @@ class ModelDeduper
     (model_class.name || model_class.table_name).underscore.humanize.downcase
   end
 
-  def join_label(join_class)
-    (join_class.name || join_class.table_name.classify).underscore.humanize.pluralize
+  # Names the column too when a table references this model more than once
+  # (created_by_id + updated_by_id), so each join gets its own preview row.
+  def join_label(join)
+    join_class = join[:join_class]
+    label = (join_class.name || join_class.table_name.classify).underscore.humanize.pluralize
+    return label if reassignable_joins.one? { |other| other[:join_class].table_name == join_class.table_name }
+
+    "#{label} (#{join[:foreign_key].to_s.delete_suffix("_id").humanize(capitalize: false)})"
   end
 
   def usage_counts
@@ -406,6 +425,8 @@ class ModelDeduper
     fk = join[:foreign_key]
     natural_key = join[:natural_key]
 
+    detach_self_reference(primary, dupe, join)
+
     if natural_key.empty?
       moved = join_references(join, dupe.id).update_all(fk => primary.id)
       logger.info "  moved #{moved} #{jc.name} to primary" if moved > 0
@@ -429,6 +450,14 @@ class ModelDeduper
 
     remaining = join_references(join, dupe.id).count
     raise "ABORT: #{remaining} #{jc.name} items still reference #{model_label} #{dupe.id}" if remaining > 0
+  end
+
+  # The keeper can't point at the record merged into it (e.g. its parent or creator),
+  # so that one reference clears rather than becoming a self-reference.
+  def detach_self_reference(primary, dupe, join)
+    return unless join[:join_class].table_name == model_class.table_name
+
+    join[:join_class].where(id: primary.id, join[:foreign_key] => dupe.id).update_all(join[:foreign_key] => nil)
   end
 
   # The primary already holds an equivalent row (same natural key), so the loser can't
