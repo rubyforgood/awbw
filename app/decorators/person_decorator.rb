@@ -14,7 +14,7 @@ class PersonDecorator < ApplicationDecorator
       profile_show_phone: "Phone",
       profile_show_social_media: "Social media links"
     },
-    "Your work" => {
+    "Your activity" => {
       profile_show_events_registered: "Events you attended",
       profile_show_workshops: "Workshops you wrote",
       profile_show_workshop_variations: "Workshop variations you wrote",

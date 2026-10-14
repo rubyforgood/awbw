@@ -154,6 +154,23 @@
                     <% end %>
                   </div>
                 </div>
+                <% work_addresses = organization.addresses.select { |address| !address.inactive? || address.id == affiliation.organization_address_id } %>
+                <div class="mt-2 rounded-lg bg-gray-50 p-3">
+                  <% if work_addresses.any? %>
+                    <%= f.simple_fields_for :affiliations, affiliation, child_index: affiliation.id do |af| %>
+                      <%= af.input :organization_address_id, label: "Your work address", required: false,
+                                   collection: work_addresses.map { |address| [ address.name, address.id ] },
+                                   include_blank: "Not picked yet", wrapper_html: { class: "sm:max-w-xl" }, input_html: { class: input_class } %>
+                    <% end %>
+                  <% else %>
+                    <p class="text-sm text-gray-600">We don't have an address on file for <%= organization.name %> yet.</p>
+                  <% end %>
+                  <%= link_to new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: affiliation.id,
+                                                              change: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, return_to: "details"),
+                              target: "_blank", rel: "noopener", class: "mt-1 inline-flex items-center gap-1 text-sm font-medium text-blue-600 underline hover:text-blue-800" do %>
+                    <%= work_addresses.any? ? "Address not listed? Tell us" : "Tell us your work address" %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                  <% end %>
+                </div>
               <% end %>
             </div>
           </div>

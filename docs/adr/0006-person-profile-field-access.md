@@ -51,7 +51,9 @@ Ask in order, and stop at the first yes:
 
 - **The policy is a denylist.** For non-admins, `PersonPolicy`'s `params_filter` permits the
   full list and then strips `ADMIN_ONLY_FIELDS`, `ADMIN_ONLY_USER_FIELDS` (login account), and
-  `ADMIN_ONLY_SECTOR_FIELDS` (the leader flag). Request-a-change, admin-set, and admin-only fields all go on
+  `ADMIN_ONLY_SECTOR_FIELDS` (the leader flag). Affiliations are the one
+  narrowed exception: owners keep only `OWNER_AFFILIATION_FIELDS` (the work address) on rows
+  they already have. Request-a-change, admin-set, and admin-only fields all go on
   these lists.
 - **Adding a field to the permit list makes it owner-editable by default**, so classify it
   here and add it to the right strip list in the same change.
@@ -72,7 +74,7 @@ What each audience gets today, as of rubyforgood/awbw#2673. "Index" is the peopl
 (`people_results`). Non-admins only see published people there, and on their own row the
 owner sees hidden pieces like an admin does. "Profile" is `people#show`. "Edit · admin" is
 the person form. "Edit · owner" is the set of pages an owner reaches from their profile:
-"Edit my data" (`people#details`), "Choose what others can see" (`people#visibility`, the
+"Edit my data" (`people#details`), "Choose what others see" (`people#visibility`, the
 `profile_show_*` toggles plus search, display-name, and anonymity preferences), and the
 change-request pages for 📨 fields. Owners aren't linked to the person form.
 
@@ -105,6 +107,7 @@ read-only with a "Request a change" link · 🔵 admin-only (admin styling) · �
 | Age ranges, incl. primary ⭐ | Shared by choice | 🔀 primary | primary | 🔀 | 👁 | 👁 | ✅ | ✅ |
 | Professional licenses | Shared by choice (credentials suffix) | — | — | 🔀 suffix | 👁 suffix | 🔵 full list | ✅, 🔒 once tied to CE | ✅ |
 | Affiliations, organization name | Request a change | 🔀 | ✅ | 🔀 | 👁 | 👁 | 📨 | ✅ |
+| Work address (an affiliation's organization address) | Private | — | — | — | — | 🔵 | ✅ pick from the org's addresses, 📨 if missing | ✅ |
 | Facilitator since (derived) | Shared by choice | 🔀 year | year | 🔀 | 👁 | 👁 | 🔒 | 🔒 |
 | Member since (override) | Admin-set | as the year | as the year | via facilitator since | via facilitator since | ✅ | — | 🔵 with `?admin` |
 | Authored work, registrations | Shared by choice | — | admin quick links | 🔀 | 👁 | 👁 | — | — |

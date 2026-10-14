@@ -28,6 +28,7 @@ class ProfileChangeRequest < ApplicationRecord
   AFFILIATION_CHANGE_ORGANIZATION = "Organization".freeze
   AFFILIATION_CHANGE_REMOVE = "Remove this affiliation".freeze
   AFFILIATION_CHANGE_ADD = "Add a new affiliation".freeze
+  AFFILIATION_CHANGE_WORK_ADDRESS = "Work address".freeze
   AFFILIATION_CHANGE_OTHER = "Other".freeze
   AFFILIATION_CHANGE_TYPES = [
     AFFILIATION_CHANGE_TITLE,
@@ -35,11 +36,12 @@ class ProfileChangeRequest < ApplicationRecord
     AFFILIATION_CHANGE_ORGANIZATION,
     AFFILIATION_CHANGE_REMOVE,
     AFFILIATION_CHANGE_ADD,
+    AFFILIATION_CHANGE_WORK_ADDRESS,
     AFFILIATION_CHANGE_OTHER
   ].freeze
-  # Every affiliation category except "Other" carries a structured value Approve
-  # can apply directly; "Other" is free text an admin handles by hand.
-  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - [ AFFILIATION_CHANGE_OTHER ]).freeze
+  # These carry a structured value Approve can apply directly. "Work address" and
+  # "Other" are free text an admin handles by hand.
+  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - [ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ]).freeze
 
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
@@ -145,7 +147,7 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   def requires_details?
-    other? || (field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER)
+    other? || (field == "affiliation" && requested_value.in?([ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ]))
   end
 
   # A category's hidden sibling inputs still post their (stale) values; drop the

@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# The "Choose what others can see" page saves through PeopleController#update as the
+# The "Choose what others see" page saves through PeopleController#update as the
 # owner, so every setting it shows must survive the owner params filter and land
 # on the person's change log.
 RSpec.describe "Choosing what others see on your profile", type: :request do
@@ -88,7 +88,7 @@ RSpec.describe "Choosing what others see on your profile", type: :request do
     save_visibility(first_name: "")
 
     expect(response).to have_http_status(:unprocessable_content)
-    expect(response.body).to include("Choose what others can see")
+    expect(response.body).to include("Choose what others see")
   end
 
   it "is closed to other people" do

@@ -57,7 +57,9 @@
   <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE %>
     <p class="text-lg text-gray-700">We'll mark <strong><%= current&.organization&.name %></strong> as an organization you no longer work with.</p>
   <% end %>
-  <% if change == ProfileChangeRequest::AFFILIATION_CHANGE_OTHER %>
+  <% if change == ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS %>
+    <%= f.input :details, as: :text, label: "Your work address", hint: "Street, city, state, and zip code.", input_html: { rows: 3, class: "w-full text-lg" } %>
+  <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_OTHER %>
     <%= f.input :details, as: :text, label: "What would you like us to change?", input_html: { rows: 5, class: "w-full text-lg" } %>
   <% else %>
     <%= f.input :details, as: :text, label: "Anything else we should know? (optional)", input_html: { rows: 3, class: "w-full" } %>

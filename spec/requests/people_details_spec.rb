@@ -160,12 +160,67 @@ RSpec.describe "Editing your own profile details", type: :request do
     let(:organization) { create(:organization, name: "Sunrise Center") }
     let!(:affiliation) { create(:affiliation, person: person, organization: organization, title: "Facilitator") }
 
+    describe "work address" do
+      let!(:office) { create(:address, addressable: organization, street_address: "1 Office Way", city: "Los Angeles", state: "CA", locality: "LA City") }
+
+      it "shows a work address picker from the organization's addresses and a way to report a missing one" do
+        get details_person_path(person)
+
+        expect(response.body).to include("Your work address", "1 Office Way")
+        expect(response.body).to include("person[affiliations_attributes][#{affiliation.id}][organization_address_id]")
+        expect(response.body).to include("change=Work+address")
+      end
+
+      it "lets the owner pick it, and nothing else about the affiliation" do
+        save_details(affiliations_attributes: {
+          affiliation.id.to_s => { id: affiliation.id, organization_address_id: office.id, title: "Director", end_date: "2020-01-01" },
+          "1" => { organization_id: create(:organization).id, title: "New role" }
+        })
+
+        affiliation.reload
+        expect(affiliation.organization_address).to eq(office)
+        expect(affiliation.title).to eq("Facilitator")
+        expect(affiliation.end_date).to be_nil
+        expect(person.affiliations.count).to eq(1)
+      end
+
+      it "rejects an address from a different organization" do
+        elsewhere = create(:address, addressable: create(:organization), locality: "LA City")
+
+        save_details(affiliations_attributes: { affiliation.id.to_s => { id: affiliation.id, organization_address_id: elsewhere.id } })
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(affiliation.reload.organization_address).to be_nil
+      end
+
+      it "asks for the address when it isn't listed" do
+        get new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id,
+                                            change: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, return_to: "details")
+        expect(response.body).to include("Add my work address", "Your work address")
+
+        post profile_change_requests_path(person_id: person), params: {
+          return_to: "details",
+          profile_change_request: { field: "affiliation", affiliation_id: affiliation.id,
+                                    requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, details: "" }
+        }
+        expect(response).to have_http_status(:unprocessable_content)
+
+        post profile_change_requests_path(person_id: person), params: {
+          return_to: "details",
+          profile_change_request: { field: "affiliation", affiliation_id: affiliation.id,
+                                    requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, details: "9 Elm St, Pasadena, CA" }
+        }
+        expect(person.profile_change_requests.last).to have_attributes(requested_value: "Work address", details: "9 Elm St, Pasadena, CA")
+        expect(person.profile_change_requests.last).not_to be_auto_appliable
+      end
+    end
+
     it "names an organization once with each title nested under it" do
       create(:affiliation, person: person, organization: organization, title: "Program Coordinator")
 
       get details_person_path(person)
 
-      expect(response.body.scan("Sunrise Center").size).to eq(1)
+      expect(response.body.scan(%r{>Sunrise Center</p>}).size).to eq(1)
       expect(response.body).to include("AWBW Facilitator", "Program Coordinator")
     end
 
