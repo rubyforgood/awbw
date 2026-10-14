@@ -32,6 +32,12 @@ class FormSubmissionChanges
   # organization_<attr>), so a change row can deep-link to where it's edited.
   SECTION_ANCHORS = { "Address" => "addresses", "ContactMethod" => "phones" }.freeze
 
+  # Rows whose changes group under the record they belong to, keyed to that owner's polymorphic prefix.
+  OWNER_PREFIXES = {
+    "SectorableItem" => "sectorable", "CategorizableItem" => "categorizable",
+    "Address" => "addressable", "ContactMethod" => "contactable"
+  }.freeze
+
   Change = Struct.new(:outcome, :label, :value, :previous_value, :anchor, keyword_init: true)
   Group = Struct.new(:record_type, :record_id, :title, :changes, keyword_init: true)
 
@@ -81,32 +87,29 @@ class FormSubmissionChanges
       .select { |event| event.properties["resource_type"].in?(RELEVANT_TYPES) }
   end
 
-  # A tag row belongs to the person/organization it tags, not to itself, so its
-  # changes group under that owner. Everything else owns its own changes.
+  # A tag, address, or phone belongs to the person/organization it hangs off, so
+  # its changes group under that owner; one whose owner can't be found (the row
+  # is gone) groups under itself. Everything else owns its own changes.
   def owner_key(event)
     props = event.properties
-    case props["resource_type"]
-    when "SectorableItem" then tag_owner_key(event, "sectorable")
-    when "CategorizableItem" then tag_owner_key(event, "categorizable")
-    when "Address", "ContactMethod" then [ props.dig("attributes", "addressable_type") || props.dig("attributes", "contactable_type"), props.dig("attributes", "addressable_id") || props.dig("attributes", "contactable_id") ]
-    else [ props["resource_type"], props["resource_id"] ]
-    end
+    own_key = [ props["resource_type"], props["resource_id"] ]
+    prefix = OWNER_PREFIXES[props["resource_type"]]
+    return own_key unless prefix
+
+    attributes = row_attributes(event)
+    owner_key = [ attributes["#{prefix}_type"], attributes["#{prefix}_id"] ]
+    owner_key.all?(&:present?) ? owner_key : own_key
   end
 
-  def tag_owner_key(event, prefix)
-    attributes = tag_attributes(event)
-    [ attributes["#{prefix}_type"], attributes["#{prefix}_id"] ]
+  # A row's own columns. A create or destroy event snapshots them; an update
+  # (a phone edited, a primary flag flipped) carries only the changed columns,
+  # so the row itself supplies the rest.
+  def row_attributes(event)
+    @row_attributes ||= {}
+    @row_attributes[event.id] ||= event.properties["attributes"].presence || live_row_attributes(event)
   end
 
-  # A tag row's own columns. A create or destroy event snapshots them; an update
-  # (the primary flag flipping as a new primary is selected) carries only the
-  # changed column, so the row itself supplies the rest.
-  def tag_attributes(event)
-    @tag_attributes ||= {}
-    @tag_attributes[event.id] ||= event.properties["attributes"].presence || tag_row_attributes(event)
-  end
-
-  def tag_row_attributes(event)
+  def live_row_attributes(event)
     props = event.properties
     props["resource_type"].safe_constantize&.find_by(id: props["resource_id"])&.attributes || {}
   end
@@ -163,7 +166,7 @@ class FormSubmissionChanges
   end
 
   def tag_change(action, event)
-    attributes = tag_attributes(event)
+    attributes = row_attributes(event)
     if event.properties["resource_type"] == "SectorableItem"
       name = Sector.find_by(id: attributes["sector_id"])&.name
       kind = "sector"
