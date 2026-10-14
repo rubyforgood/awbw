@@ -341,9 +341,12 @@ RSpec.describe PersonPolicy, type: :policy do
       ActionController::Parameters.new(
         contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
         topic_subscription_type_id: [ "2" ], facilitator_status: "active",
-        membership_status: "paid"
+        membership_status: "paid", sector_names_all: "Arts", age_range_names_all: "Teens",
+        organization_name: "Acme", organization_id: "3"
       )
     end
+
+    let(:shared_filter_keys) { %w[shared_contact_info shared_sector_names_all shared_age_range_names_all shared_organization_name shared_organization_id] }
 
     def index_filters_for(user)
       policy_for(record: Person, user: user)
@@ -355,15 +358,27 @@ RSpec.describe PersonPolicy, type: :policy do
     end
 
     it "drops the admin-only filters for a regular user" do
-      expect(index_filters_for(regular_user).keys).to contain_exactly("shared_contact_info")
+      expect(index_filters_for(regular_user).keys).to contain_exactly(*shared_filter_keys)
     end
 
     it "drops the admin-only filters for a visitor" do
-      expect(index_filters_for(nil).keys).to contain_exactly("shared_contact_info")
+      expect(index_filters_for(nil).keys).to contain_exactly(*shared_filter_keys)
     end
 
     it "narrows a non-admin's contact-info search to shared contact info" do
       expect(index_filters_for(regular_user)[:shared_contact_info]).to eq("ada")
+    end
+
+    it "narrows a non-admin's sector and age range filters to what profiles share" do
+      filters = index_filters_for(regular_user)
+      expect(filters[:shared_sector_names_all]).to eq("Arts")
+      expect(filters[:shared_age_range_names_all]).to eq("Teens")
+    end
+
+    it "narrows a non-admin's organization filters to shared affiliations" do
+      filters = index_filters_for(regular_user)
+      expect(filters[:shared_organization_name]).to eq("Acme")
+      expect(filters[:shared_organization_id]).to eq("3")
     end
   end
 
