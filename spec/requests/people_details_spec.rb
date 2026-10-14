@@ -41,10 +41,10 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect(response.body).not_to include("person[email]", "person[filemaker_code]", "person[profile_show_email]")
   end
 
-  it "leaves Ask a question to the profile banner" do
+  it "leaves Ask an unrelated question to the profile banner" do
     get details_person_path(person)
 
-    expect(response.body).not_to include("Ask a question")
+    expect(response.body).not_to include("Ask an unrelated question")
   end
 
   it "saves and returns to the profile" do
@@ -159,6 +159,39 @@ RSpec.describe "Editing your own profile details", type: :request do
         return_to: "details", profile_change_request: { field: "secondary_email", requested_value: "new2@example.com" }
       }
       expect(response).to redirect_to(details_person_path(person, anchor: "emails"))
+    end
+  end
+
+  describe "the affiliations card" do
+    let(:organization) { create(:organization, name: "Sunrise Center") }
+    let!(:affiliation) { create(:affiliation, person: person, organization: organization, title: "Facilitator") }
+
+    it "lists each organization with a request-a-change button and an add button" do
+      get details_person_path(person)
+
+      expect(response.body).to include("Affiliations", "Sunrise Center", "AWBW Facilitator", "Add an organization")
+      expect(response.body).to include("affiliation_id=#{affiliation.id}&amp;field=affiliation&amp;person_id=#{person.id}&amp;return_to=details")
+      expect(response.body).to include("add=1&amp;field=affiliation&amp;person_id=#{person.id}&amp;return_to=details")
+    end
+
+    it "links an organization with a pending request to that request" do
+      request = create(:profile_change_request, person: person, affiliation: affiliation, requested_by: owner_user,
+                                                requested_value: "Title or role", proposed_title: "Lead", details: nil)
+
+      get details_person_path(person)
+
+      expect(response.body).to include(edit_profile_change_request_path(request, return_to: "details"), "See your request")
+    end
+
+    it "keeps the edit page as the way back through the request steps" do
+      get new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id, return_to: "details")
+      expect(response.body).to include("Back to editing my profile", "change=Start+or+end+dates&amp;field=affiliation&amp;person_id=#{person.id}&amp;return_to=details")
+
+      post profile_change_requests_path(person_id: person), params: {
+        return_to: "details",
+        profile_change_request: { field: "affiliation", affiliation_id: affiliation.id, requested_value: "Title or role", proposed_title: "Lead" }
+      }
+      expect(response).to redirect_to(details_person_path(person, anchor: "affiliations"))
     end
   end
 

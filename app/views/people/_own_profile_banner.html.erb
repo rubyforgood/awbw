@@ -25,8 +25,8 @@
     <%= link_to new_profile_change_request_path(person_id: person, field: ProfileChangeRequest::OTHER_FIELD), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-comment"></i> Ask for another change
     <% end %>
-    <%= link_to contact_us_path(subject: "Question about my profile", return_to: "person_profile"), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-circle-question"></i> Ask a question
+    <%= link_to contact_us_path(subject: "Question for AWBW staff", return_to: "person_profile"), class: button_classes(:secondary_outline) do %>
+      <i class="fa-solid fa-circle-question"></i> Ask an unrelated question
     <% end %>
   </div>
   <% if pending_requests.any? %>

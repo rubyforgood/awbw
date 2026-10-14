@@ -24,10 +24,10 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
 
     it "offers a prefilled question form that leads back to the profile" do
       get person_path(person)
-      expect(response.body).to include("Ask a question")
-      expect(response.body).to include(contact_us_path(subject: "Question about my profile", return_to: "person_profile").gsub("&", "&amp;"))
+      expect(response.body).to include("Ask an unrelated question")
+      expect(response.body).to include(contact_us_path(subject: "Question for AWBW staff", return_to: "person_profile").gsub("&", "&amp;"))
 
-      get contact_us_path(subject: "Question about my profile", return_to: "person_profile")
+      get contact_us_path(subject: "Question for AWBW staff", return_to: "person_profile")
       expect(response.body).to include("Back to my profile", %(href="#{person_path(person)}"))
     end
 

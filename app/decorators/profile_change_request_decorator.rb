@@ -45,7 +45,7 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
 
   # `return_to: "details"` comes back to the email card on the simple edit page.
   def profile_return_path(return_to = nil)
-    return h.details_person_path(person, anchor: "emails") if return_to == "details"
+    return h.details_person_path(person, anchor: (field == "affiliation" ? "affiliations" : "emails")) if return_to == "details"
 
     h.person_path(person, anchor: ("affiliations" if field == "affiliation"))
   end

@@ -104,8 +104,12 @@ class ProfileChangeRequestsController < ApplicationController
   def prepare_affiliation_request
     @affiliations = @person.affiliations.includes(:organization).select(&:organization)
                            .sort_by { |a| [ a.active? ? 0 : 1, a.organization.name.downcase ] }
-    organizations_path = new_profile_change_request_path(person_id: @person, field: "affiliation")
-    profile_link = [ person_path(@person, anchor: "affiliations"), "Back to my profile" ]
+    organizations_path = new_profile_change_request_path(person_id: @person, field: "affiliation", return_to: return_to)
+    profile_link = if return_to
+      [ details_person_path(@person, anchor: "affiliations"), "Back to editing my profile" ]
+    else
+      [ person_path(@person, anchor: "affiliations"), "Back to my profile" ]
+    end
     organizations_link = @affiliations.many? ? [ organizations_path, "Back to my organizations" ] : profile_link
 
     if params[:add].present? || @affiliations.empty?
@@ -122,7 +126,7 @@ class ProfileChangeRequestsController < ApplicationController
     end
 
     existing = @person.profile_change_requests.pending.find_by(field: "affiliation", affiliation: @request.affiliation)
-    return redirect_to edit_profile_change_request_path(existing) if existing
+    return redirect_to edit_profile_change_request_path(existing, return_to: return_to) if existing
 
     change = params[:change].presence_in(ProfileChangeRequest::AFFILIATION_CHANGE_TYPES - [ ProfileChangeRequest::AFFILIATION_CHANGE_ADD ])
     unless change
@@ -131,7 +135,7 @@ class ProfileChangeRequestsController < ApplicationController
     end
 
     @request.requested_value = change
-    @back_path = new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: @request.affiliation.id)
+    @back_path = new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: @request.affiliation.id, return_to: return_to)
     @back_label = "Back"
   end
 

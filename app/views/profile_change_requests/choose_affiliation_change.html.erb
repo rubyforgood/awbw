@@ -9,7 +9,7 @@
   <p class="mt-2 text-lg text-gray-700"><%= @request.affiliation_summary %></p>
   <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
     <% ProfileChangeRequestDecorator::AFFILIATION_CHANGE_CHOICES.except(ProfileChangeRequest::AFFILIATION_CHANGE_ADD).each do |change, choice| %>
-      <%= link_to new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: @request.affiliation.id, change: change),
+      <%= link_to new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: @request.affiliation.id, change: change, return_to: return_to),
                   class: "border-primary/10 flex items-center gap-4 rounded-2xl border bg-white p-5 shadow-sm transition hover:border-primary hover:shadow-md" do %>
         <span class="bg-brand-cream text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl">
           <i class="<%= choice[:icon] %>"></i>
