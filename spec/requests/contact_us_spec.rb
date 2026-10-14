@@ -98,6 +98,23 @@ RSpec.describe "ContactUs", type: :request do
         expect(response.body).to include("reply by email to #{user.email}")
       end
 
+      it "focuses the subject line" do
+        get contact_us_path
+        expect(response.body).to match(/name="contact_us\[subject\]"[^>]*autofocus/m)
+      end
+
+      it "focuses the message when the subject is prefilled" do
+        get contact_us_path(subject: "Request to update my affiliation history")
+        expect(response.body).to match(/name="contact_us\[message\]"[^>]*autofocus/m)
+        expect(response.body).not_to match(/name="contact_us\[subject\]"[^>]*autofocus/m)
+      end
+
+      it "shows other ways to reach us beside the form" do
+        get contact_us_path
+        expect(response.body).to include("Other ways to reach us")
+        expect(response.body).to include("tel:310-396-0317")
+      end
+
       it "does not show visible form fields for name, email, and organization" do
         get contact_us_path
         expect(response.body).to include('type="hidden"')
@@ -140,6 +157,7 @@ RSpec.describe "ContactUs", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(EmailConfigHelpers::INFO_EMAIL)
       expect(response.body).to include("1029 1/2 W 24th Street")
+      expect(response.body).not_to include("Other ways to reach us")
       # Rendered inside the story_shares layout (the get-involved band)
       expect(response.body).to include("There's a place for you at AWBW")
       # Subject preset picker posts straight through as contact_us[subject]
