@@ -186,28 +186,27 @@ class Person < ApplicationRecord
     options :all, type: :text, default: true, default_operator: :or
   end
 
-  search_scope :shared_name_search do
-    attributes all: [ :first_name, :last_name ]
-    options :all, type: :text, default: true, default_operator: :or
-  end
+  FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
+  LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
 
-  search_scope :shared_email_search do
-    scope { left_joins(:user) }
-    attributes all: [ :email, "user.email" ]
-    options :all, type: :text, default: true, default_operator: :or
-  end
+  SHARED_CONTACT_MATCH_SQL = <<~SQL.squish
+    (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
+    OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
+    OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
+    OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
+  SQL
 
-  search_scope :shared_phone_search do
-    scope { left_joins(:user, :active_phones) }
-    attributes all: [ "user.phone", "contact_methods.value" ]
-    options :all, type: :text, default: true, default_operator: :or
-  end
-
-  # Contact-info search for non-admins: matches only what the person's profile shows.
+  # Contact-info search for non-admins: every term must match something the person's profile shows.
   def self.shared_contact_search(query)
-    where(id: unscoped.shared_name_search(query).select(:id))
-      .or(where(id: unscoped.where(profile_show_email: true).shared_email_search(query).select(:id)))
-      .or(where(id: unscoped.where(profile_show_phone: true).shared_phone_search(query).select(:id)))
+    query.split.reduce(all) do |relation, term|
+      matches = unscoped.left_joins(:user, :active_phones).where(
+        SHARED_CONTACT_MATCH_SQL,
+        pattern: "%#{sanitize_sql_like(term)}%",
+        first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
+        last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES
+      )
+      relation.where(id: matches.select(:id))
+    end
   end
 
   scope :organization_ids, ->(organization_ids)  { joins(:affiliations)
