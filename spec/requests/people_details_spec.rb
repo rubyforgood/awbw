@@ -41,12 +41,6 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect(response.body).not_to include("person[email]", "person[filemaker_code]", "person[profile_show_email]")
   end
 
-  it "leaves Ask an unrelated question to the profile banner" do
-    get details_person_path(person)
-
-    expect(response.body).not_to include("Ask an unrelated question")
-  end
-
   it "saves and returns to the profile" do
     save_details(first_name: "Jordan", pronouns: "they/them", bio: "I teach art.", linked_in_url: "https://linkedin.com/in/x")
 

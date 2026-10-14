@@ -1,18 +1,12 @@
 <%# locals: (person:) %>
 <% pending_requests = person.profile_change_requests.pending.newest_first.includes(affiliation: :organization).decorate %>
 <div id="own-profile" class="border-primary/10 mb-4 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div class="space-y-1 text-base text-gray-700">
-      <h2 class="text-primary font-display text-2xl font-semibold">This is your profile</h2>
-      <p>To update your details, click <strong>Edit my profile</strong>.</p>
-      <p>AWBW staff keep your email and organizations up to date. Use the buttons below to ask us for a change, or for anything you can't change yourself.</p>
-    </div>
-    <%= link_to details_person_path(person),
-                  class: "text-primary inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-brand-yellow-400 px-6 py-3 text-lg font-semibold shadow-sm transition hover:bg-brand-yellow-500" do %>
-      <i class="fa-solid fa-pen"></i> Edit my profile
-    <% end %>
+  <div class="space-y-1 text-base text-gray-700">
+    <h2 class="text-primary font-display text-2xl font-semibold">This is your profile</h2>
+    <p>To update your details, click <strong>Edit my profile</strong>.</p>
+    <p>AWBW staff keep your email and organizations up to date. Use the buttons below to ask us for a change, or for anything you can't change yourself.</p>
   </div>
-  <div class="mt-4 flex flex-wrap gap-3">
+  <div class="mt-4 flex flex-wrap items-center gap-3">
     <%= link_to visibility_person_path(person), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-eye-slash"></i> Choose what others see
     <% end %>
@@ -25,8 +19,9 @@
     <%= link_to new_profile_change_request_path(person_id: person, field: ProfileChangeRequest::OTHER_FIELD), class: button_classes(:secondary_outline) do %>
       <i class="fa-solid fa-comment"></i> Ask for another change
     <% end %>
-    <%= link_to contact_us_path(subject: "Question for AWBW staff", return_to: "person_profile"), class: button_classes(:secondary_outline) do %>
-      <i class="fa-solid fa-circle-question"></i> Ask an unrelated question
+    <%= link_to details_person_path(person),
+                  class: "text-primary inline-flex items-center justify-center gap-2 rounded-full bg-brand-yellow-400 px-6 py-3 text-lg font-semibold shadow-sm transition hover:bg-brand-yellow-500 sm:ml-auto" do %>
+      <i class="fa-solid fa-pen"></i> Edit my profile
     <% end %>
   </div>
   <% if pending_requests.any? %>
