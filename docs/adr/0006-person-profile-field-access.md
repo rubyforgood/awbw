@@ -75,7 +75,7 @@ person form.
 
 **Hidden pieces stay visible to the owner and admins.** When a `profile_show_*` toggle is
 off, the index marks that cell with an eye-slash, and the profile keeps the piece in its
-usual spot under the blue `admin-or-owner` wash with a "Hidden from profile" badge
+usual spot under the lilac `admin-or-owner` wash with a "Hidden from profile" badge
 (`PersonHelper#profile_piece_hidden_for_viewer?`, `DomainTheme` key `admin_or_owner`).
 When every section in a profile card is off, the whole card takes the wash and other users
 don't see the card. The lazy `?section=` frames for hidden sections authorize on
@@ -86,7 +86,7 @@ always sit under the `admin-or-owner` wash and are never shown to other users. T
 `profile_show_*` columns are unused.
 
 Key: ✅ shown or editable · 🔀 shown only if the owner's `profile_show_*` toggle is on · 👁
-shown, under the blue `admin-or-owner` wash when the toggle is off · 🔒 read-only · 📨
+shown, under the lilac `admin-or-owner` wash when the toggle is off · 🔒 read-only · 📨
 read-only with a "Request a change" link · 🔵 admin-only (admin styling) · — not shown
 
 | Field | Tier | Index · user | Index · admin | Profile · other user | Profile · owner | Profile · admin | Edit · owner | Edit · admin |

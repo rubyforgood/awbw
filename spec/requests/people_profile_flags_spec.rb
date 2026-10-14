@@ -35,13 +35,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
           expect(response.body).not_to include(marker)
         end
 
-        it "reveals content with the blue wash on own profile" do
+        it "reveals content with the admin-or-owner wash on own profile" do
           sign_in owner_user
           get person_path(person)
           expect(washed?("admin-or-owner", marker)).to be(true)
         end
 
-        it "reveals content with the blue wash when admin views profile" do
+        it "reveals content with the admin-or-owner wash when admin views profile" do
           sign_in admin
           get person_path(person)
           expect(washed?("admin-or-owner", marker)).to be(true)
@@ -72,13 +72,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_credentials: false) }
 
-      it "reveals the license credentials with the blue wash on own profile" do
+      it "reveals the license credentials with the admin-or-owner wash on own profile" do
         sign_in owner_user
         get person_path(person)
         expect(washed?("admin-or-owner", "LCSW")).to be(true)
       end
 
-      it "reveals the license credentials with the blue wash when admin views profile" do
+      it "reveals the license credentials with the admin-or-owner wash when admin views profile" do
         sign_in admin
         get person_path(person)
         expect(washed?("admin-or-owner", "LCSW")).to be(true)
@@ -112,13 +112,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_social_media: false) }
 
-      it "reveals social media with the blue wash on own profile" do
+      it "reveals social media with the admin-or-owner wash on own profile" do
         sign_in owner_user
         get person_path(person)
         expect(washed?("admin-or-owner", "fa-linkedin-in")).to be(true)
       end
 
-      it "reveals social media with the blue wash when admin views profile" do
+      it "reveals social media with the admin-or-owner wash when admin views profile" do
         sign_in admin
         get person_path(person)
         expect(washed?("admin-or-owner", "fa-linkedin-in")).to be(true)
@@ -154,13 +154,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_email: false) }
 
-      it "reveals email with the blue wash on own profile" do
+      it "reveals email with the admin-or-owner wash on own profile" do
         sign_in owner_user
         get person_path(person)
         expect(washed?("admin-or-owner", email)).to be(true)
       end
 
-      it "reveals email with the blue wash when admin views profile" do
+      it "reveals email with the admin-or-owner wash when admin views profile" do
         sign_in admin
         get person_path(person)
         expect(washed?("admin-or-owner", email)).to be(true)
@@ -228,7 +228,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
   end
 
   def nearest_wash(title)
-    section_heading(title)&.ancestors&.find { |node| node["class"].to_s.split.include?("bg-blue-100") }
+    section_heading(title)&.ancestors&.find { |node| node["class"].to_s.split.include?(DomainTheme.bg_class_for(:admin_or_owner, intensity: 100)) }
   end
 
   # Published-content sections stay visible to the owner and admins under a wash when turned off
@@ -245,14 +245,14 @@ RSpec.describe "Person profile flag visibility", type: :request do
       context "when false" do
         before { person.update!(flag => false) }
 
-        it "shows the section with the blue wash on own profile" do
+        it "shows the section with the admin-or-owner wash on own profile" do
           sign_in owner_user
           get person_path(person)
           expect(nearest_wash(title)["class"]).to include("admin-or-owner")
           expect(nearest_wash(title).text).to include(badge)
         end
 
-        it "shows the section with the blue wash when admin views profile" do
+        it "shows the section with the admin-or-owner wash when admin views profile" do
           sign_in admin
           get person_path(person)
           expect(nearest_wash(title)["class"]).to include("admin-or-owner")
@@ -312,13 +312,13 @@ RSpec.describe "Person profile flag visibility", type: :request do
     submitted_titles = [ "Workshop ideas submitted", "Workshop variation ideas submitted",
                          "Story ideas submitted", "Workshop logs submitted" ]
 
-    it "always shows under the blue wash on own profile" do
+    it "always shows under the admin-or-owner wash on own profile" do
       sign_in owner_user
       get person_path(person)
       submitted_titles.each { |title| expect(nearest_wash(title).text).to include("Only visible to you and admins") }
     end
 
-    it "always shows under the blue wash when admin views profile" do
+    it "always shows under the admin-or-owner wash when admin views profile" do
       sign_in admin
       get person_path(person)
       submitted_titles.each { |title| expect(nearest_wash(title).text).to include("Only visible to this person and admins") }
