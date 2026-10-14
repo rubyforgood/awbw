@@ -1,0 +1,8 @@
+<ul class="space-y-1">
+  <% records.each do |record| %>
+    <li class="flex gap-2">
+      <%= fm_archive_id_tag(record) %>
+      <%= fm_archive_summary_tag(record) %>
+    </li>
+  <% end %>
+</ul>
