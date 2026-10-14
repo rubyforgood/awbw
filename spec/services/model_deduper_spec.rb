@@ -193,6 +193,15 @@ RSpec.describe ModelDeduper do
       expect(news.reload.organization_id).to eq(keep.id)
       expect(story.reload.organization_id).to eq(keep.id)
     end
+
+    it "previews rows whose STI type no longer maps to a subclass by id" do
+      stale = create(:report, organization: dupe)
+      stale.update_column(:type, "WorkshopLog")
+
+      entry = service.reassignment_preview(dupe).find { |e| e[:label] == "Reports" }
+
+      expect(entry).to include(count: 1, names: [ "##{stale.id}" ])
+    end
   end
 
   describe "#unhandled_references (coverage safeguard)" do

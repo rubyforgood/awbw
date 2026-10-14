@@ -68,9 +68,16 @@ class ModelDeduper
       {
         label: join_label(join),
         count: count,
-        names: scope.limit(NAME_LIMIT).map { |related| record_display(related) }
+        names: preview_names(scope.limit(NAME_LIMIT))
       }
     end.sort_by { |entry| entry[:label] }
+  end
+
+  # A row whose STI type has no subclass can't be instantiated, so it's listed by id.
+  def preview_names(scope)
+    scope.map { |related| record_display(related) }
+  rescue ActiveRecord::SubclassNotFound
+    scope.pluck(:id).map { |id| "##{id}" }
   end
 
   # A best-effort human name for an associated record: its own name/title, else a
