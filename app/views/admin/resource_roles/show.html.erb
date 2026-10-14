@@ -1,0 +1,111 @@
+<% content_for(:page_title, "Resource roles") %>
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+
+<div class="mx-auto max-w-4xl">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+    <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class}" %>
+  </div>
+
+  <h1 class="mb-2 text-2xl font-semibold text-gray-900">Resource roles</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Choose which Resource fills each built-in spot in the portal — certificate artwork, the W-9, and the
+    training handouts. Upload the file as a Resource the usual way, then connect it here.
+  </p>
+
+  <div class="space-y-8">
+    <% @sections.each do |section, slots| %>
+      <section>
+        <h2 class="text-lg font-semibold text-gray-900"><%= section %></h2>
+        <p class="mb-3 text-sm text-gray-600"><%= Admin::ResourceRolesController::SECTIONS[section] %></p>
+
+        <div class="space-y-4">
+          <% slots.each do |slot| %>
+            <div id="<%= slot[:role] %>" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div class="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+                <div class="min-w-0 sm:flex-1">
+                  <h3 class="text-sm font-semibold text-gray-800"><%= slot[:label] %></h3>
+                  <p class="mt-1 truncate text-xs text-gray-500" title="<%= slot[:description] %>"><%= slot[:description] %></p>
+
+                  <%# Picking a resource (or clearing it with the ✕) submits this form and
+                      connects/disconnects the slot — no separate button. %>
+                  <%= form_with url: admin_resource_roles_path, method: :patch, class: "mt-3" do %>
+                    <%= hidden_field_tag :slot, slot[:role] %>
+                    <select name="resource_id"
+                            data-controller="remote-select"
+                            data-remote-select-model-value="resource"
+                            data-remote-select-submit-on-change-value="true"
+                            class="w-full rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
+                      <option value="">Type to search resources…</option>
+                      <% if slot[:connected_resource] %>
+                        <option value="<%= slot[:connected_resource].id %>" selected><%= slot[:connected_resource].title %></option>
+                      <% end %>
+                    </select>
+                  <% end %>
+
+                  <% if slot[:resource] %>
+                    <%= link_to edit_resource_path(slot[:resource]), target: "_blank", rel: "noopener",
+                          class: "mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 hover:text-gray-900" do %>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                      <span class="underline">Open “<%= slot[:resource].title %>” in a new tab</span>
+                    <% end %>
+                    <% unless slot[:connected] %>
+                      <p class="mt-1 text-xs text-amber-700">Auto-matched by title — connect it here to keep it after it's renamed.</p>
+                    <% end %>
+                  <% else %>
+                    <p class="mt-2 text-xs text-gray-400">
+                      Or
+                      <%= link_to "create a new Resource", new_resource_path(title: slot[:label]),
+                            target: "_blank", rel: "noopener",
+                            class: "font-medium text-gray-700 underline hover:text-gray-900" %>,
+                      then connect it here.
+                    </p>
+                  <% end %>
+                </div>
+
+                <% if slot[:preview_partial] %>
+                  <div class="sm:w-60 sm:shrink-0">
+                    <%# A true miniature of the final certificate: the real partial rendered
+                        at full size, scaled down by transform so the committed-PNG and
+                        CSS-drawn frames both read accurately. frame_file is the connected
+                        upload (else nil → the built-in design). %>
+                    <div class="mx-auto h-[136px] w-[192px] overflow-hidden rounded-lg border border-gray-200 bg-white">
+                      <div class="w-[1024px] origin-top-left scale-[0.1875]">
+                        <%= render slot[:preview_partial],
+                              event: @preview_event, recipient: @preview_recipient,
+                              frame_file: slot[:file], signature_file: nil,
+                              license_label: "LMFT 00000", hours_label: 6,
+                              facilitator_names: [ "Sample Facilitator" ], issued_on: Date.current %>
+                      </div>
+                    </div>
+                    <p class="mt-2 text-center text-xs text-gray-400">
+                      <% if slot[:resource] %>Preview<% else %>Built-in design — none connected<% end %>
+                    </p>
+                  </div>
+                <% elsif slot[:image_preview] %>
+                  <div class="sm:w-60 sm:shrink-0">
+                    <% if slot[:resource] %>
+                      <div class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <% if slot[:file]&.variable? %>
+                          <%= image_tag slot[:file].variant(:card), alt: "#{slot[:label]} preview",
+                                class: "mx-auto max-h-16 w-auto object-contain" %>
+                        <% else %>
+                          <p class="py-6 text-center text-xs text-amber-700">
+                            “<%= slot[:resource].title %>” has no previewable image attached.
+                          </p>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <div class="flex h-24 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400">
+                        No default signature — blank until connected
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  </div>
+</div>

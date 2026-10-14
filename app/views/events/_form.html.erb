@@ -742,24 +742,16 @@
 
                   <% if card.title == "Handouts" %>
                     <div class="mt-2 space-y-1">
-                      <% ["2-Day AWBW Facilitator Training Worksheets & Handouts",
-                          "AWBW Training Workshop Worksheets",
-                          "AHA Moments",
-                          "Inviting and Responding to Participants' Sharing",
-                          "Letter to Supervisors"].each do |t| %>
-                        <% resource = Resource.find_by(title: t) %>
-
-                        <% if resource %>
-                          <%= link_to edit_resource_path(resource),
-                                      class: "text-xs text-blue-600 hover:text-blue-800 underline block" do %>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                            <%= resource.title %>
-                          <% end %>
+                      <% Resource.for_roles(Resource::HANDOUT_ROLES).each do |resource| %>
+                        <%= link_to edit_resource_path(resource),
+                                    class: "text-xs text-blue-600 hover:text-blue-800 underline block" do %>
+                          <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                          <%= resource.title %>
                         <% end %>
                       <% end %>
                     </div>
                   <% elsif card.title == "Forms" %>
-                    <% w9 = Resource.find_by(title: "W-9") %>
+                    <% w9 = Resource.for_role("w9") %>
                     <% if w9 %>
                       <div class="mt-2">
                         <%= link_to edit_resource_path(w9),
