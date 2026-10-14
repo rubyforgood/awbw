@@ -17,7 +17,7 @@
     <h2 class="font-display text-2xl text-gray-900">Hidden from public</h2>
     <span class="ml-auto flex items-center gap-3">
       <span class="text-sm <%= DomainTheme.text_class_for(:user_only, intensity: 700) %> italic">
-        <%= current_user&.person_id == person.id ? "Only visible to you and admins" : "Only visible to this person and admins" %>
+        <%= owner_and_admins_label(person) %>
       </span>
       <i class="fa-solid fa-chevron-down text-gray-400 transition-transform" data-expandable-card-target="icon"></i>
     </span>

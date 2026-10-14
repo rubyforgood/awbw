@@ -155,6 +155,10 @@ module PersonHelper
     !person.public_send(:"#{flag}?") && allowed_to?(:own_record?, person)
   end
 
+  def owner_and_admins_label(person)
+    current_user&.person_id == person.id ? "Only visible to you and admins" : "Only visible to this person and admins"
+  end
+
   def profile_hidden_icon
     tag.i(class: "admin-or-owner fa-solid fa-eye-slash text-xs #{DomainTheme.text_class_for(:user_only, intensity: 700)}", title: "Hidden from public")
   end
