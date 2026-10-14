@@ -14,7 +14,7 @@
               label: "What would you like us to change?",
               hint: "For example: \"Please fix the spelling of my last name.\"",
               input_html: { rows: 5, class: "w-full text-lg" } %>
-<% elsif request.auto_appliable? %>
+<% elsif request.field.in?(ProfileChangeRequest::AUTO_APPLIABLE_FIELDS) %>
   <%= f.input :requested_value,
               label: "Change #{request.field_label.downcase} to",
               input_html: { class: "w-full" } %>

@@ -17,10 +17,7 @@ class ProfileChangeRequestsController < ApplicationController
     @person = Person.find(params[:person_id])
     @request = @person.profile_change_requests.new(field: requested_field, requested_by: current_user)
     authorize! @request
-
-    # Affiliation requests target a specific affiliation chosen on the form, so we
-    # can't resolve "the" existing one here — only the single-target fields dedupe.
-    return if requested_field == "affiliation"
+    return prepare_affiliation_request if requested_field == "affiliation"
 
     existing = @person.profile_change_requests.pending.find_by(field: requested_field)
     redirect_to edit_profile_change_request_path(existing) if existing
@@ -100,6 +97,26 @@ class ProfileChangeRequestsController < ApplicationController
 
   def review_note
     params[:reviewer_note].presence
+  end
+
+  # Someone with several organizations picks one first; with one (or none) the
+  # form opens straight on it.
+  def prepare_affiliation_request
+    @affiliations = @person.affiliations.includes(:organization).select(&:organization)
+                           .sort_by { |a| [ a.active? ? 0 : 1, a.organization.name.downcase ] }
+    if params[:add].present? || @affiliations.empty?
+      @request.requested_value = ProfileChangeRequest::AFFILIATION_CHANGE_ADD
+    elsif params[:affiliation_id].present?
+      @request.affiliation = @affiliations.find { |a| a.id.to_s == params[:affiliation_id].to_s }
+    elsif @affiliations.one?
+      @request.affiliation = @affiliations.first
+    else
+      @pending_by_affiliation = @person.profile_change_requests.pending.where(field: "affiliation").index_by(&:affiliation_id)
+      return render :choose_affiliation
+    end
+
+    existing = @request.affiliation && @person.profile_change_requests.pending.find_by(field: "affiliation", affiliation: @request.affiliation)
+    redirect_to edit_profile_change_request_path(existing) if existing
   end
 
   def profile_change_request_params
