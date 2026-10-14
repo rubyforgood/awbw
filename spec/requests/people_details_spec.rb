@@ -162,7 +162,7 @@ RSpec.describe "Editing your own profile details", type: :request do
 
       get details_person_path(person)
 
-      expect(response.body).to include("Add another address", "Make this my main address")
+      expect(response.body).to include("Add another address", "Make this my main address", "Mark as main")
       expect(response.body).to include("person[addresses_attributes][999][street_address]")
       expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[addresses_attributes\]\[0\]\[primary\]"/)
     end

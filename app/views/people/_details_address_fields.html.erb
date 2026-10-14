@@ -2,7 +2,7 @@
 <% input_class = "w-full text-lg" %>
 <div class="rounded-xl border border-gray-200 p-4" data-primary-tag-target="chip">
   <div class="mb-2 flex items-center justify-between gap-4">
-    <%= render "people/main_star", f: f, kind: "address", attribute: :primary, checked: (f.object.primary? || main_by_default) %>
+    <%= render "people/main_star", f: f, kind: "address", attribute: :primary, checked: (f.object.primary? || main_by_default), prompt: "Mark as main" %>
     <% if f.object.persisted? %>
       <label class="flex items-center gap-2 text-gray-700">
         <%= f.check_box :_destroy, class: "text-primary h-5 w-5 rounded border-gray-300 focus:ring-blue-200" %> Remove this address

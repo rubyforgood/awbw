@@ -1,7 +1,10 @@
-<%# locals: (f:, kind:, attribute: :is_primary, checked: nil) %>
+<%# locals: (f:, kind:, attribute: :is_primary, checked: nil, prompt: nil) %>
 <label class="flex shrink-0 cursor-pointer items-center gap-1 rounded-full py-1 pl-3 select-none" title="Make this my main <%= kind %>">
   <%= f.check_box attribute, { checked: checked, class: "peer sr-only", data: { primary_tag_target: "primary", action: "primary-tag#selectPrimary" } }.compact %>
   <i class="fa-solid fa-star text-xl text-gray-300 transition-colors peer-checked:text-amber-400 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-200" aria-hidden="true"></i>
   <span class="sr-only">Main <%= kind %></span>
+  <% if prompt %>
+    <span class="text-sm text-gray-500 peer-checked:hidden"><%= prompt %></span>
+  <% end %>
   <span class="hidden text-sm font-medium text-amber-800 peer-checked:inline">Main</span>
 </label>

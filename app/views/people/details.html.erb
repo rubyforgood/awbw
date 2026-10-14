@@ -43,7 +43,7 @@
       <div class="divide-y divide-gray-100">
         <% emails.each do |email| %>
           <% pending = pending_email_requests[email[:field]] %>
-          <div class="grid grid-cols-1 items-start gap-4 py-4 first:pt-0 last:pb-0 sm:grid-cols-[1fr_12rem]">
+          <div class="grid grid-cols-1 items-start gap-4 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,24rem)_12rem] sm:gap-8">
             <div>
               <p class="text-sm font-medium text-gray-700"><%= email[:label] %></p>
               <% if email[:address].present? %>
@@ -236,15 +236,21 @@
             </div>
           <% end %>
         <% end %>
-        <%= f.simple_fields_for :professional_licenses, ProfessionalLicense.new, child_index: 999 do |lf| %>
-          <p class="font-medium text-gray-800"><%= @person.professional_licenses.any? ? "Add another license" : "Add a license" %></p>
-          <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
-            <%= lf.input :kind, label: "Type", placeholder: "For example: LMFT", input_html: { class: input_class } %>
-            <%= lf.input :number, label: "License number", input_html: { class: input_class } %>
-            <%= lf.input :issuing_state, label: "State", collection: us_states, include_blank: true, input_html: { class: input_class } %>
-            <%= lf.input :expires_on, label: "Expires", as: :date, html5: true, input_html: { class: input_class } %>
-          </div>
-        <% end %>
+        <details class="group">
+          <summary class="<%= button_classes(:secondary_outline) %> w-fit cursor-pointer list-none group-open:hidden [&::-webkit-details-marker]:hidden">
+            <i class="fa-solid fa-plus"></i> <%= @person.professional_licenses.any? ? "Add another license" : "Add a license" %>
+          </summary>
+          <%= f.simple_fields_for :professional_licenses, ProfessionalLicense.new, child_index: 999 do |lf| %>
+            <div class="rounded-xl border border-gray-200 p-4">
+              <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
+                <%= lf.input :kind, label: "Type", placeholder: "For example: LMFT", input_html: { class: input_class } %>
+                <%= lf.input :number, label: "License number", input_html: { class: input_class } %>
+                <%= lf.input :issuing_state, label: "State", collection: us_states, include_blank: true, input_html: { class: input_class } %>
+                <%= lf.input :expires_on, label: "Expires", as: :date, html5: true, input_html: { class: input_class } %>
+              </div>
+            </div>
+          <% end %>
+        </details>
       </div>
     </div>
     <div class="sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-3 border-t border-gray-200 bg-white/95 py-4 pr-20 pl-4 backdrop-blur sm:pr-4">

@@ -48,6 +48,7 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
     within(find("[data-primary-tag-target='chip']", text: "Health")) { find("label[title='Make this my main sector']").click }
     find("label", text: "Children (0-12)").click
     within(find("[data-primary-tag-target='chip']", text: "Teens (13-17)")) { find("label[title='Make this my main age range']").click }
+    find("summary", text: "Add a license").click
     fill_in "Type", with: "LMFT"
     fill_in "License number", with: "12345"
     click_button "Save"
