@@ -74,17 +74,36 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect(person.reload.sectors).to contain_exactly(health)
   end
 
-  it "marks the main sector" do
+  it "stars the current main sector" do
     create(:sectorable_item, sectorable: person, sector: arts, is_primary: true)
     create(:sectorable_item, sectorable: person, sector: health)
 
     get details_person_path(person)
 
-    arts_pill = response.body[/<label[^>]*>(?:(?!<\/label>).)*Arts(?:(?!<\/label>).)*<\/label>/m]
-    health_pill = response.body[/<label[^>]*>(?:(?!<\/label>).)*Health(?:(?!<\/label>).)*<\/label>/m]
-    expect(arts_pill).to include("Main")
-    expect(health_pill).not_to include("Main")
-    expect(response.body).to include("marks your main sector")
+    expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="person\[sectorable_items_attributes\]\[0\]\[is_primary\]"/)
+    expect(response.body).not_to match(/<input[^>]*checked="checked"[^>]*name="person\[sectorable_items_attributes\]\[1\]\[is_primary\]"/)
+  end
+
+  it "moves the main sector to the newly starred one" do
+    old_main = create(:sectorable_item, sectorable: person, sector: arts, is_primary: true)
+    other = create(:sectorable_item, sectorable: person, sector: health)
+
+    save_details(sectorable_items_attributes: {
+      "0" => { id: old_main.id, sector_id: arts.id, _destroy: "0", is_primary: "0" },
+      "1" => { id: other.id, sector_id: health.id, _destroy: "0", is_primary: "1" }
+    })
+
+    expect(person.reload.primary_sector).to eq(health)
+  end
+
+  it "rejects two main sectors" do
+    save_details(sectorable_items_attributes: {
+      "0" => { sector_id: arts.id, _destroy: "0", is_primary: "1" },
+      "1" => { sector_id: health.id, _destroy: "0", is_primary: "1" }
+    })
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("Only one sector can be marked as primary")
   end
 
   it "adds a license from the add row" do

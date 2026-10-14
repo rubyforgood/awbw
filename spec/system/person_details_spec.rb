@@ -33,9 +33,10 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
     select "LA City", from: "Area"
     fill_in "LinkedIn", with: "https://linkedin.com/in/jordan"
     find("label", text: "Arts").click
-    find("label", text: "Health").click
+    find("label[title='Make this my main sector']", match: :first) # stars render
+    within(find("[data-primary-tag-target='chip']", text: "Health")) { find("label[title='Make this my main sector']").click }
     find("label", text: "Children (0-12)").click
-    find("label", text: "Teens (13-17)").click
+    within(find("[data-primary-tag-target='chip']", text: "Teens (13-17)")) { find("label[title='Make this my main age range']").click }
     fill_in "Type", with: "LMFT"
     fill_in "License number", with: "12345"
     click_button "Save"
@@ -49,7 +50,9 @@ RSpec.describe "Editing my profile details", type: :system, js: true do
     expect(person.addresses.map { |a| [ a.street_address, a.city, a.state, a.zip_code, a.locality ] })
       .to eq([ [ "1 Main St", "Los Angeles", "CA", "90001", "LA City" ] ])
     expect(person.sectors).to contain_exactly(health)
+    expect(person.primary_sector).to eq(health)
     expect(person.age_range_categorizable_items.map(&:category)).to contain_exactly(teens)
+    expect(person.primary_age_groups).to eq([ teens ])
     expect(person.professional_licenses.map { |l| [ l.kind, l.number ] }).to eq([ [ "LMFT", "12345" ] ])
   end
 end

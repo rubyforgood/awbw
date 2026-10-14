@@ -95,17 +95,18 @@
     </div>
     <div id="sectors" class="<%= card_class %>">
       <h2 class="mb-1 font-display text-2xl text-gray-900">Sectors you work in</h2>
-      <p class="mb-4 text-gray-600">Turn on every one that fits.<% if @person.sectorable_items.any?(&:is_primary?) %> <span class="whitespace-nowrap"><i class="fa-solid fa-star text-xs text-amber-600"></i> Main</span> marks your main sector. To change which one is main, ask AWBW staff.<% end %></p>
+      <p class="mb-4 text-gray-600">Turn on every one that fits. Then tap the <i class="fa-solid fa-star text-amber-400"></i> star next to your main one.</p>
       <% items_by_sector = @person.sectorable_items.index_by(&:sector_id) %>
-      <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+      <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2" data-controller="primary-tag" data-primary-tag-primary-class="bg-brand-cream">
         <% @sectors_collection.each_with_index do |(name, sector_id), index| %>
           <% existing = items_by_sector[sector_id] %>
           <%= f.fields_for :sectorable_items, existing || SectorableItem.new(sector_id: sector_id), child_index: index do |sector| %>
             <%= sector.hidden_field :sector_id %>
-            <div class="border-b border-gray-100">
+            <div class="rounded-lg border-b border-gray-100" data-primary-tag-target="chip">
               <%= render "people/switch_row", f: sector, attribute: :_destroy, label: name, on_text: nil,
                          checked: existing.present? && !existing.marked_for_destruction?, checked_value: "0", unchecked_value: "1",
-                         badge: (render("people/main_badge") if existing&.is_primary?) %>
+                         leading: render("people/main_star", f: sector, kind: "sector"),
+                         input_data: { primary_tag_target: "member", action: "primary-tag#selectMember" } %>
             </div>
           <% end %>
         <% end %>
@@ -114,17 +115,18 @@
     <% if @age_ranges_collection.present? %>
       <div id="age-ranges" class="<%= card_class %>">
         <h2 class="mb-1 font-display text-2xl text-gray-900">Ages you work with</h2>
-        <p class="mb-4 text-gray-600">Turn on every one that fits.<% if @person.age_range_categorizable_items.any?(&:is_primary?) %> <span class="whitespace-nowrap"><i class="fa-solid fa-star text-xs text-amber-600"></i> Main</span> marks your main age range. To change which one is main, ask AWBW staff.<% end %></p>
+        <p class="mb-4 text-gray-600">Turn on every one that fits. Then tap the <i class="fa-solid fa-star text-amber-400"></i> star next to your main one.</p>
         <% items_by_category = @person.age_range_categorizable_items.index_by(&:category_id) %>
-        <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+        <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2" data-controller="primary-tag" data-primary-tag-primary-class="bg-brand-cream">
           <% @age_ranges_collection.each_with_index do |(name, category_id), index| %>
             <% existing = items_by_category[category_id] %>
             <%= f.fields_for :age_range_categorizable_items, existing || CategorizableItem.new(category_id: category_id), child_index: index do |age| %>
               <%= age.hidden_field :category_id %>
-              <div class="border-b border-gray-100">
+              <div class="rounded-lg border-b border-gray-100" data-primary-tag-target="chip">
                 <%= render "people/switch_row", f: age, attribute: :_destroy, label: name, on_text: nil,
                            checked: existing.present? && !existing.marked_for_destruction?, checked_value: "0", unchecked_value: "1",
-                           badge: (render("people/main_badge") if existing&.is_primary?) %>
+                           leading: render("people/main_star", f: age, kind: "age range"),
+                           input_data: { primary_tag_target: "member", action: "primary-tag#selectMember" } %>
               </div>
             <% end %>
           <% end %>
