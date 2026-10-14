@@ -72,6 +72,33 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(response.body).to include('name="person[user_attributes][time_zone]"')
     end
 
+    it "changes their primary sector and primary age range" do
+      old_sector = create(:sectorable_item, sectorable: person, is_primary: true)
+      new_sector = create(:sectorable_item, sectorable: person, is_primary: false)
+      age_category = create(:category, category_type: create(:category_type, name: "AgeRange"))
+      age_range = create(:categorizable_item, categorizable: person, category: age_category, is_primary: false)
+
+      patch person_path(person), params: { person: {
+        sectorable_items_attributes: [
+          { id: old_sector.id, sector_id: old_sector.sector_id, is_primary: false },
+          { id: new_sector.id, sector_id: new_sector.sector_id, is_primary: true }
+        ],
+        age_range_categorizable_items_attributes: [ { id: age_range.id, category_id: age_category.id, is_primary: true } ]
+      } }
+
+      expect(person.reload.primary_sector).to eq(new_sector.sector)
+      expect(age_range.reload.is_primary).to be(true)
+    end
+
+    it "shows the primary star but not the leader crown on sectors" do
+      create(:sectorable_item, sectorable: person)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("person[sectorable_items_attributes][0][is_primary]")
+      expect(response.body).not_to include("person[sectorable_items_attributes][0][is_leader]")
+    end
+
     it "ignores admin-only fields a non-admin owner tries to submit" do
       original_code = person.filemaker_code
       original_email = person.email

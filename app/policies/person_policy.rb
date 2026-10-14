@@ -11,7 +11,7 @@ class PersonPolicy < ApplicationPolicy
   ].freeze
 
   ADMIN_ONLY_USER_FIELDS = %i[person_id email inactive super_user notes].freeze
-  ADMIN_ONLY_SECTOR_FIELDS = %i[is_primary is_leader].freeze
+  ADMIN_ONLY_SECTOR_FIELDS = %i[is_leader].freeze
 
   # People-index filters only an admin may apply. The index itself is readable by
   # any signed-in user while profiles preview, but each of these narrows the list

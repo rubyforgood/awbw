@@ -402,8 +402,9 @@ RSpec.describe PersonPolicy, type: :policy do
         .to eq("id" => "1", "phone" => "555-0100", "time_zone" => "Hawaii")
     end
 
-    it "strips the admin-only sector flags while retaining the sector" do
-      expect(write_params_for(owner_user)[:sectorable_items_attributes].to_h).to eq("0" => { "sector_id" => "3" })
+    it "strips the sector leader flag while retaining the sector and its primary flag" do
+      expect(write_params_for(owner_user)[:sectorable_items_attributes].to_h)
+        .to eq("0" => { "sector_id" => "3", "is_primary" => "1" })
     end
 
     it "retains the permitted fields for an admin" do

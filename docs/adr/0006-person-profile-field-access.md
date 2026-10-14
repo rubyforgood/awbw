@@ -26,6 +26,10 @@ Every person field sits in exactly one access tier:
 | **Admin-set** | sees read-only, no request path | per its share toggle, or never | see + edit |
 | **Admin-only** | never sees | never see | see + edit |
 
+**People choose their own primary sector and primary age range.** Registration and
+other forms already ask for both, so the profile lets the owner change them too. Sector
+leader is an earned designation, so only admins set it.
+
 **Badges are always public, whatever the share toggles say.** "Sector Leader" shows with
 sectors hidden, author badges show with anonymous contributions on, and "Events Attended"
 shows with registrations hidden.
@@ -47,7 +51,7 @@ Ask in order, and stop at the first yes:
 
 - **The policy is a denylist.** For non-admins, `PersonPolicy`'s `params_filter` permits the
   full list and then strips `ADMIN_ONLY_FIELDS`, `ADMIN_ONLY_USER_FIELDS` (login account), and
-  `ADMIN_ONLY_SECTOR_FIELDS`. Request-a-change, admin-set, and admin-only fields all go on
+  `ADMIN_ONLY_SECTOR_FIELDS` (the leader flag). Request-a-change, admin-set, and admin-only fields all go on
   these lists.
 - **Adding a field to the permit list makes it owner-editable by default**, so classify it
   here and add it to the right strip list in the same change.
@@ -82,9 +86,9 @@ read-only · 📨 read-only with a "Request a change" link · 🔵 admin-only (a
 | Primary phone | Shared by choice | — | — | 🔀 | 🔀 | ✅ | ✅ | ✅ |
 | Social media links | Shared by choice | ✅ | ✅ | 🔀 | 🔀 | ✅ | ✅ | ✅ |
 | Bio | Shared by choice | — | — | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Sectors | Shared by choice | primary | primary | 🔀 | 🔀 | ✅ | ✅ | ✅ |
-| Sector primary ⭐ / leader 👑 flags | Admin-set | drive the chips | drive the chips | 🔀 | 🔀 | ✅ | — | ✅ |
-| Age ranges, incl. primary | Shared by choice | primary | primary | 🔀 | 🔀 | ✅ | ✅ | ✅ |
+| Sectors, incl. primary ⭐ | Shared by choice | primary | primary | 🔀 | 🔀 | ✅ | ✅ | ✅ |
+| Sector leader 👑 | Admin-set (shown as a badge) | drives the chip | drives the chip | badge | badge | badge | — | 🔵 |
+| Age ranges, incl. primary ⭐ | Shared by choice | primary | primary | 🔀 | 🔀 | ✅ | ✅ | ✅ |
 | Professional licenses | Shared by choice (credentials suffix) | — | — | 🔀 suffix | 🔀 suffix | 🔵 full list | ✅, 🔒 once tied to CE | ✅ |
 | Affiliations, organization name | Request a change | ✅ | ✅ | 🔀 | 🔀 | ✅ | 📨 | ✅ |
 | Facilitator since (derived) | Shared by choice | year | year | 🔀 | 🔀 | ✅ | 🔒 | 🔒 |
