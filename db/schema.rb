@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_160225) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_123237) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1673,10 +1673,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_160225) do
     t.boolean "profile_show_sectors", default: true, null: false
     t.boolean "profile_show_social_media", default: true, null: false
     t.boolean "profile_show_stories", default: true, null: false
-    t.boolean "profile_show_story_ideas", default: true, null: false
-    t.boolean "profile_show_workshop_ideas", default: true, null: false
     t.boolean "profile_show_workshop_logs", default: true, null: false
-    t.boolean "profile_show_workshop_variation_ideas", default: true, null: false
     t.boolean "profile_show_workshop_variations", default: true, null: false
     t.boolean "profile_show_workshops", default: true, null: false
     t.string "pronouns"
