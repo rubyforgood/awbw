@@ -283,9 +283,8 @@
           <%= f.input :organization_status_id,
                       as: :select,
                       collection: @organization_statuses,
-                      include_blank: true,
+                      include_blank: "(none)",
                       label: "Organization status",
-                      required: true,
                       wrapper_html: { class: "mb-0" },
                       input_html: {
                         class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
