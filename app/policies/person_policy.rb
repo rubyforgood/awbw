@@ -1,13 +1,17 @@
 class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
+  # Which tier each field sits in: docs/adr/0006-person-profile-field-access.md
   ADMIN_ONLY_FIELDS = %i[
-    email email_type email_2 email_2_type
-    filemaker_code blog_contributor notes member_since
+    email email_2
+    filemaker_code blog_contributor notes member_since racial_ethnic_identity
     created_by_id updated_by_id
     staff_taggings_attributes affiliations_attributes comments_attributes
-    notifications_attributes user_attributes
+    notifications_attributes
   ].freeze
+
+  ADMIN_ONLY_USER_FIELDS = %i[person_id email inactive super_user notes].freeze
+  ADMIN_ONLY_SECTOR_FIELDS = %i[is_leader].freeze
 
   # People-index filters only an admin may apply. The index itself is readable by
   # any signed-in user while profiles preview, but each of these narrows the list
@@ -200,10 +204,19 @@ class PersonPolicy < ApplicationPolicy
     )
     next permitted if admin?
 
-    permitted.except(*ADMIN_ONLY_FIELDS)
+    owner_params = permitted.except(*ADMIN_ONLY_FIELDS)
+    owner_params[:user_attributes] = owner_params[:user_attributes].except(*ADMIN_ONLY_USER_FIELDS) if owner_params[:user_attributes]
+    owner_params[:sectorable_items_attributes] = without_admin_sector_flags(owner_params[:sectorable_items_attributes]) if owner_params[:sectorable_items_attributes]
+    owner_params
   end
 
   private
+
+  def without_admin_sector_flags(items)
+    return items.map { |item| item.except(*ADMIN_ONLY_SECTOR_FIELDS) } if items.is_a?(Array)
+
+    items.transform_values { |item| item.except(*ADMIN_ONLY_SECTOR_FIELDS) }
+  end
 
   def profiles_visible_to_users?
     authenticated? && !Rails.env.production?

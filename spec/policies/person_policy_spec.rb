@@ -372,9 +372,16 @@ RSpec.describe PersonPolicy, type: :policy do
       ActionController::Parameters.new(
         first_name: "Ada",
         email: "changed@example.com",
+        email_type: "work",
         email_2: "second@example.com",
+        email_2_type: "personal",
         notes: "Internal note",
-        user_attributes: { id: "1", email: "changed@example.com", super_user: "1" },
+        racial_ethnic_identity: "Self-described",
+        sectorable_items_attributes: { "0" => { sector_id: "3", is_primary: "1", is_leader: "1" } },
+        user_attributes: {
+          id: "1", person_id: "2", email: "changed@example.com", super_user: "1", inactive: "1",
+          notes: "Internal note", phone: "555-0100", time_zone: "Hawaii"
+        },
         affiliations_attributes: { "0" => { id: "1", title: "Changed title" } },
         professional_licenses_attributes: { "0" => { kind: "LCSW", number: "123" } }
       )
@@ -388,7 +395,20 @@ RSpec.describe PersonPolicy, type: :policy do
     it "strips admin-only fields while retaining owner-editable profile fields" do
       filtered = write_params_for(owner_user)
 
-      expect(filtered.keys).to contain_exactly("first_name", "professional_licenses_attributes")
+      expect(filtered.keys).to contain_exactly(
+        "first_name", "email_type", "email_2_type", "sectorable_items_attributes",
+        "user_attributes", "professional_licenses_attributes"
+      )
+    end
+
+    it "strips admin-only user attributes while retaining the rest" do
+      expect(write_params_for(owner_user)[:user_attributes].to_h)
+        .to eq("id" => "1", "phone" => "555-0100", "time_zone" => "Hawaii")
+    end
+
+    it "strips the sector leader flag while retaining the sector and its primary flag" do
+      expect(write_params_for(owner_user)[:sectorable_items_attributes].to_h)
+        .to eq("0" => { "sector_id" => "3", "is_primary" => "1" })
     end
 
     it "retains the permitted fields for an admin" do
