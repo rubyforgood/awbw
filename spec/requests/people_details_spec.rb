@@ -117,6 +117,7 @@ RSpec.describe "Editing your own profile details", type: :request do
       expect(response.body).to include("field=primary_email&amp;person_id=#{person.id}&amp;return_to=details")
       expect(response.body).to include("field=secondary_email&amp;person_id=#{person.id}&amp;return_to=details")
       expect(response.body).not_to include("person[email]", "person[email_2]\"")
+      expect(response.body).to match(/<a[^>]*target="_blank"[^>]*href="[^"]*field=secondary_email/)
     end
 
     it "offers to add a secondary email when there isn't one" do
