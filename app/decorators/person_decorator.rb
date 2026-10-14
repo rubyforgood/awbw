@@ -42,6 +42,33 @@ class PersonDecorator < ApplicationDecorator
     "#{full_name.to_s.strip} (#{name})"
   end
 
+  # Share toggles for the public profile, in the order the "Hidden from public" card lists them.
+  PROFILE_PIECE_FLAGS = %i[
+    profile_show_credentials profile_show_pronouns profile_show_member_since
+    profile_show_email profile_show_phone profile_show_social_media
+    profile_show_affiliations profile_show_sectors profile_show_age_ranges profile_show_bio
+    profile_show_workshops profile_show_workshop_variations profile_show_stories
+    profile_show_resources profile_show_events_registered
+  ].freeze
+
+  # The address shown on the person's profile — excludes the admin-only email_2.
+  def profile_email
+    user&.email.presence || email.presence
+  end
+
+  def profile_phone
+    phone_number.presence || user&.phone.presence
+  end
+
+  def social_media?
+    [ linked_in_url, instagram_url, facebook_url, twitter_url, youtube_url ].any?(&:present?)
+  end
+
+  # Pieces the person turned off that have something to show; sections always count.
+  def hidden_profile_pieces
+    PROFILE_PIECE_FLAGS.reject { |flag| public_send(:"#{flag}?") }.select { |flag| profile_piece_content?(flag) }
+  end
+
   def pronouns_display
     profile_show_pronouns ? pronouns : nil
   end
@@ -139,6 +166,20 @@ class PersonDecorator < ApplicationDecorator
   end
 
   private
+
+  def profile_piece_content?(flag)
+    case flag
+    when :profile_show_credentials then license_credentials.present?
+    when :profile_show_pronouns then pronouns.present?
+    when :profile_show_member_since then (facilitator_since_date || affiliated_since_date).present?
+    when :profile_show_email then profile_email.present?
+    when :profile_show_phone then profile_phone.present?
+    when :profile_show_social_media then social_media?
+    when :profile_show_age_ranges then primary_age_groups.any? || additional_age_groups.any?
+    when :profile_show_bio then bio.present?
+    else true
+    end
+  end
 
   def compute_badges
     earliest = facilitator_since_date

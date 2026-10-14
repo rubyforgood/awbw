@@ -4,6 +4,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
+  let(:other_user) { create(:user) }
 
   before do
     person.update!(
@@ -15,51 +16,71 @@ RSpec.describe "Person profile flag visibility", type: :request do
     create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2020, 1, 1))
   end
 
-  # Flags whose content is visible to any viewer with show access
+  def hidden_card
+    Capybara.string(response.body).all("#hidden_from_public").first
+  end
+
+  # flag => [marker in its public spot, text inside the "Hidden from public" card]
   {
-    profile_show_pronouns: "they/them",
-    profile_show_member_since: "Facilitator since",
-    profile_show_phone: "555-123-4567",
-    profile_show_affiliations: "Affiliations",
-    profile_show_sectors: "\">Sectors</h2>",
-    profile_show_bio: "\">Bio</h2>",
-    profile_show_workshops: "\">Workshops authored</h3>",
-    profile_show_workshop_variations: "Workshop variations authored",
-    profile_show_stories: "Stories authored/featured",
-    profile_show_resources: "\">Resources authored</h3>",
-    profile_show_events_registered: "Participation history"
-  }.each do |flag, marker|
+    profile_show_pronouns: [ "(they/them)", "they/them" ],
+    profile_show_member_since: [ "Facilitator since", "Facilitator since" ],
+    profile_show_phone: [ "555-123-4567", "555-123-4567" ],
+    profile_show_affiliations: [ "\">Affiliations</h2>", "Affiliations" ],
+    profile_show_sectors: [ "\">Sectors</h2>", "Sectors" ],
+    profile_show_bio: [ "\">Bio</h2>", "A passionate facilitator" ],
+    profile_show_workshops: [ "\">Workshops authored</h3>", "Workshops authored" ],
+    profile_show_workshop_variations: [ "Workshop variations authored", "Workshop variations authored" ],
+    profile_show_stories: [ "Stories authored/featured", "Stories authored/featured" ],
+    profile_show_resources: [ "\">Resources authored</h3>", "Resources authored" ],
+    profile_show_events_registered: [ "Participation history", "Events attended" ]
+  }.each do |flag, (public_marker, hidden_text)|
     describe "##{flag}" do
       context "when false" do
         before { person.update!(flag => false) }
 
-        it "hides content on own profile" do
-          sign_in owner_user
+        it "hides content from other signed-in users" do
+          sign_in other_user
           get person_path(person)
-          expect(response.body).not_to include(marker)
+          expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include(public_marker)
+          expect(hidden_card).to be_nil
         end
 
-        it "reveals content with admin-only styling when admin views profile" do
+        it "shows content to the owner in the collapsed hidden-from-public card" do
+          sign_in owner_user
+          get person_path(person)
+          expect(hidden_card).to be_present
+          expect(hidden_card.native.to_html).to include(hidden_text)
+          expect(response.body).to include("Only visible to you and admins")
+        end
+
+        it "shows content to an admin in the collapsed hidden-from-public card" do
           sign_in admin
           get person_path(person)
-          expect(response.body).to include(marker)
-          expect(response.body).to include("Hidden from profile")
+          expect(hidden_card.native.to_html).to include(hidden_text)
+          expect(response.body).to include("Only visible to this person and admins")
         end
       end
 
       context "when true" do
         before { person.update!(flag => true) }
 
+        it "shows content to other signed-in users" do
+          sign_in other_user
+          get person_path(person)
+          expect(response.body).to include(public_marker)
+        end
+
         it "shows content on own profile" do
           sign_in owner_user
           get person_path(person)
-          expect(response.body).to include(marker)
+          expect(response.body).to include(public_marker)
         end
 
         it "shows content when admin views profile" do
           sign_in admin
           get person_path(person)
-          expect(response.body).to include(marker)
+          expect(response.body).to include(public_marker)
         end
       end
     end
@@ -71,17 +92,22 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_credentials: false) }
 
-      it "hides the license credentials on own profile" do
-        sign_in owner_user
+      it "hides the license credentials from other signed-in users" do
+        sign_in other_user
         get person_path(person)
         expect(response.body).not_to include("LCSW")
       end
 
-      it "reveals the license credentials with admin-only styling when admin views profile" do
+      it "shows the license credentials to the owner in the hidden-from-public card" do
+        sign_in owner_user
+        get person_path(person)
+        expect(hidden_card.native.to_html).to include("LCSW")
+      end
+
+      it "shows the license credentials to an admin in the hidden-from-public card" do
         sign_in admin
         get person_path(person)
-        expect(response.body).to include("LCSW")
-        expect(response.body).to include("Hidden from profile")
+        expect(hidden_card.native.to_html).to include("LCSW")
       end
     end
 
@@ -106,17 +132,22 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_social_media: false) }
 
-      it "hides social media on own profile" do
-        sign_in owner_user
+      it "hides social media from other signed-in users" do
+        sign_in other_user
         get person_path(person)
         expect(response.body).not_to include("fa-linkedin-in")
       end
 
-      it "reveals social media with admin-only styling when admin views profile" do
+      it "shows social media to the owner in the hidden-from-public card" do
+        sign_in owner_user
+        get person_path(person)
+        expect(hidden_card.native.to_html).to include("fa-linkedin-in")
+      end
+
+      it "shows social media to an admin in the hidden-from-public card" do
         sign_in admin
         get person_path(person)
-        expect(response.body).to include("fa-linkedin-in")
-        expect(response.body).to include("Hidden from profile")
+        expect(hidden_card.native.to_html).to include("fa-linkedin-in")
       end
     end
 
@@ -143,17 +174,22 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_email: false) }
 
-      it "hides email on own profile" do
-        sign_in owner_user
+      it "hides email from other signed-in users" do
+        sign_in other_user
         get person_path(person)
         expect(response.body).not_to include(email)
       end
 
-      it "shows email with admin-only styling when admin views profile" do
+      it "shows email to the owner in the hidden-from-public card" do
+        sign_in owner_user
+        get person_path(person)
+        expect(hidden_card.native.to_html).to include(email)
+      end
+
+      it "shows email to an admin in the hidden-from-public card" do
         sign_in admin
         get person_path(person)
-        expect(response.body).to include(email)
-        expect(response.body).to include("Hidden from profile")
+        expect(hidden_card.native.to_html).to include(email)
       end
     end
 
@@ -232,6 +268,26 @@ RSpec.describe "Person profile flag visibility", type: :request do
           expect(response.body).to include(marker)
         end
       end
+    end
+  end
+
+  describe "lazy section requests" do
+    before { person.update!(profile_show_workshops: false) }
+
+    def get_workshops_section
+      get person_path(person, section: "workshops"), headers: { "Turbo-Frame" => "person_workshops_section" }
+    end
+
+    it "denies a hidden section to other signed-in users" do
+      sign_in other_user
+      get_workshops_section
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "serves a hidden section to the owner" do
+      sign_in owner_user
+      get_workshops_section
+      expect(response).to be_successful
     end
   end
 end

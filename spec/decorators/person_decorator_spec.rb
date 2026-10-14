@@ -20,6 +20,44 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#profile_email" do
+    it "prefers the login email" do
+      person = create(:person, email: "record@example.com")
+
+      expect(person.decorate.profile_email).to eq(person.user.email)
+    end
+
+    it "falls back to the record email" do
+      person = create(:person, user: nil, email: "record@example.com", email_2: "secondary@example.com")
+
+      expect(person.decorate.profile_email).to eq("record@example.com")
+    end
+
+    it "never returns the admin-only secondary email" do
+      person = create(:person, user: nil, email: nil, email_2: "secondary@example.com")
+
+      expect(person.decorate.profile_email).to be_nil
+    end
+  end
+
+  describe "#hidden_profile_pieces" do
+    it "is empty when every piece is shared" do
+      expect(create(:person).decorate.hidden_profile_pieces).to be_empty
+    end
+
+    it "lists hidden pieces that have something to show" do
+      person = create(:person, pronouns: "they/them", profile_show_pronouns: false, profile_show_workshops: false)
+
+      expect(person.decorate.hidden_profile_pieces).to eq(%i[profile_show_pronouns profile_show_workshops])
+    end
+
+    it "skips hidden pieces with nothing to show" do
+      person = create(:person, pronouns: nil, bio: nil, profile_show_pronouns: false, profile_show_bio: false)
+
+      expect(person.decorate.hidden_profile_pieces).to be_empty
+    end
+  end
+
   describe "#active_facilitator_organization_names" do
     let(:person) { create(:person) }
 
