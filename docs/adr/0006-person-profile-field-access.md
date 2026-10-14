@@ -20,7 +20,7 @@ Every person field sits in exactly one access tier:
 | Tier | Owner | Other signed-in users | Admins |
 |---|---|---|---|
 | **Always public** | edits | always see | see + edit |
-| **Shared by choice** | edits, decides whether to share it with a `profile_show_*` toggle, and still sees it, marked "hidden from profile", when off | see only when the toggle is on | always see, marked "hidden from profile" when off |
+| **Shared by choice** | edits, decides whether to share it with a `profile_show_*` toggle, and still sees it in the collapsible "Hidden from profile" card when off | see only when the toggle is on | always see, in the same card when off |
 | **Private** | edits | never see | see + edit |
 | **Request a change** | sees read-only, files a `ProfileChangeRequest` | per its share toggle | see + edit, approve requests |
 | **Admin-set** | sees read-only, no request path | per its share toggle, or never | see + edit |
@@ -68,25 +68,23 @@ Ask in order, and stop at the first yes:
 
 ## Field grid
 
-What each audience gets today, as of rubyforgood/awbw#2676. "Index" is the people index
+What each audience gets today, as of rubyforgood/awbw#2673. "Index" is the people index
 (`people_results`). Non-admins only see published people there, and on their own row the
 owner sees hidden pieces like an admin does. "Profile" is `people#show`. "Edit" is the
 person form.
 
 **Hidden pieces stay visible to the owner and admins.** When a `profile_show_*` toggle is
-off, the index marks that cell with an eye-slash, and the profile keeps the piece in its
-usual spot under the blue `admin-or-owner` wash with a "Hidden from profile" badge
-(`PersonHelper#profile_piece_hidden_for_viewer?`, `DomainTheme` key `admin_or_owner`).
-When every section in a profile card is off, the whole card takes the wash and other users
-don't see the card. The lazy `?section=` frames for hidden sections authorize on
-`own_record?`.
+off, the index marks that cell with an eye-slash, and the profile moves the piece into a
+collapsible "Hidden from profile" card (`people/_hidden_from_profile_card`) under the lilac
+`admin-or-owner` wash (`DomainTheme` key `admin_or_owner`). The lazy `?section=` frames for
+hidden sections authorize on `own_record?`.
 
 **Submitted content is private with no toggle.** Ideas, workshop logs, and monthly reports
 always sit under the `admin-or-owner` wash and are never shown to other users. Their
 `profile_show_*` columns are unused.
 
 Key: ✅ shown or editable · 🔀 shown only if the owner's `profile_show_*` toggle is on · 👁
-shown, under the blue `admin-or-owner` wash when the toggle is off · 🔒 read-only · 📨
+shown, or in the "Hidden from profile" card when the toggle is off · 🔒 read-only · 📨
 read-only with a "Request a change" link · 🔵 admin-only (admin styling) · — not shown
 
 | Field | Tier | Index · user | Index · admin | Profile · other user | Profile · owner | Profile · admin | Edit · owner | Edit · admin |
@@ -130,5 +128,6 @@ membership status, staff tags, and mailing list.
 
 These places don't yet follow the tiers above:
 
-- **Unused submitted-content columns.** The `profile_show_*` columns for ideas, workshop
-  logs, and monthly reports no longer drive anything and can be dropped.
+- **Unused submitted-content columns.** The person `profile_show_workshop_logs` and
+  `profile_show_monthly_reports` columns no longer drive anything and can be dropped (the
+  idea columns went in rubyforgood/awbw#2680).
