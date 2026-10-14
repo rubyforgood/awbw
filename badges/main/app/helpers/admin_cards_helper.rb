@@ -92,7 +92,6 @@ module AdminCardsHelper
     [
       custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
       custom_card("Bulk payments", bulk_payments_path, icon: "💳", color: :sky, intensity: 100),
-      custom_card("Certificate settings", admin_certificate_settings_path, icon: "🎓", color: :sky, intensity: 100),
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
       custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
@@ -101,6 +100,7 @@ module AdminCardsHelper
       custom_card("Form answers", form_answers_path, icon: "✅", color: :sky, intensity: 100),
       custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
       custom_card("Payments", payments_path, icon: "💳", color: :sky, intensity: 100),
+      custom_card("Resource roles", admin_resource_roles_path, icon: "📌", color: :sky, intensity: 100),
       custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
       custom_card("CE registrations", continuing_education_registrations_path, icon: "📜", color: :sky, intensity: 100),
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),

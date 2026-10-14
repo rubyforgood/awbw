@@ -29,7 +29,7 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "builds a paid event's Payment card with the W-9 link (subtitle) in memory" do
-      w9 = create(:resource, title: "W-9")
+      w9 = create(:resource, title: "W-9", role: "w9")
       event = Event.new(cost_cents: 5_000)
 
       described_class.build(event)
@@ -94,7 +94,7 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "links the W-9 to the Payment card as a removable resource on paid events" do
-      w9 = create(:resource, title: "W-9")
+      w9 = create(:resource, title: "W-9", role: "w9")
       event = create(:event) # paid by factory, so the W-9 seeds
 
       described_class.seed(event)
@@ -104,7 +104,7 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "links the W-9 to the Payment card on a free event too (dormant until it's priced)" do
-      w9 = create(:resource, title: "W-9")
+      w9 = create(:resource, title: "W-9", role: "w9")
       event = create(:event, facilitator_training: true, cost_cents: 0)
 
       described_class.seed(event)
@@ -117,7 +117,7 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "links the signatures record to the Certificate card as a removable resource" do
-      signatures = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      signatures = create(:resource, role: "training_signatures")
       event = create(:event)
 
       described_class.seed(event)
@@ -195,8 +195,8 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "links the handout worksheet resources in display order" do
-      first = create(:resource, title: "2-Day AWBW Facilitator Training Worksheets & Handouts")
-      second = create(:resource, title: "AWBW Training Workshop Worksheets")
+      first = create(:resource, role: "training_handouts")
+      second = create(:resource, role: "training_workshop_worksheets")
       event = create(:event)
 
       described_class.seed(event)
@@ -206,17 +206,26 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "materializes each handout link's default subtitle and page content" do
-      title = "Aha Moments"
-      create(:resource, title: title)
+      resource = create(:resource, role: "aha_moments")
       event = create(:event)
 
       described_class.seed(event)
 
       handouts = event.registration_ticket_callouts.find_by(builtin_key: "handouts")
-      link = handouts.registration_ticket_callout_resources.joins(:resource).find_by(resources: { title: })
-      defaults = BuiltinCallouts::HANDOUT_LINK_DEFAULTS[title]
+      link = handouts.registration_ticket_callout_resources.find_by(resource:)
+      defaults = BuiltinCallouts::HANDOUT_LINK_DEFAULTS["aha_moments"]
       expect(link.subtitle).to eq(defaults[:subtitle])
       expect(link.page_content).to eq(defaults[:page_content])
+    end
+
+    it "materializes a legacy title-matched handout's default copy too" do
+      create(:resource, title: "Aha Moments")
+      event = create(:event)
+
+      described_class.seed(event)
+
+      link = event.registration_ticket_callouts.find_by(builtin_key: "handouts").registration_ticket_callout_resources.first
+      expect(link.subtitle).to eq(BuiltinCallouts::HANDOUT_LINK_DEFAULTS["aha_moments"][:subtitle])
     end
 
     it "flags edited link copy as customized and restores it on reset" do

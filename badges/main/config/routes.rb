@@ -62,8 +62,9 @@ Rails.application.routes.draw do
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
     get "data_health",               to: "data_health#index", as: "data_health"
     post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
-    get "certificate_settings",      to: "certificate_settings#show", as: "certificate_settings"
-    patch "certificate_settings",    to: "certificate_settings#update"
+    get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
+    patch "resource_roles",          to: "resource_roles#update"
+    get "certificate_settings",      to: redirect("/admin/resource_roles")
   end
 
   resources :fm_archives, only: [ :index, :show ]

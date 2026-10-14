@@ -48,32 +48,38 @@ puts "Creating hidden Resources…"
 hidden_resources = [
   {
     title: "AWBW Training Workshop Worksheets",
+    role: "training_workshop_worksheets",
     body: "Printable worksheets used in AWBW training workshops, including the Touchstone Journey exercise.",
     filename: "awbw_training_workshop_worksheets.pdf"
   },
   {
     title: "AHA Moments",
+    role: "aha_moments",
     body: "A facilitation worksheet for capturing insights and reflections during AWBW art workshops.",
     filename: "aha_moments.pdf"
   },
   {
     title: "2-Day AWBW Facilitator Training Worksheets & Handouts",
+    role: "training_handouts",
     body: "The complete packet of worksheets and handouts for the 2-day AWBW Facilitator Training.",
     filename: "two_day_training_worksheets_and_handouts.pdf"
   },
   {
     title: "Inviting and Responding to Participants' Sharing",
+    role: "participant_sharing_guide",
     body: "Guidance for holding space and responding to participant sharing in breakout rooms.",
     filename: "inviting_and_responding_to_sharing.pdf"
   },
   {
     title: "Letter to Supervisors",
+    role: "supervisor_letter",
     body: "A letter trainees can share with supervisors to request release time for the training.",
     filename: "letter_to_supervisors.pdf",
     kind: "Form"
   },
   {
     title: "W-9",
+    role: "w9",
     body: "AWBW's W-9 tax form for trainees' records.",
     filename: "w9.pdf",
     kind: "Form"
@@ -82,6 +88,7 @@ hidden_resources = [
 
 hidden_resources.each do |attrs|
   resource = Resource.where(title: attrs[:title]).first_or_create!(
+    role: attrs[:role],
     body: attrs[:body],
     rhino_body: attrs[:body],
     agency: "A Window Between Worlds",
@@ -120,7 +127,7 @@ SurveyFormSeeder.new.link_fanout_resources
 # which seeds before this file creates the W-9, so the link is healed here.
 # Idempotent: skips a callout that already carries the W-9.
 puts "Linking the W-9 to paid events' payment callouts…"
-w9 = Resource.find_by(title: "W-9")
+w9 = Resource.for_role("w9")
 if w9
   Event.where("cost_cents > ?", 0).find_each do |paid_event|
     payment = paid_event.registration_ticket_callouts.find_by(builtin_key: "payment")
