@@ -501,6 +501,40 @@ RSpec.describe "/story_share", type: :request do
   end
 
   # ==========================================================
+  # STANDARD IMAGE SHAPES
+  # ==========================================================
+  describe "standard image shapes" do
+    let(:banner) { "div[class~='aspect-[4/3]'][class~='sm:aspect-[2/1]']" }
+    let(:standard) { "div[class~='aspect-[3/2]']" }
+
+    it "frames the home carousel as a banner and topic cards in the standard shape" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      featured = create(:story, :published, :publicly_visible, title: "Carousel story", story_share_carousel_position: 1)
+      topic = create(:story, :published, :publicly_visible, title: "Topic story")
+      topic.sectorable_items.create!(sector: sector)
+
+      get story_shares_path
+
+      page = Capybara.string(response.body)
+      expect(page.find(".swiper-slide", text: featured.title)).to have_css(banner)
+      expect(page.find("article", text: topic.title)).to have_css(standard)
+    end
+
+    it "frames the single-topic lead as a banner and browse cards in the standard shape" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      older = create(:story, :published, :publicly_visible, title: "Older card story", created_at: 2.days.ago)
+      lead = create(:story, :published, :publicly_visible, title: "Newer lead story")
+      [ older, lead ].each { |s| s.sectorable_items.create!(sector: sector) }
+
+      get story_shares_path(sector_names_all: "Homelessness")
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css(banner, count: 1)
+      expect(page.find("article", text: older.title)).to have_css(standard)
+    end
+  end
+
+  # ==========================================================
   # "What others are reading" — most-read by Ahoy view count
   # ==========================================================
   describe "\"What others are reading\" section" do

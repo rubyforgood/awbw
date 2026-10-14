@@ -1,6 +1,6 @@
 <%# Full-bleed story image with the primary-tag pills and a play badge for video stories.
-    Locals: story; aspect (default "aspect-[4/3]"). %>
-<% aspect = local_assigns.fetch(:aspect, "aspect-[4/3]") %>
+    Locals: story; aspect (default STORY_IMAGE_ASPECT). %>
+<% aspect = local_assigns.fetch(:aspect, StorySharesHelper::STORY_IMAGE_ASPECT) %>
 <div class="relative <%= aspect %> overflow-hidden bg-gray-200">
   <%= render "assets/fitted_image", file: story.display_image, alt: story.title, loading: "lazy" %>
   <%= render "story_shares/primary_tag_pills", story: story, wrapper_class: "absolute top-3 left-3 right-3" %>

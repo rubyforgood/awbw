@@ -222,7 +222,8 @@
     <% end %>
 
     <div id="attachments">
-      <%= render "shared/form_image_fields", f: f %>
+      <%= render "shared/form_image_fields", f: f,
+                 section_subtitle: tag.p(StorySharesHelper::STORY_IMAGE_GUIDANCE, class: "text-sm text-gray-600") %>
     </div>
 
     <div id="publish-preferences" class="flex pt-6 gap-4">

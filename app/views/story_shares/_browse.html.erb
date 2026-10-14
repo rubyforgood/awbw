@@ -15,7 +15,7 @@
         <% lead = @lead_stories.first %>
         <div class="ring-brand-navy-900/10 mb-12 overflow-hidden rounded-2xl shadow-md ring-1">
           <%= link_to story_share_path(lead), class: "block" do %>
-            <%= render "story_image", story: lead, aspect: "aspect-[16/6]" %>
+            <%= render "story_image", story: lead, aspect: StorySharesHelper::STORY_BANNER_ASPECT %>
             <div class="bg-brand-navy-800 p-5 text-white">
               <h2 class="font-display text-xl"><%= lead.title %></h2>
               <p class="text-sm opacity-80">
@@ -32,7 +32,7 @@
             <% @lead_stories.each do |story| %>
               <div class="swiper-slide">
                 <%= link_to story_share_path(story), class: "block relative" do %>
-                  <%= render "story_image", story: story, aspect: "aspect-[16/6]" %>
+                  <%= render "story_image", story: story, aspect: StorySharesHelper::STORY_BANNER_ASPECT %>
                   <div class="from-brand-navy-950/85 absolute right-0 bottom-0 left-0 bg-gradient-to-t to-transparent p-6 text-white">
                     <h2 class="mb-1 font-display text-2xl"><%= story.title %></h2>
                     <p class="text-sm opacity-90">

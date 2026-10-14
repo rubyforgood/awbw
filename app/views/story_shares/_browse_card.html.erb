@@ -1,6 +1,6 @@
 <article class="border-brand-navy-900/15 flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
   <%= link_to story_share_path(story), class: "block" do %>
-    <%= render "story_image", story: story, aspect: "aspect-[4/3]" %>
+    <%= render "story_image", story: story %>
   <% end %>
   <div class="flex flex-1 flex-col p-5">
     <%= tag.h3 id: local_assigns[:anchor_id], class: [ "text-brand-navy-900 font-display text-xl leading-snug", ("scroll-mt-48" if local_assigns[:anchor_id]) ] do %>
