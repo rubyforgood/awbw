@@ -384,6 +384,14 @@ RSpec.describe "FM archives", type: :request do
       expect(response.body).to include("Archie Coded")
     end
 
+    it "lists each record's key beside its ID and name" do
+      FmRolodex.create!(fm_id: "ROL1", data: { "FirstName" => "Archie", "LastName" => "Coded" })
+
+      get fm_archives_path(table: "rolodexes")
+
+      expect(response.body).to match(%r{>ROL1</a>\s*</td>\s*<td[^>]*>ID</td>\s*<td[^>]*>Archie Coded</td>})
+    end
+
     it "marks the selected table as the current page" do
       get fm_archives_path(table: "rolodexes")
 
