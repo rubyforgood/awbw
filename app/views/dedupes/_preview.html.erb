@@ -192,7 +192,7 @@
                             class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200",
                             data: { controller: "remote-select", remote_select_model_value: remote_select_options[col.name] } %>
         <% elsif col_assoc && belongs_to_options[col.name].present? %>
-          <%= keep_f.collection_select col.name.to_sym, belongs_to_options[col.name], :id, :name, { include_blank: true }, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
+          <%= keep_f.collection_select col.name.to_sym, belongs_to_options[col.name], :id, :name, { include_blank: "(none)" }, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
         <% elsif col.type == :integer && col_assoc.nil? %>
           <%= keep_f.number_field col.name.to_sym, class: "w-32 px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
         <% elsif col.type == :text %>

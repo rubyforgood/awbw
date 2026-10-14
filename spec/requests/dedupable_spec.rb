@@ -351,7 +351,7 @@ RSpec.describe "Dedupable concern", type: :request do
 
         status_select = Nokogiri::HTML(response.body).at_css("select[name$='[organization_status_id]']")
         expect(status_select.at_css("option[selected]")).to be_nil
-        expect(status_select.at_css("option[value='']")).to be_present
+        expect(status_select.at_css("option[value='']").text).to eq("(none)")
       end
     end
 
