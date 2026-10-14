@@ -250,6 +250,45 @@ RSpec.describe ModelDeduper do
     end
   end
 
+  describe "user merges (reference columns without a foreign key)" do
+    subject(:service) do
+      described_class.new(model_class: User, logger: logger, dry_run: false,
+                          reference_columns: %w[user_id created_by_id updated_by_id welcome_instructions_sent_by_id])
+    end
+
+    let!(:keep) { create(:user) }
+    let!(:dupe) { create(:user) }
+
+    it "moves stamp columns that carry no foreign key" do
+      grant = create(:grant, created_by: dupe, updated_by: dupe)
+
+      service.merge(keep, dupe)
+      expect(grant.reload.attributes.values_at("created_by_id", "updated_by_id")).to eq([ keep.id, keep.id ])
+    end
+
+    it "moves other logins' references to the duplicate onto the keeper" do
+      other = create(:user, created_by: dupe, welcome_instructions_sent_by: dupe)
+
+      service.merge(keep, dupe)
+      expect(other.reload.attributes.values_at("created_by_id", "welcome_instructions_sent_by_id")).to eq([ keep.id, keep.id ])
+    end
+
+    it "clears the keeper's own reference to the duplicate rather than pointing it at itself" do
+      keep.update_columns(created_by_id: dupe.id)
+
+      service.merge(keep, dupe)
+      expect(keep.reload.created_by_id).to be_nil
+      expect(User.exists?(dupe.id)).to be(false)
+    end
+
+    it "labels each column separately when a table references the model twice" do
+      create(:grant, created_by: dupe, updated_by: dupe)
+
+      labels = service.reassignment_preview(dupe).map { |entry| entry[:label] }
+      expect(labels).to include("Grants (created by)", "Grants (updated by)")
+    end
+  end
+
   describe "#lost_references" do
     subject(:service) { described_class.new(model_class: Organization) }
 

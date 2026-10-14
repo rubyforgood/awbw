@@ -82,7 +82,7 @@
                 <% group.records.each do |record| %>
                   <li class="flex items-center justify-between gap-3 py-1.5">
                     <span class="text-gray-800">
-                      <%= record.name.presence || "(no name)" %>
+                      <%= @dedupe[:record_label].call(record).presence || "(no name)" %>
                       <span class="text-sm text-gray-400">
                         · ID <%= record.id %><% if @dedupe[:record_extras] && (extra = @dedupe[:record_extras].call(record)).present? %> · <%= extra %><% end %>
                       </span>
