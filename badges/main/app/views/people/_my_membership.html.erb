@@ -1,17 +1,29 @@
-<div class="user-only bg-amber-100 border border-amber-200 rounded-lg shadow-sm">
-  <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-amber-200">
-    <h2 class="text-xl font-semibold text-gray-800">Annual membership</h2>
-    <span class="text-sm text-amber-700 italic">Only visible to you</span>
-  </div>
-
-  <div class="section-content px-3 sm:px-4 py-4">
+<div class="overflow-hidden rounded-2xl border-2 shadow-sm <%= profile_hidden_wash_class %>"
+     data-controller="expandable-card"
+     data-expandable-card-expanded-value="true">
+  <!-- Header -->
+  <button type="button" data-action="expandable-card#toggle"
+          aria-expanded="true"
+          class="section-header flex w-full items-center gap-3 border-b px-5 py-4 text-left sm:px-6 <%= profile_hidden_border_class %>">
+    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white <%= profile_hidden_icon_class %>">
+      <i class="fa-solid fa-id-card"></i>
+    </span>
+    <h2 class="font-display text-2xl text-gray-900">Annual membership</h2>
+    <span class="ml-auto flex items-center gap-3">
+      <span class="text-sm italic <%= profile_hidden_text_class %>"><%= owner_and_admins_label(person) %></span>
+      <i class="fa-solid fa-chevron-down rotate-180 text-gray-400 transition-transform" data-expandable-card-target="icon"></i>
+    </span>
+  </button>
+  <!-- Membership -->
+  <div class="section-content space-y-4 px-4 py-5 sm:px-6 sm:py-6"
+       data-expandable-card-target="body">
     <% if membership&.current_invoice %>
-      <ul class="mb-4">
+      <ul>
         <%= render "membership_invoices/invoice_row", invoice: membership.current_invoice %>
       </ul>
     <% end %>
 
-    <div class="px-3">
+    <div>
       <% if autopay %>
         <p class="text-sm text-gray-700">Your membership renews automatically on the card you have on file.</p>
       <% else %>
