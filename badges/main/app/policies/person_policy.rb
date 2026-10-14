@@ -75,9 +75,12 @@ class PersonPolicy < ApplicationPolicy
     relation.searchable.with_active_facilitator_affiliations.where_user_not_locked
   end
 
+  # A non-admin's contact-info search matches only what each profile shares.
   params_filter(:index) do |params|
     next params if admin?
-    params.except(*ADMIN_ONLY_FILTERS)
+    filters = params.except(*ADMIN_ONLY_FILTERS, :contact_info)
+    filters[:shared_contact_info] = params[:contact_info] if params[:contact_info].present?
+    filters
   end
 
   params_filter do |params|
