@@ -8,7 +8,7 @@
   </div>
   <h1 class="text-primary font-display text-3xl font-semibold">Choose what others see</h1>
   <p class="mt-2 text-lg text-gray-700">
-    Turn on the parts of your profile other facilitators can see. AWBW staff can always see everything.
+    Turn on the parts of your profile other AWBW facilitators can see. AWBW staff can always see everything.
   </p>
   <%= simple_form_for @person, html: { class: "mt-6 space-y-6" } do |f| %>
     <%= hidden_field_tag :return_to, "visibility" %>
@@ -36,7 +36,7 @@
       <h2 class="mb-2 font-display text-2xl text-gray-900">Your privacy</h2>
       <div class="divide-y divide-gray-100">
         <%= render "people/visibility_switch", f: f, attribute: :profile_is_searchable,
-                   label: "Let other facilitators find and see my profile", on_text: "Yes", off_text: "No" %>
+                   label: "Let other AWBW facilitators find and see my profile", on_text: "Yes", off_text: "No" %>
         <%= render "people/visibility_switch", f: f, attribute: :anonymous_contributions,
                    label: "Stay anonymous on stories, workshops, and variations I write", on_text: "Yes", off_text: "No" %>
       </div>

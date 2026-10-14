@@ -113,7 +113,7 @@ class ProfileChangeRequest < ApplicationRecord
     return unless affiliation
 
     org = affiliation.organization&.name
-    [ affiliation.title.presence || Affiliation::FACILITATOR_TITLE, org ].compact.join(" @ ")
+    [ affiliation.decorate.display_title, org ].compact.join(" @ ")
   end
 
   def resolve!(method:, reviewer:, note: nil)

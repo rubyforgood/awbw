@@ -18,8 +18,8 @@ class PersonDecorator < ApplicationDecorator
       profile_show_events_registered: "Events you attended",
       profile_show_workshops: "Workshops you wrote",
       profile_show_workshop_variations: "Workshop variations you wrote",
-      profile_show_stories: "Stories",
-      profile_show_resources: "Resources"
+      profile_show_stories: "Stories you wrote or were featured in",
+      profile_show_resources: "Resources you wrote"
     }
   }.freeze
 

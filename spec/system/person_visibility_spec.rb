@@ -8,7 +8,7 @@ RSpec.describe "Choosing what others see", type: :system, js: true do
 
   it "saves every switch and the name choice from the page" do
     labels = [
-      "Let other facilitators find and see my profile",
+      "Let other AWBW facilitators find and see my profile",
       "Stay anonymous on stories, workshops, and variations I write"
     ] + PersonDecorator::PROFILE_VISIBILITY_GROUPS.values.flat_map(&:values)
     attributes = %i[profile_is_searchable anonymous_contributions] +

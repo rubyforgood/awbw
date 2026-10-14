@@ -1,4 +1,17 @@
 class ProfileChangeRequestDecorator < ApplicationDecorator
+  AFFILIATION_CHANGE_CHOICES = {
+    ProfileChangeRequest::AFFILIATION_CHANGE_TITLE => { label: "Change my title or role", icon: "fa-solid fa-id-badge" },
+    ProfileChangeRequest::AFFILIATION_CHANGE_DATES => { label: "Fix my start or end date", icon: "fa-solid fa-calendar-days" },
+    ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION => { label: "Fix the organization's name", icon: "fa-solid fa-building" },
+    ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE => { label: "I don't work with them anymore", icon: "fa-solid fa-door-open" },
+    ProfileChangeRequest::AFFILIATION_CHANGE_OTHER => { label: "Something else", icon: "fa-solid fa-comment" },
+    ProfileChangeRequest::AFFILIATION_CHANGE_ADD => { label: "Add an organization", icon: "fa-solid fa-plus" }
+  }.freeze
+
+  def heading
+    AFFILIATION_CHANGE_CHOICES.dig(requested_value, :label) if field == "affiliation"
+  end
+
   def status_badge
     classes, icon, label = case status
     when "resolved" then [ "bg-green-50 text-green-800 border-green-300", "fa-solid fa-circle-check", "Resolved" ]
