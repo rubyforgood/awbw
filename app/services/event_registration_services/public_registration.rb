@@ -101,18 +101,19 @@ module EventRegistrationServices
           existing.update!(expected_payment_method: payment_method) if payment_method.present?
           someone_else = someone_else_will_pay_answer
           existing.update!(someone_else_will_pay: someone_else) unless someone_else.nil?
-          if existing.status == "cancelled"
-            existing.update!(status: "registered")
-            send_notifications(existing)
-          else
-            changes = ResubmissionChanges.between(before_resubmission, ResubmissionChanges.snapshot(existing))
-            send_duplicate_notifications(existing, changes)
-          end
+          reactivated = existing.status == "cancelled"
+          existing.update!(status: "registered") if reactivated
           organization_link = connect_organization(existing, organization)
           submission = create_form_submission(person)
           organization_link&.record_form_submission(submission)
           save_scholarship_submission(person)
           save_continuing_education_submission(person)
+          if reactivated
+            send_notifications(existing)
+          else
+            changes = ResubmissionChanges.between(before_resubmission, ResubmissionChanges.snapshot(existing), submission:)
+            send_duplicate_notifications(existing, changes)
+          end
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 

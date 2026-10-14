@@ -1137,6 +1137,16 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       described_class.call(event: event, registration_form: form, scholarship_requested: true, form_params: params)
     end
+
+    it "notes answers that differ from the person's previous registration submission" do
+      jane = base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
+      described_class.call(event: event, registration_form: form, form_params: jane.merge(field_id("referral_source") => "A friend"))
+      question = form.form_fields.find_by!(field_identifier: "referral_source").name
+
+      expect_duplicate_notifications(custom_message: "#{question}: changed from A friend to Instagram")
+
+      described_class.call(event: event, registration_form: form, form_params: jane.merge(field_id("referral_source") => "Instagram"))
+    end
   end
 
   describe "saving an \"Other\" answer with custom text" do

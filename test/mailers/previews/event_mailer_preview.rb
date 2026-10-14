@@ -9,7 +9,7 @@ class EventMailerPreview < ActionMailer::Preview
     EventMailer.event_registration_confirmation(
       event_registration,
       duplicate: true,
-      changes_message: "Scholarship now requested\nPayment method changed from Check to Credit card"
+      changes_message: "Scholarship now requested\nPayment method changed from Check to Credit card\nOrganization linked: Helping Hands\nCity: changed from Oakland to Berkeley"
     )
   end
 
