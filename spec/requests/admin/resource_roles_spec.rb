@@ -3,6 +3,8 @@ require "rails_helper"
 RSpec.describe "Admin::ResourceRoles", type: :request do
   let(:admin) { create(:user, :admin) }
 
+  after { Current.user = nil }
+
   describe "GET show" do
     before { sign_in admin }
 
@@ -134,6 +136,77 @@ RSpec.describe "Admin::ResourceRoles", type: :request do
 
       expect(response).to redirect_to(admin_resource_roles_path)
       expect(resource.reload.role).to be_nil
+    end
+
+    context "when a resource fails validations unrelated to its role" do
+      let(:legacy) do
+        create(:resource, title: "Legacy W-9").tap do |resource|
+          resource.update_columns(created_by_id: nil, updated_by_id: nil, kind: nil)
+        end
+      end
+
+      it "still connects it, stamping updated_by and the blank created_by" do
+        patch admin_resource_roles_path, params: { slot: "w9", resource_id: legacy.id }
+
+        expect(response).to redirect_to(admin_resource_roles_path)
+        legacy.reload
+        expect(legacy.role).to eq("w9")
+        expect(legacy.updated_by).to eq(admin)
+        expect(legacy.created_by).to eq(admin)
+      end
+
+      it "keeps an existing created_by" do
+        creator = create(:user)
+        legacy.update_columns(created_by_id: creator.id)
+
+        patch admin_resource_roles_path, params: { slot: "w9", resource_id: legacy.id }
+
+        expect(legacy.reload.created_by).to eq(creator)
+      end
+
+      it "still reassigns the slot away from it" do
+        legacy.update_columns(role: "w9")
+        replacement = create(:resource)
+
+        patch admin_resource_roles_path, params: { slot: "w9", resource_id: replacement.id }
+
+        expect(legacy.reload.role).to be_nil
+        expect(legacy.updated_by).to eq(admin)
+        expect(replacement.reload.role).to eq("w9")
+      end
+
+      it "still disconnects it" do
+        legacy.update_columns(role: "w9")
+
+        patch admin_resource_roles_path, params: { slot: "w9", remove: "1" }
+
+        expect(legacy.reload.role).to be_nil
+      end
+    end
+
+    it "records the role change on the resource's change log" do
+      resource = create(:resource)
+      Analytics::LifecycleBuffer.store.clear
+      events = []
+      allow(Analytics::LifecycleBuffer).to receive(:flush) do
+        events.concat(Analytics::LifecycleBuffer.store)
+        Analytics::LifecycleBuffer.store.clear
+      end
+
+      patch admin_resource_roles_path, params: { slot: "w9", resource_id: resource.id }
+
+      event = events.find { |e| e[:name] == "update.resource" }
+      expect(event.dig(:properties, :changes, "role")).to eq(before: nil, after: "w9")
+    end
+
+    it "asks to retry when another admin claims the slot at the same moment" do
+      resource = create(:resource)
+      allow_any_instance_of(Resource).to receive(:save!).and_raise(ActiveRecord::RecordNotUnique)
+
+      patch admin_resource_roles_path, params: { slot: "w9", resource_id: resource.id }
+
+      expect(response).to redirect_to(admin_resource_roles_path)
+      expect(flash[:alert]).to eq("That slot just changed. Please try again.")
     end
 
     it "rejects an unknown slot rather than erroring" do

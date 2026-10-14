@@ -27,14 +27,14 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
-- name: "Choose the W-9 and training handouts from the admin"
+- name: "Choose the default W-9 and training handouts from the admin"
   area: content
   display_status: admin_facing
   released_on: 2026-10-14
   summary: >-
     The certificate settings page is now "Resource roles": besides certificate
-    artwork, admins pick which Resource is the W-9 and each training handout.
-    Renaming a connected Resource no longer breaks the link.
+    artwork, admins pick the default W-9 and training handouts new events start
+    with. Renaming a connected Resource no longer breaks the link.
   action_path: "/admin/resource_roles"
   pr_number: 2679
   pro_tips:

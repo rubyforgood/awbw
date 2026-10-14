@@ -8,8 +8,8 @@
 
   <h1 class="mb-2 text-2xl font-semibold text-gray-900">Resource roles</h1>
   <p class="mb-6 text-sm text-gray-600">
-    Choose which Resource fills each built-in spot in the portal — certificate artwork, the W-9, and the
-    training handouts. Upload the file as a Resource the usual way, then connect it here.
+    Choose the Resource each built-in spot uses — certificate artwork, the W-9, and training handouts.
+    Upload the file as a Resource the usual way, then connect it here.
   </p>
 
   <div class="space-y-8">
@@ -20,7 +20,7 @@
 
         <div class="space-y-4">
           <% slots.each do |slot| %>
-            <div id="<%= slot[:role] %>" class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div id="<%= slot[:role] %>" class="rounded-xl border border-gray-200 bg-white shadow-sm">
               <div class="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
                 <div class="min-w-0 sm:flex-1">
                   <h3 class="text-sm font-semibold text-gray-800"><%= slot[:label] %></h3>

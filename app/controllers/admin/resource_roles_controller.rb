@@ -5,9 +5,9 @@ module Admin
   # normal Resources rather than committed to this public repo.
   class ResourceRolesController < ApplicationController
     SECTIONS = {
-      "Certificate artwork" => "A frame overrides the built-in design for that certificate type; a signature fills the signature line. Leave a slot empty to use the built-in design.",
-      "Payment documents" => "Linked on each new paid event's payment callout for registrants to download.",
-      "Training handouts" => "Linked, in this order, on each new event's Handouts callout."
+      "Certificate artwork" => "Frames and the CE signature apply to every certificate of that type. The facilitator-training signature is the default for new events and can be swapped on an event's certificate callout.",
+      "Payment documents" => "The default W-9 added to each new event's payment callout. Change it for one event in that event's callouts; existing events keep what they have.",
+      "Training handouts" => "The default handouts added, in this order, to each new event's Handouts callout. Change them for one event in that event's callouts; existing events keep what they have."
     }.freeze
 
     # role => how the slot is labelled on the page.
@@ -68,6 +68,8 @@ module Admin
 
       connect(resource, role)
       redirect_to admin_resource_roles_path, notice: "#{config[:label]} connected to “#{resource.title}”.", status: :see_other
+    rescue ActiveRecord::RecordNotUnique
+      redirect_to admin_resource_roles_path, alert: "That slot just changed. Please try again.", status: :see_other
     end
 
     private
@@ -76,16 +78,25 @@ module Admin
     # then stamp the chosen one.
     def connect(resource, role)
       Resource.transaction do
-        Resource.where(role:).where.not(id: resource.id).find_each do |held|
-          held.update!(role: nil)
-        end
-        resource.update!(role:)
+        Resource.where(role:).where.not(id: resource.id).find_each { |held| assign_role(held, nil) }
+        assign_role(resource, role)
       end
     end
 
     def disconnect(role, config)
-      Resource.where(role:).find_each { |held| held.update!(role: nil) }
+      Resource.where(role:).find_each { |held| assign_role(held, nil) }
       redirect_to admin_resource_roles_path, notice: "#{config[:label]} disconnected.", status: :see_other
+    end
+
+    # The role is a pointer (SLOTS + the unique index guard it), so an older record's
+    # unrelated validation gaps (no created_by, blank kind) must not block it. Skipping
+    # validation also skips UserStampable, so the stamps are set here; callbacks still
+    # run, so the change lands on the resource's change log.
+    def assign_role(resource, role)
+      resource.role = role
+      resource.updated_by = current_user
+      resource.created_by ||= current_user
+      resource.save!(validate: false)
     end
 
     def slot_view(role, config)
