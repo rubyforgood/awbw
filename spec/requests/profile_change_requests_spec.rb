@@ -70,6 +70,15 @@ RSpec.describe "Profile change requests", type: :request do
       expect(person.user.reload.unconfirmed_email).to eq("changed@example.com")
     end
 
+    it "approves a secondary email request by setting the secondary email" do
+      request = create(:profile_change_request, :secondary_email, person: person, requested_value: "second@example.com")
+
+      post approve_profile_change_request_path(request)
+
+      expect(request.reload).to be_resolved
+      expect(person.reload.email_2).to eq("second@example.com")
+    end
+
     it "approves an organization name request by renaming the org" do
       org = create(:organization, name: "Old Name")
       create(:affiliation, person: person, organization: org, inactive: false, start_date: 1.year.ago, end_date: nil)

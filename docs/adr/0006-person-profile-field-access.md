@@ -41,7 +41,7 @@ Ask in order, and stop at the first yes:
 1. **Is it internal staff data?** → admin-only.
 2. **Does it identify the person or log them in?** → request a change, or admin-set. An
    owner who could set it could claim someone else's records. `email_2` is matched by
-   `PersonMatcher` and the duplicate finders, so it's admin-set.
+   `PersonMatcher` and the duplicate finders, so owners request changes to it.
 3. **Is it shared with other people's records?** → request a change. An organization's name
    is the same for everyone affiliated with it. Affiliations drive program status
    (ADR-0003).
@@ -114,7 +114,7 @@ read-only with a "Request a change" link · 🔵 admin-only (admin styling) · �
 | Legal first name, pronunciation, birthday, time zone | Private | — | — | — | — | 🔵 | ✅ | ✅ |
 | Addresses, other phones, best time to call | Private | — | — | — | — | 🔵 | ✅ | ✅ |
 | Program settings | Private | — | — | — | — | 🔵 | ✅ | ✅ |
-| Secondary email | Admin-set | — | — | — | — | 🔵 | 🔒 | ✅ |
+| Secondary email | Request a change | — | — | — | — | 🔵 | 📨 | ✅ |
 | Secondary email type | Private | — | — | — | — | 🔵 | ✅ (with a secondary email) | ✅ |
 | Membership | Private | — | filter only | — | ✅ | on the edit page | — | 🔵 |
 | Communications | Admin-only (owner sees their own) | — | — | — | — | 🔵 | 🔒 | ✅ |
@@ -131,8 +131,6 @@ membership status, staff tags, and mailing list.
 
 These places don't yet follow the tiers above:
 
-- **Owners can't reach the email type fields.** Primary and secondary email type are
-  owner-editable but only appear on the person form, which owners aren't linked to.
 - **Unused submitted-content columns.** The person `profile_show_workshop_logs` and
   `profile_show_monthly_reports` columns no longer drive anything and can be dropped (the
   idea columns went in rubyforgood/awbw#2680).

@@ -28,6 +28,11 @@ RSpec.describe ProfileChangeRequestDecorator do
       expect(request.profile_return_path).to eq("/people/#{request.person.to_param}#affiliations")
     end
 
+    it "returns to the email card on the edit page when it came from there" do
+      request = build_stubbed(:profile_change_request, :secondary_email).decorate
+      expect(request.profile_return_path("details")).to eq("/people/#{request.person.to_param}/details#emails")
+    end
+
     it "returns to the top of the profile for an email request" do
       request = build_stubbed(:profile_change_request, :primary_email).decorate
       expect(request.profile_return_path).to eq("/people/#{request.person.to_param}")

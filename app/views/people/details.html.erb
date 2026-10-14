@@ -11,9 +11,9 @@
   </div>
   <h1 class="text-primary font-display text-3xl font-semibold">Edit my profile</h1>
   <p class="mt-2 text-lg text-gray-700">
-    Change anything below, then click <strong>Save</strong>. To change your email or organizations, use the buttons on your profile.
+    Change anything below, then click <strong>Save</strong>. To change your organizations, use the button on your profile.
   </p>
-  <%= simple_form_for @person, html: { multipart: true, class: "mt-6 space-y-6" } do |f| %>
+  <%= simple_form_for @person, html: { multipart: true, class: "mt-6 space-y-6", data: { controller: "dirty-form" } } do |f| %>
     <%= hidden_field_tag :return_to, "details" %>
     <%= render "shared/errors", resource: @person if @person.errors.any? %>
     <div id="photo" class="<%= card_class %>">
@@ -28,6 +28,47 @@
         <%= f.input :pronunciation, label: "How to say your name", hint: "For example: Oom-BEAR-toh", input_html: { class: input_class } %>
         <%= f.input :legal_first_name, label: "Legal first name", hint: "Only if it's different from your first name", input_html: { class: input_class } %>
         <%= f.input :pronouns, label: "Pronouns", hint: "For example: she/her, he/him, they/them", input_html: { class: input_class } %>
+      </div>
+    </div>
+    <div id="emails" class="<%= card_class %>">
+      <h2 class="mb-1 font-display text-2xl text-gray-900">Email</h2>
+      <p class="mb-4 text-gray-600">AWBW staff change your email addresses for you. You can pick each one's type.</p>
+      <% pending_email_requests = @person.profile_change_requests.pending.where(field: ProfileChangeRequest::EMAIL_FIELDS).index_by(&:field) %>
+      <% emails = [
+           { field: "primary_email", label: "Primary email", address: @person.user&.email || @person.email, type_attribute: :email_type,
+             type_selected: @person.email_type || @person.user&.email_type },
+           { field: "secondary_email", label: "Secondary email", address: @person.email_2, type_attribute: :email_2_type,
+             type_selected: @person.email_2_type }
+         ] %>
+      <div class="divide-y divide-gray-100">
+        <% emails.each do |email| %>
+          <% pending = pending_email_requests[email[:field]] %>
+          <div class="grid grid-cols-1 items-start gap-4 py-4 first:pt-0 last:pb-0 sm:grid-cols-[1fr_12rem]">
+            <div>
+              <p class="text-sm font-medium text-gray-700"><%= email[:label] %></p>
+              <% if email[:address].present? %>
+                <!--email_off--><p class="text-lg font-medium break-all text-gray-900"><%= email[:address] %></p><!--email_on-->
+              <% else %>
+                <p class="text-lg text-gray-500 italic">None yet</p>
+              <% end %>
+              <div class="mt-2 flex flex-wrap items-center gap-3">
+                <%= link_to new_profile_change_request_path(person_id: @person, field: email[:field], return_to: "details"),
+                            class: button_classes(:secondary_outline, size: :sm) do %>
+                  <%= pending ? "See your request" : (email[:address].present? ? "Request a change" : "Add a #{email[:label].downcase}") %>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                <% end %>
+                <% if pending %>
+                  <span class="inline-flex items-center gap-1 text-sm text-amber-800"><i class="fa-solid fa-clock"></i> Change to <%= pending.requested_value %> requested</span>
+                <% end %>
+              </div>
+            </div>
+            <% if email[:address].present? %>
+              <%= f.input email[:type_attribute], label: "Type",
+                          collection: Person::CONTACT_TYPES.compact.map { |type| [ type.to_s.humanize, type ] },
+                          selected: email[:type_selected], include_blank: true, input_html: { class: input_class } %>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     </div>
     <div id="bio" class="<%= card_class %>">
@@ -206,7 +247,7 @@
       </div>
     </div>
     <div class="sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-3 border-t border-gray-200 bg-white/95 py-4 pr-20 pl-4 backdrop-blur sm:pr-4">
-      <%= link_to "Cancel", person_path(@person), class: button_classes(:secondary_outline) %>
+      <%= link_to "Cancel", person_path(@person), class: button_classes(:secondary_outline), data: { action: "click->dirty-form#confirmCancel" } %>
       <%= f.button :submit, "Save", class: button_classes(:primary, extra: "px-10 text-lg") %>
     </div>
   <% end %>

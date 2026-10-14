@@ -29,6 +29,11 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(request.errors[:details]).to be_present
     end
 
+    it "requires a valid email for a secondary_email request" do
+      expect(build(:profile_change_request, :secondary_email, requested_value: "not-an-email")).not_to be_valid
+      expect(build(:profile_change_request, :secondary_email)).to be_valid
+    end
+
     it "rejects an unknown field" do
       request = build(:profile_change_request, field: "shoe_size")
       expect(request).not_to be_valid

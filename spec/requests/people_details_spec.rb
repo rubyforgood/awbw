@@ -106,6 +106,55 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect(response.body).to include("Only one sector can be marked as primary")
   end
 
+  describe "the email card" do
+    it "shows each email with its type and a link to request a change" do
+      person.update!(email_2: "second@example.com", email_2_type: "personal")
+
+      get details_person_path(person)
+
+      expect(response.body).to include(owner_user.email, "second@example.com")
+      expect(response.body).to include("person[email_type]", "person[email_2_type]")
+      expect(response.body).to include("field=primary_email&amp;person_id=#{person.id}&amp;return_to=details")
+      expect(response.body).to include("field=secondary_email&amp;person_id=#{person.id}&amp;return_to=details")
+      expect(response.body).not_to include("person[email]", "person[email_2]\"")
+    end
+
+    it "offers to add a secondary email when there isn't one" do
+      get details_person_path(person)
+
+      expect(response.body).to include("Add a secondary email")
+      expect(response.body).not_to include("person[email_2_type]")
+    end
+
+    it "saves both email types" do
+      person.update!(email_2: "second@example.com")
+
+      save_details(email_type: "work", email_2_type: "personal")
+
+      expect(person.reload).to have_attributes(email_type: "work", email_2_type: "personal")
+    end
+
+    it "shows a pending email request" do
+      create(:profile_change_request, :secondary_email, person: person, requested_by: owner_user, requested_value: "new2@example.com")
+
+      get details_person_path(person)
+
+      expect(response.body).to include("See your request", "Change to new2@example.com requested")
+    end
+
+    it "opens the request form on the chosen email and comes back to the card" do
+      person.update!(email_2: "second@example.com")
+
+      get new_profile_change_request_path(person_id: person, field: "secondary_email", return_to: "details")
+      expect(response.body).to include("Current secondary email", "second@example.com", "Back to editing my profile")
+
+      post profile_change_requests_path(person_id: person), params: {
+        return_to: "details", profile_change_request: { field: "secondary_email", requested_value: "new2@example.com" }
+      }
+      expect(response).to redirect_to(details_person_path(person, anchor: "emails"))
+    end
+  end
+
   it "saves the time zone and best time to call" do
     save_details(best_time_to_call: "Weekday mornings", user_attributes: { id: owner_user.id, time_zone: "Eastern Time (US & Canada)" })
 

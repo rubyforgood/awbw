@@ -20,7 +20,7 @@ class ProfileChangeRequestsController < ApplicationController
     return prepare_affiliation_request if requested_field == "affiliation"
 
     existing = @person.profile_change_requests.pending.find_by(field: requested_field)
-    redirect_to edit_profile_change_request_path(existing) if existing
+    redirect_to edit_profile_change_request_path(existing, return_to: return_to) if existing
   end
 
   def create
@@ -31,7 +31,7 @@ class ProfileChangeRequestsController < ApplicationController
 
     if @request.save
       notify_admins_and_submitter(@request)
-      redirect_to @request.decorate.profile_return_path, status: :see_other,
+      redirect_to @request.decorate.profile_return_path(return_to), status: :see_other,
                   notice: "Thanks — we've sent your change request to AWBW staff."
     else
       @person = @request.person
@@ -48,7 +48,7 @@ class ProfileChangeRequestsController < ApplicationController
     authorize! @request
 
     if @request.update(profile_change_request_params)
-      redirect_to @request.decorate.profile_return_path, status: :see_other,
+      redirect_to @request.decorate.profile_return_path(return_to), status: :see_other,
                   notice: "Your change request was updated."
     else
       @person = @request.person
@@ -134,6 +134,11 @@ class ProfileChangeRequestsController < ApplicationController
     @back_path = new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: @request.affiliation.id)
     @back_label = "Back"
   end
+
+  def return_to
+    params[:return_to].presence_in(%w[details])
+  end
+  helper_method :return_to
 
   def profile_change_request_params
     params.require(:profile_change_request).permit(

@@ -10,7 +10,7 @@
   <p class="mt-2 text-lg text-gray-700">
     Turn on the parts of your profile other AWBW facilitators can see. AWBW staff can always see everything.
   </p>
-  <%= simple_form_for @person, html: { class: "mt-6 space-y-6" } do |f| %>
+  <%= simple_form_for @person, html: { class: "mt-6 space-y-6", data: { controller: "dirty-form" } } do |f| %>
     <%= hidden_field_tag :return_to, "visibility" %>
     <%= render "shared/errors", resource: @person if @person.errors.any? %>
     <div class="<%= card_class %>">
@@ -52,7 +52,7 @@
       </div>
     <% end %>
     <div class="flex justify-end gap-3">
-      <%= link_to "Cancel", person_path(@person), class: button_classes(:secondary_outline) %>
+      <%= link_to "Cancel", person_path(@person), class: button_classes(:secondary_outline), data: { action: "click->dirty-form#confirmCancel" } %>
       <%= f.button :submit, "Save", class: button_classes(:primary, extra: "px-8 text-lg") %>
     </div>
   <% end %>

@@ -13,6 +13,12 @@ FactoryBot.define do
       details { nil }
     end
 
+    trait :secondary_email do
+      field { "secondary_email" }
+      requested_value { "second@example.com" }
+      details { nil }
+    end
+
     trait :organization_name do
       field { "organization_name" }
       requested_value { "New Org Name" }

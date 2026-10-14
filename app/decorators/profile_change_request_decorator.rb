@@ -42,7 +42,10 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     parts.compact_blank.join(": ")
   end
 
-  def profile_return_path
+  # `return_to: "details"` comes back to the email card on the simple edit page.
+  def profile_return_path(return_to = nil)
+    return h.details_person_path(person, anchor: "emails") if return_to == "details"
+
     h.person_path(person, anchor: ("affiliations" if field == "affiliation"))
   end
 
@@ -52,6 +55,8 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     case field
     when "primary_email"
       "Approve and send a confirmation email to #{requested_value}?"
+    when "secondary_email"
+      "Approve and set the secondary email to #{requested_value}?"
     when "organization_name"
       org_rename_confirm(target_organization, requested_value)
     when "affiliation"
@@ -84,6 +89,8 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     case field
     when "primary_email"
       person.user ? h.edit_user_path(person.user) : h.edit_person_path(person)
+    when "secondary_email"
+      h.edit_person_path(person)
     when "organization_name"
       person.primary_organization ? h.edit_organization_path(person.primary_organization) : h.edit_person_path(person, anchor: "affiliations")
     when ProfileChangeRequest::OTHER_FIELD
