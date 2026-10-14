@@ -18,14 +18,7 @@ RSpec.describe Organization do
   describe 'validations' do
     subject { build(:organization) }
     it { should validate_presence_of(:name) }
-    it { should validate_presence_of(:organization_status_id) }
-
-    it "allows a blank status when saved for a dedupe merge" do
-      organization = create(:organization)
-      organization.organization_status_id = nil
-
-      expect(organization.valid?(Dedupable::DEDUPE_VALIDATION_CONTEXT)).to be true
-    end
+    it { should_not validate_presence_of(:organization_status_id) }
 
     it { should allow_value("info@example.com").for(:email) }
     it { should allow_value("").for(:email) }
