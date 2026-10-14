@@ -1,6 +1,5 @@
-<%# Admin-only marker: this piece was hidden from the public profile by the
-    person, but admins still see it (blue admin-only wash + eye-slash). %>
-<span class="admin-only text-2xs inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-2 py-0.5 font-semibold tracking-wide text-blue-800 uppercase"
-      title="Hidden from the public profile. Only admins can see this.">
+<%# locals: (person:) %>
+<span class="text-2xs inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold tracking-wide uppercase <%= profile_hidden_wash_class %> <%= profile_hidden_text_class %>"
+      title="<%= own_profile?(person) ? "You turned this off in your profile settings. Only you and admins can see it." : "Turned off in this person's profile settings. Only they and admins can see it." %>">
   <i class="fa-solid fa-eye-slash"></i> Hidden from profile
 </span>

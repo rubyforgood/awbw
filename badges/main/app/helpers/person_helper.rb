@@ -146,7 +146,8 @@ module PersonHelper
   end
 
   # A piece the person hid (a `profile_show_*` flag turned off) stays visible to
-  # them and to admins. `flag` is a `profile_show_*` attribute name (symbol).
+  # them and to admins under the blue admin-or-owner wash. `flag` is a
+  # `profile_show_*` attribute name (symbol).
   def profile_piece_shown?(person, flag)
     person.public_send(:"#{flag}?") || profile_piece_hidden_for_viewer?(person, flag)
   end
@@ -155,12 +156,40 @@ module PersonHelper
     !person.public_send(:"#{flag}?") && allowed_to?(:own_record?, person)
   end
 
+  def own_profile?(person)
+    current_user.present? && current_user.person_id == person.id
+  end
+
   def owner_and_admins_label(person)
-    current_user&.person_id == person.id ? "Only visible to you and admins" : "Only visible to this person and admins"
+    own_profile?(person) ? "Only visible to you and admins" : "Only visible to this person and admins"
   end
 
   def profile_hidden_icon
-    tag.i(class: "admin-or-owner fa-solid fa-eye-slash text-xs #{DomainTheme.text_class_for(:user_only, intensity: 700)}", title: "Hidden from public")
+    tag.i(class: "admin-or-owner fa-solid fa-eye-slash text-xs #{profile_hidden_icon_class}", title: "Hidden from public")
+  end
+
+  def profile_hidden_wash_class
+    "admin-or-owner #{DomainTheme.bg_class_for(:admin_or_owner, intensity: 100)} #{profile_hidden_border_class}"
+  end
+
+  def profile_hidden_border_class
+    DomainTheme.border_class_for(:admin_or_owner, intensity: 200)
+  end
+
+  def profile_hidden_text_class
+    DomainTheme.text_class_for(:admin_or_owner)
+  end
+
+  def profile_hidden_icon_class
+    DomainTheme.text_class_for(:admin_or_owner, intensity: 700)
+  end
+
+  def profile_hidden_section_class
+    "rounded-xl border p-4 #{profile_hidden_wash_class}"
+  end
+
+  def profile_hidden_chip_class
+    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 #{profile_hidden_wash_class} #{profile_hidden_text_class}"
   end
 
   # Blue admin-only pill for record data that lives only on the edit form and has

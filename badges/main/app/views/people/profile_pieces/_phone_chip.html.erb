@@ -1,4 +1,5 @@
+<%# locals: (person:, hidden: false) %>
 <% phone = person.profile_phone %>
-<span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-  <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
+<span class="<%= hidden ? profile_hidden_chip_class : "inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700" %>" title="<%= "Hidden from profile" if hidden %>">
+  <i class="fa-solid <%= hidden ? "fa-eye-slash #{profile_hidden_icon_class}" : "fa-phone #{DomainTheme.text_class_for(:people, intensity: 600)}" %> text-xs"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
 </span>
