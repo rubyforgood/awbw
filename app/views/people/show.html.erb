@@ -13,7 +13,7 @@
   <%= render "people/multiple_memberships_warning", person: @person %>
 <% end %>
 <% if allowed_to?(:index?, User) %>
-  <%= render "people/multiple_user_accounts_warning", person: @person %>
+  <%= render "people/multiple_user_accounts_warning", person: @person, return_to: "person_show" %>
 <% end %>
 <div class="admin-or-owner bg-brand-cream border-primary/10 overflow-hidden rounded-2xl border shadow-sm">
   <%= render accent_strip_partial %>

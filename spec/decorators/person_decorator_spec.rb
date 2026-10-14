@@ -13,6 +13,13 @@ RSpec.describe PersonDecorator do
       expect(person.decorate.multiple_user_accounts?).to be(true)
     end
 
+    it "suggests keeping the most recent login that can still sign in" do
+      usable = person.user
+      create(:user, person: person, confirmed_at: nil, updated_at: 1.minute.from_now)
+
+      expect(person.decorate.suggested_user_account).to eq(usable)
+    end
+
     it "does not flag a person with one login" do
       expect(person.decorate.multiple_user_accounts?).to be(false)
     end

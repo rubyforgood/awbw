@@ -1,5 +1,7 @@
-<% user_accounts = person.decorate.user_accounts %>
+<% decorated = person.decorate %>
+<% user_accounts = decorated.user_accounts %>
 <% if user_accounts.size > 1 %>
+  <% keeper = decorated.suggested_user_account %>
   <div class="admin-only mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
     <div class="flex items-start gap-3">
       <div class="flex-shrink-0 pt-0.5">
@@ -15,6 +17,14 @@
             <li>
               <%= link_to user.email, user_path(user), class: "underline hover:text-yellow-900", data: { turbo_frame: "_top" } %>
               <span class="text-yellow-600">· last signed in <%= user.decorate.last_logged_in %><%= " · shown on profile" if index.zero? %></span>
+              <% if user == keeper %>
+                <span class="ml-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Suggested keeper</span>
+              <% else %>
+                <%= link_to "Preview merge →",
+                            dedupe_preview_users_path(user_to_delete_id: user.id, user_to_keep_id: keeper.id, return_to: return_to, person_id: person.id),
+                            class: "ml-1 font-medium underline hover:text-yellow-900",
+                            data: { turbo: false } %>
+              <% end %>
             </li>
           <% end %>
         </ul>

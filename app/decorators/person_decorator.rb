@@ -38,6 +38,11 @@ class PersonDecorator < ApplicationDecorator
     user_accounts.size > 1
   end
 
+  # Matches the logins deduper's pick (UserServices::DuplicateFinder): the most recent login that can sign in.
+  def suggested_user_account
+    user_accounts.find(&:has_access?) || user_accounts.first
+  end
+
   # The subscriptions index filtered to this person's News (mailing-list) topic —
   # where mailing-list interest now lives since the person-level consent flag retired.
   def news_subscriptions_path
