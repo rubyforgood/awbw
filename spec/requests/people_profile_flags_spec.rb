@@ -4,7 +4,6 @@ RSpec.describe "Person profile flag visibility", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:owner_user) { create(:user, :with_person) }
   let(:person) { owner_user.person }
-  let(:other_user) { create(:user) }
 
   before do
     person.update!(
@@ -16,71 +15,52 @@ RSpec.describe "Person profile flag visibility", type: :request do
     create(:affiliation, person: person, title: "Facilitator", start_date: Date.new(2020, 1, 1))
   end
 
-  def hidden_card
-    Capybara.string(response.body).all("#hidden_from_public").first
-  end
-
-  # flag => [marker in its public spot, text inside the "Hidden from public" card]
+  # Flags whose content is visible to any viewer with show access
   {
-    profile_show_pronouns: [ "(they/them)", "they/them" ],
-    profile_show_member_since: [ "Facilitator since", "Facilitator since" ],
-    profile_show_phone: [ "555-123-4567", "555-123-4567" ],
-    profile_show_affiliations: [ "\">Affiliations</h2>", "Affiliations" ],
-    profile_show_sectors: [ "\">Sectors</h2>", "Sectors" ],
-    profile_show_bio: [ "\">Bio</h2>", "A passionate facilitator" ],
-    profile_show_workshops: [ "\">Workshops authored</h3>", "Workshops authored" ],
-    profile_show_workshop_variations: [ "Workshop variations authored", "Workshop variations authored" ],
-    profile_show_stories: [ "Stories authored/featured", "Stories authored/featured" ],
-    profile_show_resources: [ "\">Resources authored</h3>", "Resources authored" ],
-    profile_show_events_registered: [ "Participation history", "Events attended" ]
-  }.each do |flag, (public_marker, hidden_text)|
+    profile_show_pronouns: "they/them",
+    profile_show_member_since: "Facilitator since",
+    profile_show_phone: "555-123-4567",
+    profile_show_affiliations: "Affiliations",
+    profile_show_sectors: ">Sectors</h2>",
+    profile_show_bio: ">Bio</h2>"
+  }.each do |flag, marker|
     describe "##{flag}" do
       context "when false" do
         before { person.update!(flag => false) }
 
         it "hides content from other signed-in users" do
-          sign_in other_user
+          sign_in create(:user)
           get person_path(person)
           expect(response).to have_http_status(:ok)
-          expect(response.body).not_to include(public_marker)
-          expect(hidden_card).to be_nil
+          expect(response.body).not_to include(marker)
         end
 
-        it "shows content to the owner in the collapsed hidden-from-public card" do
+        it "reveals content with the blue wash on own profile" do
           sign_in owner_user
           get person_path(person)
-          expect(hidden_card).to be_present
-          expect(hidden_card.native.to_html).to include(hidden_text)
-          expect(response.body).to include("Only visible to you and admins")
+          expect(washed?("admin-or-owner", marker)).to be(true)
         end
 
-        it "shows content to an admin in the collapsed hidden-from-public card" do
+        it "reveals content with the blue wash when admin views profile" do
           sign_in admin
           get person_path(person)
-          expect(hidden_card.native.to_html).to include(hidden_text)
-          expect(response.body).to include("Only visible to this person and admins")
+          expect(washed?("admin-or-owner", marker)).to be(true)
         end
       end
 
       context "when true" do
         before { person.update!(flag => true) }
 
-        it "shows content to other signed-in users" do
-          sign_in other_user
-          get person_path(person)
-          expect(response.body).to include(public_marker)
-        end
-
         it "shows content on own profile" do
           sign_in owner_user
           get person_path(person)
-          expect(response.body).to include(public_marker)
+          expect(response.body).to include(marker)
         end
 
         it "shows content when admin views profile" do
           sign_in admin
           get person_path(person)
-          expect(response.body).to include(public_marker)
+          expect(response.body).to include(marker)
         end
       end
     end
@@ -92,22 +72,22 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_credentials: false) }
 
-      it "hides the license credentials from other signed-in users" do
-        sign_in other_user
-        get person_path(person)
-        expect(response.body).not_to include("LCSW")
-      end
-
-      it "shows the license credentials to the owner in the hidden-from-public card" do
+      it "reveals the license credentials with the blue wash on own profile" do
         sign_in owner_user
         get person_path(person)
-        expect(hidden_card.native.to_html).to include("LCSW")
+        expect(washed?("admin-or-owner", "LCSW")).to be(true)
       end
 
-      it "shows the license credentials to an admin in the hidden-from-public card" do
+      it "reveals the license credentials with the blue wash when admin views profile" do
         sign_in admin
         get person_path(person)
-        expect(hidden_card.native.to_html).to include("LCSW")
+        expect(washed?("admin-or-owner", "LCSW")).to be(true)
+      end
+
+      it "hides the license credentials from other users" do
+        sign_in create(:user)
+        get person_path(person)
+        expect(response.body).not_to include("LCSW")
       end
     end
 
@@ -132,22 +112,22 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_social_media: false) }
 
-      it "hides social media from other signed-in users" do
-        sign_in other_user
-        get person_path(person)
-        expect(response.body).not_to include("fa-linkedin-in")
-      end
-
-      it "shows social media to the owner in the hidden-from-public card" do
+      it "reveals social media with the blue wash on own profile" do
         sign_in owner_user
         get person_path(person)
-        expect(hidden_card.native.to_html).to include("fa-linkedin-in")
+        expect(washed?("admin-or-owner", "fa-linkedin-in")).to be(true)
       end
 
-      it "shows social media to an admin in the hidden-from-public card" do
+      it "reveals social media with the blue wash when admin views profile" do
         sign_in admin
         get person_path(person)
-        expect(hidden_card.native.to_html).to include("fa-linkedin-in")
+        expect(washed?("admin-or-owner", "fa-linkedin-in")).to be(true)
+      end
+
+      it "hides social media from other users" do
+        sign_in create(:user)
+        get person_path(person)
+        expect(response.body).not_to include("fa-linkedin-in")
       end
     end
 
@@ -174,22 +154,22 @@ RSpec.describe "Person profile flag visibility", type: :request do
     context "when false" do
       before { person.update!(profile_show_email: false) }
 
-      it "hides email from other signed-in users" do
-        sign_in other_user
-        get person_path(person)
-        expect(response.body).not_to include(email)
-      end
-
-      it "shows email to the owner in the hidden-from-public card" do
+      it "reveals email with the blue wash on own profile" do
         sign_in owner_user
         get person_path(person)
-        expect(hidden_card.native.to_html).to include(email)
+        expect(washed?("admin-or-owner", email)).to be(true)
       end
 
-      it "shows email to an admin in the hidden-from-public card" do
+      it "reveals email with the blue wash when admin views profile" do
         sign_in admin
         get person_path(person)
-        expect(hidden_card.native.to_html).to include(email)
+        expect(washed?("admin-or-owner", email)).to be(true)
+      end
+
+      it "hides email from other users" do
+        sign_in create(:user)
+        get person_path(person)
+        expect(response.body).not_to include(email)
       end
     end
 
@@ -235,59 +215,120 @@ RSpec.describe "Person profile flag visibility", type: :request do
     end
   end
 
-  # Flags inside the "Submitted content" section (gated by show? policy)
+  def washed?(marker_class, content)
+    Nokogiri::HTML(response.body).css(".#{marker_class}").any? { |el| el.inner_html.include?(content) }
+  end
+
+  def section_heading(title)
+    Nokogiri::HTML(response.body).css("h3").find { |h3| h3.text.strip == title }
+  end
+
+  def section_titles
+    Nokogiri::HTML(response.body).css("h3").map { |h3| h3.text.strip }
+  end
+
+  def nearest_wash(title)
+    section_heading(title)&.ancestors&.find { |node| node["class"].to_s.split.include?("bg-blue-100") }
+  end
+
+  # Published-content sections stay visible to the owner and admins under a wash when turned off
   {
-    profile_show_workshop_ideas: "Workshop ideas submitted",
-    profile_show_workshop_variation_ideas: "Workshop variation ideas submitted",
-    profile_show_story_ideas: "Story ideas submitted",
-    profile_show_workshop_logs: "Workshop logs submitted"
-  }.each do |flag, marker|
+    profile_show_workshops: "Workshops authored",
+    profile_show_workshop_variations: "Workshop variations authored",
+    profile_show_stories: "Stories authored/featured",
+    profile_show_resources: "Resources authored",
+    profile_show_events_registered: "Events attended"
+  }.each do |flag, title|
+    badge = "Hidden from profile"
+
     describe "##{flag}" do
       context "when false" do
         before { person.update!(flag => false) }
 
-        it "hides content on own profile" do
+        it "shows the section with the blue wash on own profile" do
           sign_in owner_user
           get person_path(person)
-          expect(response.body).not_to include(marker)
+          expect(nearest_wash(title)["class"]).to include("admin-or-owner")
+          expect(nearest_wash(title).text).to include(badge)
+        end
+
+        it "shows the section with the blue wash when admin views profile" do
+          sign_in admin
+          get person_path(person)
+          expect(nearest_wash(title)["class"]).to include("admin-or-owner")
+          expect(nearest_wash(title).text).to include(badge)
+        end
+
+        it "hides the section from other users" do
+          sign_in create(:user)
+          get person_path(person)
+          expect(response).to have_http_status(:ok)
+          expect(section_titles).not_to include(title)
         end
       end
 
       context "when true" do
         before { person.update!(flag => true) }
 
-        it "shows content on own profile" do
+        it "shows the section without a badge on own profile" do
           sign_in owner_user
           get person_path(person)
-          expect(response.body).to include(marker)
+          expect(section_heading(title).parent.text).not_to include(badge)
         end
 
-        it "shows content when admin views profile" do
+        it "shows the section without a wash when admin views profile" do
           sign_in admin
           get person_path(person)
-          expect(response.body).to include(marker)
+          expect(section_titles).to include(title)
+          expect(nearest_wash(title)).to be_nil
+        end
+
+        it "shows the section to other users" do
+          sign_in create(:user)
+          get person_path(person)
+          expect(response).to have_http_status(:ok)
+          expect(section_titles).to include(title)
         end
       end
     end
   end
 
-  describe "lazy section requests" do
-    before { person.update!(profile_show_workshops: false) }
-
-    def get_workshops_section
-      get person_path(person, section: "workshops"), headers: { "Turbo-Frame" => "person_workshops_section" }
+  describe "with every published-content section turned off" do
+    before do
+      person.update!(profile_show_workshops: false, profile_show_workshop_variations: false,
+                     profile_show_stories: false, profile_show_resources: false)
     end
 
-    it "denies a hidden section to other signed-in users" do
-      sign_in other_user
-      get_workshops_section
-      expect(response).to redirect_to(root_path)
+    it "washes the whole card once instead of each section" do
+      sign_in admin
+      get person_path(person)
+      card = nearest_wash("Workshops authored")
+      expect(card.text).to include("Published content")
+      expect(card.text.scan("Hidden from profile").size).to eq(1)
     end
+  end
 
-    it "serves a hidden section to the owner" do
+  describe "submitted content" do
+    submitted_titles = [ "Workshop ideas submitted", "Workshop variation ideas submitted",
+                         "Story ideas submitted", "Workshop logs submitted" ]
+
+    it "always shows under the blue wash on own profile" do
       sign_in owner_user
-      get_workshops_section
-      expect(response).to be_successful
+      get person_path(person)
+      submitted_titles.each { |title| expect(nearest_wash(title).text).to include("Only visible to you and admins") }
+    end
+
+    it "always shows under the blue wash when admin views profile" do
+      sign_in admin
+      get person_path(person)
+      submitted_titles.each { |title| expect(nearest_wash(title).text).to include("Only visible to this person and admins") }
+    end
+
+    it "never shows to other users" do
+      sign_in create(:user)
+      get person_path(person)
+      expect(response).to have_http_status(:ok)
+      expect(section_titles & submitted_titles).to be_empty
     end
   end
 end

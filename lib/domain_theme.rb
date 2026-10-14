@@ -50,6 +50,7 @@ module DomainTheme
     addresses:                :slate,
 
     admin_only:               :blue,
+    admin_or_owner:           :blue,
     user_only:                :amber,
     person_bio:               :purple,
 
