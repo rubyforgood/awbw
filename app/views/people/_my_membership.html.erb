@@ -1,7 +1,10 @@
-<div class="user-only bg-amber-100 border border-amber-200 rounded-lg shadow-sm">
-  <div class="section-header flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-6 sm:px-7 py-3 border-b border-amber-200">
-    <h2 class="text-xl font-semibold text-gray-800">Annual membership</h2>
-    <span class="text-sm text-amber-700 italic">Only visible to you</span>
+<div class="overflow-hidden rounded-2xl border-2 shadow-sm <%= profile_hidden_wash_class %>">
+  <div class="section-header flex items-center gap-3 border-b px-5 py-4 sm:px-6 <%= profile_hidden_border_class %>">
+    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white <%= profile_hidden_icon_class %>">
+      <i class="fa-solid fa-id-card"></i>
+    </span>
+    <h2 class="font-display text-2xl text-gray-900">Annual membership</h2>
+    <span class="ml-auto text-sm italic <%= profile_hidden_text_class %>">Only visible to you</span>
   </div>
 
   <div class="section-content px-3 sm:px-4 py-4">
