@@ -1,7 +1,7 @@
 class PersonPolicy < ApplicationPolicy
   # See https://actionpolicy.evilmartians.io/#/writing_policies
 
-  # email_2 is matched as an identity (PersonMatcher, duplicate finders), so only admins set it.
+  # Which tier each field sits in: docs/adr/0006-person-profile-field-access.md
   ADMIN_ONLY_FIELDS = %i[
     email email_2
     filemaker_code blog_contributor notes member_since racial_ethnic_identity
