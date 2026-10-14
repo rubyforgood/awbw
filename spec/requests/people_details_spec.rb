@@ -74,6 +74,19 @@ RSpec.describe "Editing your own profile details", type: :request do
     expect(person.reload.sectors).to contain_exactly(health)
   end
 
+  it "marks the main sector" do
+    create(:sectorable_item, sectorable: person, sector: arts, is_primary: true)
+    create(:sectorable_item, sectorable: person, sector: health)
+
+    get details_person_path(person)
+
+    arts_pill = response.body[/<label[^>]*>(?:(?!<\/label>).)*Arts(?:(?!<\/label>).)*<\/label>/m]
+    health_pill = response.body[/<label[^>]*>(?:(?!<\/label>).)*Health(?:(?!<\/label>).)*<\/label>/m]
+    expect(arts_pill).to include("Main")
+    expect(health_pill).not_to include("Main")
+    expect(response.body).to include("marks your main sector")
+  end
+
   it "adds a license from the add row" do
     save_details(professional_licenses_attributes: { "999" => { kind: "LMFT", number: "12345", issuing_state: "CA", expires_on: "2027-01-31" } })
 
