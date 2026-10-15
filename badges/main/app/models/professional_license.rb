@@ -6,6 +6,7 @@ class ProfessionalLicense < ApplicationRecord
   belongs_to :updated_by, class_name: "User", optional: true
 
   has_many :continuing_education_registrations, dependent: :destroy
+  has_many :profile_change_requests, dependent: :nullify
 
   # Deleting a license cascades to its CE registrations (and their allocations),
   # so refuse to remove one that has any CE registration at all — regardless of

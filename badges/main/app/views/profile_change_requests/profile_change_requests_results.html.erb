@@ -2,7 +2,7 @@
   <div class="mt-4 flex flex-wrap gap-2">
     <% ProfileChangeRequest::STATUSES.each do |status| %>
       <%= link_to status.capitalize,
-                  profile_change_requests_path(status: status),
+                  profile_change_requests_path(status: status, person_id: @person&.id),
                   class: "rounded-full px-3 py-1 text-sm #{status == @status ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}" %>
     <% end %>
   </div>

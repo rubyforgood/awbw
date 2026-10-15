@@ -77,6 +77,8 @@ module ProfileChangeRequests
     end
 
     def apply_affiliation_add
+      return Result.new(applied: false, message: "This organization isn't in the portal yet.") if @request.new_organization?
+
       affiliation = @request.person.affiliations.create(
         organization_id: @request.organization_id,
         title: @request.proposed_title,
@@ -95,25 +97,38 @@ module ProfileChangeRequests
       return Result.new(applied: false, message: "This person has no user account.") unless user
 
       requested = @request.requested_value
-      return Result.new(applied: true, message: "Email already matches; nothing to send.") if user.email == requested
-      return Result.new(applied: false, message: "That email is already in use by another account.") if email_taken?(user, requested)
+      changing_address = user.email != requested
+      return Result.new(applied: false, message: "That email is already in use by another account.") if changing_address && email_taken?(user, requested)
+
+      type_message = apply_email_type(:email_type)
+      return Result.new(applied: true, message: type_message || "Email already matches; nothing to send.") unless changing_address
 
       user.unconfirmed_email = requested
+      user.email_type = @request.proposed_email_type if @request.proposed_email_type.present?
       user.save(validate: false)
       UserServices::ProcessEmailChange.call(user: user, send_confirmation: true, current_user: @reviewer)
-      Result.new(applied: true, message: "Confirmation email sent to #{requested}.")
+      Result.new(applied: true, message: [ "Confirmation email sent to #{requested}.", type_message ].compact.join(" "))
     end
 
     def apply_secondary_email
       person = @request.person
-      requested = @request.requested_value
-      return Result.new(applied: true, message: "Secondary email already matches.") if person.email_2 == requested
+      changes = { email_2: @request.requested_value, email_2_type: @request.proposed_email_type.presence }.compact
+      return Result.new(applied: true, message: "Secondary email already matches.") if changes.all? { |attribute, value| person.public_send(attribute) == value }
 
-      if person.update(email_2: requested)
-        Result.new(applied: true, message: "Secondary email changed to #{requested}.")
+      if person.update(changes)
+        Result.new(applied: true, message: "Secondary email changed to #{PersonDecorator.email_with_type(person.email_2, person.email_2_type)}.")
       else
         Result.new(applied: false, message: person.errors.full_messages.to_sentence)
       end
+    end
+
+    # The person's type is the one shown; the login's copy rides along with an address change.
+    def apply_email_type(attribute)
+      type = @request.proposed_email_type.presence
+      return if type.nil? || @request.person.public_send(attribute) == type
+      return unless @request.person.update(attribute => type)
+
+      "Email type set to #{type}."
     end
 
     def apply_organization_name
