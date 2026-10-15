@@ -9,16 +9,14 @@ module PersonServices
   #                        every same-name person with no email when the row has none,
   #                        adds the row's ID to their filemaker_code list
   #   * already_imported — a person already carries the row's ID
-  #   * ambiguous        — the email belongs to a differently named person; reconcile
-  #                        by hand
   #   * skipped          — agency, soft-deleted, or nameless rows
   #   * failed           — the Person didn't validate
   #
-  # A row whose email matches nobody is created even when someone already shares the
-  # name: folding the occasional duplicate with the person deduper beats hand-resolving
-  # every name collision in a 39,000-row archive.
+  # A row whose name + email matches nobody is created, even when someone already shares
+  # the name or the email: folding the occasional duplicate with the person deduper beats
+  # hand-resolving every collision in a 39,000-row archive.
   class ImportFromRolodex
-    OUTCOMES = %i[created linked already_imported ambiguous skipped failed].freeze
+    OUTCOMES = %i[created linked already_imported skipped failed].freeze
     FALSE_FLAGS = %w[0 n no false].freeze
     DATE_FORMATS = %w[%m/%d/%Y %Y-%m-%d %m-%d-%Y %Y/%m/%d].freeze
     # A two-digit year below this is read as 20xx, at or above it as 19xx.
@@ -64,9 +62,6 @@ module PersonServices
       if email
         match = PersonMatcher.new(email:, last_name:, first_names: [ first_name ]).matches.to_a
         return link(match, rolodex, label) if match.any?
-
-        others = Person.where("LOWER(email) = :email OR LOWER(email_2) = :email", email: email.downcase).to_a
-        return record(:ambiguous, "#{label}: #{email} belongs to #{others.map { |p| "##{p.id} #{p.full_name}" }.join(', ')}") if others.any?
       else
         no_email = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
                          .where(email: [ nil, "" ]).to_a

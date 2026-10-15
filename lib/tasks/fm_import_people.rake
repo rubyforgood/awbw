@@ -12,7 +12,7 @@ namespace :fm do
   task import_people: :environment do
     dry_run = ENV["DRY_RUN"] != "false"
     verbose = ENV["VERBOSE"] == "true"
-    detailed = verbose ? PersonServices::ImportFromRolodex::OUTCOMES : %i[ambiguous failed]
+    detailed = verbose ? PersonServices::ImportFromRolodex::OUTCOMES : %i[failed]
     import = nil
 
     ActiveRecord::Base.transaction do
