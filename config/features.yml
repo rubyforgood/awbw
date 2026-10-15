@@ -4679,3 +4679,13 @@
   summary: >-
     Admin home now has a Timesheets button under Additional data, opening the
     cross-event timesheets report.
+
+- name: "Add a bio from the Hidden from profile section"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-15
+  action_path: "/people"
+  summary: >-
+    If your bio is turned off and you haven't written one yet, the Hidden from
+    profile section on your profile has an "Add a bio" button that takes you
+    straight to it.

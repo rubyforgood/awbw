@@ -128,6 +128,30 @@ RSpec.describe "Person profile flag visibility", type: :request do
     end
   end
 
+  describe "a hidden, empty bio" do
+    before { person.update!(bio: nil, profile_show_bio: false) }
+
+    it "prompts the owner to add one inside the hidden-from-profile card" do
+      sign_in owner_user
+      get person_path(person)
+      expect(hidden_card).to have_text("Add a bio")
+      expect(hidden_card).to have_link("Add a bio", href: edit_person_path(person, anchor: "bio"))
+    end
+
+    it "doesn't prompt an admin viewing someone else's profile" do
+      sign_in admin
+      get person_path(person)
+      expect(response.body).not_to include("Add a bio")
+    end
+
+    it "doesn't prompt the owner in production" do
+      allow(Rails.env).to receive(:production?).and_return(true)
+      sign_in owner_user
+      get person_path(person)
+      expect(response.body).not_to include("Add a bio")
+    end
+  end
+
   describe "#profile_show_social_media" do
     context "when false" do
       before { person.update!(profile_show_social_media: false) }

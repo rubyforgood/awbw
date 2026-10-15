@@ -296,7 +296,7 @@
   <% end %>
 
   <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-    <div class="form-group <%= card_class %>">
+    <div id="bio" class="form-group <%= card_class %> scroll-mt-4">
       <h3 class="<%= heading_class %>">Background</h3>
       <%# Shout-out text is edited on the registration's "Shout out" section, not here. %>
       <%= f.input :bio,

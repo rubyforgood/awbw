@@ -1,6 +1,7 @@
 <%# Profile pieces the person turned off, shown open (and collapsible) to them and admins. %>
 <% pieces = person.hidden_profile_pieces %>
-<% return if pieces.empty? %>
+<% bio_prompt = !person.profile_show_bio? && person.bio.blank? && own_profile?(person) && allowed_to?(:edit?, person) %>
+<% return if pieces.empty? && !bio_prompt %>
 <% contact_pieces = pieces & %i[profile_show_credentials profile_show_pronouns profile_show_member_since profile_show_email profile_show_phone profile_show_social_media] %>
 <% chip_class = "inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700" %>
 <div id="hidden_from_profile"
@@ -70,6 +71,11 @@
       <div>
         <h3 class="mb-3 font-display text-xl text-gray-900">Bio</h3>
         <%= render "people/profile_pieces/bio", person: person %>
+      </div>
+    <% elsif bio_prompt %>
+      <div>
+        <h3 class="mb-2 font-display text-xl text-gray-900">Bio</h3>
+        <%= render "people/profile_pieces/bio_prompt", person: person %>
       </div>
     <% end %>
     <% %i[workshops workshop_variations stories resources].each do |section| %>
