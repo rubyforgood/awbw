@@ -24,6 +24,8 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     case field
     when "primary_email"
       "Approve and send a confirmation email to #{requested_value}?"
+    when "secondary_email"
+      "Approve and change the secondary email to #{requested_value}?"
     when "organization_name"
       org_rename_confirm(target_organization, requested_value)
     when "affiliation"
@@ -56,6 +58,8 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     case field
     when "primary_email"
       person.user ? h.edit_user_path(person.user) : h.edit_person_path(person)
+    when "secondary_email"
+      h.edit_person_path(person)
     when "organization_name"
       person.primary_organization ? h.edit_organization_path(person.primary_organization) : h.edit_person_path(person, anchor: "affiliations")
     else

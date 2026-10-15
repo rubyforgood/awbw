@@ -127,4 +127,24 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(owner_user.reload.super_user?).to be(false)
     end
   end
+
+  describe "edit page headings" do
+    it "uses owner-friendly section titles for the owner" do
+      sign_in owner_user
+      get edit_person_path(person)
+
+      expect(response.body).to include("Sectors you work in")
+      expect(response.body).to include("Mailing addresses")
+      expect(response.body).to include("Portal communications")
+    end
+
+    it "keeps the admin section titles for an admin" do
+      sign_in create(:user, :admin)
+      get edit_person_path(person)
+
+      expect(response.body).to include("Mailing addresses")
+      expect(response.body).not_to include("Sectors you work in")
+      expect(response.body).not_to include("Portal communications")
+    end
+  end
 end
