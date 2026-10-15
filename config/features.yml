@@ -4643,3 +4643,30 @@
   pro_tips:
     - "If you're active with just one organization, it's filled in for you and the dropdown is hidden."
     - "Don't see the right organization? Contact AWBW to update your affiliation."
+
+- name: "Clearer ways to ask staff for profile changes"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-15
+  summary: >-
+    On your profile edit page, each email and each organization you work with
+    has its own "Request a change" button, as
+    does a license locked by continuing education credits. Organization changes
+    ask one simple question at a time, and there's a free-text request for anything else.
+  pro_tips:
+    - "Pick which organization, then what to change (title, dates, its name, your work address, or that you've left), and you'll only see the boxes you need."
+    - "Use \"Add an organization\" for one you work with that isn't listed — type its name if it's not in the portal yet and staff will add it."
+    - "You can pick your work address from the organization's addresses right on the edit page."
+    - "Can't find what you need? \"Ask AWBW staff to change it\" at the bottom of the page sends a free-text request."
+    - "A clock icon marks anything you've already asked about. Hover over it to see what you sent."
+    - "Each email shows its type after it — (w) for work, (p) for personal. To change just the type, ask for a change and pick the new type; the address is already filled in."
+
+- name: "Jump to one person's change requests"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-15
+  summary: >-
+    When someone has profile change requests, their edit page shows a Change
+    requests button at the top that opens the queue filtered to just them.
+  pro_tips:
+    - "The button shows how many are pending, and opens on Pending when there are any."

@@ -1,0 +1,37 @@
+<% content_for(:page_bg_class, "admin-or-owner") %>
+<% card_class = "flex h-full flex-col gap-1 rounded-2xl border bg-white p-5 shadow-sm transition" %>
+<div class="mx-auto w-full max-w-4xl px-4 py-6">
+  <div class="mb-2">
+    <%= link_to @back_path, class: "text-sm #{eyebrow_link_class}" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> <%= @back_label %>
+    <% end %>
+  </div>
+  <h1 class="text-primary font-display text-3xl font-semibold">Which organization?</h1>
+  <p class="mt-2 text-lg text-gray-700">Pick the organization you'd like to change. AWBW staff will look at your request.</p>
+  <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <% @affiliations.each do |affiliation| %>
+      <% decorated = affiliation.decorate %>
+      <% pending = @pending_by_affiliation[affiliation.id] %>
+      <% path = pending ? edit_profile_change_request_path(pending) : new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: affiliation.id) %>
+      <%= link_to path, class: "#{card_class} border-primary/10 hover:border-primary hover:shadow-md" do %>
+        <span class="text-primary font-display text-xl font-semibold"><%= affiliation.organization.name %></span>
+        <span class="text-gray-700"><%= decorated.display_title %></span>
+        <span class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+          <%= decorated.status_badge %>
+          <%= decorated.period_label %>
+        </span>
+        <% if pending %>
+          <span class="mt-2 inline-flex w-fit items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-sm font-medium text-amber-800">
+            <i class="fa-solid fa-clock"></i> Change requested · see or change it
+          </span>
+        <% end %>
+      <% end %>
+    <% end %>
+    <%= link_to new_profile_change_request_path(person_id: @person, field: "affiliation", add: 1),
+                class: "#{card_class} items-center justify-center border-2 border-dashed border-gray-300 text-center hover:border-primary" do %>
+      <i class="text-primary fa-solid fa-plus text-2xl"></i>
+      <span class="text-primary font-display text-xl font-semibold">Add an organization</span>
+      <span class="text-gray-600">I work with an organization that isn't listed</span>
+    <% end %>
+  </div>
+</div>

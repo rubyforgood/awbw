@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_082509) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_161648) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1722,6 +1722,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_082509) do
     t.string "field", null: false
     t.integer "organization_id"
     t.bigint "person_id", null: false
+    t.bigint "professional_license_id"
+    t.string "proposed_email_type"
     t.date "proposed_end_date"
     t.string "proposed_organization_name"
     t.date "proposed_start_date"
@@ -1737,6 +1739,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_082509) do
     t.index ["affiliation_id"], name: "index_profile_change_requests_on_affiliation_id"
     t.index ["organization_id"], name: "index_profile_change_requests_on_organization_id"
     t.index ["person_id"], name: "index_profile_change_requests_on_person_id"
+    t.index ["professional_license_id"], name: "index_profile_change_requests_on_professional_license_id"
     t.index ["requested_by_id"], name: "index_profile_change_requests_on_requested_by_id"
     t.index ["reviewed_by_id"], name: "index_profile_change_requests_on_reviewed_by_id"
     t.index ["status"], name: "index_profile_change_requests_on_status"
@@ -2796,6 +2799,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_082509) do
   add_foreign_key "profile_change_requests", "affiliations"
   add_foreign_key "profile_change_requests", "organizations"
   add_foreign_key "profile_change_requests", "people"
+  add_foreign_key "profile_change_requests", "professional_licenses"
   add_foreign_key "profile_change_requests", "users", column: "requested_by_id"
   add_foreign_key "profile_change_requests", "users", column: "reviewed_by_id"
   add_foreign_key "quotable_item_quotes", "quotes"

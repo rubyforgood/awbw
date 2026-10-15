@@ -25,6 +25,12 @@ FactoryBot.define do
       details { nil }
     end
 
+    trait :other do
+      field { ProfileChangeRequest::OTHER_FIELD }
+      requested_value { nil }
+      details { "Please fix the spelling of my last name." }
+    end
+
     trait :resolved do
       status { "resolved" }
       resolution_method { "manual" }

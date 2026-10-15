@@ -4,10 +4,12 @@ class ProfileChangeRequestsController < ApplicationController
   def index
     authorize! ProfileChangeRequest
     @status = ProfileChangeRequest::STATUSES.include?(params[:status]) ? params[:status] : "pending"
+    @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
     return unless turbo_frame_request?
 
     @requests = authorized_scope(ProfileChangeRequest.all)
                   .where(status: @status)
+                  .where(@person ? { person: @person } : {})
                   .includes(:person, :requested_by, :reviewed_by)
                   .newest_first
     render :profile_change_requests_results
@@ -17,13 +19,13 @@ class ProfileChangeRequestsController < ApplicationController
     @person = Person.find(params[:person_id])
     @request = @person.profile_change_requests.new(field: requested_field, requested_by: current_user)
     authorize! @request
-
-    # Affiliation requests target a specific affiliation chosen on the form, so we
-    # can't resolve "the" existing one here — only the single-target fields dedupe.
-    return if requested_field == "affiliation"
+    return prepare_affiliation_request if requested_field == "affiliation"
+    return prepare_license_request if @request.license?
 
     existing = @person.profile_change_requests.pending.find_by(field: requested_field)
-    redirect_to edit_profile_change_request_path(existing) if existing
+    return redirect_to edit_profile_change_request_path(existing) if existing
+
+    @request.prefill_current_email
   end
 
   def create
@@ -34,7 +36,7 @@ class ProfileChangeRequestsController < ApplicationController
 
     if @request.save
       notify_admins_and_submitter(@request)
-      redirect_to edit_person_path(@person, anchor: "affiliations"), status: :see_other,
+      redirect_to @request.decorate.profile_return_path, status: :see_other,
                   notice: "Thanks — we've sent your change request to AWBW staff."
     else
       @person = @request.person
@@ -51,7 +53,7 @@ class ProfileChangeRequestsController < ApplicationController
     authorize! @request
 
     if @request.update(profile_change_request_params)
-      redirect_to edit_person_path(@request.person, anchor: "affiliations"), status: :see_other,
+      redirect_to @request.decorate.profile_return_path, status: :see_other,
                   notice: "Your change request was updated."
     else
       @person = @request.person
@@ -102,9 +104,50 @@ class ProfileChangeRequestsController < ApplicationController
     params[:reviewer_note].presence
   end
 
+  # One question per page: which organization (skipped when there's only one),
+  # then what to change, then a form with just those inputs.
+  def prepare_affiliation_request
+    @affiliations = @person.affiliations.includes(:organization).select(&:organization)
+                           .sort_by { |a| [ a.active? ? 0 : 1, a.organization.name.downcase ] }
+    organizations_link = [ new_profile_change_request_path(person_id: @person, field: "affiliation"), "Back to my organizations" ]
+    profile_link = [ edit_person_path(@person, anchor: "affiliations"), "Back to editing my profile" ]
+
+    if params[:add].present? || @affiliations.empty?
+      @request.requested_value = ProfileChangeRequest::AFFILIATION_CHANGE_ADD
+      @back_path, @back_label = @affiliations.any? ? organizations_link : profile_link
+      return
+    end
+
+    @request.affiliation = params[:affiliation_id].present? ? @affiliations.find { |a| a.id.to_s == params[:affiliation_id].to_s } : (@affiliations.first if @affiliations.one?)
+    unless @request.affiliation
+      @pending_by_affiliation = @person.profile_change_requests.pending.where(field: "affiliation").index_by(&:affiliation_id)
+      @back_path, @back_label = profile_link
+      return render :choose_affiliation
+    end
+
+    existing = @person.profile_change_requests.pending.find_by(field: "affiliation", affiliation: @request.affiliation)
+    return redirect_to edit_profile_change_request_path(existing) if existing
+
+    change = params[:change].presence_in(ProfileChangeRequest::AFFILIATION_CHANGE_TYPES - [ ProfileChangeRequest::AFFILIATION_CHANGE_ADD ])
+    unless change
+      @back_path, @back_label = @affiliations.many? ? organizations_link : profile_link
+      return render :choose_affiliation_change
+    end
+
+    @request.requested_value = change
+    @back_path = new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: @request.affiliation.id)
+    @back_label = "Back"
+  end
+
+  def prepare_license_request
+    @request.professional_license = @person.professional_licenses.find(params[:professional_license_id])
+    existing = @person.profile_change_requests.pending.find_by(field: @request.field, professional_license: @request.professional_license)
+    redirect_to edit_profile_change_request_path(existing) if existing
+  end
+
   def profile_change_request_params
     params.require(:profile_change_request).permit(
-      :field, :requested_value, :details, :affiliation_id, :organization_id,
+      :field, :requested_value, :details, :affiliation_id, :organization_id, :professional_license_id, :proposed_email_type,
       :proposed_title, :proposed_start_date, :proposed_end_date, :proposed_organization_name
     )
   end

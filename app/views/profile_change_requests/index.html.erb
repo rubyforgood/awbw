@@ -1,8 +1,14 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto w-full max-w-4xl px-4 py-6">
   <div class="mb-2">
-    <%= link_to root_path, class: "text-sm #{eyebrow_link_class}" do %>
-      <i class="fa-solid fa-arrow-left text-xs"></i> Home
+    <% if @person %>
+      <%= link_to edit_person_path(@person), class: "text-sm #{eyebrow_link_class}" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> <%= @person.full_name %>
+      <% end %>
+    <% else %>
+      <%= link_to root_path, class: "text-sm #{eyebrow_link_class}" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Home
+      <% end %>
     <% end %>
   </div>
 
@@ -10,9 +16,15 @@
   <p class="mt-1 text-gray-600">
     Requests from facilitators to update profile details they can't edit themselves.
   </p>
+  <% if @person %>
+    <p class="mt-2 text-sm text-gray-700">
+      Showing requests from <span class="font-medium"><%= @person.full_name %></span>.
+      <%= link_to "Show everyone's", profile_change_requests_path(status: @status), class: "underline hover:text-blue-800" %>
+    </p>
+  <% end %>
 
   <%= turbo_frame_tag :profile_change_requests_results,
-                      src: profile_change_requests_path(status: @status),
+                      src: profile_change_requests_path(status: @status, person_id: @person&.id),
                       data: { turbo: "temporary" } do %>
     <p class="mt-6 text-gray-400">Loading…</p>
   <% end %>

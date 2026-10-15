@@ -1,6 +1,12 @@
 class ProfessionalLicenseDecorator < ApplicationDecorator
   Badge = Struct.new(:label, :icon, :classes, keyword_init: true)
 
+  # One line identifying the license, e.g. "LMFT · 12345 · CA · expires June 30, 2027".
+  def summary
+    expires = "expires #{expires_on.to_fs(:long)}" if expires_on
+    [ kind, number, issuing_state, expires ].compact_blank.join(" · ")
+  end
+
   # Status pill combining validity + expiry date: expired on / expiring soon /
   # active until, or unknown when no date is on file.
   def expiry_badge

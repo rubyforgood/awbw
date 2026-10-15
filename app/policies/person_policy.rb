@@ -12,6 +12,9 @@ class PersonPolicy < ApplicationPolicy
 
   ADMIN_ONLY_USER_FIELDS = %i[person_id email inactive super_user notes].freeze
   ADMIN_ONLY_SECTOR_FIELDS = %i[is_leader].freeze
+  # Owners can pick which of an organization's addresses is their work address on an
+  # affiliation they already have. Everything else about an affiliation goes through a change request.
+  OWNER_AFFILIATION_FIELDS = %i[id organization_address_id].freeze
 
   # People-index filters only an admin may apply. The index itself is readable by
   # any signed-in user while profiles preview, but each of these narrows the list
@@ -210,6 +213,7 @@ class PersonPolicy < ApplicationPolicy
     owner_params = permitted.except(*ADMIN_ONLY_FIELDS)
     owner_params[:user_attributes] = owner_params[:user_attributes].except(*ADMIN_ONLY_USER_FIELDS) if owner_params[:user_attributes]
     owner_params[:sectorable_items_attributes] = without_admin_sector_flags(owner_params[:sectorable_items_attributes]) if owner_params[:sectorable_items_attributes]
+    owner_params[:affiliations_attributes] = owner_affiliation_fields(permitted[:affiliations_attributes]) if permitted[:affiliations_attributes]
     owner_params
   end
 
@@ -219,6 +223,14 @@ class PersonPolicy < ApplicationPolicy
     return items.map { |item| item.except(*ADMIN_ONLY_SECTOR_FIELDS) } if items.is_a?(Array)
 
     items.transform_values { |item| item.except(*ADMIN_ONLY_SECTOR_FIELDS) }
+  end
+
+  # Only existing rows (with an id) — an owner can't create an affiliation this way.
+  def owner_affiliation_fields(items)
+    narrow = ->(item) { item.slice(*OWNER_AFFILIATION_FIELDS) if item[:id].present? }
+    return items.filter_map(&narrow) if items.is_a?(Array)
+
+    items.transform_values(&narrow).reject { |_key, item| item.nil? }
   end
 
   def profiles_visible_to_users?
