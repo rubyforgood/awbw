@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Create people from the FileMaker Rolodex archive (fm_rolodexes, loaded by fm:import).
-# See PersonServices::ImportFromRolodex for the match/link/create rules. Idempotent:
+# See PersonServices::ImportFromRolodex for the match/link/fill/create rules. Idempotent:
 # a row whose ID is already some person's filemaker_code is left alone.
 #
 # Dry-run by default. Set DRY_RUN=false to write changes; VERBOSE=true lists every row.
@@ -25,6 +25,11 @@ namespace :fm do
 
       puts "\n#{outcome.to_s.humanize} (#{messages.size}):"
       messages.each { |message| puts "  #{message}" }
+    end
+
+    if import.differences.any?
+      puts "\nKept the portal's value where FileMaker differs (#{import.differences.size}, also left as a comment on each person):"
+      import.differences.each { |difference| puts "  #{difference}" }
     end
 
     if import.unmatched_tags.any?
