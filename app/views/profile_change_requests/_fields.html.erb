@@ -8,7 +8,15 @@
   </div>
 <% end %>
 
-<% if request.other? %>
+<% if request.license? %>
+  <%= f.hidden_field :professional_license_id %>
+  <p class="text-sm text-gray-600">This license has continuing education credits, so AWBW staff make changes to it.</p>
+  <%= f.input :details,
+              as: :text,
+              label: "What should change?",
+              hint: "For example: \"The number should be 12345\" or \"It now expires June 30, 2027.\"",
+              input_html: { rows: 4, class: "w-full text-lg" } %>
+<% elsif request.other? %>
   <%= f.input :details,
               as: :text,
               label: "What would you like us to change?",

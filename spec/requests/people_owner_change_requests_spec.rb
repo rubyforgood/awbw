@@ -51,7 +51,26 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       get edit_person_path(person)
 
       expect(response.body).to include("See your request")
-      expect(response.body).to include("Change to #{request.requested_value} requested")
+      expect(response.body).to include("Primary email: #{request.requested_value}")
+      expect(response.body).to include("fa-clock")
+    end
+
+    it "offers a change request on a license locked by CE credit" do
+      license = create(:professional_license, person: person, kind: "LMFT", number: "12345")
+      allow_any_instance_of(ProfessionalLicense).to receive(:used_for_ce?).and_return(true)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("field=professional_license")
+      expect(response.body).to include("professional_license_id=#{license.id}")
+    end
+
+    it "marks a pending free-text request beside the ask-staff link" do
+      create(:profile_change_request, :other, person: person, requested_by: owner_user, details: "Fix my last name")
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("Profile data: Fix my last name")
     end
 
     it "flags a specific affiliation that has a pending request, linking to it" do

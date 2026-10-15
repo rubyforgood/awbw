@@ -4,10 +4,12 @@ class ProfileChangeRequestsController < ApplicationController
   def index
     authorize! ProfileChangeRequest
     @status = ProfileChangeRequest::STATUSES.include?(params[:status]) ? params[:status] : "pending"
+    @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
     return unless turbo_frame_request?
 
     @requests = authorized_scope(ProfileChangeRequest.all)
                   .where(status: @status)
+                  .where(@person ? { person: @person } : {})
                   .includes(:person, :requested_by, :reviewed_by)
                   .newest_first
     render :profile_change_requests_results
@@ -18,6 +20,7 @@ class ProfileChangeRequestsController < ApplicationController
     @request = @person.profile_change_requests.new(field: requested_field, requested_by: current_user)
     authorize! @request
     return prepare_affiliation_request if requested_field == "affiliation"
+    return prepare_license_request if @request.license?
 
     existing = @person.profile_change_requests.pending.find_by(field: requested_field)
     redirect_to edit_profile_change_request_path(existing) if existing
@@ -134,9 +137,15 @@ class ProfileChangeRequestsController < ApplicationController
     @back_label = "Back"
   end
 
+  def prepare_license_request
+    @request.professional_license = @person.professional_licenses.find(params[:professional_license_id])
+    existing = @person.profile_change_requests.pending.find_by(field: @request.field, professional_license: @request.professional_license)
+    redirect_to edit_profile_change_request_path(existing) if existing
+  end
+
   def profile_change_request_params
     params.require(:profile_change_request).permit(
-      :field, :requested_value, :details, :affiliation_id, :organization_id,
+      :field, :requested_value, :details, :affiliation_id, :organization_id, :professional_license_id,
       :proposed_title, :proposed_start_date, :proposed_end_date, :proposed_organization_name
     )
   end

@@ -22,7 +22,12 @@
         <dd class="text-gray-800"><%= request.affiliation_summary %></dd>
       </div>
     <% end %>
-    <% if request.current_value.present? %>
+    <% if request.license? %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">License</dt>
+        <dd class="text-gray-800"><%= request.professional_license&.decorate&.summary || "Removed" %></dd>
+      </div>
+    <% elsif request.current_value.present? %>
       <div class="flex gap-2">
         <dt class="w-32 shrink-0 text-gray-500">Current</dt>
         <dd class="text-gray-800"><%= request.current_value %></dd>

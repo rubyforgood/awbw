@@ -27,9 +27,7 @@
             <%= pending ? "See your request" : (email[:address].present? ? "Request a change" : "Add a #{email[:label].downcase}") %>
             <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
           <% end %>
-          <% if pending %>
-            <span class="inline-flex items-center gap-1 text-sm text-amber-800"><i class="fa-solid fa-clock"></i> Change to <%= pending.requested_value %> requested</span>
-          <% end %>
+          <%= render "people/pending_request_icon", request: pending if pending %>
         </div>
       </div>
       <% if email[:address].present? %>

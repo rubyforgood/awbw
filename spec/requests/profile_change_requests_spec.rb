@@ -27,6 +27,26 @@ RSpec.describe "Profile change requests", type: :request do
       expect(subjects).to include("requested a change")
     end
 
+    it "asks about a locked license and returns to the licenses card" do
+      license = create(:professional_license, person: person)
+
+      get new_profile_change_request_path(person_id: person, field: "professional_license", professional_license_id: license.id)
+      expect(response.body).to include("Request a license change")
+
+      post profile_change_requests_path(person_id: person), params: {
+        profile_change_request: { field: "professional_license", professional_license_id: license.id, details: "The number is 12345" }
+      }
+
+      expect(response).to redirect_to(edit_person_path(person, anchor: "professional-licenses"))
+      expect(person.profile_change_requests.last).to have_attributes(professional_license: license, details: "The number is 12345")
+    end
+
+    it "can't ask about someone else's license" do
+      get new_profile_change_request_path(person_id: person, field: "professional_license", professional_license_id: create(:professional_license).id)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "submits a structured affiliation date change targeting a specific affiliation" do
       org = create(:organization, name: "Sunrise Center")
       affiliation = create(:affiliation, person: person, organization: org, title: "Facilitator")
@@ -77,6 +97,47 @@ RSpec.describe "Profile change requests", type: :request do
 
       expect(request.reload).to be_resolved
       expect(person.reload.email_2).to eq("second@example.com")
+    end
+
+    it "puts a change-requests button on the person's edit page, filtered to them" do
+      create(:profile_change_request, :primary_email, person: person)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(person_id: person.id, status: "pending")))
+      expect(response.body).to include("Change requests (1 pending)")
+    end
+
+    it "points the button at the latest status when nothing is pending" do
+      create(:profile_change_request, :primary_email, :resolved, person: person)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(person_id: person.id, status: "resolved")))
+    end
+
+    it "leaves the button off when the person has no requests" do
+      get edit_person_path(person)
+
+      expect(response.body).not_to include("Change requests")
+    end
+
+    it "filters the queue to one person" do
+      create(:profile_change_request, :primary_email, person: person, requested_value: "mine@example.com")
+      create(:profile_change_request, :primary_email, requested_value: "someone-else@example.com")
+
+      get profile_change_requests_path(status: "pending", person_id: person.id), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("mine@example.com")
+      expect(response.body).not_to include("someone-else@example.com")
+      expect(response.body).to include("person_id=#{person.id}")
+    end
+
+    it "links back to the person on a filtered queue" do
+      get profile_change_requests_path(person_id: person.id)
+
+      expect(response.body).to include(edit_person_path(person))
+      expect(response.body).to include("Show everyone")
     end
 
     it "offers no Approve for an organization that isn't in the portal yet" do

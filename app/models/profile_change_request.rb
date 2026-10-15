@@ -6,15 +6,18 @@ class ProfileChangeRequest < ApplicationRecord
   # change to the person's affiliations can't move the target out from under it.
   belongs_to :organization, optional: true
   belongs_to :affiliation, optional: true
+  belongs_to :professional_license, optional: true
 
   OTHER_FIELD = "other".freeze
+  LICENSE_FIELD = "professional_license".freeze
   EMAIL_FIELDS = %w[primary_email secondary_email].freeze
-  FIELDS = [ *EMAIL_FIELDS, "organization_name", "affiliation", OTHER_FIELD ].freeze
+  FIELDS = [ *EMAIL_FIELDS, "organization_name", "affiliation", LICENSE_FIELD, OTHER_FIELD ].freeze
   FIELD_LABELS = {
     "primary_email" => "Primary email",
     "secondary_email" => "Secondary email",
     "organization_name" => "Organization name",
     "affiliation" => "Affiliation details",
+    LICENSE_FIELD => "Professional license",
     OTHER_FIELD => "Profile data"
   }.freeze
   # Fields whose new value is concrete enough for "Approve" to write directly.
@@ -46,11 +49,13 @@ class ProfileChangeRequest < ApplicationRecord
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
   validates :resolution_method, inclusion: { in: RESOLUTION_METHODS }, allow_nil: true
-  validates :requested_value, presence: true, unless: :other?
+  validates :requested_value, presence: true, unless: -> { other? || license? }
   validates :requested_value, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
                               if: -> { field.in?(EMAIL_FIELDS) && requested_value.present? }
   validates :details, presence: true, if: :requires_details?
   validate :affiliation_belongs_to_person
+  validate :professional_license_belongs_to_person
+  validates :professional_license, presence: true, if: :license?
   validate :affiliation_target_present, if: -> { field == "affiliation" }
   validate :affiliation_proposed_values, if: -> { field == "affiliation" }
   validate :one_pending_per_target, if: :pending?
@@ -67,6 +72,7 @@ class ProfileChangeRequest < ApplicationRecord
   def resolved? = status == "resolved"
   def declined? = status == "declined"
   def other? = field == OTHER_FIELD
+  def license? = field == LICENSE_FIELD
 
   def auto_appliable?
     return true if field.in?(AUTO_APPLIABLE_FIELDS)
@@ -119,6 +125,7 @@ class ProfileChangeRequest < ApplicationRecord
     when "primary_email" then person.user&.email
     when "secondary_email" then person.email_2
     when "organization_name" then target_organization&.name
+    when LICENSE_FIELD then professional_license&.decorate&.summary
     end
   end
 
@@ -147,7 +154,7 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   def requires_details?
-    other? || (field == "affiliation" && requested_value.in?([ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ]))
+    other? || license? || (field == "affiliation" && requested_value.in?([ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ]))
   end
 
   # A category's hidden sibling inputs still post their (stale) values; drop the
@@ -167,6 +174,11 @@ class ProfileChangeRequest < ApplicationRecord
   def affiliation_belongs_to_person
     return if affiliation.blank?
     errors.add(:affiliation, "is not one of this person's affiliations") if affiliation.person_id != person_id
+  end
+
+  def professional_license_belongs_to_person
+    return if professional_license.blank?
+    errors.add(:professional_license, "is not one of this person's licenses") if professional_license.person_id != person_id
   end
 
   # Every affiliation category except "add a new" / "other" acts on an existing row.
@@ -190,11 +202,12 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   # One open request per target — per (person, field) for email/organization, and
-  # per affiliation for affiliation requests, so a person can flag two different
-  # affiliations at once but not stack duplicates on the same one.
+  # per affiliation or license for those requests, so a person can flag two
+  # different affiliations at once but not stack duplicates on the same one.
   def one_pending_per_target
     scope = ProfileChangeRequest.pending
-                                .where(person_id: person_id, field: field, affiliation_id: affiliation_id)
+                                .where(person_id: person_id, field: field, affiliation_id: affiliation_id,
+                                       professional_license_id: professional_license_id)
                                 .where.not(id: id)
     errors.add(:base, "You already have a pending request for this.") if scope.exists?
   end

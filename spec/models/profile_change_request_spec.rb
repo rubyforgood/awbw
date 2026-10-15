@@ -67,6 +67,39 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(request.errors[:details]).to be_present
     end
 
+    describe "a professional license request" do
+      let(:license) { create(:professional_license) }
+
+      it "needs the license and details" do
+        expect(build(:profile_change_request, field: "professional_license", person: license.person,
+                                              professional_license: license, requested_value: nil, details: "New number")).to be_valid
+        expect(build(:profile_change_request, field: "professional_license", person: license.person,
+                                              professional_license: license, requested_value: nil, details: nil)).not_to be_valid
+        expect(build(:profile_change_request, field: "professional_license", person: license.person,
+                                              requested_value: nil, details: "New number")).not_to be_valid
+      end
+
+      it "rejects another person's license" do
+        request = build(:profile_change_request, field: "professional_license", professional_license: license,
+                                                 requested_value: nil, details: "New number")
+        expect(request).not_to be_valid
+        expect(request.errors[:professional_license]).to be_present
+      end
+
+      it "allows one pending request per license" do
+        attrs = { field: "professional_license", person: license.person, professional_license: license, requested_value: nil, details: "New number" }
+        create(:profile_change_request, **attrs)
+        other_license = create(:professional_license, person: license.person, number: "999")
+
+        expect(build(:profile_change_request, **attrs)).not_to be_valid
+        expect(build(:profile_change_request, **attrs, professional_license: other_license)).to be_valid
+      end
+
+      it "is handled by hand" do
+        expect(build(:profile_change_request, field: "professional_license", professional_license: license)).not_to be_auto_appliable
+      end
+    end
+
     it "rejects an unknown field" do
       request = build(:profile_change_request, field: "shoe_size")
       expect(request).not_to be_valid

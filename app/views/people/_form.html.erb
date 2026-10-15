@@ -471,10 +471,13 @@
   </div>
 
   <% if f.object.persisted? && !allowed_to?(:manage?, Person) %>
+    <% pending_other = f.object.profile_change_requests.pending.find_by(field: ProfileChangeRequest::OTHER_FIELD) %>
     <p class="text-center text-gray-700">
       Can't change something here?
-      <%= link_to "Ask AWBW staff to change it", new_profile_change_request_path(person_id: f.object, field: ProfileChangeRequest::OTHER_FIELD),
+      <%= link_to (pending_other ? "See your request" : "Ask AWBW staff to change it"),
+                  new_profile_change_request_path(person_id: f.object, field: ProfileChangeRequest::OTHER_FIELD),
                   target: "_blank", rel: "noopener", class: "font-medium text-blue-600 underline hover:text-blue-800" %>
+      <%= render "people/pending_request_icon", request: pending_other if pending_other %>
     </p>
   <% end %>
 <% end %>

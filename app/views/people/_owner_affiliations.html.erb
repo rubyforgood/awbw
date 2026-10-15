@@ -36,13 +36,11 @@
                   <p class="text-sm text-gray-500">None on file yet. <%= missing_address_link %></p>
                 <% end %>
               </div>
-              <div class="flex flex-col items-start gap-1 sm:items-end sm:pt-7">
+              <div class="flex items-center gap-2 sm:pt-7">
+                <%= render "people/pending_request_icon", request: pending if pending %>
                 <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id),
                             target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
                   <%= pending ? "See your request" : "Request a change" %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                <% end %>
-                <% if pending %>
-                  <span class="inline-flex items-center gap-1 text-sm text-amber-800"><i class="fa-solid fa-clock"></i> Change requested</span>
                 <% end %>
               </div>
             </div>
