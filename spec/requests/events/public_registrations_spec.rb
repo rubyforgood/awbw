@@ -1148,6 +1148,20 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(destination.remaining_cost).to eq(10_000)
     end
 
+    it "keeps the registration and points at support when the discount can't be applied" do
+      allow(Discount).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Discount.new))
+
+      expect {
+        post_with_code(code: "SAVE50", payment: "Credit card (now)")
+      }.to change(EventRegistration, :count).by(1)
+
+      registration = EventRegistration.last
+      expect(registration.discount_sum).to eq(0)
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include(registration_ticket_path(registration.slug))
+      expect(flash[:alert]).to match(/contact support/i)
+    end
+
     # A code that covers the whole cost leaves nothing to charge, so a
     # credit-card-now registration should land on the ticket, not a $0 checkout.
     it "skips Stripe checkout when the discount covers the whole cost" do

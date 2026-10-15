@@ -77,12 +77,15 @@ module Events
         # events (flushed after this action) so every record it wrote is traceable.
         Current.form_submission_id = result.form_submission&.id
 
-        apply_discount_code(registration)
+        discount_failed = apply_discount_code(registration) == false
 
-        if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 &&
+        if !discount_failed && !registration.scholarship_requested? && @event.cost_cents.to_i > 0 &&
            registration.remaining_cost.positive? && credit_card_payment?(registration_params)
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
+        elsif discount_failed
+          redirect_to registration_ticket_path(registration.slug),
+                      alert: "You're registered, but we couldn't apply your discount code. Please contact support."
         else
           redirect_to registration_ticket_path(registration.slug),
                       notice: "You have been successfully registered!"
@@ -166,6 +169,8 @@ module Events
         discount = Discount.create!(amount_cents: amount, event: @event)
         registration.allocations.create!(source: discount, amount: amount)
       end
+    rescue ActiveRecord::RecordInvalid
+      false
     end
 
     def event_discount_applied?(registration)
