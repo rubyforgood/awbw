@@ -144,6 +144,19 @@ answers, `OtherServiceArea`, `Settings` and `LifeExperiences` the additional one
 `Children's Services` makes Children the primary age range, and `Elder Abuse` adds Elders
 alongside whatever the primary already is.
 
+### Reads of the free text, pending staff validation
+
+The archive's hand-typed cells are mostly a venue, a programme name or a sentence about the
+work. Where the meaning is plain — `Immigration Clinic`, `Grief support group`,
+`Inpatient Psychiatric Hopital`, `Supervised visitation sessions for foster youth…` — the
+term is recorded as **proposed**: it resolves, so an import doesn't lose it, and
+`TagAlias.proposed` is the list to walk with staff term by term. About 90 terms, each worth
+one or two archive rows.
+
+**What is deliberately not read:** anything naming an organization, a place that identifies
+one, or a facilitator's own circumstances. That text is personal and belongs in the archive,
+not copied into a catalogue — which leaves 23 terms, 23 mentions, unresolved for good.
+
 ### Answers that name nothing
 
 Alongside the dropped Settings, these are recorded as naming nothing on purpose: `Other` ·
@@ -262,13 +275,14 @@ Counted across `fm_rolodexes` (October 2026): `LifeExperiences` 55 distinct valu
   It is recorded as ignored rather than translated: `Sector::OTHER_SECTOR_NAME` is offered
   for additional sectors but never as a primary, so an import can't honour it as one, and
   "they picked Other" says nothing a tag could carry.
-- **Still needing a decision** — only the long tail of one-off free text (≈90 `Settings`
-  values, 42 `OtherServiceArea` values, almost all a single mention, mostly venues, program
-  names and prose rather than anything a tag could carry). The unmatched report is the
-  queue, and it stays short enough to read.
-- **Coverage.** Every archive term with more than two mentions is now either translated or
-  deliberately untranslated: ~17,600 of the 17,757 mentions. What's left is ~130 values at
-  one or two mentions each.
+- **Still needing a decision** — 23 terms, one mention each, every one naming an
+  organization, a place that identifies one, or a facilitator's own circumstances. They stay
+  in the archive and show up in the unmatched report; nothing is copied out of them.
+- **The proposed reads need a pass with staff** before the real import run. They resolve
+  meanwhile, so the work isn't blocked, and a wrong one is a row to delete rather than a
+  deploy.
+- **Coverage.** 17,734 of the archive's 17,757 mentions are translated, deliberately
+  untranslated, or proposed.
 - **Seen in the data, no mapping decided:** Children's Services, Intellectual Disabilities,
   Maternal wellness and postpartum support, Political Asylum, Survivors with Disabilities,
   Arts Education & Community Art Making, and the rest of the one-off free text. Deliberately

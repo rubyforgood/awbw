@@ -96,6 +96,34 @@ RSpec.describe TagAliasSeeder do
     expect(TagAlias.find_by(name: "Grief and loss").source).to eq("portal")
   end
 
+  it "marks a read of free text as proposed, and a decision as decided" do
+    described_class.call(quiet: true)
+
+    expect(TagAlias.find_by(name: "Immigration Clinic")).to have_attributes(proposed: true, ignored: false)
+    expect(TagAlias.find_by(name: "Libraries")).to have_attributes(proposed: true, ignored: true)
+    expect(TagAlias.find_by(name: "Student Services").proposed).to be false
+    expect(TagAlias.find_by(name: "Virtually").proposed).to be false
+    expect(TagAlias.proposed.count).to be > 50
+  end
+
+  it "resolves a proposed read, so an import doesn't lose it while staff review" do
+    described_class.call(quiet: true)
+
+    translation = TagTranslation.new
+    tags = translation.resolve("Immigration Clinic")
+    expect(tags.sector_ids).to eq([ Sector.find_by(name: "Immigration").id ])
+    expect(translation.resolve("Libraries").sector_ids).to be_empty
+    expect(translation.unmatched).to be_empty
+  end
+
+  it "reads a free-text answer that names several sectors and the ages it serves" do
+    described_class.call(quiet: true)
+
+    tags = TagTranslation.new.resolve("1:1 children and youth who experience domestic violence, dating violence, or sexual abuse")
+    expect(tags.sector_ids).to match_array(Sector.where(name: [ "Domestic Violence", "Sexual Assault", "Child Abuse/Neglect" ]).ids)
+    expect(tags.age_group_ids).to match_array(Category.where(name: %w[Children Teens]).ids)
+  end
+
   it "adds nothing on a second run" do
     described_class.call(quiet: true)
 

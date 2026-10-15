@@ -167,6 +167,146 @@ class TagAliasSeeder
     "People Who Have Experienced War"
   ].freeze
 
+  # ─── Proposed, pending staff validation ─────────────────────────────────────────────
+  #
+  # Semantic reads of the archive's hand-typed free text, not decisions AWBW has made. They
+  # are seeded as `proposed`, so they resolve — an import shouldn't lose them — and
+  # `TagAlias.proposed` is the list to walk with staff, term by term.
+  #
+  # Only terms whose meaning is plain are here. Anything naming an organization, a place
+  # that identifies one, or a facilitator's own circumstances is left out: that text is
+  # personal, and it belongs in the archive rather than copied into a catalogue.
+  PROPOSED_SECTORS = {
+    "1:1 children and youth who experience domestic violence, dating violence, or sexual abuse" =>
+      [ "Domestic Violence", "Sexual Assault", "Child Abuse/Neglect" ],
+    "a regularly meting group with a drop in attendance from the local queer community" => [ "LGBTQIA+" ],
+    "Advocacy for survivors of domestic and sexual violence" => [ "Domestic Violence", "Sexual Assault" ],
+    "Arts Education & Community Art Making" => [ "Education", "Community Building" ],
+    "bereavement and complex care in hospital setting" => [ "Grief/Loss", "Health/Medical" ],
+    "Cancer Survivorship" => [ "Health/Medical" ],
+    "Cases opened by Child protective services" => [ "Child Abuse/Neglect" ],
+    "Children's Advocacy Center Children & Families" => [ "Child Abuse/Neglect" ],
+    "College campus" => [ "Education" ],
+    "Community Morale" => [ "Community Building" ],
+    "Community-based, youth diversion, juvenile hall" => [ "Incarceration", "Court/Legal System" ],
+    "Critically ill children" => [ "Health/Medical" ],
+    "Day Program for adults with developmental and intellectual disabilities" => [ "Disability Services" ],
+    "Disaster Recovery - Wellness through Trauma informed Activities" => [ "Climate/Environmental" ],
+    "Domestic Violence Shelter" => [ "Domestic Violence" ],
+    "Domestic Violence, Sexual Violence and Stalking Advocacy Center" => [ "Domestic Violence", "Sexual Assault" ],
+    "DV Resource Center" => [ "Domestic Violence" ],
+    "Empowerment community groups" => [ "Community Building" ],
+    "Environmental education setting" => [ "Climate/Environmental", "Education" ],
+    "First Responders. doing workshops in Fire Stations and Law Enforcement Offices" =>
+      [ "Staff/Organizational Development" ],
+    "formerly incarcerated/formerly gang related" => [ "Incarceration", "Community Violence" ],
+    "Foster Care agencies" => [ "Foster Care/Adoption" ],
+    "Grief support group" => [ "Grief/Loss" ],
+    "Helping Professionals, Caregivers, Leaders" => [ "Staff/Organizational Development" ],
+    "High level secondary art students" => [ "Education" ],
+    "I intend to service a diverse population experiencing, DV, sexual assault, and homelessness" =>
+      [ "Domestic Violence", "Sexual Assault", "Homelessness" ],
+    "Immigration Clinic" => [ "Immigration" ],
+    "In DV shelters" => [ "Domestic Violence" ],
+    "Individual and Group counseling with students. In my office and in classrooms." =>
+      [ "Education", "Mental Health" ],
+    "Individual counseling sessions with sexual assault survivors." => [ "Sexual Assault" ],
+    "Inpatient Psychiatric Hopital" => [ "Mental Health", "Health/Medical" ],
+    "Intellectual Disabilities" => [ "Disability Services" ],
+    "Intensive Outpatient programs" => [ "Mental Health" ],
+    "Interpersonal violence and any gender based harassment and discrimination" =>
+      [ "Domestic Violence", "Sexual Assault" ],
+    "LA Fire imacted Community Members in Palisades and Altadena" => [ "Climate/Environmental" ],
+    "Life Coaching" => [ "Self-Care/Personal Growth" ],
+    "Low-income housing /vulnerable population" => [ "Homelessness" ],
+    "Low-income housing support services" => [ "Homelessness" ],
+    "Maternal wellness and postpartum support" => [ "Reproductive Services" ],
+    "Ministry Events" => [ "Religious/Faith-Based" ],
+    "monthly and weekly events for survivors of incest, trafficking, clergy abuse, sexual assault, CSA" =>
+      [ "Sexual Assault", "Human Trafficking", "Child Abuse/Neglect", "Religious/Faith-Based" ],
+    "Native American and Alaska Native survivors of Domestic Violence, Sexual Assault, Human Sex Trafficking," =>
+      [ "Indigenous/Tribal Nation", "Domestic Violence", "Sexual Assault", "Human Trafficking" ],
+    "Open community - all residents regardless of age, background, or circumstances who are interested " \
+      "in using art as a tool for personal healing and community connection" => [ "Community Building" ],
+    "Organizations and their staff who work in the primary prevention of intimate partner violence" =>
+      [ "Domestic Violence", "Staff/Organizational Development" ],
+    "Parents and children of whom we receive a referral for, mostly DCF involved families" =>
+      [ "Foster Care/Adoption", "Child Abuse/Neglect" ],
+    "Parents of children involved with DCF" => [ "Foster Care/Adoption" ],
+    "personal development and life coaching" => [ "Self-Care/Personal Growth" ],
+    "Political Assylum" => [ "Immigration" ],
+    "Practical and therapeutic support for people struggling with grief, loss, existential distress" =>
+      [ "Grief/Loss", "Mental Health" ],
+    "Re-Entry/social and community based work" => [ "Incarceration" ],
+    "Resident low income housing" => [ "Homelessness" ],
+    "Restorative/Self-Care work with Faculty who teach inside of prisons/jails, as well as currently " \
+      "incarcerated students" => [ "Incarceration", "Education", "Self-Care/Personal Growth" ],
+    "Social services workers" => [ "Staff/Organizational Development" ],
+    "Staff Burnout and Wellness" => [ "Staff/Organizational Development" ],
+    "Student counseling groups" => [ "Education", "Mental Health" ],
+    "Students, families and teachers impacted by the 2025 Los Angeles fires" =>
+      [ "Climate/Environmental", "Education" ],
+    "Supervised visitation sessions for foster youth with their biological parents" => [ "Foster Care/Adoption" ],
+    "Supportive Housing" => [ "Homelessness" ],
+    "Survivors with Disabilities ( Deafness)" => [ "Disability Services" ],
+    "Urban Native American Health Centers" => [ "Indigenous/Tribal Nation", "Health/Medical" ],
+    "We are a Native American culturally specific dual sexual assault and domestic violence agency that " \
+      "has programming for teens and adults, including elderly" =>
+      [ "Indigenous/Tribal Nation", "Sexual Assault", "Domestic Violence" ],
+    "Wellness and Prevention Programs and activities" => [ "Self-Care/Personal Growth" ],
+    "Wellness Center" => [ "Self-Care/Personal Growth" ],
+    "While training psychology practicum students." => [ "Education", "Staff/Organizational Development" ],
+    "With DV agencies we support in Ohio and allied professionals addressing wellness practice, " \
+      "organizational wellness and to inspire hope and creativity" =>
+      [ "Domestic Violence", "Staff/Organizational Development" ],
+    "With outreach with students experiencing homelessness. Aisde from my job as a liaison in the " \
+      "education field, I also volunteer at homeless shleters for families and youth." =>
+      [ "Homelessness", "Education" ],
+    "With staff to practice- other: in the communities with families" => [ "Staff/Organizational Development" ],
+    "With youth in foster care" => [ "Foster Care/Adoption" ],
+    "work life balance, stress/anxiety" => [ "Self-Care/Personal Growth", "Mental Health" ],
+    "Working with families to prevent their children entering DCF care, help stabilize kids in " \
+      "foster/kinship placements, and with families reunifying with their children." => [ "Foster Care/Adoption" ],
+    "Workplace (Workshops with Staff)" => [ "Staff/Organizational Development" ],
+    "Youth who have been through trauma, re-entry youth, foster children, and sexually abused youth and children" =>
+      [ "Foster Care/Adoption", "Child Abuse/Neglect", "Sexual Assault", "Incarceration" ]
+  }.freeze
+
+  # The same reads, where the term says which ages someone serves.
+  PROPOSED_AGE_GROUPS = {
+    "1:1 children and youth who experience domestic violence, dating violence, or sexual abuse" => %w[Children Teens],
+    "Children, Adults and Families" => %w[Children Teens Adults Elders],
+    "Children and Families" => %w[Children Teens Adults Elders],
+    "Children's Advocacy Center Children & Families" => %w[Children],
+    "Children, Emotional Regulation and structure for leaders" => %w[Children],
+    "College campus" => %w[Adults],
+    "Critically ill children" => %w[Children],
+    "Culturally Specific Youth Program" => %w[Children Teens],
+    "Day Program for adults with developmental and intellectual disabilities" => %w[Adults],
+    "Department of Social Services/Children's Services" => %w[Children],
+    "High level secondary art students" => %w[Teens],
+    "Supervised visitation sessions for foster youth with their biological parents" => %w[Children Teens],
+    "We are a Native American culturally specific dual sexual assault and domestic violence agency that " \
+      "has programming for teens and adults, including elderly" => %w[Teens Adults Elders],
+    "With youth in foster care" => %w[Teens],
+    "youth services" => %w[Children Teens],
+    "Youth who have been through trauma, re-entry youth, foster children, and sexually abused youth and children" =>
+      %w[Children Teens]
+  }.freeze
+
+  # Free text that names no tag at all — a venue, a delivery method, or a shrug. Proposed
+  # rather than decided, since "it means nothing" is a judgment too.
+  PROPOSED_IGNORED = [
+    "Art Events", "at meetings/convenings with partners in prevention", "coaching support services",
+    "Community based services as well", "Community Leaders and Workshop in the community.",
+    "Community library program", "Community spaces",
+    "Community workshops at an art-based non-profit as well collaborative partners",
+    "Family Resource Centers", "Gardens, parks, forests, beaches, outsise",
+    "Group facilitation at partner agencies", "In presentations for the community", "Libraries",
+    "Participants and recipients of social services.", "trainings in the community",
+    "Workshop / retail shop setting"
+  ].freeze
+
   def self.call(...)
     new(...).call
   end
@@ -187,15 +327,18 @@ class TagAliasSeeder
     record_age_groups(FILEMAKER_AGE_GROUPS, "filemaker")
     record_age_groups(STORY_SHARE_AGE_GROUPS, "story_share")
     record_ignored(IGNORED_TERMS, "filemaker")
+    record_sectors(PROPOSED_SECTORS, "filemaker", proposed: true)
+    record_age_groups(PROPOSED_AGE_GROUPS, "filemaker", proposed: true)
+    record_ignored(PROPOSED_IGNORED, "filemaker", proposed: true)
     report
     self
   end
 
   private
 
-  def record_sectors(table, source)
+  def record_sectors(table, source, proposed: false)
     table.each do |term, names|
-      Array(names).each { |name| record(term, "Sector", sector_ids[name.downcase], source, name) }
+      Array(names).each { |name| record(term, "Sector", sector_ids[name.downcase], source, name, proposed:) }
     end
   end
 
@@ -205,29 +348,29 @@ class TagAliasSeeder
     table.each { |term, name| record(term, "Sector", every_sector_id[name.downcase], source, name) }
   end
 
-  def record_age_groups(table, source)
+  def record_age_groups(table, source, proposed: false)
     table.each do |term, names|
-      names.each { |name| record(term, "Category", age_group_ids[name.downcase], source, name) }
+      names.each { |name| record(term, "Category", age_group_ids[name.downcase], source, name, proposed:) }
     end
   end
 
-  def record_ignored(terms, source)
+  def record_ignored(terms, source, proposed: false)
     terms.each do |term|
       alias_row = TagAlias.find_or_initialize_by(name: term.squish, aliasable_type: nil, aliasable_id: nil)
       next unless alias_row.new_record?
 
-      alias_row.update!(source: source, ignored: true)
+      alias_row.update!(source: source, ignored: true, proposed: proposed)
       @created += 1
     end
   end
 
-  def record(term, type, id, source, name)
+  def record(term, type, id, source, name, proposed: false)
     return @missing << name unless id
 
     alias_row = TagAlias.find_or_initialize_by(name: term.squish, aliasable_type: type, aliasable_id: id)
     return unless alias_row.new_record?
 
-    alias_row.update!(source: source)
+    alias_row.update!(source: source, proposed: proposed)
     @created += 1
   end
 
@@ -248,7 +391,7 @@ class TagAliasSeeder
   def report
     return if @quiet
 
-    puts "  #{@created} tag aliases added (#{TagAlias.count} recorded)"
+    puts "  #{@created} tag aliases added (#{TagAlias.count} recorded, #{TagAlias.proposed.count} awaiting staff validation)"
     puts "  no published tag named: #{@missing.uniq.sort.join(', ')} — seed the sectors and age ranges first" if @missing.any?
   end
 end

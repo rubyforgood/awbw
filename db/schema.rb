@@ -2152,6 +2152,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_013218) do
     t.integer "created_by_id"
     t.boolean "ignored", default: false, null: false
     t.string "name", null: false
+    t.boolean "proposed", default: false, null: false
     t.string "source", null: false
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"

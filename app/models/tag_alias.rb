@@ -6,6 +6,9 @@
 # called outlives the import that needed it.
 #
 # A term can name two tags ("C & T" is both Children and Teens), so it is read as a list.
+# A term read out of free text rather than decided by AWBW is marked `proposed`, so the
+# guesses can be reviewed as a list without holding up the import.
+#
 # It can also be recorded as naming nothing on purpose — a FileMaker "setting" like
 # "Virtually" says where someone works, not who they serve — which is what keeps a decided
 # non-translation out of the queue of terms still needing a decision.
@@ -25,6 +28,10 @@ class TagAlias < ApplicationRecord
 
   scope :ignored, -> { where(ignored: true) }
   scope :resolving, -> { where(ignored: false) }
+  # Read from the archive's free text rather than decided by AWBW. They resolve, so an
+  # import doesn't lose them, and this is the list to walk with staff.
+  scope :proposed, -> { where(proposed: true) }
+  scope :decided, -> { where(proposed: false) }
 
   scope :for_sectors, -> { where(aliasable_type: "Sector") }
   scope :for_categories, -> { where(aliasable_type: "Category") }

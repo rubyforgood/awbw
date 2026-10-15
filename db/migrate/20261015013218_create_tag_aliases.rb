@@ -5,6 +5,8 @@ class CreateTagAliases < ActiveRecord::Migration[8.1]
       # A term can be recorded as deliberately naming nothing, so aliasable is optional.
       t.references :aliasable, polymorphic: true, null: true, index: false
       t.boolean :ignored, default: false, null: false
+      # A semantic read of the archive's free text, awaiting staff validation.
+      t.boolean :proposed, default: false, null: false
       t.string :source, null: false
       t.integer :created_by_id
       t.integer :updated_by_id
