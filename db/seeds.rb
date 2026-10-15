@@ -522,3 +522,9 @@ SurveyFormSeeder.call
 # data:seed_close_program_form task. Idempotent on form name.
 puts "Creating the Close Program form…"
 CloseProgramFormSeeder.call
+
+# What the archive, the older forms, Story Share and the portal's earlier sector list
+# each called a tag the portal now names its own way (ADR-0007). Shared with the
+# data:seed_tag_aliases task. Idempotent, and never touches a term an admin added.
+puts "Recording legacy tag aliases…"
+TagAliasSeeder.call

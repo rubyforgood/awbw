@@ -30,9 +30,14 @@ Translation is by lookup table, not by string similarity. A value that isn't in 
 
 ### Reading a source value
 
-- Compare case-insensitively, ignoring surrounding whitespace.
-- One field may list several areas: split on commas, semicolons and line breaks (FileMaker
-  repeating fields are newline-separated), then translate each piece.
+- Compare case-insensitively, ignoring surrounding whitespace. Most of the archive's
+  long tail is case variants ("Domestic violence" alongside "Domestic Violence"), so this
+  alone collapses it.
+- One field may list several areas: split on **line breaks and semicolons**, then translate
+  each piece. **Not on commas** — the wording itself contains them, inside parentheticals
+  like "Community violence (gang violence, mass shootings, police violence, etc.)".
+- Drop a trailing parenthetical when the term alone resolves, so the forms' clarifying
+  tails ("Grief/loss (including COVID-related)") need no separate entry.
 - Many source values mapping to one tag is normal. Only `C & T` maps to two tags.
 - The portal spelling wins where the spreadsheet differs: **`Systems/Policy Change`** (the
   sheet's "Sytems" is a typo).
@@ -171,6 +176,52 @@ military → Military/Veterans.
 `3-5` and `6-12` were folded into `Children` in the portal, and the `StoryPopulation`
 twins carry a trailing underscore so the clean age names stay free (see `db/seeds.rb`).
 
+## How it's stored
+
+**`TagAlias` rows, not a constant.** Each row names one legacy term, the tag it resolves
+to (polymorphic — a `Sector` or an `AgeRange` `Category`), and the system the term came
+from. `TagTranslation` reads a tag's own name first, then the aliases.
+
+- **A term can name two tags**, so a row per pair and a list on the way out (`C & T`).
+- **Unique on (term, tag)**, with the column's case-insensitive collation, so one spelling
+  can't be recorded twice for the same tag.
+- **An admin can add a term** as it turns up, without a deploy — which matters, because the
+  archive's free-text tail keeps producing new ones.
+- **`created_by` and `created_at`** make it the record of who decided a term meant a tag
+  and when. The renames and merges already ran, so the old names are gone from the data;
+  these rows are what's left of them.
+- **A term can be recorded as naming nothing on purpose** (`ignored`). That's how the
+  dropped Settings and `Other` stay out of the queue of terms still needing a decision —
+  without it, ~2,800 mentions of "Virtually", "Outreach Program" and the like would bury
+  the handful that genuinely need one.
+- `TagAliasSeeder` (and `data:seed_tag_aliases`) records the tables above, idempotently,
+  and never touches a term an admin added.
+
+The tables stay here as the readable source; the rows are the machine-readable copy.
+
+## What the archive actually holds
+
+Counted across `fm_rolodexes` (October 2026): `LifeExperiences` 55 distinct values /
+21,857 mentions · `Settings` 161 / 6,082 · `PrimaryAgeGroup` 11 / 2,356 ·
+`PrimaryServiceArea` 29 / 2,354 · `OtherServiceArea` 73 / 75.
+
+- **The canonical words dominate.** The documented vocabulary covers nearly every mention;
+  134 of the 161 `Settings` values occur exactly once.
+- **`OtherServiceArea` is free text**, not a picker: 72 of its 73 values occur once, across
+  75 rows in all. Not worth translating — it goes to the unmatched report.
+- **`Other`** appears as a stored value (90 `PrimaryServiceArea`, 60 `LifeExperiences`).
+  It is recorded as ignored rather than translated: `Sector::OTHER_SECTOR_NAME` is offered
+  for additional sectors but never as a primary, so an import can't honour it as one, and
+  "they picked Other" says nothing a tag could carry.
+- **Still needing a decision** — what the seeded terms leave unresolved: `Poverty` (634),
+  `Elder Abuse` (178), `People Who Have Experienced War` (97), `Children's Services` (8),
+  and a long tail of one-off free text (145 `Settings` values, 63 `OtherServiceArea`
+  values). Each is a judgment call for AWBW; the unmatched report is the queue.
+- **Seen in the data, no mapping decided:** Children's Services, Intellectual Disabilities,
+  Maternal wellness and postpartum support, Political Asylum, Survivors with Disabilities,
+  Arts Education & Community Art Making, and the rest of the one-off free text. Deliberately
+  unseeded — each is a judgment call for AWBW, and the unmatched report is the queue.
+
 ## Consequences
 
 - **Populations are not age ranges.** `AgeGroupTaggable` only tags `AgeRange` categories, so
@@ -182,5 +233,6 @@ twins carry a trailing underscore so the clean age names stay free (see `db/seed
 - **Unmapped values need a report, not a fallback.** `PersonServices::ImportFromRolodex`
   counts them in `#unmatched_tags` and the rake task prints them ranked; its name matching
   alone resolves only the values that already read as a sector name.
-- The tables above are the specification for that lookup. Keep them in one constant so the
-  Rolodex import, a later forms backfill, and any Story Share migration share it.
+- **The translation is data, so it can retire.** Once the imports and backfills are done,
+  the rows stay as the history of what a tag used to be called — and can be dropped without
+  touching code if that history stops being useful.

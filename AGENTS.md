@@ -48,8 +48,8 @@ This codebase (Rails 8.1)
 
 | Directory | Purpose | Count |
 |---|---|---|
-| `app/models/` | ActiveRecord models | ~90 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~73 files |
+| `app/models/` | ActiveRecord models | ~144 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~118 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 23 concerns |
 
@@ -271,6 +271,8 @@ action, or `authorize! :workshop, to: :summary?`).
 - `EventRegistrationServices::ProcessConfirmation` — Registration confirmation flow
 - `RegistrantCeForm` — The CE-specific view over the inline form the **CE callout** carries (built on the generic callout→form mechanism: `RegistrationTicketCallout#forms` + `CalloutFormSubmission`; the CE callout carries a single form, read as `forms.first`). Adds the two things CE needs: the post-training form only surfaces once `EventRegistration#ce_signouts_complete?` (event ended + no open attendance entry), and completing it — read-time `complete?`, every required field answered — is a prerequisite for the CE certificate (`EventRegistration#ce_form_requirement_met?` gates `ContinuingEducationRegistration#certificate_available?`). Read by the CE callout page (which links to the generic `registration/:slug/forms/:callout_id` form page, gated so the CE callout's form opens only after sign-outs via `CalloutsController#ce_form_locked?`) and by `BuiltinCalloutCards#ce_form_pending?` for the CE card's "Complete your form" nudge
 - `EventRegistrationServices::CalloutFormSubmission` — Records a registrant's answers to one of the forms a registration-ticket callout delivers inline (`call(registration:, callout:, form:, form_params:, clarity_params:)`, returns the service instance with `#submission`/`#profile_changes`). Find-or-creates one `FormSubmission` per `(registrant, form, event)` carrying the form's own role — a re-submit edits the answers in place via `FormSubmission#persist_answer`. That a callout collected it is recorded separately in `FormSubmission#metadata` (`collected_via: "callout"`, `collected_via_callout_id`) via `#record_callout_collection!` — the flag (`#collected_via_callout?`), not the role, tells a callout-collected submission apart. There is no survey-role flag — the extra side effects self-gate on the form's own fields, so they no-op on a form that doesn't ask those questions: a choice field with linked `FormFieldResource`s (`FormField#per_resource?`) fans out to one answer per resource (nil `form_field`, `FormField#per_resource_question` snapshotted in `question_name_when_answered` — subtitle-led, so two fan-out questions sharing a prompt can't collide on one answer row); fields carrying the `anonymous_contributions` / `display_name_preference` identifiers write through to the `Person` via `PersonServices::SyncSharingPreferences` (the same write-through the registration form runs), exposing `#profile_changes` so the controller Ahoy-tracks real edits; and submitting any form on the **`scholarship`** callout stamps a recipient's `post_survey_completed_at`. Drives `Events::CalloutsController#callout`/`#submit_callout` (the person-first `registration/:slug/forms/:callout_id` page and its `.../:form_id` submit)
+- `TagTranslation` — Turns a legacy word for who someone serves into sector / age-group ids: a tag's own name first, then any `TagAlias` recorded for it, so one term can name several tags (`C & T` is Children and Teens). Splits a repeating field on line breaks and semicolons — **not commas**, which the archive's own wording contains — and drops a trailing parenthetical. Built once and reused (it reads the whole vocabulary up front); a term nothing answers to lands in `#unmatched` rather than a guess
+- `TagAliasSeeder` — Records what the FileMaker archive, the older registration/scholarship forms, Story Share and the portal's earlier sector list each called a tag the portal now names its own way (**ADR-0007**) as `TagAlias` rows, so the translation is data an admin can extend and a record of what a tag used to be called. Idempotent on (term, tag) and never touches a term added by hand; a term whose tag isn't seeded yet is reported, not created. Read through `TagTranslation`. Shared with `data:seed_tag_aliases`
 - `SurveyFormSeeder` — Creates the four standalone survey template forms from the form-builder presets (the Day 1 / Day 2 evaluations, the overall post-event survey, and the scholarship recipients survey), idempotent on form name and returning the names created. `#link_fanout_resources` then links each fan-out question to its training-topic `Resource`s by title (skipping any that aren't present). Shared by `db/seeds.rb` and the `data:seed_survey_forms` task so prod can create them without the full seed
 - `CloseProgramFormSeeder` — Creates the standalone "Close Program" agreement form (role `close_program`, sections `person_identifier` + `close_program`) from the form-builder presets, idempotent on form name, returning the name created (or nil). Built as an unpublished template for staff to slug + publish. Shared by `db/seeds.rb` and the `data:seed_close_program_form` task
 - `EventRegistrationServices::PublicRegistration` — Public registration handling. An affirmative `communication_consent` answer captures a News (mailing-list) `TopicSubscription` via `NewsSubscriptionCapture`, sourced to the event. A resubmission matched to an active registration sends the registrant and admins DUPLICATE emails (`event_registration_duplicate` / `event_registration_duplicate_fyi`)
@@ -561,7 +563,7 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (13 files):
+Located in `lib/tasks/` (16 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
@@ -573,6 +575,8 @@ Located in `lib/tasks/` (13 files):
 - `migrate_workshop_logs.rake` — Workshop log migration
 - `backfill_user_stamps.rake` — Backfill `created_by_id`/`updated_by_id` on legacy rows from the Ahoy trail (`data:backfill_user_stamps`)
 - `backfill_notification_stamps.rake` — Backfill notifications' `created_by_id`/`updated_by_id` from `sender_id`, nil-only (`data:backfill_notification_stamps`)
+- `fm_import.rake` — Load the FileMaker CSV exports into the `fm_*` archive tables (`fm:import`, reads each CSV from the `FM Archive` resources, batch `insert_all`, skips rows whose key is already stored)
 - `resolve_resource_organizations.rake` — Link resources to organizations from the legacy `agency` free-text name (`data:resolve_resource_organizations`, match-or-create, idempotent, DRY_RUN)
+- `seed_tag_aliases.rake` — Record the legacy sector and age-group terms from ADR-0007 as tag aliases (`data:seed_tag_aliases`, via `TagAliasSeeder`, idempotent; also part of `db:seed`)
 - `seed_survey_forms.rake` — Create the Day 1 / Day 2 / recipients survey template forms without the full db:seed (`data:seed_survey_forms`, via `SurveyFormSeeder`, idempotent on form name; run before configuring the survey callouts)
 - `seed_close_program_form.rake` — Create the Close Program agreement form without the full db:seed (`data:seed_close_program_form`, via `CloseProgramFormSeeder`, idempotent on form name; give it a slug and publish it in the form builder to use it)
