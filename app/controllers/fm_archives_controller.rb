@@ -63,7 +63,7 @@ class FmArchivesController < ApplicationController
     { label: "Other", icon: "📎", tables: %w[notes] }
   ]
 
-  PORTAL_MODELS = [ Person, Organization, Affiliation ].freeze
+  PORTAL_MODELS = [ Person, Organization, Affiliation, Payment, Workshop ].freeze
 
   def index
     authorize! :fm_archive
@@ -93,6 +93,8 @@ class FmArchivesController < ApplicationController
       return
     end
 
+    @table_key = @record.class.table_name.delete_prefix("fm_")
+    @table_label = TABLES.dig(@table_key, :label)
     load_backlinks
     load_portal_records
   end

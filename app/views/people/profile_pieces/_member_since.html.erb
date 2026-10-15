@@ -1,0 +1,7 @@
+<% if person.facilitator_since_date.present? %>
+  Facilitator since
+  <span class="text-primary font-semibold"><%= person.facilitator_since_date.strftime("%B %Y") %></span>
+<% elsif person.affiliated_since_date.present? %>
+  Affiliated since
+  <span class="text-primary font-semibold"><%= person.affiliated_since_date.strftime("%B %Y") %></span>
+<% end %>

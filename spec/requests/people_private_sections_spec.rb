@@ -45,4 +45,24 @@ RSpec.describe "Person profile private (submitted) sections", type: :request do
     expect(response).to redirect_to(root_path)
     expect(response.body).not_to include("My Private Submission")
   end
+
+  describe "submitted content label" do
+    def submitted_header
+      Capybara.string(response.body).find("h2", text: "Submitted content").find(:xpath, "..")
+    end
+
+    it "tells the owner admins can see it too" do
+      sign_in owner_user
+      get person_path(person)
+
+      expect(submitted_header).to have_text("Only visible to you and admins")
+    end
+
+    it "tells an admin only the person and admins can see it" do
+      sign_in admin
+      get person_path(person)
+
+      expect(submitted_header).to have_text("Only visible to this person and admins")
+    end
+  end
 end

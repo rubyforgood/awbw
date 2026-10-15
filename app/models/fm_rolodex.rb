@@ -101,29 +101,142 @@ class FmRolodex < ApplicationRecord
     "WorksiteAddrsID" => "fm_addresses"
   }.freeze
 
+  PHONES = "Phones"
+  ADDRESSES = "Addresses"
+  JOB_AFFILIATION = "Job affiliation"
+  FACILITATOR_AFFILIATION = "Facilitator affiliation"
+  LISTED_FIELDS = %w[PrimaryPhoneID PrimaryAddrsID WorksiteAddrsID].freeze
+  TALL_GROUPS = [ "Organization & affiliations" ].freeze
+  PORTAL_FIELDS = {
+    "FirstName" => "people.first_name",
+    "LastName" => "people.last_name",
+    "Pronouns" => "people.pronouns",
+    "EmailPrimary" => "people.email",
+    "EMail" => "people.email",
+    "EmailType" => "people.email_type",
+    "BestTimeToCall" => "people.best_time_to_call",
+    "DateOfBirth" => "people.date_of_birth",
+    "Ethnicity" => "people.racial_ethnic_identity",
+    "Comments" => "people.notes",
+    "Title" => "affiliations.title",
+    "FacilitatorSinceMonth" => "people.member_since (with FacilitatorSinceYear)",
+    "FacilitatorSinceYear" => "people.member_since (with FacilitatorSinceMonth)",
+    "PrimaryServiceArea" => "the person's primary sector",
+    "OtherServiceArea" => "the person's additional sectors",
+    "PrimaryAgeGroup" => "the person's primary age group",
+    "DateEntered" => "people.created_at",
+    "DateTimeModified" => "people.updated_at",
+    "EnteredBy" => "people.created_by_id",
+    "ModifiedBy" => "people.updated_by_id"
+  }.freeze
+  USER_LOOKUP_FIELDS = %w[EnteredBy ModifiedBy].freeze
+
+  PORTAL_COUNTERPARTS = {
+    "fm_addresses" => "Addresses",
+    "fm_phone_numbers" => "Contact methods",
+    "fm_notes" => "Comments",
+    "fm_activities" => "Communications",
+    "fm_people_to_organizations" => "Affiliations",
+    "fm_personnels" => "Affiliations",
+    "fm_workshop_logs" => "Workshop logs",
+    "fm_workshops" => "Workshops",
+    "fm_participants" => "Event registrations",
+    "fm_payments" => "Payments",
+    "fm_fundings" => "Scholarships",
+    "fm_invoices" => "Invoices",
+    "fm_quotations" => "Quotes"
+  }.freeze
+
+  FIELD_GROUPS = {
+    "Identity" => %w[NamePrefix FirstName MiddleName LastName Suffix Pronouns Gender Gender2ndPerson isAgency__c
+                     EMail EmailPrimary EmailType EmailNotes BestTimeToCall],
+    "Phones & addresses" => {
+      PHONES => %w[PrimaryPhoneID],
+      ADDRESSES => %w[PrimaryAddrsID WorksiteAddrsID],
+      "Mailing list" => %w[MailingList]
+    },
+    "Organization & affiliations" => {
+      "Classification & status" => %w[Classification Status],
+      "Organization" => %w[Organization OrgID WebSite Mission PrimaryContact PrimaryContactID],
+      JOB_AFFILIATION => %w[Title Department Dept2ndName],
+      FACILITATOR_AFFILIATION => %w[FacilitatorSinceMonth FacilitatorSinceYear FacilitatorStatusPending
+                                    HowTrained TrainingMotivation LifeExperiences Settings BBSLicense]
+    },
+    "Sector & age group" => %w[PrimaryServiceArea OtherServiceArea PrimaryAgeGroup],
+    "Record keeping" => %w[ID Delete DuplicateStatus EnteredBy DateEntered ModifiedBy DateTimeModified UserID Password],
+    "Notes" => %w[Comments NameNote Keywords Interest SourceOfName],
+    "Volunteering" => %w[VolEnrollDate DropDate AvailMon AvailTue AvailWed AvailThu AvailFri AvailSat],
+    "Giving" => %w[DonationCount DonationTotal Amount CkNo FunderPotential CallForArtRecord],
+    "Personal details" => %w[DateOfBirth BirthMonth BirthDay BirthYear BirthdayFlag Anniversary Children
+                             Ethnicity Languages],
+    "Mailing" => %w[AddresseeGreetingStyles ListBy IncludeTitle FamilyCode Private]
+  }.freeze
+
   HAS_MANY = {
     "fm_addresses" => { via: "RolodexID", label: "Addresses" },
     "fm_phone_numbers" => { via: "RolodexID", label: "Phone Numbers" },
-    "fm_payments" => { via: "RolodexID", label: "Payments" },
-    "fm_activities" => { via: "ID", label: "Activities" },
+    "fm_contacts" => { via: "ContacteeID", label: "Contacts", note: "Data from 2003–2018" },
     "fm_notes" => { via: "RolodexID", label: "Notes" },
+    "fm_activities" => { via: "ID", label: "Activities", note: "Data from 2003–2025" },
+    "fm_form_letters" => { via: "SignatureID", label: "Form Letters (Signed)" },
+    "fm_people_to_organizations" => { via: "PersonID", label: "Org Affiliations" },
     "fm_personnels" => { via: "PersonID", label: "Personnel" },
+    "fm_committee_members" => { via: "MemberID", label: "Committee Memberships" },
+    "fm_group_members" => { via: "ContactID", label: "Group Memberships" },
     "fm_workshop_logs" => { via: "LeaderID", label: "Workshop Logs" },
+    "fm_workshops" => { via: "AuthorID", label: "Workshops Authored" },
     "fm_participants" => { via: "ParticipantID", label: "Participations" },
+    "fm_volunteers" => { via: "VRecID", label: "Volunteer Records" },
+    "fm_payments" => { via: "RolodexID", label: "Payments" },
+    "fm_invoices" => { via: "RolodexID", label: "Invoices" },
     "fm_fundings" => { via: "FunderID", label: "Funding" },
     "fm_program_sponsorships" => { via: "FunderID", label: "Program Sponsorships" },
-    "fm_ancillary_data" => { via: "RolodexID", label: "Ancillary Data" },
-    "fm_art_registries" => { via: "ArtistID", label: "Art Registries (Artist)" },
-    "fm_committee_members" => { via: "MemberID", label: "Committee Memberships" },
-    "fm_contacts" => { via: "ContacteeID", label: "Contacts" },
-    "fm_donor_developers" => { via: "RolodexID", label: "Donor Developments" },
-    "fm_form_letters" => { via: "SignatureID", label: "Form Letters (Signed)" },
-    "fm_group_members" => { via: "ContactID", label: "Group Memberships" },
-    "fm_invoices" => { via: "RolodexID", label: "Invoices" },
-    "fm_people_to_organizations" => { via: "PersonID", label: "Org Affiliations" },
-    "fm_quotations" => { via: "RolodexID", label: "Quotations" },
     "fm_solicitations" => { via: "DonorID", label: "Solicitations" },
-    "fm_volunteers" => { via: "VRecID", label: "Volunteer Records" },
-    "fm_workshops" => { via: "AuthorID", label: "Workshops (Authored)" }
+    "fm_donor_developers" => { via: "RolodexID", label: "Donor Developments" },
+    "fm_quotations" => { via: "RolodexID", label: "Quotations" },
+    "fm_art_registries" => { via: "ArtistID", label: "Art Registries (Artist)" },
+    "fm_ancillary_data" => { via: "RolodexID", label: "Ancillary Data" }
   }.freeze
+
+  def name
+    agency = fm_value("Organization")
+    fm_join("FirstName", "LastName") || (agency && "#{agency} (agency)") || fm_id
+  end
+
+  def phone_numbers
+    @phone_numbers ||= contact_records(FmPhoneNumber, primary_ids: data.values_at("PrimaryPhoneID"))
+  end
+
+  def addresses
+    @addresses ||= contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
+  end
+
+  def job_affiliations
+    @job_affiliations ||= FmPeopleToOrganization.find_by_data("PersonID", fm_id).order(:fm_id).to_a
+  end
+
+  def facilitator_affiliations
+    @facilitator_affiliations ||= FmPersonnel.find_by_data("PersonID", fm_id).order(:fm_id).to_a
+  end
+
+  def records_listed_under(label)
+    case label
+    when PHONES then phone_numbers
+    when ADDRESSES then addresses
+    when JOB_AFFILIATION then job_affiliations
+    when FACILITATOR_AFFILIATION then facilitator_affiliations
+    else []
+    end
+  end
+
+  private
+
+  # Ones this record points at are listed first, even when their RolodexID names someone else; one the
+  # archive lacks stands in as an unsaved placeholder.
+  def contact_records(model, primary_ids:)
+    primary_ids = primary_ids.compact_blank.uniq
+    records = model.find_by_data("RolodexID", fm_id).or(model.where(fm_id: primary_ids)).order(:fm_id).to_a
+    records += (primary_ids - records.map(&:fm_id)).map { |id| model.new(fm_id: id, data: {}) }
+    records.sort_by { |record| primary_ids.index(record.fm_id) || primary_ids.size }
+  end
 end

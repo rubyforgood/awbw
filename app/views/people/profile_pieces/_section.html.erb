@@ -1,0 +1,21 @@
+<%# A lazily loaded profile section (PeopleController#show ?section=). %>
+<%# locals: (person:, section:, id: nil) %>
+<% title, noun = {
+     affiliations: [ "Affiliations", "affiliations" ],
+     workshops: [ "Workshops authored", "workshops" ],
+     workshop_variations: [ "Workshop variations authored", "workshop variations" ],
+     stories: [ "Stories authored/featured", "stories" ],
+     resources: [ "Resources authored", "resources" ],
+     events: [ "Events attended", "events" ],
+     workshop_ideas: [ "Workshop ideas submitted", "workshop ideas" ],
+     workshop_variation_ideas: [ "Workshop variation ideas submitted", "workshop variation ideas" ],
+     story_ideas: [ "Story ideas submitted", "story ideas" ],
+     workshop_logs: [ "Workshop logs submitted", "workshop logs" ],
+     monthly_reports: [ "Monthly reports submitted", "monthly reports" ]
+   }.fetch(section) %>
+<%= tag.div id: id, class: "scroll-mt-4" do %>
+  <h3 class="mb-3 font-display text-xl text-gray-900"><%= title %></h3>
+  <%= turbo_frame_tag "person_#{section}_section", src: person_path(person, section: section), loading: :lazy do %>
+    <p class="text-gray-500 italic">Loading <%= noun %>...</p>
+  <% end %>
+<% end %>

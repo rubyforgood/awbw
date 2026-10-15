@@ -3,6 +3,10 @@
 module Dedupable
   extend ActiveSupport::Concern
 
+  included do
+    helper_method :dedupe_return
+  end
+
   CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
 
   def dedupe_index
@@ -38,7 +42,8 @@ module Dedupable
       return redirect_to url_for(action: :dedupe_index),
         alert: "#{mc.model_name.human} not found (ID: #{missing.join(', ')})."
     end
-    deduper = ModelDeduper.new(model_class: mc, movable_attachments: config[:movable_attachments])
+    deduper = ModelDeduper.new(model_class: mc, movable_attachments: config[:movable_attachments],
+                               reference_columns: config[:reference_columns])
     @reassignment_delete = deduper.reassignment_preview(@record_to_delete)
     @reassignment_keep = deduper.reassignment_preview(@record_to_keep)
     @lost_references = deduper.lost_references(@record_to_delete)
@@ -60,10 +65,7 @@ module Dedupable
     record = mc.find(params[:id])
     keep_param_key = "#{mn}_to_keep"
 
-    if params[keep_param_key].present?
-      editable = mc.column_names - %w[id created_at updated_at legacy_id]
-      record.update!(params.require(keep_param_key).permit(editable))
-    end
+    record.update!(params.require(keep_param_key).permit(dedupe_editable_columns(config))) if params[keep_param_key].present?
 
     head :ok
   rescue ActionPolicy::Unauthorized
@@ -81,7 +83,8 @@ module Dedupable
     record_to_delete = mc.find(params["#{mn}_to_delete_id"])
     record_to_keep = mc.find(params["#{mn}_to_keep_id"])
 
-    unhandled = ModelDeduper.new(model_class: mc).unhandled_references(record_to_delete)
+    unhandled = ModelDeduper.new(model_class: mc, reference_columns: config[:reference_columns])
+                            .unhandled_references(record_to_delete)
     if unhandled.any?
       tables = unhandled.map { |ref| ref[:table] }.uniq.join(", ")
       return redirect_to url_for(action: :dedupe_index),
@@ -95,8 +98,7 @@ module Dedupable
 
     keep_param_key = "#{mn}_to_keep"
     if params[keep_param_key].present?
-      editable = mc.column_names - %w[id created_at updated_at legacy_id]
-      record_to_keep.assign_attributes(params.require(keep_param_key).permit(editable))
+      record_to_keep.assign_attributes(params.require(keep_param_key).permit(dedupe_editable_columns(config)))
     end
 
     # Combine values that must survive the merge rather than be replaced wholesale
@@ -104,14 +106,15 @@ module Dedupable
     config[:merge_keeper]&.call(record_to_keep, record_to_delete)
 
     deduper = ModelDeduper.new(model_class: mc, logger: Rails.logger, dry_run: false, min_usage: 0,
-                               movable_attachments: config[:movable_attachments])
+                               movable_attachments: config[:movable_attachments],
+                               reference_columns: config[:reference_columns])
 
     if respond_to?(:track_event, true)
       track_event("dedupe.#{mn}", {
         resource_type: mc.name,
         resource_id: record_to_keep.id,
-        deleted_record: record_to_delete.attributes,
-        kept_record: { id: record_to_keep.id, name: record_to_keep.name },
+        deleted_record: dedupe_parameter_filter.filter(record_to_delete.attributes),
+        kept_record: { id: record_to_keep.id, name: dedupe_record_label(config, record_to_keep) },
         associations_moved: deduper.reassignment_counts(record_to_delete).values.sum
       })
     end
@@ -129,8 +132,8 @@ module Dedupable
     end
 
     label = mc.model_name.human.pluralize
-    redirect_to url_for(action: :index),
-      notice: "#{label} merged successfully. '#{record_to_delete.name}' was merged into '#{record_to_keep.name}'."
+    redirect_to dedupe_return&.dig(:path) || url_for(action: :index),
+      notice: "#{label} merged successfully. '#{dedupe_record_label(config, record_to_delete)}' was merged into '#{dedupe_record_label(config, record_to_keep)}'."
   rescue ActionPolicy::Unauthorized
     raise
   rescue StandardError => e
@@ -139,6 +142,32 @@ module Dedupable
   end
 
   private
+
+  # Where a merge started from outside the dedupe index returns to, with the params that carry it.
+  def dedupe_return
+    person_id = params[:person_id].presence
+    return unless person_id
+
+    carry = { return_to: params[:return_to], person_id: person_id }
+    case params[:return_to]
+    when "person_show" then { label: "Back to profile", path: person_path(person_id), params: carry }
+    when "person_edit" then { label: "Back to edit person", path: edit_person_path(person_id), params: carry }
+    end
+  end
+
+  # The preview only renders editable_columns when a config lists them, so only those are accepted.
+  def dedupe_editable_columns(config)
+    config[:editable_columns].presence || (config[:model_class].column_names - %w[id created_at updated_at legacy_id])
+  end
+
+  def dedupe_record_label(config, record)
+    (config[:record_label] || :name.to_proc).call(record)
+  end
+
+  # Keeps credentials (a login's password hash and tokens) out of the tracked deleted record.
+  def dedupe_parameter_filter
+    ActiveSupport::ParameterFilter.new(%i[passw crypt salt token secret otp])
+  end
 
   # Subclasses must implement this, returning a hash with:
   #   model_class:        The ActiveRecord model (e.g. Category)
@@ -150,6 +179,16 @@ module Dedupable
   #   field_notes:        Hash of { column_name => hint } rendered under the keeper's field, to guide
   #                       an admin on what to enter (e.g. full_name is a legacy free-text author) (optional)
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
+  #   editable_columns:   Array of column names the preview shows and lets an admin edit on the keeper;
+  #                       only these are accepted on save (optional, defaults to every column)
+  #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
+  #                       e.g. a login's email and sign-in history (optional)
+  #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
+  #                       apart, e.g. two logins of one person (optional, defaults to #name)
+  #   search_model:       Search model the index pickers query (optional, defaults to the model's own
+  #                       remote search), e.g. "user_any_status" to reach logins that can't sign in
+  #   reference_columns:  Array of column names that reference this model in any table but carry no DB
+  #                       foreign key, so the merge moves them too (e.g. created_by_id stamps) (optional)
   #   movable_attachments: Array of has_one_attached names to move to the keeper when it has none
   #                       (otherwise dropped with the deleted record), e.g. %w[thumbnail header] (optional)
   #   preview_images:     Lambda(record) returning that record's attached images (ActiveStorage
@@ -198,8 +237,10 @@ module Dedupable
       delete_id_param: "#{mn}_to_delete_id",
       keep_id_param: "#{mn}_to_keep_id",
       keep_param_key: "#{mn}_to_keep".to_sym,
-      search_model: mn,
+      search_model: config[:search_model] || mn,
       editable_columns: config[:editable_columns],
+      read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
+      record_label: config[:record_label] || :name.to_proc,
       union_columns: Array(config[:union_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},

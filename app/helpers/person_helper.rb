@@ -145,21 +145,51 @@ module PersonHelper
             class: "font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
   end
 
-  # Profile pieces the person has opted to hide (a `profile_show_*` flag turned
-  # off) are still revealed to admins, with a blue admin-only wash + eye-slash
-  # badge, so admins always see the full record. `flag` is a `profile_show_*`
-  # attribute name (symbol).
+  # A piece the person hid (a `profile_show_*` flag turned off) stays visible to
+  # them and to admins under the blue admin-or-owner wash. `flag` is a
+  # `profile_show_*` attribute name (symbol).
   def profile_piece_shown?(person, flag)
-    person.public_send(:"#{flag}?") || profile_piece_hidden_for_admin?(person, flag)
+    person.public_send(:"#{flag}?") || profile_piece_hidden_for_viewer?(person, flag)
   end
 
-  def profile_piece_hidden_for_admin?(person, flag)
-    !person.public_send(:"#{flag}?") && allowed_to?(:manage?, Person)
+  def profile_piece_hidden_for_viewer?(person, flag)
+    !person.public_send(:"#{flag}?") && allowed_to?(:own_record?, person)
   end
 
-  # Wash for a block-level profile piece the person hid but the admin still sees.
+  def own_profile?(person)
+    current_user.present? && current_user.person_id == person.id
+  end
+
+  def owner_and_admins_label(person)
+    own_profile?(person) ? "Only visible to you and admins" : "Only visible to this person and admins"
+  end
+
+  def profile_hidden_icon
+    tag.i(class: "admin-or-owner fa-solid fa-eye-slash text-xs #{profile_hidden_icon_class}", title: "Hidden from public")
+  end
+
+  def profile_hidden_wash_class
+    "admin-or-owner #{DomainTheme.bg_class_for(:admin_or_owner, intensity: 100)} #{profile_hidden_border_class}"
+  end
+
+  def profile_hidden_border_class
+    DomainTheme.border_class_for(:admin_or_owner, intensity: 200)
+  end
+
+  def profile_hidden_text_class
+    DomainTheme.text_class_for(:admin_or_owner)
+  end
+
+  def profile_hidden_icon_class
+    DomainTheme.text_class_for(:admin_or_owner, intensity: 700)
+  end
+
   def profile_hidden_section_class
-    "admin-only rounded-xl border border-blue-200 bg-blue-100 p-4"
+    "rounded-xl border p-4 #{profile_hidden_wash_class}"
+  end
+
+  def profile_hidden_chip_class
+    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 #{profile_hidden_wash_class} #{profile_hidden_text_class}"
   end
 
   # Blue admin-only pill for record data that lives only on the edit form and has

@@ -51,4 +51,8 @@ class FmOrganization < ApplicationRecord
     "fm_invoices" => { via: "OrgID", label: "Invoices" },
     "fm_people_to_organizations" => { via: "OrgID", label: "People Affiliations" }
   }.freeze
+
+  def name
+    fm_value("OrgName") || fm_id
+  end
 end

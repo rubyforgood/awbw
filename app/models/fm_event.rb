@@ -47,4 +47,8 @@ class FmEvent < ApplicationRecord
     "fm_volunteers" => { via: "EventID", label: "Volunteers" },
     "fm_quotations" => { via: "EventID", label: "Quotations" }
   }.freeze
+
+  def name
+    fm_value("Title") || fm_id
+  end
 end

@@ -92,6 +92,12 @@ RSpec.describe "/story_ideas", type: :request do
         get new_story_idea_url
         expect(response).to be_successful
       end
+
+      it "tells the submitter which image shape looks best" do
+        get new_story_idea_url
+
+        expect(response.body).to include(CGI.escapeHTML(StorySharesHelper::STORY_IMAGE_GUIDANCE))
+      end
     end
 
     describe "POST /create with a primary sector and category" do

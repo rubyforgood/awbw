@@ -186,6 +186,258 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Markedone")
       expect(response.body).not_to include("Plainone")
     end
+
+    describe "contact info search" do
+      def search(term)
+        get people_path, params: { contact_info: term }, headers: turbo_headers
+        response.body
+      end
+
+      it "matches a shared email" do
+        marked.update!(email: "marked@example.com")
+        expect(search("marked@example")).to include("Markedone")
+      end
+
+      it "skips an email the person hides" do
+        marked.update!(email: "marked@example.com", profile_show_email: false)
+        expect(search("marked@example")).not_to include("Markedone")
+      end
+
+      it "skips the secondary email" do
+        marked.update!(email_2: "second@example.com")
+        expect(search("second@example")).not_to include("Markedone")
+      end
+
+      it "skips the legal first name" do
+        marked.update!(legal_first_name: "Legalname")
+        expect(search("Legalname")).not_to include("Markedone")
+      end
+
+      it "skips addresses" do
+        create(:address, addressable: marked, street_address: "123 Hiddenway")
+        expect(search("Hiddenway")).not_to include("Markedone")
+      end
+
+      it "matches a shared phone" do
+        create(:contact_method, contactable: marked, value: "555-0142")
+        expect(search("555-0142")).to include("Markedone")
+      end
+
+      it "skips a phone the person hides" do
+        marked.update!(profile_show_phone: false)
+        create(:contact_method, contactable: marked, value: "555-0142")
+        expect(search("555-0142")).not_to include("Markedone")
+      end
+
+      it "skips an inactive phone" do
+        create(:contact_method, contactable: marked, value: "555-0142", inactive: true)
+        expect(search("555-0142")).not_to include("Markedone")
+      end
+
+      %w[first_name_last_initial first_name_only].each do |preference|
+        it "skips the last name when the display preference is #{preference}" do
+          marked.update!(last_name: "Hiddensurname", display_name_preference: preference)
+          expect(search("Hiddensurname")).not_to include("Markedone")
+        end
+      end
+
+      it "skips the first name when the display preference is last_name_only" do
+        marked.update!(last_name: "Shownsurname", display_name_preference: "last_name_only")
+        expect(search("Markedone")).not_to include("Shownsurname")
+      end
+    end
+
+    describe "sector and age range filters" do
+      let(:sector) { create(:sector, :published, name: "Quietsector") }
+      let(:age_type) { create(:category_type, :published, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE) }
+      let(:age_range) { create(:category, :published, category_type: age_type, name: "Quietage") }
+
+      before do
+        create(:sectorable_item, sectorable: marked, sector: sector, is_primary: true)
+        create(:categorizable_item, categorizable: marked, category: age_range, is_primary: true)
+      end
+
+      it "matches shared sectors" do
+        get people_path, params: { sector_names_all: "Quietsector" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips sectors the person hides" do
+        marked.update!(profile_show_sectors: false)
+        get people_path, params: { sector_names_all: "Quietsector" }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "matches shared age ranges" do
+        get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips age ranges the person hides" do
+        marked.update!(profile_show_age_ranges: false)
+        get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "shows shared sectors and age ranges in the row" do
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Quietsector")
+        expect(response.body).to include("Quietage")
+      end
+
+      it "leaves hidden sectors and age ranges out of the row" do
+        marked.update!(profile_show_sectors: false, profile_show_age_ranges: false)
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Quietsector")
+        expect(response.body).not_to include("Quietage")
+      end
+    end
+
+    describe "organization filters" do
+      let(:org) { create(:organization, name: "Quietorg") }
+
+      before { create(:affiliation, person: marked, organization: org, title: "Facilitator", start_date: 1.year.ago, inactive: false) }
+
+      it "matches a shared affiliation by organization name" do
+        get people_path, params: { organization_name: "Quietorg" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips affiliations the person hides by organization name" do
+        marked.update!(profile_show_affiliations: false)
+        get people_path, params: { organization_name: "Quietorg" }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "matches a shared affiliation by organization id" do
+        get people_path, params: { organization_id: org.id }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Plainone")
+      end
+
+      it "skips affiliations the person hides by organization id" do
+        marked.update!(profile_show_affiliations: false)
+        get people_path, params: { organization_id: org.id }, headers: turbo_headers
+        expect(response.body).not_to include("Markedone")
+      end
+
+      it "shows shared affiliations in the row" do
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Quietorg")
+      end
+
+      it "leaves hidden affiliations out of the row" do
+        marked.update!(profile_show_affiliations: false)
+        get people_path, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        expect(response.body).not_to include("Quietorg")
+      end
+    end
+  end
+
+  describe "GET /people (turbo frame) contact info search as an admin" do
+    let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_email: false, profile_show_phone: false) }
+
+    def search(term)
+      get people_path, params: { contact_info: term }, headers: turbo_headers
+      response.body
+    end
+
+    it "matches an email the person hides" do
+      person.update!(email: "hidden@example.com")
+      expect(search("hidden@example")).to include("Hiddenfacts")
+    end
+
+    it "matches the secondary email" do
+      person.update!(email_2: "second@example.com")
+      expect(search("second@example")).to include("Hiddenfacts")
+    end
+
+    it "matches the legal first name" do
+      person.update!(legal_first_name: "Legalname")
+      expect(search("Legalname")).to include("Hiddenfacts")
+    end
+
+    it "matches addresses" do
+      create(:address, addressable: person, street_address: "123 Hiddenway")
+      expect(search("Hiddenway")).to include("Hiddenfacts")
+    end
+
+    it "matches a phone the person hides" do
+      create(:contact_method, contactable: person, value: "555-0142")
+      expect(search("555-0142")).to include("Hiddenfacts")
+    end
+
+    it "matches an inactive phone" do
+      create(:contact_method, contactable: person, value: "555-0142", inactive: true)
+      expect(search("555-0142")).to include("Hiddenfacts")
+    end
+
+    %w[first_name_last_initial first_name_only].each do |preference|
+      it "matches the last name when the display preference is #{preference}" do
+        person.update!(last_name: "Hiddensurname", display_name_preference: preference)
+        expect(search("Hiddensurname")).to include("Hiddenfacts")
+      end
+    end
+
+    it "matches the first name when the display preference is last_name_only" do
+      person.update!(last_name: "Shownsurname", display_name_preference: "last_name_only")
+      expect(search("Hiddenfacts")).to include("Shownsurname")
+    end
+  end
+
+  describe "GET /people (turbo frame) sector and age range filters as an admin" do
+    let(:sector) { create(:sector, :published, name: "Quietsector") }
+    let(:age_type) { create(:category_type, :published, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE) }
+    let(:age_range) { create(:category, :published, category_type: age_type, name: "Quietage") }
+    let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_sectors: false, profile_show_age_ranges: false) }
+
+    before do
+      create(:sectorable_item, sectorable: person, sector: sector, is_primary: true)
+      create(:categorizable_item, categorizable: person, category: age_range, is_primary: true)
+    end
+
+    it "matches sectors the person hides" do
+      get people_path, params: { sector_names_all: "Quietsector" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "matches age ranges the person hides" do
+      get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "shows hidden sectors and age ranges in the row" do
+      get people_path, headers: turbo_headers
+      expect(response.body).to include("Quietsector")
+      expect(response.body).to include("Quietage")
+    end
+  end
+
+  describe "GET /people (turbo frame) organization filters as an admin" do
+    let(:org) { create(:organization, name: "Quietorg") }
+    let!(:person) { create(:person, first_name: "Hiddenfacts", profile_show_affiliations: false) }
+
+    before { create(:affiliation, person: person, organization: org) }
+
+    it "matches affiliations the person hides by organization name" do
+      get people_path, params: { organization_name: "Quietorg" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "matches affiliations the person hides by organization id" do
+      get people_path, params: { organization_id: org.id }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "shows hidden affiliations in the row" do
+      get people_path, headers: turbo_headers
+      expect(response.body).to include("Quietorg")
+    end
   end
 
   describe "GET /people?organization_id=X (full page)" do

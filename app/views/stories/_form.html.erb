@@ -205,7 +205,8 @@
     <% end %>
   <% end %>
 
-  <%= render "shared/form_image_fields", f: f, include_primary_asset: true %>
+  <%= render "shared/form_image_fields", f: f, include_primary_asset: true,
+             section_subtitle: tag.p(StorySharesHelper::STORY_IMAGE_GUIDANCE, class: "text-sm text-gray-600") %>
 
   <div class="flex flex-col md:flex-row md:space-x-4 mt-4">
     <div class="flex-1 mb-4 md:mb-0">

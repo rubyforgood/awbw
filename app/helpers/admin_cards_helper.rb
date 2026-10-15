@@ -71,7 +71,8 @@ module AdminCardsHelper
       custom_card("Dedupe organizations", dedupe_index_organizations_path, icon: "🧹", color: DomainTheme.color_for(:organizations), intensity: 100),
       custom_card("Dedupe categories", dedupe_index_categories_path, icon: "🧹", color: DomainTheme.color_for(:categories), intensity: 100),
       custom_card("Dedupe event registrations", dedupe_index_event_registrations_path, icon: "🧹", color: DomainTheme.color_for(:event_registrations), intensity: 100),
-      custom_card("Dedupe sectors", dedupe_index_sectors_path, icon: "🧹", color: DomainTheme.color_for(:sectors), intensity: 100)
+      custom_card("Dedupe sectors", dedupe_index_sectors_path, icon: "🧹", color: DomainTheme.color_for(:sectors), intensity: 100),
+      custom_card("Dedupe users", dedupe_index_users_path, icon: "🧹", color: DomainTheme.color_for(:users), intensity: 100)
     ]
   end
 
@@ -91,7 +92,6 @@ module AdminCardsHelper
     [
       custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
       custom_card("Bulk payments", bulk_payments_path, icon: "💳", color: :sky, intensity: 100),
-      custom_card("Certificate settings", admin_certificate_settings_path, icon: "🎓", color: :sky, intensity: 100),
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
       custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
@@ -100,6 +100,7 @@ module AdminCardsHelper
       custom_card("Form answers", form_answers_path, icon: "✅", color: :sky, intensity: 100),
       custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
       custom_card("Payments", payments_path, icon: "💳", color: :sky, intensity: 100),
+      custom_card("Resource roles", admin_resource_roles_path, icon: "📌", color: :sky, intensity: 100),
       custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
       custom_card("CE registrations", continuing_education_registrations_path, icon: "📜", color: :sky, intensity: 100),
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),

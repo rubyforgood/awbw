@@ -47,6 +47,9 @@
                      title: truncate(@person.name, length: 40),
                      back: back, actions: actions, width: "max-w-7xl",
                      sticky_header: true, card: false } do %>
+  <% if allowed_to?(:index?, User) %>
+    <%= render "people/multiple_user_accounts_warning", person: @person, return_to: "person_edit" %>
+  <% end %>
   <div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
     <%= render "form" %>
     <%= render "shared/audit_info", resource: @person %>

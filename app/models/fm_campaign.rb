@@ -26,4 +26,8 @@ class FmCampaign < ApplicationRecord
     "fm_donor_developers" => { via: "CampaignID", label: "Donor Developers" },
     "fm_solicitations" => { via: "CampaignID", label: "Solicitations" }
   }.freeze
+
+  def name
+    fm_value("Campaign") || fm_id
+  end
 end

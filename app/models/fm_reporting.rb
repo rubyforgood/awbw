@@ -18,4 +18,8 @@ class FmReporting < ApplicationRecord
   FM_LINKS = {
     "FundingRecordID" => "fm_fundings"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("ReportDescription"), fm_words(fm_with("due", fm_value("ReportDueDate")), fm_with("for", fm_value("FundingRecordID"))) || "funding report")
+  end
 end

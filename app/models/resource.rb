@@ -5,6 +5,7 @@ class Resource < ApplicationRecord
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include Mentionable
+  include FilemakerCoded
 
   # Define rich text fields for mentions functionality
   def self.mentionable_rich_text_fields
@@ -14,57 +15,81 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
-  # Each certificate "slot" is filled by connecting a library Resource on the admin
-  # certificate-settings page, recorded as its certificate_artwork_role (unique). The art
-  # lives on a normal Resource (never committed to this public repo) and is embedded
-  # via a signed, same-origin URL. A legacy title (below) is the fallback for
-  # records created before the connect UI, so nothing needs re-connecting to keep
-  # working.
+  # Each role is a built-in job that one library Resource fills (certificate
+  # artwork, the W-9, the training handouts), connected on the admin resource-roles
+  # page. The file lives on a normal Resource, never committed to this public repo.
   CERTIFICATE_ROLES = %w[
     training_frame on_demand_frame ce_frame other_frame training_signatures ce_signatures
   ].freeze
+  HANDOUT_ROLES = %w[
+    training_handouts training_workshop_worksheets aha_moments participant_sharing_guide supervisor_letter
+  ].freeze
+  ROLES = (CERTIFICATE_ROLES + %w[w9] + HANDOUT_ROLES).freeze
 
-  TRAINING_CERTIFICATE_SIGNATURES_TITLE = "Training certificate signatures".freeze
-  CE_CERTIFICATE_SIGNATURE_TITLE = "Training CE certificate signatures".freeze
-  CE_CERTIFICATE_FRAME_TITLE = "CE certificate frame".freeze
-  CERTIFICATE_FRAME_TITLES = {
-    training: "Training certificate frame",
-    on_demand: "On-demand certificate frame",
-    other: "Event certificate frame"
+  # The title each role was matched by before roles were connected — the lookup
+  # fallback until every environment has connected its resources.
+  LEGACY_ROLE_TITLES = {
+    "training_frame" => "Training certificate frame",
+    "on_demand_frame" => "On-demand certificate frame",
+    "ce_frame" => "CE certificate frame",
+    "other_frame" => "Event certificate frame",
+    "training_signatures" => "Training certificate signatures",
+    "ce_signatures" => "Training CE certificate signatures",
+    "w9" => "W-9",
+    "training_handouts" => "2-Day AWBW Facilitator Training Worksheets & Handouts",
+    "training_workshop_worksheets" => "AWBW Training Workshop Worksheets",
+    "aha_moments" => "Aha Moments",
+    "participant_sharing_guide" => "Inviting and Responding to Participants' Sharing",
+    "supervisor_letter" => "Letter to Supervisors"
   }.freeze
-  # Certificate category (Event#certificate_category) → its frame slot role.
+
+  # Certificate category (Event#certificate_category) → its frame role.
   CERTIFICATE_FRAME_ROLES = {
     training: "training_frame",
     on_demand: "on_demand_frame",
     other: "other_frame"
   }.freeze
 
-  # The Resource connected to a certificate slot — the one holding this role, else
-  # the legacy title-matched record (pre-connect-UI). Nil when neither exists.
-  def self.certificate_artwork(role, legacy_title = nil)
-    find_by(certificate_artwork_role: role) || (legacy_title && find_by(title: legacy_title))
+  # The Resource filling a role — the one connected to it, else the legacy
+  # title match. Nil when neither exists.
+  def self.for_role(role)
+    find_by(role:) || legacy_role_match(role)
   end
 
-  # The signature strip / frame image for each slot, or nil when nothing is
-  # connected — the certificate then omits the signature or uses its committed
-  # design rather than erroring.
+  def self.for_roles(roles)
+    roles.filter_map { |role| for_role(role) }
+  end
+
+  def self.legacy_role_match(role)
+    title = LEGACY_ROLE_TITLES[role]
+    find_by(title:) if title
+  end
+
+  # The signature strip / frame image for each certificate role, or nil when
+  # nothing fills it — the certificate then omits the signature or uses its
+  # committed design rather than erroring.
   def self.training_certificate_signatures_file
-    certificate_artwork("training_signatures", TRAINING_CERTIFICATE_SIGNATURES_TITLE)&.signature_file
+    for_role("training_signatures")&.signature_file
   end
 
   def self.ce_certificate_signature_file
-    certificate_artwork("ce_signatures", CE_CERTIFICATE_SIGNATURE_TITLE)&.signature_file
+    for_role("ce_signatures")&.signature_file
   end
 
   def self.ce_certificate_frame_file
-    certificate_artwork("ce_frame", CE_CERTIFICATE_FRAME_TITLE)&.signature_file
+    for_role("ce_frame")&.signature_file
   end
 
-  # The frame image connected for a certificate category (:training, :on_demand,
-  # :other), or nil.
+  # The frame image for a certificate category (:training, :on_demand, :other), or nil.
   def self.certificate_frame_file(category)
     role = CERTIFICATE_FRAME_ROLES[category&.to_sym]
-    certificate_artwork(role, CERTIFICATE_FRAME_TITLES[category&.to_sym])&.signature_file if role
+    for_role(role)&.signature_file if role
+  end
+
+  # The role this resource fills — its connected role, else the role its legacy
+  # title stands for.
+  def effective_role
+    role || LEGACY_ROLE_TITLES.find { |_role, legacy_title| legacy_title.casecmp?(title.to_s) }&.first
   end
 
   # The first attached image on this resource (primary asset, then downloadable),
@@ -117,12 +142,12 @@ class Resource < ApplicationRecord
 
   # Blank out to nil so the unique index treats "not connected" as NULL (MySQL
   # allows many NULLs) rather than a shared empty string.
-  normalizes :certificate_artwork_role, with: ->(value) { value.presence }
+  normalizes :role, with: ->(value) { value.presence }
 
   # Validations
   validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :kind, presence: true
-  validates :certificate_artwork_role, inclusion: { in: CERTIFICATE_ROLES }, allow_nil: true
+  validates :role, inclusion: { in: ROLES }, allow_nil: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true

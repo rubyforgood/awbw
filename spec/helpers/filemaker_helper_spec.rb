@@ -84,6 +84,91 @@ RSpec.describe FilemakerHelper, type: :helper do
     end
   end
 
+  describe "#fm_archive_records" do
+    it "finds the record an ID points at" do
+      organization = FmOrganization.create!(fm_id: "ORG1")
+
+      expect(helper.fm_archive_records("ORG1", "fm_organizations")).to eq([ organization ])
+    end
+
+    it "stands in an unsaved placeholder for an ID the archive lacks" do
+      record = helper.fm_archive_records("ORG9", "fm_organizations").sole
+
+      expect([ record.class, record.fm_id, record.persisted? ]).to eq([ FmOrganization, "ORG9", false ])
+    end
+
+    it "splits a list on line breaks and pilcrows, keeping its order and dropping repeats" do
+      FmRolodex.create!(fm_id: "00902")
+
+      records = helper.fm_archive_records("00902\r\n00901¶ 00903\v00902\n", "fm_rolodexes")
+
+      expect(records.map(&:fm_id)).to eq(%w[00902 00901 00903])
+      expect(records.map(&:persisted?)).to eq([ true, false, false ])
+    end
+  end
+
+  describe "#fm_archive_id_tag" do
+    it "links a record's ID to its archive page" do
+      html = helper.fm_archive_id_tag(FmAddress.create!(fm_id: "74001"))
+
+      expect(html).to match(%r{<a[^>]*href="#{Regexp.escape(fm_archive_path("74001", table: "addresses"))}"[^>]*>74001</a>})
+    end
+
+    it "strikes through an ID the archive has no record for" do
+      html = helper.fm_archive_id_tag(FmAddress.new(fm_id: "74999"))
+
+      expect(html).to include("line-through", %(title="No FM record found"), "74999")
+      expect(html).not_to include("href")
+    end
+  end
+
+  describe "#fm_archive_summary_tag" do
+    it "links a record by its decorator's summary" do
+      address = FmAddress.create!(fm_id: "74001", data: { "AddrsLine1" => "88 Rose Ave", "AddrsCity" => "Venice" })
+
+      expect(helper.fm_archive_summary_tag(address)).to include(">88 Rose Ave, Venice</a>")
+    end
+
+    it "links a record without a decorator by its name" do
+      organization = FmOrganization.create!(fm_id: "ORG1", data: { "OrgName" => "Sample Shelter" })
+
+      expect(helper.fm_archive_summary_tag(organization)).to include(">Sample Shelter</a>")
+    end
+
+    it "notes a record the archive lacks as not found" do
+      expect(helper.fm_archive_summary_tag(FmOrganization.new(fm_id: "ORG9"))).to include("Not found in FM data")
+    end
+  end
+
+  describe "#fm_portal_counterpart_name" do
+    let(:rolodex) { FmRolodex.new }
+
+    it "names the portal counterpart when it differs from the archive's name" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_personnels", "Personnel")).to eq("Affiliations")
+    end
+
+    it "skips a counterpart the archive's label already leads with, ignoring case" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshop_logs", "Workshop Logs")).to be_nil
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_workshops", "Workshops Authored")).to be_nil
+    end
+
+    it "skips a table without a portal counterpart" do
+      expect(helper.fm_portal_counterpart_name(rolodex, "fm_volunteers", "Volunteer Records")).to be_nil
+    end
+  end
+
+  describe "#fm_related_table_highlight" do
+    let(:rolodex) { FmRolodex.new }
+
+    it "colors a table the portal has its own records for orange" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_workshop_logs")).to include("bg-orange-100")
+    end
+
+    it "leaves a table with no portal counterpart uncolored" do
+      expect(helper.fm_related_table_highlight(rolodex, "fm_volunteers")).to be_nil
+    end
+  end
+
   describe "#filemaker_code_hint" do
     before { FmRolodex.create!(fm_id: "00006") }
 

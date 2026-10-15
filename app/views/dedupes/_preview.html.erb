@@ -8,6 +8,8 @@
     model_label:         Human label (e.g. "Organization")
     keep_param_key:      Param key for keep fields (e.g. :organization_to_keep)
     editable_columns:    Optional allowlist of column names to show/edit; nil shows all
+    read_only_columns:   Column names shown side by side for comparison but not editable
+    record_label:        Callable naming a record in the headers (defaults to #name)
     union_columns:       Column names whose values are combined into the keeper (not replaced)
     form_builder:        The parent form builder (f)
     belongs_to_options:  Hash of { column_name => collection } for select fields
@@ -31,6 +33,17 @@
   field_notes ||= {}
   deprecated_columns ||= []
   preview_images ||= nil
+  read_only_columns = Array(local_assigns[:read_only_columns]).filter_map { |name| model_class.columns_hash[name.to_s] }
+  record_label ||= :name.to_proc
+  read_only_display = ->(col, value) {
+    if col.type == :boolean
+      value ? "Yes" : "No"
+    elsif col.type == :datetime
+      value&.strftime("%Y-%m-%d %H:%M") || "—"
+    else
+      value.presence || "—"
+    end
+  }
   delete_images = preview_images ? Array(preview_images.call(record_to_delete)) : []
   keep_images = preview_images ? Array(preview_images.call(record_to_keep)) : []
 %>
@@ -47,7 +60,7 @@
     <span class="font-semibold text-gray-900"><%= model_label %> to delete:</span>
     <%= link_to edit_polymorphic_path(record_to_delete), target: "_blank", rel: "noopener",
                 class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
-      <strong><%= record_to_delete.name %></strong>
+      <strong><%= record_label.call(record_to_delete) %></strong>
       <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
     <% end %>
   </div>
@@ -56,7 +69,7 @@
     <span class="font-semibold text-gray-900"><%= model_label %> to keep:</span>
     <%= link_to edit_polymorphic_path(record_to_keep), target: "_blank", rel: "noopener",
                 class: "group inline-flex items-center gap-1.5 font-semibold text-gray-900 hover:underline" do %>
-      <strong><%= record_to_keep.name %></strong>
+      <strong><%= record_label.call(record_to_keep) %></strong>
       <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-gray-600"></i>
     <% end %>
   </div>
@@ -68,6 +81,16 @@
   <div class="border-x border-b <%= border %> bg-white px-5 py-3 text-sm">
     <span class="text-gray-400">ID</span> <span class="ml-2 text-gray-900"><%= record_to_keep.id %></span>
   </div>
+
+  <!-- Read-only comparison rows -->
+  <% read_only_columns.each do |col| %>
+    <% [ record_to_delete, record_to_keep ].each do |record| %>
+      <div class="border-x border-b <%= border %> flex flex-wrap items-start gap-x-2 bg-white px-5 py-3 text-sm">
+        <span class="w-full text-gray-400 sm:w-auto"><%= col.name.humanize %></span>
+        <span class="text-gray-900"><%= read_only_display.call(col, record.public_send(col.name)) %></span>
+      </div>
+    <% end %>
+  <% end %>
 
   <!-- Photos: attached images on each record, side by side, with what happens on merge -->
   <% if preview_images && (delete_images.any? || keep_images.any?) %>
@@ -169,7 +192,7 @@
                             class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200",
                             data: { controller: "remote-select", remote_select_model_value: remote_select_options[col.name] } %>
         <% elsif col_assoc && belongs_to_options[col.name].present? %>
-          <%= keep_f.collection_select col.name.to_sym, belongs_to_options[col.name], :id, :name, {}, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
+          <%= keep_f.collection_select col.name.to_sym, belongs_to_options[col.name], :id, :name, { include_blank: "(none)" }, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
         <% elsif col.type == :integer && col_assoc.nil? %>
           <%= keep_f.number_field col.name.to_sym, class: "w-32 px-2 py-1 border border-gray-300 rounded text-gray-900 focus:border-blue-500 focus:ring-blue-200" %>
         <% elsif col.type == :text %>

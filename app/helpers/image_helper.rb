@@ -1,4 +1,11 @@
 module ImageHelper
+  def portrait_image?(file)
+    blob = file.try(:blob) || file
+    return false unless blob.try(:image?)
+
+    blob.metadata[:height].to_i > blob.metadata[:width].to_i
+  end
+
   def main_image_url(record) # leaving this until api is refactored
     return nil unless record.present?
 

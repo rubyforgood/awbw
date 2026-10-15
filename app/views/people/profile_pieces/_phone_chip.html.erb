@@ -1,0 +1,4 @@
+<% phone = person.profile_phone %>
+<span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
+  <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:people, intensity: 600) %>"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
+</span>

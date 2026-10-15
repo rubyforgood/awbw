@@ -30,4 +30,8 @@ class FmAddress < ApplicationRecord
     "RolodexID" => "fm_rolodexes",
     "OrgID" => "fm_organizations"
   }.freeze
+
+  def name
+    [ fm_value("AddrsLine1"), fm_value("AddrsCity") ].compact.join(", ").presence || fm_id
+  end
 end

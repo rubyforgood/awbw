@@ -340,6 +340,32 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(response.body).to include("Website url")
         expect(response.body).not_to include("Profile show age ranges")
       end
+
+      it "leaves a blank status blank instead of preselecting one" do
+        keep.update_column(:organization_status_id, nil)
+
+        get dedupe_preview_organizations_path(
+          organization_to_keep_id: keep.id,
+          organization_to_delete_id: delete_rec.id
+        )
+
+        status_select = Nokogiri::HTML(response.body).at_css("select[name$='[organization_status_id]']")
+        expect(status_select.at_css("option[selected]")).to be_nil
+        expect(status_select.at_css("option[value='']").text).to eq("(none)")
+      end
+    end
+
+    describe "PATCH dedupe_update_keep" do
+      it "autosaves a keeper that has no status" do
+        keep = create(:organization, name: "Keep Org")
+        keep.update_column(:organization_status_id, nil)
+
+        patch dedupe_update_keep_organizations_path,
+              params: { id: keep.id, organization_to_keep: { name: "Renamed Org" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(keep.reload.name).to eq("Renamed Org")
+      end
     end
 
     describe "POST dedupe_perform" do
@@ -401,6 +427,22 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.reload.filemaker_code).to eq("FM-100, FM-273")
       end
 
+      it "merges when neither organization has a status" do
+        keep.update_column(:organization_status_id, nil)
+        delete_rec.update_column(:organization_status_id, nil)
+
+        expect {
+          post dedupe_perform_organizations_path, params: {
+            organization_to_delete_id: delete_rec.id,
+            organization_to_keep_id: keep.id,
+            organization_to_keep: { name: "Canonical Org", organization_status_id: "" }
+          }
+        }.to change(Organization, :count).by(-1)
+
+        expect(response).to redirect_to(organizations_path)
+        expect(keep.reload).to have_attributes(name: "Canonical Org", organization_status_id: nil)
+      end
+
       it "reassigns the duplicate's invoices instead of blocking the merge" do
         invoice = create(:invoice, invoicee: delete_rec)
 
@@ -413,6 +455,64 @@ RSpec.describe "Dedupable concern", type: :request do
         follow_redirect!
         expect(response.body).to include("merged successfully")
         expect(invoice.reload.invoicee).to eq(keep)
+      end
+
+      describe "addresses" do
+        def org_address(organization, primary: false, **overrides)
+          attrs = {
+            street_address: "1 Main St", city: "Springfield", state: "CA", zip_code: "90001",
+            country: "USA", county: "LA", district: nil, address_type: "work", locality: "LA City"
+          }.merge(overrides)
+          create(:address, addressable: organization, primary: primary, **attrs)
+        end
+
+        def merge!
+          post dedupe_perform_organizations_path, params: {
+            organization_to_delete_id: delete_rec.id,
+            organization_to_keep_id: keep.id
+          }
+        end
+
+        it "folds identical addresses into one on the keeper" do
+          org_address(keep)
+          org_address(delete_rec)
+
+          merge!
+
+          follow_redirect!
+          expect(response.body).to include("merged successfully")
+          expect(keep.reload.addresses.count).to eq(1)
+        end
+
+        it "keeps addresses that differ in any detail" do
+          org_address(keep)
+          org_address(delete_rec, street_address: "2 Other St")
+
+          merge!
+
+          expect(keep.reload.addresses.count).to eq(2)
+        end
+
+        it "keeps the keeper's primary and demotes the incoming address" do
+          keep_address = org_address(keep, primary: true)
+          org_address(delete_rec, street_address: "2 Other St", primary: true)
+
+          merge!
+
+          primaries = keep.reload.addresses.where(primary: true)
+          expect(primaries.pluck(:id)).to eq([ keep_address.id ])
+        end
+
+        it "repoints an affiliation's organization address onto the surviving address" do
+          keep_address = org_address(keep)
+          dupe_address = org_address(delete_rec)
+          affiliation = create(:affiliation, organization: delete_rec, organization_address: dupe_address)
+
+          merge!
+
+          expect(affiliation.reload.organization_id).to eq(keep.id)
+          expect(affiliation.organization_address_id).to eq(keep_address.id)
+        end
       end
     end
   end
@@ -997,6 +1097,122 @@ RSpec.describe "Dedupable concern", type: :request do
             event_registration_to_keep_id: keep.id
           }
         }.not_to change(EventRegistration, :count)
+      end
+    end
+  end
+
+  # ============================================================
+  # USERS — merging two logins of one person
+  # ============================================================
+
+  describe "Users" do
+    let(:person) { create(:person, first_name: "Jane", last_name: "Doe", user: nil) }
+    let!(:keep) { create(:user, person: person, email: "jane.keep@example.com", updated_at: 1.hour.ago) }
+    let!(:delete_rec) { create(:user, person: person, email: "jane.old@example.com", updated_at: 1.week.ago) }
+
+    before { sign_in admin }
+
+    describe "GET dedupe_index" do
+      it "lists logins that share a person, labelled by email" do
+        get dedupe_index_users_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Same person", "jane.keep@example.com", "jane.old@example.com")
+      end
+
+      it "searches every login and shows a login's status in the suggestions" do
+        delete_rec.update_columns(confirmed_at: nil)
+
+        get dedupe_index_users_path
+
+        expect(response.body).to include('data-remote-select-model-value="user_any_status"')
+        expect(response.body).to include("Unconfirmed")
+      end
+
+      it "denies access to a regular user" do
+        sign_in regular_user
+
+        get dedupe_index_users_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET dedupe_preview" do
+      it "compares the logins and warns which email stops signing in" do
+        get dedupe_preview_users_path(user_to_keep_id: keep.id, user_to_delete_id: delete_rec.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Last sign in at", "Sign in count")
+        expect(response.body).to include("Signing in as jane.old@example.com stops working")
+        expect(response.body).not_to include("Merge blocked")
+      end
+
+      it "blocks merging logins that belong to different people" do
+        delete_rec.update!(person: create(:person, first_name: "Other", last_name: "Human", user: nil))
+
+        get dedupe_preview_users_path(user_to_keep_id: keep.id, user_to_delete_id: delete_rec.id)
+
+        expect(response.body).to include("Merge blocked", "Merge the people first")
+      end
+
+      it "blocks merging away the admin's own login" do
+        get dedupe_preview_users_path(user_to_keep_id: keep.id, user_to_delete_id: admin.id)
+
+        expect(response.body).to include("Merge blocked", "can&#39;t merge away your own login")
+      end
+    end
+
+    describe "PATCH dedupe_update_keep" do
+      it "ignores columns the preview doesn't offer for editing" do
+        patch dedupe_update_keep_users_path, params: { id: keep.id, user_to_keep: { notes: "Merged", super_user: "1" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(keep.reload.notes).to eq("Merged")
+        expect(keep.super_user).to be(false)
+      end
+    end
+
+    describe "POST dedupe_perform" do
+      it "moves the deleted login's records and history onto the keeper" do
+        bookmark = create(:bookmark, user: delete_rec)
+        grant = create(:grant, created_by: delete_rec)
+        event = create(:ahoy_event, user_id: delete_rec.id)
+        version = PaperTrail::Version.create!(event: "update", item_type: "Payment", item_id: 1, whodunnit: delete_rec.id.to_s)
+
+        expect {
+          post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+        }.to change(User, :count).by(-1)
+
+        expect(response).to redirect_to(users_path)
+        expect(bookmark.reload.user_id).to eq(keep.id)
+        expect(grant.reload.created_by_id).to eq(keep.id)
+        expect(event.reload.user_id).to eq(keep.id)
+        expect(version.reload.whodunnit).to eq(keep.id.to_s)
+        expect(person.reload.user).to eq(keep)
+      end
+
+      it "hands the person to a kept login that had none" do
+        keep.update_columns(person_id: nil)
+
+        post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+
+        expect(keep.reload.person).to eq(person)
+      end
+
+      it "keeps the deleted login's password hash out of the tracked event" do
+        expect(Analytics::AhoyTracker).to receive(:track_event).with(anything, "dedupe.user", hash_including(
+          deleted_record: hash_including("encrypted_password" => "[FILTERED]", "email" => "jane.old@example.com")
+        ))
+
+        post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+      end
+
+      it "refuses to merge logins that belong to different people" do
+        delete_rec.update!(person: create(:person, user: nil))
+
+        expect {
+          post dedupe_perform_users_path, params: { user_to_delete_id: delete_rec.id, user_to_keep_id: keep.id }
+        }.not_to change(User, :count)
       end
     end
   end

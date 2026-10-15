@@ -29,6 +29,15 @@ class UserDecorator < ApplicationDecorator
     end
   end
 
+  # Why this login can't sign in — empty when it can.
+  def access_statuses
+    [ ("Inactive" if inactive?), ("Locked" if locked_at.present?), ("Unconfirmed" if confirmed_at.nil?) ].compact
+  end
+
+  def search_label_with_status
+    { id: id, label: [ full_name_with_email, access_statuses.join(", ").presence ].compact.join(" · ") }
+  end
+
   def last_logged_in
     return "never" unless last_sign_in_at
     "#{h.time_ago_in_words(last_sign_in_at)} ago"

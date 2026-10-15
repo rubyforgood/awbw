@@ -5,6 +5,14 @@ class PeopleController < ApplicationController
   # The profile's "Submitted content" sections — private to the person and admins,
   # not part of the public profile even after profile viewing opens up.
   PRIVATE_SECTIONS = %w[ workshop_ideas story_ideas workshop_variation_ideas workshop_logs monthly_reports ].freeze
+  SECTION_SHARE_FLAGS = {
+    "affiliations" => :profile_show_affiliations,
+    "workshops" => :profile_show_workshops,
+    "workshop_variations" => :profile_show_workshop_variations,
+    "stories" => :profile_show_stories,
+    "resources" => :profile_show_resources,
+    "events" => :profile_show_events_registered
+  }.freeze
 
   def index
     authorize!
@@ -60,10 +68,11 @@ class PeopleController < ApplicationController
       per_page = params[:section] == "stories" ? 8 : 9
       section = params[:section]
 
-      # Re-authorize the private sections on the narrow owner/admin rule, so a
-      # crafted ?section= frame request can't reach them once show? is widened
-      # to let non-owners view the public profile.
-      authorize! @person, to: :own_record? if PRIVATE_SECTIONS.include?(section)
+      # Re-authorize the private sections, and any section the person hid from
+      # public view, on the narrow owner/admin rule, so a crafted ?section= frame
+      # request can't reach them once show? lets non-owners view the profile.
+      share_flag = SECTION_SHARE_FLAGS[section]
+      authorize! @person, to: :own_record? if PRIVATE_SECTIONS.include?(section) || (share_flag && !@person.public_send(share_flag))
 
       case section
       when "workshops"
@@ -405,7 +414,7 @@ class PeopleController < ApplicationController
         @keeper_primary_age_category_id = keep.age_range_categorizable_items.find_by(is_primary: true)&.category_id ||
           delete.age_range_categorizable_items.find_by(is_primary: true)&.category_id
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
-        @keeper_primary_address_signature = PersonServices::ReconcileAddresses.primary_signature(keep, delete)
+        @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
         @adopted_login_id = delete.user&.id unless keep.user
       },
@@ -431,7 +440,7 @@ class PeopleController < ApplicationController
           primary_age_category_id: @keeper_primary_age_category_id).call
         PersonServices::ReconcileDefaultPayCustomer.new(keep,
           preferred_customer_id: @keeper_default_pay_customer_id).call
-        PersonServices::ReconcileAddresses.new(keep,
+        AddressDeduper.new(keep,
           primary_signature: @keeper_primary_address_signature).call
         PersonServices::ReconcileContactMethods.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call

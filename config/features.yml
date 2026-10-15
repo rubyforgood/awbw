@@ -27,6 +27,19 @@
 
 # ── 2026-10 ─────────────────────────────────────────────────────────────────
 
+- name: "Choose the default W-9 and training handouts from the admin"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-10-14
+  summary: >-
+    The certificate settings page is now "Resource roles": besides certificate
+    artwork, admins pick the default W-9 and training handouts new events start
+    with. Renaming a connected Resource no longer breaks the link.
+  action_path: "/admin/resource_roles"
+  pr_number: 2679
+  pro_tips:
+    - "A slot marked \"Auto-matched by title\" still works, but connect it so a rename can't unlink it."
+
 - name: "Certificate of completion settings"
   area: events
   display_status: admin_facing
@@ -36,7 +49,7 @@
     facilitator-training, on-demand, CE, and other-events certificates, plus the
     facilitator-training and CE signature strips. Upload each as a Resource, then
     connect it here.
-  action_path: "/admin/certificate_settings"
+  action_path: "/admin/resource_roles"
   pro_tips:
     - "Leave a slot empty to use the built-in design for that certificate type."
     - "The facilitator-training signature shows on live training certificates only — never on-demand or other events."
@@ -4261,3 +4274,280 @@
     the archive record links back to the affiliation.
   pro_tips:
     - "An affiliation's code is usually its program's FileMaker project ID (like P2775), and occasionally a personnel ID (like PS9999)."
+
+- name: "FileMaker codes on payments, workshops, and resources"
+  area: content
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2656
+  summary: >-
+    The payment, workshop, and resource editors now show each record's FileMaker
+    code so admins can see and fix it, the same way people and organizations do.
+  pro_tips:
+    - "Separate several codes with commas — a record can answer to more than one."
+    - "Each code links to its FileMaker archive record, and that record links back to the payment or workshop."
+
+- name: "FileMaker rolodex records grouped by topic"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2665
+  action_path: "/fm_archives?table=rolodexes"
+  summary: >-
+    A FileMaker rolodex record now shows its fields in labeled sections —
+    identity and email, phones and addresses, organization with job and
+    facilitator affiliations, sector and age group, and more — with the most
+    useful details first.
+  pro_tips:
+    - "FileMaker's calculated and summary fields sit at the bottom under Other fields."
+    - "The Phones & addresses section lists every phone number and address on file for the person, with the primary ones first and tagged."
+    - "A struck-through ID points at a FileMaker record the archive doesn't have — hover it to confirm."
+    - "Blank fields are left out of the cards. The blue section at the bottom still lists every field, grayed out when blank, plus every table that links to the person."
+
+- name: "Tall story images show in full"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2650
+  action_path: "/story_share"
+  summary: >-
+    Portrait (tall) photos and artwork across Story Share now show in full
+    instead of being cropped, framed by a soft blurred copy of the image.
+  pro_tips:
+    - "Wide images still fill their space edge to edge, as before."
+    - "This covers the carousels, the story cards on the home and browse pages, the related stories on each story page, and the image carousel on each story."
+    - "Cards in the home page topic sections now all stay the same size, whatever the shape of the image."
+
+- name: "FileMaker archive records show their names"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2664
+  action_path: "/fm_archives"
+  summary: >-
+    FileMaker archive lists and record pages now show each record's name — a
+    person, organization, event title, or similar — instead of only its ID.
+  pro_tips:
+    - "Each table words its names its own way, so a person's payment, registration, and volunteer shift never look alike, and an art sale reads like \"After the Rain — purchased for $250\"."
+    - "Link rows with no name of their own, like committee members, name the FileMaker IDs they connect."
+    - "An ID field that points at another archive record, like a rolodex OrgID, reads like the phone and address rows: the ID sits beside the field name and the record's name links to it. A struck-through ID means the archive has no such record."
+    - "A payment's RefID now links to the event or funding it was for."
+
+- name: "Organization merges tidy up duplicate addresses"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2636
+  action_path: "/organizations/dedupe_index"
+  summary: >-
+    Merging two organizations now folds identical addresses into one instead of
+    leaving the kept organization with duplicates, and keeps a single primary.
+  description: >-
+    This works the same way as merging people. When two organizations share the
+    same address, the merge keeps just one copy and moves anything pointing at the
+    duplicate (like a person's affiliation address or an invoice's bill-to address)
+    onto the survivor. The copy it keeps is the one still in use — an active
+    address always wins over one marked inactive — and any detail only the other
+    copy had, like a phone number, is filled in rather than lost. It also settles
+    a single primary: the kept organization's own if it had one, otherwise the
+    other organization's. Addresses that genuinely differ are all kept.
+
+- name: "Merge duplicate logins"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-13
+  action_path: "/users/dedupe_index"
+  pr_number: 2662
+  summary: >-
+    Admins can now merge two logins into one. The deduper lists people who have
+    more than one login, such as after a person merge, and suggests keeping one
+    that can still sign in.
+  description: >-
+    Reach it from the Dedupe link on the Users page or the admin home. The
+    preview shows both logins side by side — email, admin access, confirmation,
+    and sign-in history — plus everything that moves to the kept login: its
+    bookmarks, activity history, and the records it created or last edited. The
+    other login is deleted, so its email no longer signs in. It can't be undone.
+  pro_tips:
+    - "Use Swap to keep the other email as the login."
+    - "The search finds every login, including unconfirmed, locked, and inactive ones, and labels each with its status."
+    - "Logins of two different people can't be merged. Merge the people first."
+    - "You can't merge away the login you're signed in with."
+
+- name: "Link every ID in a FileMaker field that lists several"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-13
+  pr_number: 2666
+  action_path: "/fm_archives"
+  summary: >-
+    When a FileMaker archive field holds several IDs — like an activity sent to
+    many people, or a group's member list — each ID now links to its own record
+    instead of the whole list showing as not found.
+  pro_tips:
+    - "Long lists show the first 10; click \"Show more\" for the rest."
+    - "A struck-through ID in the list means the archive has no record for it."
+
+- name: "Story images share one standard shape"
+  area: stories
+  display_status: user_facing
+  released_on: 2026-10-12
+  pr_number: 2654
+  action_path: "/story_share"
+  summary: >-
+    Story Share cards and images now use one standard 3:2 shape, and the
+    image upload on stories and story ideas says which photos look best.
+  pro_tips:
+    - "For the best fit, upload landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. A recent phone photo taken sideways works well."
+    - "Wide banners at the top of the home and browse pages trim a little off the top and bottom, so keep the main subject near the center."
+    - "Tall photos and artwork still show in full on a blurred background."
+
+- name: "Ideal image sizes for Story Share"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-13
+  pr_number: 2654
+  action_path: "/story_share"
+  summary: >-
+    A guide to the shape each Story Share spot uses, and the image size that
+    looks best everywhere: a landscape 3:2 photo, ideally 2400 × 1600 pixels.
+  pro_tips:
+    - "Upload 3:2 landscape photos, ideally 2400 × 1600 pixels and at least 1800 × 1200. Anything bigger is fine."
+    - "Keep the main subject near the center. Banners trim the top and bottom, and the tall tiles trim the sides."
+    - "Tall photos and artwork show in full on a blurred background in every spot except the home page header."
+  description: |
+    <p>Every spot uses a story's primary image, except the story page carousel,
+    which shows the primary image followed by the gallery images. A story with no
+    primary image uses its first gallery image.</p>
+    <table>
+      <thead>
+        <tr><th>Spot</th><th>Shape</th><th>What shows from a 3:2 photo</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Home page featured carousel</td>
+          <td>2:1 (4:3 on phones)</td>
+          <td>A band through the middle: a little of the top and bottom is trimmed</td>
+        </tr>
+        <tr>
+          <td>Browse carousel and a topic's lead image</td>
+          <td>2:1 (4:3 on phones)</td>
+          <td>A band through the middle: a little of the top and bottom is trimmed</td>
+        </tr>
+        <tr>
+          <td>Story cards (browse grid and list), home page topic cards, related stories</td>
+          <td>3:2</td>
+          <td>The whole photo</td>
+        </tr>
+        <tr>
+          <td>Story page image carousel</td>
+          <td>3:2</td>
+          <td>The whole photo</td>
+        </tr>
+        <tr>
+          <td>"What others are reading" tiles</td>
+          <td>3:4 (tall)</td>
+          <td>The middle half: the sides are trimmed, so tall artwork fits best here</td>
+        </tr>
+        <tr>
+          <td>Home page header background</td>
+          <td>Fills the header</td>
+          <td>The first carousel story's image, behind a dark wash: any landscape photo works</td>
+        </tr>
+      </tbody>
+    </table>
+
+- name: "People search and filters respect what each profile hides"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-14
+  pr_number: 2678
+  action_path: "/people"
+  summary: >-
+    When someone who isn't an admin searches or filters the people list, it only
+    matches details each person chooses to show on their profile, so a match
+    can't reveal something they hid. Admins still search and filter on everything.
+  description: >-
+    The people list only shows non-admins people with a searchable profile who are
+    active facilitators. Within that list, the contact info search, the sector,
+    age range, and organization filters, and the Primary sector, Primary age range,
+    and Affiliation(s) columns all follow each person's profile settings. The
+    admin-only filters (role, facilitator status, membership status, staff tags,
+    and topic subscriptions) don't appear for non-admins and are ignored if added
+    to the link by hand.
+  pro_tips:
+    - "Contact info search matches a person's email or phone only when their profile shows it, and never their secondary email, legal name, address, or an inactive phone."
+    - "Names follow the display preference: someone shown as \"First L.\" can't be found by their last name."
+    - "Sector, age range, and organization filters skip people who hid their sectors, age ranges, or affiliations, and those columns stay blank for them."
+    - "To check what a non-admin sees, compare against an admin search: admins still match hidden details."
+
+- name: "See your own hidden profile details"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-14
+  pr_number: 2672
+  action_path: "/people"
+  summary: >-
+    Details you turn off in your profile's sharing settings stay hidden from
+    other people on the people list and your profile. You still see them
+    yourself in a collapsible "Hidden from profile" section on your profile.
+  pro_tips:
+    - "On the people list, an eye-slash icon marks your own details that only you and admins can see."
+    - "Use \"Change sharing settings\" in the Hidden from profile section to turn something back on."
+    - "Submitted content (your ideas, workshop logs, and monthly reports) is always private to you and admins, so it has no sharing setting."
+    - "Admins see the same Hidden from profile section on anyone's profile."
+
+- name: "Clearer contact us page"
+  area: communications
+  display_status: public_facing
+  released_on: 2026-10-14
+  pr_number: 2683
+  action_path: "/contact_us"
+  summary: >-
+    The contact us page leads with the message form, and the email, phone, and
+    social links sit in a side panel. When you're logged in, the form shows who
+    it's from and puts your cursor right where you start typing.
+  pro_tips:
+    - "Logged in, your name and reply email fill in for you under \"From\", so you only write a subject and message."
+    - "Links that pre-fill a subject (like an affiliation change request) drop you straight into the message box."
+
+- name: "Duplicate registration emails"
+  area: registration
+  display_status: user_facing
+  released_on: 2026-10-14
+  pr_number: 2684
+  summary: >-
+    When someone who is already registered for an event submits the registration
+    form again, they get a "DUPLICATE" confirmation email and programs gets a
+    "[FYI] DUPLICATE" email. Both list anything the new submission changed, such
+    as a new scholarship request.
+  pro_tips:
+    - "The new answers are added to the existing registration, so the person still has just one registration."
+    - "Changes that get called out: a new scholarship, CE credit, W-9, or invoice request, a different payment method, a change in whether someone else is paying, a newly linked organization, and any answer (name, address, sectors, and so on) that differs from their previous submission."
+    - "If the resubmission adds a scholarship request, the subject ends with \"(scholarship now requested)\"."
+    - "Filter the Communications page by \"Admin FYI: duplicate event registration\" or \"Duplicate event registration received\" to find these emails."
+
+- name: "Flag people with more than one user account"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2661
+  summary: >-
+    A person's profile and edit pages now warn admins when the person has more
+    than one user account, link to each one, and offer to merge the extras into
+    the suggested keeper.
+  pro_tips:
+    - "The extra account is usually left over from a merge."
+    - "Preview merge opens the logins deduper with the suggested keeper picked. Its back link and the finished merge return you to the person."
+    - "The account marked \"shown on profile\" is the one used most recently."
+
+- name: "See how many taggings each category has"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-14
+  action_path: "/categories"
+  summary: >-
+    The Taggings button on each row of the Categories page now shows how many
+    records use that category, and the name search comes first in the filters.
+  pro_tips:
+    - "A category showing Taggings (0) isn't used anywhere yet."

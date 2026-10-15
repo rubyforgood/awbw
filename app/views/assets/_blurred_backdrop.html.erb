@@ -1,0 +1,4 @@
+<%# Fills a positioned box with a blurred, dimmed copy of the image so a contained portrait image isn't framed by empty bars. %>
+<%= image_tag file.try(:variable?) ? file.variant(:thumbnail) : file,
+              alt: "", aria: { hidden: true }, loading: "lazy",
+              class: "absolute inset-0 h-full w-full scale-110 object-cover blur-2xl brightness-75" %>

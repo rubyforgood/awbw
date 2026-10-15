@@ -1,0 +1,31 @@
+<dl class="divide-y divide-gray-200">
+  <% fields.each do |key, value| %>
+    <% table = record.reference_table(key) %>
+    <% targets = table ? fm_archive_records(value, table) : [] %>
+    <div class="grid grid-cols-5 gap-4 py-3">
+      <dt class="col-span-2 text-sm font-medium break-words text-gray-500">
+        <%= key %>
+        <% if targets.one? %>
+          <%= fm_archive_id_tag(targets.first) %>
+        <% elsif targets.many? %>
+          <span class="ml-1 text-xs font-normal text-gray-400">(<%= targets.size %>)</span>
+        <% end %>
+      </dt>
+      <dd class="col-span-3 text-sm break-words text-gray-900">
+        <% if targets.one? %>
+          <%= fm_archive_summary_tag(targets.first) %>
+        <% elsif targets.many? %>
+          <%= render "reference_list", records: targets.first(FilemakerHelper::FM_REFERENCES_SHOWN) %>
+          <% if (hidden = targets.drop(FilemakerHelper::FM_REFERENCES_SHOWN)).any? %>
+            <details class="mt-1">
+              <summary class="cursor-pointer text-gray-500">Show <%= hidden.size %> more</summary>
+              <%= render "reference_list", records: hidden %>
+            </details>
+          <% end %>
+        <% else %>
+          <%= value %>
+        <% end %>
+      </dd>
+    </div>
+  <% end %>
+</dl>

@@ -26,9 +26,9 @@ drive the archive pages' links.
 | `people.filemaker_code` | `fm_rolodexes` | `ID`, e.g. `00006` | `filemaker_code_links` on person edit + admin details |
 | `organizations.filemaker_code` | `fm_projects`, then `fm_organizations` | `ProjectID`, e.g. `P2775`; `OrgID`, e.g. `ORG07206` | `filemaker_code_links` on org form; `filemaker_project_links` / `filemaker_organization_links` on org edit |
 | `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels` | `ProjectID`, e.g. `P2775`; rarely `PrsnlRecID`, e.g. `PS9999` | `filemaker_code_links` on affiliation edit |
-| `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | dev seed (no UI link yet) |
-| `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | dev seed (no UI link yet) |
-| `resources.filemaker_code` | `fm_quotations` | `RecordID`, e.g. `Q10215` | no UI link yet |
+| `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | `filemaker_code_hint` on payment edit |
+| `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | `filemaker_code_hint` on workshop form |
+| `resources.filemaker_code` | none | `RecordID` of the source quotation, e.g. `Q10215` | resource form (editable, no archive link) |
 
 - **Organization → Project, or → Organization.** An app `Organization` is usually one
   art program site, which is a FileMaker *Project*. FileMaker's own Organization row is
@@ -47,11 +47,12 @@ drive the archive pages' links.
   never its org. One affiliation carries a real `PS` Personnel id, so Personnel stays
   as the second table. The 13 that differ from the org's code are worth a look: the
   affiliation may sit on the wrong org, or the org may be missing that code.
-- **Resource → Quotation.** In production, 116 of 128 resource codes are quotation ids
-  (`Q…`), 115 of them on Leader spotlight resources and one on a Story; 115 of the 116
-  exist in `fm_quotations` (quotes and testimonials, with a `WorkShopLeader` field).
-  Form Letters are mail-merge templates, not resources. The dev seed still leaves
-  `resources.filemaker_code` blank.
+- **Resource → none.** In production, 116 of 128 resource codes are quotation ids
+  (`Q…`), 115 of them on Leader spotlight resources and one on a Story: each spotlight's
+  body is the text of the FileMaker quotation it was built from. A resource is still its
+  own portal record, not an archive row, and quotations belong with the portal's quotes,
+  so resource codes stay editable but don't link into the archive or back. The dev seed
+  leaves `resources.filemaker_code` blank.
 
 ## Archive id patterns
 
@@ -173,6 +174,6 @@ Production, 2026-10-12: 84 records (41 organizations, 16 affiliations, 14 worksh
 
 ## Consequences
 
-A UI link for payments, workshops, or resources includes `FilemakerCoded` on the
+A UI link for a new FileMaker-coded column includes `FilemakerCoded` on the
 model and declares the archive table above (e.g. `filemaker_archived_in FmPersonnel`);
 `filemaker_code_links` reads it from there.

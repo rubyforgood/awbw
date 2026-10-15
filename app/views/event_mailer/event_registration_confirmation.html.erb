@@ -1,9 +1,18 @@
-<h1>Event registration received</h1>
+<h1><%= @duplicate ? "DUPLICATE event registration received" : "Event registration received" %></h1>
 
 <div style="margin-top: 36px; text-align: left;">
   <p>
     Hello <strong><%= @person.first_name %></strong>,
   </p>
+
+  <% if @duplicate %>
+    <p>
+      We received another registration from you for this event. Your new answers
+      were added to your existing registration, so you're still registered just once.
+    </p>
+
+    <%= render "shared/resubmission_changes", notes: @change_notes %>
+  <% end %>
 
   <p>
     This message confirms your registration for the following <%= @organization_name %> event:

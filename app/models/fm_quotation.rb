@@ -41,4 +41,9 @@ class FmQuotation < ApplicationRecord
     "ProjectID" => "fm_projects",
     "SourceID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    quote = fm_value("Quotation")&.truncate(60)
+    fm_phrase(quote && "“#{quote}”", fm_words("quote", fm_with("from", fm_value("PersonName"))))
+  end
 end

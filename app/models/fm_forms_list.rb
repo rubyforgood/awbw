@@ -21,4 +21,8 @@ class FmFormsList < ApplicationRecord
   HAS_MANY = {
     "fm_form_submissions" => { via: "FormID", label: "Form Submissions" }
   }.freeze
+
+  def name
+    fm_value("FormTitle") || fm_id
+  end
 end
