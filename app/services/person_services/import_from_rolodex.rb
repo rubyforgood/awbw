@@ -2,8 +2,10 @@ module PersonServices
   # Turns FileMaker Rolodex archive rows (FmRolodex) into people. Each row lands in
   # one outcome bucket of #results:
   #   * created          — new Person: the fields FmRolodex::PORTAL_FIELDS maps to a
-  #                        person (including its sector/age tags and the archive's own
-  #                        entry date), plus the row's primary address and phone
+  #                        person (including the sector/age tags its service areas,
+  #                        settings, life experiences and age group translate to, and
+  #                        the archive's own entry date), plus the row's addresses and
+  #                        phones
   #   * linked           — every person PersonMatcher finds for the row's name + email
   #                        (which reaches their secondary and login addresses too), or
   #                        every same-name person with no email when the row has none,
@@ -27,21 +29,27 @@ module PersonServices
     UNKNOWN_LOCALITY = "Unknown"
     STRING_LIMIT = 255
 
-    attr_reader :results, :unmatched_tags
+    # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
+    PRIMARY_TAG_FIELDS = %w[PrimaryServiceArea PrimaryAgeGroup].freeze
+    ADDITIONAL_TAG_FIELDS = %w[OtherServiceArea Settings LifeExperiences].freeze
+
+    attr_reader :results
 
     def initialize(scope: FmRolodex.all)
       @scope = scope
       @results = OUTCOMES.index_with { [] }
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
-      @sectors_by_name = name_index(Sector.all)
-      @age_groups_by_name = name_index(Category.age_ranges)
-      @unmatched_tags = Hash.new(0)
+      @translation = TagTranslation.new
     end
 
     def call
       @scope.find_each { |rolodex| import(rolodex) }
       self
+    end
+
+    def unmatched_tags
+      @translation.unmatched
     end
 
     private
@@ -139,29 +147,27 @@ module PersonServices
       [ Date::MONTHNAMES, Date::ABBR_MONTHNAMES ].filter_map { |names| names.index { |name| name&.casecmp?(value) } }.first
     end
 
-    # The archive's service areas and age group tag the person through the same seam a
+    # The archive's who-they-serve fields tag the person through the same seam a
     # submission uses — additive, since the import is never the whole picture.
     def tag_service_areas(person, data)
-      SubmissionTagging.apply(person:, organizations: [], tag_with: :tag_sectors,
-                              primary_ids: tag_ids(data["PrimaryServiceArea"], @sectors_by_name).first(1),
-                              additional_ids: tag_ids(data["OtherServiceArea"], @sectors_by_name))
-      SubmissionTagging.apply(person:, organizations: [], tag_with: :tag_age_groups,
-                              primary_ids: tag_ids(data["PrimaryAgeGroup"], @age_groups_by_name))
-    end
+      primary = translate(data, PRIMARY_TAG_FIELDS)
+      additional = translate(data, ADDITIONAL_TAG_FIELDS)
 
-    # One field can list several areas. Each resolves by name, then by the portal's
-    # qualified form of it ("Child Abuse" → "Child Abuse/Neglect"); a name nothing
-    # answers to is counted in #unmatched_tags rather than guessed at.
-    def tag_ids(value, index)
-      value.to_s.split(/[,;]/).map { |name| name.strip.downcase }.reject(&:empty?).uniq.filter_map do |name|
-        id = index[name] || index.find { |stored, _| stored.start_with?("#{name}/") }&.last
-        @unmatched_tags[name] += 1 unless id
-        id
+      { tag_sectors: :sector_ids, tag_age_groups: :age_group_ids }.each do |tag_with, kind|
+        primary_ids, extra_ids = split_primary(primary.flat_map(&kind).uniq)
+        SubmissionTagging.apply(person:, organizations: [], tag_with:, primary_ids:,
+                                additional_ids: extra_ids + additional.flat_map(&kind))
       end
     end
 
-    def name_index(scope)
-      scope.pluck(:name, :id).to_h { |name, id| [ name.to_s.strip.downcase, id ] }
+    def translate(data, fields)
+      fields.map { |field| @translation.resolve(data[field]) }
+    end
+
+    # A person carries one primary of each kind, so a primary answer naming several —
+    # "Families" is every age range — lands them all as additional rather than picking one.
+    def split_primary(ids)
+      ids.one? ? [ ids, [] ] : [ [], ids ]
     end
 
     # Every address the row answers to, not just the one it names as primary —

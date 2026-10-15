@@ -28,7 +28,7 @@ namespace :fm do
     end
 
     if import.unmatched_tags.any?
-      puts "\nService areas and age groups no sector or category answers to:"
+      puts "\nTerms no sector, age group or recorded translation answers to:"
       import.unmatched_tags.sort_by { |name, count| [ -count, name ] }.each { |name, count| puts "  #{count.to_s.rjust(5)}  #{name}" }
     end
 
