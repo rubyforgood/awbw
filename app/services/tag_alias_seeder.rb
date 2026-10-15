@@ -104,8 +104,10 @@ class TagAliasSeeder
     "Veterans & military" => "Military/Veterans"
   }.freeze
 
-  # A term can name two age groups, so these are lists.
+  # A term can name several age groups, so these are lists: serving families is serving
+  # every age, and a person has no population tag to carry "Families" on its own.
   FILEMAKER_AGE_GROUPS = {
+    "Families" => %w[Children Teens Adults Elders],
     "C & T" => %w[Children Teens],
     "Children & Teens" => %w[Children Teens],
     "Adults & Children" => %w[Adults Children],
@@ -180,18 +182,20 @@ class TagAliasSeeder
     @created += 1
   end
 
+  # Published only, the same vocabulary TagTranslation resolves against, so a term aimed at
+  # a retired tag is reported rather than recorded as an alias that never resolves.
   def sector_ids
-    @sector_ids ||= Sector.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
+    @sector_ids ||= Sector.published.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
   end
 
   def age_group_ids
-    @age_group_ids ||= Category.age_ranges.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
+    @age_group_ids ||= Category.age_ranges.published.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
   end
 
   def report
     return if @quiet
 
     puts "  #{@created} tag aliases added (#{TagAlias.count} recorded)"
-    puts "  no tag named: #{@missing.uniq.sort.join(', ')} — seed the sectors and age ranges first" if @missing.any?
+    puts "  no published tag named: #{@missing.uniq.sort.join(', ')} — seed the sectors and age ranges first" if @missing.any?
   end
 end

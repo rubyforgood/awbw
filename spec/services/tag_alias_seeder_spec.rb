@@ -6,8 +6,8 @@ RSpec.describe TagAliasSeeder do
   let!(:age_range_type) { create(:category_type, name: "AgeRange", published: true) }
 
   before do
-    Sector::SECTOR_TYPES.each { |name| create(:sector, name: name) }
-    %w[Children Teens Adults Elders].each { |name| create(:category, category_type: age_range_type, name: name) }
+    Sector::SECTOR_TYPES.each { |name| create(:sector, :published, name: name) }
+    %w[Children Teens Adults Elders].each { |name| create(:category, :published, category_type: age_range_type, name: name) }
   end
 
   it "records every term the tables name, pointing at the tag it resolves to" do
@@ -24,6 +24,21 @@ RSpec.describe TagAliasSeeder do
     described_class.call(quiet: true)
 
     expect(TagAlias.where(name: "C & T").map { |row| row.aliasable.name }).to contain_exactly("Children", "Teens")
+  end
+
+  it "reads serving families as serving every age" do
+    described_class.call(quiet: true)
+
+    expect(TagAlias.where(name: "Families").map { |row| row.aliasable.name })
+      .to contain_exactly("Children", "Teens", "Adults", "Elders")
+  end
+
+  it "reports a term aimed at a retired tag instead of recording an alias that can't resolve" do
+    Sector.find_by(name: "Education").update!(published: false)
+
+    described_class.call(quiet: true)
+
+    expect(TagAlias.find_by(name: "Student Services")).to be_nil
   end
 
   it "labels each term with the system it came from" do

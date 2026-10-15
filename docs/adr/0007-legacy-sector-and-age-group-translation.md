@@ -170,7 +170,8 @@ military → Military/Veterans.
 | FileMaker `Adults`; Story Share `18+`, `Adult` | AgeRange **Adults** (18+) |
 | FileMaker `Elders` | AgeRange **Elders** (65+) |
 | FileMaker `C & T` | AgeRange **Children** *and* **Teens** |
-| FileMaker `Families`; Story Share `Family windows` | StoryPopulation **Families** |
+| FileMaker `Families` | AgeRange **Children**, **Teens**, **Adults** *and* **Elders** — serving families is serving every age |
+| Story Share `Family windows` | StoryPopulation **Families** (a story can carry a population; a person can't) |
 | Story Share `Mixed-age groups`, `Combined` | nothing — says the group was mixed, not which ages |
 
 `3-5` and `6-12` were folded into `Children` in the portal, and the `StoryPopulation`
@@ -181,6 +182,12 @@ twins carry a trailing underscore so the clean age names stay free (see `db/seed
 **`TagAlias` rows, not a constant.** Each row names one legacy term, the tag it resolves
 to (polymorphic — a `Sector` or an `AgeRange` `Category`), and the system the term came
 from. `TagTranslation` reads a tag's own name first, then the aliases.
+
+- **Only published tags resolve.** A retired tag is unpublished rather than deleted so its
+  old taggings survive; resolving to one would hand it to hundreds of new records. A term
+  that only matches a retired tag reads as unresolved, which puts it in front of someone.
+  The live `sectors` table holds more than this catalogue — `Poverty` is one such row, and
+  634 archive rows name it, so it needs a decision rather than a silent revival.
 
 - **A term can name two tags**, so a row per pair and a list on the way out (`C & T`).
 - **Unique on (term, tag)**, with the column's case-insensitive collation, so one spelling
@@ -213,10 +220,12 @@ Counted across `fm_rolodexes` (October 2026): `LifeExperiences` 55 distinct valu
   It is recorded as ignored rather than translated: `Sector::OTHER_SECTOR_NAME` is offered
   for additional sectors but never as a primary, so an import can't honour it as one, and
   "they picked Other" says nothing a tag could carry.
-- **Still needing a decision** — what the seeded terms leave unresolved: `Poverty` (634),
-  `Elder Abuse` (178), `People Who Have Experienced War` (97), `Children's Services` (8),
-  and a long tail of one-off free text (145 `Settings` values, 63 `OtherServiceArea`
-  values). Each is a judgment call for AWBW; the unmatched report is the queue.
+- **Still needing a decision** — what the seeded terms leave unresolved: `Poverty` (634,
+  which only matches a retired sector), `Elder Abuse` (178), `People Who Have Experienced
+  War` (97), `Children's Services` (8), and a long tail of one-off free text (145
+  `Settings` values, 63 `OtherServiceArea` values, nearly all a single mention). Each is a
+  judgment call for AWBW; the unmatched report is the queue. The seeded terms resolve 80%
+  of the archive's 17,757 mentions, and the deliberate non-translations another 16%.
 - **Seen in the data, no mapping decided:** Children's Services, Intellectual Disabilities,
   Maternal wellness and postpartum support, Political Asylum, Survivors with Disabilities,
   Arts Education & Community Art Making, and the rest of the one-off free text. Deliberately
@@ -225,9 +234,9 @@ Counted across `fm_rolodexes` (October 2026): `LifeExperiences` 55 distinct valu
 ## Consequences
 
 - **Populations are not age ranges.** `AgeGroupTaggable` only tags `AgeRange` categories, so
-  a person whose FileMaker age group is `Families` gets no age tag — `Families` is a story
-  population, and people have no population tagging. An importer reports it rather than
-  forcing it into an age range.
+  a person has no population tag to carry `Families`. Rather than drop it, a person whose
+  FileMaker age group is `Families` is tagged with every age range — which is what serving
+  families means. A story keeps its `StoryPopulation` tag.
 - **One source value can produce two tags** (`C & T`), so a translator returns a list, not a
   value.
 - **Unmapped values need a report, not a fallback.** `PersonServices::ImportFromRolodex`

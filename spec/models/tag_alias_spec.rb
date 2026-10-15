@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe TagAlias, type: :model do
-  let(:sector) { create(:sector, name: "Domestic Violence") }
+  let(:sector) { create(:sector, :published, name: "Domestic Violence") }
 
   it "is valid when it names a tag" do
     expect(build(:tag_alias, aliasable: sector)).to be_valid
@@ -26,7 +26,7 @@ RSpec.describe TagAlias, type: :model do
   end
 
   it "lets two tags share a term, for a term that names both" do
-    other = create(:sector, name: "Education")
+    other = create(:sector, :published, name: "Education")
     create(:tag_alias, name: "C & T", aliasable: sector)
 
     expect(build(:tag_alias, name: "C & T", aliasable: other)).to be_valid

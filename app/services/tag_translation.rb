@@ -3,6 +3,11 @@
 # the portal's earlier sector names. A term resolves by a tag's own name or by any
 # TagAlias recorded for it (ADR-0007), and one term can name several tags.
 #
+# Only **published** tags resolve. A retired tag is unpublished rather than deleted, so its
+# old taggings survive; matching it here would let an import hand it to hundreds more
+# records. An archive term that only matches a retired tag reads as unresolved, which puts
+# it in front of someone instead of quietly reviving the tag.
+#
 # Built once and reused — it reads the whole sector and age-group vocabulary up front, so
 # a 39,000-row import doesn't query per value. A term nothing answers to is counted in
 # #unmatched rather than guessed at — unless it's recorded as ignored, which is how a
@@ -18,8 +23,8 @@ class TagTranslation
   attr_reader :unmatched
 
   def initialize
-    @sectors = vocabulary(Sector.all)
-    @age_groups = vocabulary(Category.age_ranges)
+    @sectors = vocabulary(Sector.published)
+    @age_groups = vocabulary(Category.age_ranges.published)
     @ignored = TagAlias.ignored.pluck(:name).map { |name| key(name) }.to_set
     @unmatched = Hash.new(0)
   end

@@ -3,11 +3,11 @@
 require "rails_helper"
 
 RSpec.describe TagTranslation do
-  let!(:domestic_violence) { create(:sector, name: "Domestic Violence") }
-  let!(:education) { create(:sector, name: "Education") }
+  let!(:domestic_violence) { create(:sector, :published, name: "Domestic Violence") }
+  let!(:education) { create(:sector, :published, name: "Education") }
   let!(:age_range_type) { create(:category_type, name: "AgeRange", published: true) }
-  let!(:children) { create(:category, category_type: age_range_type, name: "Children") }
-  let!(:teens) { create(:category, category_type: age_range_type, name: "Teens") }
+  let!(:children) { create(:category, :published, category_type: age_range_type, name: "Children") }
+  let!(:teens) { create(:category, :published, category_type: age_range_type, name: "Teens") }
 
   it "resolves a term by the tag's own name, whatever its case" do
     expect(described_class.new.sector_ids_for("domestic violence")).to eq([ domestic_violence.id ])
@@ -52,6 +52,16 @@ RSpec.describe TagTranslation do
 
     expect(translation.sector_ids_for("Virtually\nDomestic Violence")).to eq([ domestic_violence.id ])
     expect(translation.unmatched).to be_empty
+  end
+
+  it "leaves a retired tag out of reach, by name or by alias" do
+    retired = create(:sector, :unpublished, name: "Poverty")
+    create(:tag_alias, name: "Destitution", aliasable: retired)
+    translation = described_class.new
+
+    expect(translation.sector_ids_for("Poverty")).to be_empty
+    expect(translation.sector_ids_for("Destitution")).to be_empty
+    expect(translation.unmatched).to eq({ "poverty" => 1, "destitution" => 1 })
   end
 
   it "has nothing to say about a blank value" do
