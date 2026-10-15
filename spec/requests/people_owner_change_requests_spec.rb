@@ -63,6 +63,7 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
 
       expect(response.body).to include("field=professional_license")
       expect(response.body).to include("professional_license_id=#{license.id}")
+      expect(response.body).not_to include("Admin only")
     end
 
     it "marks a pending free-text request beside the ask-staff link" do
