@@ -79,7 +79,8 @@ module Events
 
         apply_discount_code(registration)
 
-        if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
+        if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 &&
+           registration.remaining_cost.positive? && credit_card_payment?(registration_params)
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
         else
@@ -155,9 +156,15 @@ module Events
 
     def apply_discount_code(registration)
       return unless valid_discount_code?
+      return if registration.discounted?
 
-      discount = Discount.create!(amount_cents: @event.discount_amount_cents)
-      Allocation.create!(source: discount, allocatable: registration, amount: @event.discount_amount_cents)
+      amount = [ @event.discount_amount_cents, registration.remaining_cost ].min
+      return unless amount.positive?
+
+      ActiveRecord::Base.transaction do
+        discount = Discount.create!(amount_cents: amount)
+        registration.allocations.create!(source: discount, amount: amount)
+      end
     end
 
     def valid_discount_code?

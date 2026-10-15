@@ -1024,12 +1024,12 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
     end
 
-    def post_with_code(code: nil, payment: nil)
+    def post_with_code(code: nil, payment: nil, email: "pat-#{SecureRandom.hex(4)}@example.com")
       fields = {
         essay_field.id.to_s => "this answer has enough words for validation",
         first_name_field.id.to_s => "Pat",
         last_name_field.id.to_s => "Lee",
-        email_field.id.to_s => "pat-#{SecureRandom.hex(4)}@example.com"
+        email_field.id.to_s => email
       }
       fields[payment_method_field.id.to_s] = payment if payment
 
@@ -1076,6 +1076,55 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       }.to change(Discount, :count).by(1)
 
       expect(EventRegistration.last.discount_sum).to eq(2500)
+    end
+
+    # A discount larger than the remaining cost used to raise RecordInvalid from
+    # the Allocation ("Cannot allocate more than remaining event cost"), 500ing the
+    # registration after the row was already written. It should comp the event at
+    # most, never allocate past the cost.
+    it "caps the discount at the remaining cost instead of raising" do
+      event.update!(cost_cents: 5_000, discount_amount_cents: 10_000)
+
+      expect {
+        post_with_code(code: "SAVE50", payment: "Credit card (later)")
+      }.to change(Discount, :count).by(1)
+        .and change(Allocation, :count).by(1)
+
+      registration = EventRegistration.last
+      expect(registration.discount_sum).to eq(5_000)
+      expect(registration.remaining_cost).to eq(0)
+      expect(registration).to be_paid_in_full
+      expect(response).to have_http_status(:redirect)
+    end
+
+    # One person re-submitting the form reuses their single event registration, so
+    # the code must not stack a second discount onto it.
+    it "applies the discount only once when the form is submitted twice" do
+      email = "repeat-#{SecureRandom.hex(4)}@example.com"
+
+      post_with_code(code: "SAVE50", payment: "Credit card (later)", email: email)
+      expect(EventRegistration.count).to eq(1)
+
+      expect {
+        post_with_code(code: "SAVE50", payment: "Credit card (later)", email: email)
+      }.not_to change(Discount, :count)
+
+      expect(EventRegistration.count).to eq(1)
+      expect(EventRegistration.last.discount_sum).to eq(2_500)
+    end
+
+    # A code that covers the whole cost leaves nothing to charge, so a
+    # credit-card-now registration should land on the ticket, not a $0 checkout.
+    it "skips Stripe checkout when the discount covers the whole cost" do
+      event.update!(cost_cents: 2_500, discount_amount_cents: 2_500)
+
+      post_with_code(code: "SAVE50", payment: "Credit card (now)")
+
+      registration = EventRegistration.last
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include(registration_ticket_path(registration.slug))
+      expect(registration.remaining_cost).to eq(0)
+      expect(registration.checkout_session_id).to be_nil
     end
 
     it "does not create a discount when event has no code" do
