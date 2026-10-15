@@ -1,0 +1,10 @@
+<%# locals: (person:) %>
+<% if person.user&.unconfirmed_email.present? && allowed_to?(:show_email_change?, person) %>
+  <% pending_label = capture do %>Change to <strong><%= person.user.unconfirmed_email %></strong> awaiting confirmation<% end %>
+  <%= render "shared/badge",
+        label: pending_label,
+        classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
+        icon: "fa-solid fa-triangle-exclamation text-yellow-500",
+        extra: "mt-1",
+        title: "Only the person and admins can see this pending change; it is hidden from other profile visitors." %>
+<% end %>

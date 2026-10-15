@@ -153,8 +153,9 @@ class Person < ApplicationRecord
   # both INSERT and hit the DB unique index. Collapse duplicates before validation.
   before_validation :dedupe_age_range_items
   accepts_nested_attributes_for :user, update_only: true
+  # Only a new row needs an organization; an owner's work-address pick sends just id + address.
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["organization_id"].blank? }
+    reject_if: proc { |attrs| attrs["id"].blank? && attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   # A blank row (number + kind + state + expiry all empty) is ignored rather than
   # creating an empty license.

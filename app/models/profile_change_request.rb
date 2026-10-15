@@ -7,16 +7,18 @@ class ProfileChangeRequest < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :affiliation, optional: true
 
-  FIELDS = %w[primary_email secondary_email organization_name affiliation].freeze
+  OTHER_FIELD = "other".freeze
   EMAIL_FIELDS = %w[primary_email secondary_email].freeze
+  FIELDS = [ *EMAIL_FIELDS, "organization_name", "affiliation", OTHER_FIELD ].freeze
   FIELD_LABELS = {
     "primary_email" => "Primary email",
     "secondary_email" => "Secondary email",
     "organization_name" => "Organization name",
-    "affiliation" => "Affiliation details"
+    "affiliation" => "Affiliation details",
+    OTHER_FIELD => "Profile data"
   }.freeze
   # Fields whose new value is concrete enough for "Approve" to write directly.
-  AUTO_APPLIABLE_FIELDS = %w[primary_email secondary_email organization_name].freeze
+  AUTO_APPLIABLE_FIELDS = [ *EMAIL_FIELDS, "organization_name" ].freeze
   STATUSES = %w[pending resolved declined].freeze
   RESOLUTION_METHODS = %w[approved manual].freeze
   # What an affiliation request is asking to change (stored in requested_value),
@@ -26,6 +28,7 @@ class ProfileChangeRequest < ApplicationRecord
   AFFILIATION_CHANGE_ORGANIZATION = "Organization".freeze
   AFFILIATION_CHANGE_REMOVE = "Remove this affiliation".freeze
   AFFILIATION_CHANGE_ADD = "Add a new affiliation".freeze
+  AFFILIATION_CHANGE_WORK_ADDRESS = "Work address".freeze
   AFFILIATION_CHANGE_OTHER = "Other".freeze
   AFFILIATION_CHANGE_TYPES = [
     AFFILIATION_CHANGE_TITLE,
@@ -33,16 +36,17 @@ class ProfileChangeRequest < ApplicationRecord
     AFFILIATION_CHANGE_ORGANIZATION,
     AFFILIATION_CHANGE_REMOVE,
     AFFILIATION_CHANGE_ADD,
+    AFFILIATION_CHANGE_WORK_ADDRESS,
     AFFILIATION_CHANGE_OTHER
   ].freeze
-  # Every affiliation category except "Other" carries a structured value Approve
-  # can apply directly; "Other" is free text an admin handles by hand.
-  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - [ AFFILIATION_CHANGE_OTHER ]).freeze
+  # These carry a structured value Approve can apply directly. "Work address" and
+  # "Other" are free text an admin handles by hand.
+  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - [ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ]).freeze
 
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
   validates :resolution_method, inclusion: { in: RESOLUTION_METHODS }, allow_nil: true
-  validates :requested_value, presence: true
+  validates :requested_value, presence: true, unless: :other?
   validates :requested_value, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
                               if: -> { field.in?(EMAIL_FIELDS) && requested_value.present? }
   validates :details, presence: true, if: :requires_details?
@@ -62,10 +66,16 @@ class ProfileChangeRequest < ApplicationRecord
   def pending? = status == "pending"
   def resolved? = status == "resolved"
   def declined? = status == "declined"
+  def other? = field == OTHER_FIELD
 
   def auto_appliable?
     return true if field.in?(AUTO_APPLIABLE_FIELDS)
-    field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES)
+    field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES) && !new_organization?
+  end
+
+  # An add request for an organization that isn't in the portal yet — staff create it by hand.
+  def new_organization?
+    requested_value == AFFILIATION_CHANGE_ADD && organization_id.blank? && proposed_organization_name.present?
   end
 
   def field_label
@@ -81,8 +91,12 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_DATES then proposed_dates_label
     when AFFILIATION_CHANGE_ORGANIZATION then proposed_organization_name
     when AFFILIATION_CHANGE_REMOVE then "End-date and mark inactive"
-    when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name, proposed_dates_label ].compact_blank.join(" · ")
+    when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name || new_organization_label, proposed_dates_label ].compact_blank.join(" · ")
     end
+  end
+
+  def new_organization_label
+    "#{proposed_organization_name} (not in the portal yet)" if new_organization?
   end
 
   def proposed_dates_label
@@ -113,7 +127,7 @@ class ProfileChangeRequest < ApplicationRecord
     return unless affiliation
 
     org = affiliation.organization&.name
-    [ affiliation.title.presence || Affiliation::FACILITATOR_TITLE, org ].compact.join(" @ ")
+    [ affiliation.decorate.display_title, org ].compact.join(" @ ")
   end
 
   def resolve!(method:, reviewer:, note: nil)
@@ -133,7 +147,7 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   def requires_details?
-    field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER
+    other? || (field == "affiliation" && requested_value.in?([ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ]))
   end
 
   # A category's hidden sibling inputs still post their (stale) values; drop the
@@ -146,7 +160,8 @@ class ProfileChangeRequest < ApplicationRecord
       self.proposed_start_date = nil
       self.proposed_end_date = nil
     end
-    self.proposed_organization_name = nil unless requested_value == AFFILIATION_CHANGE_ORGANIZATION
+    self.proposed_organization_name = nil unless requested_value.in?([ AFFILIATION_CHANGE_ORGANIZATION, AFFILIATION_CHANGE_ADD ])
+    self.proposed_organization_name = nil if requested_value == AFFILIATION_CHANGE_ADD && organization_id.present?
   end
 
   def affiliation_belongs_to_person
@@ -169,7 +184,7 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_ORGANIZATION
       errors.add(:proposed_organization_name, "can't be blank") if proposed_organization_name.blank?
     when AFFILIATION_CHANGE_ADD
-      errors.add(:organization_id, "must be selected") if organization_id.blank?
+      errors.add(:base, "Pick an organization, or type its name if it's not on the list") if organization_id.blank? && proposed_organization_name.blank?
       errors.add(:proposed_title, "can't be blank") if proposed_title.blank?
     end
   end

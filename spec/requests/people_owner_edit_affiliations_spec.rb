@@ -24,8 +24,9 @@ RSpec.describe "Owner view of affiliations on the person edit form", type: :requ
     expect(response.body).to include("Sunrise Center")
     expect(response.body).to include("Jan 2018 – Jun 2020")
     expect(response.body).to include("Inactive")
-    expect(response.body).to include("Request an affiliation change")
+    expect(response.body).to include("Request a change")
     expect(response.body).to include("field=affiliation")
-    expect(response.body).to include("field=organization_name")
+    expect(response.body).to include("Add an organization")
+    expect(response.body).not_to include("field=organization_name")
   end
 end

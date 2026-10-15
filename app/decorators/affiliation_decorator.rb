@@ -3,6 +3,12 @@ class AffiliationDecorator < ApplicationDecorator
     "#{person.full_name}: #{title.presence || Affiliation::FACILITATOR_TITLE} - #{organization.name}"
   end
 
+  # A blank title means a facilitator affiliation, the same default used elsewhere.
+  def display_title
+    shown = title.presence || Affiliation::FACILITATOR_TITLE
+    shown.strip == Affiliation::FACILITATOR_TITLE ? "AWBW #{Affiliation::FACILITATOR_TITLE}" : shown
+  end
+
   def status_badge
     classes, icon = case status_on
     when "Active" then [ "bg-green-50 text-green-800 border-green-300", "fa-solid fa-circle-check" ]

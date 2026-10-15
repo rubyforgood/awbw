@@ -77,6 +77,8 @@ module ProfileChangeRequests
     end
 
     def apply_affiliation_add
+      return Result.new(applied: false, message: "This organization isn't in the portal yet.") if @request.new_organization?
+
       affiliation = @request.person.affiliations.create(
         organization_id: @request.organization_id,
         title: @request.proposed_title,

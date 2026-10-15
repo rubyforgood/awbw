@@ -1,0 +1,43 @@
+<%# locals: (f:) %>
+<% person = f.object %>
+<p class="mb-3 text-sm text-gray-600">AWBW staff change your email addresses for you. You can pick each one's type.</p>
+<% pending_requests = person.profile_change_requests.pending.where(field: ProfileChangeRequest::EMAIL_FIELDS).index_by(&:field) %>
+<% emails = [
+     { field: "primary_email", label: "Primary email", address: person.user&.email || person.email,
+       type_attribute: :email_type, type_selected: person.email_type || person.user&.email_type },
+     { field: "secondary_email", label: "Secondary email", address: person.email_2,
+       type_attribute: :email_2_type, type_selected: person.email_2_type }
+   ] %>
+<div class="divide-y divide-gray-200">
+  <% emails.each do |email| %>
+    <% pending = pending_requests[email[:field]] %>
+    <div class="grid grid-cols-1 items-start gap-x-4 gap-y-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-2">
+      <div class="min-w-0">
+        <p class="text-sm font-medium text-gray-700"><%= email[:label] %></p>
+        <% if email[:address].present? %>
+          <!--email_off--><p class="font-medium break-all text-gray-900"><%= email[:address] %></p><!--email_on-->
+        <% else %>
+          <p class="text-gray-500 italic">None yet</p>
+        <% end %>
+        <%= render "people/pending_email_change_badge", person: person if email[:field] == "primary_email" %>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <%= link_to new_profile_change_request_path(person_id: person, field: email[:field]),
+                      target: "_blank", rel: "noopener",
+                      class: button_classes(:secondary_outline, size: :sm) do %>
+            <%= pending ? "See your request" : (email[:address].present? ? "Request a change" : "Add a #{email[:label].downcase}") %>
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+          <% end %>
+          <% if pending %>
+            <span class="inline-flex items-center gap-1 text-sm text-amber-800"><i class="fa-solid fa-clock"></i> Change to <%= pending.requested_value %> requested</span>
+          <% end %>
+        </div>
+      </div>
+      <% if email[:address].present? %>
+        <%= f.input email[:type_attribute], label: "Type",
+                    collection: Person::CONTACT_TYPES.compact.map { |type| [ type.to_s.humanize, type ] },
+                    selected: email[:type_selected], include_blank: true,
+                    wrapper_html: { class: "mb-0!" }, label_html: { class: "text-sm" }, input_html: { class: "w-full" } %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
