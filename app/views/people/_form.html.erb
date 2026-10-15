@@ -1,4 +1,4 @@
-<%= simple_form_for @person, html: { multipart: true, class: "space-y-8",
+<%= simple_form_for @person, html: { multipart: true, class: "space-y-4",
                                           data: { controller: "dirty-form affiliation-dates affiliation-facilitator-warning",
                                                   affiliation_dates_member_since_value: @person.member_since&.strftime("%Y-%m-%d") || "" } } do |f| %>
   <%= render 'shared/errors', resource: @person if @person.errors.any? %>
@@ -16,120 +16,102 @@
     <%= hidden_field_tag :event_registration_id, params[:event_registration_id] %>
     <%= hidden_field_tag :link_org_return_to, params[:link_org_return_to] if params[:link_org_return_to].present? %>
   <% end %>
+  <% card_class = "rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm" %>
+  <% heading_class = "mb-3 font-semibold text-gray-700" %>
 
-  <div class="space-y-6">
-    <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start"><%= f.input :first_name, wrapper_html: { class: "w-full md:w-44" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-44" }, input_html: { class: "w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-44" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "e.g. Oom-BEAR-toh", wrapper_html: { class: "w-full md:w-48" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-36" }, input_html: { class: "w-full" } %><div class="w-full md:ml-auto md:w-auto"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div></div>
+  <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start"><%= f.input :first_name, wrapper_html: { class: "w-full md:w-44" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-44" }, input_html: { class: "w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-44" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "e.g. Oom-BEAR-toh", wrapper_html: { class: "w-full md:w-48" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-36" }, input_html: { class: "w-full" } %><div class="w-full md:ml-auto md:w-auto"><%= render "shared/form_image_field", f: f, field_name: :avatar %></div></div>
 
-    <div class="emails">
-      <h3 class="mb-2 font-semibold text-gray-700">Emails</h3>
+  <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+    <div class="emails <%= card_class %>">
+      <h3 class="<%= heading_class %>">Emails</h3>
+      <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+        <% if f.object.user %>
+          <div class="mb-4">
+            <label class="mb-1 block text-md font-medium text-gray-700">Primary email</label>
+            <span class="font-medium text-gray-900"><%= f.object.user&.email %></span>
+            <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
+              <% pending_label = capture do %>Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation<% end %>
+              <%= render "shared/badge",
+                    label: pending_label,
+                    classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
+                    icon: "fa-solid fa-triangle-exclamation text-yellow-500",
+                    extra: "mt-1",
+                    title: "Only the person and admins can see this pending change; it is hidden from other profile visitors." %>
+            <% end %>
 
-      <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-        <div class="flex flex-col gap-4 md:flex-row">
-          <% if f.object.user %>
-            <div>
-              <label class="mb-1 block text-md font-medium text-gray-700">Primary email</label>
-              <span class="font-medium text-gray-900"><%= f.object.user&.email %></span>
-              <% if f.object.user.unconfirmed_email.present? && allowed_to?(:show_email_change?, f.object) %>
-                <% pending_label = capture do %>Change to <strong><%= f.object.user.unconfirmed_email %></strong> awaiting confirmation<% end %>
-                <%= render "shared/badge",
-                      label: pending_label,
-                      classes: "bg-yellow-50 text-yellow-800 border-yellow-300",
-                      icon: "fa-solid fa-triangle-exclamation text-yellow-500",
-                      extra: "mt-1",
-                      title: "Only the person and admins can see this pending change; it is hidden from other profile visitors." %>
+            <p class="mt-1 text-sm text-gray-500">
+              Only
+              <% if allowed_to?(:edit?, f.object.user) %>
+                <%= link_to "editable by admins",
+                            edit_user_path(f.object.user),
+                            class: "underline" %>
+              <% else %>
+                editable by admins.
+                <%= render "people/change_request_link",
+                      person: f.object, field: "primary_email",
+                      label: "Request a change" %>
               <% end %>
+            </p>
+          </div>
+        <% else %>
+          <%= f.input :email, label: "Primary email" %>
+        <% end %>
 
-              <p class="mt-1 text-sm text-gray-500">
-                Only
-                <% if allowed_to?(:edit?, f.object.user) %>
-                  <%= link_to "editable by admins",
-                              edit_user_path(f.object.user),
-                              class: "underline" %>
-                <% else %>
-                  editable by admins.
-                  <%= render "people/change_request_link",
-                        person: f.object, field: "primary_email",
-                        label: "Request a change" %>
-                <% end %>
-              </p>
-            </div>
-          <% else %>
-            <%= f.input :email, label: "Primary email" %>
-          <% end %>
+        <%= f.input :email_type,
+                    label: "Primary email type",
+                    as: :select,
+                    collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
+                    selected: f.object.email_type || f.object.user&.email_type,
+                    include_blank: true %>
 
-          <%= f.input :email_type,
-                      label: "Primary email type",
+        <% if allowed_to?(:manage?, Person) %>
+          <%= f.input :email_2, label: "Secondary email" %>
+        <% elsif f.object.email_2.present? %>
+          <div class="mb-4">
+            <label class="mb-1 block text-md font-medium text-gray-700">Secondary email</label>
+            <span class="font-medium text-gray-900"><%= f.object.email_2 %></span>
+            <p class="mt-1 text-sm text-gray-500">Only editable by admins.</p>
+          </div>
+        <% end %>
+
+        <% if allowed_to?(:manage?, Person) || f.object.email_2.present? %>
+          <%= f.input :email_2_type,
+                      label: "Secondary email type",
                       as: :select,
                       collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                      selected: f.object.email_type || f.object.user&.email_type,
                       include_blank: true %>
-
-          <% if allowed_to?(:manage?, Person) %>
-            <%= f.input :email_2, label: "Secondary email" %>
-          <% elsif f.object.email_2.present? %>
-            <div>
-              <label class="mb-1 block text-md font-medium text-gray-700">Secondary email</label>
-              <span class="font-medium text-gray-900"><%= f.object.email_2 %></span>
-              <p class="mt-1 text-sm text-gray-500">Only editable by admins.</p>
-            </div>
-          <% end %>
-
-          <% if allowed_to?(:manage?, Person) || f.object.email_2.present? %>
-            <%= f.input :email_2_type,
-                        label: "Secondary email type",
-                        as: :select,
-                        collection: Person::CONTACT_TYPES.compact.map { |type| [type.to_s.humanize, type] },
-                        include_blank: true %>
-          <% end %>
-        </div>
+        <% end %>
       </div>
+    </div>
+
+    <div class="phones <%= card_class %> scroll-mt-4" id="phones">
+      <h3 class="<%= heading_class %>">Phones</h3>
+      <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
+        <%= f.input :best_time_to_call %>
+      <% end %>
+
+      <%= f.simple_fields_for :contact_methods do |f| %>
+        <%= render "contact_methods/contact_method_fields", f: f %>
+      <% end %>
+
+      <%= link_to_add_association "➕ Add phone",
+                                  f,
+                                  :contact_methods,
+                                  partial: "contact_methods/contact_method_fields",
+                                  class: button_classes(:secondary_outline) %>
     </div>
   </div>
 
-  <div class="phones scroll-mt-4" id="phones">
-    <div class="form-group space-y-4">
-      <div class="mb-2 font-semibold text-gray-700">
-        Phones
-      </div>
+  <div class="addresses scroll-mt-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm" id="addresses">
+    <h3 class="<%= heading_class %>">Addresses</h3>
+    <%= f.simple_fields_for :addresses do |f| %>
+      <%= render "addresses/address_fields", f: f %>
+    <% end %>
 
-      <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-        <% if @person.best_time_to_call.present? || params[:admin] == "true" %>
-          <%= f.input :best_time_to_call %>
-        <% end %>
-
-        <%= f.simple_fields_for :contact_methods do |f| %>
-          <%= render "contact_methods/contact_method_fields", f: f %>
-        <% end %>
-
-        <%= link_to_add_association "➕ Add phone",
-                                    f,
-                                    :contact_methods,
-                                    partial: "contact_methods/contact_method_fields",
-                                    class: button_classes(:secondary_outline) %>
-      </div>
-    </div>
-  </div>
-
-  <div class="addresses scroll-mt-4" id="addresses">
-    <!-- Primary Address Choice -->
-    <div class="flex flex-col gap-4 md:flex-row"><%# = f.input :primary_address, collection: [['Work', 1], ['Home', 2]], prompt: "Select Primary Address" %></div>
-
-    <div class="form-group space-y-4">
-      <div class="mb-2 font-semibold text-gray-700">
-        Addresses
-      </div>
-
-      <div class="mb-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
-        <%= f.simple_fields_for :addresses do |f| %>
-          <%= render "addresses/address_fields", f: f %>
-        <% end %>
-
-        <%= link_to_add_association "➕ Add address",
-                                    f,
-                                    :addresses,
-                                    class: button_classes(:secondary_outline) %>
-      </div>
-    </div>
+    <%= link_to_add_association "➕ Add address",
+                                f,
+                                :addresses,
+                                class: button_classes(:secondary_outline) %>
   </div>
 
   <!-- Sectors + Age ranges (split width; both wrap their chips) -->
@@ -147,12 +129,9 @@
   <% end %>
   <div class="flex flex-wrap gap-4 items-stretch">
     <!-- Sectors -->
-    <div class="form-group flex flex-col flex-1 min-w-[20rem]">
-      <div class="font-semibold text-gray-700 mb-2">
-        Sectors
-      </div>
-      <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm
-                  flex flex-wrap items-center content-start gap-2 flex-1"
+    <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
+      <h3 class="<%= heading_class %>">Sectors</h3>
+      <div class="flex flex-1 flex-wrap content-start items-center gap-2"
            data-controller="primary-tag"
            data-primary-tag-primary-class="border-lime-500 bg-lime-100"
            data-primary-tag-default-class="border-gray-300 bg-white">
@@ -179,27 +158,25 @@
 
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
-      <div class="form-group flex min-w-[20rem] flex-1 flex-col">
-        <div class="mb-2 font-semibold text-gray-700">
-          Age ranges
-        </div>
-        <div class="flex flex-1 flex-wrap content-start items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm"
+      <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+        <h3 class="<%= heading_class %>">Age ranges</h3>
+        <div class="flex flex-1 flex-wrap content-start items-center gap-2"
              data-controller="primary-tag"
              data-primary-tag-primary-class="border-amber-300 bg-amber-50"
              data-primary-tag-default-class="border-gray-300 bg-white">
-        <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
-        <%= f.simple_fields_for :age_range_categorizable_items, age_owner.age_range_items_ordered do |afi| %>
-          <%= render "shared/age_range_item_fields", f: afi %>
-        <% end %>
+          <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
+          <%= f.simple_fields_for :age_range_categorizable_items, age_owner.age_range_items_ordered do |afi| %>
+            <%= render "shared/age_range_item_fields", f: afi %>
+          <% end %>
 
-        <%= link_to_add_association "➕ Add age range",
-                                    f,
-                                    :age_range_categorizable_items,
-                                    partial: "shared/age_range_item_fields",
-                                    render_options: {
-                                      locals: { collection: (@age_ranges_collection || [])
-                                        .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
-                                    class: button_classes(:secondary_outline) %>
+          <%= link_to_add_association "➕ Add age range",
+                                      f,
+                                      :age_range_categorizable_items,
+                                      partial: "shared/age_range_item_fields",
+                                      render_options: {
+                                        locals: { collection: (@age_ranges_collection || [])
+                                          .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
+                                      class: button_classes(:secondary_outline) %>
         </div>
       </div>
     <% end %>
@@ -236,8 +213,8 @@
   <% if other_category_types.present? %>
     <div class="form-group space-y-4">
       <% other_category_types.each do |type, cats| %>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-          <h3 class="mb-3 font-semibold text-gray-700"><%= type.display_label %></h3>
+        <div class="<%= card_class %>">
+          <h3 class="<%= heading_class %>"><%= type.display_label %></h3>
           <div class="flex flex-wrap gap-3">
             <% cats.each do |category| %>
               <%= render "shared/category_checkbox", param_key: "person", category: category,
@@ -260,317 +237,278 @@
   <!-- Organization Affiliations -->
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
-  <div id="affiliations" class="form-group scroll-mt-4 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
+  <div id="affiliations" class="form-group admin-only scroll-mt-4 rounded-lg border border-gray-200 bg-blue-50 p-4 shadow-sm">
+    <h3 class="<%= heading_class %>">
       Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
-    </div>
+    </h3>
 
-    <div class="admin-only mb-4 rounded-lg border border-gray-200 bg-blue-50 p-4 shadow-sm">
-      <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
-        <div class="admin-only mb-4 rounded-lg bg-blue-100 p-4">
-          <%= f.input :member_since,
-                      as: :date,
-                      discard_day: true,
-                      start_year: 1991,
-                      end_year: Time.current.year,
-                      prompt: { month: "Select Month", year: "Select Year" },
-                      order: [:month, :year],
-                      label: "Member since (override)",
-                      hint: "Pick January if you only know the year",
-                      wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
-                      label_html: { class: "w-full" },
-                      hint_html: { class: "w-full" },
-                      input_html: {
-                        class: "flex-1 rounded-md border-gray-300 shadow-sm admin-only bg-blue-100 border-blue-200
-                        focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                      } %>
-        </div>
-      <% end %>
-      <div class="mb-4 flex flex-col gap-6 md:flex-row">
-        <div class="relative shrink-0">
-          <div class="group/fac relative inline-block cursor-help">
-            <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
-              Facilitator since <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
-            </label>
-            <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/fac:block">
-              <% facilitator_start = person.affiliations.facilitators.minimum(:start_date) %>
-              <% if facilitator_start.nil? && person.member_since.present? %>
-                <p>Earliest start date from affiliations with 'facilitator' somewhere in the title.<br><br><span class="font-medium text-amber-700">⚠ Currently showing the legacy member_since value (<%= person.member_since.strftime('%b %Y') %>) because no Facilitator affiliation has a start date. Add a start date to a Facilitator affiliation to stop using the legacy value.</span></p>
-              <% else %>
-                <p>Earliest start date from affiliations with 'facilitator' somewhere in the title. Edit affiliation records to change this date.</p>
-                <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
-                  <p class="mt-2 font-medium text-amber-700">⚠ Member since (<%= person.member_since.strftime('%b %Y') %>) is earlier than any Facilitator affiliation. Create an affiliation with that start date to reflect it on the profile.</p>
-                <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
-                  <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Member since (<%= person.member_since.strftime('%b %Y') %>) differs from the earliest Facilitator affiliation start date.</p>
-                <% end %>
+    <% if allowed_to?(:manage?, Person) && params[:admin].present? %>
+      <div class="admin-only mb-4 rounded-lg bg-blue-100 p-4">
+        <%= f.input :member_since,
+                    as: :date,
+                    discard_day: true,
+                    start_year: 1991,
+                    end_year: Time.current.year,
+                    prompt: { month: "Select Month", year: "Select Year" },
+                    order: [:month, :year],
+                    label: "Member since (override)",
+                    hint: "Pick January if you only know the year",
+                    wrapper_html: { class: "flex flex-wrap gap-2 items-end" },
+                    label_html: { class: "w-full" },
+                    hint_html: { class: "w-full" },
+                    input_html: {
+                      class: "flex-1 rounded-md border-gray-300 shadow-sm admin-only bg-blue-100 border-blue-200
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    } %>
+      </div>
+    <% end %>
+    <div class="mb-3 flex flex-col gap-6 md:flex-row">
+      <div class="relative shrink-0">
+        <div class="group/fac relative inline-block cursor-help">
+          <label class="mb-1 inline-flex items-center gap-1 text-md font-medium text-gray-700">
+            Facilitator since <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
+          </label>
+          <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/fac:block">
+            <% facilitator_start = person.affiliations.facilitators.minimum(:start_date) %>
+            <% if facilitator_start.nil? && person.member_since.present? %>
+              <p>Earliest start date from affiliations with 'facilitator' somewhere in the title.<br><br><span class="font-medium text-amber-700">⚠ Currently showing the legacy member_since value (<%= person.member_since.strftime('%b %Y') %>) because no Facilitator affiliation has a start date. Add a start date to a Facilitator affiliation to stop using the legacy value.</span></p>
+            <% else %>
+              <p>Earliest start date from affiliations with 'facilitator' somewhere in the title. Edit affiliation records to change this date.</p>
+              <% if decorated.member_since_earlier_than_facilitator_affiliations? %>
+                <p class="mt-2 font-medium text-amber-700">⚠ Member since (<%= person.member_since.strftime('%b %Y') %>) is earlier than any Facilitator affiliation. Create an affiliation with that start date to reflect it on the profile.</p>
+              <% elsif decorated.member_since_differs_from_facilitator_affiliations? %>
+                <p class="mt-2 text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>Member since (<%= person.member_since.strftime('%b %Y') %>) differs from the earliest Facilitator affiliation start date.</p>
               <% end %>
-            </div>
+            <% end %>
           </div>
-          <div class="pt-1">
-            <span class="font-medium text-gray-900" data-affiliation-dates-target="facilitatorSince"><%= decorated.facilitator_since_range %></span>
-            <% member_since_earlier = decorated.member_since_earlier_than_facilitator_affiliations? %>
-            <% member_since_differs = !member_since_earlier && decorated.member_since_differs_from_facilitator_affiliations? %>
-            <p class="mt-1 text-xs <%= member_since_earlier ? "text-amber-700" : member_since_differs ? "text-gray-500" : "hidden" %>"
-               data-affiliation-dates-target="memberSinceFlag">
-              <% if member_since_earlier %>
-                ⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %>
-              <% elsif member_since_differs %>
-                <i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %>
-              <% end %>
-            </p>
-            <div class="mt-1 <%= "hidden" unless decorated.affiliated_since_note %>" data-affiliation-dates-target="affiliatedNote">
-              <span class="group/aff relative inline-flex cursor-help items-center gap-1">
-                <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
-                <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
-                <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
-                  <p>The earliest date this person was affiliated with any organization, in any role. Shown only when it's earlier than the facilitator start — otherwise the two dates are the same.</p>
-                </div>
-              </span>
-            </div>
+        </div>
+        <div class="pt-1">
+          <span class="font-medium text-gray-900" data-affiliation-dates-target="facilitatorSince"><%= decorated.facilitator_since_range %></span>
+          <% member_since_earlier = decorated.member_since_earlier_than_facilitator_affiliations? %>
+          <% member_since_differs = !member_since_earlier && decorated.member_since_differs_from_facilitator_affiliations? %>
+          <p class="mt-1 text-xs <%= member_since_earlier ? "text-amber-700" : member_since_differs ? "text-gray-500" : "hidden" %>"
+             data-affiliation-dates-target="memberSinceFlag">
+            <% if member_since_earlier %>
+              ⚠ Earlier date on file: <%= person.member_since.strftime("%b %Y") %>
+            <% elsif member_since_differs %>
+              <i class="fa-solid fa-circle-info mr-1"></i>Different date on file: <%= person.member_since.strftime("%b %Y") %>
+            <% end %>
+          </p>
+          <div class="mt-1 <%= "hidden" unless decorated.affiliated_since_note %>" data-affiliation-dates-target="affiliatedNote">
+            <span class="group/aff relative inline-flex cursor-help items-center gap-1">
+              <span class="text-xs text-gray-500" data-affiliation-dates-target="affiliatedNoteText"><%= decorated.affiliated_since_note %></span>
+              <i class="fa-solid fa-circle-info text-xs text-gray-400"></i>
+              <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/aff:block">
+                <p>The earliest date this person was affiliated with any organization, in any role. Shown only when it's earlier than the facilitator start — otherwise the two dates are the same.</p>
+              </div>
+            </span>
           </div>
         </div>
       </div>
-      <% if allowed_to?(:manage?, Person) %>
-        <%= render "affiliations/editor", f: f, label: "Organization", scope: "person",
-              add_class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
-      <% else %>
-        <% owner_affiliations = f.object.affiliations.select(&:persisted?) %>
-        <% pending_affiliation_requests = f.object.profile_change_requests.pending.where(field: "affiliation").to_a %>
-        <% pending_by_affiliation = pending_affiliation_requests.index_by(&:affiliation_id) %>
-        <% unassigned_affiliation_request = pending_affiliation_requests.find { |request| request.affiliation_id.nil? } %>
-        <% if owner_affiliations.any? %>
-          <ul class="space-y-1.5 ps-6">
-            <% owner_affiliations.each do |affiliation| %>
-              <li class="flex flex-wrap items-center gap-2 text-gray-700">
-                <%= affiliation.decorate.status_badge %>
-                <span class="font-medium"><%= affiliation.title.presence || Affiliation::FACILITATOR_TITLE %></span>
-                <span>–</span>
-                <%= link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline" %>
-                <span class="text-sm text-gray-500"><%= affiliation.decorate.period_label %></span>
-                <% if (affiliation_request = pending_by_affiliation[affiliation.id]) %>
-                  <%= link_to edit_profile_change_request_path(affiliation_request),
-                              class: "inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-100" do %>
-                    <i class="fa-solid fa-clock"></i> Change requested
-                  <% end %>
-                <% end %>
-              </li>
-            <% end %>
-          </ul>
-        <% else %>
-          <p class="ps-6 text-gray-500 italic">No affiliations on record.</p>
-        <% end %>
-        <div class="mt-4 ps-6 text-sm text-gray-600">
-          Affiliation records are maintained by AWBW staff. See something that needs correcting?
-          <ul class="mt-1 list-disc space-y-0.5 ps-5">
-            <li>
-              <%= render "people/change_request_link",
-                    person: f.object, field: "affiliation",
-                    label: "Request an affiliation change (title, role, or dates)" %>
-            </li>
-            <li>
-              <%= render "people/change_request_link",
-                    person: f.object, field: "organization_name",
-                    label: "Request an organization name change" %>
-            </li>
-          </ul>
-          <% if unassigned_affiliation_request %>
-            <p class="mt-1 text-amber-700">
-              You have a pending affiliation request.
-              <%= link_to "View it", edit_profile_change_request_path(unassigned_affiliation_request),
-                          class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>
-            </p>
-          <% end %>
-        </div>
-      <% end %>
-
-      <%# Sending an agreement form is affiliation work — it's how a new job or
-          reinstatement starts — so it lives here, collapsed. %>
-      <% if person.persisted? && allowed_to?(:send_form_link?, person) %>
-        <%= render "agreement_form_links", person: person %>
-      <% end %>
     </div>
+    <% if allowed_to?(:manage?, Person) %>
+      <%= render "affiliations/editor", f: f, label: "Organization", scope: "person",
+            add_class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
+    <% else %>
+      <% owner_affiliations = f.object.affiliations.select(&:persisted?) %>
+      <% pending_affiliation_requests = f.object.profile_change_requests.pending.where(field: "affiliation").to_a %>
+      <% pending_by_affiliation = pending_affiliation_requests.index_by(&:affiliation_id) %>
+      <% unassigned_affiliation_request = pending_affiliation_requests.find { |request| request.affiliation_id.nil? } %>
+      <% if owner_affiliations.any? %>
+        <ul class="space-y-1.5 ps-6">
+          <% owner_affiliations.each do |affiliation| %>
+            <li class="flex flex-wrap items-center gap-2 text-gray-700">
+              <%= affiliation.decorate.status_badge %>
+              <span class="font-medium"><%= affiliation.title.presence || Affiliation::FACILITATOR_TITLE %></span>
+              <span>–</span>
+              <%= link_to affiliation.organization&.name, organization_path(affiliation.organization), class: "underline" %>
+              <span class="text-sm text-gray-500"><%= affiliation.decorate.period_label %></span>
+              <% if (affiliation_request = pending_by_affiliation[affiliation.id]) %>
+                <%= link_to edit_profile_change_request_path(affiliation_request),
+                            class: "inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-100" do %>
+                  <i class="fa-solid fa-clock"></i> Change requested
+                <% end %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="ps-6 text-gray-500 italic">No affiliations on record.</p>
+      <% end %>
+      <div class="mt-4 ps-6 text-sm text-gray-600">
+        Affiliation records are maintained by AWBW staff. See something that needs correcting?
+        <ul class="mt-1 list-disc space-y-0.5 ps-5">
+          <li>
+            <%= render "people/change_request_link",
+                  person: f.object, field: "affiliation",
+                  label: "Request an affiliation change (title, role, or dates)" %>
+          </li>
+          <li>
+            <%= render "people/change_request_link",
+                  person: f.object, field: "organization_name",
+                  label: "Request an organization name change" %>
+          </li>
+        </ul>
+        <% if unassigned_affiliation_request %>
+          <p class="mt-1 text-amber-700">
+            You have a pending affiliation request.
+            <%= link_to "View it", edit_profile_change_request_path(unassigned_affiliation_request),
+                        class: "font-medium text-blue-600 hover:text-blue-800 hover:underline" %>
+          </p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Sending an agreement form is affiliation work — it's how a new job or
+        reinstatement starts — so it lives here, collapsed. %>
+    <% if person.persisted? && allowed_to?(:send_form_link?, person) %>
+      <%= render "agreement_form_links", person: person %>
+    <% end %>
   </div>
 
-  <!-- PERSON FIELDS -->
-  <div class="form-group space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Background
-    </div>
-
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+  <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div class="form-group <%= card_class %>">
+      <h3 class="<%= heading_class %>">Background</h3>
       <%# Shout-out text is edited on the registration's "Shout out" section, not here. %>
       <%= f.input :bio,
                   wrapper_html: { class: "w-full" },
                   as: :text,
                   input_html: {
-                    rows: 2,
+                    rows: 3,
                     maxlength: 1650,
                     class: "w-full rounded-md border-gray-300 shadow-sm
                         focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   },
                   hint: "Maximum 250 characters" %>
     </div>
-  </div>
 
-  <div id="professional-licenses" class="form-group scroll-mt-4 space-y-4">
-    <div class="mb-2 font-semibold text-gray-700">
-      Professional licenses
-    </div>
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <p class="mb-3 text-sm text-gray-500">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
-      <%= f.simple_fields_for :professional_licenses do |license_form| %>
-        <%= render "professional_licenses/professional_license_fields", f: license_form %>
-      <% end %>
-      <%= link_to_add_association "➕ Add license",
-                                  f,
-                                  :professional_licenses,
-                                  partial: "professional_licenses/professional_license_fields",
-                                  class: button_classes(:secondary_outline) %>
-    </div>
-  </div>
+    <div class="<%= card_class %>">
+      <div class="w-full sm:w-56">
+        <%= f.input :date_of_birth,
+                    label: "Birthday",
+                    as: :date,
+                    discard_year: true,
+                    order: [:month, :day],
+                    prompt: { month: "Month", day: "Day" },
+                    hint: "Month and day only",
+                    wrapper_html: { class: "flex flex-wrap gap-x-2 items-end" },
+                    label_html: { class: "w-full" },
+                    hint_html: { class: "w-full" },
+                    input_html: {
+                      class: "flex-1 rounded-md border-gray-300 shadow-sm
+                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    } %>
+      </div>
 
-  <div class="flex flex-col items-stretch gap-6 lg:flex-row">
-    <div class="w-full rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm lg:w-auto lg:flex-1">
-      <div class="flex flex-col items-start gap-6 sm:flex-row">
-        <div class="w-full sm:w-56">
-          <%= f.input :date_of_birth,
-                      label: "Birthday",
-                      as: :date,
-                      discard_year: true,
-                      order: [:month, :day],
-                      prompt: { month: "Month", day: "Day" },
-                      hint: "Month and day only",
-                      wrapper_html: { class: "flex flex-wrap gap-x-2 items-end" },
-                      label_html: { class: "w-full" },
-                      hint_html: { class: "w-full" },
-                      input_html: {
-                        class: "flex-1 rounded-md border-gray-300 shadow-sm
-                        focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                      } %>
-        </div>
-
-        <% if f.object.user %>
-          <%= f.fields_for :user do |user_form| %>
-            <%= user_form.input :time_zone,
-                        as: :select,
-                        collection: us_time_zone_fundamentals,
-                        selected: user_form.object.time_zone.presence || "Pacific Time (US & Canada)",
-                        include_blank: false,
-                        hint: timezone_visibility_hint(user_form.object),
-                        input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full sm:flex-1" } %>
-          <% end %>
+      <% if f.object.user %>
+        <%= f.fields_for :user do |user_form| %>
+          <%= user_form.input :time_zone,
+                              as: :select,
+                              collection: us_time_zone_fundamentals,
+                              selected: user_form.object.time_zone.presence || "Pacific Time (US & Canada)",
+                              include_blank: false,
+                              hint: timezone_visibility_hint(user_form.object),
+                              input_html: { class: "w-full" } %>
         <% end %>
-      </div>
+      <% end %>
     </div>
+  </div>
 
-    <% if allowed_to?(:manage?, Person) %>
-      <div class="admin-only w-full rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm lg:w-auto">
-        <div class="flex flex-col items-start gap-6 sm:flex-row">
-          <div class="w-full sm:w-64">
-            <%= f.input :racial_ethnic_identity,
-                        label: "Racial/ethnic identity",
-                        input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full" } %>
-          </div>
+  <% if allowed_to?(:manage?, Person) %>
+    <div class="admin-only grid grid-cols-1 items-start gap-x-6 rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+      <%= f.input :racial_ethnic_identity,
+                  label: "Racial/ethnic identity",
+                  input_html: { class: "w-full" } %>
 
-          <div class="w-full sm:w-64">
-            <%= f.input :filemaker_code,
-                        label: "FileMaker code",
-                        hint: filemaker_code_hint(f.object),
-                        input_html: { class: "w-full" },
-                        wrapper_html: { class: "w-full" } %>
-          </div>
-        </div>
+      <%= f.input :filemaker_code,
+                  label: "FileMaker code",
+                  hint: filemaker_code_hint(f.object),
+                  input_html: { class: "w-full" } %>
 
-        <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <% if person.persisted? %>
-            <div class="w-full sm:flex-1">
-              <div class="mb-1 block font-medium text-gray-700">Mailing list</div>
-              <%= link_to decorated.news_subscriptions_path,
-                          class: "inline-flex items-center gap-1.5 text-sm #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 700)} #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 800, hover: true)}" do %>
-                <i class="fa-solid fa-envelope-open-text"></i>
-                News subscriptions
-              <% end %>
-              <p class="mt-1 text-xs text-gray-500">Mailing-list interest is tracked in topic subscriptions.</p>
-            </div>
+      <% if person.persisted? %>
+        <div class="mb-4">
+          <div class="mb-1 block font-medium text-gray-700">Mailing list</div>
+          <%= link_to decorated.news_subscriptions_path,
+                      class: "inline-flex items-center gap-1.5 text-sm #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 700)} #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 800, hover: true)}" do %>
+            <i class="fa-solid fa-envelope-open-text"></i>
+            News subscriptions
           <% end %>
-
-          <%= f.input :blog_contributor,
-                      as: :boolean,
-                      label: "Blog contributor",
-                      hint: "Adds a badge to their profile.",
-                      wrapper_html: { class: "w-full sm:flex-1" } %>
+          <p class="mt-1 text-xs text-gray-500">Mailing-list interest is tracked in topic subscriptions.</p>
         </div>
-      </div>
+      <% end %>
+
+      <%= f.input :blog_contributor,
+                  as: :boolean,
+                  label: "Blog contributor",
+                  hint: "Adds a badge to their profile." %>
+    </div>
+  <% end %>
+
+  <div id="professional-licenses" class="form-group <%= card_class %> scroll-mt-4">
+    <h3 class="mb-1 font-semibold text-gray-700">Professional licenses</h3>
+    <p class="mb-3 text-sm text-gray-500">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
+    <%= f.simple_fields_for :professional_licenses do |license_form| %>
+      <%= render "professional_licenses/professional_license_fields", f: license_form %>
     <% end %>
+    <%= link_to_add_association "➕ Add license",
+                                f,
+                                :professional_licenses,
+                                partial: "professional_licenses/professional_license_fields",
+                                class: button_classes(:secondary_outline) %>
   </div>
 
-  <div class="profile-preferences-section">
-    <div class="mb-2 block font-medium text-gray-700">
-      Social media links
-    </div>
-
-    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="flex flex-col gap-4 px-3 pb-3 md:flex-row">
-        <%= f.input :linked_in_url, as: :text, input_html: { rows: 1 } %>
-        <%= f.input :facebook_url, as: :text, input_html: { rows: 1 } %>
-        <%= f.input :instagram_url, as: :text, input_html: { rows: 1 } %>
-        <%= f.input :youtube_url, as: :text, input_html: { rows: 1 } %>
-        <%= f.input :twitter_url, as: :text, input_html: { rows: 1 } %>
-      </div>
+  <div class="profile-preferences-section <%= card_class %>">
+    <h3 class="<%= heading_class %>">Social media links</h3>
+    <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-5">
+      <%= f.input :linked_in_url, label: "LinkedIn" %>
+      <%= f.input :facebook_url, label: "Facebook" %>
+      <%= f.input :instagram_url, label: "Instagram" %>
+      <%= f.input :youtube_url, label: "YouTube" %>
+      <%= f.input :twitter_url, label: "X (Twitter)" %>
     </div>
   </div>
 
-  <div id="profile-preferences" class="profile-preferences-section scroll-mt-4">
-    <div class="mb-2 block font-medium text-gray-700">
-      Profile display preferences
-    </div>
+  <div id="profile-preferences" class="profile-preferences-section <%= card_class %> scroll-mt-4">
+    <h3 class="mb-1 font-semibold text-gray-700">Profile display preferences</h3>
     <p class="mb-3 text-sm text-gray-500">
       Updating these preferences applies to how you show up sitewide: stories, workshop variations, the people index, and more.
     </p>
 
-    <div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-      <div class="px-3 pb-3">
-        <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <%= f.input :profile_is_searchable,
-                    hint: ("Findable on " + (link_to "people index",
-                                                    people_path,
-                                                    class: "underline")).html_safe %>
+    <div class="grid grid-cols-1 gap-x-6 md:grid-cols-3">
+      <%= f.input :profile_is_searchable,
+                  hint: ("Findable on " + (link_to "people index",
+                                                  people_path,
+                                                  class: "underline")).html_safe %>
 
-          <%= f.input :display_name_preference,
-                    as: :select,
-                    collection: Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
-                    hint: "Sitewide (People/Profile, Stories, Workshop Variations, etc)",
-                    selected: f.object.display_name_preference || "full_name" %>
+      <%= f.input :display_name_preference,
+                  as: :select,
+                  collection: Person::DISPLAY_NAME_PREFERENCE_LABELS.invert.to_a,
+                  hint: "Sitewide (People/Profile, Stories, Workshop Variations, etc)",
+                  selected: f.object.display_name_preference || "full_name" %>
 
-          <%= f.input :anonymous_contributions,
-                    label: "Contribute anonymously",
-                    hint: "Hides your name on content, but not People/Profile" %>
+      <%= f.input :anonymous_contributions,
+                  label: "Contribute anonymously",
+                  hint: "Hides your name on content, but not People/Profile" %>
+    </div>
 
-          <%= f.input :profile_show_credentials, label: "Show credentials" %>
-
-          <%= f.input :profile_show_pronouns, label: "Show pronouns" %>
-        </div>
-
-        <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"><%= f.input :profile_show_email, label: "Show email" %><%= f.input :profile_show_phone, label: "Show phone" %><%= f.input :profile_show_social_media, label: "Show social media" %><%= f.input :profile_show_bio, label: "Show bio" %></div>
-
-        <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <%= f.input :profile_show_member_since, label: "Show facilitator since" %>
-          <%= f.input :profile_show_affiliations, label: "Show affiliations" %>
-          <%= f.input :profile_show_sectors, label: "Show sectors" %>
-          <%= f.input :profile_show_age_ranges, label: "Show age ranges" %>
-        </div>
-
-        <%# Registrations first, then the rest alphabetically by label. %>
-        <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <%= f.input :profile_show_events_registered, label: "Show registrations" %>
-          <%= f.input :profile_show_resources, label: "Show resources" %>
-          <%= f.input :profile_show_stories, label: "Show stories" %>
-          <%= f.input :profile_show_workshop_variations, label: "Show workshop variations" %>
-          <%= f.input :profile_show_workshops, label: "Show workshops" %>
-        </div>
-      </div>
+    <% toggle_wrapper = { class: "mb-0!" } %>
+    <div class="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-3 lg:grid-cols-5">
+      <%= f.input :profile_show_credentials, label: "Show credentials", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_pronouns, label: "Show pronouns", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_email, label: "Show email", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_phone, label: "Show phone", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_social_media, label: "Show social media", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_bio, label: "Show bio", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_member_since, label: "Show facilitator since", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_affiliations, label: "Show affiliations", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_sectors, label: "Show sectors", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_age_ranges, label: "Show age ranges", wrapper_html: toggle_wrapper %>
+      <%# Registrations first, then the rest alphabetically by label. %>
+      <%= f.input :profile_show_events_registered, label: "Show registrations", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_resources, label: "Show resources", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_stories, label: "Show stories", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_workshop_variations, label: "Show workshop variations", wrapper_html: toggle_wrapper %>
+      <%= f.input :profile_show_workshops, label: "Show workshops", wrapper_html: toggle_wrapper %>
     </div>
   </div>
 
@@ -581,7 +519,7 @@
   <% end %>
 
   <% if params[:admin] && allowed_to?(:manage?, Person) %>
-    <div class="admin-only mb-6 bg-blue-100">
+    <div class="admin-only bg-blue-100">
       <%= f.input :notes,
                   as: :text,
                   label: "Internal notes",
@@ -592,7 +530,7 @@
     </div>
   <% end %>
 
-  <div class="action-buttons mt-8 flex justify-center gap-3">
+  <div class="action-buttons flex justify-center gap-3 pt-2">
     <% if allowed_to?(:destroy?, f.object) %>
       <%= link_to "Delete", @person, class: button_classes(:danger_outline),
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
