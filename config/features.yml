@@ -4540,3 +4540,14 @@
     - "The extra account is usually left over from a merge."
     - "Preview merge opens the logins deduper with the suggested keeper picked. Its back link and the finished merge return you to the person."
     - "The account marked \"shown on profile\" is the one used most recently."
+
+- name: "See how many taggings each category has"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-14
+  action_path: "/categories"
+  summary: >-
+    The Taggings button on each row of the Categories page now shows how many
+    records use that category, and the name search comes first in the filters.
+  pro_tips:
+    - "A category showing Taggings (0) isn't used anywhere yet."

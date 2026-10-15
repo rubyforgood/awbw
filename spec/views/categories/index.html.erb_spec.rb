@@ -13,6 +13,7 @@ RSpec.describe "categories/index", type: :view do
     ])
 
     assign(:category_types, [ type_a, type_b ])
+    assign(:taggings_counts, {})
 
     allow(view).to receive(:current_user).and_return(admin)
   end
