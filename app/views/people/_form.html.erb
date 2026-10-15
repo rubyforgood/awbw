@@ -66,11 +66,20 @@
 
         <% if allowed_to?(:manage?, Person) %>
           <%= f.input :email_2, label: "Secondary email" %>
-        <% elsif f.object.email_2.present? %>
+        <% else %>
           <div class="mb-4">
             <label class="mb-1 block text-md font-medium text-gray-700">Secondary email</label>
-            <span class="font-medium text-gray-900"><%= f.object.email_2 %></span>
-            <p class="mt-1 text-sm text-gray-500">Only editable by admins.</p>
+            <% if f.object.email_2.present? %>
+              <span class="font-medium text-gray-900"><%= f.object.email_2 %></span>
+            <% else %>
+              <span class="text-gray-500 italic">None yet</span>
+            <% end %>
+            <p class="mt-1 text-sm text-gray-500">
+              Only editable by admins.
+              <%= render "people/change_request_link",
+                    person: f.object, field: "secondary_email",
+                    label: "Request a change" %>
+            </p>
           </div>
         <% end %>
 

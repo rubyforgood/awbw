@@ -4619,3 +4619,14 @@
   pro_tips:
     - "Emails and phones sit side by side, as do the bio and birthday/time zone."
     - "All the \"Show …\" profile checkboxes are in one compact grid."
+
+- name: "Ask staff to change your secondary email"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-15
+  pr_number: 2697
+  summary: >-
+    Your secondary email now shows on your profile edit page, with a link to ask
+    AWBW staff to add or change it, the same way the primary email works.
+  pro_tips:
+    - "Admins approve it from the change-requests queue, and it's saved right away (no confirmation email)."

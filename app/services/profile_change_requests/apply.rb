@@ -1,5 +1,5 @@
 module ProfileChangeRequests
-  # Applies an auto-appliable change request (primary email, organization name).
+  # Applies an auto-appliable change request (primary/secondary email, organization name).
   # Affiliation requests are free-form and resolved by a manual edit instead, so
   # they return applied: false with a message directing the admin to edit by hand.
   class Apply
@@ -17,6 +17,7 @@ module ProfileChangeRequests
     def call
       case @request.field
       when "primary_email" then apply_primary_email
+      when "secondary_email" then apply_secondary_email
       when "organization_name" then apply_organization_name
       when "affiliation" then apply_affiliation
       else Result.new(applied: false, message: "This request needs a manual update.")
@@ -101,6 +102,18 @@ module ProfileChangeRequests
       user.save(validate: false)
       UserServices::ProcessEmailChange.call(user: user, send_confirmation: true, current_user: @reviewer)
       Result.new(applied: true, message: "Confirmation email sent to #{requested}.")
+    end
+
+    def apply_secondary_email
+      person = @request.person
+      requested = @request.requested_value
+      return Result.new(applied: true, message: "Secondary email already matches.") if person.email_2 == requested
+
+      if person.update(email_2: requested)
+        Result.new(applied: true, message: "Secondary email changed to #{requested}.")
+      else
+        Result.new(applied: false, message: person.errors.full_messages.to_sentence)
+      end
     end
 
     def apply_organization_name

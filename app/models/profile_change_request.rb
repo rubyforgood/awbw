@@ -7,14 +7,16 @@ class ProfileChangeRequest < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :affiliation, optional: true
 
-  FIELDS = %w[primary_email organization_name affiliation].freeze
+  FIELDS = %w[primary_email secondary_email organization_name affiliation].freeze
+  EMAIL_FIELDS = %w[primary_email secondary_email].freeze
   FIELD_LABELS = {
     "primary_email" => "Primary email",
+    "secondary_email" => "Secondary email",
     "organization_name" => "Organization name",
     "affiliation" => "Affiliation details"
   }.freeze
   # Fields whose new value is concrete enough for "Approve" to write directly.
-  AUTO_APPLIABLE_FIELDS = %w[primary_email organization_name].freeze
+  AUTO_APPLIABLE_FIELDS = %w[primary_email secondary_email organization_name].freeze
   STATUSES = %w[pending resolved declined].freeze
   RESOLUTION_METHODS = %w[approved manual].freeze
   # What an affiliation request is asking to change (stored in requested_value),
@@ -42,7 +44,7 @@ class ProfileChangeRequest < ApplicationRecord
   validates :resolution_method, inclusion: { in: RESOLUTION_METHODS }, allow_nil: true
   validates :requested_value, presence: true
   validates :requested_value, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
-                              if: -> { field == "primary_email" && requested_value.present? }
+                              if: -> { field.in?(EMAIL_FIELDS) && requested_value.present? }
   validates :details, presence: true, if: :requires_details?
   validate :affiliation_belongs_to_person
   validate :affiliation_target_present, if: -> { field == "affiliation" }
@@ -101,6 +103,7 @@ class ProfileChangeRequest < ApplicationRecord
   def current_value
     case field
     when "primary_email" then person.user&.email
+    when "secondary_email" then person.email_2
     when "organization_name" then target_organization&.name
     end
   end
