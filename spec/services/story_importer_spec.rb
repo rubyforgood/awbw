@@ -625,7 +625,7 @@ RSpec.describe StoryImporter do
         expect(story.primary_category).to eq(families)
       end
 
-      it "tags but stars nothing when a primary alias names several tags" do
+      it "stars the first recorded tag when a primary alias names several" do
         children = create(:category, category_type: age_range, name: "Children")
         teens = create(:category, category_type: age_range, name: "Teens")
         create(:tag_alias, name: "C & T", aliasable: children)
@@ -634,7 +634,7 @@ RSpec.describe StoryImporter do
 
         story = Story.sole
         expect(story.categories).to contain_exactly(children, teens)
-        expect(story.primary_category).to be_nil
+        expect(story.primary_category).to eq(children)
       end
     end
   end

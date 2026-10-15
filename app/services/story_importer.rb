@@ -651,7 +651,7 @@ class StoryImporter
 
   # The row's single primary sector — added to the tagged set if missing; an
   # unmatched name becomes a comment like any other. An alias naming several
-  # sectors tags them all but stars none.
+  # sectors tags them all and stars the first recorded.
   def resolve_primary_sector(row, sectors, categories, missing_sectors)
     name = clean(row["primary_sector"])
     return if name.blank?
@@ -663,8 +663,7 @@ class StoryImporter
     end
 
     collect_tags(tags, sectors, categories)
-    primary = tags.grep(Sector)
-    primary.first if primary.one?
+    tags.grep(Sector).first
   end
 
   # The row's primary audience, written "Type: Name". An age group named here
@@ -682,8 +681,7 @@ class StoryImporter
     end
 
     collect_tags(tags, sectors, categories)
-    primary = tags.grep(Category)
-    primary.first if primary.one?
+    tags.grep(Category).first
   end
 
   # nil when nothing answers to the name, so the caller can keep it as missing.
@@ -700,7 +698,7 @@ class StoryImporter
   # A legacy term names whatever its aliases record, of either kind — or nothing,
   # when it's recorded as ignored, which drops it without flagging it as missing.
   def aliased_tags(name)
-    @tag_aliases ||= TagAlias.includes(:aliasable).group_by { |tag_alias| tag_alias.name.downcase }
+    @tag_aliases ||= TagAlias.includes(:aliasable).order(:id).group_by { |tag_alias| tag_alias.name.downcase }
     @tag_aliases[name.to_s.squish.downcase]&.reject(&:ignored?)&.map(&:aliasable)
   end
 
