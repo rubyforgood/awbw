@@ -198,11 +198,13 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.where(filemaker_code: "00009").count).to eq(1)
   end
 
-  it "flags an email that belongs to a differently named person" do
-    create(:person, first_name: "Charles", last_name: "Babbage", email: "ada@example.com")
+  it "creates a new person when the email belongs to a differently named one" do
+    babbage = create(:person, first_name: "Charles", last_name: "Babbage", email: "ada@example.com")
     rolodex("00010", EMail: "ada@example.com")
 
-    expect { expect(results[:ambiguous].size).to eq(1) }.not_to change(Person, :count)
+    expect { expect(results[:created].size).to eq(1) }.to change(Person, :count).by(1)
+    expect(Person.find_by!(filemaker_code: "00010")).to have_attributes(first_name: "Ada", email: "ada@example.com")
+    expect(babbage.reload.filemaker_code).to be_nil
   end
 
   it "links a same-name person with no email" do
