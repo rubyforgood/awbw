@@ -40,10 +40,20 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
   def requester_summary
     parts = if field == "affiliation"
       [ requested_value, (affiliation&.organization || organization)&.name || proposed_organization_name ]
+    elsif email?
+      [ field_label, PersonDecorator.email_with_type(requested_value, proposed_email_type) ]
     else
       [ field_label, requested_value.presence || details&.truncate(60) ]
     end
     parts.compact_blank.join(": ")
+  end
+
+  def current_display
+    email? ? PersonDecorator.email_with_type(current_value, current_email_type) : current_value
+  end
+
+  def requested_display
+    email? ? PersonDecorator.email_with_type(requested_value, proposed_email_type) : requested_value
   end
 
   def pending_tooltip

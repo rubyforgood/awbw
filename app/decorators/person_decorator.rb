@@ -1,4 +1,13 @@
 class PersonDecorator < ApplicationDecorator
+  # "(w)" for work, "(p)" for personal — short enough to sit after an address.
+  def self.email_type_abbreviation(type)
+    "(#{type.first})" if type.in?(Person::CONTACT_TYPES)
+  end
+
+  def self.email_with_type(address, type)
+    [ address, email_type_abbreviation(type) ].compact_blank.join(" ")
+  end
+
   def title
     "#{first_name} #{last_name}"
   end

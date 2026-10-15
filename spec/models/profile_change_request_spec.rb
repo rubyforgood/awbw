@@ -100,6 +100,32 @@ RSpec.describe ProfileChangeRequest, type: :model do
       end
     end
 
+    describe "email requests" do
+      let(:person) { create(:person, email_2: "second@example.com", email_2_type: "work") }
+
+      it "accepts a type-only change" do
+        expect(build(:profile_change_request, :secondary_email, person: person,
+                                                                requested_value: "second@example.com", proposed_email_type: "personal")).to be_valid
+      end
+
+      it "rejects a request that matches what's on file" do
+        request = build(:profile_change_request, :secondary_email, person: person,
+                                                                   requested_value: "Second@example.com", proposed_email_type: "work")
+        expect(request).not_to be_valid
+        expect(request.errors[:base].join).to include("already what's on file")
+      end
+
+      it "rejects an unknown type" do
+        expect(build(:profile_change_request, :secondary_email, person: person, proposed_email_type: "pager")).not_to be_valid
+      end
+
+      it "starts from the address and type on file" do
+        request = build(:profile_change_request, :secondary_email, person: person, requested_value: nil)
+        request.prefill_current_email
+        expect(request).to have_attributes(requested_value: "second@example.com", proposed_email_type: "work")
+      end
+    end
+
     it "rejects an unknown field" do
       request = build(:profile_change_request, field: "shoe_size")
       expect(request).not_to be_valid

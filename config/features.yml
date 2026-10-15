@@ -4659,6 +4659,7 @@
     - "You can pick your work address from the organization's addresses right on the edit page."
     - "Can't find what you need? \"Ask AWBW staff to change it\" at the bottom of the page sends a free-text request."
     - "A clock icon marks anything you've already asked about. Hover over it to see what you sent."
+    - "Each email shows its type after it — (w) for work, (p) for personal. To change just the type, ask for a change and pick the new type; the address is already filled in."
 
 - name: "Jump to one person's change requests"
   area: people

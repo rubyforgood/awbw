@@ -35,13 +35,24 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       expect(response.body).to include("field=secondary_email")
     end
 
-    it "shows an existing secondary email with its change-request link" do
-      person.update!(email_2: "second@example.com")
+    it "shows an existing secondary email with its type and change-request link" do
+      person.update!(email_2: "second@example.com", email_2_type: "work")
 
       get edit_person_path(person)
 
       expect(response.body).to include("second@example.com")
+      expect(response.body).to include("(w)")
       expect(response.body).to include("field=secondary_email")
+      expect(response.body).not_to include("person[email_2_type]")
+    end
+
+    it "prefills an email request with the address and type on file" do
+      person.update!(email_2: "second@example.com", email_2_type: "work")
+
+      get new_profile_change_request_path(person_id: person, field: "secondary_email")
+
+      expect(response.body).to include('value="second@example.com"')
+      expect(response.body).to include('<option selected="selected" value="work">Work</option>')
     end
 
     it "shows the pending request (not a new-request link) once one exists for a field" do

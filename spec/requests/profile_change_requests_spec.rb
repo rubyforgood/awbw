@@ -90,6 +90,37 @@ RSpec.describe "Profile change requests", type: :request do
       expect(person.user.reload.unconfirmed_email).to eq("changed@example.com")
     end
 
+    it "approves a type-only primary email change without sending a confirmation" do
+      person.update!(email_type: "work")
+      request = create(:profile_change_request, :primary_email, person: person,
+                                                                requested_value: person.user.email, proposed_email_type: "personal")
+
+      post approve_profile_change_request_path(request)
+
+      expect(request.reload).to be_resolved
+      expect(person.reload.email_type).to eq("personal")
+      expect(person.user.reload.unconfirmed_email).to be_blank
+    end
+
+    it "carries the type onto the login when the primary address changes" do
+      request = create(:profile_change_request, :primary_email, person: person,
+                                                                requested_value: "changed@example.com", proposed_email_type: "personal")
+
+      post approve_profile_change_request_path(request)
+
+      expect(person.reload.email_type).to eq("personal")
+      expect(person.user.reload).to have_attributes(unconfirmed_email: "changed@example.com", email_type: "personal")
+    end
+
+    it "approves a secondary email request with its type" do
+      request = create(:profile_change_request, :secondary_email, person: person,
+                                                                  requested_value: "second@example.com", proposed_email_type: "work")
+
+      post approve_profile_change_request_path(request)
+
+      expect(person.reload).to have_attributes(email_2: "second@example.com", email_2_type: "work")
+    end
+
     it "approves a secondary email request by setting email_2" do
       request = create(:profile_change_request, :secondary_email, person: person, requested_value: "second@example.com")
 
@@ -290,7 +321,8 @@ RSpec.describe "Profile change requests", type: :request do
     end
 
     it "resolves without re-sending when the email already matches" do
-      request = create(:profile_change_request, :primary_email, person: person, requested_value: person.user.email)
+      request = create(:profile_change_request, :primary_email, person: person, requested_value: "already@example.com")
+      person.user.update_column(:email, "already@example.com")
 
       post approve_profile_change_request_path(request)
 

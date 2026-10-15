@@ -23,7 +23,9 @@ class ProfileChangeRequestsController < ApplicationController
     return prepare_license_request if @request.license?
 
     existing = @person.profile_change_requests.pending.find_by(field: requested_field)
-    redirect_to edit_profile_change_request_path(existing) if existing
+    return redirect_to edit_profile_change_request_path(existing) if existing
+
+    @request.prefill_current_email
   end
 
   def create
@@ -145,7 +147,7 @@ class ProfileChangeRequestsController < ApplicationController
 
   def profile_change_request_params
     params.require(:profile_change_request).permit(
-      :field, :requested_value, :details, :affiliation_id, :organization_id, :professional_license_id,
+      :field, :requested_value, :details, :affiliation_id, :organization_id, :professional_license_id, :proposed_email_type,
       :proposed_title, :proposed_start_date, :proposed_end_date, :proposed_organization_name
     )
   end

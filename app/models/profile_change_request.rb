@@ -52,7 +52,9 @@ class ProfileChangeRequest < ApplicationRecord
   validates :requested_value, presence: true, unless: -> { other? || license? }
   validates :requested_value, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
                               if: -> { field.in?(EMAIL_FIELDS) && requested_value.present? }
+  validates :proposed_email_type, inclusion: { in: Person::CONTACT_TYPES }, allow_blank: true
   validates :details, presence: true, if: :requires_details?
+  validate :email_request_changes_something, if: -> { pending? && email? }
   validate :affiliation_belongs_to_person
   validate :professional_license_belongs_to_person
   validates :professional_license, presence: true, if: :license?
@@ -73,6 +75,7 @@ class ProfileChangeRequest < ApplicationRecord
   def declined? = status == "declined"
   def other? = field == OTHER_FIELD
   def license? = field == LICENSE_FIELD
+  def email? = field.in?(EMAIL_FIELDS)
 
   def auto_appliable?
     return true if field.in?(AUTO_APPLIABLE_FIELDS)
@@ -129,6 +132,22 @@ class ProfileChangeRequest < ApplicationRecord
     end
   end
 
+  def current_email_type
+    case field
+    when "primary_email" then person.email_type.presence || person.user&.email_type
+    when "secondary_email" then person.email_2_type
+    end
+  end
+
+  # Starts an email request from what's on file, so asking to change only the type
+  # doesn't mean retyping the address.
+  def prefill_current_email
+    return unless email?
+
+    self.requested_value ||= current_value
+    self.proposed_email_type ||= current_email_type
+  end
+
   # A one-line description of the affiliation an affiliation request targets.
   def affiliation_summary
     return unless affiliation
@@ -174,6 +193,14 @@ class ProfileChangeRequest < ApplicationRecord
   def affiliation_belongs_to_person
     return if affiliation.blank?
     errors.add(:affiliation, "is not one of this person's affiliations") if affiliation.person_id != person_id
+  end
+
+  def email_request_changes_something
+    return if requested_value.blank?
+    return unless requested_value.casecmp?(current_value.to_s)
+    return if proposed_email_type.present? && proposed_email_type != current_email_type
+
+    errors.add(:base, "That's already what's on file. Change the address or its type.")
   end
 
   def professional_license_belongs_to_person
