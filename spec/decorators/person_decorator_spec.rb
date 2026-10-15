@@ -1,6 +1,30 @@
 require "rails_helper"
 
 RSpec.describe PersonDecorator do
+  describe "#user_accounts" do
+    let(:person) { create(:person) }
+
+    it "lists every login on the person, most recently updated first" do
+      older = person.user.tap { |user| user.update_columns(updated_at: 2.days.ago) }
+      newer = create(:user, person: person, updated_at: 1.hour.ago)
+      create(:user)
+
+      expect(person.decorate.user_accounts).to eq([ newer, older ])
+      expect(person.decorate.multiple_user_accounts?).to be(true)
+    end
+
+    it "suggests keeping the most recent login that can still sign in" do
+      usable = person.user
+      create(:user, person: person, confirmed_at: nil, updated_at: 1.minute.from_now)
+
+      expect(person.decorate.suggested_user_account).to eq(usable)
+    end
+
+    it "does not flag a person with one login" do
+      expect(person.decorate.multiple_user_accounts?).to be(false)
+    end
+  end
+
   describe "#news_subscriptions_path" do
     let(:person) { create(:person) }
 

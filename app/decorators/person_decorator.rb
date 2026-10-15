@@ -28,6 +28,21 @@ class PersonDecorator < ApplicationDecorator
     end
   end
 
+  # A merge can leave several logins on one person — flagged for admins on the profile
+  # and edit pages. Ordered like Person#user, so the first is the one the profile shows.
+  def user_accounts
+    @user_accounts ||= User.where(person_id: id).order(updated_at: :desc, id: :desc).to_a
+  end
+
+  def multiple_user_accounts?
+    user_accounts.size > 1
+  end
+
+  # Matches the logins deduper's pick (UserServices::DuplicateFinder): the most recent login that can sign in.
+  def suggested_user_account
+    user_accounts.find(&:has_access?) || user_accounts.first
+  end
+
   # The subscriptions index filtered to this person's News (mailing-list) topic —
   # where mailing-list interest now lives since the person-level consent flag retired.
   def news_subscriptions_path

@@ -4527,13 +4527,16 @@
     - "If the resubmission adds a scholarship request, the subject ends with \"(scholarship now requested)\"."
     - "Filter the Communications page by \"Admin FYI: duplicate event registration\" or \"Duplicate event registration received\" to find these emails."
 
-- name: "Internal notes on people"
+- name: "Flag people with more than one user account"
   area: people
   display_status: admin_facing
-  released_on: 2026-10-14
-  pr_number: 2689
+  released_on: 2026-10-12
+  pr_number: 2661
   summary: >-
-    Admins can see and edit a person's internal notes, which hold comments
-    carried over from FileMaker, on the person's edit page.
+    A person's profile and edit pages now warn admins when the person has more
+    than one user account, link to each one, and offer to merge the extras into
+    the suggested keeper.
   pro_tips:
-    - "Add ?admin=true to the end of the edit page's address to show the Internal notes box, the same as on organizations and users."
+    - "The extra account is usually left over from a merge."
+    - "Preview merge opens the logins deduper with the suggested keeper picked. Its back link and the finished merge return you to the person."
+    - "The account marked \"shown on profile\" is the one used most recently."

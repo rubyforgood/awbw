@@ -3,6 +3,10 @@
 module Dedupable
   extend ActiveSupport::Concern
 
+  included do
+    helper_method :dedupe_return
+  end
+
   CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
 
   def dedupe_index
@@ -128,7 +132,7 @@ module Dedupable
     end
 
     label = mc.model_name.human.pluralize
-    redirect_to url_for(action: :index),
+    redirect_to dedupe_return&.dig(:path) || url_for(action: :index),
       notice: "#{label} merged successfully. '#{dedupe_record_label(config, record_to_delete)}' was merged into '#{dedupe_record_label(config, record_to_keep)}'."
   rescue ActionPolicy::Unauthorized
     raise
@@ -138,6 +142,18 @@ module Dedupable
   end
 
   private
+
+  # Where a merge started from outside the dedupe index returns to, with the params that carry it.
+  def dedupe_return
+    person_id = params[:person_id].presence
+    return unless person_id
+
+    carry = { return_to: params[:return_to], person_id: person_id }
+    case params[:return_to]
+    when "person_show" then { label: "Back to profile", path: person_path(person_id), params: carry }
+    when "person_edit" then { label: "Back to edit person", path: edit_person_path(person_id), params: carry }
+    end
+  end
 
   # The preview only renders editable_columns when a config lists them, so only those are accepted.
   def dedupe_editable_columns(config)
