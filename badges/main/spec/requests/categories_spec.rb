@@ -35,6 +35,17 @@ RSpec.describe "Categories", type: :request do
         get categories_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "shows each category's taggings count on its Taggings button" do
+        tagged = create(:category, valid_attributes)
+        create(:category, valid_attributes.merge(name: "Untagged"))
+        create_list(:categorizable_item, 2, category: tagged)
+
+        get categories_path
+
+        expect(response.body).to include("Taggings (2)")
+        expect(response.body).to include("Taggings (0)")
+      end
     end
 
     describe "GET show" do
