@@ -27,6 +27,11 @@ namespace :fm do
       messages.each { |message| puts "  #{message}" }
     end
 
+    if import.unmatched_tags.any?
+      puts "\nService areas and age groups no sector or category answers to:"
+      import.unmatched_tags.sort_by { |name, count| [ -count, name ] }.each { |name, count| puts "  #{count.to_s.rjust(5)}  #{name}" }
+    end
+
     puts
     import.results.each { |outcome, messages| puts "#{outcome.to_s.humanize.ljust(17)} #{messages.size}" }
     puts(dry_run ? "\nDRY RUN — rolled back, nothing written. Set DRY_RUN=false to execute." : "\nDone.")
