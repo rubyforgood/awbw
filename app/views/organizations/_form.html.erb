@@ -420,13 +420,12 @@
   <% end %>
 
   <% if params[:admin] && allowed_to?(:manage?, Organization) %>
-    <div class="<%= 'admin-only bg-blue-100' if allowed_to?(:manage?, Organization) %> mb-6">
+    <div class="admin-only mb-6 bg-blue-100">
       <%= f.input :notes,
                   as: :text,
-                  label: "Internal Notes",
+                  label: "Internal notes",
                   input_html: {
                     rows: 3,
-                    disabled: !allowed_to?(:manage?, Organization),
                     class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
                   } %>
     </div>
