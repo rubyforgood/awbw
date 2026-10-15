@@ -35,6 +35,7 @@ en:
   # rename "Communications" everywhere it appears in the UI.
   communications:
     title: "Communications"
+    portal_title: "Portal communications"
     detail_title: "Communication"
     back_link: "Communications"
     empty: "No communications found."

@@ -112,7 +112,7 @@
   </div>
 
   <div class="addresses scroll-mt-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm" id="addresses">
-    <h3 class="<%= heading_class %>">Addresses</h3>
+    <h3 class="<%= heading_class %>">Mailing addresses</h3>
     <%= f.simple_fields_for :addresses do |f| %>
       <%= render "addresses/address_fields", f: f %>
     <% end %>
@@ -139,7 +139,7 @@
   <div class="flex flex-wrap gap-4 items-stretch">
     <!-- Sectors -->
     <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
-      <h3 class="<%= heading_class %>">Sectors</h3>
+      <h3 class="<%= heading_class %>"><%= allowed_to?(:manage?, Person) ? "Sectors" : "Sectors you work in" %></h3>
       <div class="flex flex-1 flex-wrap content-start items-center gap-2"
            data-controller="primary-tag"
            data-primary-tag-primary-class="border-lime-500 bg-lime-100"
@@ -524,7 +524,7 @@
   <% if f.object.persisted? %>
     <%# Combined comments & communications — comment bodies/controls are admin-only
         and communication subjects are visible to the person (gated in the partial). %>
-    <%= render "shared/comments_and_communications", f: f, view_all_person: @person %>
+    <%= render "shared/comments_and_communications", f: f, view_all_person: @person, comms_title: t("communications.portal_title") %>
   <% end %>
 
   <% if params[:admin] && allowed_to?(:manage?, Person) %>
