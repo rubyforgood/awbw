@@ -1078,23 +1078,49 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(EventRegistration.last.discount_sum).to eq(2500)
     end
 
-    # A discount larger than the remaining cost used to raise RecordInvalid from
-    # the Allocation ("Cannot allocate more than remaining event cost"), 500ing the
-    # registration after the row was already written. It should comp the event at
-    # most, never allocate past the cost.
-    it "caps the discount at the remaining cost instead of raising" do
+    # The discount is a hard amount: a code larger than the balance is refused
+    # (not silently capped or allocated past the cost), the registration still
+    # stands, and no payment is taken.
+    it "refuses a discount larger than the remaining cost" do
       event.update!(cost_cents: 5_000, discount_amount_cents: 10_000)
+
+      expect {
+        post_with_code(code: "SAVE50", payment: "Credit card (now)")
+      }.not_to change(Discount, :count)
+
+      registration = EventRegistration.last
+      expect(registration.discount_sum).to eq(0)
+      expect(registration.remaining_cost).to eq(5_000)
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include(registration_ticket_path(registration.slug))
+      expect(flash[:alert]).to match(/contact support/i)
+    end
+
+    it "applies a discount that exactly equals the remaining cost" do
+      event.update!(cost_cents: 2_500, discount_amount_cents: 2_500)
 
       expect {
         post_with_code(code: "SAVE50", payment: "Credit card (later)")
       }.to change(Discount, :count).by(1)
-        .and change(Allocation, :count).by(1)
 
-      registration = EventRegistration.last
-      expect(registration.discount_sum).to eq(5_000)
-      expect(registration.remaining_cost).to eq(0)
-      expect(registration).to be_paid_in_full
+      expect(EventRegistration.last.discount_sum).to eq(2_500)
+      expect(EventRegistration.last.remaining_cost).to eq(0)
+      expect(flash[:alert]).to be_nil
+    end
+
+    it "silently skips the code when nothing is owed" do
+      email = "paid-#{SecureRandom.hex(4)}@example.com"
+      person = create(:person, first_name: "Pat", last_name: "Lee", email: email)
+      registration = create(:event_registration, event: event, registrant: person)
+      create(:allocation, source: create(:payment), allocatable: registration, amount: event.cost_cents)
+
+      expect {
+        post_with_code(code: "SAVE50", payment: "Credit card (later)", email: email)
+      }.not_to change(Discount, :count)
+
+      expect(registration.reload.discount_sum).to eq(0)
       expect(response).to have_http_status(:redirect)
+      expect(flash[:alert]).to be_nil
     end
 
     # One person re-submitting the form reuses their single event registration, so

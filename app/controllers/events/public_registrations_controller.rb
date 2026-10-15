@@ -158,17 +158,19 @@ module Events
     end
 
     def apply_discount_code(registration)
-      return unless valid_discount_code?
-      return if registration.transferred_in?
-      return if event_discount_applied?(registration)
+      return true unless valid_discount_code?
+      return true if registration.transferred_in?
+      return true if event_discount_applied?(registration)
 
-      amount = [ @event.discount_amount_cents, registration.remaining_cost ].min
-      return unless amount.positive?
+      amount = @event.discount_amount_cents
+      return true if registration.remaining_cost <= 0
+      return false if amount > registration.remaining_cost
 
       ActiveRecord::Base.transaction do
         discount = Discount.create!(amount_cents: amount, event: @event)
         registration.allocations.create!(source: discount, amount: amount)
       end
+      true
     rescue ActiveRecord::RecordInvalid
       false
     end
