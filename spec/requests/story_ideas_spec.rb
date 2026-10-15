@@ -93,6 +93,17 @@ RSpec.describe "/story_ideas", type: :request do
         expect(response).to be_successful
       end
 
+      it "offers every organization, including ones the admin isn't affiliated with" do
+        first_org = create(:organization, name: "First Arts Org")
+        second_org = create(:organization, name: "Second Arts Org")
+
+        get new_story_idea_url
+
+        page = Capybara.string(response.body)
+        option_values = page.all("select[name='story_idea[organization_id]'] option").map(&:value)
+        expect(option_values).to include(first_org.id.to_s, second_org.id.to_s)
+      end
+
       it "tells the submitter which image shape looks best" do
         get new_story_idea_url
 
