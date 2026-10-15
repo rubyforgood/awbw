@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_123237) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_013218) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2143,6 +2143,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_123237) do
     t.index ["story_idea_id", "workshop_id", "external_workshop_title"], name: "index_story_ideas_workshops_on_idea_workshop_and_title", unique: true
     t.index ["story_idea_id"], name: "index_story_ideas_workshops_on_story_idea_id"
     t.index ["workshop_id"], name: "index_story_ideas_workshops_on_workshop_id"
+  end
+
+  create_table "tag_aliases", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "aliasable_id"
+    t.string "aliasable_type"
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.boolean "ignored", default: false, null: false
+    t.string "name", null: false
+    t.boolean "proposed", default: false, null: false
+    t.string "source", null: false
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.index ["aliasable_type", "aliasable_id"], name: "index_tag_aliases_on_aliasable"
+    t.index ["name", "aliasable_type", "aliasable_id"], name: "index_tag_aliases_on_name_and_aliasable", unique: true
   end
 
   create_table "topic_subscription_types", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
