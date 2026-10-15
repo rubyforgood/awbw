@@ -244,12 +244,11 @@ RSpec.describe "FormSubmissions", type: :request do
 
         # A matching affiliation the person holds does not mark it linked — only a
         # direct link made in the editor does, so it stays Pending (the queue).
-        create(:affiliation, person: submission.person,
-               organization: create(:organization, name: "Harbor Family Shelter"))
+        organization = create(:organization, name: "Harbor Family Shelter")
+        create(:affiliation, person: submission.person, organization: organization)
         get form_submissions_path, headers: frame_headers
         expect(response.body).to include("Pending")
 
-        organization = create(:organization, name: "Harbor Family Shelter")
         submission.link_organization!(organization.id)
         get form_submissions_path, headers: frame_headers
         # Once linked, the org shows as its own chip (linking to the org) — no
