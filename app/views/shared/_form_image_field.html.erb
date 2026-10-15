@@ -18,6 +18,9 @@
 <% multiple ||= false %>
 <% file ||= nil %>
 <% use_profile_placeholder ||= false %>
+<% compact ||= false %>
+<% preview_size = compact ? "h-16 w-16" : "h-32 w-32" %>
+<% preview_span = compact ? "row-span-2" : nil %>
 <% show_file_field = show_file_field.to_s.present? ? show_file_field : true %>
 <% show_existing   = show_existing.to_s.present? ? show_existing : true %>
 <% accept_attr = asset.class.respond_to?(:accept_attribute) ? asset.class.accept_attribute : nil %>
@@ -34,7 +37,7 @@
 <% is_pdf      = blob&.content_type == "application/pdf" %>
 <% image_dom_id = "#{dom_id(asset)}_#{field_name}_image" %>
 
-<div data-controller="file-preview" class="text-center">
+<div data-controller="file-preview" class="<%= compact ? "text-left" : "text-center" %>">
 
   <%= f.label label, class: "block font-medium gap-1 text-gray-700 string required" %>
 
@@ -42,48 +45,48 @@
     <p class="text-sm text-gray-500"><%= hint.html_safe %></p>
   <% end %>
 
-  <div class="flex flex-col items-center gap-2">
+  <div class="<%= compact ? "grid grid-cols-[auto_auto] items-center justify-start gap-x-3 gap-y-1" : "flex flex-col items-center gap-2" %>">
 
     <% if show_existing %>
 
       <%# ---------- IMAGE ---------- %>
       <% if is_image && file.present? && file.try(:persisted?) %>
         <%= link_to url_for(file), target: "_blank", rel: "noopener noreferrer",
-                    title: "Open image in a new tab", class: "block cursor-zoom-in" do %>
+                    title: "Open image in a new tab", class: class_names("block cursor-zoom-in", preview_span) do %>
           <%= image_tag file,
                         id: image_dom_id,
                         alt: "#{label}",
                         data: { file_preview_target: "preview" },
-                        class: "w-32 h-32 object-cover border border-gray-300 shadow-sm hover:opacity-90 transition-opacity #{rounded ? 'rounded-full' : ''}" %>
+                        class: class_names(preview_size, "object-cover border border-gray-300 shadow-sm hover:opacity-90 transition-opacity", "rounded-full": rounded) %>
         <% end %>
 
         <%# ---------- PDF PREVIEW ---------- %>
       <% elsif is_pdf && file.previewable? %>
         <%= link_to url_for(file), target: "_blank", rel: "noopener noreferrer",
-                    title: "Open PDF in a new tab", class: "block cursor-zoom-in" do %>
+                    title: "Open PDF in a new tab", class: class_names("block cursor-zoom-in", preview_span) do %>
           <%= image_tag file.preview(resize_to_limit: [300, 300]),
                         id: image_dom_id,
                         alt: "#{label} PDF preview",
                         data: { file_preview_target: "preview" },
-                        class: "w-32 h-32 object-contain border border-gray-300 shadow-sm hover:opacity-90 transition-opacity" %>
+                        class: class_names(preview_size, "object-contain border border-gray-300 shadow-sm hover:opacity-90 transition-opacity") %>
         <% end %>
 
         <%# ---------- PLACEHOLDER ---------- %>
       <% else %>
-        <div class="relative h-32 w-32">
+        <div class="<%= class_names("relative", preview_size, preview_span) %>">
           <img id="<%= image_dom_id %>"
                data-file-preview-target="preview"
-               class="hidden h-32 w-32 border border-gray-300 object-cover shadow-sm">
+               class="<%= class_names("hidden border border-gray-300 object-cover shadow-sm", preview_size) %>">
 
           <div data-file-preview-target="placeholder"
-               class="absolute inset-0 flex items-center justify-center border border-gray-300 bg-gray-50 text-6xl text-gray-400 shadow-sm">
+               class="<%= class_names("absolute inset-0 flex items-center justify-center border border-gray-300 bg-gray-50 text-gray-400 shadow-sm", compact ? "text-2xl" : "text-6xl") %>">
             <i class="fa-regular fa-image"></i>
           </div>
         </div>
       <% end %>
 
       <div data-file-preview-target="filename"
-           class="max-w-[8rem] text-center text-sm break-all text-gray-500">
+           class="<%= class_names("max-w-[8rem] text-sm break-all text-gray-500", compact ? "text-left" : "text-center") %>">
         <%= if blob.present? && blob.respond_to?(:persisted?) && blob.persisted?
               link_to(blob.filename.to_s, url_for(file), class: "underline cursor-zoom-in", target: "_blank", rel: "noopener noreferrer", title: "Open image in a new tab")
             else
@@ -128,7 +131,7 @@
       </div>
 
       <% if accepted_label.present? %>
-        <p class="mt-1 text-xs text-gray-400">Accepts: <%= accepted_label %></p>
+        <p class="<%= class_names("mt-1 text-xs text-gray-400", "col-start-2": compact) %>">Accepts: <%= accepted_label %></p>
       <% end %>
     <% end %>
 

@@ -13,6 +13,11 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(request).not_to be_valid
     end
 
+    it "requires a valid email for a secondary_email request" do
+      request = build(:profile_change_request, :secondary_email, requested_value: "not-an-email")
+      expect(request).not_to be_valid
+    end
+
     it "requires details for a free-form affiliation request" do
       request = build(:profile_change_request, field: "affiliation", details: nil)
       expect(request).not_to be_valid
@@ -33,9 +38,10 @@ RSpec.describe ProfileChangeRequest, type: :model do
   end
 
   describe "#auto_appliable?" do
-    it "is true for primary_email and organization_name, false for affiliation" do
+    it "is true for the email fields and organization_name, false for affiliation" do
       expect(build(:profile_change_request, :primary_email)).to be_auto_appliable
       expect(build(:profile_change_request, :organization_name)).to be_auto_appliable
+      expect(build(:profile_change_request, :secondary_email)).to be_auto_appliable
       expect(build(:profile_change_request, field: "affiliation")).not_to be_auto_appliable
     end
   end
@@ -45,6 +51,12 @@ RSpec.describe ProfileChangeRequest, type: :model do
       user = create(:user, :with_person, email: "current@example.com")
       request = build(:profile_change_request, :primary_email, person: user.person)
       expect(request.current_value).to eq("current@example.com")
+    end
+
+    it "reads the person's email_2 for secondary_email" do
+      person = create(:person, email_2: "second-current@example.com")
+      request = build(:profile_change_request, :secondary_email, person: person)
+      expect(request.current_value).to eq("second-current@example.com")
     end
   end
 

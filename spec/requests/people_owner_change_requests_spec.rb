@@ -26,6 +26,23 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       expect(response.body).to include("field=organization_name")
     end
 
+    it "shows the secondary email as admin-editable with a change-request link, even when blank" do
+      get edit_person_path(person)
+
+      expect(response.body).to include("Secondary email")
+      expect(response.body).to include("None yet")
+      expect(response.body).to include("field=secondary_email")
+    end
+
+    it "shows an existing secondary email with its change-request link" do
+      person.update!(email_2: "second@example.com")
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("second@example.com")
+      expect(response.body).to include("field=secondary_email")
+    end
+
     it "shows the pending request (not a new-request link) once one exists for a field" do
       request = create(:profile_change_request, :primary_email, person: person,
                                                 requested_by: owner_user, requested_value: "new@example.com")
