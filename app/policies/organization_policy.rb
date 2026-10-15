@@ -35,6 +35,13 @@ class OrganizationPolicy < ApplicationPolicy
             .where(affiliations: { person_id: user.person_id })
   end
 
+  relation_scope(:currently_affiliated) do |relation|
+    next relation if admin?
+    next relation.none unless user&.person_id
+
+    relation.where(id: Affiliation.active.where(person_id: user.person_id).select(:organization_id))
+  end
+
   private
 
   # Signed-in users can preview org profiles everywhere but production, where
