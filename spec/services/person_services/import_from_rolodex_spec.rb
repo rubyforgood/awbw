@@ -38,9 +38,25 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
   describe "the fields FmRolodex::PORTAL_FIELDS maps onto a person" do
     let!(:age_range_type) { create(:category_type, name: "AgeRange", published: true) }
-    let!(:adults) { create(:category, category_type: age_range_type, name: "Adults") }
-    let!(:domestic_violence) { create(:sector, name: "Domestic Violence") }
-    let!(:child_abuse) { create(:sector, name: "Child Abuse/Neglect") }
+    let!(:children) { create(:category, :published, category_type: age_range_type, name: "Children") }
+    let!(:teens) { create(:category, :published, category_type: age_range_type, name: "Teens") }
+    let!(:adults) { create(:category, :published, category_type: age_range_type, name: "Adults") }
+    let!(:elders) { create(:category, :published, category_type: age_range_type, name: "Elders") }
+    let!(:domestic_violence) { create(:sector, :published, name: "Domestic Violence") }
+    let!(:child_abuse) { create(:sector, :published, name: "Child Abuse/Neglect") }
+    let!(:education) { create(:sector, :published, name: "Education") }
+    let!(:mental_health) { create(:sector, :published, name: "Mental Health") }
+    let!(:grief) { create(:sector, :published, name: "Grief/Loss") }
+
+    before do
+      create(:tag_alias, name: "Child Abuse", aliasable: child_abuse)
+      create(:tag_alias, name: "Student Services", aliasable: education)
+      create(:tag_alias, name: "Clinical Setting", aliasable: mental_health)
+      create(:tag_alias, name: "Virtually", aliasable: nil, ignored: true)
+      create(:tag_alias, name: "Children's Services", aliasable: children)
+      create(:tag_alias, name: "Elder Abuse", aliasable: elders)
+      [ children, teens, adults, elders ].each { |age| create(:tag_alias, name: "Families", aliasable: age) }
+    end
 
     it "carries the email type, facilitator start, service areas, age group, and entry date" do
       rolodex("00050", EMail: "ada@example.com", EmailType: "Work", FacilitatorSinceMonth: "3",
@@ -58,6 +74,48 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(person.sectorable_items.map(&:sector)).to contain_exactly(domestic_violence, child_abuse)
       expect(person.primary_age_groups).to eq([ adults ])
       expect(import.unmatched_tags).to eq({ "homelessness" => 1 })
+    end
+
+    it "resolves legacy words through the recorded translations" do
+      rolodex("00054", EMail: "ada@example.com", PrimaryServiceArea: "Student Services")
+
+      described_class.new.call
+
+      expect(Person.find_by!(filemaker_code: "00054").primary_sector).to eq(education)
+    end
+
+    it "adds the settings and life experiences as additional sectors" do
+      rolodex("00055", EMail: "ada@example.com", PrimaryServiceArea: "Domestic Violence",
+                       Settings: "Clinical Setting\rVirtually", LifeExperiences: "Grief/Loss\rDomestic Violence")
+
+      import = described_class.new.call
+      person = Person.find_by!(filemaker_code: "00055")
+
+      expect(person.primary_sector).to eq(domestic_violence)
+      expect(person.sectorable_items.where(is_primary: false).map(&:sector)).to contain_exactly(mental_health, grief)
+      expect(import.unmatched_tags).to be_empty
+    end
+
+    it "takes an age group a sector field names as primary or additional by the field it sat in" do
+      rolodex("00056", EMail: "ada@example.com", PrimaryServiceArea: "Children's Services", LifeExperiences: "Elder Abuse")
+
+      described_class.new.call
+      person = Person.find_by!(filemaker_code: "00056")
+
+      expect(person.primary_age_groups).to eq([ children ])
+      expect(person.additional_age_groups).to eq([ elders ])
+      expect(person.sectorable_items).to be_empty
+    end
+
+    it "tags every age range for families without marking one primary" do
+      rolodex("00057", EMail: "ada@example.com", PrimaryAgeGroup: "Families")
+
+      described_class.new.call
+      person = Person.find_by!(filemaker_code: "00057")
+
+      expect(person.primary_age_groups).to be_empty
+      expect(person.additional_age_groups).to contain_exactly(children, teens, adults, elders)
+      expect(person).to be_valid
     end
 
     it "reads a facilitator year with no month as January, and a month name" do
