@@ -5,7 +5,7 @@
     <!-- Eyebrow + header -->
     <div class="flex items-start justify-between gap-4">
       <div>
-        <%= link_to "← Back to dedupe", url_for(action: :dedupe_index),
+        <%= link_to "← #{dedupe_return&.dig(:label) || "Back to dedupe"}", dedupe_return&.dig(:path) || url_for(action: :dedupe_index),
                     class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <h1 class="text-primary mt-2 font-display text-2xl font-semibold">
           Preview <%= @dedupe[:model_label].downcase %> merge
@@ -15,7 +15,7 @@
           move to the one on the right. Edit the keeper's fields before merging.
         </p>
       </div>
-      <%= link_to url_for(action: :dedupe_preview, @dedupe[:delete_id_param] => @record_to_keep.id, @dedupe[:keep_id_param] => @record_to_delete.id),
+      <%= link_to url_for(action: :dedupe_preview, @dedupe[:delete_id_param] => @record_to_keep.id, @dedupe[:keep_id_param] => @record_to_delete.id, **dedupe_return&.dig(:params).to_h),
                   class: button_classes(:secondary_outline, size: :sm, extra: "shrink-0") do %>
         <i class="fa-solid fa-arrows-rotate"></i> Swap
       <% end %>
@@ -82,6 +82,9 @@
                           turbo_confirm: "Merge these #{@dedupe[:model_label_plural].downcase}? This can't be undone." } do |f| %>
       <%= f.hidden_field @dedupe[:delete_id_param].to_sym, value: @record_to_delete.id %>
       <%= f.hidden_field @dedupe[:keep_id_param].to_sym, value: @record_to_keep.id %>
+      <% dedupe_return&.dig(:params)&.each do |name, value| %>
+        <%= hidden_field_tag name, value %>
+      <% end %>
 
       <%= render "dedupes/preview",
                  domain: @dedupe[:domain],
@@ -167,7 +170,7 @@
             <i class="fa-solid fa-ban"></i> Merge disabled (see above).
           </span>
         <% end %>
-        <%= link_to "Cancel", url_for(action: :dedupe_index), class: button_classes(:secondary_outline) %>
+        <%= link_to "Cancel", dedupe_return&.dig(:path) || url_for(action: :dedupe_index), class: button_classes(:secondary_outline) %>
         <%= f.submit "Merge #{@dedupe[:model_label_plural].downcase}",
                      disabled: blocked,
                      class: button_classes(:danger, extra: ("cursor-not-allowed opacity-50" if blocked)) %>
