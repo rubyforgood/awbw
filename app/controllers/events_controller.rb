@@ -401,7 +401,7 @@ class EventsController < ApplicationController
     if registrant.shoutout_text.blank? && (bio = shoutout_bio_from_profile(registrant))
       registrant.update!(shoutout_text: bio)
     end
-    redirect_to edit_event_registration_path(registration, return_to: "recipients", scroll_to: "shout-out"),
+    redirect_to edit_event_registration_path(registration, return_to: "recipients"),
                 notice: "Featured on the recipients page — review their shout-out text below.", status: :see_other
   end
 
