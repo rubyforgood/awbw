@@ -4526,3 +4526,14 @@
     - "Changes that get called out: a new scholarship, CE credit, W-9, or invoice request, a different payment method, a change in whether someone else is paying, a newly linked organization, and any answer (name, address, sectors, and so on) that differs from their previous submission."
     - "If the resubmission adds a scholarship request, the subject ends with \"(scholarship now requested)\"."
     - "Filter the Communications page by \"Admin FYI: duplicate event registration\" or \"Duplicate event registration received\" to find these emails."
+
+- name: "Internal notes on people"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-14
+  pr_number: 2689
+  summary: >-
+    Admins can see and edit a person's internal notes, which hold comments
+    carried over from FileMaker, on the person's edit page.
+  pro_tips:
+    - "Add ?admin=true to the end of the edit page's address to show the Internal notes box, the same as on organizations and users."

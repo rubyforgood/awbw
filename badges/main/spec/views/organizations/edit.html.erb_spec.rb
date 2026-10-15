@@ -114,6 +114,19 @@ RSpec.describe "organizations/edit", type: :view do
     end
   end
 
+  describe "internal notes" do
+    it "hides the internal notes field without the admin param" do
+      render
+      expect(rendered).not_to have_field("Internal notes")
+    end
+
+    it "shows the internal notes field with the admin param" do
+      allow(view).to receive(:params).and_return(ActionController::Parameters.new(admin: "true"))
+      render
+      expect(rendered).to have_field("Internal notes", with: "MyText")
+    end
+  end
+
   describe "facilitators since" do
     before(:each) { assign(:organization_statuses, OrganizationStatus.all) }
 
