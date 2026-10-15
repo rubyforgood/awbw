@@ -42,7 +42,7 @@ end
 
 # Load MySQL's named time-zone tables into the server-global `mysql` schema.
 # Analytics queries convert to a named zone (e.g. America/Los_Angeles) via
-# CONVERT_TZ; a stock server (Homebrew mysql@8.0) ships these tables empty, so
+# CONVERT_TZ; a stock server (Homebrew mysql@8.4) ships these tables empty, so
 # those queries raise Groupdate::Error until they're populated. Idempotent and
 # non-fatal — skip quietly if already loaded or the tooling isn't available.
 def load_mysql_time_zones
