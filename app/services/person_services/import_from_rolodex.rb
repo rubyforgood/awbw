@@ -4,12 +4,13 @@ module PersonServices
   #   * created          — new Person: the fields FmRolodex::PORTAL_FIELDS maps to a
   #                        person (including its sector/age tags and the archive's own
   #                        entry date), plus the row's primary address and phone
-  #   * linked           — the person PersonMatcher finds for the row's name + email —
-  #                        which reaches their secondary and login addresses too — gets
-  #                        the row's ID as their filemaker_code
+  #   * linked           — every person PersonMatcher finds for the row's name + email
+  #                        (which reaches their secondary and login addresses too), or
+  #                        every same-name person with no email when the row has none,
+  #                        adds the row's ID to their filemaker_code list
   #   * already_imported — a person already carries the row's ID
-  #   * ambiguous        — a name or email collides with someone we can't safely
-  #                        claim is the same person; reconcile by hand
+  #   * ambiguous        — the email belongs to a differently named person; reconcile
+  #                        by hand
   #   * skipped          — agency, soft-deleted, or nameless rows
   #   * failed           — the Person didn't validate
   #
@@ -62,29 +63,30 @@ module PersonServices
 
       if email
         match = PersonMatcher.new(email:, last_name:, first_names: [ first_name ]).matches.to_a
-        return link(match.first, rolodex, label) if match.one?
-        return record(:ambiguous, "#{label}: #{match.size} people share this name and email (#{ids(match)})") if match.many?
+        return link(match, rolodex, label) if match.any?
 
         others = Person.where("LOWER(email) = :email OR LOWER(email_2) = :email", email: email.downcase).to_a
         return record(:ambiguous, "#{label}: #{email} belongs to #{others.map { |p| "##{p.id} #{p.full_name}" }.join(', ')}") if others.any?
       else
         no_email = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
                          .where(email: [ nil, "" ]).to_a
-        return record(:ambiguous, "#{label}: no email, same name as #{ids(no_email)}") if no_email.any?
+        return link(no_email, rolodex, label) if no_email.any?
       end
 
       create(rolodex, label, first_name:, last_name:, email:, email_2:)
     end
 
-    def link(person, rolodex, label)
-      if person.filemaker_code.present?
-        return record(:ambiguous, "#{label}: matches ##{person.id}, already linked to FileMaker #{person.filemaker_code}")
+    # Several matches are one person entered more than once, so each carries the code
+    # and the deduper unions them when they're merged.
+    def link(people, rolodex, label)
+      people.each do |person|
+        next if person.update(filemaker_code: Person.join_filemaker_codes(person.filemaker_code, rolodex.fm_id))
+
+        return record(:failed, "#{label}: ##{person.id} #{person.errors.full_messages.to_sentence}")
       end
 
-      return record(:failed, "#{label}: ##{person.id} #{person.errors.full_messages.to_sentence}") unless person.update(filemaker_code: rolodex.fm_id)
-
       @imported_codes << rolodex.fm_id
-      record(:linked, "#{label} → ##{person.id}")
+      record(:linked, "#{label} → #{ids(people)}")
     end
 
     def create(rolodex, label, **names)

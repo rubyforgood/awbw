@@ -205,21 +205,31 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect { expect(results[:ambiguous].size).to eq(1) }.not_to change(Person, :count)
   end
 
-  it "flags a same-name match with no email to confirm it" do
+  it "links a same-name person with no email" do
     # A linked login would become their primary email (PersonLoginEmailSync), so the
-    # person this guards against is one with no account.
-    create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
+    # person this reaches is one with no account.
+    person = create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
     rolodex("00011")
 
-    expect { expect(results[:ambiguous].size).to eq(1) }.not_to change(Person, :count)
+    expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
+    expect(person.reload.filemaker_code).to eq("00011")
   end
 
-  it "flags a name + email match already linked to another FileMaker record" do
+  it "adds the row's ID to a match already linked to another FileMaker record" do
     person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com", filemaker_code: "99999")
     rolodex("00012", EMail: "ada@example.com")
 
-    expect(results[:ambiguous].size).to eq(1)
-    expect(person.reload.filemaker_code).to eq("99999")
+    expect(results[:linked].size).to eq(1)
+    expect(person.reload.filemaker_codes).to eq(%w[00012 99999])
+  end
+
+  it "adds the row's ID to every person the name and email answer to" do
+    first = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+    second = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada.l@example.com", email_2: "ada@example.com")
+    rolodex("00018", EMail: "ada@example.com")
+
+    expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
+    expect([ first, second ].map { |person| person.reload.filemaker_code }).to eq(%w[00018 00018])
   end
 
   it "skips agencies, deleted rows, and nameless rows" do
