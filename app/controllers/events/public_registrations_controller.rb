@@ -77,11 +77,15 @@ module Events
         # events (flushed after this action) so every record it wrote is traceable.
         Current.form_submission_id = result.form_submission&.id
 
-        apply_discount_code(registration)
+        discount_failed = apply_discount_code(registration) == false
 
-        if !registration.scholarship_requested? && @event.cost_cents.to_i > 0 && credit_card_payment?(registration_params)
+        if !discount_failed && !registration.scholarship_requested? && @event.cost_cents.to_i > 0 &&
+           registration.remaining_cost.positive? && credit_card_payment?(registration_params)
           checkout_session = create_stripe_checkout_session(registration, result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
+        elsif discount_failed
+          redirect_to registration_ticket_path(registration.slug),
+                      alert: "You're registered, but we couldn't apply your discount code. Please contact support."
         else
           redirect_to registration_ticket_path(registration.slug),
                       notice: "You have been successfully registered!"
@@ -154,10 +158,28 @@ module Events
     end
 
     def apply_discount_code(registration)
-      return unless valid_discount_code?
+      return true unless valid_discount_code?
+      return true if registration.transferred_in?
+      return true if event_discount_applied?(registration)
 
-      discount = Discount.create!(amount_cents: @event.discount_amount_cents)
-      Allocation.create!(source: discount, allocatable: registration, amount: @event.discount_amount_cents)
+      amount = @event.discount_amount_cents
+      return true if registration.remaining_cost <= 0
+      return false if amount > registration.remaining_cost
+
+      ActiveRecord::Base.transaction do
+        discount = Discount.create!(amount_cents: amount, event: @event)
+        registration.allocations.create!(source: discount, amount: amount)
+      end
+      true
+    rescue ActiveRecord::RecordInvalid
+      false
+    end
+
+    def event_discount_applied?(registration)
+      event_discounts = Discount.where(event_id: @event.id).select(:id)
+      registration.allocations
+        .where(source_type: "Discount", source_id: event_discounts)
+        .exists?
     end
 
     def valid_discount_code?
