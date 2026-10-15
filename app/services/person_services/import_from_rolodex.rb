@@ -9,7 +9,11 @@ module PersonServices
   #   * linked           — every person PersonMatcher finds for the row's name + email
   #                        (which reaches their secondary and login addresses too), or
   #                        every same-name person with no email when the row has none,
-  #                        adds the row's ID to their filemaker_code list
+  #                        adds the row's ID to their filemaker_code list and is filled
+  #                        from it: blank fields take the archive's value, missing
+  #                        addresses, phones and tags are added, and a field the archive
+  #                        disagrees on keeps the person's value — noted in #differences
+  #                        and as a comment on the person
   #   * already_imported — a person already carries the row's ID
   #   * skipped          — agency, soft-deleted, or nameless rows
   #   * failed           — the Person didn't validate
@@ -32,12 +36,14 @@ module PersonServices
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
     PRIMARY_TAG_FIELDS = %w[PrimaryServiceArea PrimaryAgeGroup].freeze
     ADDITIONAL_TAG_FIELDS = %w[OtherServiceArea Settings LifeExperiences].freeze
+    PRIMARY_TAG_LABELS = { tag_sectors: "Primary sector", tag_age_groups: "Primary age group" }.freeze
 
-    attr_reader :results
+    attr_reader :results, :differences
 
     def initialize(scope: FmRolodex.all)
       @scope = scope
       @results = OUTCOMES.index_with { [] }
+      @differences = []
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
@@ -83,9 +89,12 @@ module PersonServices
     # and the deduper unions them when they're merged.
     def link(people, rolodex, label)
       people.each do |person|
-        next if person.update(filemaker_code: Person.join_filemaker_codes(person.filemaker_code, rolodex.fm_id))
+        person.filemaker_code = Person.join_filemaker_codes(person.filemaker_code, rolodex.fm_id)
+        kept = fill(person, rolodex)
+        return record(:failed, "#{label}: ##{person.id} #{person.errors.full_messages.to_sentence}") unless person.save
 
-        return record(:failed, "#{label}: ##{person.id} #{person.errors.full_messages.to_sentence}")
+        kept.concat(tag_service_areas(person, rolodex.data))
+        note_differences(person, rolodex, label, kept) if kept.any?
       end
 
       @imported_codes << rolodex.fm_id
@@ -94,18 +103,7 @@ module PersonServices
 
     def create(rolodex, label, **names)
       data = rolodex.data
-      person = Person.new(
-        **names,
-        filemaker_code: rolodex.fm_id,
-        pronouns: clip(data["Pronouns"]),
-        best_time_to_call: clip(data["BestTimeToCall"]),
-        racial_ethnic_identity: clip(data["Ethnicity"]),
-        date_of_birth: parse_date(data["DateOfBirth"]),
-        email_type: email_type(data["EmailType"]),
-        member_since: member_since(data),
-        notes: data["Comments"].presence,
-        **archive_timestamps(data)
-      )
+      person = Person.new(**names, filemaker_code: rolodex.fm_id, **profile_attributes(data), **archive_timestamps(data))
       build_addresses(person, rolodex)
       build_phones(person, rolodex)
 
@@ -118,6 +116,53 @@ module PersonServices
       person.update_columns(timestamps) if timestamps.any?
       @imported_codes << rolodex.fm_id
       record(:created, "#{label} → ##{person.id}")
+    end
+
+    def profile_attributes(data)
+      {
+        pronouns: clip(data["Pronouns"]),
+        best_time_to_call: clip(data["BestTimeToCall"]),
+        racial_ethnic_identity: clip(data["Ethnicity"]),
+        date_of_birth: parse_date(data["DateOfBirth"]),
+        email_type: email_type(data["EmailType"]),
+        member_since: member_since(data),
+        notes: data["Comments"].presence
+      }
+    end
+
+    # Staff edited both systems, so neither side is newer by rule: a blank takes the
+    # archive's value, and a disagreement keeps the person's and is returned as
+    # [ label, portal value, archive value ] to note.
+    def fill(person, rolodex)
+      kept = profile_attributes(rolodex.data).filter_map do |attribute, value|
+        next if value.blank?
+        next person[attribute] = value if person[attribute].blank?
+        next if same?(person[attribute], value)
+
+        [ Person.human_attribute_name(attribute), person[attribute], value ]
+      end
+      fill_email_2(person, rolodex.data)
+      build_addresses(person, rolodex)
+      build_phones(person, rolodex)
+      kept
+    end
+
+    def fill_email_2(person, data)
+      return if person.email_2.present?
+
+      held = [ person.email, person.user&.email ].compact_blank.map(&:downcase)
+      person.email_2 = data["EMail"].to_s.scan(EMAIL_PATTERN).find { |email| held.exclude?(email.downcase) }
+    end
+
+    def same?(portal, archive)
+      portal.to_s.squish.casecmp?(archive.to_s.squish)
+    end
+
+    def note_differences(person, rolodex, label, kept)
+      lines = kept.map { |field, portal, archive| "#{field}: kept “#{portal}”, FileMaker has “#{archive}”" }
+      Comment.create!(commentable: person,
+                      body: "FileMaker Rolodex #{rolodex.fm_id} differs from this profile:\n#{lines.join("\n")}")
+      @differences << "#{label} → ##{person.id}: #{lines.join('; ')}"
     end
 
     # The archive's own entry and modification dates, so an imported person dates from
@@ -148,39 +193,76 @@ module PersonServices
     end
 
     # The archive's who-they-serve fields tag the person through the same seam a
-    # submission uses — additive, since the import is never the whole picture.
+    # submission uses — additive, since the import is never the whole picture. A primary
+    # the person already holds stays; the archive's then lands as additional and is
+    # returned as a difference to note.
     def tag_service_areas(person, data)
       primary = translate(data, PRIMARY_TAG_FIELDS)
       additional = translate(data, ADDITIONAL_TAG_FIELDS)
+      sector_ids = primary.flat_map(&:sector_ids).uniq
+      age_group_ids = primary.flat_map(&:age_group_ids).uniq
+      age_primary_ids, age_additional_ids = split_age_primary(age_group_ids)
 
-      { tag_sectors: :sector_ids, tag_age_groups: :age_group_ids }.each do |tag_with, kind|
-        primary_ids, extra_ids = split_primary(primary.flat_map(&kind).uniq)
-        SubmissionTagging.apply(person:, organizations: [], tag_with:, primary_ids:,
-                                additional_ids: extra_ids + additional.flat_map(&kind))
+      [
+        apply_tags(person, :tag_sectors, Sector, person.sectorable_items.where(is_primary: true).pluck(:sector_id),
+                   primary_ids: sector_ids.first(1), additional_ids: sector_ids.drop(1) + additional.flat_map(&:sector_ids)),
+        apply_tags(person, :tag_age_groups, Category, person.primary_age_category_ids,
+                   primary_ids: age_primary_ids, additional_ids: age_additional_ids + additional.flat_map(&:age_group_ids))
+      ].compact
+    end
+
+    def apply_tags(person, tag_with, model, held_ids, primary_ids:, additional_ids:)
+      if held_ids.any?
+        difference = [ PRIMARY_TAG_LABELS[tag_with], names(model, held_ids), names(model, primary_ids) ] unless (primary_ids - held_ids).empty?
+        primary_ids, additional_ids = [], primary_ids + additional_ids
       end
+      SubmissionTagging.apply(person:, organizations: [], tag_with:, primary_ids:, additional_ids:)
+      difference
     end
 
     def translate(data, fields)
       fields.map { |field| @translation.resolve(data[field]) }
     end
 
-    # A person carries one primary of each kind, so a primary answer naming several —
-    # "Families" is every age range — lands them all as additional rather than picking one.
-    def split_primary(ids)
+    # A person carries one primary age group, and an answer naming several — "Families"
+    # is every age range — has no first to pick, so they all land as additional.
+    def split_age_primary(ids)
       ids.one? ? [ ids, [] ] : [ [], ids ]
+    end
+
+    def names(model, ids)
+      model.where(id: ids).pluck(:name).to_sentence
     end
 
     # Every address the row answers to, not just the one it names as primary —
     # FmRolodex#addresses lists them with the primary and worksite ones first, so the
-    # first that can be built is the person's primary and the rest ride along.
+    # first that can be built is the person's primary and the rest ride along. One the
+    # person already has is left out, and a primary they already hold stays primary.
     def build_addresses(person, rolodex)
+      held = person.addresses.map { |address| address_key(address.street_address, address.city) }
       attributes = rolodex.addresses.filter_map { |address| address_attributes(address.data) }
-      attributes.each_with_index { |attrs, index| person.addresses.build(attrs.merge(primary: index.zero?)) }
+                          .reject { |attrs| held.include?(address_key(attrs[:street_address], attrs[:city])) }
+      build_primary_first(person.addresses, attributes)
     end
 
     def build_phones(person, rolodex)
+      held = person.contact_methods.map { |phone| phone_key(phone.value) }
       attributes = rolodex.phone_numbers.filter_map { |phone| phone_attributes(phone.data) }
-      attributes.each_with_index { |attrs, index| person.contact_methods.build(attrs.merge(primary: index.zero?)) }
+                          .reject { |attrs| held.include?(phone_key(attrs[:value])) }
+      build_primary_first(person.contact_methods, attributes)
+    end
+
+    def build_primary_first(association, attributes)
+      has_primary = association.any?(&:primary?)
+      attributes.each_with_index { |attrs, index| association.build(attrs.merge(primary: index.zero? && !has_primary)) }
+    end
+
+    def address_key(street, city)
+      [ street, city ].map { |part| part.to_s.squish.downcase }
+    end
+
+    def phone_key(value)
+      value.to_s.gsub(/\D/, "")
     end
 
     def address_attributes(fields)

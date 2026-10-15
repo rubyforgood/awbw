@@ -107,6 +107,33 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(person.sectorable_items).to be_empty
     end
 
+    it "makes the first sector a primary answer names the primary, the rest additional" do
+      homelessness = create(:sector, :published, name: "Homelessness")
+      create(:tag_alias, name: "Domestic Violence & Homelessness", aliasable: domestic_violence)
+      create(:tag_alias, name: "Domestic Violence & Homelessness", aliasable: homelessness)
+      rolodex("00058", EMail: "ada@example.com", PrimaryServiceArea: "Domestic Violence & Homelessness")
+
+      described_class.new.call
+      person = Person.find_by!(filemaker_code: "00058")
+
+      expect(person.primary_sector).to eq(domestic_violence)
+      expect(person.sectorable_items.where(is_primary: false).map(&:sector)).to eq([ homelessness ])
+    end
+
+    it "adds a linked person's tags without replacing the primary they already have" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      person.tag_sectors(primary_ids: [ education.id ], additional_ids: [])
+      rolodex("00059", EMail: "ada@example.com", PrimaryServiceArea: "Domestic Violence", PrimaryAgeGroup: "Adults")
+
+      import = described_class.new.call
+      person.reload
+
+      expect(person.primary_sector).to eq(education)
+      expect(person.sectorable_items.where(is_primary: false).map(&:sector)).to eq([ domestic_violence ])
+      expect(person.primary_age_groups).to eq([ adults ])
+      expect(import.differences.sole).to include("Primary sector", "Domestic Violence", "Education")
+    end
+
     it "tags every age range for families without marking one primary" do
       rolodex("00057", EMail: "ada@example.com", PrimaryAgeGroup: "Families")
 
@@ -227,6 +254,54 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00021").date_of_birth).to eq(Date.new(2005, 3, 4))
     expect(Person.find_by!(filemaker_code: "00022").date_of_birth).to eq(Date.new(1983, 10, 5))
     expect(Person.find_by!(filemaker_code: "00023").date_of_birth).to eq(Date.new(1983, 10, 5))
+  end
+
+  describe "filling a linked person from the archive" do
+    let!(:person) { create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com", pronouns: "she/her") }
+
+    it "fills the fields the person has blank" do
+      rolodex("00070", EMail: "ada@example.com; ada@work.example.com", DateOfBirth: "12/10/1815",
+                       BestTimeToCall: "Mornings", Comments: "Met at training")
+
+      described_class.new.call
+
+      expect(person.reload).to have_attributes(date_of_birth: Date.new(1815, 12, 10), best_time_to_call: "Mornings",
+                                               notes: "Met at training", email_2: "ada@work.example.com")
+    end
+
+    it "keeps the person's value where the archive differs and notes the difference" do
+      rolodex("00071", EMail: "ada@example.com", Pronouns: "they/them")
+
+      import = described_class.new.call
+
+      expect(person.reload.pronouns).to eq("she/her")
+      expect(person.comments.sole.body).to include("00071", "Pronouns", "they/them", "she/her")
+      expect(import.differences.sole).to include("00071", "##{person.id}", "Pronouns", "they/them", "she/her")
+    end
+
+    it "doesn't note a value that only differs in case or spacing" do
+      rolodex("00072", EMail: "ada@example.com", Pronouns: " She/Her ")
+
+      import = described_class.new.call
+
+      expect(person.comments).to be_empty
+      expect(import.differences).to be_empty
+    end
+
+    it "adds the archive's addresses and phones the person doesn't have, keeping their primary" do
+      create(:address, addressable: person, street_address: "1 Main St", city: "Los Angeles", state: "CA", primary: true)
+      FmAddress.create!(fm_id: "A70", data: { "AddrsLine1" => "1 main st", "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+      FmAddress.create!(fm_id: "A71", data: { "RolodexID" => "00073", "AddrsLine1" => "2 Second St",
+                                              "AddrsCity" => "Oakland", "AddrsState" => "CA" })
+      FmPhoneNumber.create!(fm_id: "P70", data: { "PhoneNumber" => "555-0100" })
+      rolodex("00073", EMail: "ada@example.com", PrimaryAddrsID: "A70", PrimaryPhoneID: "P70")
+
+      described_class.new.call
+
+      expect(person.addresses.order(:id).pluck(:street_address, :primary))
+        .to eq([ [ "1 Main St", true ], [ "2 Second St", false ] ])
+      expect(person.contact_methods.pluck(:value, :primary)).to eq([ [ "555-0100", true ] ])
+    end
   end
 
   it "links an existing person with the same name and email instead of creating one" do
