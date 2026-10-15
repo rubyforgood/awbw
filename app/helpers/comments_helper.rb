@@ -77,6 +77,16 @@ module CommentsHelper
     end
   end
 
+  # A comment's "Logged against" picker: the person's targets with the comment's
+  # current record selected, listed first when it isn't one of those targets.
+  def comment_target_options(comment, targets)
+    record = comment.commentable
+    current = targets.find { |target| target[:gid] == record.to_gid_param } ||
+      { label: commentable_label(record), sgid: record.to_sgid.to_s }
+    options = targets.include?(current) ? targets : [ current, *targets ]
+    options_for_select(options.map { |target| [ target[:label], target[:sgid] ] }, current[:sgid])
+  end
+
   private
 
   def event_label(event)

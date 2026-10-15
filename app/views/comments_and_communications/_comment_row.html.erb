@@ -3,7 +3,9 @@
     top-level comment route directly (find-by-id, admin-only — works
     regardless of the commentable's own routing) with combined: 1, which the
     controller's turbo_stream response uses to re-render this same row in
-    place. Locals: entry (a Comment). %>
+    place. Locals: entry (a Comment). Optional: person and record_targets (the
+    person feed's records the comment can be moved to). %>
+<% person = local_assigns[:person] %>
 <% chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900" %>
 <% record = entry.commentable %>
 <% source_chip = if record.present?
@@ -27,6 +29,8 @@
   <div data-edit-toggle-target="edit" class="hidden rounded-md border <%= comment_card_class %> px-3 py-2">
     <%= simple_form_for entry, url: comment_path(entry), method: :patch do |f| %>
       <%= hidden_field_tag :combined, 1 %>
+      <% if person %><%= hidden_field_tag :for_person_id, person.id %><% end %>
+      <%= render "comments/commentable_picker", comment: entry, record_targets: local_assigns[:record_targets] %>
       <div class="flex items-start gap-x-2">
         <%= f.input_field :topic,
                           placeholder: "Topic",
@@ -40,11 +44,12 @@
       <div class="mt-3 flex items-center gap-x-3">
         <%= f.submit "Save", class: button_classes(:secondary_outline) %>
         <button type="button" data-action="edit-toggle#toggle" class="text-sm <%= eyebrow_link_class %>">Cancel</button>
-        <label class="inline-flex items-center cursor-pointer select-none" title="Flag this note for follow-up">
+        <label class="inline-flex cursor-pointer items-center select-none" title="Flag this note for follow-up">
           <%= f.check_box :flagged, class: "peer sr-only" %>
           <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
           <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flag</span>
         </label>
+        <%= render "comments/delete_link", comment: entry %>
       </div>
     <% end %>
   </div>

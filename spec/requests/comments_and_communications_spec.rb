@@ -355,6 +355,36 @@ RSpec.describe "Comments and communications", type: :request do
       expect(comment.reload.body).to eq("Updated affiliation note")
     end
 
+    it "moves a comment to another of the person's records and deletes one, in place" do
+      user = create(:user, person: person)
+      moved = create(:comment, commentable: user, body: "Meant for the profile", created_by: admin)
+      doomed = create(:comment, commentable: person, body: "Filed by mistake", created_by: admin)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      doc = Nokogiri::HTML(response.body)
+      picker = doc.at_css("##{ActionView::RecordIdentifier.dom_id(moved)} select[name='commentable_sgid']")
+      expect(picker.at_css("option[selected]").text).to eq("User account")
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(doomed)} a[data-turbo-method='delete']")).to be_present
+
+      patch comment_path(moved), params: { combined: 1, for_person_id: person.id, commentable_sgid: person.to_sgid.to_s, comment: { body: "Meant for the profile" } },
+                                  headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      expect(moved.reload.commentable).to eq(person)
+      expect(response.body).to include("Profile")
+
+      expect {
+        delete comment_path(doomed), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      }.to change(Comment, :count).by(-1)
+    end
+
+    it "deletes but doesn't offer a Logged against picker on the everyone feed" do
+      comment = create(:comment, commentable: person, body: "Unscoped note", created_by: admin)
+
+      get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
+      row = Nokogiri::HTML(response.body).at_css("##{ActionView::RecordIdentifier.dom_id(comment)}")
+      expect(row.at_css("select[name='commentable_sgid']")).to be_nil
+      expect(row.at_css("a[data-turbo-method='delete']")).to be_present
+    end
+
     it "shows an Edit control for a communication and saves changes in place" do
       notification = create(:notification, noticeable: person, recipient_email: "primary@example.com",
                                            email_subject: "Original subject", kind: "manual_log",

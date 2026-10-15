@@ -1,0 +1,11 @@
+<%# Re-points an existing comment at another of the person's records; the chosen
+    record's signed GlobalID rides along with the edit form's save.
+    Locals: comment, record_targets. %>
+<% if record_targets.present? && comment.commentable %>
+  <div class="mb-2 flex items-center gap-2">
+    <label class="shrink-0 text-xs font-semibold text-gray-600" for="<%= dom_id(comment, :commentable_sgid) %>">Logged against</label>
+    <%= select_tag :commentable_sgid, comment_target_options(comment, record_targets),
+                   id: dom_id(comment, :commentable_sgid),
+                   class: "w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none sm:w-1/2" %>
+  </div>
+<% end %>

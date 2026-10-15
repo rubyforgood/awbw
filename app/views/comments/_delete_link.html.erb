@@ -1,0 +1,5 @@
+<%= link_to comment_path(comment),
+            class: "ml-auto text-sm text-gray-400 hover:text-red-600",
+            data: { turbo_method: :delete, turbo_confirm: "Delete this comment? This can't be undone." } do %>
+  <i class="fa-solid fa-trash text-2xs"></i> Delete
+<% end %>

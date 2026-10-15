@@ -4699,3 +4699,16 @@
     to admins, so they share the blue used for other admin-only information.
   pro_tips:
     - "The Incoming pill and the incoming/outgoing switch on a communication are purple too."
+
+- name: "Delete a comment or move it to another record"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-15
+  pr_number: 2701
+  summary: >-
+    Filed a comment against the wrong record, or need it gone? Click Edit on the
+    comment in a person's comments feed to change what it's logged against, or
+    delete it.
+  pro_tips:
+    - "The \"Logged against\" picker lists the same records as the \"Add a note to\" composer: profile, user account, registrations, and more."
+    - "Moving a comment is available from a person's feed. On the everyone feed you can still delete."
