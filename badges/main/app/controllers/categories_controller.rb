@@ -9,8 +9,8 @@ class CategoriesController < ApplicationController
     base_scope = authorized_scope(Category.includes(:category_type).joins(:category_type))
     filtered = base_scope.category_type_id(params[:category_type_id])
                          .category_name(params[:category_name])
-                         .published(params[:published])
                          .order(Arel.sql("category_types.name, categories.position, categories.name"))
+    filtered = filtered.published(params[:published]) if params[:published].present?
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
     @taggings_counts = CategorizableItem.where(category_id: @categories.map(&:id)).group(:category_id).count
 
