@@ -5,7 +5,11 @@ module StoryIdeaFormVariables
   # the public "Share your story" page renders the same form as the admin one.
   def set_story_idea_form_variables
     @user = User.find(params[:user_id]) if params[:user_id].present?
-    @organizations = (@user || current_user)&.organizations&.order(:name) || Organization.none
+    @organizations = if current_user&.super_user?
+      (@user || current_user).organizations.order(:name)
+    else
+      authorized_scope(Organization.all, as: :currently_affiliated).order(:name)
+    end
     @windows_types = WindowsType.all
 
     users = authorized_scope(User.has_access.includes(:person))
