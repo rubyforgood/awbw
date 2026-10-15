@@ -4576,6 +4576,6 @@
   pro_tips:
     - "This is how an import knows that \"Student Services\" means Education and that \"C & T\" means both Children and Teens."
     - "A word can be recorded as meaning nothing on purpose — FileMaker's \"Virtually\" described where someone worked, not who they served."
-    - "An old word for a retired tag doesn't quietly bring the tag back: it's reported so someone can decide where it belongs now."
+    - "A retired tag never comes back by accident — but a word can be pointed at one deliberately, which is how FileMaker's \"Poverty\" still finds the sector that already carries it."
     - "Someone recorded as serving families is tagged with every age range, since that's what serving families means."
     - "The mapping is written up in ADR-0007 for anyone who needs to see the whole picture."

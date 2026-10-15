@@ -33,12 +33,58 @@ RSpec.describe TagAliasSeeder do
       .to contain_exactly("Children", "Teens", "Adults", "Elders")
   end
 
-  it "reports a term aimed at a retired tag instead of recording an alias that can't resolve" do
+  it "reports a term whose tag isn't published, when nothing says to point at a retired one" do
     Sector.find_by(name: "Education").update!(published: false)
 
     described_class.call(quiet: true)
 
     expect(TagAlias.find_by(name: "Student Services")).to be_nil
+  end
+
+  it "points the archive's Poverty at the retired sector that already carries its taggings" do
+    retired = create(:sector, :unpublished, name: "Poverty")
+
+    described_class.call(quiet: true)
+
+    expect(TagAlias.find_by(name: "Poverty").aliasable).to eq(retired)
+    expect(TagTranslation.new.resolve("Poverty").sector_ids).to eq([ retired.id ])
+  end
+
+  it "reads a cell naming several sectors as all of them" do
+    described_class.call(quiet: true)
+
+    expect(TagAlias.where(name: "Sexual Assault & Domestic Violence").map { |row| row.aliasable.name })
+      .to contain_exactly("Sexual Assault", "Domestic Violence")
+    expect(TagTranslation.new.resolve("DV/SA/other related crimes").sector_ids.size).to eq(2)
+  end
+
+  it "reads a life experience or service area that means an age group" do
+    described_class.call(quiet: true)
+
+    translation = TagTranslation.new
+    expect(translation.resolve("Elder Abuse").age_group_ids).to eq([ Category.find_by(name: "Elders").id ])
+    expect(translation.resolve("Children's Services").age_group_ids).to eq([ Category.find_by(name: "Children").id ])
+    expect(translation.resolve("Elder Abuse").sector_ids).to be_empty
+  end
+
+  it "leaves war untagged, as decided" do
+    described_class.call(quiet: true)
+
+    expect(TagAlias.find_by(name: "People Who Have Experienced War")).to have_attributes(aliasable: nil, ignored: true)
+
+    translation = TagTranslation.new
+    expect(translation.resolve("People Who Have Experienced War").sector_ids).to be_empty
+    expect(translation.unmatched).to be_empty
+  end
+
+  it "records an answer that says nothing as naming nothing" do
+    described_class.call(quiet: true)
+
+    expect(TagAlias.find_by(name: "n/a")).to have_attributes(aliasable: nil, ignored: true)
+
+    translation = TagTranslation.new
+    expect(translation.resolve("n/a\nunsure\nIn person").sector_ids).to be_empty
+    expect(translation.unmatched).to be_empty
   end
 
   it "labels each term with the system it came from" do
@@ -80,7 +126,7 @@ RSpec.describe TagAliasSeeder do
     expect(virtually).to have_attributes(aliasable: nil, ignored: true)
 
     translation = TagTranslation.new
-    expect(translation.sector_ids_for("Virtually")).to be_empty
+    expect(translation.resolve("Virtually").sector_ids).to be_empty
     expect(translation.unmatched).to be_empty
   end
 
@@ -88,7 +134,7 @@ RSpec.describe TagAliasSeeder do
     described_class.call(quiet: true)
 
     translation = TagTranslation.new
-    expect(translation.sector_ids_for("Clinical Setting")).to eq([ Sector.find_by(name: "Mental Health").id ])
-    expect(translation.age_group_ids_for("C & T").size).to eq(2)
+    expect(translation.resolve("Clinical Setting").sector_ids).to eq([ Sector.find_by(name: "Mental Health").id ])
+    expect(translation.resolve("C & T").age_group_ids.size).to eq(2)
   end
 end

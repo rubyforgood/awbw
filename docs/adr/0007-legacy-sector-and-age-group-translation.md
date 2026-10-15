@@ -116,6 +116,47 @@ who they serve — they aren't sectors and have no portal home.
 purpose — each needs a sector added before it can be translated, and inventing a near-miss
 would bury the gap. An importer reports them.
 
+### Cells naming more than one sector
+
+Hand-typed answers that name several sectors resolve to all of them — the same one-to-many
+shape as `C & T`. Recorded only where every concept in the cell is itself a decided term:
+`Domestic Violence & Homelessness` · `Sexual Assault & Domestic Violence` ·
+`Domestic Violence, Sexual Assault` · `Domestic Violence and Sexual Assault survivors` ·
+`Domestic and Sexual Violence Families` · `Sexual and Domestic Violence Agency` ·
+`DV/SA/other related crimes` · `Dual Agency Domestic violence/Sexual assault/ Human
+trafficking` · `Immigration, Health, Prevention of Violence and Education` ·
+`Addiction, Native Americans, mental health and addiction` · `Education, SEL needs` ·
+`Hospice, end of life, bereavement`.
+
+### Terms that cross vocabularies
+
+Two of the archive's *sector* fields carry terms that say which **ages** someone serves, so
+they resolve to an age range rather than a sector:
+
+| Source value | Portal tag |
+|---|---|
+| `Elder Abuse` (LifeExperiences) | AgeRange **Elders** |
+| `Children's Services` (PrimaryServiceArea) | AgeRange **Children** |
+
+Whether the tag lands as the **primary** or an **additional** one follows from the field the
+term sat in, not from the term: `PrimaryServiceArea` and `PrimaryAgeGroup` are the primary
+answers, `OtherServiceArea`, `Settings` and `LifeExperiences` the additional ones. So
+`Children's Services` makes Children the primary age range, and `Elder Abuse` adds Elders
+alongside whatever the primary already is.
+
+### Answers that name nothing
+
+Alongside the dropped Settings, these are recorded as naming nothing on purpose: `Other` ·
+`Did not specify` · `n/a` · `none` · `something` · `unsure` · `Everyone` · `Technology` ·
+and the delivery modes `In person` · `In visits` · `virtually & in-person` · `At office` ·
+`Office space.` · `Residential` · `On-Call/Crisis` · `Support groups`. None of them says
+who a facilitator serves, so leaving them in the undecided queue would only bury the terms
+that do.
+
+**`People Who Have Experienced War` (97) joins them by decision, not by shape.** It names a
+real experience, and Community Violence was the fallback if it had to go somewhere — but
+AWBW chose to leave it untagged rather than file it under a sector it doesn't mean.
+
 ### Story Share categories → sector
 
 | Story Share | Sector |
@@ -183,11 +224,12 @@ twins carry a trailing underscore so the clean age names stay free (see `db/seed
 to (polymorphic — a `Sector` or an `AgeRange` `Category`), and the system the term came
 from. `TagTranslation` reads a tag's own name first, then the aliases.
 
-- **Only published tags resolve.** A retired tag is unpublished rather than deleted so its
-  old taggings survive; resolving to one would hand it to hundreds of new records. A term
-  that only matches a retired tag reads as unresolved, which puts it in front of someone.
-  The live `sectors` table holds more than this catalogue — `Poverty` is one such row, and
-  634 archive rows name it, so it needs a decision rather than a silent revival.
+- **A tag resolves by name only while it's published.** A retired tag is unpublished rather
+  than deleted so its old taggings survive, and matching one by name would hand it to
+  hundreds of new records by accident. **A recorded alias may point at a retired tag** —
+  that's someone deciding the term means that tag, which is the opposite of an accident.
+  `Poverty` is exactly that case: the sector is retired, 634 archive rows name it, and the
+  alias sends them to the tag that already carries its older taggings.
 
 - **A term can name two tags**, so a row per pair and a list on the way out (`C & T`).
 - **Unique on (term, tag)**, with the column's case-insensitive collation, so one spelling
@@ -220,12 +262,13 @@ Counted across `fm_rolodexes` (October 2026): `LifeExperiences` 55 distinct valu
   It is recorded as ignored rather than translated: `Sector::OTHER_SECTOR_NAME` is offered
   for additional sectors but never as a primary, so an import can't honour it as one, and
   "they picked Other" says nothing a tag could carry.
-- **Still needing a decision** — what the seeded terms leave unresolved: `Poverty` (634,
-  which only matches a retired sector), `Elder Abuse` (178), `People Who Have Experienced
-  War` (97), `Children's Services` (8), and a long tail of one-off free text (145
-  `Settings` values, 63 `OtherServiceArea` values, nearly all a single mention). Each is a
-  judgment call for AWBW; the unmatched report is the queue. The seeded terms resolve 80%
-  of the archive's 17,757 mentions, and the deliberate non-translations another 16%.
+- **Still needing a decision** — only the long tail of one-off free text (≈90 `Settings`
+  values, 42 `OtherServiceArea` values, almost all a single mention, mostly venues, program
+  names and prose rather than anything a tag could carry). The unmatched report is the
+  queue, and it stays short enough to read.
+- **Coverage.** Every archive term with more than two mentions is now either translated or
+  deliberately untranslated: ~17,600 of the 17,757 mentions. What's left is ~130 values at
+  one or two mentions each.
 - **Seen in the data, no mapping decided:** Children's Services, Intellectual Disabilities,
   Maternal wellness and postpartum support, Political Asylum, Survivors with Disabilities,
   Arts Education & Community Art Making, and the rest of the one-off free text. Deliberately
@@ -237,8 +280,9 @@ Counted across `fm_rolodexes` (October 2026): `LifeExperiences` 55 distinct valu
   a person has no population tag to carry `Families`. Rather than drop it, a person whose
   FileMaker age group is `Families` is tagged with every age range — which is what serving
   families means. A story keeps its `StoryPopulation` tag.
-- **One source value can produce two tags** (`C & T`), so a translator returns a list, not a
-  value.
+- **One source value can produce several tags** (`C & T`, `Families`, the compound cells),
+  so a translator returns a list, not a value — and across both vocabularies, since a sector
+  field can carry an age term.
 - **Unmapped values need a report, not a fallback.** `PersonServices::ImportFromRolodex`
   counts them in `#unmatched_tags` and the rake task prints them ranked; its name matching
   alone resolves only the values that already read as a sector name.

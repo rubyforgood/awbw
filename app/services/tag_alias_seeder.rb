@@ -23,6 +23,8 @@ class TagAliasSeeder
     "Prisons/Jails" => "Incarceration",
     "Private Practice" => "Private Practice/Sole Proprietor",
     "With Staff" => "Staff/Organizational Development",
+    "school" => "Education",
+    "Students" => "Education",
     "Climate/Environmental Trauma" => "Climate/Environmental",
     "Illness" => "Health/Medical",
     "Pandemic-Related Stress" => "Health/Medical",
@@ -63,6 +65,31 @@ class TagAliasSeeder
     "Foster care/adoption" => "Foster Care/Adoption",
     "Law enforcement/court/legal" => "Court/Legal System"
   }.freeze
+
+  # Hand-typed cells that name more than one sector, so each resolves to all of them —
+  # the same one-to-many shape as "C & T". Only recorded where every concept in the cell is
+  # already a decided term, so nothing new is being inferred.
+  COMPOUND_SECTORS = {
+    "Domestic Violence & Homelessness" => [ "Domestic Violence", "Homelessness" ],
+    "Sexual Assault & Domestic Violence" => [ "Sexual Assault", "Domestic Violence" ],
+    "Domestic Violence, Sexual Assault" => [ "Domestic Violence", "Sexual Assault" ],
+    "Domestic Violence and Sexual Assault survivors" => [ "Domestic Violence", "Sexual Assault" ],
+    "Domestic and Sexual Violence Families" => [ "Domestic Violence", "Sexual Assault" ],
+    "Sexual and Domestic Violence Agency" => [ "Sexual Assault", "Domestic Violence" ],
+    "DV/SA/other related crimes" => [ "Domestic Violence", "Sexual Assault" ],
+    "Dual Agency Domestic violence/Sexual assault/ Human trafficking" =>
+      [ "Domestic Violence", "Sexual Assault", "Human Trafficking" ],
+    "Immigration, Health, Prevention of Violence and Education" => [ "Immigration", "Health/Medical", "Education" ],
+    "Addiction, Native Americans, mental health and addiction" =>
+      [ "Substance Use/Recovery", "Indigenous/Tribal Nation", "Mental Health" ],
+    "Education, SEL needs" => [ "Education" ],
+    "Hospice, end of life, bereavement" => [ "Grief/Loss" ]
+  }.freeze
+
+  # A retired sector an alias deliberately points at. The term is in the archive 634 times
+  # and the tag it means still exists, unpublished, carrying the taggings it already had —
+  # so the term resolves even though nothing new can be tagged with it by name.
+  RETIRED_SECTORS = { "Poverty" => "Poverty" }.freeze
 
   STORY_SHARE_SECTORS = {
     "Advocacy" => "Systems/Policy Change",
@@ -106,8 +133,15 @@ class TagAliasSeeder
 
   # A term can name several age groups, so these are lists: serving families is serving
   # every age, and a person has no population tag to carry "Families" on its own.
+  #
+  # Some of these terms come from the *sector* fields, because the vocabularies cross — a
+  # life experience of elder abuse says the person serves elders, and a service area of
+  # children's services says they serve children. Whether the tag lands as primary or
+  # additional follows from the field the term sat in, not from the term.
   FILEMAKER_AGE_GROUPS = {
     "Families" => %w[Children Teens Adults Elders],
+    "Elder Abuse" => %w[Elders],
+    "Children's Services" => %w[Children],
     "C & T" => %w[Children Teens],
     "Children & Teens" => %w[Children Teens],
     "Adults & Children" => %w[Adults Children],
@@ -121,11 +155,16 @@ class TagAliasSeeder
 
   STORY_SHARE_AGE_GROUPS = { "Adult" => %w[Adults] }.freeze
 
-  # Settings that say where or how someone works rather than who they serve. Recorded as
-  # naming nothing on purpose, so they don't sit in the queue of undecided terms.
+  # Terms that name no tag on purpose: a setting that says where or how someone works
+  # rather than who they serve, an answer that says nothing at all, and one life experience
+  # (war) that AWBW chose to leave untagged. Recorded so they don't sit in the queue of
+  # terms still needing a decision.
   IGNORED_TERMS = [
     "Community-Based", "Events and Conferences", "Events & Conferences", "Home Visits",
-    "Outreach Program", "Residential Program", "Virtually", "Other", "Did not specify"
+    "Outreach Program", "Residential Program", "Virtually", "Other", "Did not specify",
+    "Residential", "In person", "In visits", "virtually & in-person", "At office", "Office space.",
+    "On-Call/Crisis", "Support groups", "n/a", "none", "something", "unsure", "Everyone", "Technology",
+    "People Who Have Experienced War"
   ].freeze
 
   def self.call(...)
@@ -140,6 +179,8 @@ class TagAliasSeeder
 
   def call
     record_sectors(FILEMAKER_SECTORS, "filemaker")
+    record_sectors(COMPOUND_SECTORS, "filemaker")
+    record_retired_sectors(RETIRED_SECTORS, "filemaker")
     record_sectors(FORM_SECTORS, "forms")
     record_sectors(STORY_SHARE_SECTORS, "story_share")
     record_sectors(PORTAL_SECTORS, "portal")
@@ -153,7 +194,15 @@ class TagAliasSeeder
   private
 
   def record_sectors(table, source)
-    table.each { |term, name| record(term, "Sector", sector_ids[name.downcase], source, name) }
+    table.each do |term, names|
+      Array(names).each { |name| record(term, "Sector", sector_ids[name.downcase], source, name) }
+    end
+  end
+
+  # Resolved against every sector, published or not: the point of the table is the ones that
+  # aren't, which the published lookup would report as missing.
+  def record_retired_sectors(table, source)
+    table.each { |term, name| record(term, "Sector", every_sector_id[name.downcase], source, name) }
   end
 
   def record_age_groups(table, source)
@@ -190,6 +239,10 @@ class TagAliasSeeder
 
   def age_group_ids
     @age_group_ids ||= Category.age_ranges.published.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
+  end
+
+  def every_sector_id
+    @every_sector_id ||= Sector.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
   end
 
   def report
