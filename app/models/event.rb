@@ -38,6 +38,7 @@ class Event < ApplicationRecord
   has_many :topic_subscriptions, foreign_key: :interested_event_id, inverse_of: :interested_event, dependent: :nullify
   has_many :event_staffs, dependent: :destroy
   has_many :event_forms, dependent: :destroy
+  has_many :discounts, dependent: :nullify
   has_many :registration_ticket_callouts, -> { ordered }, dependent: :destroy, inverse_of: :event
   # Block destroying an event that has submissions (registrations, scholarship
   # applications, payments). Submissions that were never tied to an event are
