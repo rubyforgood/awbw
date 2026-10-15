@@ -36,6 +36,55 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00007")).to have_attributes(email: "ada@example.com", email_2: "ada@work.example.com")
   end
 
+  describe "the fields FmRolodex::PORTAL_FIELDS maps onto a person" do
+    let!(:age_range_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:adults) { create(:category, category_type: age_range_type, name: "Adults") }
+    let!(:domestic_violence) { create(:sector, name: "Domestic Violence") }
+    let!(:child_abuse) { create(:sector, name: "Child Abuse/Neglect") }
+
+    it "carries the email type, facilitator start, service areas, age group, and entry date" do
+      rolodex("00050", EMail: "ada@example.com", EmailType: "Work", FacilitatorSinceMonth: "3",
+                       FacilitatorSinceYear: "2011", PrimaryServiceArea: "Domestic Violence",
+                       OtherServiceArea: "Child Abuse; Homelessness", PrimaryAgeGroup: "Adults",
+                       DateEntered: "03/14/2011", DateTimeModified: "09/02/2014 10:22:31")
+
+      import = described_class.new.call
+      person = Person.find_by!(filemaker_code: "00050")
+
+      expect(person).to have_attributes(email_type: "work", member_since: Date.new(2011, 3, 1))
+      expect(person.created_at.to_date).to eq(Date.new(2011, 3, 14))
+      expect(person.updated_at.to_date).to eq(Date.new(2014, 9, 2))
+      expect(person.primary_sector).to eq(domestic_violence)
+      expect(person.sectorable_items.map(&:sector)).to contain_exactly(domestic_violence, child_abuse)
+      expect(person.primary_age_groups).to eq([ adults ])
+      expect(import.unmatched_tags).to eq({ "homelessness" => 1 })
+    end
+
+    it "reads a facilitator year with no month as January, and a month name" do
+      rolodex("00051", FirstName: "Grace", EMail: "grace@example.com", FacilitatorSinceYear: "2018")
+      rolodex("00052", FirstName: "Hedy", EMail: "hedy@example.com", FacilitatorSinceMonth: "June",
+                       FacilitatorSinceYear: "2014")
+
+      results
+
+      expect(Person.find_by!(filemaker_code: "00051").member_since).to eq(Date.new(2018, 1, 1))
+      expect(Person.find_by!(filemaker_code: "00052").member_since).to eq(Date.new(2014, 6, 1))
+    end
+
+    it "leaves the fields alone when the archive row doesn't carry them" do
+      rolodex("00053", EMail: "ada@example.com")
+
+      import = described_class.new.call
+      person = Person.find_by!(filemaker_code: "00053")
+
+      expect(person).to have_attributes(email_type: nil, member_since: nil)
+      expect(person.sectorable_items).to be_empty
+      expect(person.categorizable_items).to be_empty
+      expect(person.created_at).to be_within(1.minute).of(Time.current)
+      expect(import.unmatched_tags).to be_empty
+    end
+  end
+
   it "prefixes the street number when the first line doesn't already carry it" do
     FmAddress.create!(fm_id: "A2", data: { "StreetNo" => "1234", "AddrsLine1" => "Main St",
                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
@@ -48,6 +97,24 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
     expect(Person.find_by!(filemaker_code: "00030").addresses.sole.street_address).to eq("1234 Main St")
     expect(Person.find_by!(filemaker_code: "00031").addresses.sole.street_address).to eq("1234 Main St")
+  end
+
+  it "brings in every address and phone the row answers to, primary first" do
+    FmAddress.create!(fm_id: "A20", data: { "RolodexID" => "00060", "AddrsLine1" => "2 Second St",
+                                            "AddrsCity" => "Oakland", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A21", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Los Angeles",
+                                            "AddrsState" => "CA" })
+    FmPhoneNumber.create!(fm_id: "P20", data: { "RolodexID" => "00060", "PhoneNumber" => "555-0200" })
+    FmPhoneNumber.create!(fm_id: "P21", data: { "PhoneNumber" => "555-0100" })
+    rolodex("00060", EMail: "ada@example.com", PrimaryAddrsID: "A21", PrimaryPhoneID: "P21")
+
+    results
+
+    person = Person.find_by!(filemaker_code: "00060")
+    expect(person.addresses.order(:id).pluck(:street_address, :primary))
+      .to eq([ [ "1 Main St", true ], [ "2 Second St", false ] ])
+    expect(person.contact_methods.order(:id).pluck(:value, :primary))
+      .to eq([ [ "555-0100", true ], [ "555-0200", false ] ])
   end
 
   it "truncates over-long free text instead of losing the person to it" do
