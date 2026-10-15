@@ -4630,3 +4630,16 @@
     AWBW staff to add or change it, the same way the primary email works.
   pro_tips:
     - "Admins approve it from the change-requests queue, and it's saved right away (no confirmation email)."
+
+- name: "Variation idea form lists only your current organization"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-14
+  pr_number: 2693
+  summary: >-
+    When you submit a workshop variation idea, the organization choices now
+    include only the organizations you're currently active with, not every
+    organization you've ever been part of.
+  pro_tips:
+    - "If you're active with just one organization, it's filled in for you and the dropdown is hidden."
+    - "Don't see the right organization? Contact AWBW to update your affiliation."
