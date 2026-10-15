@@ -42,7 +42,7 @@ RSpec.describe "organizations/edit", type: :view do
       Organization.create!(
         windows_type: windows_type,
         organization_status: OrganizationStatus.find_or_create_by!(name: name),
-        name: "MyString",
+        name: "Status org",
         description: "MyString",
         notes: "MyText"
       )

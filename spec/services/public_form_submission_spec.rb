@@ -264,20 +264,6 @@ RSpec.describe PublicFormSubmission do
           .to include("Facilitator")
       end
 
-      # Two orgs answering to one submitted name would make the scenario guess
-      # which one to end affiliations at, so it stays in the admin's queue.
-      it "leaves an ambiguous name for an admin rather than picking an org" do
-        form.update!(role: "new_job")
-        create(:organization, name: "helping hands")
-
-        result = described_class.call(form: form, form_params: org_params)
-
-        expect(result.person.affiliations).to be_empty
-        expect(result.form_submission.reload.linked_organization_ids).to be_empty
-        expect(Organization.where("LOWER(name) = ?", "helping hands").count).to eq(2)
-        expect(FormSubmission.org_link_status("pending")).to include(result.form_submission)
-      end
-
       # Fill-blanks, not latest-wins: an agreement runs the admin linking core, so
       # a curated value is kept and reported as a conflict on the linking page.
       it "does not overwrite the organization's curated profile" do
@@ -418,16 +404,6 @@ RSpec.describe PublicFormSubmission do
 
       expect(facilitator.reload.end_date).to be_nil
       expect(result.form_submission.linked_organization_ids).to be_empty
-    end
-
-    it "does not auto-process when two organizations share the submitted name" do
-      create(:organization, name: "Sunset Youth Services")
-      person = create(:person, user: nil, first_name: "Casey", last_name: "Closing", email: "casey@example.com")
-      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator")
-
-      described_class.call(form: form, form_params: close_params)
-
-      expect(facilitator.reload.end_date).to be_nil
     end
   end
 end

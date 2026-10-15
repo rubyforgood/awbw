@@ -4,9 +4,8 @@
 #
 # For each resource that has an `agency` name but no organization linked yet:
 #   - match an Organization by exact, case-insensitive name (agency == org.name)
-#   - exactly one match   -> link it
-#   - no match            -> create the Organization, link it
-#   - more than one match -> ambiguous; skip and report (reconcile by hand)
+#   - match    -> link it
+#   - no match -> create the Organization, link it
 #
 # New orgs get status "Unknown" — not because the link cares (it doesn't), but
 # because Organization requires organization_status_id (org status is legacy and
@@ -27,7 +26,7 @@ namespace :data do
     unknown_status = OrganizationStatus.find_by(name: "Unknown")
     raise "OrganizationStatus \"Unknown\" is required to create organizations" if !dry_run && unknown_status.nil?
 
-    linked = created = ambiguous = 0
+    linked = created = 0
     created_by_name = {}
 
     ActiveRecord::Base.transaction do
@@ -36,14 +35,7 @@ namespace :data do
         next if name.blank?
         key = name.downcase
 
-        matches = Organization.where("LOWER(name) = ?", key).to_a
-        if matches.size > 1
-          ambiguous += 1
-          puts "  ! resource ##{resource.id} #{resource.title.inspect}: #{matches.size} orgs named #{name.inspect} (ids: #{matches.map(&:id).join(', ')}) — skipped"
-          next
-        end
-
-        if (organization = matches.first)
+        if (organization = Organization.find_by(name: name))
           linked += 1
           puts "  = resource ##{resource.id}: link existing org ##{organization.id} #{name.inspect}"
         elsif created_by_name.key?(key)
@@ -66,7 +58,6 @@ namespace :data do
     puts
     puts "linked to existing: #{linked}"
     puts "orgs created:       #{created}"
-    puts "ambiguous, skipped: #{ambiguous}"
     puts(dry_run ? "\nDRY RUN — rolled back, nothing written. Set DRY_RUN=false to execute." : "\nDone.")
   end
 end

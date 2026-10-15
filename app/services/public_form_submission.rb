@@ -89,16 +89,15 @@ class PublicFormSubmission
 
   # A close-program submission end-dates the person's affiliations at the named
   # organization (see AffiliationServices::CloseProgram). We only auto-process
-  # when the submitted organization name resolves to exactly one org — an exact,
-  # case-insensitive name match. Anything ambiguous (no match, or two same-named
-  # orgs) is left for an admin to resolve on the submission's processing panel,
-  # which runs the same service once they link the organization by hand.
+  # when the submitted organization name matches an org exactly (case-insensitive).
+  # An unmatched name is left for an admin to resolve on the submission's processing
+  # panel, which runs the same service once they link the organization by hand.
   def process_close_program(submission)
     return unless @form.role == "close_program"
     return unless submission.person
 
     answers = submission.answers_by_identifier
-    organization = sole_organization_named(answers[FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER])
+    organization = organization_named(answers[FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER])
     return unless organization
 
     ended = AffiliationServices::CloseProgram.call(
@@ -145,7 +144,7 @@ class PublicFormSubmission
   # core would have to guess at is left for an admin on the submission's linking
   # page.
   def process_agreement_organization(submission)
-    organization = sole_organization_named(field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER))
+    organization = organization_named(field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER))
     return unless organization
 
     result = OrganizationServices::LinkSubmittedOrganization.call(
@@ -161,16 +160,8 @@ class PublicFormSubmission
     organization
   end
 
-  # Only an unambiguous name match is auto-processed. Organization names aren't
-  # unique and the column collates case-insensitively, so two orgs can answer to
-  # one submitted name — and picking the wrong one here would end a facilitator's
-  # affiliations at the org they actually work for. Ambiguity goes to an admin.
-  def sole_organization_named(name)
-    name = name.to_s.strip
-    return if name.blank?
-
-    matches = Organization.where("LOWER(name) = ?", name.downcase)
-    matches.first if matches.count == 1
+  def organization_named(name)
+    Organization.find_by(name: name) if name.present?
   end
 
   def field_value(identifier)
