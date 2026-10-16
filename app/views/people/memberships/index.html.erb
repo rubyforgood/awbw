@@ -36,8 +36,8 @@
             <div>
               <div class="mb-1"><%= render "memberships/status_badge", membership: membership %></div>
               <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
-                <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
-                <% if membership.active? || membership.owes? %>
+                <% unless membership.ended? %>
+                  <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
                   <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
                 <% end %>
                 <% if membership.stripe_active? %>
@@ -55,7 +55,9 @@
                 <%= link_to "Add invoice", new_membership_membership_invoice_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
               <% end %>
 
-              <%= link_to "Edit cost", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
+              <% unless membership.ended? %>
+                <%= link_to "Edit cost", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
+              <% end %>
 
               <% if membership.autorenewal_cancelled? %>
                 <% if membership.active? || membership.owes? %>

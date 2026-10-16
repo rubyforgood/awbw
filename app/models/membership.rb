@@ -81,6 +81,8 @@ class Membership < ApplicationRecord
 
   def owes? = membership_invoices.any?(&:overdue?)
 
+  def ended? = !active? && !owes?
+
   def autorenewal_cancelled? = autorenewal_cancelled_at.present?
   alias_method :autorenewal_cancelled, :autorenewal_cancelled?
 

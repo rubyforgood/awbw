@@ -9,7 +9,7 @@ class MembershipDecorator < ApplicationDecorator
     return "Ending #{end_date.strftime("%b %-d, %Y")}" if active? && autorenewal_cancelled?
     return "Active" if active?
 
-    owes? ? "Lapsed" : "Ended"
+    ended? ? "Ended" : "Lapsed"
   end
 
   def status_classes
