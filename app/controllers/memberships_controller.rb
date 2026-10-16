@@ -59,7 +59,7 @@ class MembershipsController < ApplicationController
 
   def directory_memberships
     scope = authorized_scope(Membership.all)
-      .includes(person: :user)
+      .includes(person: :user, membership_invoices: :allocations)
       .by_person_name(params[:person_name])
     scope = scope.public_send(status_filter) unless status_filter == "all"
 

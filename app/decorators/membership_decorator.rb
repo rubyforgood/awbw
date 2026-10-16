@@ -6,24 +6,24 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def status_label
-    return autorenewal_cancelled? ? "Ended" : "Lapsed" unless active?
-    return "Ends #{end_date.strftime("%b %-d, %Y")}" if autorenewal_cancelled?
+    return "Ending #{end_date.strftime("%b %-d, %Y")}" if active? && autorenewal_cancelled?
+    return "Active" if active?
 
-    "Active"
+    owes? ? "Lapsed" : "Ended"
   end
 
   def status_classes
-    return "bg-gray-50 text-gray-600 border-gray-200" if !active? && autorenewal_cancelled?
-    return "bg-orange-50 text-orange-700 border-orange-200" unless active?
+    return "bg-orange-50 text-orange-700 border-orange-200" if !active? && owes?
+    return "bg-gray-50 text-gray-600 border-gray-200" unless active?
     return "bg-amber-50 text-amber-700 border-amber-200" if autorenewal_cancelled?
 
     "bg-green-50 text-green-700 border-green-200"
   end
 
   def auto_renewal_label
-    return "Auto-renew: enabled" if !autorenewal_cancelled? && active?
-    return "Auto-renew: on — renews if the outstanding invoice is paid" if !autorenewal_cancelled?
+    return "Auto-renew: enabled" if active? && !autorenewal_cancelled?
     return "Auto-renew: cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}" if active?
+    return "Auto-renew: on — renews if the outstanding invoice is paid" if owes? && !autorenewal_cancelled?
 
     "Auto-renew: off"
   end

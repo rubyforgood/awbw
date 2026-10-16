@@ -37,7 +37,9 @@
               <div class="mb-1"><%= render "memberships/status_badge", membership: membership %></div>
               <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
                 <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
-                <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
+                <% if membership.active? || membership.owes? %>
+                  <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
+                <% end %>
                 <% if membership.stripe_active? %>
                   <%= render "shared/badge", label: "Stripe", classes: "bg-green-100 text-green-700 border-green-200" %>
                 <% end %>
@@ -56,10 +58,12 @@
               <%= link_to "Edit cost", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
 
               <% if membership.autorenewal_cancelled? %>
-                <%= button_to "Resume", membership_path(membership),
-                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
-                      params: { membership: { autorenewal_cancelled: "0" } },
-                      data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
+                <% if membership.active? || membership.owes? %>
+                  <%= button_to "Resume", membership_path(membership),
+                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                        params: { membership: { autorenewal_cancelled: "0" } },
+                        data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
+                <% end %>
               <% else %>
                 <%= button_to "Cancel recurring", membership_path(membership),
                       method: :patch, class: button_classes(:secondary_outline, size: :sm),

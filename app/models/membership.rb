@@ -13,7 +13,7 @@ class Membership < ApplicationRecord
   ANNUAL_COST_CENTS = ENV.fetch("ANNUAL_MEMBERSHIP_CENTS", 10000).to_i
   RENEWAL_WINDOW_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", 30).to_i
 
-  DIRECTORY_STATUSES = %w[active ends lapsed ended all].freeze
+  DIRECTORY_STATUSES = %w[active ending lapsed ended all].freeze
 
   has_paper_trail
 
@@ -35,14 +35,16 @@ class Membership < ApplicationRecord
   scope :active, ->(as_of = Date.current) {
     where(autorenewal_cancelled_at: nil).where(end_date: as_of..)
   }
-  scope :ends, ->(as_of = Date.current) {
+  scope :ending, ->(as_of = Date.current) {
     where.not(autorenewal_cancelled_at: nil).where(end_date: as_of..)
   }
   scope :lapsed, ->(as_of = Date.current) {
-    where(autorenewal_cancelled_at: nil).where("end_date IS NULL OR end_date < ?", as_of)
+    where("end_date IS NULL OR end_date < ?", as_of)
+      .where(id: MembershipInvoice.overdue(as_of).select(:membership_id))
   }
   scope :ended, ->(as_of = Date.current) {
-    where.not(autorenewal_cancelled_at: nil).where("end_date IS NULL OR end_date < ?", as_of)
+    where("end_date IS NULL OR end_date < ?", as_of)
+      .where.not(id: MembershipInvoice.overdue(as_of).select(:membership_id))
   }
 
   scope :by_person_name, ->(query) {
@@ -76,6 +78,8 @@ class Membership < ApplicationRecord
   before_destroy :cancel_stripe_subscription
 
   def active? = end_date.present? && end_date >= Date.current
+
+  def owes? = membership_invoices.any?(&:overdue?)
 
   def autorenewal_cancelled? = autorenewal_cancelled_at.present?
   alias_method :autorenewal_cancelled, :autorenewal_cancelled?
