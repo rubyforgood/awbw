@@ -236,18 +236,6 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(paid.reload).not_to be_overdue
       expect(described_class.overdue).not_to include(paid)
     end
-
-    it ".paid_or_not_started is the exact complement of .overdue" do
-      create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
-      create(:membership_invoice, cost_cents: 2_500, start_date: Date.current + 1)
-      paid = create(:membership_invoice, cost_cents: 0, start_date: Date.current - 1)
-
-      overdue_ids = described_class.overdue.ids
-      complement_ids = described_class.paid_or_not_started.ids
-
-      expect(overdue_ids & complement_ids).to be_empty
-      expect((overdue_ids + complement_ids).sort).to eq(described_class.ids.sort)
-    end
   end
 
   describe "#registrant" do

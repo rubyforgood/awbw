@@ -57,21 +57,6 @@ class Membership < ApplicationRecord
       needle: needle)
   }
 
-  # Memberships with an invoice active on the given date that is paid.
-  scope :current, ->(as_of = Date.current) {
-    where(id: MembershipInvoice.active_on(as_of).paid_in_full.select(:membership_id))
-  }
-
-  # Memberships with a future-starting invoice (e.g. a pre-issued renewal).
-  scope :upcoming, ->(as_of = Date.current) {
-    where(id: MembershipInvoice.where("start_date > ?", as_of).select(:membership_id))
-  }
-
-  # Memberships with an unpaid invoice whose term has started.
-  scope :overdue, ->(as_of = Date.current) {
-    where(id: MembershipInvoice.overdue(as_of).select(:membership_id))
-  }
-
   after_update :cancel_stripe_subscription, if: :just_autorenewal_cancelled?
   after_update :expire_unbilled_future_invoices, if: :just_autorenewal_cancelled?
   before_destroy :prepare_destroy, prepend: true

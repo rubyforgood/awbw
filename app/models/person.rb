@@ -363,10 +363,6 @@ class Person < ApplicationRecord
     profile_is_searchable? && affiliations.any? { |a| a.facilitator? && a.active? }
   end
 
-  def membership_current?(as_of: Date.current)
-    membership_invoices.active_on(as_of).paid_or_not_started(as_of).exists?
-  end
-
   def sector_list
     sectors.pluck(:name)
   end

@@ -461,7 +461,7 @@ RSpec.describe "Memberships", type: :request do
         patch membership_path(subscription), params: { membership: { autorenewal_cancelled: "1" } }
 
         expect(year.reload.end_date).to be_present
-        expect(person.reload).to be_membership_current
+        expect(subscription.reload).to be_covered_on
       end
 
       it "clears the cancellation on resume, keeping the cost" do

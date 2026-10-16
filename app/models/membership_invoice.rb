@@ -30,10 +30,6 @@ class MembershipInvoice < ApplicationRecord
   scope :overdue, ->(as_of = Date.current) {
     not_paid_in_full.where(start_date: ..as_of)
   }
-  # Defined as the complement to `overdue` so it can't drift.
-  scope :paid_or_not_started, ->(as_of = Date.current) {
-    where.not(id: MembershipInvoice.overdue(as_of))
-  }
 
   before_validation :derive_end_date, on: :create
   before_destroy :prevent_destroy_unless_deletable
