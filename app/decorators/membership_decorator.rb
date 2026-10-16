@@ -5,6 +5,10 @@ class MembershipDecorator < ApplicationDecorator
     "Locked at #{h.dollars_from_cents(cost_cents)}"
   end
 
+  def coverage_label
+    active? ? "Membership good through:" : "Membership ended:"
+  end
+
   def status_label
     return "Ending #{end_date.strftime("%b %-d, %Y")}" if active? && autorenewal_cancelled?
     return "Active" if active?
