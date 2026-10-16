@@ -2,8 +2,6 @@
 <% locked = user.locked_at.present? %>
 
 <%= form_with url: toggle_lock_status_user_path(user), method: :post do |f| %>
-  <%= f.hidden_field :membership_id, value: membership.id %>
-  <%= f.hidden_field :section_key, value: section_key %>
   <%= f.submit locked ? "Unlock" : "Lock",
         class: "shrink-0 rounded px-2 py-1 text-xs font-medium border transition hover:opacity-80 #{locked ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}" %>
 <% end %>

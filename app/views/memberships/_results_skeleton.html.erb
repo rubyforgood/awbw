@@ -1,4 +1,14 @@
-<section class="border-primary/10 flex min-h-screen items-center justify-center rounded-2xl border bg-white p-4 shadow-sm sm:p-5" role="status" aria-live="polite">
+<section class="border-primary/10 rounded-2xl border bg-white shadow-sm" role="status" aria-live="polite">
   <span class="sr-only">Loading memberships...</span>
-  <%= render "shared/loading" %>
+  <div class="divide-y divide-gray-200">
+    <% 8.times do %>
+      <div class="flex animate-pulse items-center gap-4 px-4 py-3">
+        <div class="min-w-0 flex-1 space-y-2">
+          <div class="h-4 w-40 rounded bg-gray-200"></div>
+          <div class="h-3 w-56 rounded bg-gray-100"></div>
+        </div>
+        <div class="h-6 w-14 rounded bg-gray-200"></div>
+      </div>
+    <% end %>
+  </div>
 </section>

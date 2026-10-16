@@ -5,6 +5,20 @@ class MembershipDecorator < ApplicationDecorator
     "Locked at #{h.dollars_from_cents(cost_cents)}"
   end
 
+  def status_label
+    return "Lapsed" unless active?
+    return "Ends #{end_date.strftime("%b %-d, %Y")}" if autorenewal_cancelled?
+
+    "Active"
+  end
+
+  def status_classes
+    return "bg-gray-50 text-gray-600 border-gray-200" unless active?
+    return "bg-amber-50 text-amber-700 border-amber-200" if autorenewal_cancelled?
+
+    "bg-green-50 text-green-700 border-green-200"
+  end
+
   def auto_renewal_label
     return "Auto-renew: enable" unless autorenewal_cancelled?
 

@@ -3,22 +3,13 @@ class MembershipsController < ApplicationController
 
   def index
     authorize!
+    @status = status_filter
 
     if turbo_frame_request?
-      render_overview_section
+      @memberships = directory_memberships
+      render "memberships/memberships_results"
     else
-      render :admin_index
-    end
-  end
-
-  def show
-    @membership = Membership.find(params[:id]).decorate
-    authorize! @membership
-    @invoices = @membership.membership_invoices.includes(:allocations)
-
-    respond_to do |format|
-      format.html
-      format.turbo_stream
+      render :index
     end
   end
 
@@ -54,8 +45,6 @@ class MembershipsController < ApplicationController
 
   private
 
-  SECTION_CONFIG = Membership::OVERVIEW_SECTIONS
-
   def set_membership
     @membership = Membership.find(params[:id])
     @person = @membership.person
@@ -68,25 +57,16 @@ class MembershipsController < ApplicationController
     "Membership resumed. Autorenewal turned back on."
   end
 
-  # Admin overview sections
+  def directory_memberships
+    scope = authorized_scope(Membership.all)
+      .includes(person: :user)
+      .by_person_name(params[:person_name])
+    scope = scope.public_send(status_filter) unless status_filter == "all"
 
-  def overview_section(key, page:)
-    authorized_scope(Membership.all)
-      .autorenewal_not_cancelled
-      .includes(person: :user, membership_invoices: :allocations)
-      .references(:person)
-      .public_send(key)
-      .order("people.first_name", "people.last_name")
-      .paginate(page: page, per_page: 10)
+    scope.order(start_date: :desc).paginate(page: params[:page], per_page: 25)
   end
 
-  def render_overview_section
-    section_key = params[:section]&.to_sym
-    section_key = :overdue unless SECTION_CONFIG.key?(section_key)
-
-    memberships = overview_section(section_key, page: params[:page])
-
-    render "memberships/memberships_results",
-      locals: { section_key: section_key, memberships: memberships }
+  def status_filter
+    params[:status].presence_in(Membership::DIRECTORY_STATUSES) || "active"
   end
 end

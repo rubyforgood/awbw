@@ -13,13 +13,7 @@ class Membership < ApplicationRecord
   ANNUAL_COST_CENTS = ENV.fetch("ANNUAL_MEMBERSHIP_CENTS", 10000).to_i
   RENEWAL_WINDOW_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", 30).to_i
 
-  # The admin overview's sections, in display order: the index's default query is
-  # :overdue. Keys double as Membership scopes and section_invoice keys.
-  OVERVIEW_SECTIONS = {
-    overdue: "Overdue",
-    upcoming: "Upcoming",
-    current: "Current"
-  }.freeze
+  DIRECTORY_STATUSES = %w[active ends lapsed all].freeze
 
   has_paper_trail
 
@@ -37,6 +31,26 @@ class Membership < ApplicationRecord
 
   scope :autorenewal_not_cancelled, -> { where(autorenewal_cancelled_at: nil) }
   scope :autorenewal_cancelled, -> { where.not(autorenewal_cancelled_at: nil) }
+
+  scope :active, ->(as_of = Date.current) {
+    where(autorenewal_cancelled_at: nil).where(end_date: as_of..)
+  }
+  scope :ends, ->(as_of = Date.current) {
+    where.not(autorenewal_cancelled_at: nil).where(end_date: as_of..)
+  }
+  scope :lapsed, ->(as_of = Date.current) {
+    where("end_date IS NULL OR end_date < ?", as_of)
+  }
+
+  scope :by_person_name, ->(query) {
+    return all if query.blank?
+
+    needle = "%#{sanitize_sql_like(query.to_s.strip.downcase)}%"
+    joins(:person).where(
+      "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
+      "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle",
+      needle: needle)
+  }
 
   # Memberships with an invoice active on the given date that is paid.
   scope :current, ->(as_of = Date.current) {
@@ -84,16 +98,6 @@ class Membership < ApplicationRecord
 
   def current_invoice
     membership_invoices.find { |invoice| invoice.active_on?(Date.current) } || membership_invoices.first
-  end
-
-  # The invoice that puts this membership in the given overview section, or nil.
-  # Computed over the preloaded invoices so the admin index pays no per-row query.
-  def section_invoice(section_key, as_of: Date.current)
-    case section_key.to_sym
-    when :current then membership_invoices.find { |invoice| invoice.active_on?(as_of) }
-    when :upcoming then membership_invoices.find { |invoice| invoice.start_date && invoice.start_date > as_of }
-    when :overdue then membership_invoices.find { |invoice| invoice.overdue?(as_of) }
-    end
   end
 
   def stripe_subscription
