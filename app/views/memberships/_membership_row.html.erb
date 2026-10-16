@@ -18,7 +18,12 @@
     </div>
   </div>
 
-  <% if membership.person.user %>
-    <%= render "memberships/membership_lock_toggle", membership: membership %>
-  <% end %>
+  <div class="flex items-center gap-2">
+    <%= link_to "Manage membership", person_memberships_path(membership.person),
+          data: { turbo_frame: "_top" }, class: button_classes(:secondary_outline, size: :sm) %>
+
+    <% if membership.person.user %>
+      <%= render "memberships/membership_lock_toggle", membership: membership %>
+    <% end %>
+  </div>
 </div>

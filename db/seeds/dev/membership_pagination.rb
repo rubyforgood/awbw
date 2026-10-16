@@ -1,64 +1,73 @@
-# `rake db:seed:membership_pagination`. not part of `rake db:seed:dev`
+# `rake db:seed:membership_pagination`. Not part of `rake db:seed:dev`.
+# 30 memberships per directory state (Active / Ending / Lapsed / Ended) so every
+# filter tab paginates. Invoice variety (partial / upcoming / comped) lives in the
+# dedicated `db/seeds/dev/membership.rb` scenarios.
+
 puts "Creating membership pagination volume…"
 
 first_names = %w[
   Ada Ben Cleo Dana Ellery Finn Gita Hana Idris Jules Keir Lena Micah Nina Ona
   Priya Quincy Rosa Sana Theo Uma Vale Wes Xena Yara Zoe Amir Bree Cato Del
 ].freeze
-last_name_for = {
-  current: "OnTime",
-  due: "Due",
-  overdue: "Overdue"
-}
+
 standard = Membership::ANNUAL_COST_CENTS
 
-pay_invoice = ->(invoice) do
+pay = ->(invoice, cents) do
   payment = CashPayment.create!(
     person: invoice.person,
-    amount_cents: invoice.cost_cents,
-    amount_cents_remaining: invoice.cost_cents,
+    amount_cents: cents,
+    amount_cents_remaining: cents,
     currency: "usd"
   )
-  Allocation.create!(source: payment, allocatable: invoice, amount: invoice.cost_cents)
+  Allocation.create!(source: payment, allocatable: invoice, amount: cents)
 end
 
-add_membership = ->(first_name, last_name, marker, start_date, &build) do
+year = ->(membership, start_date, cost_cents: standard, paid: false) do
+  invoice = membership.membership_invoices.create!(start_date: start_date, cost_cents: cost_cents)
+  pay.(invoice, cost_cents) if paid
+  invoice
+end
+
+add = ->(first_name, last_name, marker, &build) do
   person = Person.find_or_create_by!(email: "#{marker}@paginationdemo.membership.seed.example.com") do |p|
     p.first_name = first_name
     p.last_name = last_name
   end
-  return if person.memberships.autorenewal_not_cancelled.exists?
+  next if person.memberships.exists?
 
+  build.call(person)
+end
+
+build_group = ->(last_name, prefix, &build) do
+  first_names.each_with_index do |first_name, i|
+    add.(first_name, last_name, "#{prefix}#{'%02d' % i}", &build)
+  end
+  puts "  #{first_names.size} #{last_name.downcase} memberships"
+end
+
+# Active — covered, renewing
+build_group.("Active", "active") do |person|
   membership = person.memberships.create!
-  build.call(membership) if build
-  puts "  #{person.full_name}: #{last_name}"
-  membership
+  year.(membership, Date.current - 3.months, paid: true)
 end
 
-# 30 "paid up, renewal pre-issued" memberships → one row on current + one on upcoming.
-first_names.each_with_index do |first_name, i|
-  add_membership.call(first_name, last_name_for[:current], "current#{'%02d' % i}", Date.current - 3.months) do |membership|
-    year = membership.membership_invoices.create!(start_date: Date.current - 3.months, cost_cents: standard)
-    pay_invoice.call(year)
-    membership.membership_invoices.create!(start_date: year.end_date + 1.day, cost_cents: standard)
-  end
+# Ending — covered, renewal cancelled
+build_group.("Ending", "ending") do |person|
+  membership = person.memberships.create!(autorenewal_cancelled_at: Time.current)
+  year.(membership, Date.current - 3.months, paid: true)
 end
 
-# 30 memberships with one unpaid invoice whose term has started.
-first_names.each_with_index do |first_name, i|
-  add_membership.call(first_name, last_name_for[:due], "due#{'%02d' % i}", Date.current - 5.days) do |membership|
-    membership.membership_invoices.create!(start_date: Date.current - 5.days, cost_cents: standard)
-  end
+# Lapsed — not covered, owes the current year
+build_group.("Lapsed", "lapsed") do |person|
+  membership = person.memberships.create!
+  year.(membership, Date.current - 2.years, paid: true)
+  year.(membership, Date.current - 8.months)
 end
 
-# 30 memberships with one unpaid invoice past start date.
-first_names.each_with_index do |first_name, i|
-  add_membership.call(first_name, last_name_for[:overdue], "overdue#{'%02d' % i}", Date.current - 45.days) do |membership|
-    membership.membership_invoices.create!(
-      start_date: Date.current - 45.days,
-      cost_cents: standard
-    )
-  end
+# Ended — not covered, nothing owed
+build_group.("Ended", "ended") do |person|
+  membership = person.memberships.create!
+  year.(membership, Date.current - 2.years, paid: true)
 end
 
 puts "  #{Membership.count} memberships, #{MembershipInvoice.count} membership invoices"
