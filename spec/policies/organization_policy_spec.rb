@@ -129,4 +129,36 @@ RSpec.describe OrganizationPolicy, type: :policy do
       end
     end
   end
+
+  describe "relation_scope(:currently_affiliated)" do
+    def scope_for(user)
+      policy_for(record: Organization, user: user)
+        .apply_scope(Organization.all, type: :active_record_relation, name: :currently_affiliated)
+    end
+
+    it "returns all organizations for an admin" do
+      expect(scope_for(admin_user)).to eq(Organization.all)
+    end
+
+    it "returns only organizations with an active affiliation for the user's person" do
+      person = create(:person)
+      user = create(:user, person: person)
+      active_org = create(:organization)
+      ended_org = create(:organization)
+      flagged_org = create(:organization)
+      upcoming_org = create(:organization)
+      create(:organization)
+      create(:affiliation, person: person, organization: active_org)
+      create(:affiliation, person: person, organization: active_org, start_date: 5.years.ago, end_date: 3.years.ago)
+      create(:affiliation, person: person, organization: ended_org, start_date: 3.years.ago, end_date: 2.years.ago)
+      create(:affiliation, person: person, organization: flagged_org, inactive: true)
+      create(:affiliation, person: person, organization: upcoming_org, start_date: 1.month.from_now)
+
+      expect(scope_for(user)).to contain_exactly(active_org)
+    end
+
+    it "returns no organizations for a user without a person" do
+      expect(scope_for(regular_user).to_sql).to eq(Organization.none.to_sql)
+    end
+  end
 end

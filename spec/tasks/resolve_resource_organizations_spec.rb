@@ -55,16 +55,6 @@ RSpec.describe "data:resolve_resource_organizations" do
     expect(r1.reload.organization).to eq(r2.reload.organization)
   end
 
-  it "skips a resource whose agency name is ambiguous across multiple orgs" do
-    create(:organization, name: "Twins")
-    create(:organization, name: "Twins")
-    resource = create(:resource, agency: "Twins")
-
-    run_task
-
-    expect(resource.reload.organization_id).to be_nil
-  end
-
   it "leaves an already-linked resource untouched" do
     existing = create(:organization, name: "Existing Link")
     other = create(:organization, name: "Someplace Else")

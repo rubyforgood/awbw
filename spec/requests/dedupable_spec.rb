@@ -314,7 +314,7 @@ RSpec.describe "Dedupable concern", type: :request do
     describe "GET dedupe_index" do
       it "renders and surfaces candidate groups from the duplicate finder" do
         create(:organization, name: "Hope Center")
-        create(:organization, name: "hope center")
+        create(:organization, name: "Hope-Center")
 
         get dedupe_index_organizations_path
 

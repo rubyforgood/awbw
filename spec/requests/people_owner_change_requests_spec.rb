@@ -17,13 +17,42 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
   end
 
   describe "the edit form" do
-    it "offers change-request links for the primary email, organization name, and affiliations" do
+    it "offers change-request buttons for the emails and each affiliation, plus a free-text request" do
       get edit_person_path(person)
 
       expect(response).to be_successful
       expect(response.body).to include("field=primary_email")
-      expect(response.body).to include("field=affiliation")
-      expect(response.body).to include("field=organization_name")
+      expect(response.body).to include("affiliation_id=#{affiliation.id}")
+      expect(response.body).to include("field=other")
+      expect(response.body).to include("AWBW Facilitator")
+    end
+
+    it "shows the secondary email as admin-editable with a change-request link, even when blank" do
+      get edit_person_path(person)
+
+      expect(response.body).to include("Secondary email")
+      expect(response.body).to include("None yet")
+      expect(response.body).to include("field=secondary_email")
+    end
+
+    it "shows an existing secondary email with its type and change-request link" do
+      person.update!(email_2: "second@example.com", email_2_type: "work")
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("second@example.com")
+      expect(response.body).to include("(w)")
+      expect(response.body).to include("field=secondary_email")
+      expect(response.body).not_to include("person[email_2_type]")
+    end
+
+    it "prefills an email request with the address and type on file" do
+      person.update!(email_2: "second@example.com", email_2_type: "work")
+
+      get new_profile_change_request_path(person_id: person, field: "secondary_email")
+
+      expect(response.body).to include('value="second@example.com"')
+      expect(response.body).to include('<option selected="selected" value="work">Work</option>')
     end
 
     it "shows the pending request (not a new-request link) once one exists for a field" do
@@ -32,9 +61,28 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
 
       get edit_person_path(person)
 
-      expect(response.body).to include("Change requested — pending review")
-      expect(response.body).to include(edit_profile_change_request_path(request))
-      expect(response.body).not_to include("field=primary_email")
+      expect(response.body).to include("See your request")
+      expect(response.body).to include("Primary email: #{request.requested_value}")
+      expect(response.body).to include("fa-clock")
+    end
+
+    it "offers a change request on a license locked by CE credit" do
+      license = create(:professional_license, person: person, kind: "LMFT", number: "12345")
+      allow_any_instance_of(ProfessionalLicense).to receive(:used_for_ce?).and_return(true)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("field=professional_license")
+      expect(response.body).to include("professional_license_id=#{license.id}")
+      expect(response.body).not_to include("Admin only")
+    end
+
+    it "marks a pending free-text request beside the ask-staff link" do
+      create(:profile_change_request, :other, person: person, requested_by: owner_user, details: "Fix my last name")
+
+      get edit_person_path(person)
+
+      expect(response.body).to include("Profile data: Fix my last name")
     end
 
     it "flags a specific affiliation that has a pending request, linking to it" do
@@ -45,10 +93,10 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       get edit_person_path(person)
 
       expect(response.body).to include("Change requested")
-      expect(response.body).to include(edit_profile_change_request_path(request))
-      # The "Request an affiliation change" link still shows so other affiliations
-      # can be flagged too.
-      expect(response.body).to include("field=affiliation")
+      expect(response.body).to include("See your request")
+      # Organizations can still be added while one has a pending request.
+      expect(response.body).to include("add=1")
+      expect(request).to be_pending
     end
   end
 
@@ -67,6 +115,24 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       expect(person.email).not_to eq("hacked@example.com")
       expect(owner_user.reload.email).to eq("owner@example.com")
       expect(affiliation.reload.title).to eq("Facilitator")
+    end
+
+    it "lets the owner pick their work address on an existing affiliation" do
+      address = create(:address, addressable: organization)
+
+      patch person_path(person), params: {
+        person: { affiliations_attributes: { affiliation.id.to_s => { id: affiliation.id, organization_address_id: address.id } } }
+      }
+
+      expect(affiliation.reload.organization_address_id).to eq(address.id)
+    end
+
+    it "can't add an affiliation through the edit form" do
+      expect {
+        patch person_path(person), params: {
+          person: { affiliations_attributes: { "0" => { organization_id: create(:organization).id, title: "Sneaky" } } }
+        }
+      }.not_to change(Affiliation, :count)
     end
   end
 end

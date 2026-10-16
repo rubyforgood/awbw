@@ -27,6 +27,26 @@ RSpec.describe "Profile change requests", type: :request do
       expect(subjects).to include("requested a change")
     end
 
+    it "asks about a locked license and returns to the licenses card" do
+      license = create(:professional_license, person: person)
+
+      get new_profile_change_request_path(person_id: person, field: "professional_license", professional_license_id: license.id)
+      expect(response.body).to include("Request a license change")
+
+      post profile_change_requests_path(person_id: person), params: {
+        profile_change_request: { field: "professional_license", professional_license_id: license.id, details: "The number is 12345" }
+      }
+
+      expect(response).to redirect_to(edit_person_path(person, anchor: "professional-licenses"))
+      expect(person.profile_change_requests.last).to have_attributes(professional_license: license, details: "The number is 12345")
+    end
+
+    it "can't ask about someone else's license" do
+      get new_profile_change_request_path(person_id: person, field: "professional_license", professional_license_id: create(:professional_license).id)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "submits a structured affiliation date change targeting a specific affiliation" do
       org = create(:organization, name: "Sunrise Center")
       affiliation = create(:affiliation, person: person, organization: org, title: "Facilitator")
@@ -68,6 +88,97 @@ RSpec.describe "Profile change requests", type: :request do
       expect(request.reload).to be_resolved
       expect(request.resolution_method).to eq("approved")
       expect(person.user.reload.unconfirmed_email).to eq("changed@example.com")
+    end
+
+    it "approves a type-only primary email change without sending a confirmation" do
+      person.update!(email_type: "work")
+      request = create(:profile_change_request, :primary_email, person: person,
+                                                                requested_value: person.user.email, proposed_email_type: "personal")
+
+      post approve_profile_change_request_path(request)
+
+      expect(request.reload).to be_resolved
+      expect(person.reload.email_type).to eq("personal")
+      expect(person.user.reload.unconfirmed_email).to be_blank
+    end
+
+    it "carries the type onto the login when the primary address changes" do
+      request = create(:profile_change_request, :primary_email, person: person,
+                                                                requested_value: "changed@example.com", proposed_email_type: "personal")
+
+      post approve_profile_change_request_path(request)
+
+      expect(person.reload.email_type).to eq("personal")
+      expect(person.user.reload).to have_attributes(unconfirmed_email: "changed@example.com", email_type: "personal")
+    end
+
+    it "approves a secondary email request with its type" do
+      request = create(:profile_change_request, :secondary_email, person: person,
+                                                                  requested_value: "second@example.com", proposed_email_type: "work")
+
+      post approve_profile_change_request_path(request)
+
+      expect(person.reload).to have_attributes(email_2: "second@example.com", email_2_type: "work")
+    end
+
+    it "approves a secondary email request by setting email_2" do
+      request = create(:profile_change_request, :secondary_email, person: person, requested_value: "second@example.com")
+
+      post approve_profile_change_request_path(request)
+
+      expect(request.reload).to be_resolved
+      expect(person.reload.email_2).to eq("second@example.com")
+    end
+
+    it "puts a change-requests button on the person's edit page, filtered to them" do
+      create(:profile_change_request, :primary_email, person: person)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(person_id: person.id, status: "pending")))
+      expect(response.body).to include("Change requests (1 pending)")
+    end
+
+    it "points the button at the latest status when nothing is pending" do
+      create(:profile_change_request, :primary_email, :resolved, person: person)
+
+      get edit_person_path(person)
+
+      expect(response.body).to include(ERB::Util.html_escape(profile_change_requests_path(person_id: person.id, status: "resolved")))
+    end
+
+    it "leaves the button off when the person has no requests" do
+      get edit_person_path(person)
+
+      expect(response.body).not_to include("Change requests")
+    end
+
+    it "filters the queue to one person" do
+      create(:profile_change_request, :primary_email, person: person, requested_value: "mine@example.com")
+      create(:profile_change_request, :primary_email, requested_value: "someone-else@example.com")
+
+      get profile_change_requests_path(status: "pending", person_id: person.id), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("mine@example.com")
+      expect(response.body).not_to include("someone-else@example.com")
+      expect(response.body).to include("person_id=#{person.id}")
+    end
+
+    it "links back to the person on a filtered queue" do
+      get profile_change_requests_path(person_id: person.id)
+
+      expect(response.body).to include(edit_person_path(person))
+      expect(response.body).to include("Show everyone")
+    end
+
+    it "offers no Approve for an organization that isn't in the portal yet" do
+      create(:profile_change_request, person: person, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD,
+                                      proposed_organization_name: "Hillside Shelter", proposed_title: "Counselor", details: nil)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to include("Hillside Shelter (not in the portal yet)")
+      expect(response.body).not_to include(">Approve<")
     end
 
     it "approves an organization name request by renaming the org" do
@@ -210,7 +321,8 @@ RSpec.describe "Profile change requests", type: :request do
     end
 
     it "resolves without re-sending when the email already matches" do
-      request = create(:profile_change_request, :primary_email, person: person, requested_value: person.user.email)
+      request = create(:profile_change_request, :primary_email, person: person, requested_value: "already@example.com")
+      person.user.update_column(:email, "already@example.com")
 
       post approve_profile_change_request_path(request)
 

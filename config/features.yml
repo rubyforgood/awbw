@@ -4551,3 +4551,122 @@
     records use that category, and the name search comes first in the filters.
   pro_tips:
     - "A category showing Taggings (0) isn't used anywhere yet."
+
+- name: "Published filter on Categories shows everything when set to All"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-14
+  action_path: "/categories"
+  pr_number: 2694
+  summary: >-
+    Choosing All in the Published filter on the Categories page now lists both
+    published and unpublished categories, instead of only published ones.
+  pro_tips:
+    - "Unpublished categories have a gray row, so you can tell them apart in the All view."
+
+- name: "What a tag used to be called"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-15
+  pr_number: 2691
+  summary: >-
+    The portal now records what FileMaker, the older registration and scholarship
+    forms, Story Share and the portal's earlier sector list each called a sector or
+    age group, so an old word still resolves to the right tag today.
+  pro_tips:
+    - "This is how an import knows that \"Student Services\" means Education and that \"C & T\" means both Children and Teens."
+    - "A word can be recorded as meaning nothing on purpose — FileMaker's \"Virtually\" described where someone worked, not who they served."
+    - "A retired tag never comes back by accident — but a word can be pointed at one deliberately, which is how FileMaker's \"Poverty\" still finds the sector that already carries it."
+    - "Someone recorded as serving families is tagged with every age range, since that's what serving families means."
+    - "Where an old answer was typed by hand, the reading of it is marked as proposed, so staff can check the list and correct anything that reads wrong."
+    - "The mapping is written up in ADR-0007 for anyone who needs to see the whole picture."
+
+- name: "Organization names are unique"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-12
+  pr_number: 2637
+  action_path: "/organizations/dedupe_index"
+  summary: >-
+    Two organizations can no longer share the same name. Names that differ only
+    by capitalization or extra spaces count as the same name.
+  pro_tips:
+    - "To tell apart two real organizations with the same name, add the city or program, e.g. \"Hope House (Oakland)\"."
+    - "Use Dedupe on the Organizations page to combine records that already exist twice."
+
+- name: "Story import reads old tag names"
+  area: stories
+  display_status: admin_facing
+  released_on: 2026-10-15
+  pr_number: 2698
+  action_path: "/stories/import/new"
+  summary: >-
+    The story import now recognizes an old word for a sector or category — like
+    Story Share's own wording — and tags the story with the portal tag it stands for.
+  pro_tips:
+    - "A tag's current name always wins; an old word is only checked when nothing goes by that name today."
+    - "A word recorded as meaning nothing on purpose is left off the story without being flagged as missing."
+    - "If an old word stands for more than one tag as the primary sector or population, the story gets all of them and the first one recorded is starred as primary."
+
+- name: "Person edit page is more compact"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-15
+  pr_number: 2697
+  summary: >-
+    The person edit page has less empty space. Each section's title sits inside
+    its box, and small sections share a row, so there's less scrolling.
+  pro_tips:
+    - "Emails and phones sit side by side, as do the bio and birthday/time zone."
+    - "All the \"Show …\" profile checkboxes are in one compact grid."
+
+- name: "Ask staff to change your secondary email"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-15
+  pr_number: 2697
+  summary: >-
+    Your secondary email now shows on your profile edit page, with a link to ask
+    AWBW staff to add or change it, the same way the primary email works.
+  pro_tips:
+    - "Admins approve it from the change-requests queue, and it's saved right away (no confirmation email)."
+
+- name: "Idea forms list only your current organization"
+  area: content
+  display_status: user_facing
+  released_on: 2026-10-14
+  pr_number: 2693
+  summary: >-
+    When you submit a workshop variation idea or a story idea, the organization
+    choices now include only the organizations you're currently active with,
+    not every organization you've ever been part of.
+  pro_tips:
+    - "If you're active with just one organization, it's filled in for you and the dropdown is hidden."
+    - "Don't see the right organization? Contact AWBW to update your affiliation."
+
+- name: "Clearer ways to ask staff for profile changes"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-15
+  summary: >-
+    On your profile edit page, each email and each organization you work with
+    has its own "Request a change" button, as
+    does a license locked by continuing education credits. Organization changes
+    ask one simple question at a time, and there's a free-text request for anything else.
+  pro_tips:
+    - "Pick which organization, then what to change (title, dates, its name, your work address, or that you've left), and you'll only see the boxes you need."
+    - "Use \"Add an organization\" for one you work with that isn't listed — type its name if it's not in the portal yet and staff will add it."
+    - "You can pick your work address from the organization's addresses right on the edit page."
+    - "Can't find what you need? \"Ask AWBW staff to change it\" at the bottom of the page sends a free-text request."
+    - "A clock icon marks anything you've already asked about. Hover over it to see what you sent."
+    - "Each email shows its type after it — (w) for work, (p) for personal. To change just the type, ask for a change and pick the new type; the address is already filled in."
+
+- name: "Jump to one person's change requests"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-15
+  summary: >-
+    When someone has profile change requests, their edit page shows a Change
+    requests button at the top that opens the queue filtered to just them.
+  pro_tips:
+    - "The button shows how many are pending, and opens on Pending when there are any."

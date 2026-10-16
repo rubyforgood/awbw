@@ -60,15 +60,16 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(owner_user.reload.time_zone).to eq("Hawaii")
     end
 
-    it "shows the secondary email read-only with an editable type" do
-      person.update!(email_2: "second@example.com")
+    it "shows both emails read-only with their types, leaving the time zone editable" do
+      person.update!(email_2: "second@example.com", email_2_type: "personal")
 
       get edit_person_path(person)
 
       expect(response.body).to include("second@example.com")
+      expect(response.body).to include("(p)")
       expect(response.body).not_to include('name="person[email_2]"')
-      expect(response.body).to include('name="person[email_2_type]"')
-      expect(response.body).to include('name="person[email_type]"')
+      expect(response.body).not_to include('name="person[email_2_type]"')
+      expect(response.body).not_to include('name="person[email_type]"')
       expect(response.body).to include('name="person[user_attributes][time_zone]"')
     end
 
@@ -125,6 +126,26 @@ RSpec.describe "People with profiles enabled", type: :request do
       expect(person.sectorable_items.sole.is_leader).to be(false)
       expect(person.staff_taggings).to be_empty
       expect(owner_user.reload.super_user?).to be(false)
+    end
+  end
+
+  describe "edit page headings" do
+    it "uses owner-friendly section titles for the owner" do
+      sign_in owner_user
+      get edit_person_path(person)
+
+      expect(response.body).to include("Sectors you work in")
+      expect(response.body).to include("Mailing addresses")
+      expect(response.body).to include("Portal communications")
+    end
+
+    it "keeps the admin section titles for an admin" do
+      sign_in create(:user, :admin)
+      get edit_person_path(person)
+
+      expect(response.body).to include("Mailing addresses")
+      expect(response.body).not_to include("Sectors you work in")
+      expect(response.body).not_to include("Portal communications")
     end
   end
 end
