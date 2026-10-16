@@ -475,8 +475,9 @@ RSpec.describe "Memberships", type: :request do
       end
 
       it "lets the nightly job renew again once resumed" do
-        create(:membership_invoice, membership: subscription,
+        invoice = create(:membership_invoice, membership: subscription,
           start_date: Date.current - 1.year + 10.days, end_date: Date.current + 10.days)
+        create(:allocation, source: create(:payment), allocatable: invoice, amount: invoice.cost_cents)
         subscription.update!(autorenewal_cancelled_at: Time.current)
 
         expect { IssueMembershipInvoicesJob.new.perform }.not_to change(MembershipInvoice, :count)

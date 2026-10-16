@@ -6,6 +6,7 @@ class IssueMembershipInvoicesJob < ApplicationJob
 
     Time.use_zone(Membership::TIME_ZONE) do
       expiring_invoices.find_each do |invoice|
+        next unless invoice.paid_in_full?
         Membership::EnsureInvoice.call(membership: invoice.membership, covering: invoice.end_date + 1.day)
       end
     end

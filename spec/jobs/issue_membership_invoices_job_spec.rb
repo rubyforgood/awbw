@@ -2,10 +2,12 @@ require "rails_helper"
 
 RSpec.describe IssueMembershipInvoicesJob, type: :job do
   def term_ending(date, subscription: create(:membership))
-    create(:membership_invoice,
+    invoice = create(:membership_invoice,
       membership: subscription,
       start_date: date - 1.year + 1.day,
       end_date: date)
+    create(:allocation, source: create(:payment), allocatable: invoice, amount: invoice.cost_cents)
+    invoice
   end
 
   describe "#perform" do
