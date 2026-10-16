@@ -20,7 +20,6 @@ export default class extends Controller {
 
   connect() {
     if (window.location.hash.slice(1) !== this.anchorValue) return
-
     if (this.hasContentTarget && this.contentTarget.classList.contains("hidden")) {
       this.toggleTarget.click()
     }
