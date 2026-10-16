@@ -269,6 +269,18 @@ RSpec.describe "People search", type: :request do
         expect(response.body).not_to include("Markedone")
       end
 
+      it "matches additional (non-primary) sectors and age ranges" do
+        additional_sector = create(:sector, :published, name: "Extrasector")
+        additional_age = create(:category, :published, category_type: age_type, name: "Extraage")
+        create(:sectorable_item, sectorable: marked, sector: additional_sector, is_primary: false)
+        create(:categorizable_item, categorizable: marked, category: additional_age, is_primary: false)
+
+        get people_path, params: { sector_names_all: "Extrasector" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+        get people_path, params: { age_range_names_all: "Extraage" }, headers: turbo_headers
+        expect(response.body).to include("Markedone")
+      end
+
       it "matches shared age ranges" do
         get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
         expect(response.body).to include("Markedone")
@@ -408,6 +420,18 @@ RSpec.describe "People search", type: :request do
 
     it "matches age ranges the person hides" do
       get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+    end
+
+    it "matches additional (non-primary) sectors and age ranges" do
+      additional_sector = create(:sector, :published, name: "Extrasector")
+      additional_age = create(:category, :published, category_type: age_type, name: "Extraage")
+      create(:sectorable_item, sectorable: person, sector: additional_sector, is_primary: false)
+      create(:categorizable_item, categorizable: person, category: additional_age, is_primary: false)
+
+      get people_path, params: { sector_names_all: "Extrasector" }, headers: turbo_headers
+      expect(response.body).to include("Hiddenfacts")
+      get people_path, params: { age_range_names_all: "Extraage" }, headers: turbo_headers
       expect(response.body).to include("Hiddenfacts")
     end
 
