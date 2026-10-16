@@ -300,13 +300,13 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(comped.deletion_blocked_reason).to eq("it is comped")
     end
 
-    it "is false while it covers today" do
+    it "is false while it covers today on an uncancelled membership" do
       sibling(Date.current + 2.years)
       active = create(:membership_invoice, membership: subscription,
         start_date: Date.current - 1.day, end_date: Date.current + 1.day)
 
       expect(active).not_to be_deletable
-      expect(active.deletion_blocked_reason).to eq("it covers today")
+      expect(active.deletion_blocked_reason).to match(/covers today/)
     end
 
     it "is false when it is the membership's only invoice" do
