@@ -11,17 +11,17 @@ class MembershipDecorator < ApplicationDecorator
 
   def status_label
     return "Ending #{end_date.strftime("%b %-d, %Y")}" if active? && autorenewal_cancelled?
-    return "Active" if active?
+    return "Active" if active? || renewal_in_flight?
 
     ended? ? "Ended" : "Lapsed"
   end
 
   def status_classes
-    return "bg-orange-50 text-orange-700 border-orange-200" if !active? && owes?
-    return "bg-gray-50 text-gray-600 border-gray-200" unless active?
-    return "bg-amber-50 text-amber-700 border-amber-200" if autorenewal_cancelled?
+    return "bg-amber-50 text-amber-700 border-amber-200" if active? && autorenewal_cancelled?
+    return "bg-green-50 text-green-700 border-green-200" if active? || renewal_in_flight?
+    return "bg-orange-50 text-orange-700 border-orange-200" if owes?
 
-    "bg-green-50 text-green-700 border-green-200"
+    "bg-gray-50 text-gray-600 border-gray-200"
   end
 
   def auto_renewal_label

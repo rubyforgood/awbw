@@ -83,6 +83,13 @@ class Membership < ApplicationRecord
 
   def ended? = !active? && !owes?
 
+  def renewal_in_flight?
+    return false unless person.payment_processor&.subscribed?
+
+    invoice = current_invoice
+    invoice&.overdue? && invoice.start_date >= Date.current - 1.day
+  end
+
   def autorenewal_cancelled? = autorenewal_cancelled_at.present?
   alias_method :autorenewal_cancelled, :autorenewal_cancelled?
 
