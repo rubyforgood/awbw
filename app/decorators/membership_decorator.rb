@@ -25,11 +25,11 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def auto_renewal_label
-    return "Auto-renew: enabled" if active? && !autorenewal_cancelled?
-    return "Auto-renew: cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}" if active?
-    return "Auto-renew: on — renews if the outstanding invoice is paid" if owes? && !autorenewal_cancelled?
+    return "enabled" if active? && !autorenewal_cancelled?
+    return "cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}" if active?
+    return "on — renews if the outstanding invoice is paid" if owes? && !autorenewal_cancelled?
 
-    "Auto-renew: off"
+    "off"
   end
 
   def period_label

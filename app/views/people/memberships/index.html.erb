@@ -9,7 +9,7 @@
       <%= @person.full_name %>
     <% end %>
 
-    <%= link_to "All memberships", membership_invoices_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "All memberships", memberships_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
   <div class="mb-6 flex flex-wrap items-end justify-between gap-2">
@@ -35,11 +35,13 @@
           <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
             <div>
               <div class="mb-1"><%= render "memberships/status_badge", membership: membership %></div>
+
               <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
                 <% unless membership.ended? %>
                   <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
                   <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
                 <% end %>
+
                 <% if membership.stripe_active? %>
                   <%= render "shared/badge", label: "Stripe", classes: "bg-green-100 text-green-700 border-green-200" %>
                 <% end %>

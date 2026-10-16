@@ -8,6 +8,9 @@
 
 <section class="border-primary/10 rounded-2xl border bg-white shadow-sm">
   <% if memberships.any? %>
+    <% if status == "lapsed" %>
+      <p class="m-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">Some members below may show <span class="font-medium">Active</span>. Their renewal charge may still be pending in Stripe (it can lag up to a day).</p>
+    <% end %>
     <div class="divide-y divide-gray-200">
       <% memberships.each do |membership| %>
         <%= render "memberships/membership_row", membership: membership %>
