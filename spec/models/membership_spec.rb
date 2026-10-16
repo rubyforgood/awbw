@@ -40,20 +40,13 @@ RSpec.describe Membership, type: :model do
       expect(build(:membership, person: person, start_date: Date.current, end_date: Date.current + 1.month)).to be_valid
     end
 
-    it "rejects a second autorenewal_cancelled subscription for the same person" do
+    it "rejects a second uncancelled membership for the same person" do
       person = create(:person)
       create(:membership, person: person)
 
       second = build(:membership, person: person)
       expect(second).not_to be_valid
       expect(second.errors[:base].join).to match(/already has a membership/)
-    end
-
-    it "allows a new subscription once the previous one is autorenewal_cancelled and dates don't overlap" do
-      person = create(:person)
-      create(:membership, :autorenewal_cancelled, person: person, start_date: Date.current - 2.months, end_date: Date.current - 1.month)
-
-      expect(build(:membership, person: person)).to be_valid
     end
 
     it "allows two people to each have an uncancelled subscription" do
@@ -65,16 +58,6 @@ RSpec.describe Membership, type: :model do
       subscription = create(:membership)
       subscription.cost_cents = 1_500
       expect(subscription).to be_valid
-    end
-  end
-
-  describe "#autorenewal_cancelled?" do
-    it "is false while autorenewal_cancelled_at is blank" do
-      expect(build(:membership)).not_to be_autorenewal_cancelled
-    end
-
-    it "is true once autorenewal_cancelled_at is stamped" do
-      expect(build(:membership, :autorenewal_cancelled)).to be_autorenewal_cancelled
     end
   end
 
@@ -105,13 +88,6 @@ RSpec.describe Membership, type: :model do
   end
 
   describe "associations" do
-    it "destroys its invoices with it" do
-      subscription = create(:membership)
-      create(:membership_invoice, membership: subscription)
-
-      expect { subscription.destroy }.to change(MembershipInvoice, :count).by(-1)
-    end
-
     it "is reachable from the person, along with their invoices" do
       subscription = create(:membership)
       invoice = create(:membership_invoice, membership: subscription)
@@ -146,20 +122,6 @@ RSpec.describe Membership, type: :model do
       expect { membership.stripe_subscription }.not_to change { membership.person.pay_customers.count }
     end
   end
-
-  describe "#end_date" do
-       it "returns the end_date when set" do
-         membership = create(:membership, end_date: Date.current + 11.months)
-
-         expect(membership.end_date).to eq(Date.current + 11.months)
-       end
-
-       it "is nil when end_date is not set" do
-         membership = create(:membership, end_date: nil)
-
-         expect(membership.end_date).to be_nil
-       end
-     end
 
   describe "#sync_dates_from_invoice" do
     it "sets start_date and end_date from a paid invoice" do

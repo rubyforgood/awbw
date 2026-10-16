@@ -303,9 +303,6 @@ class Person < ApplicationRecord
     where(id: Membership.where("end_date IS NOT NULL AND end_date < ?", Date.current).select(:person_id)) }
   scope :membership_paid, -> {
     where(id: MembershipInvoice.active_on.paid_in_full.joins(:membership).select("memberships.person_id")) }
-  scope :membership_due, -> {
-    where(id: MembershipInvoice.active_on.overdue
-      .joins(:membership).select("memberships.person_id")) }
   scope :membership_overdue, -> {
     where(id: MembershipInvoice.active_on.overdue.joins(:membership).select("memberships.person_id")) }
   scope :by_membership_status, ->(status) {

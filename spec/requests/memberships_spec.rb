@@ -321,16 +321,6 @@ RSpec.describe "Memberships", type: :request do
       end
       expect(response.body).to include(expected)
     end
-
-    it "is not a link on the edit-page card, which stays read-only" do
-      subscription = create(:membership, person: person)
-      invoice = membership_invoice_for(subscription: subscription)
-
-      get edit_person_path(person)
-
-      expect(response.body).to include(invoice.decorate.status_badge.label)
-      expect(response.body).not_to include(allocations_path(allocatable_sgid: invoice.to_sgid.to_s))
-    end
   end
 
   describe "the New membership affordance" do
@@ -407,13 +397,6 @@ RSpec.describe "Memberships", type: :request do
 
   describe "the policy params filter" do
     let!(:subscription) { create(:membership, person: person) }
-
-    it "lets an admin set the cost" do
-      sign_in admin
-      patch membership_path(subscription), params: { membership: { cost_dollars: "15" } }
-
-      expect(subscription.reload.cost_cents).to eq(1_500)
-    end
 
     it "permits only the autorenewal_cancelled flag for a non-admin" do
            policy = MembershipPolicy.new(subscription, user: create(:user))

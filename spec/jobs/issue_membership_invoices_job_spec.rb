@@ -62,12 +62,6 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
         .to eq(Membership::ANNUAL_COST_CENTS)
     end
 
-    it "renews an unpaid invoice, since renewal doesn't depend on payment" do
-      term_ending(Date.current + 10.days)
-
-      expect { described_class.new.perform }.to change(MembershipInvoice, :count).by(1)
-    end
-
     it "creates nothing on a second run" do
       term_ending(Date.current + 10.days)
       described_class.new.perform

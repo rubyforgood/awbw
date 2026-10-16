@@ -7,7 +7,7 @@ first_names = %w[
 ].freeze
 last_name_for = {
   current: "OnTime",
-  grace: "InGrace",
+  due: "Due",
   overdue: "Overdue"
 }
 standard = Membership::ANNUAL_COST_CENTS
@@ -46,7 +46,7 @@ end
 
 # 30 memberships with one unpaid invoice whose term has started.
 first_names.each_with_index do |first_name, i|
-  add_membership.call(first_name, last_name_for[:grace], "grace#{'%02d' % i}", Date.current - 5.days) do |membership|
+  add_membership.call(first_name, last_name_for[:due], "due#{'%02d' % i}", Date.current - 5.days) do |membership|
     membership.membership_invoices.create!(start_date: Date.current - 5.days, cost_cents: standard)
   end
 end

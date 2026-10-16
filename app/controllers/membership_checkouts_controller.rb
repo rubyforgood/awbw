@@ -7,7 +7,7 @@ class MembershipCheckoutsController < ApplicationController
     invoice = Membership::EnsureInvoice.call(membership: membership)
 
     person.set_payment_processor :stripe
-    session = if grace_balance?(invoice)
+    session = if balance_due?(invoice)
       balance_checkout_session(person, membership, invoice)
     else
       subscription_checkout_session(person, membership, invoice)
@@ -20,11 +20,7 @@ class MembershipCheckoutsController < ApplicationController
 
   private
 
-  # A started-but-unpaid year is debited one-time; a year starting today (or one
-  # already paid) goes straight to the subscription session. After the payment
-  # lands the member can click "Set up" again from their profile — the invoice
-  # will now be paid, triggering the subscription path with the billing anchor.
-  def grace_balance?(invoice)
+  def balance_due?(invoice)
     invoice&.outstanding_started?
   end
 

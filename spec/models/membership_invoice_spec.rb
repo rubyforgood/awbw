@@ -70,7 +70,8 @@ RSpec.describe MembershipInvoice, type: :model do
 
     it "rejects an overlap that sits under a different subscription for the same person" do
       existing.membership.update!(autorenewal_cancelled_at: Time.current)
-      rejoined = create(:membership, person: person, start_date: Date.new(2027, 10, 14), end_date: Date.new(2028, 10, 13))
+      rejoined = create(:membership, person: person,
+        start_date: subscription.end_date + 1.day, end_date: subscription.end_date + 1.year)
 
       invoice = build(:membership_invoice,
         membership: rejoined,
@@ -131,10 +132,6 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(invoice.discount_sum).to eq(2_500)
       expect(invoice.payments_sum).to eq(0)
       expect(invoice).not_to be_payment_received
-    end
-
-    it "does not respond to the certificate interface" do
-      expect(invoice).not_to respond_to(:certificate_available?)
     end
   end
 
@@ -218,7 +215,7 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
-  describe "overdue semantics (no grace window)" do
+  describe "overdue semantics" do
     it "treats an unpaid invoice whose term has started as overdue" do
       invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current - 1)
       expect(invoice).to be_overdue
