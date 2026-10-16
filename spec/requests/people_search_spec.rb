@@ -269,18 +269,6 @@ RSpec.describe "People search", type: :request do
         expect(response.body).not_to include("Markedone")
       end
 
-      it "matches additional (non-primary) sectors and age ranges" do
-        additional_sector = create(:sector, :published, name: "Extrasector")
-        additional_age = create(:category, :published, category_type: age_type, name: "Extraage")
-        create(:sectorable_item, sectorable: marked, sector: additional_sector, is_primary: false)
-        create(:categorizable_item, categorizable: marked, category: additional_age, is_primary: false)
-
-        get people_path, params: { sector_names_all: "Extrasector" }, headers: turbo_headers
-        expect(response.body).to include("Markedone")
-        get people_path, params: { age_range_names_all: "Extraage" }, headers: turbo_headers
-        expect(response.body).to include("Markedone")
-      end
-
       it "matches shared age ranges" do
         get people_path, params: { age_range_names_all: "Quietage" }, headers: turbo_headers
         expect(response.body).to include("Markedone")
@@ -423,22 +411,62 @@ RSpec.describe "People search", type: :request do
       expect(response.body).to include("Hiddenfacts")
     end
 
-    it "matches additional (non-primary) sectors and age ranges" do
-      additional_sector = create(:sector, :published, name: "Extrasector")
-      additional_age = create(:category, :published, category_type: age_type, name: "Extraage")
-      create(:sectorable_item, sectorable: person, sector: additional_sector, is_primary: false)
-      create(:categorizable_item, categorizable: person, category: additional_age, is_primary: false)
-
-      get people_path, params: { sector_names_all: "Extrasector" }, headers: turbo_headers
-      expect(response.body).to include("Hiddenfacts")
-      get people_path, params: { age_range_names_all: "Extraage" }, headers: turbo_headers
-      expect(response.body).to include("Hiddenfacts")
-    end
-
     it "shows hidden sectors and age ranges in the row" do
       get people_path, headers: turbo_headers
       expect(response.body).to include("Quietsector")
       expect(response.body).to include("Quietage")
+    end
+  end
+
+  describe "GET /people (turbo frame) sector and age range filters match only tagged people" do
+    let(:age_type) { create(:category_type, :published, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE) }
+    let(:target_sector) { create(:sector, :published, name: "Targetsector") }
+    let(:other_sector) { create(:sector, :published, name: "Othersector") }
+    let(:target_age) { create(:category, :published, category_type: age_type, name: "Targetage") }
+    let(:other_age) { create(:category, :published, category_type: age_type, name: "Otherage") }
+
+    def published_person(first_name)
+      person = create(:person, first_name: first_name, last_name: "Facil", profile_is_searchable: true)
+      create(:affiliation, person: person, title: "Facilitator", start_date: 1.year.ago, inactive: false)
+      person
+    end
+
+    def tag(person, sector:, age:, primary:)
+      create(:sectorable_item, sectorable: person, sector: sector, is_primary: primary)
+      create(:categorizable_item, categorizable: person, category: age, is_primary: primary)
+    end
+
+    before do
+      tag(published_person("Primarymatch"), sector: target_sector, age: target_age, primary: true)
+      additional = published_person("Additionalmatch")
+      tag(additional, sector: other_sector, age: other_age, primary: true)
+      tag(additional, sector: target_sector, age: target_age, primary: false)
+      tag(published_person("Differenttags"), sector: other_sector, age: other_age, primary: true)
+      published_person("Notags")
+    end
+
+    shared_examples "a tag filter" do |param, value|
+      it "returns people tagged with it as primary or additional, and no one else" do
+        get people_path, params: { param => value }, headers: turbo_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Primarymatch")
+        expect(response.body).to include("Additionalmatch")
+        expect(response.body).not_to include("Differenttags")
+        expect(response.body).not_to include("Notags")
+      end
+    end
+
+    context "as an admin" do
+      it_behaves_like "a tag filter", :sector_names_all, "Targetsector"
+      it_behaves_like "a tag filter", :age_range_names_all, "Targetage"
+    end
+
+    context "as a non-admin" do
+      before { sign_in create(:user) }
+
+      it_behaves_like "a tag filter", :sector_names_all, "Targetsector"
+      it_behaves_like "a tag filter", :age_range_names_all, "Targetage"
     end
   end
 
