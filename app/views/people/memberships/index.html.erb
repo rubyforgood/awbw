@@ -56,18 +56,16 @@
 
               <%= link_to "Edit cost", edit_membership_path(membership), class: button_classes(:secondary_outline, size: :sm) %>
 
-              <% if membership.active? %>
-                <% if membership.autorenewal_cancelled? %>
-                  <%= button_to "Resume", membership_path(membership),
-                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
-                        params: { membership: { autorenewal_cancelled: "0" } },
-                        data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
-                <% else %>
-                  <%= button_to "Cancel recurring", membership_path(membership),
-                        method: :patch, class: button_classes(:secondary_outline, size: :sm),
-                        params: { membership: { autorenewal_cancelled: "1" } },
-                        data: { turbo_confirm: "Stop renewing membership for #{@person.full_name}? They keep the invoice period they have already paid for." } %>
-                <% end %>
+              <% if membership.autorenewal_cancelled? %>
+                <%= button_to "Resume", membership_path(membership),
+                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                      params: { membership: { autorenewal_cancelled: "0" } },
+                      data: { turbo_confirm: "Resume renewals for #{@person.full_name}?" } %>
+              <% else %>
+                <%= button_to "Cancel recurring", membership_path(membership),
+                      method: :patch, class: button_classes(:secondary_outline, size: :sm),
+                      params: { membership: { autorenewal_cancelled: "1" } },
+                      data: { turbo_confirm: "Stop renewing membership for #{@person.full_name}? They keep the invoice period they have already paid for." } %>
               <% end %>
 
               <%= button_to "Delete membership", membership_path(membership),

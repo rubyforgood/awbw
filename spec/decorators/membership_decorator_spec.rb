@@ -19,8 +19,8 @@ RSpec.describe MembershipDecorator, type: :decorator do
   end
 
   describe "#auto_renewal_label" do
-    it "reads enable when not autorenewal_cancelled" do
-      expect(create(:membership).decorate.auto_renewal_label).to eq("Auto-renew: enable")
+    it "reads enabled when not autorenewal_cancelled" do
+      expect(create(:membership).decorate.auto_renewal_label).to eq("Auto-renew: enabled")
     end
 
     it "reads the cancelled date once autorenewal_cancelled" do

@@ -20,7 +20,7 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def auto_renewal_label
-    return "Auto-renew: enable" unless autorenewal_cancelled?
+    return "Auto-renew: enabled" unless autorenewal_cancelled?
 
     "Auto-renew: cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}"
   end
