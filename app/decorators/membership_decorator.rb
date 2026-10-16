@@ -20,9 +20,11 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def auto_renewal_label
-    return "Auto-renew: enabled" unless autorenewal_cancelled?
+    return "Auto-renew: enabled" if !autorenewal_cancelled? && active?
+    return "Auto-renew: on — renews if the outstanding invoice is paid" if !autorenewal_cancelled?
+    return "Auto-renew: cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}" if active?
 
-    "Auto-renew: cancelled on #{autorenewal_cancelled_at.strftime("%b %-d, %Y")}"
+    "Auto-renew: off"
   end
 
   def period_label
@@ -33,13 +35,4 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def stripe_active? = person.payment_processor&.subscribed?
-
-  def cancelled_expires_on
-    return unless autorenewal_cancelled?
-
-    ends = membership_invoices.filter_map(&:end_date).sort
-    return if ends.empty? || ends.last < Date.current
-
-    ends.last.strftime("%b %-d, %Y")
-  end
 end

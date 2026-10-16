@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 
-<% active_membership = @memberships.any? { |membership| membership.active? } %>
+<% offer_new_membership = @memberships.none? { |membership| !membership.autorenewal_cancelled? } %>
 
 <div class="border-primary/10 mx-auto max-w-3xl rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
   <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
@@ -18,7 +18,7 @@
       <p class="text-sm text-gray-500"><%= @person.full_name %></p>
     </div>
 
-    <% if !active_membership || params[:admin] == "true" %>
+    <% if offer_new_membership || params[:admin] == "true" %>
       <%= link_to new_person_membership_path(@person), class: button_classes(:primary, extra: "inline-flex items-center gap-1.5") do %>
         <i class="fa-solid fa-plus text-xs"></i>
         New membership
@@ -32,21 +32,20 @@
     <div class="space-y-6">
       <% @memberships.each do |membership| %>
         <div class="border-primary/10 rounded-2xl border p-3 sm:p-4">
-          <div class="mb-3 flex flex-wrap items-start justify-between gap-1">
-            <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
-              <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
-              <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
-              <% if membership.stripe_active? %>
-                <%= render "shared/badge", label: "Stripe", classes: "bg-green-100 text-green-700 border-green-200" %>
-              <% end %>
+          <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <div class="mb-1"><%= render "memberships/status_badge", membership: membership %></div>
+              <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+                <span class="text-gray-600">Cost: <span class="font-medium text-gray-800"><%= membership.cost_label %></span></span>
+                <span class="text-gray-600">Auto-renewal: <span class="font-medium text-gray-800"><%= membership.auto_renewal_label %></span></span>
+                <% if membership.stripe_active? %>
+                  <%= render "shared/badge", label: "Stripe", classes: "bg-green-100 text-green-700 border-green-200" %>
+                <% end %>
 
-              <% if membership.period_label.present? %>
-                <span class="text-gray-600">Dates: <span class="font-medium text-gray-800"><%= membership.period_label %></span></span>
-              <% end %>
-
-              <% if membership.cancelled_expires_on.present? %>
-                <span class="text-gray-600">Expires: <span class="font-medium text-gray-800"><%= membership.cancelled_expires_on %></span></span>
-              <% end %>
+                <% if membership.period_label.present? %>
+                  <span class="text-gray-600">Dates: <span class="font-medium text-gray-800"><%= membership.period_label %></span></span>
+                <% end %>
+              </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
