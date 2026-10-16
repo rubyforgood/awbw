@@ -207,7 +207,7 @@
             form to add the shout-out text (the toggle is already saved). %>
         <% if recipient_shoutout_options.any? %>
           <%= form_with url: feature_recipient_shoutout_event_path(@event), method: :post,
-                        data: { turbo: false }, class: "flex items-center gap-2 print:hidden" do %>
+                        class: "flex items-center gap-2 print:hidden" do %>
             <div class="min-w-[220px]" data-controller="searchable-select" data-searchable-select-mode-value="person">
               <%= select_tag :registration_id,
                              options_for_select(recipient_shoutout_options),
@@ -216,7 +216,9 @@
                              class: "ts-flat w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-fuchsia-500 focus:border-fuchsia-500",
                              data: { searchable_select_target: "select" } %>
             </div>
-            <button type="submit" class="<%= button_classes(:utility_outline, extra: "whitespace-nowrap") %>">
+            <button type="submit"
+                    class="<%= button_classes(:utility_outline, extra: "whitespace-nowrap") %>"
+                    data-turbo-submits-with="Adding…">
               <i class="fa-solid fa-plus"></i> Add shoutout
             </button>
           <% end %>
