@@ -99,7 +99,7 @@ class MembershipInvoice < ApplicationRecord
   def deletion_blocked_reason
     return "it has payments or credits applied" if allocations.exists?
     return "it is comped" if cost_cents.to_i.zero?
-    return "it covers today — cancel the membership's renewal first" if active_on?(Date.current) && !membership.autorenewal_cancelled?
+    return "it covers today — click Cancel recurring first" if active_on?(Date.current) && !membership.autorenewal_cancelled?
     return "it is the membership's only invoice" unless other_invoices?
 
     nil
