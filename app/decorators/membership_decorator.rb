@@ -6,14 +6,15 @@ class MembershipDecorator < ApplicationDecorator
   end
 
   def status_label
-    return "Lapsed" unless active?
+    return autorenewal_cancelled? ? "Ended" : "Lapsed" unless active?
     return "Ends #{end_date.strftime("%b %-d, %Y")}" if autorenewal_cancelled?
 
     "Active"
   end
 
   def status_classes
-    return "bg-gray-50 text-gray-600 border-gray-200" unless active?
+    return "bg-gray-50 text-gray-600 border-gray-200" if !active? && autorenewal_cancelled?
+    return "bg-orange-50 text-orange-700 border-orange-200" unless active?
     return "bg-amber-50 text-amber-700 border-amber-200" if autorenewal_cancelled?
 
     "bg-green-50 text-green-700 border-green-200"

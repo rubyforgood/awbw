@@ -13,7 +13,7 @@ class Membership < ApplicationRecord
   ANNUAL_COST_CENTS = ENV.fetch("ANNUAL_MEMBERSHIP_CENTS", 10000).to_i
   RENEWAL_WINDOW_DAYS = ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", 30).to_i
 
-  DIRECTORY_STATUSES = %w[active ends lapsed all].freeze
+  DIRECTORY_STATUSES = %w[active ends lapsed ended all].freeze
 
   has_paper_trail
 
@@ -39,7 +39,10 @@ class Membership < ApplicationRecord
     where.not(autorenewal_cancelled_at: nil).where(end_date: as_of..)
   }
   scope :lapsed, ->(as_of = Date.current) {
-    where("end_date IS NULL OR end_date < ?", as_of)
+    where(autorenewal_cancelled_at: nil).where("end_date IS NULL OR end_date < ?", as_of)
+  }
+  scope :ended, ->(as_of = Date.current) {
+    where.not(autorenewal_cancelled_at: nil).where("end_date IS NULL OR end_date < ?", as_of)
   }
 
   scope :by_person_name, ->(query) {
