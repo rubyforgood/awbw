@@ -7,60 +7,22 @@
               class: "space-y-2" do |f| %>
   <div class="flex flex-wrap items-end gap-6 md:flex-nowrap">
     <!-- TITLE -->
-    <div class="min-w-[150px] pb-2">
-      <label for="title" class="<%= search_label_class %>">
-        Title contains
-      </label>
-
-      <%= f.text_field :title,
-                       value: params[:title],
-                       placeholder: "e.g. Art, Music…",
-                       class: search_field_class(extra: "bg-white"),
-                       oninput: "this.form.requestSubmit()" %>
-    </div>
+    <%= render "shared/filter_text", param: :title, label: "Title contains", placeholder: "e.g. Art, Music…",
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[150px] pb-2",
+          input_options: { oninput: "this.form.requestSubmit()" } %>
 
     <!-- KEYWORDS -->
-    <div class="min-w-[200px] flex-1 pb-2">
-      <label for="query" class="<%= search_label_class %>">
-        Keywords
-      </label>
-
-      <div class="relative">
-        <%= f.text_field :query,
-                         value: params[:query],
-                         class: search_field_class(extra: "bg-white pr-10") %>
-
-        <%= render "shared/search_submit" %>
-      </div>
-    </div>
+    <%= render "shared/filter_text", param: :query, label: "Keywords", submit: true,
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[200px] flex-1 pb-2" %>
 
     <!-- AUTHOR NAME -->
-    <div class="min-w-[180px] pb-2">
-      <label for="author_name" class="<%= search_label_class %>">
-        Author name
-      </label>
-
-      <div class="relative">
-        <%= f.text_field :author_name,
-                         value: params[:author_name],
-                         placeholder: "e.g. Jane Doe",
-                         class: search_field_class(extra: "bg-white pr-10") %>
-
-        <%= render "shared/search_submit" %>
-      </div>
-    </div>
+    <%= render "shared/filter_text", param: :author_name, label: "Author name", placeholder: "e.g. Jane Doe", submit: true,
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[180px] pb-2" %>
 
     <!-- YEAR -->
-    <div class="w-24 pb-2">
-      <label for="year" class="<%= search_label_class %>">
-        Year
-      </label>
-
-      <%= f.text_field :year,
-                       placeholder: "e.g. 2025",
-                       class: search_field_class(extra: "bg-white"),
-                       oninput: "this.form.requestSubmit()" %>
-    </div>
+    <%= render "shared/filter_text", param: :year, label: "Year", placeholder: "e.g. 2025",
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "w-24 pb-2",
+          input_options: { oninput: "this.form.requestSubmit()" } %>
 
     <!-- VISIBILITY -->
     <div class="min-w-[150px] pb-2">

@@ -39,15 +39,9 @@
 
 <% primary = capture do %>
   <% primary_text.each do |f| %>
-    <div class="<%= f[:search] ? "w-full md:flex-1 md:min-w-0" : "w-full md:w-48" %>">
-      <%= label_tag f[:param], f[:label], class: label_class %>
-      <div class="relative">
-        <%= text_field_tag f[:param], params[f[:param]], class: f[:search] ? "#{field_class} pr-10" : field_class, placeholder: f[:placeholder] %>
-        <% if f[:search] %>
-          <%= render "shared/search_submit" %>
-        <% end %>
-      </div>
-    </div>
+    <%= render "shared/filter_text", param: f[:param], label: f[:label], placeholder: f[:placeholder],
+          field_class: field_class, label_class: label_class, submit: f[:search],
+          wrapper_class: f[:search] ? "w-full md:flex-1 md:min-w-0" : "w-full md:w-48" %>
   <% end %>
 
   <%# Top three, in the order an admin works a registration: overall progress,

@@ -34,35 +34,14 @@
 
           <div class="flex flex-wrap gap-4 lg:flex-nowrap">
 
-            <div class="min-w-0 flex-1">
-              <label class="<%= search_label_class %>">
-                User
-              </label>
-              <%= text_field_tag :user_search,
-                                 params[:user_search],
-                                 placeholder: "Name or email",
-                                 class: search_field_class %>
-            </div>
+            <%= render "shared/filter_text", param: :user_search, label: "User",
+                  placeholder: "Name or email", wrapper_class: "min-w-0 flex-1" %>
 
-            <div class="min-w-0 flex-1">
-              <label class="<%= search_label_class %>">
-                IP address
-              </label>
-              <%= text_field_tag :ip,
-                                 params[:ip],
-                                 placeholder: "e.g. 203.0.113.5",
-                                 class: search_field_class %>
-            </div>
+            <%= render "shared/filter_text", param: :ip, label: "IP address",
+                  placeholder: "e.g. 203.0.113.5", wrapper_class: "min-w-0 flex-1" %>
 
-            <div class="min-w-0 flex-1">
-              <label class="<%= search_label_class %>">
-                User agent
-              </label>
-              <%= text_field_tag :user_agent,
-                                 params[:user_agent],
-                                 placeholder: "e.g. Chrome, iPhone",
-                                 class: search_field_class %>
-            </div>
+            <%= render "shared/filter_text", param: :user_agent, label: "User agent",
+                  placeholder: "e.g. Chrome, iPhone", wrapper_class: "min-w-0 flex-1" %>
 
             <div class="min-w-0 flex-1">
               <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true %>

@@ -38,21 +38,12 @@
           prompt: "Search for an organization" %>
       </div>
 
-      <div class="md:col-span-2">
-        <label for="person_name" class="<%= label_class %>">Person name</label>
+      <%= render "shared/filter_text", param: :person_name, label: "Person name", placeholder: "e.g. Jane Doe",
+            field_class: field_class, label_class: label_class, wrapper_class: "md:col-span-2" %>
 
-        <%= text_field_tag "person_name", params[:person_name],
-          placeholder: "e.g. Jane Doe",
-          class: field_class %>
-      </div>
-
-      <div class="md:col-span-2">
-        <label for="search" class="<%= label_class %>">Search metadata / Stripe charge ID</label>
-
-        <%= text_field_tag "search", params[:search],
-          placeholder: "Search metadata or Stripe charge ID",
-          class: field_class %>
-      </div>
+      <%= render "shared/filter_text", param: :search, label: "Search metadata / Stripe charge ID",
+            placeholder: "Search metadata or Stripe charge ID",
+            field_class: field_class, label_class: label_class, wrapper_class: "md:col-span-2" %>
 
       <div class="md:col-span-2">
         <label for="type" class="<%= label_class %>">Payment method</label>
