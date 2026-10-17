@@ -146,7 +146,7 @@
                                 data: { turbo_frame: "_top" },
                                 class: admin_button_classes(size: nil, extra: "px-2.5 py-1 text-xs") if person.user %>
                         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-                          <%= link_to "Activity", person_activity_path(person),
+                          <%= link_to "Activity", admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
                                   data: { turbo_frame: "_top" },
                                   title: "#{person.name} activity",
                                   class: admin_button_classes(size: nil, extra: "px-2.5 py-1 text-xs") %>

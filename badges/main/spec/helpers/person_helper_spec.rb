@@ -116,18 +116,6 @@ RSpec.describe PersonHelper, type: :helper do
     end
   end
 
-  describe "#person_activity_path" do
-    it "opens the person's all-time activity with account and interaction noise hidden" do
-      person = create(:person)
-      uri = URI.parse(helper.person_activity_path(person))
-      query = Rack::Utils.parse_nested_query(uri.query)
-
-      expect(uri.path).to eq(admin_activities_events_path)
-      expect(query).to include("person_id" => person.id.to_s, "time_period" => "all_time",
-                               "audience" => %w[visitors users staff], "hide_account" => "1", "hide_interactions" => "1")
-    end
-  end
-
   describe "#user_link" do
     let(:user) { create(:user, person: create(:person, first_name: "Cara", last_name: "Lang")) }
 

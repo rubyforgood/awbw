@@ -7,7 +7,6 @@ module Admin
     # admins' own actions matter, so it defaults to including them.
     DEFAULT_AUDIENCES = %w[visitors users].freeze
     EVENTS_DEFAULT_AUDIENCES = %w[visitors users staff].freeze
-    SCOPING_PARAMS = %i[person_id user_id resource_type resource_id].freeze
 
     def index
       authorize! :ahoy_activity, to: :index?
