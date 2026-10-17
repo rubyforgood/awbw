@@ -258,7 +258,7 @@ module PersonServices
     end
 
     def address_key(street, city)
-      [ street, city ].map { |part| part.to_s.squish.downcase }
+      [ AddressNormalizer.street(street), AddressNormalizer.city(city) ]
     end
 
     def phone_key(value)
