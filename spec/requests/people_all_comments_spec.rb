@@ -17,6 +17,17 @@ RSpec.describe "Person aggregated comments", type: :request do
       expect(response.body).to include("person_comments_results")
     end
 
+    it "lists comments deleted from the person's records in a read-only section" do
+      create(:ahoy_event, name: "destroy.comment", resource_type: "Comment", resource_id: 9_301,
+                          properties: { "attributes" => { "body" => "Deleted note marker",
+                                                          "commentable_type" => "Person", "commentable_id" => person.id } })
+
+      get all_comments_person_path(person)
+
+      expect(response.body).to include("Deleted comments")
+      expect(response.body).to include("Deleted note marker")
+    end
+
     it "shows comments from the person, their registrations, scholarships, CE, and user account in the results frame" do
       create(:comment, commentable: person, body: "Profile note")
 
