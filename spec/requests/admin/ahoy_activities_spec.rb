@@ -44,6 +44,10 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
   # The visits page lazy-loads its rows the same way, in the visit_results frame.
   let(:visits_frame_headers) { { "Turbo-Frame" => "visit_results" } }
 
+  def filters_applied_stream(body)
+    Nokogiri::HTML(body).at_css("turbo-stream[target='active_filters'] template")&.inner_html.to_s
+  end
+
   # ============================================================
   # AS A GUEST
   # ============================================================
@@ -143,6 +147,14 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         get index_path
 
         expect(response.body).to include('data-turbo-action="advance"')
+      end
+
+      it "refreshes the filters-applied chips from the results frame, so clearing drops them" do
+        get index_path, params: { event_name: "bookmark" }, headers: frame_headers
+        expect(filters_applied_stream(response.body)).to include("Activity: bookmark")
+
+        get index_path, headers: frame_headers
+        expect(filters_applied_stream(response.body)).not_to include("Activity:")
       end
 
       it "breaks the row's user link out of the results frame" do
@@ -596,6 +608,14 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       it "renders the shell ok on a full-page load" do
         get visits_path
         expect(response).to have_http_status(:ok)
+      end
+
+      it "refreshes the filters-applied chips from the results frame, so clearing drops them" do
+        get visits_path, params: { ip: "10.0.0.1" }, headers: visits_frame_headers
+        expect(filters_applied_stream(response.body)).to include("IP: 10.0.0.1")
+
+        get visits_path, headers: visits_frame_headers
+        expect(filters_applied_stream(response.body)).not_to include("IP:")
       end
 
       it "filters visits by user_id" do
