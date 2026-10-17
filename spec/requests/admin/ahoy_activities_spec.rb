@@ -387,28 +387,23 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body.index("auth.login")).to be < response.body.index("create.bookmark")
       end
 
-      it "filters events by free-text user search across person and user fields" do
-        rudy = create(:user, :with_person, email: "rudy-login@example.com")
-        rudy.person.update!(
-          first_name: "Rudy", last_name: "Hernandez",
-          legal_first_name: "Rudolfo",
-          email: "rudy@example.com", email_2: "rudy.alt@example.com"
-        )
-        rudy_visit = create(:ahoy_visit, user: rudy, started_at: 1.day.ago)
-        create(:ahoy_event, name: "view.workshop", user: rudy, visit: rudy_visit,
-               time: 1.day.ago, properties: { "resource_title" => "rudy_activity_marker" })
+      it "filters by person with a lookup that jumps to that person's activity" do
+        get index_path
 
-        other = create(:user, :with_person)
-        other_visit = create(:ahoy_visit, user: other, started_at: 1.day.ago)
-        create(:ahoy_event, name: "view.workshop", user: other, visit: other_visit,
-               time: 1.day.ago, properties: { "resource_title" => "other_activity_marker" })
+        picker = Nokogiri::HTML(response.body).at_css("select#jump_person_id")
+        expect(picker["data-controller"]).to eq("remote-select navigate-select")
+        expect(picker["data-remote-select-model-value"]).to eq("person")
+        expect(CGI.unescape(picker["data-navigate-select-url-template-value"])).to include("person_id=__ID__")
+        expect(response.body).not_to include('name="user_search"')
+      end
 
-        %w[Hernandez Rudolfo rudy.alt@example.com rudy-login@example.com].each do |term|
-          get index_path, params: { user_search: term, time_period: "all_time", audience: %w[visitors users staff], hide_interactions: "0" }, headers: frame_headers
+      it "preselects the scoped person in the lookup" do
+        person = create(:person)
 
-          expect(response.body).to include("rudy_activity_marker"), "expected #{term.inspect} to match Rudy"
-          expect(response.body).not_to include("other_activity_marker")
-        end
+        get index_path, params: { person_id: person.id }
+
+        selected = Nokogiri::HTML(response.body).at_css("select#jump_person_id option[selected]")
+        expect(selected.text).to eq(person.full_name)
       end
 
       it "filters by person_id to the person, their user, and associated data" do
