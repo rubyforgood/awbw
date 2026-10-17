@@ -15,9 +15,10 @@
             <% pending = pending_requests[affiliation.id] %>
             <% work_addresses = organization.addresses.select { |address| !address.inactive? || address.id == affiliation.organization_address_id } %>
             <div class="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_16rem_auto] sm:gap-4">
-              <div class="min-w-0">
-                <p class="text-gray-800"><%= decorated.display_title %></p>
-                <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500"><%= decorated.status_badge %> <%= decorated.period_label %></p>
+              <div class="flex min-w-0 flex-wrap items-center gap-2 sm:pt-7">
+                <%= decorated.status_badge %>
+                <span class="text-gray-800"><%= decorated.display_title %></span>
+                <span class="text-sm text-gray-500"><%= decorated.period_label %></span>
               </div>
               <div class="min-w-0">
                 <% missing_address_link = link_to(new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id,
