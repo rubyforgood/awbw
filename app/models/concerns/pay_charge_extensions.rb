@@ -19,7 +19,6 @@ module PayChargeExtensions
     elsif (form_submission_id = metadata["form_submission_id"])
       create_bulk_payment(form_submission_id)
     elsif (membership_invoice_id = metadata["membership_invoice_id"])
-      # A one-off balance payment carries both ids; the invoice is the specific one.
       create_membership_invoice_payment(membership_invoice_id)
     elsif (membership_id = membership_id_from_metadata)
       create_membership_payment(membership_id)
@@ -37,9 +36,7 @@ module PayChargeExtensions
       data&.dig("stripe_invoice", "parent", "subscription_details", "metadata", "membership_id")
   end
 
-  # A one-off balance payment names the invoice it's for (its id rides in the
-  # charge metadata), so it allocates there rather than to whatever invoice
-  # happens to cover the charge date.
+  # one off payment on overdue invoice when invoice_id is present
   def create_membership_invoice_payment(invoice_id)
     invoice = MembershipInvoice.find_by(id: invoice_id)
     return unless invoice

@@ -83,9 +83,6 @@ class MembershipInvoice < ApplicationRecord
     self.cost_cents = (value.to_d * 100).to_i if value.present?
   end
 
-  # Set while a membership cascade-destroys its invoices, so the per-invoice
-  # guards (which exist for standalone deletes) don't block the cascade — the
-  # membership's own "no allocations" guard is the gate there.
   attr_accessor :skip_deletion_guard
 
   def deletable?
