@@ -62,12 +62,11 @@ RSpec.describe Membership, type: :model do
   end
 
   describe "scopes" do
-    let!(:open_subscription) { create(:membership) }
-    let!(:cancelled_subscription) { create(:membership, :autorenewal_cancelled) }
+    it "autorenewal_not_cancelled excludes cancelled memberships" do
+      open_subscription = create(:membership)
+      create(:membership, :autorenewal_cancelled)
 
-    it "separates cancelled from uncancelled" do
       expect(described_class.autorenewal_not_cancelled).to contain_exactly(open_subscription)
-      expect(described_class.autorenewal_cancelled).to contain_exactly(cancelled_subscription)
     end
   end
 

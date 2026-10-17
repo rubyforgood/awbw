@@ -30,7 +30,6 @@ class Membership < ApplicationRecord
   validate :no_overlapping_membership_dates
 
   scope :autorenewal_not_cancelled, -> { where(autorenewal_cancelled_at: nil) }
-  scope :autorenewal_cancelled, -> { where.not(autorenewal_cancelled_at: nil) }
 
   scope :active, ->(as_of = Date.current) {
     where(autorenewal_cancelled_at: nil).where(end_date: as_of..).where(start_date: ..as_of)
@@ -78,7 +77,6 @@ class Membership < ApplicationRecord
   end
 
   def autorenewal_cancelled? = autorenewal_cancelled_at.present?
-  alias_method :autorenewal_cancelled, :autorenewal_cancelled?
 
   def autorenewal_cancelled=(value)
     flag = ActiveModel::Type::Boolean.new.cast(value)

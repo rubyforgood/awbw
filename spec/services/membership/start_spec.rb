@@ -19,7 +19,7 @@ RSpec.describe Membership::Start do
 
   it "leaves the person membership current straight away" do
     described_class.call(person: person)
-    expect(person.reload).to be_membership_current
+    expect(person.reload.memberships.sole).to be_active
   end
 
   it "does nothing the second time" do

@@ -7,7 +7,6 @@ class MembershipInvoice < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   has_many :allocations, as: :allocatable, dependent: :destroy
-  has_many :payments, through: :allocations, source: :source, source_type: "Payment"
 
   delegate :person, to: :membership
   alias_method :registrant, :person
