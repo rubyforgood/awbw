@@ -178,13 +178,13 @@
 
       <div class="border-primary/10 mt-6 rounded-2xl border bg-white p-6 shadow-sm">
         Base data
-       <div class="mt-3 flex flex-wrap gap-4">
+       <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           <% @reference_cards.each do |card| %>
             <a href="<%= card[:path] %>"
              class="flex items-center gap-3 rounded-lg border border-gray-200 shadow-lg
               <%= card[:bg_color] %> <%= card[:text_color] %>
               <%= card[:hover_bg_color] %>
-              flex-1 px-4 py-1 transition-colors transition-shadow duration-300">
+              px-4 py-1 transition-colors transition-shadow duration-300">
 
               <div class="flex-shrink-0 text-lg text-gray-700">
                 <%= card[:icon] %>
