@@ -290,7 +290,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
     it "adds the archive's addresses and phones the person doesn't have, keeping their primary" do
       create(:address, addressable: person, street_address: "1 Main St", city: "Los Angeles", state: "CA", primary: true)
-      FmAddress.create!(fm_id: "A70", data: { "AddrsLine1" => "1 main st", "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+      FmAddress.create!(fm_id: "A70", data: { "AddrsLine1" => "1 Main Street", "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
       FmAddress.create!(fm_id: "A71", data: { "RolodexID" => "00073", "AddrsLine1" => "2 Second St",
                                               "AddrsCity" => "Oakland", "AddrsState" => "CA" })
       FmPhoneNumber.create!(fm_id: "P70", data: { "PhoneNumber" => "555-0100" })
