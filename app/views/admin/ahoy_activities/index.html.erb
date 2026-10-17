@@ -33,8 +33,14 @@
                 <%= @person.first_name %>'s comments &amp; communications
               <% end %>
             <% end %>
+            <%= link_to person_path(@person), class: button_classes(:primary_outline) do %>
+              <i class="fa-solid fa-user"></i>
+              <%= @person.first_name %>'s profile
+            <% end %>
           </div>
-          <div class="mt-2"><%= render "count" %></div>
+          <div class="mt-2 text-sm text-gray-500">
+            <%= render "count" %> · <%= link_to "View everyone", admin_activities_events_path, class: "#{eyebrow_link_class} hover:underline" %>
+          </div>
         </div>
       <% else %>
         <div class="flex items-baseline gap-3 mb-6 leading-none">

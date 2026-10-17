@@ -27,6 +27,10 @@ RSpec.describe "Comments and communications", type: :request do
       link = doc.css("a").find { |a| a.text.strip == "Aisha's activity" }
       expect(link).to be_present
       expect(link["href"]).to eq(admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"))
+      profile = doc.css("a").find { |a| a.text.strip == "Aisha's profile" }
+      expect(profile["href"]).to eq(person_path(person))
+      everyone = doc.css("a").find { |a| a.text.strip == "View everyone" }
+      expect(everyone["href"]).to eq(comments_and_communications_path)
     end
 
     it "renders comments and communications together in the results frame" do

@@ -433,6 +433,10 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(doc.at_css("h1").text).to include("Ada Lovelace")
         link = doc.css("a").find { |a| a.text.strip == "Ada's comments & communications" }
         expect(link["href"]).to eq(comments_and_communications_path(person_id: person.id))
+        profile = doc.css("a").find { |a| a.text.strip == "Ada's profile" }
+        expect(profile["href"]).to eq(person_path(person))
+        everyone = doc.css("a").find { |a| a.text.strip == "View everyone" }
+        expect(everyone["href"]).to eq(admin_activities_events_path)
       end
 
       it "shows a back-to-person eyebrow (not Admin) when scoped to a person" do
