@@ -428,11 +428,11 @@ class Organization < ApplicationRecord
 
   private
 
-  # Most-held first, then alphabetical.
+  # Most primary holders first; additional holders break ties, then alphabetical.
   def tag_breakdown(tag_and_primary_pairs)
     tag_and_primary_pairs.group_by(&:first)
       .map { |tag, pairs| TagBreakdown.new(tag:, primary_count: pairs.count(&:last), additional_count: pairs.count { |pair| !pair.last }) }
-      .sort_by { |row| [ -row.total, row.tag.name.to_s.downcase ] }
+      .sort_by { |row| [ -row.primary_count, -row.additional_count, row.tag.name.to_s.downcase ] }
   end
 
   def affiliation_dates_locked

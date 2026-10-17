@@ -434,6 +434,31 @@ RSpec.describe Organization do
     end
   end
 
+  describe "#active_facilitator_age_group_breakdown" do
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+    let!(:adults) { create(:category, :published, category_type: age_type, name: "Adults") }
+    let!(:elders) { create(:category, :published, category_type: age_type, name: "Elders") }
+    let!(:teens) { create(:category, :published, category_type: age_type, name: "Teens") }
+    let!(:children) { create(:category, :published, category_type: age_type, name: "Children") }
+    let(:organization) { create(:organization) }
+
+    def facilitator(primary:, additional: [])
+      person = create(:person)
+      create(:affiliation, organization: organization, person: person)
+      person.tag_age_groups(primary_ids: primary.map(&:id), additional_ids: additional.map(&:id))
+    end
+
+    it "orders by primary holders, then additional holders, then name" do
+      facilitator(primary: [ teens ], additional: [ adults ])
+      facilitator(primary: [ children ], additional: [ adults ])
+      facilitator(primary: [ elders ], additional: [ adults, teens ])
+
+      rows = organization.active_facilitator_age_group_breakdown
+      expect(rows.map { |row| row.tag.name }).to eq(%w[Teens Children Elders Adults])
+      expect(rows.map { |row| [ row.primary_count, row.additional_count ] }).to eq([ [ 1, 1 ], [ 1, 0 ], [ 1, 0 ], [ 0, 3 ] ])
+    end
+  end
+
   describe "#active_facilitator_age_groups" do
     let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
     let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
