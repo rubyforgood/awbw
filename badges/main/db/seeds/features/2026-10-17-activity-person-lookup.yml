@@ -1,0 +1,9 @@
+name: "Filter activity to one person with a lookup"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+action_path: "/admin/activities"
+summary: >-
+  The Activity page's Person filter searches people as you type and opens that
+  person's full activity history. The filters-applied chips now update as you
+  filter or clear, without a reload.
