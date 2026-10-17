@@ -6,25 +6,21 @@
   <%= form_with url: memberships_path, method: :get,
         data: { controller: "collection", turbo_frame: "memberships_results" },
         autocomplete: "off", class: "flex flex-wrap items-end gap-4" do %>
-    <div class="w-full md:w-44">
-      <%= render "events/filter_select",
+    <div class="w-full md:w-44"><%= render "shared/filter_select",
             param: :status,
             label: "Status",
             options: Membership::DIRECTORY_STATUSES.map { |status| [ status.capitalize, status ] },
             selected: status,
             blank: nil,
             clear_to: "active",
-            field_class: select_class %>
-    </div>
+            field_class: select_class %></div>
 
     <div class="min-w-[200px] flex-1">
       <%= label_tag :person_name, "Person name", class: label_class %>
-      <div class="relative">
-        <%= text_field_tag :person_name, params[:person_name],
+
+      <div class="relative"><%= text_field_tag :person_name, params[:person_name],
               placeholder: "e.g. Jane Doe",
-              class: input_class %>
-        <%= render "shared/search_submit" %>
-      </div>
+              class: input_class %><%= render "shared/search_submit" %></div>
     </div>
   <% end %>
 </div>
