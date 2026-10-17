@@ -1,0 +1,12 @@
+name: "Ticket form answers reach Other responses and quotes"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-17
+action_path: "/other_responses"
+pr_number: 2719
+summary: >-
+  Forms a registration ticket shows inline, like post-event surveys, now send
+  their typed "Other" answers to the Other responses page and their quotes to
+  quote review, the same as registration and standalone forms.
+pro_tips:
+  - "New organization-type \"Other\" answers now link to the exact form they came from."
