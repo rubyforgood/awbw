@@ -21,8 +21,6 @@ RSpec.describe "page_bg_class alignment with policies" do
   #   "admin-or-owner-or-public-or-authpublished"     → the same, plus owner? — an
   #                                                     event owner sees their own
   #                                                     draft/past event page
-  #   "admin-or-authpublished"                        → admin? || (authenticated? && published?)
-  #   "admin-or-owner-or-authsearchable"              → admin? || owner? || (authenticated? && published?)
   #   "admin-or-owner"                                → admin? || owner? (manage?,
   #                                                     dashboard?, edit?, the report
   #                                                     suite — a bg-* utility may ride
@@ -47,12 +45,14 @@ RSpec.describe "page_bg_class alignment with policies" do
 
     # ─── admin-or-auth (policy: authenticated?) ───
     "app/views/organizations/index.html.erb"           => "admin-or-auth",
+    "app/views/organizations/show.html.erb"            => "admin-or-auth",
     "app/views/devise/sessions/new.html.erb"            => "public",
     "app/views/devise/passwords/new.html.erb"           => "public",
     "app/views/devise/passwords/edit.html.erb"          => "public",
     "app/views/devise/confirmations/new.html.erb"       => "public",
     "app/views/devise/unlocks/new.html.erb"             => "public",
     "app/views/people/index.html.erb"                  => "admin-or-auth",
+    "app/views/people/show.html.erb"                   => "admin-or-auth",
     "app/views/workshop_logs/index.html.erb"           => "admin-or-auth",
     "app/views/features/index.html.erb"                => "admin-or-auth",
 
@@ -77,7 +77,6 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshops/show.html.erb"                => "admin-or-public-or-authpublished",
     "app/views/story_shares/show.html.erb"             => "admin-or-public-or-authpublished",
 
-    "app/views/organizations/show.html.erb"            => "admin-or-authpublished",
     "app/views/organizations/populations_served.html.erb" => "admin-or-authpublished",
     "app/views/features/show.html.erb"                 => "admin-or-authpublished",
 
@@ -96,7 +95,6 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/profile_change_requests/edit.html.erb"  => "admin-or-owner",
     "app/views/profile_change_requests/choose_affiliation.html.erb" => "admin-or-owner",
     "app/views/profile_change_requests/choose_affiliation_change.html.erb" => "admin-or-owner",
-    "app/views/people/show.html.erb"                   => "admin-or-owner-or-authsearchable",
     "app/views/people/edit.html.erb"                   => "admin-or-owner",
 
     "app/views/reports/show.html.erb"                  => "admin-or-owner-or-member",
