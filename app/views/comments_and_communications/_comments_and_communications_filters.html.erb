@@ -1,4 +1,4 @@
-<%# Filter bar for the combined feed. Keyword and Attached-to stay visible;
+<%# Filter bar for the combined feed. Keyword, Attached-to and From/author stay visible;
     the rest sit behind a "More filters" chevron toggle so a non-technical user
     isn't met by a wall of fields. Most filters are shared: the two models name the
     same idea differently, so each side answers on its own column (author/from,
@@ -12,7 +12,7 @@
 <% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
 <%# Open the advanced panel on load when any of its filters is already applied, so
     an active filter is never hidden from the person looking at the results. %>
-<% advanced_active = params[:subject].present? || params[:author_id].present? || params[:follow_up].present? || params[:flagged].present? || params[:from].present? || params[:to].present? || params[:email_topic].present? %>
+<% advanced_active = params[:subject].present? || params[:follow_up].present? || params[:flagged].present? || params[:from].present? || params[:to].present? || params[:email_topic].present? %>
 <%= form_with url: url, method: :get, id: CommentsHelper::FEED_FILTER_FORM_ID,
               data: { controller: "collection expandable-card", turbo_frame: frame, expandable_card_expanded_value: advanced_active },
               html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-100 p-4" do |f| %>
@@ -58,6 +58,15 @@
                    onchange: "this.form.requestSubmit()" %>
     </div>
 
+    <div class="w-56">
+      <label for="author_id" class="<%= search_label_class %>">From or author</label>
+      <%= select_tag :author_id,
+                     options_for_select(User.where(id: params[:author_id]).map { |user| [ user.full_name_with_email, user.id ] }, params[:author_id]),
+                     include_blank: true, prompt: "Search staff by name",
+                     class: search_field_class(extra: "bg-white"),
+                     data: { controller: "remote-select", remote_select_model_value: "user" } %>
+    </div>
+
     <div class="shrink-0 pb-2">
       <button type="button"
               class="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs <%= eyebrow_link_class %>"
@@ -80,15 +89,6 @@
                        placeholder: "Comment topic / email subject…",
                        class: search_field_class(extra: "bg-white"),
                        oninput: "this.form.requestSubmit()" %>
-    </div>
-
-    <div class="min-w-[180px] grow">
-      <label for="author_id" class="<%= search_label_class %>">From or author</label>
-      <%= select_tag :author_id,
-                     options_for_select(User.where(id: params[:author_id]).map { |user| [ user.full_name_with_email, user.id ] }, params[:author_id]),
-                     include_blank: true, prompt: "Search staff by name",
-                     class: search_field_class(extra: "bg-white"),
-                     data: { controller: "remote-select", remote_select_model_value: "user" } %>
     </div>
 
     <div class="w-32">
