@@ -45,9 +45,10 @@ class ProfileChangeRequest < ApplicationRecord
     AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
     AFFILIATION_CHANGE_OTHER
   ].freeze
-  AFFILIATION_FREE_TEXT_CATEGORIES = [ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ].freeze
-  # Approve applies these directly. A work address change joins them only when it picks one of the org's addresses.
-  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - AFFILIATION_FREE_TEXT_CATEGORIES - [ AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS ]).freeze
+  AFFILIATION_WORK_ADDRESS_CATEGORIES = [ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS ].freeze
+  # Approve applies these directly; "Other" is free text an admin handles by hand.
+  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - [ AFFILIATION_CHANGE_OTHER ]).freeze
+  PROPOSED_ADDRESS_FIELDS = %i[proposed_street_address proposed_city proposed_state proposed_zip_code].freeze
 
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
@@ -82,9 +83,24 @@ class ProfileChangeRequest < ApplicationRecord
 
   def auto_appliable?
     return true if field.in?(AUTO_APPLIABLE_FIELDS)
-    return proposed_organization_address_id.present? if requested_value == AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS
+    return proposed_work_address_given? if work_address_change?
 
     field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES) && !new_organization?
+  end
+
+  def work_address_change?
+    field == "affiliation" && requested_value.in?(AFFILIATION_WORK_ADDRESS_CATEGORIES)
+  end
+
+  # A request from before work addresses were structured carries only free text in details.
+  def proposed_work_address_given?
+    proposed_organization_address_id.present? || proposed_city.present?
+  end
+
+  def typed_work_address_label
+    return if proposed_city.blank?
+
+    [ proposed_street_address, proposed_city, [ proposed_state, proposed_zip_code ].compact_blank.join(" ") ].compact_blank.join(", ")
   end
 
   # An add request for an organization that isn't in the portal yet — staff create it by hand.
@@ -105,7 +121,7 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_DATES then proposed_dates_label
     when AFFILIATION_CHANGE_ORGANIZATION then proposed_organization_name
     when AFFILIATION_CHANGE_REMOVE then "End-date and mark inactive"
-    when AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS then proposed_organization_address&.name
+    when *AFFILIATION_WORK_ADDRESS_CATEGORIES then proposed_organization_address&.name || typed_work_address_label
     when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name || new_organization_label, proposed_dates_label ].compact_blank.join(" · ")
     end
   end
@@ -179,7 +195,7 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   def requires_details?
-    other? || license? || (field == "affiliation" && requested_value.in?(AFFILIATION_FREE_TEXT_CATEGORIES))
+    other? || license? || (field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER)
   end
 
   # A category's hidden sibling inputs still post their (stale) values; drop the
@@ -194,7 +210,8 @@ class ProfileChangeRequest < ApplicationRecord
     end
     self.proposed_organization_name = nil unless requested_value.in?([ AFFILIATION_CHANGE_ORGANIZATION, AFFILIATION_CHANGE_ADD ])
     self.proposed_organization_name = nil if requested_value == AFFILIATION_CHANGE_ADD && organization_id.present?
-    self.proposed_organization_address_id = nil unless requested_value == AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS
+    self.proposed_organization_address_id = nil unless work_address_change?
+    PROPOSED_ADDRESS_FIELDS.each { |attribute| self[attribute] = nil } if !work_address_change? || proposed_organization_address_id.present?
   end
 
   def affiliation_belongs_to_person
@@ -232,11 +249,16 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_ADD
       errors.add(:base, "Pick an organization, or type its name if it's not on the list") if organization_id.blank? && proposed_organization_name.blank?
       errors.add(:proposed_title, "can't be blank") if proposed_title.blank?
-    when AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS
-      errors.add(:base, "Pick an address from the list, or type your new one") if proposed_organization_address_id.blank? && details.blank?
-      if proposed_organization_address && proposed_organization_address.addressable != affiliation&.organization
-        errors.add(:proposed_organization_address, "isn't one of this organization's addresses")
-      end
+    when *AFFILIATION_WORK_ADDRESS_CATEGORIES
+      work_address_proposed_values if pending?
+    end
+  end
+
+  def work_address_proposed_values
+    if proposed_organization_address
+      errors.add(:proposed_organization_address, "isn't one of this organization's addresses") if proposed_organization_address.addressable != affiliation&.organization
+    elsif [ proposed_street_address, proposed_city, proposed_state ].any?(&:blank?)
+      errors.add(:base, affiliation&.organization&.addresses&.any? ? "Pick an address from the list, or enter its street, city, and state" : "Enter the street, city, and state of your work address")
     end
   end
 

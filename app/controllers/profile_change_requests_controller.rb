@@ -148,7 +148,8 @@ class ProfileChangeRequestsController < ApplicationController
   def profile_change_request_params
     params.require(:profile_change_request).permit(
       :field, :requested_value, :details, :affiliation_id, :organization_id, :professional_license_id, :proposed_email_type,
-      :proposed_title, :proposed_start_date, :proposed_end_date, :proposed_organization_name, :proposed_organization_address_id
+      :proposed_title, :proposed_start_date, :proposed_end_date, :proposed_organization_name, :proposed_organization_address_id,
+      :proposed_street_address, :proposed_city, :proposed_state, :proposed_zip_code
     )
   end
 

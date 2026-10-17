@@ -28,42 +28,61 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(request.errors[:details]).to be_present
     end
 
-    it "requires details for a work address request" do
-      affiliation = create(:affiliation)
-      request = build(:profile_change_request, person: affiliation.person, affiliation: affiliation,
-                                               requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, details: nil)
-      expect(request).not_to be_valid
-      expect(request.errors[:details]).to be_present
-    end
-
-    describe "changing a work address" do
+    describe "work address requests" do
       let(:affiliation) { create(:affiliation) }
-      let(:change) { { person: affiliation.person, affiliation: affiliation, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS, details: nil } }
+      let(:typed) { { proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV", proposed_zip_code: "89501" } }
 
-      it "needs a picked address or a typed one" do
-        request = build(:profile_change_request, **change)
+      [ ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS ].each do |change|
+        context change do
+          let(:base) { { person: affiliation.person, affiliation: affiliation, requested_value: change, details: nil } }
+
+          it "needs a picked address or a street, city, and state" do
+            request = build(:profile_change_request, **base, proposed_city: "Reno")
+            expect(request).not_to be_valid
+            expect(request.errors[:base]).to include("Enter the street, city, and state of your work address")
+          end
+
+          it "is auto-appliable with a typed address and no details" do
+            request = build(:profile_change_request, **base, **typed)
+            expect(request).to be_valid
+            expect(request).to be_auto_appliable
+            expect(request.proposed_change_summary).to eq("12 Elm St, Reno, NV 89501")
+          end
+
+          it "is auto-appliable with an address picked from the org's list, dropping any typed one" do
+            address = create(:address, addressable: affiliation.organization)
+            request = build(:profile_change_request, **base, **typed, proposed_organization_address: address)
+            expect(request).to be_valid
+            expect(request).to be_auto_appliable
+            expect(request.proposed_city).to be_nil
+            expect(request.proposed_change_summary).to eq(address.name)
+          end
+        end
+      end
+
+      it "asks to pick or enter one when the org has addresses on file" do
+        create(:address, addressable: affiliation.organization)
+        request = build(:profile_change_request, person: affiliation.person, affiliation: affiliation, details: nil,
+                                                 requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS)
         expect(request).not_to be_valid
-        expect(request.errors[:base]).to include("Pick an address from the list, or type your new one")
-      end
-
-      it "is auto-appliable when the address is picked from the org's list" do
-        address = create(:address, addressable: affiliation.organization)
-        request = build(:profile_change_request, **change, proposed_organization_address: address)
-        expect(request).to be_valid
-        expect(request).to be_auto_appliable
-        expect(request.proposed_change_summary).to eq(address.name)
-      end
-
-      it "is a manual update when the address is typed" do
-        request = build(:profile_change_request, **change, details: "12 Elm St, Reno, NV 89501")
-        expect(request).to be_valid
-        expect(request).not_to be_auto_appliable
+        expect(request.errors[:base]).to include("Pick an address from the list, or enter its street, city, and state")
       end
 
       it "rejects another organization's address" do
-        request = build(:profile_change_request, **change, proposed_organization_address: create(:address))
+        request = build(:profile_change_request, person: affiliation.person, affiliation: affiliation, details: nil,
+                                                 requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                                                 proposed_organization_address: create(:address))
         expect(request).not_to be_valid
         expect(request.errors[:proposed_organization_address]).to be_present
+      end
+
+      it "leaves an older free-text request for a manual update and still lets it be resolved" do
+        request = create(:profile_change_request, person: affiliation.person, affiliation: affiliation, **typed,
+                                                  requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS)
+        request.update_columns(proposed_street_address: nil, proposed_city: nil, proposed_state: nil, proposed_zip_code: nil)
+
+        expect(request.reload).not_to be_auto_appliable
+        expect { request.resolve!(method: "manual", reviewer: create(:user, :admin)) }.not_to raise_error
       end
     end
 

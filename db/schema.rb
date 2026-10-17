@@ -1737,6 +1737,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.bigint "proposed_organization_address_id"
+    t.string "proposed_street_address"
+    t.string "proposed_city"
+    t.string "proposed_state"
+    t.string "proposed_zip_code"
     t.index ["affiliation_id"], name: "index_profile_change_requests_on_affiliation_id"
     t.index ["organization_id"], name: "index_profile_change_requests_on_organization_id"
     t.index ["person_id"], name: "index_profile_change_requests_on_person_id"

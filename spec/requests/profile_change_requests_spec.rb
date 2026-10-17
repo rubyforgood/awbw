@@ -220,14 +220,32 @@ RSpec.describe "Profile change requests", type: :request do
       expect(request.reload).to be_resolved
     end
 
-    it "leaves a typed work address change for a manual update" do
+    it "approves a typed work address by adding it to the organization" do
       affiliation = create(:affiliation, person: person)
-      request = create(:profile_change_request, person: person, affiliation: affiliation,
-                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
-                       details: "12 Elm St, Reno, NV 89501")
+      request = create(:profile_change_request, person: person, affiliation: affiliation, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV", proposed_zip_code: "89501")
 
-      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
-      expect(response.body).not_to include(">Approve<")
+      expect {
+        post approve_profile_change_request_path(request)
+      }.to change { affiliation.organization.addresses.count }.by(1)
+
+      expect(affiliation.reload.organization_address).to have_attributes(street_address: "12 Elm St", city: "Reno", address_type: "work")
+      expect(request.reload).to be_resolved
+    end
+
+    it "reuses the organization's matching address when approving a typed one" do
+      affiliation = create(:affiliation, person: person)
+      existing = create(:address, addressable: affiliation.organization, street_address: "12 Elm Street", city: "Reno", state: "NV")
+      request = create(:profile_change_request, person: person, affiliation: affiliation, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      expect {
+        post approve_profile_change_request_path(request)
+      }.not_to change(Address, :count)
+
+      expect(affiliation.reload.organization_address).to eq(existing)
     end
 
     it "approves an add-a-new-affiliation request by creating it" do

@@ -80,20 +80,9 @@
   <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE %>
     <p class="text-lg text-gray-700">We'll mark <strong><%= current&.organization&.name %></strong> as an organization you no longer work with.</p>
   <% end %>
-  <% if change == ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS %>
-    <%= f.input :details, as: :text, label: "Your work address", hint: "Street, city, state, and zip code.", input_html: { rows: 3, class: "w-full text-lg" } %>
-  <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS %>
-    <% if current&.organization_address %>
-      <p class="text-gray-700">Right now: <span class="font-medium"><%= current.organization_address.name %></span></p>
-    <% end %>
-    <% other_addresses = current&.organization&.addresses.to_a.reject { |address| address.inactive? || address.id == current.organization_address_id } %>
-    <% if other_addresses.any? %>
-      <%= f.input :proposed_organization_address_id, label: "Your new work address",
-                  collection: other_addresses.map { |address| [ address.name, address.id ] }, include_blank: "Pick an address",
-                  input_html: { class: "w-full text-lg" } %>
-    <% end %>
-    <%= f.input :details, as: :text, label: (other_addresses.any? ? "Not on the list? Type it here" : "Your new work address"),
-                hint: "Street, city, state, and zip code.", required: other_addresses.none?, input_html: { rows: 3, class: "w-full text-lg" } %>
+  <% if change.in?(ProfileChangeRequest::AFFILIATION_WORK_ADDRESS_CATEGORIES) %>
+    <%= render "profile_change_requests/work_address_fields", f: f, affiliation: current %>
+    <%= f.input :details, as: :text, label: "Anything else you'd like us to know? (optional)", input_html: { rows: 3, class: "w-full" } %>
   <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_OTHER %>
     <%= f.input :details, as: :text, label: "What would you like us to change?", input_html: { rows: 5, class: "w-full text-lg" } %>
   <% else %>

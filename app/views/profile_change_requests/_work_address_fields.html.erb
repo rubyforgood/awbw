@@ -1,0 +1,20 @@
+<%# locals: (f:, affiliation:) %>
+<% if affiliation&.organization_address %>
+  <p class="text-gray-700">Right now: <span class="font-medium"><%= affiliation.organization_address.name %></span></p>
+<% end %>
+<% listed = affiliation&.organization&.addresses.to_a.reject { |address| address.inactive? || address.id == affiliation.organization_address_id } %>
+<% if listed.any? %>
+  <%= f.input :proposed_organization_address_id, label: "Pick your work address",
+              collection: listed.map { |address| [ address.name, address.id ] }, include_blank: "Not on the list",
+              input_html: { class: "w-full text-lg" } %>
+<% end %>
+<fieldset class="space-y-3">
+  <legend class="mb-2 font-medium text-gray-700"><%= listed.any? ? "Not on the list? Enter it here" : "Your work address" %></legend>
+  <%= f.input :proposed_street_address, label: "Street", required: false, input_html: { class: "w-full", autocomplete: "address-line1" } %>
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_8rem]">
+    <%= f.input :proposed_city, label: "City", required: false, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "address-level2" } %>
+    <%= f.input :proposed_state, label: "State", as: :select, required: false, collection: state_select_options(f.object.proposed_state),
+                include_blank: true, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "address-level1" } %>
+    <%= f.input :proposed_zip_code, label: "ZIP code", required: false, wrapper_html: { class: "mb-0" }, input_html: { class: "w-full", autocomplete: "postal-code" } %>
+  </div>
+</fieldset>
