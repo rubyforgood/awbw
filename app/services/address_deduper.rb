@@ -31,6 +31,11 @@ class AddressDeduper
       signature(delete.addresses.find_by(primary: true))
   end
 
+  # Folds an owner's duplicates outside a merge, keeping its current primary.
+  def self.fold(addressable)
+    new(addressable, primary_signature: signature(addressable.addresses.find_by(primary: true))).call
+  end
+
   def initialize(addressable, primary_signature: nil)
     @addressable = addressable
     @primary_signature = primary_signature

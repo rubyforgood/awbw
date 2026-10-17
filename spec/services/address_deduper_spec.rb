@@ -102,4 +102,16 @@ RSpec.describe AddressDeduper do
     expect(keep.la_service_planning_area).to eq(2)
     expect(keep.la_supervisorial_district).to eq(3)
   end
+
+  describe ".fold" do
+    it "keeps the owner's primary when its copy folds into an active duplicate" do
+      address(primary: true, inactive: true)
+      active = address
+      address(street_address: "2 Other St")
+
+      described_class.fold(person)
+
+      expect(person.addresses.reload.where(primary: true)).to eq([ active ])
+    end
+  end
 end

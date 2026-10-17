@@ -113,6 +113,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/bookmarks/tally.html.erb"               => "admin-only bg-blue-100",
     "app/views/users/flow_diagram.html.erb"            => "admin-only bg-blue-100",
     "app/views/dedupes/index.html.erb"                 => "admin-only bg-blue-100",
+    "app/views/addresses/dedupe_index.html.erb"        => "admin-only bg-blue-100",
     "app/views/profile_change_requests/index.html.erb" => "admin-only bg-blue-100",
     "app/views/dedupes/preview.html.erb"               => "admin-only bg-blue-100",
     "app/views/taggings/matrix.html.erb"               => "admin-only bg-blue-100",

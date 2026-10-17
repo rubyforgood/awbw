@@ -1,0 +1,65 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:addresses) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="space-y-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <h1 class="text-primary mt-2 font-display text-2xl font-semibold">Dedupe addresses</h1>
+        <p class="mt-1 text-gray-500">
+          People and organizations with the same address saved more than once. Folding keeps one
+          copy — the active one, then the primary, then the oldest — and moves its contact methods,
+          invoices, and affiliations onto it.
+        </p>
+      </div>
+      <% if @groups.any? %>
+        <%= button_to dedupe_perform_addresses_path,
+                      class: button_classes(:primary, extra: "whitespace-nowrap"),
+                      form_class: "shrink-0",
+                      form: { data: { turbo_confirm: "Fold duplicate addresses on all #{pluralize(@groups.size, "record")}?" } } do %>
+          <i class="fa-solid fa-broom"></i> Fold all (<%= @groups.sum(&:folded_count) %>)
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @groups.any? %>
+      <div class="space-y-4">
+        <% @groups.each do |group| %>
+          <% anchor = "address-dedupe-#{group.addressable.model_name.singular}-#{group.addressable.id}" %>
+          <div id="<%= anchor %>" class="border-primary/10 scroll-mt-24 rounded-2xl border bg-white p-4">
+            <div class="mb-2 flex items-start justify-between gap-4">
+              <h3 class="font-semibold text-gray-900">
+                <%= link_to group.label.presence || "(no name)",
+                            polymorphic_path(group.addressable, return_to: "address_dedupe", anchor_id: anchor),
+                            class: "#{DomainTheme.text_class_for(group.addressable.model_name.plural.to_sym, intensity: 700)} hover:underline" %>
+                <span class="font-normal text-gray-400">· <%= group.addressable.model_name.human %></span>
+              </h3>
+              <%= button_to "Fold #{pluralize(group.folded_count, "duplicate")}",
+                            dedupe_perform_addresses_path,
+                            params: { addressable_sgid: group.addressable.to_sgid(for: AddressesController::DEDUPE_PURPOSE).to_s },
+                            class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap"),
+                            form_class: "shrink-0" %>
+            </div>
+            <ul class="divide-y divide-gray-100">
+              <% group.duplicate_sets.each do |addresses| %>
+                <li class="py-1.5">
+                  <span class="text-gray-800"><%= addresses.first.name %></span>
+                  <span class="text-sm text-gray-400">
+                    · <%= addresses.size %> copies
+                    · IDs <%= addresses.map(&:id).join(", ") %>
+                    <% if addresses.any?(&:primary?) %>· primary<% end %>
+                    <% if addresses.any?(&:inactive?) %>· <%= addresses.count(&:inactive?) %> inactive<% end %>
+                  </span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="border-primary/10 rounded-2xl border bg-white py-10 text-center">
+        <i class="fa-solid fa-circle-check mb-2 text-3xl text-emerald-500"></i>
+        <p class="text-gray-600">No duplicate addresses detected.</p>
+      </div>
+    <% end %>
+  </div>
+</div>
