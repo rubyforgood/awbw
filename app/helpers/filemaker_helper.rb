@@ -2,7 +2,7 @@ module FilemakerHelper
   # FileMaker separates the IDs in a multi-value field with line breaks or pilcrows.
   FM_ID_SEPARATOR = /[\r\n\v¶]+/
   FM_REFERENCES_SHOWN = 10
-  FILEMAKER_CODE_FORMAT_HINT = "Comma separated if multiple"
+  FILEMAKER_CODE_FORMAT_HINT = "Comma-separated if multiple"
 
   # One archive link per FileMaker code a record carries, since a record can answer to
   # several (see FilemakerCoded). A `label` names the button, adding each code only when
@@ -17,7 +17,7 @@ module FilemakerHelper
     links = filemaker_code_links(record, link_class: "text-blue-600 underline hover:text-blue-800")
     return FILEMAKER_CODE_FORMAT_HINT unless links
 
-    safe_join([ FILEMAKER_CODE_FORMAT_HINT, tag.br, "In the archive: ", links ])
+    safe_join([ "In the archive:", links ], " ")
   end
 
   # The FM projects among an org's codes.
