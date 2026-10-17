@@ -129,7 +129,7 @@ class PublicFormSubmission
     return process_agreement_organization(submission) if submission.agreement_scenario?
 
     organization = OrganizationServices::CaptureFromSubmission.call(
-      form: @form, form_params: @form_params, person: submission.person
+      form: @form, form_params: @form_params, person: submission.person, submission: submission
     ).organization
     submission.link_organization!(organization.id) if organization
     organization

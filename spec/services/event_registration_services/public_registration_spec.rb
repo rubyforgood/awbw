@@ -538,6 +538,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         .to eq([ "Equine therapy", "organization_type", false ])
     end
 
+    it "records the form answer the org-type 'Other' came from, so the review page can link its form" do
+      register_with_organization_type("Other: Equine therapy")
+
+      response = organization.other_responses.sole
+      expect(response.source_form_answer.submitted_answer).to eq("Other: Equine therapy")
+      expect(response.source_form_answer.form_field.field_identifier).to eq("organization_type")
+    end
+
     it "does not capture an OtherResponse for a non-'Other' classification" do
       register_with_organization_type("501c3/nonprofit")
 

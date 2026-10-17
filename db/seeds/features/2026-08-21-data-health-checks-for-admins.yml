@@ -8,7 +8,7 @@ summary: >-
   at a time — each shows a count, the rows it found, and a button to fix them
   where a correct fix exists.
 pro_tips:
-  - "Checks with nothing to report stay quiet, so an empty page is the healthy state."
+  - "Every check shows its count, so a page of zeros is the healthy state."
   - >-
     Not every check can be fixed automatically. Ones marked "Review by hand"
     report only, because the right answer is a judgement call rather than a rule.

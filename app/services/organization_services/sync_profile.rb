@@ -24,15 +24,18 @@ module OrganizationServices
     # OrganizationServices::ProfileDiff.
     Result = Struct.new(:organization, :changes, keyword_init: true)
 
-    def self.call(organization:, website: nil, organization_type: nil, overwrite: true)
-      new(organization:, website:, organization_type:, overwrite:).call
+    # submission: the form submission the answers came from, when it's saved
+    # already, so a captured org-type "Other" records which answer typed it.
+    def self.call(organization:, website: nil, organization_type: nil, overwrite: true, submission: nil)
+      new(organization:, website:, organization_type:, overwrite:, submission:).call
     end
 
-    def initialize(organization:, website: nil, organization_type: nil, overwrite: true)
+    def initialize(organization:, website: nil, organization_type: nil, overwrite: true, submission: nil)
       @organization = organization
       @website = website
       @organization_type = organization_type
       @overwrite = overwrite
+      @submission = submission
     end
 
     def call
@@ -80,6 +83,10 @@ module OrganizationServices
         field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER,
         normalized_text: OtherResponse.normalize(text)
       ) { |response| response.text = text }
+      return unless @submission
+
+      OtherResponse.record_source(owner: @organization, submission: @submission,
+                                  field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER)
     end
 
     def apply_value(attribute, value)

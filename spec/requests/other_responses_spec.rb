@@ -117,6 +117,40 @@ RSpec.describe "OtherResponses", type: :request do
       expect(response.body).to include(%(id="#{response_record.review_anchor}"))
     end
 
+    it "links the question to the form it was answered on" do
+      sign_in admin
+      answer = create(:form_answer)
+      create(:other_response, text: "Equine therapy", source_form_answer: answer)
+
+      get other_responses_path
+
+      row = Nokogiri::HTML(response.body).at_css("tr##{OtherResponse.review_anchor('sector', 'equine therapy')}")
+      expect(row.at_css("a[href='#{edit_form_path(answer.form_field.form)}']").text.strip).to eq("Sectors")
+    end
+
+    it "lists each form when a group's answers came from several" do
+      sign_in admin
+      first = create(:form_answer)
+      second = create(:form_answer)
+      create(:other_response, owner: create(:person), text: "Equine therapy", source_form_answer: first)
+      create(:other_response, owner: create(:person), text: "equine therapy", source_form_answer: second)
+
+      get other_responses_path
+
+      expect(response.body).to include(%(href="#{edit_form_path(first.form_field.form)}"))
+      expect(response.body).to include(%(href="#{edit_form_path(second.form_field.form)}"))
+    end
+
+    it "links an organization-type answer to the form asking that question" do
+      sign_in admin
+      field = create(:form_field, field_identifier: "organization_type")
+      create(:other_response, :organization_type, text: "Mobile clinic")
+
+      get other_responses_path
+
+      expect(response.body).to include(%(href="#{edit_form_path(field.form)}"))
+    end
+
     it "points the eyebrow back to the person when arrived from their page" do
       sign_in admin
       person = create(:person)

@@ -102,7 +102,8 @@ module OrganizationServices
       return [] unless @entry
 
       OrganizationServices::SyncProfile.call(
-        organization: @organization, overwrite: false, website: @entry[:website], organization_type: @entry[:organization_type]
+        organization: @organization, overwrite: false, website: @entry[:website], organization_type: @entry[:organization_type],
+        submission: @entry[:submission]
       ).changes
     end
 

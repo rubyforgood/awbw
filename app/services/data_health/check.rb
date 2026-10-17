@@ -6,10 +6,14 @@ module DataHealth
   # (`repairable?` / `repair!`). Everything on the page is derived from those, so
   # adding a check is one subclass plus a line in `DataHealth::CHECKS`.
   #
-  # `scope` must be a relation — the page counts it without loading, and only the
-  # first `PREVIEW_LIMIT` rows are rendered.
+  # `scope` must be a relation — the page counts it without loading, and lists
+  # its rows `PER_PAGE` at a time.
   class Check
-    PREVIEW_LIMIT = 25
+    include Rails.application.routes.url_helpers
+
+    PER_PAGE = 10
+
+    Aside = Data.define(:count, :text, :path)
 
     def self.key = name.demodulize.underscore
 
@@ -21,11 +25,9 @@ module DataHealth
 
     def any? = count.positive?
 
-    def preview
-      @preview ||= scope.limit(PREVIEW_LIMIT).to_a
+    def page(number)
+      ordered_scope.paginate(page: number, per_page: PER_PAGE, total_entries: count)
     end
-
-    def more_than_preview = count - preview.size
 
     # Checks that can only report are the honest default: a wrong row is not
     # always a row we know how to put right (see OrphanedProvenance).
@@ -58,11 +60,35 @@ module DataHealth
       record.to_s
     end
 
-    # A check whose rows are worth comparing side by side names its column
-    # headings here and a partial to render each row; the page falls back to the
-    # one-line #describe when both are nil.
+    # A partial to render each row (several links, chips); with `columns` too the
+    # rows line up in a grid under those headings. Without either, the page shows
+    # the one-line #describe.
     def columns = nil
 
     def row_partial = nil
+
+    # Where each listed row opens, so it can be fixed by hand; nil leaves it plain text.
+    def path_for(_record) = nil
+
+    # An existing page that works through these rows, linked from the card header.
+    def review_path = nil
+
+    def review_label = "Review"
+
+    # Rows the check leaves out on purpose (e.g. old-system data nobody will
+    # resolve), counted and linked beside the explanation so they aren't hidden.
+    def aside = nil
+
+    private
+
+    def before_launch_text = "before #{Notification::LAUNCHED_ON.strftime('%B %-d, %Y')}"
+
+    # Pages need a stable order; a scope without one is ordered by primary key.
+    def ordered_scope
+      relation = scope
+      return relation if relation.order_values.any?
+
+      relation.order(relation.arel_table[relation.primary_key])
+    end
   end
 end
