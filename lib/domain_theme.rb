@@ -14,7 +14,6 @@ module DomainTheme
     events:                   :"brand-teal",
     people:                   :"brand-cyan",
     organizations:            :"brand-emerald",
-    addresses:                :slate,
     quotes:                   :slate,
     grants:                   :green,
 
