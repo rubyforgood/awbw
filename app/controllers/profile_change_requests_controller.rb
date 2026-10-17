@@ -63,7 +63,9 @@ class ProfileChangeRequestsController < ApplicationController
 
   def approve
     authorize! @request
-    result = ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user)
+    result = Analytics::LifecycleBuffer.tagging(Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY.to_sym => @request.id) do
+      ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user)
+    end
 
     unless result.applied
       redirect_back_or_to profile_change_requests_path,

@@ -340,6 +340,22 @@ RSpec.describe "Profile change requests", type: :request do
       expect(person.affiliations.exists?(organization: org, title: "Facilitator")).to be(true)
     end
 
+    it "stamps the records an approval writes onto Ahoy with the change request" do
+      org = create(:organization)
+      request = create(:profile_change_request, person: person, field: "affiliation",
+                       requested_value: "Add a new affiliation", organization: org,
+                       proposed_title: "Facilitator", proposed_start_date: "2026-01-01", details: nil)
+      Analytics::LifecycleBuffer.store.clear
+      tracked = []
+      allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, properties| tracked << [ name, properties ] }
+
+      post approve_profile_change_request_path(request)
+
+      affiliation = person.affiliations.find_by!(organization: org)
+      created = tracked.find { |name, properties| name == "create.affiliation" && properties[:resource_id] == affiliation.id }
+      expect(created&.last).to include(profile_change_request_id: request.id)
+    end
+
     it "responds to a turbo_stream request by replacing the row and flash" do
       request = create(:profile_change_request, person: person)
 

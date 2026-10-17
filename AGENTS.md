@@ -204,7 +204,7 @@ action, or `authorize! :workshop, to: :summary?`).
 
 ### Analytics
 
-- `Analytics::LifecycleBuffer` — Thread-safe event buffer for batch tracking
+- `Analytics::LifecycleBuffer` — Thread-safe event buffer for batch tracking; at flush it stamps `Current.form_submission_id` onto every event; `.tagging(props) { }` adds properties to just the events buffered inside the block (`ProfileChangeRequestsController#approve` tags the approval's writes with `profile_change_request_id`), and `Ahoy::EventDecorator#detail_rows` links a stamped change request to its card in the admin queue
 - `Analytics::EventBuilder` — Constructs analytics event payloads
 - `Analytics::AhoyTracker` — Coordinates ahoy event tracking
 - `Analytics::PersonActivityEvents` — Aggregates Ahoy events for a person, their user, and associated data (powers the person edit History card + `person_id` filter on the Ahoy activities index)

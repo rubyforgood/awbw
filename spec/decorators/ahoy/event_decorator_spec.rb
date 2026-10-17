@@ -329,6 +329,21 @@ RSpec.describe Ahoy::EventDecorator do
       )
     end
 
+    it "links the change request that made the change to its card in the admin queue" do
+      request = create(:profile_change_request, status: "resolved")
+      event = decorate("profile_change_request_id" => request.id, "source" => "import")
+      path = Rails.application.routes.url_helpers.profile_change_requests_path(
+        status: "resolved", person_id: request.person_id, anchor: "profile_change_request_#{request.id}"
+      )
+
+      expect(event.detail_rows).to eq(
+        [
+          { label: "From change request", depth: 0, link: { text: request.decorate.requester_summary, path: path } },
+          { label: "Source", value: "import", depth: 0 }
+        ]
+      )
+    end
+
     it "labels both result_count and the legacy page_result_count as Results found" do
       current = decorate("result_count" => 8)
       legacy = decorate("page_result_count" => 21)

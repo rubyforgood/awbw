@@ -177,13 +177,21 @@ module Ahoy
     # record references (association changes, associated records) become links to
     # the record's show page so admins can jump straight to it.
     def detail_rows
-      rows = extra_properties.except("changes")
-      return [] if rows.empty?
-
-      flatten_rows(rows)
+      rows = extra_properties.except("changes", Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY)
+      [ change_request_row, *(flatten_rows(rows) if rows.present?) ].compact
     end
 
     private
+
+    # The approved change request that made this change, linked to its card in the admin queue.
+    def change_request_row
+      id = properties_hash[Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY]
+      return if id.blank?
+
+      request = find_referenced_record("ProfileChangeRequest", id)
+      path = request && h.profile_change_requests_path(status: request.status, person_id: request.person_id, anchor: h.dom_id(request))
+      { label: "From change request", depth: 0, link: { text: request&.decorate&.requester_summary || "Change request ##{id}", path: path } }
+    end
 
     def compute_resource_link
       commentable = comment&.commentable || deleted_commentable
