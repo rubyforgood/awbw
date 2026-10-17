@@ -59,6 +59,18 @@ RSpec.describe "Story primary sector and category stars", type: :system, js: tru
     expect(primary(:sector, education)).to be_checked
   end
 
+  it "stars a newly checked tag when none of the checked ones is starred" do
+    story.sectorable_items.create!(sector: health, is_primary: false)
+    story.sectorable_items.create!(sector: education, is_primary: false)
+    arts = create(:sector, :published, name: "Arts")
+
+    visit edit_story_path(story)
+    find("label[for='story_sector_ids_#{arts.id}']").click
+
+    expect(primary(:sector, arts)).to be_checked
+    expect(primary(:sector, health)).not_to be_checked
+  end
+
   it "clears the star when its tag is unchecked" do
     story.sectorable_items.create!(sector: health, is_primary: true)
 

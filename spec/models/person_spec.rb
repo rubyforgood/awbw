@@ -273,6 +273,16 @@ RSpec.describe Person, type: :model do
       expect(person.primary_age_groups).to be_empty
     end
 
+    it "doesn't star a newly picked sector on save when the others are unstarred" do
+      person.sectorable_items.create!(sector: sector_a, is_primary: false)
+      person.reload
+
+      person.sectorable_items.build(sector: sector_b, is_primary: false)
+      person.save!
+
+      expect(person.reload.primary_sector).to be_nil
+    end
+
     it "leaves an untouched sole sector alone on an unrelated save" do
       person.sectorable_items.create!(sector: sector_a, is_primary: false)
       person.reload

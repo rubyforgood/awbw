@@ -8,3 +8,5 @@ summary: >-
   "Who is this story about?" tag for a story or story idea, it's saved as the
   primary one, so you don't have to star it yourself. The star lights up as
   soon as you pick it.
+pro_tips:
+  - "If none of the tags already there is starred, the next one you pick gets the star. Click a different star to move it."
