@@ -29,6 +29,13 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include(%(href="#{form_submissions_path}"))
   end
 
+  it "links to the cross-event timesheets" do
+    get "/admin"
+
+    expect(response.body).to include("Timesheets")
+    expect(response.body).to include(%(href="#{signins_events_path}"))
+  end
+
   it "links to the record dedupers under the Dedupers section" do
     get "/admin"
 
