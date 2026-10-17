@@ -9,6 +9,7 @@ module Admin
       track_view("admin.data_health")
 
       @groups = DataHealth.grouped_checks
+      @open_check = params[:open]
     end
 
     def worklists
@@ -35,7 +36,8 @@ module Admin
       return redirect_to admin_data_health_path, alert: "Unknown check." unless check&.repairable?
 
       repaired = check.repair!
-      redirect_to admin_data_health_path, notice: check.repaired_message(repaired)
+      redirect_to admin_data_health_path(open: check.key, anchor: "check-#{check.key}"),
+                  notice: check.repaired_message(repaired)
     end
   end
 end

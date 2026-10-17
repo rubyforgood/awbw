@@ -25,8 +25,7 @@ module DataHealth
     ],
     "Communications" => [
       UnansweredContactMessages,
-      StuckNotifications,
-      UnboundNotifications
+      StuckNotifications
     ]
   }.freeze
 

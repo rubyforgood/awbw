@@ -39,6 +39,17 @@ RSpec.describe "Admin::DataHealth", type: :request do
       expect(doc.at_css("[data-action='expandable-cards#toggleAll']").text).to include("Expand all")
     end
 
+    it "opens the group holding the check just repaired, leaving the rest collapsed" do
+      get admin_data_health_path(open: "stories_without_workshop")
+
+      doc = Nokogiri::HTML(response.body)
+      open_cards = doc.css("[data-expandable-card-expanded-value='true']")
+      expect(open_cards.size).to eq(1)
+      expect(open_cards.first.at_css("h2").text).to include("Stories")
+      expect(open_cards.first.at_css("[data-expandable-card-target='body']")["class"].split).not_to include("hidden")
+      expect(doc.at_css("#check-stories_without_workshop")).to be_present
+    end
+
     it "lists an offending row with enough context to recognise it" do
       offending_affiliation
 
@@ -154,13 +165,12 @@ RSpec.describe "Admin::DataHealth", type: :request do
     before { sign_in admin }
 
     it "counts them in a sentence beside the check, linked to the index, outside the main count" do
-      create(:notification, person: nil, recipient_email: "old-#{SecureRandom.hex(4)}@example.com",
-                            created_at: Date.new(2025, 6, 1))
+      create(:notification, :incoming, kind: "contact_us_fyi", responded: false, created_at: Date.new(2025, 6, 1))
 
       get admin_data_health_path
 
       expect(response.body).to include("Not counted: 1 from the old system, before January 1, 2026.")
-      expect(response.body).to include(%(href="#{notifications_path(to: "2025-12-31")}"))
+      expect(response.body).to include(CGI.escapeHTML(notifications_path(responded_status: "no", to: "2025-12-31")))
     end
   end
 
@@ -195,7 +205,8 @@ RSpec.describe "Admin::DataHealth", type: :request do
 
       post admin_data_health_repair_path(check: "facilitator_affiliations_from_non_trainings")
 
-      expect(response).to redirect_to(admin_data_health_path)
+      expect(response).to redirect_to(admin_data_health_path(open: "facilitator_affiliations_from_non_trainings",
+                                                             anchor: "check-facilitator_affiliations_from_non_trainings"))
       expect(flash[:notice]).to eq("Deleted 1 facilitator affiliation.")
       expect(Affiliation.exists?(affiliation.id)).to be(false)
     end

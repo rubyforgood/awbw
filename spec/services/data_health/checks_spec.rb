@@ -295,28 +295,6 @@ RSpec.describe DataHealth::UnresolvedResourceAgencies do
   end
 end
 
-RSpec.describe DataHealth::UnboundNotifications do
-  def unbound(**attrs)
-    create(:notification, person: nil, recipient_email: "nobody-#{SecureRandom.hex(4)}@example.com", **attrs)
-  end
-
-  it "finds a communication with an address but no person, and reports only" do
-    notification = unbound
-
-    expect(described_class.new.scope).to include(notification)
-    expect(described_class.new).not_to be_repairable
-  end
-
-  it "counts old-system ones separately, linked to the index before launch" do
-    old = unbound(created_at: Date.new(2025, 6, 1))
-    check = described_class.new
-
-    expect(check.scope).not_to include(old)
-    expect(check.aside.count).to eq(1)
-    expect(check.aside.path).to eq("/notifications?to=2025-12-31")
-  end
-end
-
 RSpec.describe DataHealth::StuckNotifications do
   def stuck(**attrs)
     create(:notification, kind: "event_registration_confirmation", created_at: 2.hours.ago, **attrs)

@@ -1,7 +1,8 @@
-<%# Locals: title, total. One collapsible card per page heading; the block renders its checks. %>
+<%# Locals: title, total, open (optional — starts expanded, e.g. after a repair). One collapsible card per page heading; the block renders its checks. %>
+<% open = local_assigns.fetch(:open, false) %>
 <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          data-controller="expandable-card"
-         data-expandable-card-expanded-value="false"
+         data-expandable-card-expanded-value="<%= open %>"
          data-action="expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse">
   <h2>
     <button type="button" data-action="expandable-card#toggle"
@@ -17,7 +18,7 @@
       <% end %>
     </button>
   </h2>
-  <div class="hidden divide-y divide-gray-100 border-t border-gray-200" data-expandable-card-target="body">
+  <div class="<%= "hidden" unless open %> divide-y divide-gray-100 border-t border-gray-200" data-expandable-card-target="body">
     <%= yield %>
   </div>
 </section>

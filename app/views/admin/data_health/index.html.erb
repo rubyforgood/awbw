@@ -32,7 +32,7 @@
 
     <div class="space-y-3">
       <% @groups.each do |group, checks| %>
-        <%= render "group_card", title: group, total: checks.sum(&:count) do %>
+        <%= render "group_card", title: group, total: checks.sum(&:count), open: checks.any? { |check| check.key == @open_check } do %>
           <% checks.each do |check| %>
             <%= render "check", check: check %>
           <% end %>
