@@ -4679,3 +4679,12 @@
   summary: >-
     Admin home now has a Timesheets button under Additional data, opening the
     cross-event timesheets report.
+
+- name: "Pick workshop settings from a list"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-17
+  pr_number: 2709
+  summary: >-
+    A person's edit page now shows only the workshop settings they've chosen.
+    Click the box to search and add more, or click the x on one to remove it.
