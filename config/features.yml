@@ -4712,3 +4712,16 @@
   pro_tips:
     - "The \"Logged against\" picker lists the same records as the \"Add a note to\" composer: profile, user account, registrations, and more."
     - "On a record's edit page, click Edit in the comments section to see each comment's Delete link. It deletes right away; no need to save the page."
+
+- name: "Pick several sectors and age ranges on the people list"
+  area: people
+  display_status: user_facing
+  released_on: 2026-10-16
+  action_path: "/people"
+  pr_number: 2704
+  summary: >-
+    The people list's Sector and Age range filters are now searchable dropdowns
+    where you can pick more than one. The list shows everyone tagged with any of
+    your picks.
+  pro_tips:
+    - "A filter matches a person's primary and additional tags, even though each row shows only the primary ones."
