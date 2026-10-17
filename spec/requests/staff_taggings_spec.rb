@@ -112,6 +112,18 @@ RSpec.describe "/staff_taggings", type: :request do
     end
   end
 
+  describe "GET /staff_taggings/new" do
+    before { sign_in admin }
+
+    it "points back to the staff tags list when opened from there" do
+      get new_staff_tagging_path(return_to: "staff_tags")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("← Staff tags")
+      expect(Nokogiri::HTML(response.body).at_css("input[name='return_to']")["value"]).to eq("staff_tags")
+    end
+  end
+
   describe "POST /staff_taggings (create)" do
     before { sign_in admin }
 
@@ -126,6 +138,12 @@ RSpec.describe "/staff_taggings", type: :request do
       expect(response).to redirect_to(staff_taggings_path)
       expect(StaffTagging.last.staff_taggable).to eq(person)
       expect(StaffTagging.last.staff_tag).to eq(tag)
+    end
+
+    it "returns to the staff tags list when started from there" do
+      post staff_taggings_path, params: { return_to: "staff_tags", staff_tagging: { person_id: create(:person).id, staff_tag_id: create(:staff_tag).id } }
+
+      expect(response).to redirect_to(staff_tags_path)
     end
 
     it "rejects a tagging with no person" do

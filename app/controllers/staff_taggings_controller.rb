@@ -1,5 +1,6 @@
 class StaffTaggingsController < ApplicationController
   before_action :set_staff_tagging, only: [ :edit, :update, :destroy, :toggle_marked, :save_note ]
+  helper_method :new_tagging_return_path
 
   def index
     authorize!
@@ -41,7 +42,7 @@ class StaffTaggingsController < ApplicationController
     authorize! @staff_tagging
 
     if @staff_tagging.save
-      redirect_to staff_taggings_path, notice: "Staff tagging created.", status: :see_other
+      redirect_to new_tagging_return_path, notice: "Staff tagging created.", status: :see_other
     else
       render :new, status: :unprocessable_content
     end
@@ -110,6 +111,10 @@ class StaffTaggingsController < ApplicationController
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
     )
+  end
+
+  def new_tagging_return_path
+    params[:return_to] == "staff_tags" ? staff_tags_path : staff_taggings_path
   end
 
   def staff_tagging_return_path

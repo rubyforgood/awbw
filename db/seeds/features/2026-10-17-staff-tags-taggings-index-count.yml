@@ -6,3 +6,6 @@ action_path: "/staff_tags"
 summary: >-
   The Staff tags list now has People index and Taggings index columns, each
   showing a count. Click a number to open that list filtered to the tag.
+pro_tips:
+  - Use New staff tagging on the Staff tags list to tag someone without leaving
+    the page; you land back on the list when you save.

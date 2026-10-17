@@ -70,7 +70,7 @@
               <% end %>
             </td>
             <td class="px-4 py-2 text-gray-700">
-              <%= link_to type.topic_subscriptions.count, topic_subscriptions_path(topic_subscription_type_id: type.id),
+              <%= link_to @subscription_counts.fetch(type.id, 0), topic_subscriptions_path(topic_subscription_type_id: type.id),
                     class: button_classes(nil) %>
             </td>
             <td class="px-4 py-2 text-sm">
