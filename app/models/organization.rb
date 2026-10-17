@@ -359,8 +359,10 @@ class Organization < ApplicationRecord
 
   # Sectors and age groups are never entered on an org — they roll up from the
   # primary tags of its active facilitators.
+  # Most-held first, then alphabetical, so a capped list shows the most representative.
   def active_facilitator_sectors
-    active_facilitators.filter_map(&:primary_sector).uniq
+    active_facilitators.filter_map(&:primary_sector).tally
+      .sort_by { |sector, count| [ -count, sector.name.to_s.downcase ] }.map(&:first)
   end
 
   def active_facilitator_age_groups

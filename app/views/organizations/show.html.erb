@@ -153,7 +153,7 @@
       </div>
       <!-- Sectors + Age groups served (two columns on desktop; stack on narrow viewports) -->
       <% show_sectors = @organization.profile_show_sectors? %>
-      <% sectors = show_sectors ? @organization.active_facilitator_sectors.sort_by { |s| s&.name.to_s } : [] %>
+      <% sectors = show_sectors ? @organization.active_facilitator_sectors : [] %>
       <% age_groups = @organization.profile_show_age_ranges? ? @organization.active_facilitator_age_groups : [] %>
       <% show_age = age_groups.any? %>
       <% if show_sectors || show_age %>
@@ -164,8 +164,12 @@
                 <h2 class="mb-3 font-display text-2xl text-gray-900">Sectors</h2>
                 <% if sectors.any? %>
                   <div class="flex flex-wrap gap-2">
-                    <% sectors.each do |sector| %>
+                    <% sectors.first(3).each do |sector| %>
                       <%= render "sectors/tagging_label", sector: sector, is_primary: true %>
+                    <% end %>
+                    <% if sectors.size > 3 %>
+                      <%= link_to "+#{sectors.size - 3} more", populations_served_organization_path(@organization),
+                                  class: "self-center px-2 text-sm font-medium #{eyebrow_link_class}" %>
                     <% end %>
                   </div>
                 <% else %>

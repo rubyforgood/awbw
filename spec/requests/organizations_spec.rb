@@ -125,12 +125,17 @@ RSpec.describe "/organizations", type: :request do
       org
     end
 
-    it "shows every active facilitator's primary sector, starred, on the show page" do
+    it "shows the three most-held facilitator primaries, starred, then links to the full list" do
+      second_delta = create(:person)
+      create(:sectorable_item, sector: Sector.find_by!(name: "Delta"), sectorable: second_delta, is_primary: true)
+      create(:affiliation, organization: organization_with_sectors, person: second_delta)
+
       get organization_url(organization_with_sectors)
 
       page = Capybara.string(response.body)
-      %w[Alpha Bravo Charlie Delta].each { |name| expect(page).to have_link(name) }
-      expect(page).to have_css("a[data-sector-name] i.fa-star", count: 4)
+      expect(page.all("a[data-sector-name]").map { |chip| chip["data-sector-name"] }).to eq(%w[Delta Alpha Bravo])
+      expect(page).to have_css("a[data-sector-name] i.fa-star", count: 3)
+      expect(page).to have_link("+1 more", href: populations_served_organization_path(organization_with_sectors))
       expect(page).not_to have_content("Direct Sector 1")
       expect(page).not_to have_content("Former Sector")
     end
