@@ -121,7 +121,7 @@ RSpec.describe Person, type: :model do
 
     describe "email requirement" do
       it "tells the user to enter a placeholder when a new person has no email" do
-        person = build(:person, user: nil, email: "")
+        person = Person.new(first_name: "No", last_name: "Email", email: "")
 
         expect(person).not_to be_valid
         expect(person.errors.full_messages).to include(
