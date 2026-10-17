@@ -1,0 +1,11 @@
+name: "Change logs show which change request an approval came from"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+action_path: "/profile_change_requests"
+pr_number: 2730
+summary: >-
+  When you approve a profile change request, every record it changes logs a
+  "From change request" link back to that request.
+pro_tips:
+  - "The link opens the request's card in the change request queue, filtered to that person."
