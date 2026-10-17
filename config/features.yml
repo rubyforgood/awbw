@@ -4686,5 +4686,5 @@
   released_on: 2026-10-17
   pr_number: 2709
   summary: >-
-    A person's edit page now shows only the workshop settings they've chosen.
-    Click the box to search and add more, or click the x on one to remove it.
+    Person and organization edit pages now show only the workshop settings
+    chosen. Click the box to search and add more, or click the x on one to remove it.
