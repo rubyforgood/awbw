@@ -145,9 +145,37 @@ puts "Creating StaffTags…"
 end
 
 puts "Creating Organization…"
-awbw_org = Organization.find_or_create_by!(name: ENV.fetch("ORGANIZATION_NAME", "AWBW")) do |org|
+awbw_org = Organization.find_or_create_by!(name: Setting.organization_name) do |org|
   org.organization_status = OrganizationStatus.find_by!(name: "Active")
 end
+awbw_org.update!(tax_id: "95-448606") if awbw_org.tax_id.blank?
+
+puts "Pointing settings at the organization and its addresses…"
+# The invoice header prints the return address and the pay-by-check instructions print
+# the remittance address, so an unconfigured portal shows neither. Seeding them keeps
+# every environment printing a usable document from the start; an admin can repoint
+# either on /admin/settings.
+return_address = awbw_org.addresses.find_or_create_by!(street_address: "1029 1/2 W 24th St") do |address|
+  address.city = "Los Angeles"
+  address.state = "CA"
+  address.zip_code = "90007"
+  address.locality = "LA City"
+  address.address_type = "work"
+  address.invoice_address = true
+end
+
+remittance_address = awbw_org.addresses.find_or_create_by!(street_address: "1210 Fernside Dr.") do |address|
+  address.city = "La Cañada"
+  address.state = "CA"
+  address.zip_code = "91011"
+  address.locality = "LA County"
+  address.address_type = "mailing"
+end
+
+setting = Setting.first_or_create!
+setting.update!(organization: setting.organization || awbw_org,
+                return_address: setting.return_address || return_address,
+                remittance_address: setting.remittance_address || remittance_address)
 
 [ admin, amy, aisha ].each do |user|
   next unless user.person.present? && user.person.affiliations.empty?

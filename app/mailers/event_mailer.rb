@@ -12,7 +12,7 @@ class EventMailer < ApplicationMailer
     @notification_type = "Event registration confirmation"
 
     @time_zone = @person.user&.time_zone || Time.zone.name
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
     @organization_website  = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
     mail(
@@ -42,7 +42,7 @@ class EventMailer < ApplicationMailer
     # Itemized invoice for this payment — public to the payer (no account) for
     # bulk-payment submissions, same as their ticket. Returns to the ticket page.
     @invoice_url = event_invoice_url(@submission.event, submission_id: @submission.id, return_to: "bulk_payment_ticket") if @submission.event.present?
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
 
     mail(
       to: @person.preferred_email,
@@ -72,7 +72,7 @@ class EventMailer < ApplicationMailer
     @notification_type = "Event registration reminder"
 
     @time_zone = @person.user&.time_zone || Time.zone.name
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
     @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
     # Admins can override the subject from the bulk-reminder page; fall back to
@@ -101,7 +101,7 @@ class EventMailer < ApplicationMailer
     @hide_ticket_button = hide_ticket_button
     @notification_type = "Event registration reminder"
     @time_zone = Time.zone.name
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
 
     count = @recipient_labels.size
     mail(
@@ -121,7 +121,7 @@ class EventMailer < ApplicationMailer
 
     @time_zone = @person.user&.time_zone || Time.zone.name
     @event_url = event_url(@event, reg: @event_registration.slug)
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
 
     mail(
       to: @person.preferred_email,

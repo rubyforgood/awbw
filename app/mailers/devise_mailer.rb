@@ -56,7 +56,7 @@ class DeviseMailer < Devise::Mailer
   protected
 
   def set_branding
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "Our organization")
+    @organization_name = Setting.app_organization_name
   end
 
   private

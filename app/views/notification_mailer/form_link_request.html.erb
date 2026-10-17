@@ -7,9 +7,9 @@
 
   <p>
     <% if @sender %>
-      <%= @sender.full_name %> from A Window Between Worlds sent you the <strong><%= @form_name %></strong> to complete.
+      <%= @sender.full_name %> from <%= app_organization_name %> sent you the <strong><%= @form_name %></strong> to complete.
     <% else %>
-      A Window Between Worlds sent you the <strong><%= @form_name %></strong> to complete.
+      <%= app_organization_name %> sent you the <strong><%= @form_name %></strong> to complete.
     <% end %>
     Click the button below to fill it out.
   </p>

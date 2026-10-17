@@ -136,7 +136,7 @@ module ApplicationHelper
   # Just "training", not "on-demand training" — these titles already say so
   # ("On-Demand Training 2026"), and the pairing reads as a stutter.
   def default_reminder_message(days_until_event, event: nil)
-    organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    organization = app_organization_name
     opening = if event&.on_demand?
       "This is a reminder that you're registered for the #{organization} training <strong>#{ERB::Util.html_escape(event.title)}</strong>."
     else
@@ -712,14 +712,14 @@ module ApplicationHelper
   end
 
   def app_organization_name
-    app_organization&.name.presence || Setting.organization_name
+    Setting.app_organization_name
   end
 
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 
     if current_user.super_user?
-      Organization.find_by(name: ENV["ORGANIZATION_NAME"])
+      Setting.app_organization
     elsif current_user.person&.affiliations&.count == 1
       current_user.person.primary_organization
     end
