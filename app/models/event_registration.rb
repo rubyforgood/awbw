@@ -46,7 +46,10 @@ class EventRegistration < ApplicationRecord
   before_create :generate_slug
   before_save :capture_pre_transfer_status, if: :becoming_transferred_out?
   after_update :release_scholarships, if: :status_changed_to_cancelled?
-  after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
+  after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?, unless: :skip_cancellation_emails
+
+  # Set by the spreadsheet importer, which records historical cancellations silently.
+  attr_accessor :skip_cancellation_emails
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
@@ -155,7 +158,9 @@ class EventRegistration < ApplicationRecord
   DAY_FIELDS = (1..5).map { |day| "completed_day_#{day}" }.freeze
 
   # Validations
-  validates :registrant_id, uniqueness: { scope: :event_id }
+  # Inactive registrations may repeat (an import re-registers someone who cancelled);
+  # the active_registrant_id unique index holds the same line in the database.
+  validates :registrant_id, uniqueness: { scope: :event_id, conditions: -> { active } }, if: :active?
   validates :event_id, presence: true
   validates :status, inclusion: { in: ATTENDANCE_STATUSES }, allow_nil: false
   validates :slug, uniqueness: true, allow_nil: true
@@ -172,6 +177,12 @@ class EventRegistration < ApplicationRecord
   scope :event_title, ->(event_title) { joins(:event).where("LOWER(events.title LIKE ?)", "%#{event_title}%") }
   scope :active, -> { where(status: ACTIVE_STATUSES) }
   scope :inactive, -> { where(status: INACTIVE_STATUSES) }
+  # A person can hold several registrations for one event (one active, the rest
+  # inactive), so a lookup by registrant takes the active one, else the newest.
+  scope :active_first, -> {
+    order(Arel.sql(sanitize_sql_array([ "CASE WHEN event_registrations.status IN (?) THEN 1 ELSE 0 END", INACTIVE_STATUSES ])))
+      .order(id: :desc)
+  }
   scope :attended, -> { where(status: "attended") }
   scope :registrant_ids, ->(ids) { where(registrant_id: ids.to_s.split("-").map(&:to_i)) }
   scope :transferred_in, -> { where.not(transferred_from_registration_id: nil) }
@@ -618,6 +629,10 @@ class EventRegistration < ApplicationRecord
 
   def active?
     status.in?(ACTIVE_STATUSES)
+  end
+
+  def inactive?
+    status.in?(INACTIVE_STATUSES)
   end
 
   # Cancel this registration. Releasing scholarships and sending cancellation

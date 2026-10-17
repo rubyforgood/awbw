@@ -67,7 +67,7 @@ module EventRegistrationServices
         # Resolve the registration before creating affiliations so each one can record
         # which registration created it. Capture `existing` first — the find_by must
         # see prior state, not the row we're about to create.
-        existing = @event.event_registrations.find_by(registrant: person)
+        existing = @event.event_registrations.active_first.find_by(registrant: person)
         event_registration = existing || create_event_registration(person)
 
         # find_organization only ever finds, so a matched org already existed and the
@@ -93,7 +93,7 @@ module EventRegistrationServices
         if existing
           before_resubmission = ResubmissionChanges.snapshot(existing)
           existing.update!(scholarship_requested: true) if @scholarship_requested
-          create_ce_registration(existing, person)
+          create_ce_registration(existing)
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
           payment_method = field_value("payment_method")&.strip
@@ -117,7 +117,7 @@ module EventRegistrationServices
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
-        create_ce_registration(event_registration, person)
+        create_ce_registration(event_registration)
         organization_link = connect_organization(event_registration, organization)
         submission = create_form_submission(person)
         organization_link&.record_form_submission(submission)
@@ -265,15 +265,13 @@ module EventRegistrationServices
     # found-or-created from the license-number answer (a placeholder license when
     # none was given). Hours come from the event via the model. No-op when they
     # didn't opt in or a CE registration already exists for this registration.
-    def create_ce_registration(event_registration, person)
+    def create_ce_registration(event_registration)
       return unless ce_credit_requested?
-      return if event_registration.continuing_education_registrations.exists?
 
-      license = ProfessionalLicense.find_or_create_for(person: person, number: ce_license_number, kind: ce_license_kind)
-      if ce_license_issuing_state || ce_license_expires_on
-        license.update!(issuing_state: ce_license_issuing_state, expires_on: ce_license_expires_on)
-      end
-      event_registration.continuing_education_registrations.create!(professional_license: license)
+      ContinuingEducationRegistration.enroll!(
+        event_registration: event_registration, number: ce_license_number, kind: ce_license_kind,
+        issuing_state: ce_license_issuing_state, expires_on: ce_license_expires_on
+      )
     end
 
     def ce_credit_requested?

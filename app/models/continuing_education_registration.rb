@@ -65,6 +65,18 @@ class ContinuingEducationRegistration < ApplicationRecord
     results
   end
 
+  # Enrolls a registration in CE against the registrant's license for the given
+  # number and kind (a placeholder license when none was given); hours and cost come
+  # from the event. Returns the registration's existing CE record when it has one.
+  def self.enroll!(event_registration:, number: nil, kind: nil, issuing_state: nil, expires_on: nil)
+    existing = event_registration.continuing_education_registrations.first
+    return existing if existing
+
+    license = ProfessionalLicense.find_or_create_for(person: event_registration.registrant, number: number, kind: kind)
+    license.update!(issuing_state: issuing_state, expires_on: expires_on) if issuing_state || expires_on
+    event_registration.continuing_education_registrations.create!(professional_license: license)
+  end
+
   def self.parse_iso_date(value)
     return if value.blank?
     parts = Date._parse(value.to_s)

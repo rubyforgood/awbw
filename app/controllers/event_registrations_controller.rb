@@ -88,7 +88,7 @@ class EventRegistrationsController < ApplicationController
   rescue ActiveRecord::RecordNotUnique
     # The uniqueness validation isn't atomic with the insert, so a concurrent
     # request or double-submit can slip past it and hit the DB unique index on
-    # (registrant_id, event_id). Treat it the same as a duplicate validation
+    # (active_registrant_id, event_id). Treat it the same as a duplicate validation
     # failure instead of surfacing a 500.
     redirect_after_failed_create("This person is already registered for this event.")
   end
@@ -236,7 +236,7 @@ class EventRegistrationsController < ApplicationController
     # The registrant may already be registered for the destination event, which
     # would collide with the (registrant, event) uniqueness rule — link that
     # record as the transfer target instead of creating a duplicate.
-    destination = EventRegistration.find_or_initialize_by(
+    destination = EventRegistration.active_first.find_or_initialize_by(
       registrant_id: @event_registration.registrant_id,
       event_id: destination_event.id
     )
@@ -528,9 +528,8 @@ class EventRegistrationsController < ApplicationController
         someone_else_will_pay invoice_requested scholarship_requested w9_requested
         payment_unresolved
       ],
-      # The (registrant_id, event_id) index means two registrations only ever
-      # collide when their registrants are different Person records. Merging keeps
-      # them separate — say so, so the admin also merges the people if they match.
+      # Registrations with different registrants stay two people after a merge —
+      # say so, so the admin also merges the people if they match.
       merge_notes: ->(keep, delete) {
         next [] if keep.registrant_id == delete.registrant_id
 

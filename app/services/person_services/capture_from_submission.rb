@@ -13,15 +13,23 @@ module PersonServices
   # Reads its answers straight from the form + params (self-gating on each field
   # identifier), so a form that doesn't ask a given question is simply a no-op for
   # it.
+  #
+  # `answers` (field_identifier => value) stands in for form + form_params when the
+  # values come from somewhere other than a submitted form, e.g. a spreadsheet import.
+  # `overwrite: false` only fills what's blank — a historical import keeps the
+  # person's current name, primary address, primary phone, and primary tags, adding
+  # anything new beside them.
   class CaptureFromSubmission
-    def self.call(person:, form:, form_params: {})
-      new(person:, form:, form_params:).call
+    def self.call(person:, form: nil, form_params: {}, answers: nil, overwrite: true)
+      new(person:, form:, form_params:, answers:, overwrite:).call
     end
 
-    def initialize(person:, form:, form_params: {})
+    def initialize(person:, form: nil, form_params: {}, answers: nil, overwrite: true)
       @person = person
       @form = form
       @form_params = (form_params || {}).transform_keys(&:to_s)
+      @answers = answers&.transform_keys(&:to_s)
+      @overwrite = overwrite
     end
 
     def call
@@ -32,7 +40,7 @@ module PersonServices
       apply_value(@person, :email_2, field_value("secondary_email"))
       apply_value(@person, :email_2_type, field_value("secondary_email_type")&.downcase)
       apply_value(@person, :racial_ethnic_identity, field_value("racial_ethnic_identity"))
-      PersonServices::SyncSharingPreferences.call(person: @person, form: @form, form_params: @form_params)
+      PersonServices::SyncSharingPreferences.call(person: @person, form: @form, form_params: @form_params) if @form
       capture_mailing_address
       capture_phone
       apply_tags
@@ -45,7 +53,7 @@ module PersonServices
     # its own column, matching how a new registrant's name is resolved at sign-up.
     def apply_nickname
       nickname = field_value("nickname")&.strip
-      return if nickname.blank?
+      return if nickname.blank? || !@overwrite
 
       @person.update!(first_name: nickname)
       apply_value(@person, :legal_first_name, field_value("first_name"))
@@ -53,10 +61,13 @@ module PersonServices
 
     def apply_value(record, attribute, value)
       return if value.blank?
+      return if !@overwrite && record.public_send(attribute).present?
       record.update!(attribute => value.strip)
     end
 
     def field_value(key)
+      return @answers[key] if @answers
+
       field = @form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
@@ -74,18 +85,24 @@ module PersonServices
       end
 
       if existing
-        existing.update!(
-          street_address: field_value("mailing_street"),
-          zip_code: field_value("mailing_zip"),
-          primary: true,
-          inactive: false
-        )
+        if @overwrite
+          existing.update!(
+            street_address: field_value("mailing_street"),
+            zip_code: field_value("mailing_zip"),
+            primary: true,
+            inactive: false
+          )
+        else
+          apply_value(existing, :street_address, field_value("mailing_street"))
+          apply_value(existing, :zip_code, field_value("mailing_zip"))
+        end
         apply_value(existing, :country, new_country)
         apply_value(existing, :address_type, field_value("mailing_address_type")&.downcase)
         return existing
       end
 
-      @person.addresses.where(primary: true).update_all(primary: false, inactive: true)
+      make_primary = @overwrite || @person.addresses.where(primary: true).none?
+      @person.addresses.where(primary: true).update_all(primary: false, inactive: true) if @overwrite
 
       @person.addresses.create!(
         street_address: field_value("mailing_street"),
@@ -95,7 +112,7 @@ module PersonServices
         country: new_country,
         locality: AddressLocality.for(city: new_city, state: new_state, country: new_country),
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
-        primary: true
+        primary: make_primary
       )
     end
 
@@ -109,44 +126,51 @@ module PersonServices
       existing = @person.contact_methods.find_by(kind: :phone, value: phone_value)
 
       if existing
-        existing.update!(contact_type: contact_type, primary: true, inactive: false)
+        existing.update!(contact_type: contact_type, primary: true, inactive: false) if @overwrite
         return existing
       end
 
-      @person.contact_methods.where(kind: :phone, primary: true).update_all(primary: false, inactive: true)
+      make_primary = @overwrite || @person.contact_methods.where(kind: :phone, primary: true).none?
+      @person.contact_methods.where(kind: :phone, primary: true).update_all(primary: false, inactive: true) if @overwrite
 
       @person.contact_methods.create!(
         kind: :phone,
         value: phone_value,
         contact_type: contact_type,
-        primary: true
+        primary: make_primary
       )
     end
 
     def apply_tags
       apply_tag_set(FormField::PRIMARY_SECTOR_FIELD_IDENTIFIERS,
-                    FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS, :tag_sectors)
+                    FormField::ADDITIONAL_SECTOR_FIELD_IDENTIFIERS, :tag_sectors,
+                    keep_primary: !@overwrite && @person.primary_sector.present?)
       apply_tag_set(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS,
-                    FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS, :tag_age_groups)
+                    FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS, :tag_age_groups,
+                    keep_primary: !@overwrite && @person.primary_age_category_ids.any?)
     end
 
     # Only a primary answer → reassign the primary but keep the rest (additive).
     # Both primary and additional → the submission is the whole picture, so
-    # overwrite the person's set.
-    def apply_tag_set(primary_identifiers, additional_identifiers, tag_with)
+    # overwrite the person's set. Fill-only keeps an existing primary and adds the
+    # submitted one beside it.
+    def apply_tag_set(primary_identifiers, additional_identifiers, tag_with, keep_primary:)
       primary_ids = collect_ids(primary_identifiers)
       additional_ids = collect_ids(additional_identifiers)
       return if primary_ids.empty? && additional_ids.empty?
 
+      if keep_primary
+        additional_ids |= primary_ids
+        primary_ids = []
+      end
+
       @person.public_send(tag_with, primary_ids: primary_ids, additional_ids: additional_ids,
-                                    replace: primary_ids.any? && additional_ids.any?)
+                                    replace: @overwrite && primary_ids.any? && additional_ids.any?)
     end
 
     def collect_ids(identifiers)
       identifiers.flat_map do |identifier|
-        field = @form.form_fields.find_by(field_identifier: identifier)
-        next [] unless field
-        Array(@form_params[field.id.to_s]).reject(&:blank?).map(&:to_i)
+        Array(field_value(identifier)).reject(&:blank?).map(&:to_i)
       end
     end
   end

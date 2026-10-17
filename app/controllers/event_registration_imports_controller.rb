@@ -1,6 +1,5 @@
 class EventRegistrationImportsController < ApplicationController
-  # Admin-only flow for bulk-importing attended registrants into one event from a
-  # CSV.
+  # Admin-only flow for bulk-importing registrants into one event from a CSV.
   #
   #   new     → pick the event + upload form
   #   create  → dry-run preview of what would be created (nothing written)
@@ -88,12 +87,15 @@ class EventRegistrationImportsController < ApplicationController
   end
 
   def import_notice(result)
-    "Import complete — #{result.registrations_created} attended registrations created " \
+    "Import complete — #{result.registrations_created} registrations created " \
       "(#{result.people_created} new people, #{result.people_matched} matched)" \
-      "#{", #{result.registrations_promoted} promoted to attended" if result.registrations_promoted.positive?}" \
+      "#{", #{result.registrations_added_alongside} added beside an inactive registration" if result.registrations_added_alongside.positive?}" \
+      "#{", #{result.registrations_updated} status updates" if result.registrations_updated.positive?}" \
       "#{", #{result.organizations_to_reconcile} orgs to reconcile" if result.organizations_to_reconcile.positive?}" \
+      "#{", #{result.scholarships_recorded} scholarships (#{helpers.dollars_from_cents(result.scholarships_amount_cents)})" if result.scholarships_recorded.positive?}" \
       "#{", #{result.payments_recorded} payments (#{helpers.dollars_from_cents(result.payments_amount_cents)})" if result.payments_recorded.positive?}" \
       "#{", #{result.discounts_recorded} discounts (#{helpers.dollars_from_cents(result.discounts_amount_cents)})" if result.discounts_recorded.positive?}" \
+      "#{", #{result.ce_enrollments} CE enrollments" if result.ce_enrollments.positive?}" \
       "#{", #{result.skipped.size} rows skipped" if result.skipped.any?}."
   end
 end

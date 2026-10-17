@@ -319,7 +319,7 @@ class ModelDeduper
   def natural_key_columns(join_klass, fk)
     join_klass.connection.indexes(join_klass.table_name)
       .select(&:unique)
-      .map { |index| Array(index.columns) }
+      .map { |index| Array(index.columns).map { |column| column == "active_#{fk}" ? fk.to_s : column } }
       .select { |cols| cols.include?(fk) }
       .reject { |cols| cols.intersect?(NULL_DISTINCT_MARKERS) }
       .map { |cols| (cols - [ fk ]).map(&:to_sym) }

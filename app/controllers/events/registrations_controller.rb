@@ -93,7 +93,7 @@ module Events
     end
 
     def create
-      existing = @event.event_registrations.find_by(registrant: @registrant)
+      existing = @event.event_registrations.active_first.find_by(registrant: @registrant)
 
       if existing&.status == "cancelled"
         authorize! existing

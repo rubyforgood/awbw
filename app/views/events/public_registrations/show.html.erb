@@ -1,6 +1,6 @@
 <% content_for(:page_bg_class, "public") %>
 
-<% reg = @form_submission.person.event_registrations.find_by(event: @event) %>
+<% reg = @form_submission.person.event_registrations.active_first.find_by(event: @event) %>
 <%# Viewed from the admin Registrants roster (same-tab nav): return to that
     registrant's row, not the public ticket. Falls back to ticket/event. %>
 <% if params[:return_to] == "registrants" && reg && allowed_to?(:index?, EventRegistration) %>
