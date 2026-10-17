@@ -296,11 +296,24 @@ RSpec.describe DataHealth::UnresolvedResourceAgencies do
 end
 
 RSpec.describe DataHealth::UnboundNotifications do
+  def unbound(**attrs)
+    create(:notification, person: nil, recipient_email: "nobody-#{SecureRandom.hex(4)}@example.com", **attrs)
+  end
+
   it "finds a communication with an address but no person, and reports only" do
-    notification = create(:notification, person: nil, recipient_email: "nobody-#{SecureRandom.hex(4)}@example.com")
+    notification = unbound
 
     expect(described_class.new.scope).to include(notification)
     expect(described_class.new).not_to be_repairable
+  end
+
+  it "counts old-system ones separately, linked to the index before launch" do
+    old = unbound(created_at: Date.new(2025, 6, 1))
+    check = described_class.new
+
+    expect(check.scope).not_to include(old)
+    expect(check.aside.count).to eq(1)
+    expect(check.aside.path).to eq("/notifications?to=2025-12-31")
   end
 end
 
@@ -322,6 +335,15 @@ RSpec.describe DataHealth::StuckNotifications do
     expect(described_class.new.scope).not_to include(original)
   end
 
+  it "counts old-system undelivered emails separately, linked to the Archived filter" do
+    old = create(:notification, kind: "event_registration_confirmation", created_at: Date.new(2025, 6, 1))
+    check = described_class.new
+
+    expect(check.scope).not_to include(old)
+    expect(check.aside.count).to eq(1)
+    expect(check.aside.path).to eq("/notifications?delivery_status=archived")
+  end
+
   it "leaves delivered, failed, fresh, and Devise emails alone" do
     delivered = stuck(delivered_at: 1.hour.ago)
     failed = stuck(error_at: 1.hour.ago)
@@ -329,6 +351,30 @@ RSpec.describe DataHealth::StuckNotifications do
     devise = stuck(kind: "reset_password")
 
     expect(described_class.new.scope).not_to include(delivered, failed, fresh, devise)
+  end
+end
+
+RSpec.describe DataHealth::UnansweredContactMessages do
+  it "finds an incoming message since launch nobody marked responded" do
+    message = create(:notification, :incoming, kind: "contact_us_fyi", responded: false)
+
+    expect(described_class.new.scope).to include(message)
+  end
+
+  it "leaves answered messages and outgoing email alone" do
+    answered = create(:notification, :incoming, kind: "contact_us_fyi", responded: true)
+    outgoing = create(:notification, kind: "event_registration_confirmation")
+
+    expect(described_class.new.scope).not_to include(answered, outgoing)
+  end
+
+  it "counts old-system ones separately, linked to the matching index filter" do
+    old = create(:notification, :incoming, kind: "contact_us_fyi", responded: false, created_at: Date.new(2025, 6, 1))
+    check = described_class.new
+
+    expect(check.scope).not_to include(old)
+    expect(check.aside.count).to eq(1)
+    expect(check.aside.path).to eq("/notifications?responded_status=no&to=2025-12-31")
   end
 end
 

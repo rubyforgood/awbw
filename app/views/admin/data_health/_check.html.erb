@@ -9,6 +9,12 @@
         </span>
       </h3>
       <p class="mt-1 text-xs text-gray-500"><%= check.explanation %></p>
+      <% if (aside = check.aside)&.count&.positive? %>
+        <p class="mt-1 text-xs text-gray-400">
+          Not counted: <%= number_with_delimiter(aside.count) %> <%= aside.text %>.
+          <%= link_to "View them", aside.path, target: "_blank", rel: "noopener", class: "text-blue-700 hover:underline" %>
+        </p>
+      <% end %>
     </div>
 
     <% if check.any? && check.review_path %>

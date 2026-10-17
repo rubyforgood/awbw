@@ -13,6 +13,8 @@ module DataHealth
 
     PER_PAGE = 10
 
+    Aside = Data.define(:count, :text, :path)
+
     def self.key = name.demodulize.underscore
 
     def key = self.class.key
@@ -73,7 +75,13 @@ module DataHealth
 
     def review_label = "Review"
 
+    # Rows the check leaves out on purpose (e.g. old-system data nobody will
+    # resolve), counted and linked beside the explanation so they aren't hidden.
+    def aside = nil
+
     private
+
+    def before_launch_text = "before #{Notification::LAUNCHED_ON.strftime('%B %-d, %Y')}"
 
     # Pages need a stable order; a scope without one is ordered by primary key.
     def ordered_scope

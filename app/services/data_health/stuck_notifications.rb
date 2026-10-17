@@ -21,6 +21,15 @@ module DataHealth
         .order(created_at: :desc)
     end
 
+    # Undelivered old-system emails are already retired as Archived.
+    def aside
+      Aside.new(
+        count: Notification.archived.count,
+        text: "undelivered from the old system, #{before_launch_text}",
+        path: notifications_path(delivery_status: "archived")
+      )
+    end
+
     def describe(notification)
       "#{notification.email_subject.presence || notification.kind.humanize} — " \
       "#{notification.recipient_email} (#{notification.created_at.to_date.to_fs(:long)})"

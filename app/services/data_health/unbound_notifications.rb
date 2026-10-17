@@ -1,17 +1,23 @@
 module DataHealth
-  # Communications with a recipient address but no person. New notifications bind
-  # to a person when they're created; these predate that.
+  # Communications since launch with a recipient address that matched no person,
+  # so they sit outside every communications history. Old-system rows are
+  # counted aside — they predate person binding and won't be resolved.
   class UnboundNotifications < Check
     def title = "Communications not tied to a person"
 
     def explanation
-      "These were sent before communications were linked to the person who received them, so they " \
-      "don't appear in anyone's communications history. Matching on today's email could pick the " \
-      "wrong person, so they're informational for now."
+      "Sent to an address that matched no one in the portal, so they don't appear in anyone's " \
+      "communications history. Add the address to the right person, or create them."
     end
 
-    def scope
-      Notification.where(person_id: nil).where.not(recipient_email: [ nil, "" ]).order(created_at: :desc)
+    def scope = unbound.where(created_at: Notification::LAUNCHED_ON..).order(created_at: :desc)
+
+    def aside
+      Aside.new(
+        count: unbound.where(created_at: ...Notification::LAUNCHED_ON).count,
+        text: "from the old system, #{before_launch_text}",
+        path: notifications_path(to: (Notification::LAUNCHED_ON - 1).iso8601)
+      )
     end
 
     def describe(notification)
@@ -20,5 +26,9 @@ module DataHealth
     end
 
     def path_for(notification) = notification_path(notification)
+
+    private
+
+    def unbound = Notification.where(person_id: nil).where.not(recipient_email: [ nil, "" ])
   end
 end

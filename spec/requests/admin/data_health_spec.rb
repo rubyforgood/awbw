@@ -150,6 +150,20 @@ RSpec.describe "Admin::DataHealth", type: :request do
     end
   end
 
+  describe "old-system rows" do
+    before { sign_in admin }
+
+    it "counts them in a sentence beside the check, linked to the index, outside the main count" do
+      create(:notification, person: nil, recipient_email: "old-#{SecureRandom.hex(4)}@example.com",
+                            created_at: Date.new(2025, 6, 1))
+
+      get admin_data_health_path
+
+      expect(response.body).to include("Not counted: 1 from the old system, before January 1, 2026.")
+      expect(response.body).to include(%(href="#{notifications_path(to: "2025-12-31")}"))
+    end
+  end
+
   describe "GET worklists" do
     it "renders duplicate and author credit counts into the lazy frame" do
       sign_in admin

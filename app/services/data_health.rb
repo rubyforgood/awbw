@@ -21,6 +21,7 @@ module DataHealth
       UnresolvedResourceAgencies
     ],
     "Communications" => [
+      UnansweredContactMessages,
       StuckNotifications,
       UnboundNotifications
     ]
