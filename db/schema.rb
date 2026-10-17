@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_222332) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2051,6 +2051,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.datetime "updated_at", null: false
     t.bigint "return_address_id"
     t.bigint "remittance_address_id"
+    t.string "contact_attention"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["organization_id"], name: "index_settings_on_organization_id"
     t.index ["remittance_address_id"], name: "index_settings_on_remittance_address_id"

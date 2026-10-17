@@ -18,7 +18,9 @@
       Mailing address
     </div>
     <address class="leading-relaxed text-gray-700 not-italic">
-      Attn: Zachery Scott, Executive Director<br>
+      <% if (attention = Setting.contact_attention) %>
+        Attn: <%= attention %><br>
+      <% end %>
       <%= app_organization_name %>
       <% if (address_lines = Setting.organization_address_lines).any? %>
         <br><%= safe_join(address_lines, tag.br) %>
