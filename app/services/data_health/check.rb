@@ -9,6 +9,8 @@ module DataHealth
   # `scope` must be a relation — the page counts it without loading, and only the
   # first `PREVIEW_LIMIT` rows are rendered.
   class Check
+    include Rails.application.routes.url_helpers
+
     PREVIEW_LIMIT = 25
 
     def self.key = name.demodulize.underscore
@@ -64,5 +66,13 @@ module DataHealth
     def columns = nil
 
     def row_partial = nil
+
+    # Where each listed row opens, so it can be fixed by hand; nil leaves it plain text.
+    def path_for(_record) = nil
+
+    # An existing page that works through these rows, linked from the card header.
+    def review_path = nil
+
+    def review_label = "Review"
   end
 end

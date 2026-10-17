@@ -1,0 +1,29 @@
+<%= turbo_frame_tag :data_health_worklists, target: "_top" do %>
+  <div class="space-y-4">
+    <% @worklists.sections.each do |section| %>
+      <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="border-b border-gray-100 px-4 py-3">
+          <h2 class="text-sm font-semibold text-gray-800">
+            <%= section.title %>
+            <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-medium <%= section.total.positive? ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-500" %>">
+              <%= section.total %>
+            </span>
+          </h2>
+          <p class="mt-1 text-xs text-gray-500"><%= section.explanation %></p>
+        </div>
+        <ul class="divide-y divide-gray-100 text-sm">
+          <% section.entries.each do |entry| %>
+            <li class="flex items-center justify-between gap-3 px-4 py-2">
+              <span class="text-gray-700"><%= entry.label %></span>
+              <% if entry.count.positive? %>
+                <%= link_to pluralize(entry.count, entry.unit), entry.path, class: "text-blue-700 hover:underline" %>
+              <% else %>
+                <span class="text-gray-400">None</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+<% end %>

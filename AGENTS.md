@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~144 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~118 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~126 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 23 concerns |
 
@@ -210,7 +210,9 @@ action, or `authorize! :workshop, to: :summary?`).
 - `Analytics::PersonActivityEvents` — Aggregates Ahoy events for a person, their user, and associated data (powers the person edit History card + `person_id` filter on the Ahoy activities index)
 - `Analytics::EventReferenceLoader` — Batch-loads the records referenced in a page of Ahoy event properties (association changes, associated records), one query per type, so the activity table's Details column links each to its show page without an N+1
 
-- `DataHealth` + `DataHealth::Check` subclasses — Consistency checks spanning the whole database, rendered on the admin Data health page (`/admin/data_health`). Each subclass supplies `scope` (a relation, so counting doesn't load the table), `title`/`explanation`, and either a `repair!` or nothing — report-only is the default, because a wrong row isn't always one we know how to put right. Register a new check in `DataHealth::CHECKS`. Current checks: facilitator affiliations minted by non-training registrations (deletes), affiliations whose minting registration belongs to another org (unlinks, restoring ADR-0002 D2a's invariant), and legacy organization-status drift (reports only)
+- `DataHealth` + `DataHealth::Check` subclasses — Consistency checks spanning the whole database, rendered on the admin Data health page (`/admin/data_health`). Each subclass supplies `scope` (a relation, so counting doesn't load the table), `title`/`explanation`, and either a `repair!` or nothing — report-only is the default, because a wrong row isn't always one we know how to put right. Register a new check in `DataHealth::CHECKS`. A check can also link each row (`path_for`) and point the card at an existing review page (`review_path`). Current checks: facilitator affiliations minted by non-training registrations (deletes), affiliations whose minting registration belongs to another org (unlinks, restoring ADR-0002 D2a's invariant), legacy organization-status drift, people with several logins, people with several primary sectors/age ranges, over-allocated registrations (incl. CE), stories without a specific workshop (none linked, or only a generic Adult/Children's Windows Workshop), unbound notifications (all report-only), and resources with a legacy agency name but no organization (links via `ResourceServices::ResolveOrganizations`)
+- `DataHealth::Worklists` — Counts for review pages that live elsewhere (possible duplicates per dedupe page via each `DuplicateFinder` / `Dedupable.name_groups`, and author credit divergence sections), rendered in Data health's lazy `data_health_worklists` frame because the finders load records in Ruby
+- `ResourceServices::ResolveOrganizations` — Links resources to an organization from the legacy free-text `agency` name (case-insensitive exact match, else creates one with status "Unknown"). Idempotent; drives both the `data:resolve_resource_organizations` rake task (dry-run by default) and the Data health repair
 ### Business Logic
 
 - `AffiliationPeriods` — Merges an organization's affiliation date-intervals into periods, at year precision for "Affiliated since" (e.g. "2010-2012, 2026") or month precision for "Art program since" (e.g. "Aug 2015 – Jun 2018, Feb 2024"); rendered server-side on the org show/index/edit pages, with `affiliation_dates_controller.js` mirroring it only to live-update the edit form

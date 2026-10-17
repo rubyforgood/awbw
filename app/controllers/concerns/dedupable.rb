@@ -9,6 +9,14 @@ module Dedupable
 
   CandidateGroup = Struct.new(:label, :records, :reasons, keyword_init: true)
 
+  # The fallback for models with no candidate finder: records sharing a name.
+  def self.name_groups(model_class)
+    model_class.all
+      .group_by { |record| record.name.to_s.strip.downcase }
+      .select { |_name, records| records.size > 1 }
+      .map { |name, records| CandidateGroup.new(label: name, records: records, reasons: []) }
+  end
+
   def dedupe_index
     authorize! :dedupe, to: :dedupe?
     config = dedupe_config
@@ -218,10 +226,7 @@ module Dedupable
     finder = config[:candidate_finder]
     return Array(finder.call) if finder
 
-    config[:model_class].all
-      .group_by { |record| record.name.to_s.strip.downcase }
-      .select { |_name, records| records.size > 1 }
-      .map { |name, records| CandidateGroup.new(label: name, records: records, reasons: []) }
+    Dedupable.name_groups(config[:model_class])
   end
 
   def build_dedupe_vars(config)

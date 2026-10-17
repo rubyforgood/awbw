@@ -61,6 +61,7 @@ Rails.application.routes.draw do
     get "activities/counts",         to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
     get "data_health",               to: "data_health#index", as: "data_health"
+    get "data_health/worklists",     to: "data_health#worklists", as: "data_health_worklists"
     post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
     get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
     patch "resource_roles",          to: "resource_roles#update"

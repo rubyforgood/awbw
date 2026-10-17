@@ -83,6 +83,43 @@ RSpec.describe "Admin::DataHealth", type: :request do
     end
   end
 
+  describe "listed rows" do
+    before { sign_in admin }
+
+    it "links each row to where it can be fixed, and the card to its review page" do
+      person = create(:person)
+      create(:user, person: person)
+
+      get admin_data_health_path
+
+      expect(response.body).to include(%(href="#{person_path(person)}"))
+      expect(response.body).to include(%(href="#{dedupe_index_users_path}"))
+    end
+  end
+
+  describe "GET worklists" do
+    it "renders duplicate and author credit counts into the lazy frame" do
+      sign_in admin
+      create_list(:workshop, 2, title: "Anger Volcano")
+
+      get admin_data_health_worklists_path, headers: { "Turbo-Frame" => "data_health_worklists" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('id="data_health_worklists"')
+      expect(response.body).to include("Possible duplicates")
+      expect(response.body).to include(%(href="#{dedupe_index_workshops_path}"))
+      expect(response.body).to include("Author credit to review")
+    end
+
+    it "denies a non-admin" do
+      sign_in create(:user)
+
+      get admin_data_health_worklists_path, headers: { "Turbo-Frame" => "data_health_worklists" }
+
+      expect(response).not_to have_http_status(:ok)
+    end
+  end
+
   describe "POST repair" do
     before { sign_in admin }
 

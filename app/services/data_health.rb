@@ -4,7 +4,13 @@ module DataHealth
   CHECKS = [
     FacilitatorAffiliationsFromNonTrainings,
     MisalignedAffiliationProvenance,
-    LegacyOrganizationStatusDrift
+    LegacyOrganizationStatusDrift,
+    PeopleWithSeveralLogins,
+    PeopleWithSeveralPrimaries,
+    OverAllocatedRegistrations,
+    StoriesWithoutWorkshop,
+    UnresolvedResourceAgencies,
+    UnboundNotifications
   ].freeze
 
   def self.checks = CHECKS.map(&:new)

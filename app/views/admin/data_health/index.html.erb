@@ -35,11 +35,15 @@
             <p class="mt-1 text-xs text-gray-500"><%= check.explanation %></p>
           </div>
 
+          <% if check.any? && check.review_path %>
+            <%= link_to check.review_label, check.review_path,
+                  class: button_classes(:secondary_outline, extra: "shrink-0") %>
+          <% end %>
           <% if check.any? && check.repairable? %>
             <%= button_to check.repair_label, admin_data_health_repair_path(check: check.key),
                   method: :post, class: button_classes(:danger_outline, extra: "shrink-0"),
                   form: { data: { turbo_confirm: "#{check.repair_label} for #{check.count} #{'record'.pluralize(check.count)}? This can't be undone." } } %>
-          <% elsif check.any? %>
+          <% elsif check.any? && !check.review_path %>
             <span class="shrink-0 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
               Review by hand
             </span>
@@ -62,7 +66,14 @@
         <% elsif check.any? %>
           <ul class="divide-y divide-gray-100 text-sm">
             <% check.preview.each do |record| %>
-              <li class="px-4 py-2 text-gray-700"><%= check.describe(record) %></li>
+              <li class="px-4 py-2 text-gray-700">
+                <% if (path = check.path_for(record)) %>
+                  <%= link_to check.describe(record), path, target: "_blank", rel: "noopener",
+                        class: "hover:text-blue-700 hover:underline" %>
+                <% else %>
+                  <%= check.describe(record) %>
+                <% end %>
+              </li>
             <% end %>
           </ul>
           <% if check.more_than_preview.positive? %>
@@ -72,6 +83,12 @@
           <% end %>
         <% end %>
       </section>
+    <% end %>
+
+    <%= turbo_frame_tag :data_health_worklists, src: admin_data_health_worklists_path, loading: :lazy, target: "_top" do %>
+      <div class="animate-pulse rounded-xl border border-gray-200 bg-white px-4 py-6 text-sm text-gray-400 shadow-sm">
+        Counting possible duplicates and author credit…
+      </div>
     <% end %>
   </div>
 </div>

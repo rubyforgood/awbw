@@ -11,6 +11,13 @@ module Admin
       @checks = DataHealth.checks
     end
 
+    def worklists
+      authorize! :data_health, to: :index?
+
+      @worklists = DataHealth::Worklists.new
+      render :data_health_worklists
+    end
+
     def repair
       authorize! :data_health, to: :repair?
 

@@ -142,3 +142,156 @@ RSpec.describe DataHealth::LegacyOrganizationStatusDrift do
     expect { check.repair! }.to raise_error(NotImplementedError)
   end
 end
+
+RSpec.describe DataHealth::PeopleWithSeveralLogins do
+  it "finds a person carrying two logins and links to the users deduper" do
+    person = create(:person)
+    create(:user, person: person)
+    check = described_class.new
+
+    expect(check.scope).to contain_exactly(person)
+    expect(check.describe(person)).to include("2 logins")
+    expect(check.review_path).to eq(Rails.application.routes.url_helpers.dedupe_index_users_path)
+  end
+
+  it "leaves a person with one login alone" do
+    create(:person)
+
+    expect(described_class.new).not_to be_any
+  end
+end
+
+RSpec.describe DataHealth::OverAllocatedRegistrations do
+  let(:event) { create(:event, cost_cents: 1_000) }
+  let(:registration) { create(:event_registration, event: event) }
+
+  # Allocation validations cap the amount at the cost, so the overage is written past them.
+  def allocate(allocatable, cents)
+    create(:allocation, allocatable: allocatable, amount: 0).tap { |a| a.update_column(:amount, cents) }
+  end
+
+  it "finds a registration allocated beyond its event's cost" do
+    allocate(registration, 1_500)
+
+    check = described_class.new
+    expect(check.scope).to contain_exactly(registration)
+    expect(check.describe(check.preview.first)).to include("over by $5")
+  end
+
+  it "finds a registration whose CE registration is over-allocated" do
+    ce = create(:continuing_education_registration, event_registration: registration, cost_cents: 2_000)
+    allocate(ce, 2_500)
+
+    expect(described_class.new.scope).to contain_exactly(registration)
+  end
+
+  it "leaves a registration paid exactly in full alone" do
+    allocate(registration, 1_000)
+
+    expect(described_class.new).not_to be_any
+  end
+end
+
+RSpec.describe DataHealth::PeopleWithSeveralPrimaries do
+  let(:person) { create(:person) }
+
+  it "finds a person with two primary sectors" do
+    create(:sectorable_item, sectorable: person, is_primary: true)
+    item = build(:sectorable_item, sectorable: person, is_primary: true)
+    item.save(validate: false)
+
+    check = described_class.new
+    expect(check.scope).to contain_exactly(person)
+    expect(check.describe(person)).to include("2 primary sectors")
+  end
+
+  it "finds a person with two primary age ranges" do
+    age_range = CategoryType.find_or_create_by!(name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE)
+    2.times do
+      create(:categorizable_item, categorizable: person, is_primary: true,
+                                  category: create(:category, category_type: age_range))
+    end
+
+    expect(described_class.new.describe(person)).to include("2 primary age ranges")
+  end
+
+  it "leaves one primary and several additional alone" do
+    create(:sectorable_item, sectorable: person, is_primary: true)
+    create(:sectorable_item, sectorable: person, is_primary: false)
+
+    expect(described_class.new).not_to be_any
+  end
+end
+
+RSpec.describe DataHealth::StoriesWithoutWorkshop do
+  it "finds a story with no workshop linked" do
+    story = create(:story, workshop: nil, external_workshop_title: nil)
+
+    expect(described_class.new.describe(story)).to include("no workshop linked")
+    expect(described_class.new.scope).to include(story)
+  end
+
+  [ "Adult Windows Workshop", "Children Windows Workshop", "Children's Windows Workshop",
+    "Childrens Windows Workshop", "children’s windows workshop" ].each do |placeholder|
+    it "finds a story linked only to #{placeholder.inspect}" do
+      story = create(:story, workshop: create(:workshop, title: placeholder))
+
+      expect(described_class.new.scope).to include(story)
+    end
+  end
+
+  it "leaves a story linked to a specific workshop alone, even alongside a placeholder" do
+    story = create(:story, workshop: create(:workshop, title: "Anger Volcano"))
+    create(:story_workshop, story: story, workshop: create(:workshop, title: "Adult Windows Workshop"))
+
+    expect(described_class.new.scope).not_to include(story)
+  end
+end
+
+RSpec.describe DataHealth::UnresolvedResourceAgencies do
+  let!(:unknown) { OrganizationStatus.find_or_create_by!(name: "Unknown") }
+
+  it "links a resource to the organization its agency names" do
+    organization = create(:organization, name: "Lake Family Center")
+    resource = create(:resource, agency: "lake family center ")
+
+    expect(described_class.new.scope).to include(resource)
+    expect(described_class.new.repair!).to eq(1)
+    expect(resource.reload.organization).to eq(organization)
+    expect(described_class.new).not_to be_any
+  end
+
+  it "creates the organization once when several resources share an unknown name" do
+    first = create(:resource, agency: "Brand New Agency")
+    second = create(:resource, agency: "brand new agency")
+
+    expect { described_class.new.repair! }.to change(Organization, :count).by(1)
+    expect(first.reload.organization).to eq(second.reload.organization)
+  end
+
+  it "can't repair without the Unknown status to give new organizations" do
+    unknown.destroy
+
+    expect(described_class.new).not_to be_repairable
+  end
+end
+
+RSpec.describe DataHealth::UnboundNotifications do
+  it "finds a communication with an address but no person, and reports only" do
+    notification = create(:notification, person: nil, recipient_email: "nobody-#{SecureRandom.hex(4)}@example.com")
+
+    expect(described_class.new.scope).to include(notification)
+    expect(described_class.new).not_to be_repairable
+  end
+end
+
+RSpec.describe DataHealth::Worklists do
+  it "counts possible duplicates per type, with a link to each dedupe page" do
+    create_list(:workshop, 2, title: "Anger Volcano")
+
+    workshops = described_class.new.duplicates.find { |entry| entry.label == "Workshops" }
+
+    expect(workshops.count).to eq(1)
+    expect(workshops.path).to eq(Rails.application.routes.url_helpers.dedupe_index_workshops_path)
+  end
+end
