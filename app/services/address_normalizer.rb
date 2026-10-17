@@ -97,7 +97,7 @@ module AddressNormalizer
     words(value).join(" ")
   end
 
-  # The whole-address key AddressDeduper folds on: two addresses with one
+  # The whole-address key AddressDeduper merges on: two addresses with one
   # signature are the same place recorded twice.
   def signature(address)
     [

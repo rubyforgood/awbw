@@ -4,7 +4,7 @@ module EventRegistrationServices
   # point at the deleted registrant's license, so they're invalid (the license
   # belongs to the other person) and duplicate the keeper's own CE for the same
   # enrollment. Repoint each to the kept registrant's equivalent license (same kind
-  # + number, found or created), then fold the resulting duplicates into one with
+  # + number, found or created), then merge the resulting duplicates into one with
   # ContinuingEducationDeduper so payments are preserved and nothing is billed twice.
   class ReconcileMergedContinuingEducation
     def initialize(registration)

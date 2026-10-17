@@ -473,7 +473,7 @@ RSpec.describe "Dedupable concern", type: :request do
           }
         end
 
-        it "folds identical addresses into one on the keeper" do
+        it "merges identical addresses into one on the keeper" do
           org_address(keep)
           org_address(delete_rec)
 

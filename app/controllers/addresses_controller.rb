@@ -48,7 +48,7 @@ class AddressesController < ApplicationController
   def merge_addresses(addressable)
     ActiveRecord::Base.transaction do
       before = addressable.addresses.count
-      AddressDeduper.fold(addressable)
+      AddressDeduper.merge_duplicates(addressable)
       before - addressable.addresses.count
     end
   end

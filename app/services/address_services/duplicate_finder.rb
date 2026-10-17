@@ -1,6 +1,6 @@
 module AddressServices
   # People and organizations carrying two or more addresses that are one place
-  # (AddressDeduper.matching_sets) — the set the standalone address deduper folds.
+  # (AddressDeduper.matching_sets) — the set the standalone address deduper merges.
   # Only compares addresses within one owner: two orgs sharing a street are
   # separate records, not duplicates.
   class DuplicateFinder
