@@ -20,9 +20,34 @@
         </div>
       </div>
 
-      <div class="flex items-baseline gap-3 mb-6 leading-none">
-        <h1 class="font-display text-2xl font-semibold text-primary leading-none">Activity</h1>
-        <%= render "count" %>
+      <% scoped = Admin::AhoyActivitiesController::SCOPING_PARAMS.any? { |key| params[key].present? } %>
+      <div class="mb-6">
+        <span class="text-2xs font-semibold tracking-widest uppercase <%= DomainTheme.text_class_for(:people, intensity: 700) %>">Activity</span>
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 class="text-primary font-display text-3xl">
+            <% if @person %>
+              <%= link_to @person.full_name, person_path(@person), class: "hover:underline" %>
+            <% else %>
+              <%= scoped ? "Filtered" : "Everyone" %>
+            <% end %>
+          </h1>
+          <% if @person %>
+            <% if allowed_to?(:manage?, Comment) %>
+              <%= link_to comments_and_communications_path(person_id: @person.id), class: button_classes(:primary_outline) do %>
+                <i class="fa-solid fa-comments"></i>
+                <%= @person.first_name %>'s comments &amp; communications
+              <% end %>
+            <% end %>
+            <%= link_to person_path(@person), class: button_classes(:primary_outline) do %>
+              <i class="fa-solid fa-user"></i>
+              <%= @person.first_name %>'s profile
+            <% end %>
+          <% end %>
+          <% if scoped %>
+            <%= link_to "View everyone", admin_activities_events_path, class: "ml-auto text-sm #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
+          <% end %>
+        </div>
+        <div class="mt-2 text-sm text-gray-500"><%= render "count" %></div>
       </div>
 
       <div class="mb-6 text-sm min-h-10">
@@ -44,7 +69,7 @@
               audit trail) but have no visible control, so carry them as hidden
               fields — otherwise submitting the form drops them and reverts to the
               global feed. %>
-          <% %i[person_id user_id resource_type resource_id].each do |scoping_param| %>
+          <% Admin::AhoyActivitiesController::SCOPING_PARAMS.each do |scoping_param| %>
             <% if params[scoping_param].present? %>
               <%= hidden_field_tag scoping_param, params[scoping_param] %>
             <% end %>
@@ -148,9 +173,11 @@
                         url_for(safe_params.merge(from: 30.days.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>
 
+            <%# Scoping params ride in hidden fields and the header names the scope, so
+                clearing a scoped page reloads the whole page unscoped. %>
             <%= link_to "Clear filters", request.path,
                         class: "ml-auto #{eyebrow_link_class}",
-                        data: { action: "collection#clearAndSubmit" } %>
+                        data: scoped ? { turbo_frame: "_top" } : { action: "collection#clearAndSubmit" } %>
           </div>
 
         <% end %>

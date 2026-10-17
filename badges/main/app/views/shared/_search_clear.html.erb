@@ -1,3 +1,4 @@
-<%# "Clear filters" button. Locals: url (required). %>
+<%# "Clear filters" button. Locals: url (required), full_page (reload the whole
+    page at url, for when clearing changes what sits outside the results frame). %>
 <%= link_to "Clear filters", url, class: button_classes(:utility, extra: "whitespace-nowrap"),
-      data: { action: "collection#clearAndSubmit" } %>
+      data: local_assigns[:full_page] ? { turbo_frame: "_top" } : { action: "collection#clearAndSubmit" } %>

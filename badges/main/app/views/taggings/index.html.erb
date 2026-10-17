@@ -97,7 +97,13 @@
           </h2>
         </div>
 
-        <%= render "tagged_items_carousel", items: items %>
+        <%= render "tagged_items_carousel", items: items, tag_names: [ @sector_names_all, @category_names_all ] %>
+
+        <% if type == :organizations %>
+          <p class="mt-4 text-center text-xs text-gray-500">
+            * Number of the organization's active facilitators who list it on their profile, as a primary or additional tag.
+          </p>
+        <% end %>
 
         <div class="mt-6 text-right">
           <%= link_to "View all #{type.to_s.humanize} results",

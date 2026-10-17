@@ -112,51 +112,147 @@ RSpec.describe "/organizations", type: :request do
 
   describe "sector displays" do
     let!(:organization_with_sectors) do
-      affiliated_sector_1 = create(:sector, name: "Affiliated Sector 1")
-      affiliated_sector_2 = create(:sector, name: "Affiliated Sector 2")
-      person_1 = create(:person)
-      person_2 = create(:person)
-      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1, is_primary: true)
-      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2, is_primary: true)
-
       org = create(:organization, organization_status: organization_status)
       create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
-      create(:sectorable_item, sector: create(:sector, name: "Direct Sector 2"), sectorable: org)
-      create(:affiliation, organization: org, person: person_1)
-      create(:affiliation, organization: org, person: person_2)
+      %w[Alpha Bravo Charlie Delta].each do |name|
+        person = create(:person)
+        create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: true)
+        create(:affiliation, organization: org, person: person)
+      end
+      former = create(:person)
+      create(:sectorable_item, sector: create(:sector, name: "Former Sector"), sectorable: former, is_primary: true)
+      create(:affiliation, organization: org, person: former, end_date: 1.year.ago)
       org
     end
 
-    it "truncates sectors to the first 3 with a 'more' indicator on the show page" do
+    it "shows the three most-held facilitator primaries, starred, then links to the full list" do
+      second_delta = create(:person)
+      create(:sectorable_item, sector: Sector.find_by!(name: "Delta"), sectorable: second_delta, is_primary: true)
+      create(:affiliation, organization: organization_with_sectors, person: second_delta)
+
       get organization_url(organization_with_sectors)
 
       page = Capybara.string(response.body)
-      all_sector_names = organization_with_sectors.all_sectors.map(&:name).sort
-      expect(all_sector_names.length).to be > 3
-      all_sector_names.first(3).each { |name| expect(page).to have_content(name) }
-      expect(page).not_to have_content(all_sector_names[3])
-      expect(page).to have_content(/\+?[0-9]+ more|\.\.\./i)
+      expect(page.all("a[data-sector-name]").map { |chip| chip["data-sector-name"] }).to eq(%w[Delta Alpha Bravo])
+      expect(page).to have_css("a[data-sector-name] i.fa-star", count: 3)
+      expect(page).to have_link("+1 more", href: populations_served_organization_path(organization_with_sectors))
+      expect(page).not_to have_content("Direct Sector 1")
+      expect(page).not_to have_content("Former Sector")
     end
 
-    it "lists all sectors with per-sector people counts on the populations served page" do
+    it "lists every sector and age group active facilitators hold, primary and additional, on the breakdown page" do
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      teen = create(:category, :published, category_type: age_type, name: "Teens")
+      person = organization_with_sectors.affiliations.first.person
+      create(:sectorable_item, sector: create(:sector, name: "Echo"), sectorable: person, is_primary: false)
+      person.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
+
       get populations_served_organization_url(organization_with_sectors)
 
       page = Capybara.string(response.body)
-      expect(page).to have_content("Sector Distribution")
-      expect(page).to have_content(organization_with_sectors.name)
+      expect(page).to have_content("Sectors and age groups")
+      %w[Alpha Bravo Charlie Delta Echo Teens].each { |name| expect(page).to have_content(name) }
+      expect(page).to have_css("li[title='1 total · 0 primary · 1 additional']", count: 2)
+      expect(page).not_to have_content("Direct Sector 1")
+      expect(page).not_to have_content("Former Sector")
+    end
 
-      organization_with_sectors.all_sectors.map(&:name).each do |name|
-        expect(page).to have_content(name)
+    it "sorts the breakdown by the chosen option, defaulting to primary first" do
+      person = organization_with_sectors.affiliations.first.person
+      %w[Echo Foxtrot].each { |name| create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: false) }
+      second = create(:person)
+      create(:affiliation, organization: organization_with_sectors, person: second)
+      create(:sectorable_item, sector: Sector.find_by!(name: "Echo"), sectorable: second, is_primary: false)
+
+      sector_order = -> { Capybara.string(response.body).all("section", text: "Sectors").first.all("li a").map(&:text) }
+
+      get populations_served_organization_url(organization_with_sectors)
+      expect(sector_order.call).to eq(%w[Alpha Bravo Charlie Delta Echo Foxtrot])
+      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary first")
+
+      get populations_served_organization_url(organization_with_sectors, sort: "total")
+      expect(sector_order.call).to eq(%w[Echo Alpha Bravo Charlie Delta Foxtrot])
+
+      get populations_served_organization_url(organization_with_sectors, sort: "name")
+      expect(sector_order.call).to eq(%w[Alpha Bravo Charlie Delta Echo Foxtrot])
+
+      get populations_served_organization_url(organization_with_sectors, sort: "bogus")
+      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary first")
+    end
+
+    it "caps the edit page at three sectors with links to the breakdown that return to the edit page" do
+      breakdown = populations_served_organization_path(organization_with_sectors, return_to: "organization_edit")
+
+      get edit_organization_url(organization_with_sectors)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("a[data-sector-name]", count: 3)
+      expect(page).to have_link("+1 more", href: breakdown)
+      expect(page).to have_link("See all sectors and age groups", href: breakdown)
+
+      get breakdown
+      expect(Capybara.string(response.body)).to have_link("Edit #{organization_with_sectors.name}", href: edit_organization_path(organization_with_sectors))
+      expect(response.body).to include("return_to=organization_edit&amp;sort=total")
+    end
+
+    it "points the breakdown eyebrow at the profile by default" do
+      get populations_served_organization_url(organization_with_sectors)
+
+      expect(Capybara.string(response.body)).to have_link(organization_with_sectors.name, href: organization_path(organization_with_sectors))
+    end
+
+    it "shows the roll-up read-only on the edit page with a note on where it comes from" do
+      get edit_organization_url(organization_with_sectors)
+
+      page = Capybara.string(response.body)
+      %w[Alpha Bravo Charlie].each { |name| expect(page).to have_content(name) }
+      expect(page).not_to have_content("Direct Sector 1")
+      expect(page).to have_content("Not editable here")
+      expect(page).not_to have_css("[name*='sectorable_items_attributes']")
+      expect(page).not_to have_css("[name='organization[primary_age_category_ids][]']")
+    end
+
+    describe "profile display preferences" do
+      let!(:teen) do
+        age_type = create(:category_type, name: "AgeRange", published: true)
+        create(:category, :published, category_type: age_type, name: "Teens").tap do |category|
+          organization_with_sectors.affiliations.first.person.tag_age_groups(primary_ids: [ category.id ], additional_ids: [])
+        end
       end
 
-      people = organization_with_sectors.users.includes(person: :sectors).map(&:person).compact
-      expected_counts = Hash.new(0)
-      people.each do |person|
-        primary_sector = person.sectors.first
-        expected_counts[primary_sector.name] += 1 if primary_sector
+      it "drops the breakdown section an organization hides on its profile" do
+        organization_with_sectors.update!(profile_show_sectors: false)
+
+        get populations_served_organization_url(organization_with_sectors)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("h2", exact_text: "Age groups served")
+        expect(page).not_to have_css("h2", exact_text: "Sectors")
+        expect(page).not_to have_content("Alpha")
       end
-      expected_counts.each do |_sector_name, count|
-        expect(page).to have_content("#{count} #{count == 1 ? 'person' : 'people'}")
+
+      it "shows nothing to break down when both are hidden" do
+        organization_with_sectors.update!(profile_show_sectors: false, profile_show_age_ranges: false)
+
+        get populations_served_organization_url(organization_with_sectors)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_content("This organization doesn't show sectors or age groups on its profile.")
+        expect(page).not_to have_css("section h2")
+        expect(page).not_to have_link("Primary first")
+      end
+
+      it "hides the profile and edit links to the breakdown when both are hidden" do
+        organization_with_sectors.update!(profile_show_sectors: false, profile_show_age_ranges: false)
+
+        get organization_url(organization_with_sectors)
+        expect(Capybara.string(response.body)).not_to have_link("See all sectors and age groups")
+
+        get edit_organization_url(organization_with_sectors)
+        page = Capybara.string(response.body)
+        expect(page).not_to have_link("See all sectors and age groups")
+        expect(page).not_to have_link("+1 more")
+        expect(page).to have_content("+1 more")
       end
     end
   end
@@ -366,47 +462,33 @@ RSpec.describe "/organizations", type: :request do
     let!(:sector) { create(:sector, :published) }
     let(:organization) { Organization.create!(valid_attributes) }
 
-    it "saves sectors via nested attributes on create" do
-      post organizations_url, params: {
-        organization: valid_attributes.merge(
-          category_ids: [ "" ],
-          sectorable_items_attributes: {
-            "0" => { sector_id: sector.id, _destroy: "false" }
-          }
-        )
-      }
-
-      expect(Organization.last.sectors).to include(sector)
-    end
-
-    it "saves sectors via nested attributes on update" do
+    it "ignores submitted sectors" do
       patch organization_url(organization), params: {
         organization: {
           name: organization.name,
-          category_ids: [ "" ],
-          sectorable_items_attributes: {
-            "0" => { sector_id: sector.id, _destroy: "false" }
-          }
+          sectorable_items_attributes: { "0" => { sector_id: sector.id, _destroy: "false" } }
         }
       }
 
-      organization.reload
-      expect(organization.sectors).to include(sector)
+      expect(organization.reload.sectors).to be_empty
     end
 
-    it "preserves existing sectors when updating other fields" do
-      organization.sectorable_items.create!(sector: sector)
-      expect(organization.sectors).to include(sector)
+    it "preserves the org's existing age-range taggings when saving workshop settings" do
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      teen = create(:category, :published, category_type: age_type, name: "13-17")
+      settings_type = create(:category_type, name: "WorkshopEnvironment", published: true, profile_specific: true)
+      clinical = create(:category, :published, category_type: settings_type, name: "Clinical setting")
+      organization.categorizable_items.create!(category: teen)
 
       patch organization_url(organization), params: {
         organization: {
-          name: "Updated Name",
-          category_ids: [ "" ]
+          name: organization.name,
+          category_ids: [ "", clinical.id.to_s ],
+          managed_category_type_ids: [ "", settings_type.id.to_s ]
         }
       }
 
-      organization.reload
-      expect(organization.sectors).to include(sector)
+      expect(organization.reload.categories).to contain_exactly(teen, clinical)
     end
   end
 

@@ -156,6 +156,11 @@ module PersonHelper
     !person.public_send(:"#{flag}?") && allowed_to?(:own_record?, person)
   end
 
+  # Opens on changelogs and communications; account and interaction noise start hidden.
+  def person_activity_path(person)
+    admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
+  end
+
   def own_profile?(person)
     current_user.present? && current_user.person_id == person.id
   end

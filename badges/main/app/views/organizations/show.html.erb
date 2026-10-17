@@ -153,10 +153,9 @@
       </div>
       <!-- Sectors + Age groups served (two columns on desktop; stack on narrow viewports) -->
       <% show_sectors = @organization.profile_show_sectors? %>
-      <% sectors = show_sectors ? @organization.all_sectors.sort_by { |s| s&.name.to_s } : [] %>
-      <% primary_age_groups = @organization.profile_show_age_ranges? ? @organization.all_primary_age_groups : [] %>
-      <% additional_age_groups = @organization.profile_show_age_ranges? ? @organization.all_additional_age_groups : [] %>
-      <% show_age = primary_age_groups.any? || additional_age_groups.any? %>
+      <% sectors = show_sectors ? @organization.active_facilitator_sectors : [] %>
+      <% age_groups = @organization.profile_show_age_ranges? ? @organization.active_facilitator_age_groups : [] %>
+      <% show_age = age_groups.any? %>
       <% if show_sectors || show_age %>
         <div class="md:col-span-2">
           <div class="flex flex-col items-start gap-4 sm:flex-row">
@@ -164,31 +163,23 @@
               <div class="min-w-0 flex-1">
                 <h2 class="mb-3 font-display text-2xl text-gray-900">Sectors</h2>
                 <% if sectors.any? %>
-                  <div class="flex flex-wrap gap-2">
-                    <% sectors.first(3).each do |sector| %>
-                      <%= render "sectors/tagging_label",
-                                 sector: sector,
-                                 display_leader: true %>
-                    <% end %>
-                    <% if sectors.length > 3 %>
-                      <span class="px-2 text-gray-500">...</span>
-                    <% end %>
-                  </div>
+                  <%= render "organizations/sector_preview", sectors: sectors,
+                             breakdown_path: populations_served_organization_path(@organization) %>
                 <% else %>
-                  <p class="text-gray-500 italic">None selected.</p>
+                  <p class="text-gray-500 italic">None listed by active facilitators.</p>
                 <% end %>
-                <div class="mt-4">
-                  <%= link_to "Explore sector data",
-                              populations_served_organization_path(@organization),
-                              class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-                </div>
               </div>
             <% end %>
             <% if show_age %>
               <div class="min-w-0 flex-1">
                 <h2 class="mb-3 font-display text-2xl text-gray-900">Age groups served</h2>
-                <%= render "shared/age_group_tags", primary: primary_age_groups, additional: additional_age_groups %>
+                <%= render "shared/age_group_tags", primary: age_groups %>
               </div>
+            <% end %>
+          </div>
+          <div class="mt-4">
+            <%= link_to populations_served_organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+              See all sectors and age groups <i class="fa-solid fa-arrow-right text-xs"></i>
             <% end %>
           </div>
         </div>
