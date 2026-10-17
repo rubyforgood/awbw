@@ -19,6 +19,20 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
+    it "links to the person's activity history from the header" do
+      person.update!(first_name: "Aisha")
+      get comments_and_communications_path(person_id: person.id)
+
+      doc = Nokogiri::HTML(response.body)
+      link = doc.css("a").find { |a| a.text.strip == "Aisha's activity" }
+      expect(link).to be_present
+      expect(link["href"]).to eq(admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"))
+      profile = doc.css("a").find { |a| a.text.strip == "Aisha's profile" }
+      expect(profile["href"]).to eq(person_path(person))
+      everyone = doc.css("a").find { |a| a.text.strip == "View everyone" }
+      expect(everyone["href"]).to eq(comments_and_communications_path)
+    end
+
     it "renders comments and communications together in the results frame" do
       create(:comment, commentable: person, body: "Internal staff note", created_by: admin)
       create(:notification, recipient_email: "primary@example.com", email_subject: "Welcome aboard",
@@ -28,6 +42,23 @@ RSpec.describe "Comments and communications", type: :request do
 
       expect(response.body).to include("Internal staff note")
       expect(response.body).to include("Welcome aboard")
+    end
+
+    it "narrows the results frame to the one entry a date link points at" do
+      comment = create(:comment, commentable: person, body: "The linked note", created_by: admin)
+      create(:comment, commentable: person, body: "Another note", created_by: admin)
+      notification = create(:notification, recipient_email: "primary@example.com", email_subject: "The linked email",
+                                           kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+      frame = { "Turbo-Frame" => "comments_and_communications_results" }
+
+      get comments_and_communications_path(person_id: person.id, comment_id: comment.id), headers: frame
+      expect(response.body).to include("The linked note", "Showing one entry")
+      expect(response.body).not_to include("Another note")
+      expect(response.body).not_to include("The linked email")
+
+      get comments_and_communications_path(person_id: person.id, notification_id: notification.id), headers: frame
+      expect(response.body).to include("The linked email")
+      expect(response.body).not_to include("The linked note")
     end
 
     it "groups entries by subject in the results frame when the toggle is on" do
@@ -280,6 +311,7 @@ RSpec.describe "Comments and communications", type: :request do
       expect(doc.at_css("turbo-frame#cc_composers")).to be_nil
       expect(doc.at_css("select#person_id")).to be_nil
       expect(doc.at_css("select#jump_person_id")).to be_present
+      expect(doc.css("a").map { |a| a["href"] }.grep(/person_id=/)).to be_empty
 
       get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
 

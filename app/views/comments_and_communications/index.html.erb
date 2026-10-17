@@ -21,29 +21,40 @@
   <div class="flex flex-wrap items-center gap-1">
     <%= link_to "Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <%= link_to "Activity", admin_activities_events_path(person_id: @person&.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "Activity", admin_activities_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 <% end %>
 <% subtitle = capture do %>
   <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
 <% end %>
-<%# Title: the person's name (or "Everyone"), with a "View everyone" reset link on
-    a person's feed. The person picker that scopes the feed lives in the filter row
-    below (Filter to one person). %>
+<%# Title: the person's name (or "Everyone"). On a person's feed their activity,
+    profile, and the composer triggers sit beside it; the composer panels open in
+    the body, sharing the card-level panel-toggle scope (content_data). The person
+    picker that scopes the feed lives in the filter row below. %>
 <% title = capture do %>
-  <%= @person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone" %>
-  <% if @person %>
-    <%= link_to "View everyone", comments_and_communications_path,
-                class: "ml-3 align-middle text-sm font-sans font-normal #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
-  <% end %>
+  <span class="flex flex-wrap items-center gap-3">
+    <%= @person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone" %>
+    <% if @person %>
+      <span class="flex flex-wrap items-center gap-3 font-sans">
+        <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+          <%= link_to person_activity_path(@person), class: button_classes(:primary_outline) do %>
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <%= @person.first_name %>'s activity
+          <% end %>
+        <% end %>
+        <%= link_to person_path(@person), class: button_classes(:primary_outline) do %>
+          <i class="fa-solid fa-user"></i>
+          <%= @person.first_name %>'s profile
+        <% end %>
+        <%= render "comments_and_communications/add_buttons" %>
+      </span>
+    <% end %>
+  </span>
 <% end %>
 
-<%# Person feed: the composer triggers sit top-right by the name; their panels open
-    in the body, sharing the card-level panel-toggle scope (content_data). Everyone
-    feed has no target person yet, so its add flow stays in a body card. %>
 <% actions = capture do %>
   <% if @person %>
-    <%= render "comments_and_communications/add_buttons" %>
+    <%= link_to "View everyone", comments_and_communications_path, class: "text-sm #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
   <% end %>
 <% end %>
 
@@ -73,12 +84,19 @@
 
     <%= render "comments_and_communications/comments_and_communications_filters",
                url: comments_and_communications_path(person_id: @person&.id),
-               clear_path: comments_and_communications_path(person_id: @person&.id),
+               clear_path: comments_and_communications_path,
                frame: "comments_and_communications_results", person: @person %>
 
-    <% result_src = comments_and_communications_path(request.query_parameters) %>
-    <%= turbo_frame_tag "comments_and_communications_results", src: result_src, data: { turbo: "temporary" } do %>
-      <div class="py-6 text-center text-sm text-gray-400">Loading comments &amp; communications…</div>
-    <% end %>
+    <%# Expand/collapse state lives outside the frame so a filter reload keeps it. %>
+    <div data-controller="expandable-cards"
+         data-expandable-cards-expanded-label-value="<%= t("communications.collapse_all") %>"
+         data-expandable-cards-collapsed-label-value="<%= t("communications.expand_all") %>"
+         data-expandable-cards-expandable-card-outlet="#comments_and_communications_results [data-controller~='expandable-card']"
+         data-action="expandable-card:toggled->expandable-cards#remember">
+      <% result_src = comments_and_communications_path(request.query_parameters) %>
+      <%= turbo_frame_tag "comments_and_communications_results", src: result_src, data: { turbo: "temporary" } do %>
+        <div class="py-6 text-center text-sm text-gray-400">Loading comments &amp; communications…</div>
+      <% end %>
+    </div>
   </div>
 <% end %>

@@ -4,7 +4,9 @@
     to re-render this same row in place. An autoemail is generated, not
     authored, so it renders through communication_row_readonly instead — this
     partial is only reached when entry.manual_log? is true. Locals: entry (a
-    Notification). %>
+    Notification). Optional: person (scopes the date link's feed, and rides along
+    on the save so the re-rendered row stays scoped to them). %>
+<% person = local_assigns[:person] %>
 <% chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900" %>
 <% record = entry.noticeable %>
 <% source_chip = if record.present?
@@ -19,14 +21,16 @@
 <% trailing = content_tag(:span, safe_join([ render("notifications/responded_checkbox", notification: entry), edit_button ]),
                            class: "ml-auto flex shrink-0 items-center gap-3") %>
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
-  <div data-edit-toggle-target="view">
-    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false,
+  <%= tag.div data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false, key: dom_id(entry)) } do %>
+    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, expandable: true,
+               date_path: feed_entry_path(entry, person: person),
                leading: source_chip, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
-  </div>
+  <% end %>
 
   <div data-edit-toggle-target="edit" class="hidden rounded-md border <%= communication_card_class %> px-3 py-2">
     <%= simple_form_for entry, url: notification_path(entry), method: :patch do |f| %>
       <%= hidden_field_tag :combined, 1 %>
+      <% if person %><%= hidden_field_tag :for_person_id, person.id %><% end %>
       <% field_class = "w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start" data-controller="conditional-fields">
         <div class="shrink-0 space-y-2 sm:w-1/3">

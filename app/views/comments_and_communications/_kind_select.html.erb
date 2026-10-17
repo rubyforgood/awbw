@@ -1,0 +1,8 @@
+<%# The All / Comments / Communications picker shared by a record's section
+    (filters rows in place) and the full feed (submits the filter form).
+    Locals: name, selected, options (extra select_tag options, e.g. data or form). %>
+<%= select_tag name,
+               options_for_select([ [ t("communications.show_all"), "" ], [ t("communications.show_comments"), "comments" ], [ t("communications.show_communications"), "communications" ] ], selected),
+               { aria: { label: t("communications.show_label") },
+                 autocomplete: "off",
+                 class: "w-auto rounded-md border border-gray-300 bg-transparent py-1 pr-8 pl-2 text-xs text-gray-600 focus:border-blue-500 focus:ring-blue-200" }.merge(options) %>

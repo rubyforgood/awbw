@@ -1,0 +1,7 @@
+name: "Click anywhere on a role to request a change"
+area: people
+display_status: user_facing
+released_on: 2026-10-17
+summary: >-
+  On your profile's affiliations, the whole role row now opens its change request,
+  not just the "Request a change" button.

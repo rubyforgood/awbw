@@ -6,7 +6,7 @@
 <% [ [ "comment", "New comment", "fa-comment" ],
      [ "communication", "New communication", "fa-envelope" ] ].each do |name, label, icon| %>
   <button type="button"
-          class="<%= button_classes(:primary_outline, extra: "admin-only bg-blue-100 cursor-pointer aria-expanded:hidden") %>"
+          class="<%= button_classes(:primary_outline, extra: "cursor-pointer aria-expanded:hidden") %>"
           data-panel-toggle-name="<%= name %>"
           data-panel-toggle-target="button"
           data-action="panel-toggle#toggle"

@@ -1,0 +1,12 @@
+name: "Expand and filter comments and communications"
+area: communications
+display_status: user_facing
+released_on: 2026-10-17
+pr_number: 2711
+summary: >-
+  A chevron opens any comment or communication that's cut off, and "Expand all"
+  opens them all. A dropdown shows everything, just comments, or just
+  communications.
+pro_tips:
+  - "The full Comments & communications page has the same controls above its results, plus \"Collapse all\" to skim headlines."
+  - "Click an entry's date to open the full Comments & communications page showing just that entry — handy for sharing a link to it."

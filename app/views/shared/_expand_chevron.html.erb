@@ -1,0 +1,11 @@
+<%# Locals: clamp (default false — the row is line-clamped, so the chevron stays
+    invisible until expandable-card measures the text as cut off). %>
+<% clamp = local_assigns.fetch(:clamp, false) %>
+<button type="button"
+        class="<%= "invisible" if clamp %> shrink-0 cursor-pointer px-1 text-xs text-gray-400 hover:text-gray-600"
+        data-action="expandable-card#toggle"
+        <% if clamp %>data-expandable-card-target="toggle"<% end %>
+        title="<%= t("communications.expand_entry") %>"
+        aria-label="<%= t("communications.expand_entry") %>">
+  <i class="fa-solid fa-chevron-down transition-transform" data-expandable-card-target="icon"></i>
+</button>

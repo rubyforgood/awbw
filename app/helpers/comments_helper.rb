@@ -1,4 +1,33 @@
 module CommentsHelper
+  FEED_FILTER_FORM_ID = "comments-and-communications-filters"
+
+  # The full feed narrowed to one comment or communication, carrying the person
+  # it's about and the record to return to for the eyebrow.
+  def feed_entry_path(entry, person: nil, return_to: nil)
+    id_param = entry.is_a?(Comment) ? :comment_id : :notification_id
+    comments_and_communications_path({
+      person_id: person&.id,
+      id_param => entry.id,
+      return_to_type: return_to&.model_name&.name,
+      return_to_id: return_to&.id
+    }.compact)
+  end
+
+  # Stimulus wiring for a feed row the chevron and "Expand/Collapse all" toggle.
+  # clamp: a one-line row unclamped to show the full entry; otherwise a full row
+  # whose body hides on collapse. key lets expandable-cards remember a row toggled
+  # on its own across a results reload.
+  def expandable_feed_row_data(clamp: true, key: nil)
+    data = {
+      controller: "expandable-card",
+      expandable_card_expanded_value: !clamp,
+      action: "expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"
+    }
+    data[:expandable_card_collapsed_class] = "line-clamp-2" if clamp
+    data[:expandable_card_key_value] = key if key
+    data
+  end
+
   # Human-readable label for a record a comment or communication hangs off, used
   # for both the aggregated composer's target picker and each feed row's chip so
   # the two never drift. For event-bound records we spell out the event and its

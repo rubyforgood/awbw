@@ -1,0 +1,11 @@
+<%# A feed row's timestamp. With a path it links to the full feed narrowed to this
+    one entry. Locals: time, path (optional), new_tab (default false), css (extra
+    layout classes). %>
+<% label = time.strftime("%-m/%-d/%Y %-I:%M %p") %>
+<% classes = "#{local_assigns[:css]} w-32 shrink-0 text-xs whitespace-nowrap text-gray-400" %>
+<% if local_assigns[:path] %>
+  <% link_options = local_assigns[:new_tab] ? { target: "_blank", rel: "noopener" } : { data: { turbo_frame: "_top" } } %>
+  <%= link_to label, path, class: "#{classes} hover:text-gray-600 hover:underline", title: t("communications.open_entry"), **link_options %>
+<% else %>
+  <span class="<%= classes %>"><%= label %></span>
+<% end %>
