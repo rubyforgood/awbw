@@ -32,7 +32,7 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path(person_id: person.id)
 
       doc = Nokogiri::HTML(response.body)
-      link = doc.css("a").find { |a| a.text.strip == "Aisha's activity logs" }
+      link = doc.css("a").find { |a| a.text.strip == "Aisha's activity" }
       expect(link).to be_present
       expect(link["href"]).to eq(admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"))
       profile = doc.css("a").find { |a| a.text.strip == "Aisha's profile" }

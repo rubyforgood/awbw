@@ -39,7 +39,7 @@
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to person_activity_path(@person), class: button_classes(:primary_outline) do %>
             <i class="fa-solid fa-clock-rotate-left"></i>
-            <%= @person.first_name %>'s activity logs
+            <%= @person.first_name %>'s activity
           <% end %>
         <% end %>
         <%= link_to person_path(@person), class: button_classes(:primary_outline) do %>
