@@ -572,6 +572,30 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).not_to include("No Comments")
     end
 
+    it "shows and edits the latest comment in the inline note" do
+      older = create(:comment, commentable: subscription, body: "Older note", created_at: 2.days.ago)
+      create(:comment, commentable: subscription, body: "Newest note")
+
+      get topic_subscriptions_path, headers: { "Turbo-Frame" => "topic_subscriptions_results" }
+
+      expect(response.body).to include("Latest comment")
+      expect(Nokogiri::HTML(response.body).at_css("textarea[name='note']").text.strip).to eq("Newest note")
+
+      expect {
+        patch save_note_topic_subscription_path(subscription), params: { note: "Edited note" }
+      }.not_to change { subscription.comments.count }
+
+      expect(subscription.comments.first.body).to eq("Edited note")
+      expect(older.reload.body).to eq("Older note")
+    end
+
+    it "streams back the refreshed note hint" do
+      patch save_note_topic_subscription_path(subscription), params: { note: "Left a voicemail" }, as: :turbo_stream
+
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include(%(target="#{ActionView::RecordIdentifier.dom_id(subscription, :note_hint)}"))
+    end
+
     it "saves the inline note as a comment" do
       expect {
         patch save_note_topic_subscription_path(subscription), params: { note: "Left a voicemail" }

@@ -10,6 +10,7 @@ class TopicSubscriptionTypesController < ApplicationController
 
     scope = @status_filter == "archived" ? TopicSubscriptionType.archived : TopicSubscriptionType.active
     @topic_subscription_types = scope.ordered
+    @subscription_counts = TopicSubscription.where(topic_subscription_type: @topic_subscription_types).group(:topic_subscription_type_id).count
   end
 
   def new

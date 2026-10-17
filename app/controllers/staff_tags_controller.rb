@@ -7,10 +7,7 @@ class StaffTagsController < ApplicationController
     base_scope = authorized_scope(StaffTag.all)
     @count_display = base_scope.count
     @staff_tags = base_scope.ordered.paginate(page: params[:page], per_page: per_page).decorate
-    @tagged_people_counts = StaffTagging
-      .where(staff_tag_id: @staff_tags.map(&:id), staff_taggable_type: "Person")
-      .group(:staff_tag_id)
-      .count
+    @taggings_counts = StaffTagging.where(staff_tag_id: @staff_tags.map(&:id)).group(:staff_tag_id).count
   end
 
   def show
