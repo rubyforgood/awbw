@@ -21,4 +21,8 @@ class FmPeopleToOrganization < ApplicationRecord
     "PersonID" => "fm_rolodexes",
     "OrgID" => "fm_organizations"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("PersonID"), fm_words(fm_value("Title") || "Affiliated", fm_with("at", fm_value("OrgID"))))
+  end
 end

@@ -38,6 +38,7 @@ class Event < ApplicationRecord
   has_many :topic_subscriptions, foreign_key: :interested_event_id, inverse_of: :interested_event, dependent: :nullify
   has_many :event_staffs, dependent: :destroy
   has_many :event_forms, dependent: :destroy
+  has_many :discounts, dependent: :nullify
   has_many :registration_ticket_callouts, -> { ordered }, dependent: :destroy, inverse_of: :event
   # Block destroying an event that has submissions (registrations, scholarship
   # applications, payments). Submissions that were never tied to an event are
@@ -146,6 +147,16 @@ class Event < ApplicationRecord
   # is already done — registrations flip straight to "attended".
   def on_demand_facilitator_training?
     on_demand? && facilitator_training?
+  end
+
+  # Which certificate design this event's completion certificate uses — also the
+  # key for its admin-uploaded frame override (Resource.certificate_frame_file):
+  # :on_demand (self-paced facilitator training), :training (live facilitator
+  # training), or :other (every non-training event).
+  def certificate_category
+    return :on_demand if on_demand_facilitator_training?
+    return :training if facilitator_training?
+    :other
   end
 
   # Event staff whose title names them a facilitator, ordered by name — the roster

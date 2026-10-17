@@ -6,7 +6,7 @@ RSpec.describe Organization do
   describe 'associations' do
     it { should belong_to(:location).optional }
     it { should belong_to(:windows_type).optional }
-    it { should belong_to(:organization_status) }
+    it { should belong_to(:organization_status).optional }
     it { should belong_to(:parent).class_name("Organization").optional }
     it { should have_many(:children).class_name("Organization").with_foreign_key(:parent_id).dependent(:nullify) }
     it { should have_many(:affiliations) }
@@ -18,7 +18,23 @@ RSpec.describe Organization do
   describe 'validations' do
     subject { build(:organization) }
     it { should validate_presence_of(:name) }
-    it { should validate_presence_of(:organization_status_id) }
+    it { should_not validate_presence_of(:organization_status_id) }
+    it { should validate_uniqueness_of(:name).case_insensitive }
+
+    it "strips surrounding whitespace from the name" do
+      expect(build(:organization, name: "  Hope House  ").name).to eq("Hope House")
+    end
+
+    it "rejects a name that differs only by case or trailing whitespace" do
+      create(:organization, name: "Hope House")
+      expect(build(:organization, name: "hope house ")).not_to be_valid
+    end
+
+    it "is enforced by a unique index when validations are skipped" do
+      create(:organization, name: "Hope House")
+      duplicate = build(:organization, name: "HOPE HOUSE")
+      expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique, /index_organizations_on_name/)
+    end
 
     it { should allow_value("info@example.com").for(:email) }
     it { should allow_value("").for(:email) }

@@ -5,6 +5,7 @@ class Resource < ApplicationRecord
   include Rails.application.routes.url_helpers
   include ActionText::Attachable
   include Mentionable
+  include FilemakerCoded
 
   # Define rich text fields for mentions functionality
   def self.mentionable_rich_text_fields
@@ -14,34 +15,85 @@ class Resource < ApplicationRecord
   PUBLISHED_KINDS = [ "Handout", "Template", "Toolkit", "Form" ]
   KINDS = PUBLISHED_KINDS + [ "Resource", "Story", "LeaderSpotlight", "SectorImpact", "Theme", "Scholarship", "FM Archive" ]
 
-  # The facilitator-training certificate pulls its signature strip from this
-  # admin-managed record instead of a committed asset, so real handwritten
-  # signatures never live in this public repo. Create the record hidden from
-  # search (admin-only) and attach the signature image; the certificate embeds
-  # it via a signed, same-origin URL. Matched by title — keep this in sync.
-  TRAINING_CERTIFICATE_SIGNATURES_TITLE = "Training certificate signatures".freeze
+  # Each role is a built-in job that one library Resource fills (certificate
+  # artwork, the W-9, the training handouts), connected on the admin resource-roles
+  # page. The file lives on a normal Resource, never committed to this public repo.
+  CERTIFICATE_ROLES = %w[
+    training_frame on_demand_frame ce_frame other_frame training_signatures ce_signatures
+  ].freeze
+  HANDOUT_ROLES = %w[
+    training_handouts training_workshop_worksheets aha_moments participant_sharing_guide supervisor_letter
+  ].freeze
+  ROLES = (CERTIFICATE_ROLES + %w[w9] + HANDOUT_ROLES).freeze
 
-  # The attached signature image for the training certificate, or nil when the
-  # record/upload isn't present (e.g. dev/OSS), so the certificate simply omits
-  # the signatures rather than erroring.
-  def self.training_certificate_signatures_file
-    find_by(title: TRAINING_CERTIFICATE_SIGNATURES_TITLE)&.signature_file
+  # The title each role was matched by before roles were connected — the lookup
+  # fallback until every environment has connected its resources.
+  LEGACY_ROLE_TITLES = {
+    "training_frame" => "Training certificate frame",
+    "on_demand_frame" => "On-demand certificate frame",
+    "ce_frame" => "CE certificate frame",
+    "other_frame" => "Event certificate frame",
+    "training_signatures" => "Training certificate signatures",
+    "ce_signatures" => "Training CE certificate signatures",
+    "w9" => "W-9",
+    "training_handouts" => "2-Day AWBW Facilitator Training Worksheets & Handouts",
+    "training_workshop_worksheets" => "AWBW Training Workshop Worksheets",
+    "aha_moments" => "Aha Moments",
+    "participant_sharing_guide" => "Inviting and Responding to Participants' Sharing",
+    "supervisor_letter" => "Letter to Supervisors"
+  }.freeze
+
+  # Certificate category (Event#certificate_category) → its frame role.
+  CERTIFICATE_FRAME_ROLES = {
+    training: "training_frame",
+    on_demand: "on_demand_frame",
+    other: "other_frame"
+  }.freeze
+
+  # The Resource filling a role — the one connected to it, else the legacy
+  # title match. Nil when neither exists.
+  def self.for_role(role)
+    find_by(role:) || legacy_role_match(role)
   end
 
-  # The CE "Confirmation of Attendance" certificate carries a single signature (the
-  # CE administrator), so it pulls from its own admin-managed, search-hidden record
-  # rather than the training certificate's multi-signer strip. Matched by title —
-  # keep this in sync. Create it hidden and attach the signature image.
-  CE_CERTIFICATE_SIGNATURE_TITLE = "Training CE certificate signatures".freeze
+  def self.for_roles(roles)
+    roles.filter_map { |role| for_role(role) }
+  end
 
-  # The attached CE administrator signature image, or nil when the record/upload
-  # isn't present, so the CE certificate simply leaves the signature line blank.
+  def self.legacy_role_match(role)
+    title = LEGACY_ROLE_TITLES[role]
+    find_by(title:) if title
+  end
+
+  # The signature strip / frame image for each certificate role, or nil when
+  # nothing fills it — the certificate then omits the signature or uses its
+  # committed design rather than erroring.
+  def self.training_certificate_signatures_file
+    for_role("training_signatures")&.signature_file
+  end
+
   def self.ce_certificate_signature_file
-    find_by(title: CE_CERTIFICATE_SIGNATURE_TITLE)&.signature_file
+    for_role("ce_signatures")&.signature_file
+  end
+
+  def self.ce_certificate_frame_file
+    for_role("ce_frame")&.signature_file
+  end
+
+  # The frame image for a certificate category (:training, :on_demand, :other), or nil.
+  def self.certificate_frame_file(category)
+    role = CERTIFICATE_FRAME_ROLES[category&.to_sym]
+    for_role(role)&.signature_file if role
+  end
+
+  # The role this resource fills — its connected role, else the role its legacy
+  # title stands for.
+  def effective_role
+    role || LEGACY_ROLE_TITLES.find { |_role, legacy_title| legacy_title.casecmp?(title.to_s) }&.first
   end
 
   # The first attached image on this resource (primary asset, then downloadable),
-  # for use as a certificate signature strip. Nil when nothing is attached.
+  # for use as a certificate signature strip or frame. Nil when nothing is attached.
   def signature_file
     [ primary_asset, downloadable_asset ].compact.map(&:file).find(&:attached?)
   end
@@ -88,9 +140,14 @@ class Resource < ApplicationRecord
   attribute :published, :boolean, default: false
   attribute :hidden_from_search, :boolean, default: false
 
+  # Blank out to nil so the unique index treats "not connected" as NULL (MySQL
+  # allows many NULLs) rather than a shared empty string.
+  normalizes :role, with: ->(value) { value.presence }
+
   # Validations
   validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :kind, presence: true
+  validates :role, inclusion: { in: ROLES }, allow_nil: true
 
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true

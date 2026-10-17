@@ -35,6 +35,44 @@ RSpec.describe "Categories", type: :request do
         get categories_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "shows each category's taggings count on its Taggings button" do
+        tagged = create(:category, valid_attributes)
+        create(:category, valid_attributes.merge(name: "Untagged"))
+        create_list(:categorizable_item, 2, category: tagged)
+
+        get categories_path
+
+        expect(response.body).to include("Taggings (2)")
+        expect(response.body).to include("Taggings (0)")
+      end
+
+      describe "published filter" do
+        before do
+          create(:category, valid_attributes.merge(name: "Shown category"))
+          create(:category, valid_attributes.merge(name: "Hidden category", published: false))
+        end
+
+        it "lists published and unpublished categories when set to All" do
+          get categories_path, params: { published: "" }
+
+          expect(response.body).to include("Shown category", "Hidden category")
+        end
+
+        it "lists only published categories when set to Published" do
+          get categories_path, params: { published: "true" }
+
+          expect(response.body).to include("Shown category")
+          expect(response.body).not_to include("Hidden category")
+        end
+
+        it "lists only unpublished categories when set to Unpublished" do
+          get categories_path, params: { published: "false" }
+
+          expect(response.body).to include("Hidden category")
+          expect(response.body).not_to include("Shown category")
+        end
+      end
     end
 
     describe "GET show" do

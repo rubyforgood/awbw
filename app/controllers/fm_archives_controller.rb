@@ -63,6 +63,8 @@ class FmArchivesController < ApplicationController
     { label: "Other", icon: "📎", tables: %w[notes] }
   ]
 
+  PORTAL_MODELS = [ Person, Organization, Affiliation, Payment, Workshop ].freeze
+
   def index
     authorize! :fm_archive
 
@@ -91,10 +93,26 @@ class FmArchivesController < ApplicationController
       return
     end
 
+    @table_key = @record.class.table_name.delete_prefix("fm_")
+    @table_label = TABLES.dig(@table_key, :label)
     load_backlinks
+    load_portal_records
   end
 
   private
+
+  def load_portal_records
+    @portal_records = PORTAL_MODELS
+      .select { |model| model.filemaker_archives.include?(@record.class) }
+      .flat_map { |model| model.with_filemaker_code(@record.fm_id).to_a }
+    @portal_records |= organizations_via_projects if @record.is_a?(FmOrganization)
+  end
+
+  # Most orgs carry a project code, reaching their FM organization through Project.OrgID.
+  def organizations_via_projects
+    project_ids = FmProject.where("data->>'$.OrgID' = ?", @record.fm_id).pluck(:fm_id)
+    Organization.with_any_filemaker_code(project_ids).to_a
+  end
 
   def load_backlinks
     @backlinks = {}

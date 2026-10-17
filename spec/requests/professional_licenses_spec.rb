@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "ProfessionalLicenses", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person) }
-  let!(:license) { create(:professional_license, person: person, kind: "LMFT", number: "555") }
+  let!(:license) { create(:professional_license, person: person, kind: "LMFT", number: "LIC-555") }
 
   describe "as an admin" do
     before { sign_in admin }
@@ -20,7 +20,7 @@ RSpec.describe "ProfessionalLicenses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(person.full_name)
-      expect(response.body).to include("555")
+      expect(response.body).to include("LIC-555")
     end
 
     it "breaks the person edit button out of the results frame" do
@@ -31,57 +31,57 @@ RSpec.describe "ProfessionalLicenses", type: :request do
     end
 
     it "filters by type" do
-      other = create(:professional_license, kind: "LCSW", number: "999")
+      other = create(:professional_license, kind: "LCSW", number: "LIC-999")
 
       get professional_licenses_path(kind: "LMFT"),
         headers: { "Turbo-Frame" => "professional_licenses_results" }
 
-      expect(response.body).to include("555")
-      expect(response.body).not_to include("999")
+      expect(response.body).to include("LIC-555")
+      expect(response.body).not_to include("LIC-999")
     end
 
     it "filters by registrant name" do
       holder = create(:person, first_name: "Zephyrina", last_name: "Aldercott")
-      create(:professional_license, person: holder, number: "444")
+      create(:professional_license, person: holder, number: "LIC-444")
 
       get professional_licenses_path(person_query: "Zephyrina"),
         headers: { "Turbo-Frame" => "professional_licenses_results" }
 
-      expect(response.body).to include("444")
-      expect(response.body).not_to include("555")
+      expect(response.body).to include("LIC-444")
+      expect(response.body).not_to include("LIC-555")
     end
 
     it "filters by registrant email" do
       holder = create(:person, email: "unique-holder@example.com")
-      create(:professional_license, person: holder, number: "333")
+      create(:professional_license, person: holder, number: "LIC-333")
 
       get professional_licenses_path(person_query: "unique-holder@example.com"),
         headers: { "Turbo-Frame" => "professional_licenses_results" }
 
-      expect(response.body).to include("333")
-      expect(response.body).not_to include("555")
+      expect(response.body).to include("LIC-333")
+      expect(response.body).not_to include("LIC-555")
     end
 
     it "filters by expiry status" do
       license.update!(expires_on: 1.year.ago.to_date)
-      current = create(:professional_license, number: "222", expires_on: 1.year.from_now.to_date)
+      current = create(:professional_license, number: "LIC-222", expires_on: 1.year.from_now.to_date)
 
       get professional_licenses_path(expired: "yes"),
         headers: { "Turbo-Frame" => "professional_licenses_results" }
 
-      expect(response.body).to include("555")
-      expect(response.body).not_to include("222")
+      expect(response.body).to include("LIC-555")
+      expect(response.body).not_to include("LIC-222")
     end
 
     it "sorts by license number" do
       holder = create(:person)
-      create(:professional_license, person: holder, kind: "LMFT", number: "111")
-      create(:professional_license, person: holder, kind: "LMFT", number: "999")
+      create(:professional_license, person: holder, kind: "LMFT", number: "LIC-111")
+      create(:professional_license, person: holder, kind: "LMFT", number: "LIC-999")
 
       get professional_licenses_path(person_query: holder.full_name, sort: "number", direction: "asc"),
         headers: { "Turbo-Frame" => "professional_licenses_results" }
 
-      expect(response.body.index("111")).to be < response.body.index("999")
+      expect(response.body.index("LIC-111")).to be < response.body.index("LIC-999")
     end
 
     it "renders the new license form" do
@@ -93,21 +93,21 @@ RSpec.describe "ProfessionalLicenses", type: :request do
     it "creates a license for the selected person" do
       expect do
         post professional_licenses_path, params: {
-          professional_license: { person_id: person.id, number: "777", kind: "LCSW", issuing_state: "CA" }
+          professional_license: { person_id: person.id, number: "LIC-777", kind: "LCSW", issuing_state: "CA" }
         }
       end.to change(ProfessionalLicense, :count).by(1)
 
       expect(response).to redirect_to(professional_licenses_path)
       created = ProfessionalLicense.order(:created_at).last
       expect(created.person).to eq(person)
-      expect(created.number).to eq("777")
+      expect(created.number).to eq("LIC-777")
       expect(created.created_by).to eq(admin)
     end
 
     it "re-renders new when the person is missing" do
       expect do
         post professional_licenses_path, params: {
-          professional_license: { number: "888", kind: "LMFT" }
+          professional_license: { number: "LIC-888", kind: "LMFT" }
         }
       end.not_to change(ProfessionalLicense, :count)
 
@@ -167,7 +167,7 @@ RSpec.describe "ProfessionalLicenses", type: :request do
 
     it "redirects back to the person after saving when reached from the person page" do
       patch professional_license_path(license, return_to: "person"), params: {
-        professional_license: { number: "556", kind: "LCSW" }
+        professional_license: { number: "LIC-556", kind: "LCSW" }
       }
 
       expect(response).to redirect_to(edit_person_path(person, anchor: "professional-licenses"))
@@ -175,12 +175,12 @@ RSpec.describe "ProfessionalLicenses", type: :request do
 
     it "updates the license fields" do
       patch professional_license_path(license), params: {
-        professional_license: { number: "556", kind: "LCSW", issuing_state: "NY" }
+        professional_license: { number: "LIC-556", kind: "LCSW", issuing_state: "NY" }
       }
 
       expect(response).to redirect_to(professional_licenses_path)
       license.reload
-      expect(license.number).to eq("556")
+      expect(license.number).to eq("LIC-556")
       expect(license.kind).to eq("LCSW")
       expect(license.issuing_state).to eq("NY")
       expect(license.person).to eq(person)
@@ -190,7 +190,7 @@ RSpec.describe "ProfessionalLicenses", type: :request do
       other = create(:person)
 
       patch professional_license_path(license), params: {
-        professional_license: { person_id: other.id, number: "556" }
+        professional_license: { person_id: other.id, number: "LIC-556" }
       }
 
       expect(license.reload.person).to eq(person)
@@ -213,7 +213,7 @@ RSpec.describe "ProfessionalLicenses", type: :request do
     sign_in create(:user)
     expect do
       post professional_licenses_path, params: {
-        professional_license: { person_id: person.id, number: "999", kind: "LMFT" }
+        professional_license: { person_id: person.id, number: "LIC-999", kind: "LMFT" }
       }
     end.not_to change(ProfessionalLicense, :count)
     expect(response).not_to have_http_status(:ok)
@@ -224,7 +224,7 @@ RSpec.describe "ProfessionalLicenses", type: :request do
     get edit_professional_license_path(license)
     expect(response).not_to have_http_status(:ok)
 
-    patch professional_license_path(license), params: { professional_license: { number: "000" } }
-    expect(license.reload.number).to eq("555")
+    patch professional_license_path(license), params: { professional_license: { number: "LIC-000" } }
+    expect(license.reload.number).to eq("LIC-555")
   end
 end

@@ -16,8 +16,9 @@ require "set"
 #
 # The taxonomy is trusted as written: the sheet already carries resolved portal
 # "sectors", "categories" (as "Type: Name") and "window_type" values, so they are
-# looked up by name. Anything that can't be matched is preserved as a Comment on
-# the story rather than invented. Content is run through wpautop so raw-newline
+# looked up by name, then by any TagAlias recorded for a legacy term (ADR-0007).
+# Anything that can't be matched is preserved as a Comment on the story rather
+# than invented. Content is run through wpautop so raw-newline
 # paragraphs survive as HTML, and the publish date is preserved as created_at.
 class StoryImporter
   # Columns the importer reads, in a natural order, for the downloadable template.
@@ -624,21 +625,22 @@ class StoryImporter
   # that matched nothing so they can be preserved as comments on the story.
   def resolve_tags(row)
     sectors = []
-    missing_sectors = []
-    sector_names(row).each do |name|
-      sector = Sector.where("LOWER(name) = ?", name.downcase).first
-      sector ? sectors << sector : missing_sectors << name
-    end
-
     categories = []
+    missing_sectors = []
     missing_categories = []
-    category_specs(row).each do |type, name|
-      category = category_named(name, type)
-      category ? categories << category : missing_categories << [ type, name ]
+
+    sector_names(row).each do |name|
+      tags = sector_tags(name)
+      tags ? collect_tags(tags, sectors, categories) : missing_sectors << name
     end
 
-    primary_sector = resolve_primary_sector(row, sectors, missing_sectors)
-    primary_category = resolve_primary_category(row, categories, missing_categories)
+    category_specs(row).each do |type, name|
+      tags = category_tags(name, type)
+      tags ? collect_tags(tags, sectors, categories) : missing_categories << [ type, name ]
+    end
+
+    primary_sector = resolve_primary_sector(row, sectors, categories, missing_sectors)
+    primary_category = resolve_primary_category(row, sectors, categories, missing_categories)
 
     RowTags.new(
       sectors: sectors.uniq, categories: categories.uniq,
@@ -647,38 +649,61 @@ class StoryImporter
     )
   end
 
-  # The row's single primary sector (a subset of the sectors list) — added to the
-  # tagged set if missing; an unmatched name becomes a comment like any other.
-  def resolve_primary_sector(row, sectors, missing_sectors)
+  # The row's single primary sector — added to the tagged set if missing; an
+  # unmatched name becomes a comment like any other. An alias naming several
+  # sectors tags them all and stars the first recorded.
+  def resolve_primary_sector(row, sectors, categories, missing_sectors)
     name = clean(row["primary_sector"])
     return if name.blank?
 
-    sector = Sector.where("LOWER(name) = ?", name.downcase).first
-    unless sector
+    tags = sector_tags(name)
+    unless tags
       missing_sectors << name
       return
     end
 
-    sectors << sector unless sectors.include?(sector)
-    sector
+    collect_tags(tags, sectors, categories)
+    tags.grep(Sector).first
   end
 
   # The row's primary audience, written "Type: Name". An age group named here
   # stars its AgeRange category — either kind of audience can be the primary.
-  def resolve_primary_category(row, categories, missing_categories)
+  def resolve_primary_category(row, sectors, categories, missing_categories)
     token = clean(row["primary_story_population"])
     return if token.blank?
 
     type, name = token.split(":", 2).map(&:strip)
     type, name = nil, type unless name
-    category = category_named(name, type)
-    unless category
+    tags = category_tags(name, type)
+    unless tags
       missing_categories << [ type, name ]
       return
     end
 
-    categories << category unless categories.include?(category)
-    category
+    collect_tags(tags, sectors, categories)
+    tags.grep(Category).first
+  end
+
+  # nil when nothing answers to the name, so the caller can keep it as missing.
+  def sector_tags(name)
+    sector = Sector.where("LOWER(name) = ?", name.downcase).first
+    sector ? [ sector ] : aliased_tags(name)
+  end
+
+  def category_tags(name, type)
+    category = category_named(name, type)
+    category ? [ category ] : aliased_tags(name)
+  end
+
+  # A legacy term names whatever its aliases record, of either kind — or nothing,
+  # when it's recorded as ignored, which drops it without flagging it as missing.
+  def aliased_tags(name)
+    @tag_aliases ||= TagAlias.includes(:aliasable).order(:id).group_by { |tag_alias| tag_alias.name.downcase }
+    @tag_aliases[name.to_s.squish.downcase]&.reject(&:ignored?)&.map(&:aliasable)
+  end
+
+  def collect_tags(tags, sectors, categories)
+    tags.each { |tag| tag.is_a?(Sector) ? sectors << tag : categories << tag }
   end
 
   def sector_names(row)

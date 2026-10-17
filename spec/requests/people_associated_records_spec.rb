@@ -71,4 +71,18 @@ RSpec.describe "Person edit associated records", type: :request do
       expect(response.body).not_to include(%(href="#{workshop_variation_ideas_path}"))
     end
   end
+
+  describe "GET /people/:id/edit as the person themself" do
+    let(:owner_user) { create(:user, :with_person) }
+
+    before { sign_in owner_user }
+
+    it "hides the associated records links" do
+      get edit_person_path(owner_user.person)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Associated records")
+      expect(response.body).not_to include(event_registrations_path(registrant_id: owner_user.person.id))
+    end
+  end
 end

@@ -207,7 +207,7 @@ class WorkshopsController < ApplicationController
     params.require(:workshop).permit(
       :title, :featured, :published,
       :full_name, :author_id, :windows_type_id, :workshop_idea_id, :author_credit_preference,
-      :month, :year,
+      :month, :year, :filemaker_code,
       :publicly_visible,
       :publicly_featured,
 

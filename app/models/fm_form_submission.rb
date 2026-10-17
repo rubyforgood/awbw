@@ -54,4 +54,8 @@ class FmFormSubmission < ApplicationRecord
     "PaymentID" => "fm_payments",
     "ParticRecID" => "fm_participants"
   }.freeze
+
+  def name
+    fm_phrase(fm_join("FirstName", "LastName") || fm_value("OrgName"), fm_value("FormTitle") || "form submission")
+  end
 end

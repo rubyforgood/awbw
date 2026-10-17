@@ -1,5 +1,3 @@
-<% profile_url = person_url(@person) %>
-
 New Event Registration
 ==========================
 
@@ -12,35 +10,4 @@ Registered on
 
 ------------------------------------------------------------
 
-Event
-<%= @event.title %>
-
-Event date
-<%= @event.times(display_day: true, display_date: true) %>
-
-<% if @event.location.present? %>
-  Location
-  <%= @event.location.name %>
-<% end %>
-
-<% if event_platform_label(@event).present? %>
-  Videoconference
-  <%= event_platform_label(@event) %>
-<% end %>
-
-<% if @event.labelled_cost.present? %>
-  Cost
-  <%= @event.labelled_cost %>
-<% end %>
-
-------------------------------------------------------------
-
-View ticket:
-<%= registration_ticket_url(@event_registration.slug) if @event_registration.present? %>
-
-View profile:
-<%= profile_url %>
-
-View event:
-<%= event_url(@event, reg: @event_registration.slug) %>
-
+<%= render "event_registration_fyi_details" %>

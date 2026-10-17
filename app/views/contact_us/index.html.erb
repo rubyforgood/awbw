@@ -2,9 +2,11 @@
 <%= render "shared/public_welcome_banner" unless @from_story_share %>
 
 <% profile_return_path = (edit_person_path(current_user.person, anchor: "affiliations") if @return_to == "person_edit" && current_user&.person) %>
+<% show_contact_sidebar = !@from_story_share %>
+<% autofocus_field = (@prefilled_subject.present? ? :message : :subject) if user_signed_in? %>
 <div class="border-primary/10 mx-auto w-full max-w-7xl overflow-hidden rounded-2xl border bg-white shadow-sm" id="contact-us-container">
   <%= render accent_strip_partial %>
-  <div class="p-6">
+  <div class="p-6 sm:p-8">
       <% if profile_return_path %>
         <div class="mb-3">
           <%= link_to profile_return_path, class: "text-sm #{eyebrow_link_class}" do %>
@@ -12,8 +14,7 @@
           <% end %>
         </div>
       <% end %>
-      <!-- Header -->
-      <header class="space-y-4">
+      <header class="space-y-3">
         <h1 class="text-primary font-display text-3xl tracking-tight">
           Contact us
         </h1>
@@ -27,66 +28,8 @@
           </div>
         <% end %>
       </header>
-      <!-- Contact Details (website variant only; the portal shows it below the form) -->
-      <% unless @from_story_share %>
-      <div class="mt-10 text-gray-800">
-        <div class="space-y-4">
-          <div class="grid grid-cols-3 gap-x-8">
-            <div>
-              <div class="mb-1 text-sm font-semibold tracking-wide text-gray-500 uppercase">
-                Email
-              </div>
-              <%= mail_to Organization.programs_email,
-                          subject: "AWBW Portal: Website question",
-                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
-            </div>
-            <div>
-              <div class="mb-1 text-sm font-semibold tracking-wide text-gray-500 uppercase">
-                Phone
-              </div>
-              <%= link_to "310-396-0317",
-                          "tel:310-396-0317",
-                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
-            </div>
-            <div>
-              <div class="mb-2 text-sm font-semibold tracking-wide text-gray-500 uppercase">
-                Social Media
-              </div>
-              <div class="flex flex-wrap items-center gap-3">
-                <!-- LinkedIn -->
-                <%= link_to "https://www.linkedin.com/company/a-window-between-worlds",
-                            target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-linkedin transition" do %>
-                  <i class="fab fa-linkedin-in text-lg text-gray-600 group-hover:text-white"></i>
-                <% end %>
-                <!-- Instagram -->
-                <%= link_to "https://www.instagram.com/awbworg",
-                            target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-gradient-to-tr hover:from-instagram-start hover:via-instagram-mid hover:to-instagram-end transition" do %>
-                  <i class="fab fa-instagram text-lg text-gray-600 group-hover:text-white"></i>
-                <% end %>
-                <!-- Facebook -->
-                <%= link_to "https://www.facebook.com/awbworg",
-                            target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-facebook transition" do %>
-                  <i class="fab fa-facebook-f text-lg text-gray-600 group-hover:text-white"></i>
-                <% end %>
-                <!-- YouTube -->
-                <%= link_to "https://www.youtube.com/@awbworg",
-                            target: "_blank", rel: "noopener noreferrer",
-                            class: "group inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 shadow-sm hover:shadow-md hover:bg-youtube transition" do %>
-                  <i class="fa-brands fa-youtube text-lg text-gray-600 group-hover:text-white"></i>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <% end %>
-      <!-- Divider -->
-      <div class="mt-12 border-t border-gray-200 pt-12">
-        <!-- Contact Form -->
-        <div id="contact-form" class="space-y-8">
+      <div class="mt-8 grid grid-cols-1 gap-10 <%= "lg:grid-cols-3" if show_contact_sidebar %>">
+        <div id="contact-form" class="space-y-6 <%= "lg:col-span-2" if show_contact_sidebar %>">
           <% if @form_submitted %>
             <!-- Thank You Message -->
             <div id="thank-you" class="space-y-4 py-12 text-center">
@@ -116,21 +59,15 @@
             </div>
             <script>document.getElementById("thank-you").scrollIntoView({ behavior: "smooth", block: "center" });</script>
           <% else %>
-            <!-- Contact Form -->
-            <div class="space-y-2">
-              <h3 class="text-2xl font-semibold text-gray-900">
+            <div class="space-y-1">
+              <h2 class="text-2xl font-semibold text-gray-900">
                 Send us a message
-              </h3>
+              </h2>
               <p class="text-gray-600">
-                Please complete the form below and our team will respond by email as soon as possible.
+                Our team will respond by email as soon as possible.
               </p>
             </div>
-            <% if current_user && @user %>
-              <div class="rounded-lg border border-blue-300 bg-blue-50 p-4 text-sm text-blue-700">
-                Hello, <%= @user.first_name_or_email %>! We're glad to hear from you. We'll reply by email to <%= @user.email %>.
-              </div>
-            <% end %>
-            <%= form_tag("/contact_us", method: "POST", class: "space-y-8", id: "contact-us-form", novalidate: true) do %>
+            <%= form_tag("/contact_us", method: "POST", class: "space-y-6", id: "contact-us-form", novalidate: true) do %>
               <input type="hidden" name="contact_us[q]" value="general">
               <% if @from_story_share %>
                 <input type="hidden" name="from" value="story_share">
@@ -140,10 +77,10 @@
               <% end %>
               <% unless current_user %>
                 <!-- Name Row -->
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                      First Name *
+                      First name *
                     </label>
                     <input type="text"
                            name="contact_us[first_name]"
@@ -154,7 +91,7 @@
                   </div>
                   <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                      Last Name
+                      Last name
                     </label>
                     <input type="text"
                            name="contact_us[last_name]"
@@ -174,7 +111,7 @@
                   </div>
                   <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                      Agency / Organization *
+                      Agency / organization *
                     </label>
                     <input type="text"
                            name="contact_us[organization]"
@@ -185,6 +122,22 @@
                   </div>
                 </div>
               <% else %>
+                <div>
+                  <div class="mb-1 block text-sm font-medium text-gray-700">From</div>
+                  <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                    <span class="bg-primary/10 text-primary inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
+                      <% if (initials = @user.decorate.initials.presence) %>
+                        <%= initials %>
+                      <% else %>
+                        <i class="fa-solid fa-user"></i>
+                      <% end %>
+                    </span>
+                    <div class="min-w-0 text-sm">
+                      <p class="font-medium text-gray-900">Hello, <%= @user.first_name_or_email %>!</p>
+                      <p class="truncate text-gray-600">We'll reply by email to <%= @user.email %>.</p>
+                    </div>
+                  </div>
+                </div>
                 <input type="hidden" name="contact_us[first_name]" value="<%= @user.person&.first_name %>">
                 <input type="hidden" name="contact_us[last_name]" value="<%= @user.person&.last_name %>">
                 <input type="hidden" name="contact_us[from]" value="<%= @user.email %>">
@@ -212,11 +165,12 @@
               <% else %>
                 <div>
                   <label class="mb-1 block text-sm font-medium text-gray-700">
-                    Subject Line *
+                    Subject line *
                   </label>
                   <input type="text"
                          name="contact_us[subject]"
                          value="<%= @prefilled_subject %>"
+                         <%= "autofocus" if autofocus_field == :subject %>
                          required
                          maxlength="100"
                          data-error-message="Subject line is required"
@@ -227,20 +181,20 @@
               <!-- Message -->
               <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">
-                  Your Message *
+                  Your message *
                 </label>
                 <textarea name="contact_us[message]"
+                          <%= "autofocus" if autofocus_field == :message %>
                           required
                           rows="6"
                           data-error-message="Message is required"
                           class="w-full resize-none rounded border border-gray-300 bg-white px-4 py-2.5 text-gray-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"><%= @prefilled_message %></textarea>
                 <p class="field-error mt-1 hidden text-xs text-red-600"></p>
               </div>
-              <!-- Submit -->
               <div class="flex justify-end">
                 <button type="submit"
                         class="<%= button_classes(:primary) %>">
-                  Submit
+                  <i class="fa-solid fa-paper-plane"></i> Send message
                 </button>
               </div>
             <% end %>
@@ -293,6 +247,54 @@
             </script>
           <% end %>
         </div>
+        <% if show_contact_sidebar %>
+          <aside class="h-fit space-y-6 rounded-xl border border-gray-200 bg-gray-50 p-6 text-gray-800">
+            <h2 class="text-base font-semibold text-gray-900">Other ways to reach us</h2>
+            <div>
+              <div class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                Email
+              </div>
+              <%= mail_to Organization.programs_email,
+                          subject: "AWBW Portal: Website question",
+                          class: "text-blue-600 hover:text-blue-800 font-medium break-all" %>
+            </div>
+            <div>
+              <div class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                Phone
+              </div>
+              <%= link_to "310-396-0317",
+                          "tel:310-396-0317",
+                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            </div>
+            <div>
+              <div class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                Social media
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <%= link_to "https://www.linkedin.com/company/a-window-between-worlds",
+                            target: "_blank", rel: "noopener noreferrer", "aria-label": "LinkedIn",
+                            class: "group inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:shadow-md hover:bg-linkedin transition" do %>
+                  <i class="fab fa-linkedin-in text-gray-600 group-hover:text-white"></i>
+                <% end %>
+                <%= link_to "https://www.instagram.com/awbworg",
+                            target: "_blank", rel: "noopener noreferrer", "aria-label": "Instagram",
+                            class: "group inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:shadow-md hover:bg-gradient-to-tr hover:from-instagram-start hover:via-instagram-mid hover:to-instagram-end transition" do %>
+                  <i class="fab fa-instagram text-gray-600 group-hover:text-white"></i>
+                <% end %>
+                <%= link_to "https://www.facebook.com/awbworg",
+                            target: "_blank", rel: "noopener noreferrer", "aria-label": "Facebook",
+                            class: "group inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:shadow-md hover:bg-facebook transition" do %>
+                  <i class="fab fa-facebook-f text-gray-600 group-hover:text-white"></i>
+                <% end %>
+                <%= link_to "https://www.youtube.com/@awbworg",
+                            target: "_blank", rel: "noopener noreferrer", "aria-label": "YouTube",
+                            class: "group inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:shadow-md hover:bg-youtube transition" do %>
+                  <i class="fa-brands fa-youtube text-gray-600 group-hover:text-white"></i>
+                <% end %>
+              </div>
+            </div>
+          </aside>
+        <% end %>
       </div>
       <% if @from_story_share %>
         <!-- Contact details below the form (portal variant) -->
@@ -301,4 +303,4 @@
         </div>
       <% end %>
   </div>
-    </div>
+</div>

@@ -13,10 +13,22 @@ FactoryBot.define do
       details { nil }
     end
 
+    trait :secondary_email do
+      field { "secondary_email" }
+      requested_value { "second@example.com" }
+      details { nil }
+    end
+
     trait :organization_name do
       field { "organization_name" }
       requested_value { "New Org Name" }
       details { nil }
+    end
+
+    trait :other do
+      field { ProfileChangeRequest::OTHER_FIELD }
+      requested_value { nil }
+      details { "Please fix the spelling of my last name." }
     end
 
     trait :resolved do

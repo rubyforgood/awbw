@@ -1,5 +1,5 @@
 <% collection ||= @sectors_collection || Sector.published.order(:name).pluck(:name, :id) %>
-<% show_admin_flags = local_assigns.fetch(:show_admin_flags, false) %>
+<% show_person_flags = local_assigns.fetch(:show_person_flags, false) %>
 <% is_primary = f.object&.is_primary? %>
 
 <div class="nested-fields inline-flex items-center gap-2 rounded-md border border-lime-300 <%= is_primary ? "bg-lime-100" : "bg-lime-50" %>
@@ -20,14 +20,16 @@
                   class: "bg-transparent border-none focus:ring-0 text-sm text-gray-500 cursor-pointer py-0"
                 } %>
   <% end %>
-  <% if show_admin_flags && allowed_to?(:manage?, Person) %>
-    <label class="admin-only cursor-pointer leading-none" title="Mark as primary sector">
+  <% if show_person_flags %>
+    <label class="cursor-pointer leading-none" title="Mark as primary sector">
       <%= f.check_box :is_primary,
                       class: "peer sr-only",
                       data: { primary_tag_target: "primary", action: "primary-tag#selectPrimary" } %>
       <i class="fa-solid fa-star text-base text-gray-300 transition-colors peer-checked:text-amber-400" aria-hidden="true"></i>
       <span class="sr-only">Primary</span>
     </label>
+  <% end %>
+  <% if show_person_flags && allowed_to?(:manage?, Person) %>
     <label class="admin-only cursor-pointer leading-none" title="Mark as sector leader">
       <%= f.check_box :is_leader, class: "peer sr-only" %>
       <i class="fa-solid fa-crown text-base text-gray-300 transition-colors peer-checked:text-lime-700" aria-hidden="true"></i>

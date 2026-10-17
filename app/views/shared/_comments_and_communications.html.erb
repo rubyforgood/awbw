@@ -1,9 +1,10 @@
 <%# Combined comments + communications section (locals: f:, and optional
-    mark_admin_only:, view_all_person:). %>
+    mark_admin_only:, view_all_person:, comms_title:). %>
 <% record = f.object %>
 <% can_manage_comments = allowed_to?(:manage?, Comment) %>
 <% admin = allowed_to?(:index?, with: NotificationPolicy) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
+<% comms_title = local_assigns.fetch(:comms_title, t("communications.title")) %>
 <%# The person this record's comments and communications belong to — links the
     header to their full, filterable feed. Nil when the record has no person yet. %>
 <% view_all_person = local_assigns[:view_all_person] %>
@@ -34,7 +35,7 @@
     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> <%= DomainTheme.text_class_for(:notifications, intensity: 600) %>">
       <i class="fa-solid fa-comments"></i>
     </span>
-    <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : t("communications.title") %></h2>
+    <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : comms_title %></h2>
     <div class="ml-auto flex items-center gap-3">
       <% if entries.size > 1 %>
         <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">

@@ -2,6 +2,7 @@ class Person < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable, StaffTaggable
   include Communicable
   include FilemakerCoded
+  filemaker_archived_in FmRolodex
 
   pay_customer default_payment_processor: :stripe
 
@@ -23,6 +24,7 @@ class Person < ApplicationRecord
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
   has_many :contact_methods, as: :contactable, dependent: :destroy
+  has_many :active_phones, -> { phone.where(inactive: false) }, as: :contactable, class_name: "ContactMethod"
   has_many :categorizable_items, inverse_of: :categorizable, as: :categorizable, dependent: :destroy
   has_many :sectorable_items, as: :sectorable, dependent: :destroy
   has_many :other_responses, as: :owner, dependent: :destroy
@@ -152,8 +154,9 @@ class Person < ApplicationRecord
   # both INSERT and hit the DB unique index. Collapse duplicates before validation.
   before_validation :dedupe_age_range_items
   accepts_nested_attributes_for :user, update_only: true
+  # Only a new row needs an organization; an owner's work-address pick sends just id + address.
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
-    reject_if: proc { |attrs| attrs["organization_id"].blank? }
+    reject_if: proc { |attrs| attrs["id"].blank? && attrs["organization_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
   # A blank row (number + kind + state + expiry all empty) is ignored rather than
   # creating an empty license.
@@ -183,6 +186,33 @@ class Person < ApplicationRecord
                       "addresses.street_address", "addresses.city", "addresses.state",
                       "addresses.zip_code", "addresses.phone" ]
     options :all, type: :text, default: true, default_operator: :or
+  end
+
+  FIRST_NAME_HIDDEN_PREFERENCES = %w[last_name_only].freeze
+  LAST_NAME_HIDDEN_PREFERENCES = %w[first_name_last_initial first_name_only].freeze
+
+  SHARED_CONTACT_MATCH_SQL = <<~SQL.squish
+    (people.first_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden))
+    OR (people.last_name LIKE :pattern AND COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden))
+    OR (people.profile_show_email AND (people.email LIKE :pattern OR users.email LIKE :pattern))
+    OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
+  SQL
+
+  # Same term syntax as SearchCop: a quoted phrase is one term, otherwise split on whitespace.
+  SEARCH_TERM_PATTERN = /"([^"]*)"|'([^']*)'|(\S+)/
+
+  # Contact-info search for non-admins: every term must match something the person's profile shows.
+  def self.shared_contact_search(query)
+    terms = query.scan(SEARCH_TERM_PATTERN).map { |groups| groups.compact.first }.compact_blank
+    terms.reduce(all) do |relation, term|
+      matches = unscoped.left_joins(:user, :active_phones).where(
+        SHARED_CONTACT_MATCH_SQL,
+        pattern: "%#{sanitize_sql_like(term)}%",
+        first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES,
+        last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES
+      )
+      relation.where(id: matches.select(:id))
+    end
   end
 
   scope :organization_ids, ->(organization_ids)  { joins(:affiliations)
@@ -287,6 +317,10 @@ class Person < ApplicationRecord
       .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
       .where("LOWER(categories.name) = ?", name.to_s.strip.downcase)
       .distinct }
+  scope :shared_sector_names_all, ->(names) { where(profile_show_sectors: true).sector_names_all(names) }
+  scope :shared_age_range_names_all, ->(name) { where(profile_show_age_ranges: true).age_range_names_all(name) }
+  scope :shared_organization_name, ->(name) { where(profile_show_affiliations: true).organization_name(name) }
+  scope :shared_organization_id, ->(organization_id) { where(profile_show_affiliations: true).organization_id(organization_id) }
   scope :by_role, ->(role) {
     case role
     when "story_author" then story_authors
@@ -341,15 +375,20 @@ class Person < ApplicationRecord
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:contact_info]) if params[:contact_info].present?
+    results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
     results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?
     results = results.subscribed_to_topic(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
+    results = results.shared_sector_names_all(params[:shared_sector_names_all]) if params[:shared_sector_names_all].present?
     results = results.age_range_names_all(params[:age_range_names_all]) if params[:age_range_names_all].present?
+    results = results.shared_age_range_names_all(params[:shared_age_range_names_all]) if params[:shared_age_range_names_all].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
+    results = results.shared_organization_name(params[:shared_organization_name]) if params[:shared_organization_name].present?
     results = results.organization_id(params[:organization_id]) if params[:organization_id].present?
+    results = results.shared_organization_id(params[:shared_organization_id]) if params[:shared_organization_id].present?
     results = results.staff_tagged_with(params[:staff_tag_ids]) if params[:staff_tag_ids].present?
     results = results.windows_type_name(params[:windows_type_name]) if params[:windows_type_name].present?
     results

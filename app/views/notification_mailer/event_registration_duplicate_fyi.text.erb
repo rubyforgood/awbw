@@ -1,0 +1,18 @@
+DUPLICATE <%= @event_registration.registration_subject_noun %>
+==========================
+
+<%= @person.full_name %> (<%= @person.preferred_email %>)
+
+Resubmitted on
+<%= @resubmitted_at.in_time_zone("Pacific Time (US & Canada)").strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+Originally registered on
+<%= @event_registration.created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%B %-d, %Y at %-l:%M %p %Z") %>
+
+The answers were added to the existing registration.
+
+<%= render "shared/resubmission_changes", notes: @change_notes %>
+
+------------------------------------------------------------
+
+<%= render "event_registration_fyi_details" %>

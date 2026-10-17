@@ -9,16 +9,14 @@ class CategoriesController < ApplicationController
     base_scope = authorized_scope(Category.includes(:category_type).joins(:category_type))
     filtered = base_scope.category_type_id(params[:category_type_id])
                          .category_name(params[:category_name])
-                         .published(params[:published])
                          .order(Arel.sql("category_types.name, categories.position, categories.name"))
+    filtered = filtered.published(params[:published]) if params[:published].present?
     @categories = filtered.paginate(page: params[:page], per_page: per_page)
+    @taggings_counts = CategorizableItem.where(category_id: @categories.map(&:id)).group(:category_id).count
 
-    @count_display =
-      if filtered.count == base_scope.count
-        base_scope.count
-      else
-        "#{filtered.count}/#{base_scope.count}"
-      end
+    total_count = base_scope.count
+    filtered_count = filtered.count
+    @count_display = filtered_count == total_count ? total_count : "#{filtered_count}/#{total_count}"
     set_index_variables
   end
 

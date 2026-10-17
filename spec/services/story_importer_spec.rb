@@ -562,6 +562,81 @@ RSpec.describe StoryImporter do
 
       expect(Story.sole.comments.pluck(:body)).to include(a_string_matching(/Imported sector not in portal: Imaginary Sector/))
     end
+
+    describe "legacy terms recorded as tag aliases" do
+      it "tags the sector an aliased sector name stands for" do
+        education = create(:sector, name: "Education")
+        create(:tag_alias, name: "Schools", aliasable: education, source: "story_share")
+        import([ base_row("sectors" => "schools") ])
+
+        story = Story.sole
+        expect(story.sectors).to contain_exactly(education)
+        expect(story.comments.pluck(:body)).not_to include(a_string_matching(/sector not in portal/))
+      end
+
+      it "tags every tag an alias names, whichever kind" do
+        children = create(:category, category_type: age_range, name: "Children")
+        teens = create(:category, category_type: age_range, name: "Teens")
+        create(:tag_alias, name: "Youth", aliasable: children, source: "story_share")
+        create(:tag_alias, name: "Youth", aliasable: teens, source: "story_share")
+        import([ base_row("sectors" => "Youth") ])
+
+        expect(Story.sole.categories).to contain_exactly(children, teens)
+      end
+
+      it "tags the category an aliased category name stands for" do
+        grief = create(:category, category_type: emotional_theme, name: "Grief")
+        create(:tag_alias, name: "Loss", aliasable: grief, source: "story_share")
+        import([ base_row("categories" => "EmotionalTheme: Loss") ])
+
+        story = Story.sole
+        expect(story.categories).to contain_exactly(grief)
+        expect(story.comments.pluck(:body)).not_to include(a_string_matching(/category not in portal/))
+      end
+
+      it "prefers a tag's own name over an alias spelled the same" do
+        education = create(:sector, name: "Education")
+        schools = create(:sector, name: "Schools")
+        create(:tag_alias, name: "Schools", aliasable: education)
+        import([ base_row("sectors" => "Schools") ])
+
+        expect(Story.sole.sectors).to contain_exactly(schools)
+      end
+
+      it "drops a term recorded as naming no tag without flagging it" do
+        create(:tag_alias, name: "Virtually", aliasable: nil, ignored: true)
+        import([ base_row("sectors" => "Virtually") ])
+
+        story = Story.sole
+        expect(story.sectors).to be_empty
+        expect(story.comments.pluck(:body)).not_to include(a_string_matching(/sector not in portal/))
+      end
+
+      it "flags the primary sector and story population an alias stands for" do
+        education = create(:sector, name: "Education")
+        families = create(:category, category_type: create(:category_type, name: "StoryPopulation"), name: "Families")
+        create(:tag_alias, name: "Schools", aliasable: education, source: "story_share")
+        create(:tag_alias, name: "Parents", aliasable: families, source: "story_share")
+        import([ base_row("sectors" => "", "primary_sector" => "Schools",
+                          "primary_story_population" => "StoryPopulation: Parents") ])
+
+        story = Story.sole
+        expect(story.primary_sector).to eq(education)
+        expect(story.primary_category).to eq(families)
+      end
+
+      it "stars the first recorded tag when a primary alias names several" do
+        children = create(:category, category_type: age_range, name: "Children")
+        teens = create(:category, category_type: age_range, name: "Teens")
+        create(:tag_alias, name: "C & T", aliasable: children)
+        create(:tag_alias, name: "C & T", aliasable: teens)
+        import([ base_row("primary_story_population" => "AgeRange: C & T") ])
+
+        story = Story.sole
+        expect(story.categories).to contain_exactly(children, teens)
+        expect(story.primary_category).to eq(children)
+      end
+    end
   end
 
   describe "grants" do

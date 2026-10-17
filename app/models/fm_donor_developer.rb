@@ -26,4 +26,8 @@ class FmDonorDeveloper < ApplicationRecord
   HAS_MANY = {
     "fm_solicitations" => { via: "DonorDevRecID", label: "Solicitations" }
   }.freeze
+
+  def name
+    fm_phrase(fm_value("NameListing"), fm_words("donor developer", fm_with("for", fm_value("CampaignID"))))
+  end
 end

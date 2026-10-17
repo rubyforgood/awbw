@@ -41,9 +41,12 @@ module Events
     def certificate
       # The page shows the certificate once unlocked, or the pending unlock
       # conditions until then, so there's nothing to gate here.
-      # Facilitator trainings render the branded certificate, whose signatures
-      # come from an admin-managed record (never committed to this public repo).
-      @signature_file = certificate_signature_file if @event.facilitator_training?
+      # An admin can upload a full-bleed frame per category that overrides the
+      # committed/default one (managed on the certificate-settings page).
+      @frame_file = Resource.certificate_frame_file(@event.certificate_category)
+      # Signatures come from an admin-managed record (never committed to this
+      # public repo) and show on the live facilitator-training certificate only.
+      @signature_file = certificate_signature_file if @event.certificate_category == :training
     end
 
     # CE "Confirmation of Attendance" certificate — a separate document from the
@@ -55,6 +58,7 @@ module Events
       @ce_registration = ce_certificate_registration
       return redirect_to(registration_ce_path(@event_registration.slug)) unless @ce_registration
       @signature_file = Resource.ce_certificate_signature_file
+      @frame_file = Resource.ce_certificate_frame_file
     end
 
     # Scholarship status: the award (amount, funder, criteria, tasks) once a
@@ -533,7 +537,7 @@ module Events
 
     # The certificate's signature strip: the certificate callout's first linked
     # resource when an admin connected one (attached overrides the default), else
-    # the title-matched record. Mirrors the payment callout's W-9 resolution.
+    # the training_signatures role default. Mirrors the payment callout's W-9 resolution.
     def certificate_signature_file
       connected = @builtin_callout&.resources&.first
       return connected.signature_file if connected
@@ -629,7 +633,7 @@ module Events
       payment_callout = @event.registration_ticket_callouts.find_by(builtin_key: "payment")
       return payment_callout.registration_ticket_callout_resources.ordered.includes(:resource).to_a if payment_callout
       return [] unless @event.cost_cents.to_i.positive?
-      Resource.where(title: "W-9").map { |resource| RegistrationTicketCalloutResource.new(resource:) }
+      Resource.for_roles(%w[w9]).map { |resource| RegistrationTicketCalloutResource.new(resource:) }
     end
 
     # A grey document card for a non-resource payment document (the dynamic

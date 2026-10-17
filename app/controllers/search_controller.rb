@@ -4,9 +4,12 @@ class SearchController < ApplicationController
   # Virtual "model" that searches people and organizations together for the
   # compound payer / funder pickers, listing organizations first.
   COMPOUND_MODEL = "person_or_organization".freeze
+  # Every login, whatever its access, labelled with why it can't sign in — for the users deduper.
+  USER_ANY_STATUS_MODEL = "user_any_status".freeze
 
   def index
     return render json: compound_results if params[:model] == COMPOUND_MODEL
+    return render json: user_any_status_results if params[:model] == USER_ANY_STATUS_MODEL
 
     model_class = allowed_model(params[:model])
     unless model_class
@@ -52,6 +55,17 @@ class SearchController < ApplicationController
       authorized_scope(Person.remote_search(query)).limit(25).to_a
 
     records.map(&:compound_search_label)
+  end
+
+  def user_any_status_results
+    authorize! User, to: :search?
+
+    query = params[:q].to_s.strip
+    return [] if query.blank?
+
+    records = authorized_scope(User.activity_search(query))
+    records = records.where.not(id: params[:exclude].split(",").map(&:to_i)) if params[:exclude].present?
+    records.includes(:person).limit(25).map { |user| user.decorate.search_label_with_status }
   end
 
   def allowed_model(model_param)

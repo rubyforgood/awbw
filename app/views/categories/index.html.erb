@@ -44,7 +44,7 @@
                 </th>
               <% end %>
 
-              <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">
+              <th class="w-[220px] px-4 py-2 text-center text-sm font-semibold text-gray-700">
                 Actions
               </th>
             </tr>
@@ -97,7 +97,7 @@
                   <%= link_to "Edit",
                               edit_category_path(category),
                               class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
-                  <%= link_to "Taggings",
+                  <%= link_to "Taggings (#{@taggings_counts[category.id].to_i})",
                               taggings_path(category_names_all: category.name),
                               class: button_classes(:secondary_outline, extra: "whitespace-nowrap") %>
                 </td>

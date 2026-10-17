@@ -23,4 +23,8 @@ class FmGroupMember < ApplicationRecord
     "GroupID" => "fm_groups",
     "ContactID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("ContactID"), fm_words("member of group", fm_value("GroupID")))
+  end
 end

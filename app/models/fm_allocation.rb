@@ -31,4 +31,8 @@ class FmAllocation < ApplicationRecord
   HAS_MANY = {
     "fm_participants" => { via: "AllocRecID", label: "Participants" }
   }.freeze
+
+  def name
+    fm_words(fm_value("Year"), "allocation", fm_with("of", fm_dollars("AmountGeneral", "AmountSupplies", "AmountExhibit")), fm_with("to", fm_value("ProjectID"))).upcase_first
+  end
 end

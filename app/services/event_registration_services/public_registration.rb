@@ -92,6 +92,7 @@ module EventRegistrationServices
         )
 
         if existing
+          before_resubmission = ResubmissionChanges.snapshot(existing)
           existing.update!(scholarship_requested: true) if @scholarship_requested
           create_ce_registration(existing, person)
           existing.update!(w9_requested: true) if w9_requested?
@@ -100,15 +101,19 @@ module EventRegistrationServices
           existing.update!(expected_payment_method: payment_method) if payment_method.present?
           someone_else = someone_else_will_pay_answer
           existing.update!(someone_else_will_pay: someone_else) unless someone_else.nil?
-          if existing.status == "cancelled"
-            existing.update!(status: "registered")
-            send_notifications(existing)
-          end
+          reactivated = existing.status == "cancelled"
+          existing.update!(status: "registered") if reactivated
           organization_link = connect_organization(existing, organization)
           submission = create_form_submission(person)
           organization_link&.record_form_submission(submission)
           save_scholarship_submission(person)
           save_continuing_education_submission(person)
+          if reactivated
+            send_notifications(existing)
+          else
+            changes = ResubmissionChanges.between(before_resubmission, ResubmissionChanges.snapshot(existing), submission:)
+            send_duplicate_notifications(existing, changes)
+          end
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
@@ -399,6 +404,27 @@ module EventRegistrationServices
         recipient_role: :admin,
         recipient_email: Organization.programs_email,
         notification_type: 0
+      )
+    end
+
+    def send_duplicate_notifications(event_registration, changes)
+      NotificationServices::CreateNotification.call(
+        noticeable: event_registration,
+        person: event_registration.registrant,
+        kind: :event_registration_duplicate,
+        recipient_role: :person,
+        recipient_email: event_registration.registrant.preferred_email,
+        custom_message: changes.to_message,
+        notification_type: 1
+      )
+
+      NotificationServices::CreateNotification.call(
+        noticeable: event_registration,
+        kind: :event_registration_duplicate_fyi,
+        recipient_role: :admin,
+        recipient_email: Organization.programs_email,
+        custom_message: changes.to_message,
+        notification_type: 1
       )
     end
   end

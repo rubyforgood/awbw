@@ -42,7 +42,7 @@ RSpec.describe "organizations/edit", type: :view do
       Organization.create!(
         windows_type: windows_type,
         organization_status: OrganizationStatus.find_or_create_by!(name: name),
-        name: "MyString",
+        name: "Status org",
         description: "MyString",
         notes: "MyText"
       )
@@ -111,6 +111,19 @@ RSpec.describe "organizations/edit", type: :view do
       assign(:organization, org.reload)
       render
       expect(rendered).not_to include("Legacy organization status does not match affiliation status")
+    end
+  end
+
+  describe "internal notes" do
+    it "hides the internal notes field without the admin param" do
+      render
+      expect(rendered).not_to have_field("Internal notes")
+    end
+
+    it "shows the internal notes field with the admin param" do
+      allow(view).to receive(:params).and_return(ActionController::Parameters.new(admin: "true"))
+      render
+      expect(rendered).to have_field("Internal notes", with: "MyText")
     end
   end
 

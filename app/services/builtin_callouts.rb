@@ -54,39 +54,29 @@ class BuiltinCallouts
            "The membership fee covers all facilitators connected to the same program or organization for the calendar year, regardless of the number of facilitators participating. Only one membership fee payment is required per program annually." ] }
   ].freeze
 
-  # Hidden Resource (by title) backing the handout links, in display order.
-  # Missing ones (e.g. not seeded in an environment) are silently skipped.
-  HANDOUT_RESOURCE_TITLES = [
-    "2-Day AWBW Facilitator Training Worksheets & Handouts",
-    "AWBW Training Workshop Worksheets",
-    "Aha Moments",
-    "Inviting and Responding to Participants' Sharing",
-    "Letter to Supervisors"
-  ].freeze
-
   # Default per-resource copy for the built-in handout links, keyed by resource
-  # title. `subtitle` is the short line on the handouts card; `page_content` is
+  # role. `subtitle` is the short line on the handouts card; `page_content` is
   # the longer copy shown under the title on the resource's own page. Materialized
   # onto each join row so admins edit it per event (previously hard-coded in
   # Events::CalloutsController::HANDOUT_SUBTITLES and rendered from there).
   HANDOUT_LINK_DEFAULTS = {
-    "2-Day AWBW Facilitator Training Worksheets & Handouts" => {
+    "training_handouts" => {
       subtitle: "Worksheets we'll reference throughout the training",
       page_content: "List of resources and worksheets we will reference and utilize during the training. You do not need to print them out, it may be helpful for you to access the links during the training."
     },
-    "AWBW Training Workshop Worksheets" => {
+    "training_workshop_worksheets" => {
       subtitle: "Create-along worksheets for the five art workshops",
       page_content: "Worksheets you can create on during all 5 of the art workshops at the training. Any art materials are welcomed during creation."
     },
-    "Aha Moments" => {
+    "aha_moments" => {
       subtitle: "Reflect on the workshop and its impact",
       page_content: "Worksheet you can use to reflect on the workshop, its impact, and how you'd like to apply it."
     },
-    "Inviting and Responding to Participants' Sharing" => {
+    "participant_sharing_guide" => {
       subtitle: "Support sharing and connection in breakout rooms",
       page_content: "A resource to invite and support sharing, active listening, and connection during breakout rooms."
     },
-    "Letter to Supervisors" => {
+    "supervisor_letter" => {
       subtitle: "Secure the time and space to fully engage",
       page_content: "Letter you can share to help relieve you from competing responsibilities during the two training days. So you can secure the time and space needed to fully engage in the training."
     }
@@ -216,10 +206,10 @@ class BuiltinCallouts
         # no backfill. It stays dormant on a free event — the payment surface (and
         # its documents) only renders once the event has a cost. Admins add/remove
         # it per event; the invoice/receipt stay dynamic on the payment page.
-        resources: -> { [ Resource.find_by(title: "W-9") ].compact },
+        resources: -> { Resource.for_roles(%w[w9]) },
         # Its card subtitle is materialized here (admin-editable), not hard-coded in the view.
         resource_content: {
-          "W-9" => { subtitle: "AWBW's W-9 tax form for your records" }
+          "w9" => { subtitle: "AWBW's W-9 tax form for your records" }
         }
       },
       {
@@ -280,8 +270,8 @@ class BuiltinCallouts
         icon_class: "fa-solid fa-folder-open",
         color_class: "blue",
         hidden: ->(_event) { true },
-        resources: -> { handout_resources },
-        # Per-link subtitle/page_content defaults, keyed by resource title.
+        resources: -> { Resource.for_roles(Resource::HANDOUT_ROLES) },
+        # Per-link subtitle/page_content defaults, keyed by resource role.
         resource_content: HANDOUT_LINK_DEFAULTS
       },
       {
@@ -295,10 +285,10 @@ class BuiltinCallouts
         # links to the certificate (BuiltinCalloutCards guards this).
         hidden: ->(_event) { true },
         # The facilitator-training certificate's signature strip is a removable linked
-        # resource, attached on create by title so admins can swap it per event. When
+        # resource, attached on create by role so admins can swap it per event. When
         # nothing is linked (e.g. the record isn't seeded yet), the page falls back to
-        # the title-matched default. Mirrors the payment callout's W-9.
-        resources: -> { [ Resource.find_by(title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE) ].compact }
+        # the role's resource. Mirrors the payment callout's W-9.
+        resources: -> { Resource.for_roles(%w[training_signatures]) }
       },
       {
         builtin_key: "faq",
@@ -384,14 +374,14 @@ class BuiltinCallouts
   end
 
   # Link the definition's resources in order, materializing each join row's
-  # subtitle/page_content from `resource_content` (keyed by resource title) when
+  # subtitle/page_content from `resource_content` (keyed by resource role) when
   # the definition supplies it. Links persist immediately for a saved callout, or
   # stay in memory (saved with the event) when the callout is still unsaved. The
   # positioning gem assigns each row's position.
   def build_resource_links(callout, definition)
     content = definition[:resource_content] || {}
     Array(definition[:resources]&.call).each do |resource|
-      attrs = content[resource.title] || {}
+      attrs = content[resource.effective_role] || {}
       link = callout.registration_ticket_callout_resources.build(
         resource: resource,
         subtitle: attrs[:subtitle],
@@ -418,18 +408,11 @@ class BuiltinCallouts
     return false if content.blank?
 
     callout.registration_ticket_callout_resources.any? do |link|
-      defaults = content[link.resource.title]
+      defaults = content[link.resource.effective_role]
       next false if defaults.blank?
       link.subtitle.to_s != defaults[:subtitle].to_s ||
         link.page_content.to_s != defaults[:page_content].to_s
     end
-  end
-
-  # The training worksheet resources, by title, in the display order the code
-  # card used. Missing ones (not seeded in an environment) are simply skipped.
-  def handout_resources
-    by_title = Resource.where(title: HANDOUT_RESOURCE_TITLES).index_by(&:title)
-    HANDOUT_RESOURCE_TITLES.filter_map { |title| by_title[title] }
   end
 
   # Renders FAQS to standard <details>/<summary> disclosures so each question is a

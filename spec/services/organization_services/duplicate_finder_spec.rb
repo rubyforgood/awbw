@@ -10,7 +10,7 @@ RSpec.describe OrganizationServices::DuplicateFinder do
   describe "#groups" do
     it "groups organizations with the same normalized name" do
       a = org(name: "Hope Center")
-      b = org(name: "hope center")
+      b = org(name: "Hope-Center")
       org(name: "Unrelated")
 
       groups = described_class.new.groups
@@ -52,14 +52,14 @@ RSpec.describe OrganizationServices::DuplicateFinder do
 
     it "flags a FileMaker code present on only one record" do
       org(name: "Sunrise", filemaker_code: "FM123")
-      org(name: "Sunrise", filemaker_code: nil)
+      org(name: "Sunrise!", filemaker_code: nil)
 
       expect(described_class.new.groups.first.reasons).to include("FileMaker code on only one record")
     end
 
     it "surfaces multiple FileMaker codes as a keep-all conflict" do
       org(name: "Rivertown", filemaker_code: "FM1")
-      org(name: "Rivertown", filemaker_code: "FM2")
+      org(name: "Rivertown!", filemaker_code: "FM2")
 
       expect(described_class.new.groups.first.reasons)
         .to include(a_string_matching(/Multiple FileMaker codes.*merging keeps all/))

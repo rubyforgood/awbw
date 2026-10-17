@@ -21,4 +21,8 @@ class FmContact < ApplicationRecord
   FM_LINKS = {
     "ContacteeID" => "fm_rolodexes"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("RecordID"), fm_words("contact", fm_with("for", fm_value("ContacteeID"))))
+  end
 end

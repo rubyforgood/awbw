@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe PersonServices::ReconcileAddresses do
+RSpec.describe AddressDeduper do
   let(:person) { create(:person) }
 
   def address(primary: false, **overrides)

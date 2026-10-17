@@ -470,6 +470,86 @@ RSpec.describe Person, type: :model do
       expect(results).not_to include(person_alice)
     end
 
+    it 'filters by shared_contact_info matching a full name' do
+      results = Person.search_by_params(shared_contact_info: 'Alice Smith')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+
+    it 'filters by shared_contact_info matching a shared email but not a hidden one' do
+      person_alice.update!(email: 'alice@example.com', profile_show_email: false)
+
+      expect(Person.search_by_params(shared_contact_info: 'bob@example')).to include(person_bob)
+      expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
+    end
+
+    it 'filters by shared_contact_info matching a shared login phone' do
+      person_bob.user.update!(phone: '555-0199')
+
+      expect(Person.search_by_params(shared_contact_info: '555-0199')).to include(person_bob)
+    end
+
+    it 'filters by shared_contact_info matching terms across a name and a shared phone' do
+      person_alice.user.update!(phone: '555-0199')
+
+      results = Person.search_by_params(shared_contact_info: 'Alice 555-0199')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+
+    it 'filters by shared_contact_info treating a quoted phrase as one term' do
+      person_mary = create(:person, first_name: 'Mary Ann', last_name: 'Lee')
+
+      expect(Person.search_by_params(shared_contact_info: '"Mary Ann"')).to contain_exactly(person_mary)
+      expect(Person.search_by_params(shared_contact_info: "'Mary Ann' Lee")).to contain_exactly(person_mary)
+    end
+
+    it 'filters by shared_contact_info requiring every term to match' do
+      expect(Person.search_by_params(shared_contact_info: 'Alice Jones')).to be_empty
+    end
+
+    %w[first_name_last_initial first_name_only].each do |preference|
+      it "skips the last name when the display preference is #{preference}" do
+        person_alice.update!(display_name_preference: preference)
+
+        expect(Person.search_by_params(shared_contact_info: 'Smith')).not_to include(person_alice)
+        expect(Person.search_by_params(shared_contact_info: 'Alice')).to include(person_alice)
+      end
+    end
+
+    it 'skips the first name when the display preference is last_name_only' do
+      person_alice.update!(display_name_preference: 'last_name_only', profile_show_email: false)
+
+      expect(Person.search_by_params(shared_contact_info: 'Alice')).not_to include(person_alice)
+      expect(Person.search_by_params(shared_contact_info: 'Smith')).to include(person_alice)
+    end
+
+    it 'filters by contact_info matching an email the person hides' do
+      person_alice.update!(email: 'alice@example.com', profile_show_email: false)
+
+      expect(Person.search_by_params(contact_info: 'alice@example')).to include(person_alice)
+    end
+
+    %w[first_name_last_initial first_name_only].each do |preference|
+      it "filters by contact_info matching the last name when the display preference is #{preference}" do
+        person_alice.update!(display_name_preference: preference)
+
+        expect(Person.search_by_params(contact_info: 'Smith')).to include(person_alice)
+      end
+    end
+
+    it 'filters by contact_info matching the first name when the display preference is last_name_only' do
+      person_alice.update!(display_name_preference: 'last_name_only', profile_show_email: false)
+
+      expect(Person.search_by_params(contact_info: 'Alice')).to include(person_alice)
+    end
+
+    it 'chains shared_contact_info and organization_name' do
+      results = Person.search_by_params(shared_contact_info: 'Alice', organization_name: 'Alpha')
+      expect(results).to include(person_alice)
+      expect(results).not_to include(person_bob)
+    end
+
     it 'filters by organization_name' do
       results = Person.search_by_params(organization_name: 'Alpha')
       expect(results).to include(person_alice)

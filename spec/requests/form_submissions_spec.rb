@@ -244,12 +244,11 @@ RSpec.describe "FormSubmissions", type: :request do
 
         # A matching affiliation the person holds does not mark it linked — only a
         # direct link made in the editor does, so it stays Pending (the queue).
-        create(:affiliation, person: submission.person,
-               organization: create(:organization, name: "Harbor Family Shelter"))
+        organization = create(:organization, name: "Harbor Family Shelter")
+        create(:affiliation, person: submission.person, organization: organization)
         get form_submissions_path, headers: frame_headers
         expect(response.body).to include("Pending")
 
-        organization = create(:organization, name: "Harbor Family Shelter")
         submission.link_organization!(organization.id)
         get form_submissions_path, headers: frame_headers
         # Once linked, the org shows as its own chip (linking to the org) — no
@@ -782,6 +781,19 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("Riverside Community Arts")
         expect(response.body).to include("Replaced")
         expect(response.body).to include("new.com")
+      end
+
+      it "renders an update to an existing phone, grouped under its owner" do
+        person = create(:person, first_name: "Robin", last_name: "Sample")
+        phone = create(:contact_method, contactable: person)
+        stamp("update.contact_method", resource_type: "ContactMethod", resource_id: phone.id,
+              properties: { "changes" => { "value" => { "before" => "555-0100", "after" => "555-0199" } } })
+
+        get changes_form_submission_path(submission)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Robin Sample")
+        expect(response.body).to include("555-0199")
       end
 
       it "shows an empty state when no existing record was changed" do

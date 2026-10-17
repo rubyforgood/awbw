@@ -985,8 +985,7 @@ RSpec.describe "Events::Callouts", type: :request do
       end
 
       it "renders the uploaded signature strip as a normalized web image when the record exists" do
-        resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE,
-                                     hidden_from_search: true)
+        resource = create(:resource, role: "training_signatures", hidden_from_search: true)
         create(:primary_asset, :with_file, owner: resource)
 
         get registration_certificate_path(registration.slug)
@@ -999,9 +998,9 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to include("/rails/active_storage/blobs/")
       end
 
-      it "prefers a resource linked to the certificate callout over the title default" do
-        # The title-matched default carries no image, so a title-only lookup renders nothing.
-        create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      it "prefers a resource linked to the certificate callout over the role default" do
+        # The role default carries no image, so a role-only lookup renders nothing.
+        create(:resource, role: "training_signatures")
         connected = create(:resource, title: "Event-specific signatures", hidden_from_search: true)
         create(:primary_asset, :with_file, owner: connected)
         create(:registration_ticket_callout, :action, event: event, builtin_key: "certificate",
@@ -1026,6 +1025,16 @@ RSpec.describe "Events::Callouts", type: :request do
         # The branded document itself is one click away, not inline on the chooser.
         expect(response.body).not_to include("certificate-training-border")
       end
+
+      it "overrides the committed training border with an uploaded frame" do
+        frame = create(:resource, role: "training_frame", hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: frame)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response.body).not_to include("certificate-training-border")
+        expect(response.body).to include("/rails/active_storage/blobs/")
+      end
     end
 
     context "for an on-demand facilitator training event" do
@@ -1044,6 +1053,27 @@ RSpec.describe "Events::Callouts", type: :request do
         expect(response.body).not_to include("certificate-training-border")
         expect(response.body).not_to include("This certifies that")
       end
+
+      it "overrides the committed on-demand border with an uploaded frame" do
+        frame = create(:resource, role: "on_demand_frame", hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: frame)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response.body).not_to include("certificate-ondemand-border")
+        expect(response.body).to include("/rails/active_storage/blobs/")
+      end
+
+      it "never shows a signature, even when the training signatures record exists" do
+        resource = create(:resource, role: "training_signatures", hidden_from_search: true)
+        create(:primary_asset, :with_file, owner: resource)
+
+        get registration_certificate_path(registration.slug)
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).not_to include("Signed by Christy Turek Rials")
+        expect(response.body).not_to include("/rails/active_storage")
+      end
     end
 
     it "uses the default completion certificate for non-training events" do
@@ -1051,6 +1081,16 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response.body).to include("This certifies that")
       expect(response.body).not_to include("AWBW Facilitator Certification Training")
+    end
+
+    it "renders an uploaded other-events frame full-bleed for non-training events" do
+      frame = create(:resource, role: "other_frame", hidden_from_search: true)
+      create(:primary_asset, :with_file, owner: frame)
+
+      get registration_certificate_path(registration.slug)
+
+      expect(response.body).to include("This certifies that")
+      expect(response.body).to include("/rails/active_storage/blobs/")
     end
   end
 
@@ -1097,7 +1137,7 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     it "renders the CE administrator signature from its own resource as a normalized web image" do
-      resource = create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE, hidden_from_search: true)
+      resource = create(:resource, role: "ce_signatures", hidden_from_search: true)
       create(:primary_asset, :with_file, owner: resource)
 
       get registration_ce_certificate_path(registration.slug, ce_registration)
@@ -1111,13 +1151,24 @@ RSpec.describe "Events::Callouts", type: :request do
     end
 
     it "leaves the signature line blank when the training certificate's strip exists but the CE resource doesn't" do
-      training = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE, hidden_from_search: true)
+      training = create(:resource, role: "training_signatures", hidden_from_search: true)
       create(:primary_asset, :with_file, owner: training)
 
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
       expect(response).to have_http_status(:success)
       expect(response.body).not_to include("/rails/active_storage")
+    end
+
+    it "renders an uploaded CE certificate frame full-bleed, keeping the live content" do
+      frame = create(:resource, role: "ce_frame", hidden_from_search: true)
+      create(:primary_asset, :with_file, owner: frame)
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).to include("Continuing Education Confirmation of Attendance")
+      expect(response.body).to include(registration.registrant.full_name)
+      expect(response.body).to include("/rails/active_storage/blobs/")
     end
 
     it "returns to the certificate chooser when reached from it" do

@@ -28,4 +28,8 @@ class FmPersonnel < ApplicationRecord
     "PersonID" => "fm_rolodexes",
     "ProjectID" => "fm_projects"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Name"), fm_words(fm_value("Role") || "Personnel", fm_with("on", fm_value("ProjectID"))))
+  end
 end

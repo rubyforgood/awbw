@@ -18,4 +18,8 @@ class FmEmailAddress < ApplicationRecord
   FM_LINKS = {
     "OrgID" => "fm_organizations"
   }.freeze
+
+  def name
+    fm_value("EmailAddress") || fm_id
+  end
 end

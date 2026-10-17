@@ -92,6 +92,23 @@ RSpec.describe "/story_ideas", type: :request do
         get new_story_idea_url
         expect(response).to be_successful
       end
+
+      it "offers every organization, including ones the admin isn't affiliated with" do
+        first_org = create(:organization, name: "First Arts Org")
+        second_org = create(:organization, name: "Second Arts Org")
+
+        get new_story_idea_url
+
+        page = Capybara.string(response.body)
+        option_values = page.all("select[name='story_idea[organization_id]'] option").map(&:value)
+        expect(option_values).to include(first_org.id.to_s, second_org.id.to_s)
+      end
+
+      it "tells the submitter which image shape looks best" do
+        get new_story_idea_url
+
+        expect(response.body).to include(CGI.escapeHTML(StorySharesHelper::STORY_IMAGE_GUIDANCE))
+      end
     end
 
     describe "POST /create with a primary sector and category" do
@@ -205,6 +222,40 @@ RSpec.describe "/story_ideas", type: :request do
         story_idea = create(:story_idea)
         get story_idea_url(story_idea)
         expect(response).to redirect_to(root_path)
+      end
+    end
+
+    describe "GET /new" do
+      it "fills in the one organization the user is currently active at" do
+        person = create(:person, user: regular_user)
+        current_org = create(:organization, name: "Current Arts Org")
+        past_org = create(:organization, name: "Former Arts Org")
+        create(:affiliation, person: person, organization: current_org, start_date: 1.year.ago)
+        create(:affiliation, person: person, organization: current_org, start_date: 5.years.ago, end_date: 3.years.ago)
+        create(:affiliation, person: person, organization: past_org, start_date: 3.years.ago, end_date: 2.years.ago)
+
+        get new_story_idea_url
+
+        page = Capybara.string(response.body)
+        expect(page).to have_field("story_idea[organization_id]", type: :hidden, with: current_org.id.to_s)
+        expect(page).not_to have_select("story_idea[organization_id]")
+        expect(page).not_to have_text(past_org.name)
+      end
+
+      it "lets the user choose among several current organizations" do
+        person = create(:person, user: regular_user)
+        first_org = create(:organization, name: "First Arts Org")
+        second_org = create(:organization, name: "Second Arts Org")
+        past_org = create(:organization, name: "Former Arts Org")
+        create(:affiliation, person: person, organization: first_org)
+        create(:affiliation, person: person, organization: second_org)
+        create(:affiliation, person: person, organization: past_org, inactive: true)
+
+        get new_story_idea_url
+
+        page = Capybara.string(response.body)
+        option_values = page.all("select[name='story_idea[organization_id]'] option").map(&:value)
+        expect(option_values).to eq([ "", first_org.id.to_s, second_org.id.to_s ])
       end
     end
 

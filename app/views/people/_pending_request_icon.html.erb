@@ -1,0 +1,6 @@
+<%# locals: (request:) %>
+<% tooltip = request.decorate.pending_tooltip %>
+<span class="inline-flex cursor-help items-center text-amber-600" title="<%= tooltip %>">
+  <i class="fa-solid fa-clock" aria-hidden="true"></i>
+  <span class="sr-only"><%= tooltip %></span>
+</span>

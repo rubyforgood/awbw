@@ -1,23 +1,24 @@
-<div class="nested-fields mb-4 rounded-lg border border-gray-200 bg-white p-6">
+<div class="nested-fields mb-3 rounded-lg border border-gray-200 bg-white p-3">
   <%= f.hidden_field :kind, value: :phone %>
-  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
+  <div class="flex flex-wrap items-end gap-3">
     <!-- Contact Type -->
-    <div>
+    <div class="w-full sm:w-36">
       <%= f.input :contact_type,
                   as: :select,
                   required: true,
                   wrapper: false,
                   label: "Contact type",
-                  collection: ContactMethod::CONTACT_TYPES.compact.map { |t| [t.humanize, t] } %>
+                  collection: ContactMethod::CONTACT_TYPES.compact.map { |t| [t.humanize, t] },
+                  input_html: { class: "w-full" } %>
     </div>
 
     <!-- Value -->
-    <div>
+    <div class="w-full min-w-32 sm:w-auto sm:flex-1">
       <%= f.input :value,
                   wrapper: false,
                   label: "Value",
                   input_html: {
-                    class: "rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                   } %>
     </div>
 
@@ -39,7 +40,7 @@
                   input_html: { class: "mr-2 text-blue-600 focus:ring-blue-500" } %>
     </div>
 
-    <div class="text-end text-right">
+    <div class="ms-auto text-right">
       <!-- Remove button -->
       <%= link_to_remove_association "Remove",
                                      f,

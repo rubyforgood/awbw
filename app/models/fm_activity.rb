@@ -39,4 +39,8 @@ class FmActivity < ApplicationRecord
     "ID" => "fm_rolodexes",
     "LinkID" => "fm_payments"
   }.freeze
+
+  def name
+    fm_phrase(fm_value("Subject"), fm_words(fm_value("Type") || "Activity", fm_with("with", fm_value("FullName") || fm_join("FirstName", "LastName"))))
+  end
 end

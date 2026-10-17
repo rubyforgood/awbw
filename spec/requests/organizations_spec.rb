@@ -175,6 +175,15 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
     end
 
+    it "shows (none) in the admin status select when the organization has no status" do
+      organization = Organization.create!(valid_attributes.merge(organization_status_id: nil))
+      get edit_organization_url(organization, admin: 1)
+
+      status_select = Nokogiri::HTML(response.body).at_css("select[name='organization[organization_status_id]']")
+      expect(status_select.at_css("option[selected]")).to be_nil
+      expect(status_select.at_css("option[value='']").text).to eq("(none)")
+    end
+
     it "hides the Monthly reports row when there are no monthly reports" do
       organization = Organization.create!(valid_attributes)
       get edit_organization_url(organization)

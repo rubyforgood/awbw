@@ -1,6 +1,30 @@
 require "rails_helper"
 
 RSpec.describe PersonDecorator do
+  describe "#user_accounts" do
+    let(:person) { create(:person) }
+
+    it "lists every login on the person, most recently updated first" do
+      older = person.user.tap { |user| user.update_columns(updated_at: 2.days.ago) }
+      newer = create(:user, person: person, updated_at: 1.hour.ago)
+      create(:user)
+
+      expect(person.decorate.user_accounts).to eq([ newer, older ])
+      expect(person.decorate.multiple_user_accounts?).to be(true)
+    end
+
+    it "suggests keeping the most recent login that can still sign in" do
+      usable = person.user
+      create(:user, person: person, confirmed_at: nil, updated_at: 1.minute.from_now)
+
+      expect(person.decorate.suggested_user_account).to eq(usable)
+    end
+
+    it "does not flag a person with one login" do
+      expect(person.decorate.multiple_user_accounts?).to be(false)
+    end
+  end
+
   describe "#news_subscriptions_path" do
     let(:person) { create(:person) }
 
@@ -17,6 +41,44 @@ RSpec.describe PersonDecorator do
       path = person.decorate.news_subscriptions_path
 
       expect(path).to include("person_id=#{person.id}")
+    end
+  end
+
+  describe "#profile_email" do
+    it "prefers the login email" do
+      person = create(:person, email: "record@example.com")
+
+      expect(person.decorate.profile_email).to eq(person.user.email)
+    end
+
+    it "falls back to the record email" do
+      person = create(:person, user: nil, email: "record@example.com", email_2: "secondary@example.com")
+
+      expect(person.decorate.profile_email).to eq("record@example.com")
+    end
+
+    it "never returns the admin-only secondary email" do
+      person = create(:person, user: nil, email: nil, email_2: "secondary@example.com")
+
+      expect(person.decorate.profile_email).to be_nil
+    end
+  end
+
+  describe "#hidden_profile_pieces" do
+    it "is empty when every piece is shared" do
+      expect(create(:person).decorate.hidden_profile_pieces).to be_empty
+    end
+
+    it "lists hidden pieces that have something to show" do
+      person = create(:person, pronouns: "they/them", profile_show_pronouns: false, profile_show_workshops: false)
+
+      expect(person.decorate.hidden_profile_pieces).to eq(%i[profile_show_pronouns profile_show_workshops])
+    end
+
+    it "skips hidden pieces with nothing to show" do
+      person = create(:person, pronouns: nil, bio: nil, profile_show_pronouns: false, profile_show_bio: false)
+
+      expect(person.decorate.hidden_profile_pieces).to be_empty
     end
   end
 

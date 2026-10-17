@@ -341,9 +341,12 @@ RSpec.describe PersonPolicy, type: :policy do
       ActionController::Parameters.new(
         contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
         topic_subscription_type_id: [ "2" ], facilitator_status: "active",
-        membership_status: "paid"
+        membership_status: "paid", sector_names_all: "Arts", age_range_names_all: "Teens",
+        organization_name: "Acme", organization_id: "3"
       )
     end
+
+    let(:shared_filter_keys) { %w[shared_contact_info shared_sector_names_all shared_age_range_names_all shared_organization_name shared_organization_id] }
 
     def index_filters_for(user)
       policy_for(record: Person, user: user)
@@ -355,11 +358,87 @@ RSpec.describe PersonPolicy, type: :policy do
     end
 
     it "drops the admin-only filters for a regular user" do
-      expect(index_filters_for(regular_user).keys).to contain_exactly("contact_info")
+      expect(index_filters_for(regular_user).keys).to contain_exactly(*shared_filter_keys)
     end
 
     it "drops the admin-only filters for a visitor" do
-      expect(index_filters_for(nil).keys).to contain_exactly("contact_info")
+      expect(index_filters_for(nil).keys).to contain_exactly(*shared_filter_keys)
+    end
+
+    it "narrows a non-admin's contact-info search to shared contact info" do
+      expect(index_filters_for(regular_user)[:shared_contact_info]).to eq("ada")
+    end
+
+    it "narrows a non-admin's sector and age range filters to what profiles share" do
+      filters = index_filters_for(regular_user)
+      expect(filters[:shared_sector_names_all]).to eq("Arts")
+      expect(filters[:shared_age_range_names_all]).to eq("Teens")
+    end
+
+    it "narrows a non-admin's organization filters to shared affiliations" do
+      filters = index_filters_for(regular_user)
+      expect(filters[:shared_organization_name]).to eq("Acme")
+      expect(filters[:shared_organization_id]).to eq("3")
+    end
+  end
+
+  describe "default params_filter" do
+    let(:submitted_attributes) do
+      ActionController::Parameters.new(
+        first_name: "Ada",
+        email: "changed@example.com",
+        email_type: "work",
+        email_2: "second@example.com",
+        email_2_type: "personal",
+        notes: "Internal note",
+        racial_ethnic_identity: "Self-described",
+        sectorable_items_attributes: { "0" => { sector_id: "3", is_primary: "1", is_leader: "1" } },
+        user_attributes: {
+          id: "1", person_id: "2", email: "changed@example.com", super_user: "1", inactive: "1",
+          notes: "Internal note", phone: "555-0100", time_zone: "Hawaii"
+        },
+        affiliations_attributes: { "0" => { id: "1", title: "Changed title" } },
+        professional_licenses_attributes: { "0" => { kind: "LCSW", number: "123" } }
+      )
+    end
+
+    def write_params_for(user)
+      policy_for(record: owned_person, user: user)
+        .apply_scope(submitted_attributes, type: :action_controller_params)
+    end
+
+    it "strips admin-only fields while retaining owner-editable profile fields" do
+      filtered = write_params_for(owner_user)
+
+      expect(filtered.keys).to contain_exactly(
+        "first_name", "email_type", "email_2_type", "sectorable_items_attributes",
+        "user_attributes", "professional_licenses_attributes", "affiliations_attributes"
+      )
+    end
+
+    it "narrows an owner's affiliation changes to the work address on existing rows" do
+      submitted = ActionController::Parameters.new(affiliations_attributes: {
+        "0" => { id: "1", title: "Changed title", organization_address_id: "7" },
+        "1" => { organization_id: "9", title: "New row" }
+      })
+
+      filtered = policy_for(record: owned_person, user: owner_user).apply_scope(submitted, type: :action_controller_params)
+
+      expect(filtered[:affiliations_attributes].to_h).to eq("0" => { "id" => "1", "organization_address_id" => "7" })
+    end
+
+    it "strips admin-only user attributes while retaining the rest" do
+      expect(write_params_for(owner_user)[:user_attributes].to_h)
+        .to eq("id" => "1", "phone" => "555-0100", "time_zone" => "Hawaii")
+    end
+
+    it "strips the sector leader flag while retaining the sector and its primary flag" do
+      expect(write_params_for(owner_user)[:sectorable_items_attributes].to_h)
+        .to eq("0" => { "sector_id" => "3", "is_primary" => "1" })
+    end
+
+    it "retains the permitted fields for an admin" do
+      expect(write_params_for(admin_user).keys).to match_array(submitted_attributes.keys)
     end
   end
 end

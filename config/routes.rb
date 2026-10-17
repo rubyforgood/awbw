@@ -25,6 +25,10 @@ Rails.application.routes.draw do
     collection do
       get :check_duplicates
       get :flow_diagram
+      get :dedupe_index
+      get :dedupe_preview
+      post :dedupe_perform
+      patch :dedupe_update_keep
     end
     member do
       post :send_reset_password_instructions
@@ -58,6 +62,9 @@ Rails.application.routes.draw do
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
     get "data_health",               to: "data_health#index", as: "data_health"
     post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
+    get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
+    patch "resource_roles",          to: "resource_roles#update"
+    get "certificate_settings",      to: redirect("/admin/resource_roles")
   end
 
   resources :fm_archives, only: [ :index, :show ]

@@ -1070,17 +1070,82 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
     end
+  end
 
-    it "does not send notifications for an already-active registration" do
-      cancelled_registration.update!(status: "registered")
+  describe "duplicate submission for an active registration" do
+    let(:person) { create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com") }
+    let!(:active_registration) do
+      create(:event_registration, event: event, registrant: person, scholarship_requested: false)
+    end
 
-      expect(NotificationServices::CreateNotification).not_to receive(:call)
-
+    def resubmit(scholarship_requested: false)
       described_class.call(
         event: event,
         registration_form: form,
+        scholarship_requested: scholarship_requested,
         form_params: base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
       )
+    end
+
+    def expect_duplicate_notifications(custom_message:)
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :event_registration_duplicate, recipient_role: :person,
+                       recipient_email: "jane@example.com", noticeable: active_registration,
+                       custom_message: custom_message)
+      )
+      expect(NotificationServices::CreateNotification).to receive(:call).with(
+        hash_including(kind: :event_registration_duplicate_fyi, recipient_role: :admin,
+                       noticeable: active_registration, custom_message: custom_message)
+      )
+    end
+
+    it "sends the registrant and admins duplicate emails, with no change notes when nothing changed" do
+      expect_duplicate_notifications(custom_message: nil)
+
+      resubmit
+    end
+
+    it "notes a newly requested scholarship" do
+      expect_duplicate_notifications(custom_message: "Scholarship now requested")
+
+      resubmit(scholarship_requested: true)
+    end
+
+    it "leaves the scholarship off when the registration already requested one" do
+      active_registration.update!(scholarship_requested: true)
+
+      expect_duplicate_notifications(custom_message: nil)
+
+      resubmit(scholarship_requested: true)
+    end
+
+    it "notes every change the resubmission made" do
+      active_registration.update!(expected_payment_method: "Check")
+      additional_forms = form.form_fields.create!(
+        name: "Additional forms", answer_type: :multi_select_checkbox, status: :active,
+        position: form.form_fields.maximum(:position) + 1, required: false, visibility: :always_ask,
+        field_identifier: described_class::ADDITIONAL_FORMS_IDENTIFIER, section: "additional_forms"
+      )
+      params = base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com").merge(
+        field_id("payment_method") => "Credit card",
+        additional_forms.id.to_s => [ "W-9" ]
+      )
+
+      expect_duplicate_notifications(
+        custom_message: "Scholarship now requested\nW-9 now requested\nPayment method changed from Check to Credit card"
+      )
+
+      described_class.call(event: event, registration_form: form, scholarship_requested: true, form_params: params)
+    end
+
+    it "notes answers that differ from the person's previous registration submission" do
+      jane = base_form_params(first_name: "Jane", last_name: "Doe", email: "jane@example.com")
+      described_class.call(event: event, registration_form: form, form_params: jane.merge(field_id("referral_source") => "A friend"))
+      question = form.form_fields.find_by!(field_identifier: "referral_source").name
+
+      expect_duplicate_notifications(custom_message: "#{question}: changed from A friend to Instagram")
+
+      described_class.call(event: event, registration_form: form, form_params: jane.merge(field_id("referral_source") => "Instagram"))
     end
   end
 

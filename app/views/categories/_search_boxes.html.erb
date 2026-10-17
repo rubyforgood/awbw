@@ -5,18 +5,6 @@
                 local: true,
                 class: "grid grid-cols-1 md:grid-cols-5 gap-4 items-end" do |f| %>
 
-    <!-- Category Type -->
-    <div>
-      <%= f.label :category_type_id, "Category Type",
-                  class: search_label_class %>
-
-      <%= f.select :category_type_id,
-                   options_from_collection_for_select(@category_types, :id, :name, params[:category_type_id]),
-                   { include_blank: "All types" },
-                   class: search_field_class(extra: "search-select-placeholder"),
-                   onchange: "this.form.requestSubmit()" %>
-    </div>
-
     <!-- Name Search -->
     <div>
       <%= f.label :category_name, "Name contains",
@@ -29,8 +17,20 @@
                        oninput: "this.form.requestSubmit()" %>
     </div>
 
-    <!-- PUBLISHED -->
-    <div class="min-w-[150px] rounded-md p-2">
+    <!-- Category Type -->
+    <div>
+      <%= f.label :category_type_id, "Category type",
+                  class: search_label_class %>
+
+      <%= f.select :category_type_id,
+                   options_from_collection_for_select(@category_types, :id, :name, params[:category_type_id]),
+                   { include_blank: "All types" },
+                   class: search_field_class(extra: "search-select-placeholder"),
+                   onchange: "this.form.requestSubmit()" %>
+    </div>
+
+    <!-- Published -->
+    <div>
       <label for="published" class="<%= search_label_class %>">
         Published
       </label>

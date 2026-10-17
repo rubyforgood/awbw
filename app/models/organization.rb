@@ -2,7 +2,8 @@ class Organization < ApplicationRecord
   include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
   include Communicable
   include FilemakerCoded
-  belongs_to :organization_status
+  filemaker_archived_in FmProject, FmOrganization
+  belongs_to :organization_status, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
   belongs_to :organization_obligation, optional: true
@@ -84,8 +85,8 @@ class Organization < ApplicationRecord
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],
             size: { less_than: 5.megabytes }
-  validates :name, presence: true, length: { maximum: 255 }
-  validates :organization_status_id, presence: true
+  normalizes :name, with: ->(name) { name.strip }
+  validates :name, presence: true, length: { maximum: 255 }, uniqueness: { case_sensitive: false }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
   validates :organization_type_other, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }

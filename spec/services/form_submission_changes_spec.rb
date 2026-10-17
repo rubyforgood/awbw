@@ -181,6 +181,30 @@ RSpec.describe FormSubmissionChanges do
     end
   end
 
+  # An update event carries only the changed columns, so a sub-record's owner
+  # comes off the row itself.
+  describe "updates to an existing address or phone" do
+    it "groups an address update under its owner, reading the owner off the address row" do
+      person = create(:person)
+      address = create(:address, addressable: person)
+      stamp("update.address", resource_type: "Address", resource_id: address.id,
+            properties: { "changes" => { "zip_code" => { "before" => "1", "after" => "2" } } })
+
+      group = described_class.new(submission).edited_groups.sole
+      expect(group).to have_attributes(record_type: "Person", record_id: person.id)
+      expect(group.changes.first).to have_attributes(outcome: "Replaced", label: "ZIP", anchor: "addresses")
+    end
+
+    it "groups a phone update under the phone itself once the row is gone" do
+      stamp("update.contact_method", resource_type: "ContactMethod", resource_id: 999_999,
+            properties: { "changes" => { "value" => { "before" => "555-0100", "after" => "555-0199" } } })
+
+      group = described_class.new(submission).edited_groups.sole
+      expect(group).to have_attributes(record_type: "ContactMethod", record_id: 999_999)
+      expect(group.changes.first).to have_attributes(outcome: "Replaced", label: "Phone")
+    end
+  end
+
   it "only reads events stamped with this submission" do
     other = create(:form_submission)
     create(:ahoy_event, name: "update.person", properties: {

@@ -121,13 +121,13 @@ RSpec.describe Resource do
     end
 
     it "returns nil when the record exists but has no attached image" do
-      create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      create(:resource, role: "training_signatures")
 
       expect(Resource.training_certificate_signatures_file).to be_nil
     end
 
     it "returns the attached file when the record has one" do
-      resource = create(:resource, title: Resource::TRAINING_CERTIFICATE_SIGNATURES_TITLE)
+      resource = create(:resource, role: "training_signatures")
       create(:primary_asset, :with_file, owner: resource)
 
       file = Resource.training_certificate_signatures_file
@@ -142,16 +142,123 @@ RSpec.describe Resource do
     end
 
     it "returns nil when the record exists but has no attached image" do
-      create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE)
+      create(:resource, role: "ce_signatures")
 
       expect(Resource.ce_certificate_signature_file).to be_nil
     end
 
     it "returns the attached file when the record has one" do
-      resource = create(:resource, title: Resource::CE_CERTIFICATE_SIGNATURE_TITLE)
+      resource = create(:resource, role: "ce_signatures")
       create(:primary_asset, :with_file, owner: resource)
 
       expect(Resource.ce_certificate_signature_file).to be_attached
+    end
+  end
+
+  describe ".certificate_frame_file" do
+    it "returns nil when no record exists for the category" do
+      expect(Resource.certificate_frame_file(:training)).to be_nil
+    end
+
+    it "returns nil for an unknown category" do
+      expect(Resource.certificate_frame_file(:nonsense)).to be_nil
+    end
+
+    it "returns the attached frame for the matching category" do
+      resource = create(:resource, role: "on_demand_frame")
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.certificate_frame_file(:on_demand)).to be_attached
+    end
+
+    it "matches the category by role, not across categories" do
+      resource = create(:resource, role: "training_frame")
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.certificate_frame_file(:training)).to be_attached
+      expect(Resource.certificate_frame_file(:other)).to be_nil
+    end
+  end
+
+  describe ".ce_certificate_frame_file" do
+    it "returns nil when no record exists" do
+      expect(Resource.ce_certificate_frame_file).to be_nil
+    end
+
+    it "returns the attached frame when the record has one" do
+      resource = create(:resource, role: "ce_frame")
+      create(:primary_asset, :with_file, owner: resource)
+
+      expect(Resource.ce_certificate_frame_file).to be_attached
+    end
+  end
+
+  describe ".for_role" do
+    it "returns the resource connected to the role" do
+      connected = create(:resource, title: "Any signature art", role: "training_signatures")
+
+      expect(Resource.for_role("training_signatures")).to eq(connected)
+    end
+
+    it "falls back to the legacy title match when nothing is connected" do
+      legacy = create(:resource, title: Resource::LEGACY_ROLE_TITLES["w9"])
+
+      expect(Resource.for_role("w9")).to eq(legacy)
+    end
+
+    it "prefers the connected resource over a legacy title-matched record" do
+      create(:resource, title: Resource::LEGACY_ROLE_TITLES["training_signatures"])
+      connected = create(:resource, title: "Newer signature art", role: "training_signatures")
+
+      expect(Resource.for_role("training_signatures")).to eq(connected)
+    end
+
+    it "returns nil when neither exists" do
+      expect(Resource.for_role("w9")).to be_nil
+    end
+  end
+
+  describe ".for_roles" do
+    it "returns the filled roles in the given order, skipping empty ones" do
+      letter = create(:resource, role: "supervisor_letter")
+      handouts = create(:resource, role: "training_handouts")
+
+      expect(Resource.for_roles(Resource::HANDOUT_ROLES)).to eq([ handouts, letter ])
+    end
+  end
+
+  describe "#effective_role" do
+    it "is the connected role" do
+      expect(build(:resource, role: "w9").effective_role).to eq("w9")
+    end
+
+    it "is the role a legacy title stands for, ignoring case" do
+      expect(build(:resource, title: "AHA Moments").effective_role).to eq("aha_moments")
+    end
+
+    it "is nil for an ordinary resource" do
+      expect(build(:resource, title: "Some handout").effective_role).to be_nil
+    end
+  end
+
+  describe "role" do
+    it "rejects a role outside the known set" do
+      resource = build(:resource, role: "bogus")
+
+      expect(resource).not_to be_valid
+      expect(resource.errors[:role]).to be_present
+    end
+
+    it "normalizes a blank role to nil (not connected)" do
+      resource = create(:resource, role: "")
+
+      expect(resource.role).to be_nil
+    end
+
+    it "forbids two resources sharing a role" do
+      create(:resource, role: "ce_frame")
+
+      expect { create(:resource, role: "ce_frame") }.to raise_error(ActiveRecord::RecordNotUnique)
     end
   end
 end
