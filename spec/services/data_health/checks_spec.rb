@@ -378,6 +378,25 @@ RSpec.describe DataHealth::UnansweredContactMessages do
   end
 end
 
+RSpec.describe DataHealth::PendingOtherResponses do
+  it "finds pending answers and deep-links each to its group on the review page" do
+    response = create(:other_response, text: "Equine therapy")
+    check = described_class.new
+
+    expect(check.scope).to contain_exactly(response)
+    expect(check.describe(response)).to include("“Equine therapy” — sector for")
+    expect(check.path_for(response)).to eq("/other_responses?status=pending##{response.review_anchor}")
+  end
+
+  it "leaves kept, dismissed, and promoted answers alone" do
+    create(:other_response, :kept)
+    create(:other_response, :dismissed)
+    create(:other_response, :promoted)
+
+    expect(described_class.new).not_to be_any
+  end
+end
+
 RSpec.describe DataHealth::Worklists do
   it "counts possible duplicates per type, with a link to each dedupe page" do
     create_list(:workshop, 2, title: "Anger Volcano")

@@ -11,6 +11,9 @@ module DataHealth
       PeopleWithSeveralLogins,
       PeopleWithSeveralPrimaries
     ],
+    "Form answers" => [
+      PendingOtherResponses
+    ],
     "Payments" => [
       OverAllocatedRegistrations
     ],
