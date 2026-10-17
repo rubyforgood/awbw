@@ -39,9 +39,8 @@ class PublicFormSubmission
 
       if person
         record_news_subscription(person)
-        organization = capture_organization(submission)
-        PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params,
-                                                   organizations: [ organization ].compact)
+        capture_organization(submission)
+        PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params)
       end
 
       OtherResponses::CaptureFromSubmission.call(submission)

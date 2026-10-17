@@ -822,6 +822,23 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       person.reload
       expect(person.sectors).to contain_exactly(primary_sector, additional_sector)
     end
+
+    it "tags only the registrant, never the organization they named" do
+      organization = create(:organization, name: "Helping Hands")
+
+      described_class.call(
+        event: event,
+        registration_form: form,
+        form_params: base_form_params(first_name: "Pat", last_name: "Lee", email: "pat@example.com").merge(
+          field_id(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER) => "Helping Hands",
+          field_id("primary_sector") => primary_sector.id.to_s,
+          field_id("additional_sectors") => [ additional_sector.id.to_s ]
+        )
+      )
+
+      expect(Person.find_by(email: "pat@example.com").sectors).to contain_exactly(primary_sector, additional_sector)
+      expect(organization.reload.sectorable_items).to be_empty
+    end
   end
 
   describe "age group tagging" do

@@ -52,6 +52,8 @@ class Category < ApplicationRecord
   scope :has_published_taggings, -> {
     subqueries = Tag::TAGGABLE_META.map do |_key, data|
       klass = data[:klass]
+      next klass.category_tagging_exists if klass.respond_to?(:category_tagging_exists)
+
       klass.published
            .joins(:categorizable_items)
            .where("categorizable_items.category_id = categories.id")

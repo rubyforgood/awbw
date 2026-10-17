@@ -39,4 +39,32 @@ RSpec.describe Sector, type: :model do
       expect(Sector.story_share_featured).to eq([ first, third ])
     end
   end
+
+  describe ".has_published_taggings" do
+    let(:organization) { create(:organization) }
+
+    def tag_person(sector, **affiliation_attrs)
+      person = create(:person)
+      create(:sectorable_item, sector: sector, sectorable: person, is_primary: true)
+      create(:affiliation, organization: organization, person: person, **affiliation_attrs)
+    end
+
+    it "includes a sector an organization's active facilitator holds as primary" do
+      sector = create(:sector, :published)
+      tag_person(sector)
+
+      expect(Sector.has_published_taggings).to include(sector)
+    end
+
+    it "excludes sectors held only by non-facilitators, by ended affiliations, or on the org itself" do
+      staff_only = create(:sector, :published)
+      former = create(:sector, :published)
+      org_own = create(:sector, :published)
+      tag_person(staff_only, title: "Director")
+      tag_person(former, end_date: 1.year.ago)
+      create(:sectorable_item, sector: org_own, sectorable: organization)
+
+      expect(Sector.has_published_taggings).not_to include(staff_only, former, org_own)
+    end
+  end
 end

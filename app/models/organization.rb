@@ -1,5 +1,5 @@
 class Organization < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
+  include RemoteSearchable, Trendable, WindowsTypeFilterable # Publishable
   include Communicable
   include FilemakerCoded
   filemaker_archived_in FmProject, FmOrganization
@@ -97,9 +97,6 @@ class Organization < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
-  accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs["sector_id"].blank? }
-  after_save :remove_duplicate_sectorable_items
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
@@ -115,6 +112,7 @@ class Organization < ApplicationRecord
   # An org is active because someone is affiliated there, not because the legacy
   # status column says so (ADR-0001 D3, ADR-0003 D4).
   scope :active, -> { where(id: Affiliation.active.select(:organization_id)) }
+  scope :with_active_facilitators, -> { where(id: Affiliation.active.facilitators.select(:organization_id)) }
   scope :address, ->(address) do
     return all if address.blank?
     terms = address.to_s.strip.split(/[\s,]+/).reject(&:blank?)
@@ -171,32 +169,78 @@ class Organization < ApplicationRecord
     [ "Never active", "never_active" ]
   ].freeze
 
-  # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
-  # mirroring the aggregate the index/profile columns show.
-  scope :sector_name_including_people, ->(name) {
-    next all if name.blank?
-    term = name.to_s.downcase
-    direct = joins(:sectors).where("LOWER(sectors.name) = ?", term).select(:id)
-    via_people = joins(people: { sectorable_items: :sector })
-                   .where(sectorable_items: { is_primary: true })
-                   .where("LOWER(sectors.name) = ?", term)
-                   .select(Arel.sql("organizations.id"))
-    where(id: direct).or(where(id: via_people))
+  # Org search: like TagFilterable (matches ALL names), but sectors and age ranges
+  # match through any tag, primary or additional, an active facilitator holds.
+  # Other category types (workshop settings) are still entered on the org itself,
+  # and like the tag counts below they only surface while the org has an active
+  # facilitator, so search and the tag matrix report the same organizations.
+  scope :sector_names_all, ->(names) {
+    parsed = TagFilterable.parse_names(names)
+    next all if parsed.empty?
+
+    where(id: Organization.active_facilitator_sector_tags.joins(person: { sectorable_items: :sector })
+                .where("LOWER(sectors.name) IN (?)", parsed)
+                .group(:organization_id)
+                .having("COUNT(DISTINCT LOWER(sectors.name)) = ?", parsed.size)
+                .select(:organization_id))
   }
 
-  scope :age_group_name_including_people, ->(name) {
-    next all if name.blank?
-    age_category_ids = Category.joins(:category_type)
-                               .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
-                               .where("LOWER(categories.name) = ?", name.to_s.downcase)
-                               .select(:id)
-    direct = joins(:categories).where(categories: { id: age_category_ids }).select(:id)
-    via_people = joins(people: { categorizable_items: :category })
-                   .where(categorizable_items: { is_primary: true })
-                   .where(categories: { id: age_category_ids })
-                   .select(Arel.sql("organizations.id"))
-    where(id: direct).or(where(id: via_people))
+  scope :category_names_all, ->(names) {
+    parsed = TagFilterable.parse_names(names)
+    next all if parsed.empty?
+
+    age_names = Category.age_ranges.where("LOWER(categories.name) IN (?)", parsed).pluck(Arel.sql("LOWER(categories.name)")).uniq
+    own_names = parsed - age_names
+    scope = all
+    if age_names.any?
+      scope = scope.where(id: Organization.active_facilitator_age_group_tags.joins(person: { categorizable_items: :category })
+                                .where("LOWER(categories.name) IN (?)", age_names)
+                                .group(:organization_id)
+                                .having("COUNT(DISTINCT LOWER(categories.name)) = ?", age_names.size)
+                                .select(:organization_id))
+    end
+    if own_names.any?
+      scope = scope.where(id: Organization.unscoped.with_active_facilitators
+                                .joins(:categories).where("LOWER(categories.name) IN (?)", own_names)
+                                .group("organizations.id")
+                                .having("COUNT(DISTINCT LOWER(categories.name)) = ?", own_names.size)
+                                .select("organizations.id"))
+    end
+    scope
   }
+
+  def self.active_facilitator_sector_tags
+    Affiliation.active.facilitators.joins(person: :sectorable_items)
+  end
+
+  def self.active_facilitator_age_group_tags
+    Affiliation.active.facilitators.joins(person: :categorizable_items)
+               .where(categorizable_items: { category_id: Category.age_ranges.select(:id) })
+  end
+
+  # EXISTS conditions for the public tag lists (Sector/Category.has_published_taggings),
+  # correlated on the outer sectors / categories row.
+  def self.sector_tagging_exists
+    active_facilitator_sector_tags.where("sectorable_items.sector_id = sectors.id").select("1").arel.exists
+  end
+
+  def self.category_tagging_exists
+    via_people = active_facilitator_age_group_tags.where("categorizable_items.category_id = categories.id")
+    own = with_active_facilitators.joins(:categorizable_items).where("categorizable_items.category_id = categories.id")
+                   .where.not(categorizable_items: { category_id: Category.age_ranges.select(:id) })
+    via_people.select("1").arel.exists.or(own.select("1").arel.exists)
+  end
+
+  # Org counts per tag for the tag matrix, matching the tag-search scopes above.
+  def self.sector_tag_counts
+    active_facilitator_sector_tags.group("sectorable_items.sector_id").distinct.count(:organization_id)
+  end
+
+  def self.category_tag_counts
+    own = with_active_facilitators.joins(:categories).where.not(categories: { id: Category.age_ranges.select(:id) })
+                   .group("categories.id").count
+    own.merge(active_facilitator_age_group_tags.group("categorizable_items.category_id").distinct.count(:organization_id))
+  end
 
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
@@ -205,8 +249,8 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_name_including_people(params[:sector_name]) if params[:sector_name].present?
-    organizations = organizations.age_group_name_including_people(params[:age_group_name]) if params[:age_group_name].present?
+    organizations = organizations.sector_names_all(params[:sector_names_all].presence || params[:sector_name])
+    organizations = organizations.category_names_all(params[:category_names_all].presence || params[:age_group_name])
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
@@ -316,41 +360,67 @@ class Organization < ApplicationRecord
     affiliations.active.exists?
   end
 
-  def sector_list
-    sectors.pluck(:name)
+  # Sectors and age groups are never entered on an org — they roll up from the
+  # primary tags of its active facilitators.
+  # Most-held first, so a capped list shows the most representative; ties break
+  # alphabetically for sectors and on age position for age groups.
+  def active_facilitator_sectors
+    active_facilitators.filter_map(&:primary_sector).tally
+      .sort_by { |sector, count| [ -count, sector.name.to_s.downcase ] }.map(&:first)
   end
 
-  def direct_sectors
-    sectors
- end
-
-  # Only affiliated people's PRIMARY sector; their others don't roll up to the org.
-  def affiliated_sectors
-    affiliated_people.flat_map { |person| person.sectorable_items.filter_map { |item| item.sector if item.is_primary? } }
+  def active_facilitator_age_groups
+    active_facilitators.flat_map(&:primary_age_groups).tally
+      .sort_by { |group, count| [ -count, group.position || 0, group.name.to_s ] }.map(&:first)
   end
 
-  def all_sectors
-    (direct_sectors + affiliated_sectors).uniq
+  BREAKDOWN_SORT_OPTIONS = [ [ "Primary first", "primary" ], [ "Total", "total" ], [ "A–Z", "name" ] ].freeze
+  BREAKDOWN_SORTS = BREAKDOWN_SORT_OPTIONS.map(&:last).freeze
+
+  TagBreakdown = Data.define(:tag, :primary_count, :additional_count) do
+    def total = primary_count + additional_count
+
+    def sort_key(sort)
+      name = tag.name.to_s.downcase
+      case sort
+      when "total" then [ -total, -primary_count, name ]
+      when "name" then [ name ]
+      else [ -primary_count, -additional_count, name ]
+      end
+    end
   end
 
-  # Age groups served across the organization — its own tags plus every
-  # affiliated person's — deduped so a category shared by several members shows
-  # once. A category that is primary anywhere wins over an additional tagging.
-  def all_primary_age_groups
-    collect_age_groups(:primary_age_groups)
+  # Every sector active facilitators hold, primary or additional, for the full breakdown page.
+  def active_facilitator_sector_breakdown(sort: nil)
+    tag_breakdown(active_facilitators.flat_map { |person|
+      person.sectorable_items.filter_map { |item| [ item.sector, item.is_primary? ] if item.sector && item.sector.name != Sector::OTHER_SECTOR_NAME }
+    }, sort)
   end
 
-  # The org's OWN only — affiliated people contribute just their primary age groups.
-  def all_additional_age_groups
-    additional_age_groups - all_primary_age_groups
+  def active_facilitator_age_group_breakdown(sort: nil)
+    tag_breakdown(active_facilitators.flat_map { |person|
+      person.primary_age_groups.map { |group| [ group, true ] } + person.additional_age_groups.map { |group| [ group, false ] }
+    }, sort)
+  end
+
+  # Reads preloaded affiliations, so a list page that nests PEOPLE_TAGGINGS under
+  # them costs no queries per row.
+  def active_facilitators
+    @active_facilitators ||= begin
+      facilitating = if affiliations.loaded?
+        affiliations.select { |affiliation| affiliation.active? && affiliation.facilitator? }
+      else
+        affiliations.active.facilitators.includes(person: PEOPLE_TAGGINGS)
+      end
+      facilitating.filter_map(&:person).uniq
+    end
   end
 
   # The roll-up cells aggregate across affiliated people, so retagging a person or
   # adding an affiliation leaves the organizations row untouched and `[organization]`
   # alone caches them stale. Reads preloaded associations, so it costs no queries.
   def rollup_cache_version
-    records = affiliations.to_a + sectorable_items.to_a + categorizable_items.to_a +
-      affiliated_people.flat_map { |person| person.sectorable_items.to_a + person.categorizable_items.to_a }
+    records = affiliations.to_a + active_facilitators.flat_map { |person| person.sectorable_items.to_a + person.categorizable_items.to_a }
     [ records.size, records.filter_map(&:updated_at).max ]
   end
 
@@ -370,15 +440,10 @@ class Organization < ApplicationRecord
 
   private
 
-  # Union of the org's own age groups and its affiliated people's, deduped.
-  def collect_age_groups(kind)
-    ([ self ] + affiliated_people).flat_map { |record| record.public_send(kind) }.uniq
-  end
-
-  # Reused as-is when already preloaded — list pages preload `people` with the
-  # PEOPLE_TAGGINGS nest, and a bare `:people` would defeat that.
-  def affiliated_people
-    @affiliated_people ||= people.loaded? ? people.to_a : people.includes(PEOPLE_TAGGINGS).to_a
+  def tag_breakdown(tag_and_primary_pairs, sort)
+    tag_and_primary_pairs.group_by(&:first)
+      .map { |tag, pairs| TagBreakdown.new(tag:, primary_count: pairs.count(&:last), additional_count: pairs.count { |pair| !pair.last }) }
+      .sort_by { |row| row.sort_key(sort) }
   end
 
   def affiliation_dates_locked
@@ -398,11 +463,5 @@ class Organization < ApplicationRecord
     elsif persisted? && descendants.any? { |org| org.id == parent_id }
       errors.add(:parent_id, "can't be one of this organization's nested organizations")
     end
-  end
-
-  def remove_duplicate_sectorable_items
-    sectorable_items
-      .group_by(&:sector_id)
-      .each_value { |dupes| dupes.drop(1).each(&:destroy) }
   end
 end

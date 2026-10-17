@@ -81,6 +81,20 @@ class OrganizationDecorator < ApplicationDecorator
     name
   end
 
+  # [path, label] for the populations-served eyebrow, back to whichever page linked in.
+  def breakdown_return_link(return_to)
+    return [ h.edit_organization_path(object), "Edit #{name}" ] if return_to == "organization_edit"
+
+    [ h.organization_path(object), name ]
+  end
+
+  # Breakdown rows (tag + primary/additional counts) for each searched tag, in search order.
+  def tag_search_totals(tag_names)
+    rows = object.active_facilitator_sector_breakdown + object.active_facilitator_age_group_breakdown
+    by_name = rows.index_by { |row| row.tag.name.downcase }
+    TagFilterable.parse_names(tag_names).filter_map { |name| by_name[name] }
+  end
+
   def affiliated_since_date
     @affiliated_since_date ||= affiliations.minimum(:start_date)
   end

@@ -12,17 +12,16 @@ module PersonServices
   #
   # Reads its answers straight from the form + params (self-gating on each field
   # identifier), so a form that doesn't ask a given question is simply a no-op for
-  # it. Sector/age tags are mirrored onto any organizations passed in.
+  # it.
   class CaptureFromSubmission
-    def self.call(person:, form:, form_params: {}, organizations: [])
-      new(person:, form:, form_params:, organizations:).call
+    def self.call(person:, form:, form_params: {})
+      new(person:, form:, form_params:).call
     end
 
-    def initialize(person:, form:, form_params: {}, organizations: [])
+    def initialize(person:, form:, form_params: {})
       @person = person
       @form = form
       @form_params = (form_params || {}).transform_keys(&:to_s)
-      @organizations = Array(organizations).compact
     end
 
     def call
@@ -136,12 +135,10 @@ module PersonServices
     def apply_tag_set(primary_identifiers, additional_identifiers, tag_with)
       primary_ids = collect_ids(primary_identifiers)
       additional_ids = collect_ids(additional_identifiers)
+      return if primary_ids.empty? && additional_ids.empty?
 
-      SubmissionTagging.apply(
-        person: @person, organizations: @organizations, tag_with: tag_with,
-        primary_ids: primary_ids, additional_ids: additional_ids,
-        replace_person: primary_ids.any? && additional_ids.any?
-      )
+      @person.public_send(tag_with, primary_ids: primary_ids, additional_ids: additional_ids,
+                                    replace: primary_ids.any? && additional_ids.any?)
     end
 
     def collect_ids(identifiers)

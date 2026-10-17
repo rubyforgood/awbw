@@ -11,7 +11,7 @@
       <div
         class="swiper-slide max-w-[360px] shrink-0 basis-[360px]"
       >
-        <%= render "tagged_item_card", item: item %>
+        <%= render "tagged_item_card", item: item, tag_names: local_assigns[:tag_names] %>
       </div>
     <% end %>
   </div>

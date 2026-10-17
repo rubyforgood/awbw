@@ -7,18 +7,17 @@ module TagFilterable
     scope :sector_names_all, ->(names) { names.nil? ? all : tag_names_all(:sectors, names) }
   end
 
+  def self.parse_names(names)
+    Array(names).flat_map { |n| n.to_s.split("--") }.map(&:strip).reject(&:blank?).map(&:downcase)
+  end
+
   class_methods do
     # AND logic - matches items that have ALL of the specified tags
     # Uses subquery approach to avoid GROUP BY issues with eager loading
     def tag_names_all(association, names)
       return all if names.blank?
 
-      parsed_names =
-        Array(names)
-          .flat_map { |n| n.to_s.split("--") }
-          .map(&:strip)
-          .reject(&:blank?)
-          .map(&:downcase)
+      parsed_names = TagFilterable.parse_names(names)
 
       return all if parsed_names.empty?
 

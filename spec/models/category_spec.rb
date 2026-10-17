@@ -124,4 +124,45 @@ RSpec.describe Category do
       expect(cat3.position).to eq(1)
     end
   end
+
+  describe ".has_published_taggings" do
+    let(:organization) { create(:organization) }
+    let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
+
+    def tag_person(category, title: Affiliation::FACILITATOR_TITLE)
+      person = create(:person)
+      create(:categorizable_item, category: category, categorizable: person, is_primary: true)
+      create(:affiliation, organization: organization, person: person, title: title)
+    end
+
+    it "includes an age group an organization's active facilitator holds as primary" do
+      teens = create(:category, :published, category_type: age_type, name: "Teens")
+      tag_person(teens)
+
+      expect(Category.has_published_taggings).to include(teens)
+    end
+
+    it "excludes an age group held only by non-facilitators" do
+      adults = create(:category, :published, category_type: age_type, name: "Adults")
+      tag_person(adults, title: "Director")
+
+      expect(Category.has_published_taggings).not_to include(adults)
+    end
+
+    it "includes a facilitating org's own workshop settings but not its own age groups" do
+      settings_type = create(:category_type, name: "WorkshopEnvironment", published: true)
+      clinical = create(:category, :published, category_type: settings_type, name: "Clinical")
+      adults = create(:category, :published, category_type: age_type, name: "Adults")
+      create(:categorizable_item, category: clinical, categorizable: organization)
+      create(:categorizable_item, category: adults, categorizable: organization)
+      create(:affiliation, organization: organization, title: "Director")
+
+      expect(Category.has_published_taggings).not_to include(clinical, adults)
+
+      create(:affiliation, organization: organization)
+
+      expect(Category.has_published_taggings).to include(clinical)
+      expect(Category.has_published_taggings).not_to include(adults)
+    end
+  end
 end
