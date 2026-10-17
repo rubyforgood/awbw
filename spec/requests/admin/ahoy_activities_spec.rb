@@ -717,6 +717,23 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
           expect(body).to include(title), "Expected chart title '#{title}' to be present"
         end
       end
+
+      it "credits content to the user or admin card so the two add up to the total" do
+        create(:bookmark, user: user)
+        create(:bookmark, user: admin)
+        create(:bookmark, user: admin)
+
+        get charts_path
+
+        doc = Nokogiri::HTML(response.body)
+        bookmark_count = ->(card) do
+          card_node = doc.css("h3").find { |h| h.text.strip == card }.parent
+          card_node.css("li").find { |li| li.text.include?("Bookmarks") }.at_css("span").text.strip
+        end
+        expect(bookmark_count.call("User-generated content")).to eq("1")
+        expect(bookmark_count.call("Admin-generated content")).to eq("2")
+        expect(bookmark_count.call("Total content created")).to eq("3")
+      end
     end
 
     # ==============================================================

@@ -1,0 +1,24 @@
+<div class="border-primary/10 rounded-2xl border bg-white p-6 shadow-sm">
+  <h3 class="mb-4 text-sm font-semibold text-gray-700"><%= title %></h3>
+  <ul class="space-y-1 text-sm text-gray-700">
+    <% groups.each_with_index do |rows, index| %>
+      <% if index.positive? %>
+        <li class="h-3"></li>
+      <% end %>
+      <% rows.each do |row| %>
+        <% tally = row.public_send(side) %>
+        <% ideas = [] %>
+        <% ideas << "#{tally.promoted_ideas} promoted" if tally.promoted_ideas.positive? %>
+        <% ideas << "#{tally.unpromoted_ideas} unpromoted" if tally.unpromoted_ideas.positive? %>
+        <li>
+          <span class="font-semibold text-gray-900 tabular-nums"><%= number_with_delimiter(tally.count) %></span>
+          <span class="mx-1 text-gray-400">&times;</span>
+          <%= row.label %>
+          <% if ideas.any? %>
+            <span class="ml-1 text-xs text-gray-400">(incl <%= ideas.to_sentence %> ideas)</span>
+          <% end %>
+        </li>
+      <% end %>
+    <% end %>
+  </ul>
+</div>
