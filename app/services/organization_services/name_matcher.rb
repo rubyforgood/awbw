@@ -1,8 +1,8 @@
 module OrganizationServices
   # Finds the existing organization a typed name means, tolerating the spelling
   # drift a spreadsheet carries: an exact (case-insensitive) name first, then the
-  # same name ignoring punctuation ("A New Leaf, Inc." / "a new leaf inc"), then the
-  # same name ignoring a legal suffix ("A New Leaf" / "A New Leaf LLC"). A loose
+  # same name ignoring punctuation ("Sample Org, Inc." / "sample org inc"), then the
+  # same name ignoring a legal suffix ("Sample Org" / "Sample Org LLC"). A loose
   # match counts only when it points at a single organization. Names are indexed
   # once per instance, so one matcher serves a whole import.
   class NameMatcher

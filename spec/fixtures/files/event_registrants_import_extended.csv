@@ -1,4 +1,4 @@
 FirstName,LastName,EMail,Status,Organization,Position,City,State,PrimarySector,Scholarship,AmountPaid,FavoriteColor
-Pat,Example,pat@example.org,,A New Leaf Inc.,Counselor,Springfield,IL,Astronomy,2.00,5.00,Blue
+Pat,Example,pat@example.org,,Sample Org Inc.,Counselor,Springfield,IL,Astronomy,2.00,5.00,Blue
 Sam,Sample,,No show,,,,,,,,
 Lee,Placeholder,lee@example.org,Cancelled,,,,,,,,

@@ -5,7 +5,7 @@ RSpec.describe EventRegistrationImporter do
   let(:csv_path) { Rails.root.join("spec/fixtures/files/event_registrants_import.csv").to_s }
 
   before do
-    create(:organization, name: "A New Leaf")
+    create(:organization, name: "Sample Org")
     build_registration_form(event)
   end
 
@@ -73,14 +73,14 @@ RSpec.describe EventRegistrationImporter do
 
   describe "person matching parity" do
     it "matches on email + last name + first name, tolerating a legal-name swap" do
-      create(:person, first_name: "Cidney", last_name: "Acosta", email: "cacosta@turnanewleaf.org")
+      create(:person, first_name: "Jordan", last_name: "Rivera", email: "jordan.rivera@example.org")
       result = import(dry_run: true)
       expect(result.people_matched).to eq(1)
       expect(result.people_created).to eq(2)
     end
 
     it "does not match when only the email and last name agree but the first name differs" do
-      create(:person, first_name: "Different", last_name: "Acosta", email: "cacosta@turnanewleaf.org")
+      create(:person, first_name: "Different", last_name: "Rivera", email: "jordan.rivera@example.org")
       result = import(dry_run: true)
       expect(result.people_matched).to eq(0)
       expect(result.people_created).to eq(3)
@@ -98,34 +98,34 @@ RSpec.describe EventRegistrationImporter do
 
     it "simulates a registration form submission with the row's answers" do
       import(dry_run: false)
-      person = Person.find_by(email: "macosta@wrcnbc.org")
+      person = Person.find_by(email: "casey.rivera@example.org")
       submission = person.form_submissions.find_by(event: event, role: "registration")
 
       expect(submission).to be_present
       answers = submission.form_answers.joins(:form_field).pluck("form_fields.field_identifier", :submitted_answer).to_h
       expect(answers).to include(
-        "last_name" => "Acosta",
-        "primary_email" => "macosta@wrcnbc.org",
+        "last_name" => "Rivera",
+        "primary_email" => "casey.rivera@example.org",
         "organization_name" => "Unknown Org LLC"
       )
     end
 
     it "links a matched organization to the registration" do
       import(dry_run: false)
-      registration = registration_for("cacosta@turnanewleaf.org")
-      expect(registration.organizations.pluck(:name)).to eq([ "A New Leaf" ])
+      registration = registration_for("jordan.rivera@example.org")
+      expect(registration.organizations.pluck(:name)).to eq([ "Sample Org" ])
     end
 
     it "mints a facilitator affiliation for a matched org on a training event" do
       import(dry_run: false)
-      person = Person.find_by(email: "cacosta@turnanewleaf.org")
+      person = Person.find_by(email: "jordan.rivera@example.org")
       affiliation = person.affiliations.find_by(title: Affiliation::FACILITATOR_TITLE)
-      expect(affiliation.organization.name).to eq("A New Leaf")
+      expect(affiliation.organization.name).to eq("Sample Org")
     end
 
     it "leaves an unmatched org for reconciliation — answer stored, nothing linked" do
       import(dry_run: false)
-      registration = registration_for("macosta@wrcnbc.org")
+      registration = registration_for("casey.rivera@example.org")
       expect(registration.organizations).to be_empty
       expect(EventRegistration.organization_linking_status("pending", event)).to include(registration)
     end
@@ -135,18 +135,18 @@ RSpec.describe EventRegistrationImporter do
     end
 
     it "does not duplicate a person already in the system" do
-      create(:person, first_name: "Cidney", last_name: "Acosta", email: "cacosta@turnanewleaf.org")
+      create(:person, first_name: "Jordan", last_name: "Rivera", email: "jordan.rivera@example.org")
       expect { import(dry_run: false) }.to change(Person, :count).by(2)
     end
 
     it "attributes new people to the importing admin" do
       admin = create(:user)
       described_class.call(file_path: csv_path, event: event, import_user: admin, dry_run: false)
-      expect(Person.find_by(email: "kadams@rcoe.us").created_by).to eq(admin)
+      expect(Person.find_by(email: "morgan.quinn@example.org").created_by).to eq(admin)
     end
 
     it "promotes an existing non-attended registration to attended" do
-      person = create(:person, first_name: "Cidney", last_name: "Acosta", email: "cacosta@turnanewleaf.org")
+      person = create(:person, first_name: "Jordan", last_name: "Rivera", email: "jordan.rivera@example.org")
       registration = create(:event_registration, event: event, registrant: person, status: "registered")
 
       result = import(dry_run: false)
@@ -157,12 +157,12 @@ RSpec.describe EventRegistrationImporter do
 
     it "marks its own submission as imported" do
       import(dry_run: false)
-      submission = Person.find_by(email: "kadams@rcoe.us").form_submissions.find_by(event: event, role: "registration")
+      submission = Person.find_by(email: "morgan.quinn@example.org").form_submissions.find_by(event: event, role: "registration")
       expect(submission.metadata).to include("imported_from")
     end
 
     it "adds its own submission alongside a real registrant's, leaving theirs untouched" do
-      person = create(:person, first_name: "Cidney", last_name: "Acosta", email: "cacosta@turnanewleaf.org")
+      person = create(:person, first_name: "Jordan", last_name: "Rivera", email: "jordan.rivera@example.org")
       create(:event_registration, event: event, registrant: person, status: "registered")
       real = FormSubmission.create!(person: person, form: event.registration_form, event: event, role: "registration")
 
@@ -182,8 +182,8 @@ RSpec.describe EventRegistrationImporter do
 
       it "links the org but mints no facilitator affiliation" do
         import(dry_run: false)
-        person = Person.find_by(email: "cacosta@turnanewleaf.org")
-        expect(registration_for("cacosta@turnanewleaf.org").organizations.pluck(:name)).to eq([ "A New Leaf" ])
+        person = Person.find_by(email: "jordan.rivera@example.org")
+        expect(registration_for("jordan.rivera@example.org").organizations.pluck(:name)).to eq([ "Sample Org" ])
         expect(person.affiliations.where(title: Affiliation::FACILITATOR_TITLE)).to be_empty
       end
     end
@@ -192,7 +192,7 @@ RSpec.describe EventRegistrationImporter do
   describe "payments" do
     it "records the payment actually paid and marks the registration paid in full" do
       import(dry_run: false)
-      registration = registration_for("cacosta@turnanewleaf.org")
+      registration = registration_for("jordan.rivera@example.org")
 
       expect(registration).to be_paid_in_full
       expect(registration).to be_payment_received
@@ -203,7 +203,7 @@ RSpec.describe EventRegistrationImporter do
 
     it "comps the unpaid remainder with a discount so a partial payment reads as paid" do
       import(dry_run: false)
-      registration = registration_for("cacosta@turnanewleaf.org")
+      registration = registration_for("jordan.rivera@example.org")
       discount_allocation = registration.allocations.find_by(source_type: "Discount")
 
       expect(discount_allocation.amount).to eq(599)
@@ -212,7 +212,7 @@ RSpec.describe EventRegistrationImporter do
 
     it "creates no discount when the payment covers the full cost" do
       import(dry_run: false)
-      registration = registration_for("macosta@wrcnbc.org")
+      registration = registration_for("casey.rivera@example.org")
 
       expect(registration.allocations.where(source_type: "Discount")).to be_empty
       expect(registration.allocations.find_by(source_type: "Payment").amount).to eq(1099)
@@ -220,7 +220,7 @@ RSpec.describe EventRegistrationImporter do
 
     it "uses the check number for a check-type row" do
       import(dry_run: false)
-      registration = registration_for("macosta@wrcnbc.org")
+      registration = registration_for("casey.rivera@example.org")
       payment = registration.allocations.find_by(source_type: "Payment").source
 
       expect(payment).to be_a(CheckPayment)
@@ -229,7 +229,7 @@ RSpec.describe EventRegistrationImporter do
 
     it "records no payment or discount for a row without an amount" do
       import(dry_run: false)
-      registration = registration_for("kadams@rcoe.us")
+      registration = registration_for("morgan.quinn@example.org")
       expect(registration.allocations).to be_empty
     end
 
@@ -241,7 +241,7 @@ RSpec.describe EventRegistrationImporter do
 
     it "stamps the payment as imported and scoped to the event" do
       import(dry_run: false)
-      payment = registration_for("cacosta@turnanewleaf.org").allocations.find_by(source_type: "Payment").source
+      payment = registration_for("jordan.rivera@example.org").allocations.find_by(source_type: "Payment").source
       expect(payment.metadata).to include("imported_from", "event_id" => event.id)
     end
 
@@ -266,7 +266,7 @@ RSpec.describe EventRegistrationImporter do
       it "ignores the amount, recording no payment or discount" do
         expect { import(dry_run: false) }.not_to change(Payment, :count)
         expect { import(dry_run: false) }.not_to change(Discount, :count)
-        expect(registration_for("cacosta@turnanewleaf.org").allocations).to be_empty
+        expect(registration_for("jordan.rivera@example.org").allocations).to be_empty
       end
     end
   end
@@ -480,6 +480,12 @@ RSpec.describe EventRegistrationImporter do
         expect(ce.allocations.find_by(source_type: "Payment").amount).to eq(201)
         expect(ce.allocations.find_by(source_type: "Discount").amount).to eq(1799)
         expect(registration).to be_paid_in_full
+      end
+
+      it "warns that CE stays unpaid when the row carries no payment" do
+        result = import_rows(%w[FirstName LastName EMail CE], %w[Pat Example pat@example.org Yes], dry_run: true)
+
+        expect(result.rows.first.warnings).to eq([ "CE stays unpaid ($20) — no CE certificate until it's paid" ])
       end
 
       it "sets the yes/no flags and completion dates" do

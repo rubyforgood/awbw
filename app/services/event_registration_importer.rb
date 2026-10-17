@@ -529,6 +529,10 @@ class EventRegistrationImporter
       preview.ce_status = :will_enroll
       preview.details << "CE"
       @result.ce_enrollments += 1
+      ce_cost = @event.ce_hours_cost_cents.to_i
+      if ce_cost.positive? && preview.payment_status != :will_record
+        preview.warnings << "CE stays unpaid (#{MoneyFormatter.dollars_from_cents(ce_cost)}) — no CE certificate until it's paid"
+      end
     else
       preview.ce_status = :not_offered
       preview.warnings << "CE requested, but this event offers no CE hours"
