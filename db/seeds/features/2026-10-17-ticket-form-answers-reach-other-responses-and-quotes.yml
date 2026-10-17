@@ -9,4 +9,5 @@ summary: >-
   their typed "Other" answers to the Other responses page and their quotes to
   quote review, the same as registration and standalone forms.
 pro_tips:
-  - "New organization-type \"Other\" answers now link to the exact form they came from."
+  - "Each answer names the form it came from, so you can see the question that produced it."
+  - "Captured quotes arrive unpublished — review and publish them from the quotes page."
