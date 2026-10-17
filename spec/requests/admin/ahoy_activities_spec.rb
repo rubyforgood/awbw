@@ -114,6 +114,27 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
   context "as an admin" do
     before { sign_in admin }
 
+    describe "a change stamped with its form submission" do
+      let(:submission) { create(:form_submission) }
+      let!(:stamped_event) do
+        create(:ahoy_event, name: "update.person", user: admin, visit: visit_for_admin, time: 1.hour.ago,
+                            properties: { "form_submission_id" => submission.id })
+      end
+
+      it "links the submission from the activity list" do
+        get index_path, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(%(href="#{form_submission_path(submission)}"))
+      end
+
+      it "links the submission from the activity's detail page" do
+        get admin_activities_event_path(stamped_event)
+
+        expect(response.body).to include(%(href="#{form_submission_path(submission)}"))
+      end
+    end
+
     describe "default filters" do
       it "shows Past month chip and Audience chips on events page" do
         get index_path
