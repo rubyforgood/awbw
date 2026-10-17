@@ -11,6 +11,9 @@ module DataHealth
       PeopleWithSeveralLogins,
       PeopleWithSeveralPrimaries
     ],
+    "Registrations" => [
+      PeopleRegisteredTwiceForAnEvent
+    ],
     "Form answers" => [
       PendingOtherResponses
     ],

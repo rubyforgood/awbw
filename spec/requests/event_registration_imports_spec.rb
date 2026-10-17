@@ -53,6 +53,21 @@ RSpec.describe "Event registration imports", type: :request do
       expect(response.body).to include("Preview import")
     end
 
+    it "previews the extended columns: matches, placeholders, a second registration, and warnings" do
+      person = create(:person, first_name: "Lee", last_name: "Placeholder", email: "lee@example.org")
+      create(:event_registration, event: event, registrant: person, status: "no_show")
+      extended = fixture_file_upload("spec/fixtures/files/event_registrants_import_extended.csv", "text/csv")
+
+      post event_registration_import_path, params: { event_id: event.id, file: extended }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Link: A New Leaf", "typed “A New Leaf Inc.”")
+      expect(response.body).to include("as 1@example.com", "Add as no show")
+      expect(response.body).to include("Already no show")
+      expect(response.body).to include("Unknown sector “Astronomy”", "FavoriteColor")
+      expect(response.body).to include("scholarship")
+    end
+
     it "re-renders the form when no event is chosen" do
       post event_registration_import_path, params: { file: csv }
 
@@ -94,7 +109,7 @@ RSpec.describe "Event registration imports", type: :request do
 
       expect(event.event_registrations.pluck(:status).uniq).to eq([ "attended" ])
       expect(response).to redirect_to(registrants_event_path(event))
-      expect(flash[:notice]).to match(/3 attended registrations created/)
+      expect(flash[:notice]).to match(/3 registrations created/)
     end
 
     it "records the payments and comping discounts carried on the sheet" do

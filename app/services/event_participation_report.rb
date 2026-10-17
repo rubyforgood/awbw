@@ -32,7 +32,7 @@ class EventParticipationReport
   OTHER_STATUSES = (STATUSES - EventRegistration::NAMED_OUTCOME_STATUSES).freeze
 
   # Per-event outcome counts. Unique people equals attended seats here: the
-  # [registrant_id, event_id] uniqueness index means a person holds one
+  # active-registration unique index means a person holds at most one attended
   # registration per event, so people and seats only diverge once aggregated
   # across events (a year subtotal or the grand total).
   Row = Struct.new(:event, :status_counts, keyword_init: true) do

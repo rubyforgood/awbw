@@ -313,10 +313,12 @@ class ModelDeduper
   # soft-delete index (one containing `deleted_at`) is skipped: MySQL treats NULLs
   # as distinct, so `[owner, deleted_at]` does NOT bound live rows to one per owner
   # (pay_customers), and collapsing on it would destroy a row the DB happily keeps.
+  # A generated `active_<fk>` column (the FK, NULL on inactive rows — see
+  # event_registrations) stands for the FK, so the merge folds those rows together too.
   def natural_key_columns(join_klass, fk)
     join_klass.connection.indexes(join_klass.table_name)
       .select(&:unique)
-      .map { |index| Array(index.columns) }
+      .map { |index| Array(index.columns).map { |column| column == "active_#{fk}" ? fk.to_s : column } }
       .select { |cols| cols.include?(fk) }
       .reject { |cols| cols.include?("deleted_at") }
       .map { |cols| (cols - [ fk ]).map(&:to_sym) }

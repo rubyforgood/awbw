@@ -1,0 +1,13 @@
+name: "Import registrants with status, contact details, CE, and scholarships"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2727
+action_path: "/events"
+summary: >-
+  The registrant import now reads status, days attended, addresses, phone, sectors,
+  CE licenses, and scholarships. It matches existing people, organizations, and
+  addresses instead of duplicating them, even when a row has no email.
+pro_tips:
+  - "Open an event's Registrants page, then Bulk actions → Import registrants. Expand “Columns we read” for the full list."
+  - "A cancelled or no-show registration is never overwritten. The import adds a second one, and Data health lists anyone registered twice for an event."
