@@ -7,5 +7,3 @@ summary: >-
   Bulk payments, ticket forms like surveys, and linking an organization from a
   submission's page now record which submission made each change, so change
   logs link to it the same as registrations and public forms.
-pro_tips:
-  - "Older changes from these forms get linked too, except ones made by people who weren't signed in."
