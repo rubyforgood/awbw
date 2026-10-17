@@ -1,0 +1,39 @@
+<%# locals: (person:, affiliations:, pending_requests:, empty_label:) %>
+<% if affiliations.empty? %>
+  <p class="py-2 text-sm text-gray-500 italic"><%= empty_label %></p>
+<% end %>
+<div class="divide-y divide-gray-200">
+  <% affiliations.group_by(&:organization).each do |organization, org_affiliations| %>
+    <div class="py-3 first:pt-0">
+      <% if allowed_to?(:show?, organization) %>
+        <div class="w-fit max-w-full"><%= organization_profile_button(organization, compact: true) %></div>
+      <% else %>
+        <p class="font-medium text-gray-900"><%= organization.name %></p>
+      <% end %>
+      <div class="mt-2 space-y-4 border-l-2 border-gray-200 pl-4">
+        <% org_affiliations.each do |affiliation| %>
+          <% decorated = affiliation.decorate %>
+          <% pending = pending_requests[affiliation.id] %>
+          <div class="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4">
+            <div class="min-w-0 space-y-1">
+              <p class="flex flex-wrap items-baseline gap-x-2">
+                <span class="text-gray-800"><%= decorated.display_title %></span>
+                <span class="text-sm text-gray-500"><%= decorated.period_label %></span>
+              </p>
+              <p class="text-sm text-gray-600">
+                <%= affiliation.organization_address&.name || tag.span("No work address on file", class: "italic text-gray-500") %>
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <%= render "people/pending_request_icon", request: pending if pending %>
+              <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id),
+                          target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
+                <%= pending ? "See your request" : "Request a change" %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

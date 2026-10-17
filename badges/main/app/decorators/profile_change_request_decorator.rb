@@ -4,6 +4,7 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     ProfileChangeRequest::AFFILIATION_CHANGE_DATES => { label: "Fix my start or end date", icon: "fa-solid fa-calendar-days" },
     ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION => { label: "Fix the organization's name", icon: "fa-solid fa-building" },
     ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE => { label: "I don't work with them anymore", icon: "fa-solid fa-door-open" },
+    ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS => { label: "Change my work address", icon: "fa-solid fa-map-location-dot" },
     ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS => { label: "Add my work address", icon: "fa-solid fa-location-dot" },
     ProfileChangeRequest::AFFILIATION_CHANGE_OTHER => { label: "Something else", icon: "fa-solid fa-comment" },
     ProfileChangeRequest::AFFILIATION_CHANGE_ADD => { label: "Add an organization", icon: "fa-solid fa-plus" }

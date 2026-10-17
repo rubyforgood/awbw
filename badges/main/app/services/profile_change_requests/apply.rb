@@ -33,6 +33,7 @@ module ProfileChangeRequests
       when ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION then apply_affiliation_organization
       when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE then apply_affiliation_remove
       when ProfileChangeRequest::AFFILIATION_CHANGE_ADD then apply_affiliation_add
+      when *ProfileChangeRequest::AFFILIATION_WORK_ADDRESS_CATEGORIES then apply_affiliation_work_address
       else Result.new(applied: false, message: "This request needs a manual update.")
       end
     end
@@ -74,6 +75,49 @@ module ProfileChangeRequests
 
       affiliation.update(inactive: true, inactive_supplied: true, end_date: affiliation.end_date || Date.current)
       Result.new(applied: true, message: "Affiliation ended and marked inactive.")
+    end
+
+    def apply_affiliation_work_address
+      affiliation = @request.affiliation
+      return Result.new(applied: false, message: "The affiliation no longer exists.") unless affiliation
+
+      return Result.new(applied: false, message: "This request needs a manual update.") unless @request.proposed_work_address_given?
+
+      address = @request.proposed_organization_address || find_or_create_typed_address(affiliation.organization)
+      return Result.new(applied: false, message: address.errors.full_messages.to_sentence) unless address.persisted?
+
+      address.update(inactive: false) if address.inactive?
+      roles = work_address_roles(affiliation)
+      Affiliation.transaction { roles.each { |role| role.update!(organization_address: address) } }
+      Result.new(applied: true, message: "Work address set to #{address.name} for #{roles.size} #{"role".pluralize(roles.size)} at #{affiliation.organization.name}.")
+    rescue ActiveRecord::RecordInvalid => e
+      Result.new(applied: false, message: e.record.errors.full_messages.to_sentence)
+    end
+
+    # A person works at one address per organization, so it applies to every active role there.
+    def work_address_roles(affiliation)
+      others = @request.person.affiliations.where(organization_id: affiliation.organization_id).where.not(id: affiliation.id).select(&:active?)
+      [ affiliation, *others ]
+    end
+
+    # Reuses the org's address when the street and city already match, so approving doesn't add a duplicate.
+    def find_or_create_typed_address(organization)
+      street = AddressNormalizer.street(@request.proposed_street_address)
+      city = AddressNormalizer.city(@request.proposed_city)
+      existing = organization.addresses.find do |address|
+        AddressNormalizer.street(address.street_address) == street && AddressNormalizer.city(address.city) == city
+      end
+      return existing if existing
+
+      organization.addresses.create(
+        street_address: @request.proposed_street_address,
+        city: @request.proposed_city,
+        state: @request.proposed_state,
+        zip_code: @request.proposed_zip_code.to_s,
+        locality: "Unknown",
+        address_type: "work",
+        primary: organization.addresses.active.where(primary: true).none?
+      )
     end
 
     def apply_affiliation_add
