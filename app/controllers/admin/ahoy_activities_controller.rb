@@ -148,6 +148,9 @@ module Admin
       authorize! :ahoy_activity, to: :show?
       @event = Ahoy::Event.includes(:user, :visit).find(params[:id])
       @resource_path = safe_resource_path(@event.resource_type, @event.resource_id)
+      # A stamped submission can be gone (its person was deleted), so the view
+      # links the id only when the record is still there.
+      @form_submission = FormSubmission.find_by(id: @event.properties&.dig("form_submission_id"))
     end
 
     def visits

@@ -116,24 +116,25 @@ RSpec.describe Quotes::CaptureFromSubmission do
     expect(submission.quotes.reload.sole).to have_attributes(body: "Second try", speaker_name: "Jordan")
   end
 
-  it "leaves an admin's reworded quote alone and captures the edited answer as its own" do
+  it "keeps an admin's rewording and records the edited answer as the original" do
     answer("quote", "First try")
     described_class.call(submission)
-    admin_quote = submission.quotes.sole
-    admin_quote.update!(body: "A refined version")
+    submission.quotes.sole.update!(body: "A refined version")
     submission.form_answers.sole.update!(submitted_answer: "Second try")
 
-    expect { described_class.call(submission) }.to change(Quote, :count).by(1)
-    expect(admin_quote.reload.body).to eq("A refined version")
+    expect { described_class.call(submission) }.not_to change(Quote, :count)
+    expect(submission.quotes.reload.sole)
+      .to have_attributes(body: "A refined version", original_body: "Second try")
   end
 
-  it "leaves a published quote alone and captures the edited answer as its own" do
+  it "rewrites a published quote rather than adding a second one" do
     answer("quote", "First try")
     described_class.call(submission)
     submission.quotes.sole.update!(published: true)
     submission.form_answers.sole.update!(submitted_answer: "Second try")
 
-    expect { described_class.call(submission) }.to change(Quote, :count).by(1)
+    expect { described_class.call(submission) }.not_to change(Quote, :count)
+    expect(submission.quotes.reload.sole).to have_attributes(body: "Second try", published: true)
   end
 
   it "still recognizes the answer after an admin edited the published body" do

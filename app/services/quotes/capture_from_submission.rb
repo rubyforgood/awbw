@@ -7,13 +7,9 @@ module Quotes
   # its creator, and the submission is kept as the quote's source. The quote
   # starts unpublished for an admin to review, refine, and publish.
   #
-  # Idempotent per submission: re-running (an edited re-submission calls this
-  # again) won't duplicate a quote already captured for the same text. The match
-  # keys on the untouched `original_body`, so an admin editing the published
-  # `body` doesn't cause a re-capture. A re-submission that changes the text
-  # rewrites the quote it captured, so only the current answer sits in the
-  # review queue — unless an admin has published or reworded that quote, which
-  # makes it theirs to keep and the new text its own capture.
+  # One quote per submission: re-running (an edited re-submission calls this
+  # again) rewrites the quote it already captured rather than adding a second one,
+  # so the review queue never holds a superseded version beside the current text.
   #
   # Shared by the registration, scholarship, bulk-payment, ticket-callout, and
   # public-form submission paths.
@@ -31,8 +27,8 @@ module Quotes
       return if body.blank?
       return if @submission.quotes.exists?(original_body: body)
 
-      captured = quote_as_captured
-      return captured.update!(body: body, original_body: body, speaker_name: speaker_name, age: age) if captured
+      captured = @submission.quotes.order(:id).last
+      return rewrite(captured, body) if captured
 
       quote = Quote.create!(
         body: body,
@@ -45,11 +41,13 @@ module Quotes
 
     private
 
-    # The submission's quote while it still reads exactly as captured. A reworded
-    # or published one is the admin's, so it's left out and the edited answer is
-    # captured as its own quote.
-    def quote_as_captured
-      @submission.quotes.where(published: false).detect { |quote| quote.body == quote.original_body }
+    # `original_body` always catches up to what the person now says. The displayed
+    # `body` follows only while it still reads as captured, so an admin's rewording
+    # survives their source fixing a typo.
+    def rewrite(quote, body)
+      return quote.update!(original_body: body) unless quote.body == quote.original_body
+
+      quote.update!(body: body, original_body: body, speaker_name: speaker_name, age: age)
     end
 
     def answers
