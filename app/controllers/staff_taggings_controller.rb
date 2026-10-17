@@ -92,7 +92,7 @@ class StaffTaggingsController < ApplicationController
 
   def create_params
     person = Person.find_by(id: params.dig(:staff_tagging, :person_id))
-    { staff_tag_id: params.dig(:staff_tagging, :staff_tag_id), staff_taggable: person, marked: params.dig(:staff_tagging, :marked) == "1" }
+    staff_tagging_params.merge(staff_taggable: person)
   end
 
   # When the list is filtered to a single tag, the Mark column header takes that

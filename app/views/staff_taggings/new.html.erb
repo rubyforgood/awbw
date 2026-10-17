@@ -33,6 +33,10 @@
           <%= render "mark_toggle", f: f %>
         </div>
 
+        <div class="mt-6">
+          <%= render "shared/comments_and_communications", f: f, view_all_person: @staff_tagging.staff_taggable %>
+        </div>
+
         <div class="action-buttons mt-8 flex flex-wrap justify-center gap-3">
           <%= link_to "Cancel", new_tagging_return_path, class: button_classes(:secondary_outline) %>
           <%= f.button :submit, "Create tagging", class: button_classes(:primary) %>

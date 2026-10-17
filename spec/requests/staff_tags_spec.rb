@@ -18,15 +18,15 @@ RSpec.describe "/staff_tags", type: :request do
       expect(response.body).to include("Highlight roster")
     end
 
-    it "links each tag's taggings count to the filtered taggings index" do
+    it "links each tag's taggings count and its people list" do
       tag = create(:staff_tag, name: "Highlight roster")
       2.times { tag.staff_taggings.create!(staff_taggable: create(:person)) }
 
       get staff_tags_path
 
-      expect(response.body).to include("Taggings index")
-      link = Nokogiri::HTML(response.body).at_css("a[href='#{staff_taggings_path(staff_tag_ids: tag.id)}']")
-      expect(link.text.strip).to eq("2")
+      page = Nokogiri::HTML(response.body)
+      expect(page.at_css("a[href='#{staff_taggings_path(staff_tag_ids: tag.id)}']").text.strip).to eq("2")
+      expect(page.at_css("a[href='#{people_path(staff_tag_ids: tag.id, return_to: "staff_tags")}']").text.strip).to eq("View people")
     end
 
     it "shows tagged people with who applied the tag, plus audit info" do
