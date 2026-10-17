@@ -1,10 +1,11 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["item", "nav"];
+  static targets = ["item", "nav", "kindSelect"];
   static values = {
     perPage: { type: Number, default: 10 },
     grouped: { type: Boolean, default: false },
+    kind: { type: String, default: "" },
     noSubjectLabel: { type: String, default: "No subject" }
   };
 
@@ -38,10 +39,15 @@ export default class extends Controller {
     requestAnimationFrame(() => target.scrollIntoView({ block: "center" }));
   }
 
+  // Rows still on the form (cocoon hides removed ones) that match the kind filter.
   get visibleItems() {
     return this.itemTargets.filter(
-      (el) => !el.style.display || el.style.display !== "none"
+      (el) => el.style.display !== "none" && this.matchesKind(el)
     );
+  }
+
+  matchesKind(el) {
+    return !this.kindValue || el.dataset.kind === this.kindValue;
   }
 
   get totalPages() {
@@ -67,9 +73,8 @@ export default class extends Controller {
     const start = (this.currentPage - 1) * this.perPageValue;
     const end = start + this.perPageValue;
 
-    items.forEach((el, i) => {
-      el.classList.toggle("hidden", i < start || i >= end);
-    });
+    this.itemTargets.forEach((el) => el.classList.add("hidden"));
+    items.slice(start, end).forEach((el) => el.classList.remove("hidden"));
 
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
@@ -122,6 +127,26 @@ export default class extends Controller {
     }
   }
 
+  // Show every row, or only rows whose data-kind matches the select's value.
+  filterKind(event) {
+    this.kindValue = event.target.value;
+  }
+
+  kindValueChanged() {
+    if (this.hasKindSelectTarget) this.kindSelectTarget.value = this.kindValue;
+    if (!this.ready) return;
+    this.currentPage = 1;
+    this.refresh();
+  }
+
+  refresh() {
+    if (this.groupedValue) {
+      this.renderGrouped();
+    } else {
+      this.render();
+    }
+  }
+
   // Cluster the rows by subject line, newest group first (a group's position is
   // its newest row's, and rows are already newest-first). Rows are reordered with
   // the CSS `order` property so their DOM position never changes — moving nodes
@@ -132,8 +157,9 @@ export default class extends Controller {
     if (!parent) return;
 
     this.clearGroupHeaders();
+    this.itemTargets.forEach((el) => el.classList.add("hidden"));
     const groups = new Map();
-    for (const el of this.itemTargets) {
+    for (const el of this.visibleItems) {
       const key = this.subjectKey(el);
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(el);
@@ -201,9 +227,11 @@ export default class extends Controller {
 
   // Re-render when items are added/removed (cocoon). On a user-triggered add
   // (after the initial render), jump to the page holding the new item — which is
-  // appended last — so it's visible instead of being hidden on a later page.
-  itemTargetConnected() {
+  // appended last — so it's visible instead of being hidden on a later page. A
+  // new row the kind filter would hide clears the filter so it stays in view.
+  itemTargetConnected(el) {
     if (!this.ready) return;
+    if (!this.matchesKind(el)) this.kindValue = "";
     if (this.groupedValue) {
       this.renderGrouped();
       return;
