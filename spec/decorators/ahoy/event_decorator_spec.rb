@@ -276,6 +276,36 @@ RSpec.describe Ahoy::EventDecorator do
       )
     end
 
+    it "links both parents of a moved comment, reading the unchanged type off the comment" do
+      from = create(:person, first_name: "Ada", last_name: "Park")
+      to = create(:person, first_name: "Bo", last_name: "Lee")
+      comment = create(:comment, commentable: to)
+      event = create(:ahoy_event, name: "update.comment", resource_type: "Comment", resource_id: comment.id,
+                                  properties: { "changes" => { "commentable_id" => { "before" => from.id, "after" => to.id } } }).decorate
+
+      routes = Rails.application.routes.url_helpers
+      expect(event.changes_summary).to eq(
+        [ { field: "Commentable", before: "Ada Park", after: "Bo Lee",
+            before_path: routes.edit_person_path(from), after_path: routes.edit_person_path(to) } ]
+      )
+    end
+
+    it "folds a moved comment's type change into the one linked parent row" do
+      from = create(:person, first_name: "Ada", last_name: "Park")
+      to = create(:user)
+      comment = create(:comment, commentable: to)
+      event = create(:ahoy_event, name: "update.comment", resource_type: "Comment", resource_id: comment.id,
+                                  properties: { "changes" => {
+                                    "commentable_id" => { "before" => from.id, "after" => to.id },
+                                    "commentable_type" => { "before" => "Person", "after" => "User" }
+                                  } }).decorate
+
+      expect(event.changes_summary.map { |change| change.slice(:field, :before, :before_path) }).to eq(
+        [ { field: "Commentable", before: "Ada Park", before_path: Rails.application.routes.url_helpers.edit_person_path(from) } ]
+      )
+      expect(event.changes_summary.first[:after_path]).to be_present
+    end
+
     it "leaves out a field that was blank before and after" do
       event = decorate("changes" => { "note" => { "before" => nil, "after" => "" } })
 

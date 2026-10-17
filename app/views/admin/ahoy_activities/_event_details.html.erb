@@ -9,19 +9,11 @@
     <% if activity.comment_note[:body] %>
       <div><span class="font-medium text-gray-700">Body:</span> <span class="text-gray-600" title="<%= activity.comment_note[:body] %>"><%= truncate(activity.comment_note[:body], length: 150) %></span></div>
     <% end %>
+    <%= render "admin/ahoy_activities/changes_summary", activity: activity %>
   </div>
 <% elsif activity.extra_details? %>
   <div class="space-y-1.5">
-    <% if activity.changes? %>
-      <ul class="space-y-1.5">
-        <% activity.changes_summary.each do |change| %>
-          <li class="flex flex-wrap items-baseline gap-1.5">
-            <span class="font-medium text-gray-700"><%= change[:field] %>:</span>
-            <%= render "admin/ahoy_activities/change_diff", before: change[:before], after: change[:after] %>
-          </li>
-        <% end %>
-      </ul>
-    <% end %>
+    <%= render "admin/ahoy_activities/changes_summary", activity: activity %>
     <% activity.detail_rows.each do |row| %>
       <div class="text-xs" style="padding-left: <%= row[:depth] * 12 %>px;">
         <% if row[:label] %>

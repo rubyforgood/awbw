@@ -49,6 +49,19 @@ RSpec.describe Analytics::EventReferenceLoader do
       expect(described_class.new(events).records[[ "Person", person.id ]]).to eq(person)
     end
 
+    it "loads both parents of a moved comment, reading the unchanged type off the comment" do
+      from = create(:person)
+      to = create(:person)
+      comment = create(:comment, commentable: to)
+      events = [ build(:ahoy_event, resource_type: "Comment", resource_id: comment.id,
+                                    properties: { "changes" => { "commentable_id" => { "before" => from.id, "after" => to.id } } }) ]
+
+      map = described_class.new(events).records
+
+      expect(map[[ "Person", from.id ]]).to eq(from)
+      expect(map[[ "Person", to.id ]]).to eq(to)
+    end
+
     it "omits records that no longer exist" do
       events = [ event("associated_records" => [ { "record_type" => "Workshop", "record_id" => 0 } ]) ]
       expect(described_class.new(events).records).to eq({})

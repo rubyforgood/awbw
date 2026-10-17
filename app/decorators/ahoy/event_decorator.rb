@@ -146,11 +146,18 @@ module Ahoy
     end
 
     # Field-level before/after diffs for update events, humanized for a
-    # non-technical reader: [{ field:, before:, after: }, ...].
+    # non-technical reader: [{ field:, before:, after: }, ...]. A swapped
+    # polymorphic parent (a moved comment) reads as one row naming and linking
+    # both records: [{ field:, before:, after:, before_path:, after_path: }].
     def changes_summary
       return [] unless changes?
 
+      moves = Analytics::EventReferenceLoader.polymorphic_changes(object.resource_type, change_diffs, resource_record)
       change_diffs.filter_map do |field, diff|
+        name = field.to_s.delete_suffix("_id")
+        next moved_parent_change(name, *moves[name]) if moves.key?(name)
+        next if moves.key?(field.to_s.delete_suffix("_type"))
+
         diff = {} unless diff.is_a?(Hash)
         next if blank_change?(diff)
 
@@ -362,9 +369,23 @@ module Ahoy
     # A polymorphic parent (a comment's commentable) as one row linked to the
     # record, which often still exists after the child was deleted.
     def polymorphic_row(name, type, id, depth)
+      { label: humanize_key(name), depth: depth, link: parent_link(type, id) }
+    end
+
+    def moved_parent_change(name, before, after)
+      from = parent_link(*before)
+      to = parent_link(*after)
+      { field: humanize_key(name), before: from[:text], after: to[:text], before_path: from[:path], after_path: to[:path] }
+    end
+
+    def parent_link(type, id)
       record = find_referenced_record(type, id)
       text = custom_resource_link(record)&.dig(:text).presence || safe_label(record) || "#{type} ##{id}"
-      { label: humanize_key(name), depth: depth, link: { text: text, path: edit_path_for(record) } }
+      { text: text, path: edit_path_for(record) }
+    end
+
+    def resource_record
+      find_referenced_record(object.resource_type, object.resource_id)
     end
 
     # A comment's topic titles its body rather than sitting beside it, so it leads.
