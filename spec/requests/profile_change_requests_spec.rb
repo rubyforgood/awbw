@@ -280,6 +280,44 @@ RSpec.describe "Profile change requests", type: :request do
       expect(elsewhere.reload.organization_address).to be_nil
     end
 
+    it "sets the work address on an ended role that was asked about, plus the active roles at that organization" do
+      organization = create(:organization)
+      ended = create(:affiliation, person: person, organization: organization, title: "Intern", start_date: 5.years.ago, end_date: 4.years.ago)
+      active = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      request = create(:profile_change_request, person: person, affiliation: ended, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      post approve_profile_change_request_path(request)
+
+      address = ended.reload.organization_address
+      expect(address).to have_attributes(street_address: "12 Elm St")
+      expect(active.reload.organization_address).to eq(address)
+    end
+
+    it "sends the new address and each role it sets to the Ahoy change log" do
+      organization = create(:organization)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
+      request = create(:profile_change_request, person: person, affiliation: facilitator, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+      Analytics::LifecycleBuffer.store.clear
+      events = []
+      allow(Analytics::LifecycleBuffer).to receive(:flush) do
+        events.concat(Analytics::LifecycleBuffer.store)
+        Analytics::LifecycleBuffer.store.clear
+      end
+
+      post approve_profile_change_request_path(request)
+
+      address = facilitator.reload.organization_address
+      tracked = ->(name) { events.select { |event| event[:name] == name }.map { |event| event.dig(:properties, :resource_id) } }
+      expect(tracked.call("create.address")).to include(address.id)
+      expect(tracked.call("update.affiliation")).to include(facilitator.id, job.id)
+      expect(tracked.call("update.profile_change_request")).to include(request.id)
+    end
+
     it "approves an add-a-new-affiliation request by creating it" do
       org = create(:organization, name: "New Org")
       request = create(:profile_change_request, person: person, field: "affiliation",
