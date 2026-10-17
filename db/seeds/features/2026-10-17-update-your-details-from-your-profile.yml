@@ -1,0 +1,12 @@
+name: "Update your details from your profile"
+area: people
+display_status: user_facing
+released_on: 2026-10-17
+pr_number: 2671
+summary: >-
+  Your own profile page is now the place to keep your details up to date.
+  Click "Edit my data" at the top to change them, or "Choose what others see"
+  to decide what other facilitators see.
+pro_tips:
+  - "Open it from \"My profile\" in the menu under your picture."
+  - "\"Choose what others see\" is a short page of on/off switches, plus how your name shows."

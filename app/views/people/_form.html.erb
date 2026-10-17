@@ -103,7 +103,7 @@
   </div>
 
   <!-- Sectors + Age ranges (split width; both wrap their chips) -->
-  <div class="flex flex-wrap items-stretch gap-4">
+  <div id="sectors" class="flex scroll-mt-4 flex-wrap items-stretch gap-4">
     <!-- Sectors -->
     <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
       <h3 class="<%= heading_class %>"><%= allowed_to?(:manage?, Person) ? "Sectors" : "Sectors you work in" %></h3>
@@ -136,7 +136,7 @@
 
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
-      <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
+      <div id="age-ranges" class="form-group flex min-w-[20rem] flex-1 scroll-mt-4 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
         <h3 class="<%= heading_class %>">Age ranges</h3>
         <div class="flex flex-1 flex-wrap content-start items-center gap-2"
              data-controller="primary-tag"
@@ -305,7 +305,7 @@
   <% end %>
 
   <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-    <div class="form-group <%= card_class %>">
+    <div id="bio" class="form-group scroll-mt-4 <%= card_class %>">
       <h3 class="<%= heading_class %>">Background</h3>
       <%# Shout-out text is edited on the registration's "Shout out" section, not here. %>
       <%= f.input :bio,
@@ -444,7 +444,7 @@
                   data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete?" } %>
     <% end %>
 
-    <%= link_to "Cancel", people_path, class: button_classes(:secondary_outline),
+    <%= link_to "Cancel", ((allowed_to?(:edit_own_profile?, f.object) && !allowed_to?(:manage?, Person)) ? person_path(f.object) : people_path), class: button_classes(:secondary_outline),
                 data: { action: "click->dirty-form#confirmCancel" } %>
     <%= f.button :submit, class: button_classes(:primary) %>
   </div>
