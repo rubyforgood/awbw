@@ -1,14 +1,15 @@
 <%= turbo_frame_tag :data_health_worklists, target: "_top" do %>
+  <h2 class="mb-3 text-lg font-semibold text-gray-800">Review queues</h2>
   <div class="space-y-4">
     <% @worklists.sections.each do |section| %>
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="border-b border-gray-100 px-4 py-3">
-          <h2 class="text-sm font-semibold text-gray-800">
+          <h3 class="text-sm font-semibold text-gray-800">
             <%= section.title %>
             <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-medium <%= section.total.positive? ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-500" %>">
               <%= section.total %>
             </span>
-          </h2>
+          </h3>
           <p class="mt-1 text-xs text-gray-500"><%= section.explanation %></p>
         </div>
         <ul class="divide-y divide-gray-100 text-sm">

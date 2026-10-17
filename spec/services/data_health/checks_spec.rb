@@ -295,3 +295,12 @@ RSpec.describe DataHealth::Worklists do
     expect(workshops.path).to eq(Rails.application.routes.url_helpers.dedupe_index_workshops_path)
   end
 end
+
+RSpec.describe DataHealth, ".grouped_checks" do
+  it "puts every check under exactly one heading" do
+    grouped = described_class.grouped_checks.values.flatten.map(&:key)
+
+    expect(grouped).to match_array(described_class.checks.map(&:key))
+    expect(grouped.uniq).to eq(grouped)
+  end
+end

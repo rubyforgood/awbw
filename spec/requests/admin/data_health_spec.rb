@@ -23,6 +23,13 @@ RSpec.describe "Admin::DataHealth", type: :request do
       expect(response.body).to include("Everything checks out")
     end
 
+    it "groups checks under headings" do
+      get admin_data_health_path
+
+      headings = Nokogiri::HTML(response.body).css("h2").map { |h| h.text.strip }
+      expect(headings).to include("Affiliations", "People", "Payments", "Content", "Communications")
+    end
+
     it "lists an offending row with enough context to recognise it" do
       offending_affiliation
 

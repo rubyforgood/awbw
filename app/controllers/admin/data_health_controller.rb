@@ -8,7 +8,7 @@ module Admin
       authorize! :data_health, to: :index?
       track_view("admin.data_health")
 
-      @checks = DataHealth.checks
+      @groups = DataHealth.grouped_checks
     end
 
     def worklists
