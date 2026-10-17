@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Comments & communications expandable rows", type: :system do
+RSpec.describe "Comments & communications expandable rows and type filter", type: :system do
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person, email: "primary@example.com") }
   let(:long_body) { "Long note. " * 80 }
@@ -31,6 +31,31 @@ RSpec.describe "Comments & communications expandable rows", type: :system do
 
       click_button "Collapse all"
       expect(page).to have_css("[data-expandable-card-target='body'].line-clamp-2", count: 2)
+    end
+  end
+
+  scenario "the dropdown narrows the list to just comments or just communications" do
+    within "#comments-section" do
+      select "Comments", from: "person-activity-list-kind"
+      expect(page).to have_content("Phone call")
+      expect(page).to have_no_content("Welcome")
+
+      select "Communications", from: "person-activity-list-kind"
+      expect(page).to have_content("Welcome")
+      expect(page).to have_no_content("Phone call")
+
+      select "All", from: "person-activity-list-kind"
+      expect(page).to have_content("Phone call")
+      expect(page).to have_content("Welcome")
+    end
+  end
+
+  scenario "adding a comment while showing only communications brings it into view" do
+    within "#comments-section" do
+      select "Communications", from: "person-activity-list-kind"
+      click_link "Add comment"
+      expect(page).to have_field(placeholder: "Type your comment")
+      expect(find_field("person-activity-list-kind").value).to eq("")
     end
   end
 

@@ -48,6 +48,14 @@
       </button>
     <% end %>
     <div class="ml-auto flex items-center gap-3">
+      <% if comments.any? && notifications.any? %>
+        <%= select_tag "#{list_id}-kind",
+                       options_for_select([ [ t("communications.show_all"), "" ], [ t("communications.show_comments"), "comment" ], [ t("communications.show_communications"), "communication" ] ]),
+                       aria: { label: t("communications.show_label") },
+                       autocomplete: "off",
+                       class: "w-auto rounded-md border border-gray-300 bg-transparent py-1 pr-8 pl-2 text-xs text-gray-600 focus:border-blue-500 focus:ring-blue-200",
+                       data: { paginated_fields_target: "kindSelect", action: "paginated-fields#filterKind" } %>
+      <% end %>
       <% if entries.size > 1 %>
         <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
           <%= check_box_tag "#{list_id}-group", "1", false, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", data: { action: "paginated-fields#toggleGrouping" } %>
@@ -80,7 +88,7 @@
             <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
           <% end %>
         <% else %>
-          <div data-paginated-fields-target="item" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
+          <div data-paginated-fields-target="item" data-kind="communication" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
             <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only, expandable: true,
                        flag: (render("notifications/flag_indicator", notification: entry) if admin) %>
           </div>
