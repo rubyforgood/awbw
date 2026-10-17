@@ -107,7 +107,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(person.sectorable_items).to be_empty
     end
 
-    it "makes the first sector a primary answer names the primary, the rest additional" do
+    it "lands every sector a primary answer names as additional when it names several" do
       homelessness = create(:sector, :published, name: "Homelessness")
       create(:tag_alias, name: "Domestic Violence & Homelessness", aliasable: domestic_violence)
       create(:tag_alias, name: "Domestic Violence & Homelessness", aliasable: homelessness)
@@ -116,8 +116,8 @@ RSpec.describe PersonServices::ImportFromRolodex do
       described_class.new.call
       person = Person.find_by!(filemaker_code: "00058")
 
-      expect(person.primary_sector).to eq(domestic_violence)
-      expect(person.sectorable_items.where(is_primary: false).map(&:sector)).to eq([ homelessness ])
+      expect(person.primary_sector).to be_nil
+      expect(person.sectorable_items.where(is_primary: false).map(&:sector)).to contain_exactly(domestic_violence, homelessness)
     end
 
     it "adds a linked person's tags without replacing the primary they already have" do
