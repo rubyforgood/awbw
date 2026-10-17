@@ -2,6 +2,8 @@ module Admin
   class HomeController < ApplicationController
     include AdminCardsHelper
 
+    DATA_HEALTH_BADGE_TITLE = "Data checks only. Possible duplicates and author credit are counted separately on the Data health page.".freeze
+
     def index
       authorize! :home, to: :index?
 
@@ -10,8 +12,40 @@ module Admin
       @reference_cards       = reference_cards
       @additional_data_cards = additional_data_cards
       @deduper_cards         = deduper_cards
+      @system_settings_cards = system_settings_cards
       @deprecated_data_cards = deprecated_data_cards
       @pending_change_requests_count = ProfileChangeRequest.pending.count
+    end
+
+    def data_health_count
+      authorize! :home, to: :index?
+
+      render_count_badge(:data_health_count, title: DATA_HEALTH_BADGE_TITLE) { DataHealth.checks.sum(&:count) }
+    end
+
+    def author_credit_count
+      authorize! :home, to: :index?
+
+      render_count_badge(:author_credit_count) { DataHealth::Worklists.new.author_credit.sum(&:count) }
+    end
+
+    def unsynced_features_count
+      authorize! Feature, to: :create?
+
+      render_count_badge(:unsynced_features_count) { FeatureCatalog.new.missing_count }
+    end
+
+    private
+
+    # A badge is a nicety, so a failing count renders an empty frame and leaves the button usable.
+    def render_count_badge(frame_id, title: nil)
+      count = begin
+        yield
+      rescue StandardError => e
+        Rails.error.report(e)
+        nil
+      end
+      render partial: "count_badge_frame", locals: { frame_id: frame_id, count: count, title: title }
     end
   end
 end

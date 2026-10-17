@@ -16,9 +16,7 @@ module AdminCardsHelper
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
       model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),
-      model_card(:banners, icon: "📣"),
-      model_card(:community_news, icon: "📰"),
-      model_card(:faqs, icon: "❔", title: "FAQs")
+      model_card(:community_news, icon: "📰")
     ]
   end
 
@@ -27,7 +25,7 @@ module AdminCardsHelper
   # -----------------------------
   def user_content_cards
     [
-      custom_card("Portal activity", admin_activities_counts_path, icon: "📊"),
+      custom_card("Activity", admin_activities_counts_path, icon: "📊"),
       custom_card("Bookmarks tally", tally_bookmarks_path, icon: "🔖"),
       custom_card(t("communications.section_title"), comments_and_communications_path, icon: "🗂️", color: DomainTheme.color_for(:notifications), intensity: 50),
       custom_card("Event reports", reports_events_path, icon: "📊", color: :blue),
@@ -78,6 +76,18 @@ module AdminCardsHelper
   end
 
   # -----------------------------
+  # SYSTEM SETTINGS CARDS
+  # -----------------------------
+  def system_settings_cards
+    [
+      model_card(:banners, icon: "📣"),
+      model_card(:faqs, icon: "❔", title: "FAQs"),
+      custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
+      custom_card("Smart resource settings", admin_resource_roles_path, icon: "📌", color: :sky, intensity: 100)
+    ]
+  end
+
+  # -----------------------------
   # DEPRECATED DATA CARDS
   # -----------------------------
   def deprecated_data_cards
@@ -94,14 +104,12 @@ module AdminCardsHelper
       custom_card("Allocations", allocations_path, icon: "📤", color: :sky, intensity: 100),
       custom_card("Bulk payments", bulk_payments_path, icon: "💳", color: :sky, intensity: 100),
       custom_card("Event registrations", event_registrations_path, icon: "🎟️", color: :sky, intensity: 100),
-      custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
       custom_card("Forms", forms_path, icon: "📋", color: :sky, intensity: 100),
-      custom_card("Licenses", professional_licenses_path, icon: "🪪", color: :sky, intensity: 100),
+      custom_card("Professional licenses", professional_licenses_path, icon: "🪪", color: :sky, intensity: 100),
       custom_card("Form submissions", form_submissions_path, icon: "📨", color: :sky, intensity: 100),
       custom_card("Form answers", form_answers_path, icon: "✅", color: :sky, intensity: 100),
       custom_card("Monthly reports", monthly_reports_path, icon: "📈", color: :sky, intensity: 100),
       custom_card("Payments", payments_path, icon: "💳", color: :sky, intensity: 100),
-      custom_card("Resource roles", admin_resource_roles_path, icon: "📌", color: :sky, intensity: 100),
       custom_card("Bookmarks", bookmarks_path, icon: "🔖", color: :sky, intensity: 100),
       custom_card("CE registrations", continuing_education_registrations_path, icon: "📜", color: :sky, intensity: 100),
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),
