@@ -721,6 +721,6 @@ class PeopleController < ApplicationController
   def membership_for(person)
     return unless Membership.enabled? && allowed_to?(:show?, person)
 
-    person.memberships.includes(:membership_invoices).order(created_at: :desc).first&.decorate
+    person.current_membership&.decorate
   end
 end

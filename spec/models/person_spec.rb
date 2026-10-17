@@ -1044,3 +1044,51 @@ RSpec.describe Person, "scholarship index helpers" do
     end
   end
 end
+
+RSpec.describe Person, "#current_membership" do
+  let(:person) { create(:person) }
+
+  def subscribe_to(membership)
+    customer = Pay::Customer.create!(owner: person, processor: "stripe", processor_id: "cus_test", default: true)
+    Pay::Subscription.create!(customer: customer, name: "default", processor_id: "sub_test",
+      processor_plan: "membership", status: "active", quantity: 1,
+      metadata: { "membership_id" => membership.id })
+  end
+
+  it "prefers the membership the live subscription belongs to over a newer cancelled one" do
+    live = create(:membership, person: person)
+    subscribe_to(live)
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current + 2.years, end_date: Date.current + 3.years)
+
+    expect(person.current_membership).to eq(live)
+  end
+
+  it "falls back to the active membership when there is no subscription" do
+    active = create(:membership, person: person)
+
+    expect(person.current_membership).to eq(active)
+  end
+
+  it "falls back to the soonest upcoming membership" do
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current + 2.years, end_date: Date.current + 3.years)
+    sooner = create(:membership, person: person,
+      start_date: Date.current + 1.month, end_date: Date.current + 1.year)
+
+    expect(person.current_membership).to eq(sooner)
+  end
+
+  it "falls back to the most recent membership when all have ended" do
+    create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current - 3.years, end_date: Date.current - 2.years)
+    newer = create(:membership, :autorenewal_cancelled, person: person,
+      start_date: Date.current - 1.year, end_date: Date.current - 1.day)
+
+    expect(person.current_membership).to eq(newer)
+  end
+
+  it "returns nil when the person has no membership" do
+    expect(person.current_membership).to be_nil
+  end
+end

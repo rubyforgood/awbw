@@ -2,7 +2,7 @@ class People::MembershipsController < ApplicationController
   before_action :set_person, only: [ :index, :new, :create ]
 
   def index
-    authorize! :membership, to: :index?
+    authorize! :membership
 
     @memberships = @person.memberships
       .includes(membership_invoices: :allocations)
@@ -11,7 +11,7 @@ class People::MembershipsController < ApplicationController
   end
 
   def new
-    authorize! :membership, to: :new?
+    authorize! :membership
 
     @membership = @person.memberships.new
     @membership.membership_invoices.new(
@@ -21,7 +21,7 @@ class People::MembershipsController < ApplicationController
   end
 
   def create
-    authorize! :membership, to: :create?
+    authorize! :membership
 
     @membership = @person.memberships.new(membership_params)
 

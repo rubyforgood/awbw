@@ -40,7 +40,16 @@ RSpec.describe "Membership billing portal", type: :request do
     expect(response).to redirect_to(root_path)
   end
 
+  it "refuses someone with no membership record" do
+    sign_in user
+
+    post membership_billing_portals_path
+
+    expect(response).to redirect_to(root_path)
+  end
+
   it "refuses someone with no active Stripe subscription" do
+    create(:membership, person: person)
     sign_in user
 
     post membership_billing_portals_path
@@ -49,6 +58,7 @@ RSpec.describe "Membership billing portal", type: :request do
   end
 
   it "sends someone with an active subscription to the billing portal" do
+    create(:membership, person: person)
     create_active_subscription
     sign_in user
 
@@ -59,6 +69,7 @@ RSpec.describe "Membership billing portal", type: :request do
   end
 
   it "reports an alert when Stripe is unreachable" do
+    create(:membership, person: person)
     create_active_subscription
     allow(fake_processor).to receive(:billing_portal).and_raise(Stripe::StripeError.new("down"))
     sign_in user

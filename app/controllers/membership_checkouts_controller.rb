@@ -1,6 +1,6 @@
 class MembershipCheckoutsController < ApplicationController
   def create
-    authorize! :membership_checkout, to: :create?
+    authorize! :membership, to: :checkout?
 
     person = current_user.person
     membership = person.memberships.autorenewal_not_cancelled.first || person.memberships.create!

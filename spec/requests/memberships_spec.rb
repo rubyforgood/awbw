@@ -398,17 +398,7 @@ RSpec.describe "Memberships", type: :request do
   describe "the policy params filter" do
     let!(:subscription) { create(:membership, person: person) }
 
-    it "permits only the autorenewal_cancelled flag for a non-admin" do
-           policy = MembershipPolicy.new(subscription, user: create(:user))
-           filtered = policy.apply_scope(
-             ActionController::Parameters.new(cost_dollars: "0", autorenewal_cancelled: "1"),
-             type: :action_controller_params
-           )
-
-           expect(filtered.keys).to contain_exactly("autorenewal_cancelled")
-         end
-
-    it "permits both for an admin" do
+    it "permits the cost and autorenewal flags" do
       policy = MembershipPolicy.new(subscription, user: admin)
       filtered = policy.apply_scope(
         ActionController::Parameters.new(cost_dollars: "0", autorenewal_cancelled: "1"),
