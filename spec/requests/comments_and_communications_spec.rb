@@ -19,11 +19,12 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
-    it "links to the person's activity history from the header" do
+    it "links to the person's activity history beside the search heading" do
+      person.update!(first_name: "Aisha")
       get comments_and_communications_path(person_id: person.id)
 
       doc = Nokogiri::HTML(response.body)
-      link = doc.css("a").find { |a| a.text.strip == "Activity" && a["href"]&.include?("person_id=#{person.id}") }
+      link = doc.css("a").find { |a| a.text.strip == "Aisha's activity" }
       expect(link).to be_present
       expect(link["href"]).to eq(admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"))
     end
