@@ -14,6 +14,7 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(mail.subject).to eq(NotificationMailer::PROFILE_CHANGE_REVIEWED_SUBJECT)
       expect(mail.html_part.body.decoded).to include("<strong>declined</strong>")
       expect(mail.html_part.body.decoded).to include("Please send proof")
+      expect(mail.text_part.body.decoded).to include("Thank you,\nAWBW Staff")
     end
   end
 
