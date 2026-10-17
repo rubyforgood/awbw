@@ -1,0 +1,11 @@
+name: "Your profile points you to edit it"
+area: people
+display_status: user_facing
+released_on: 2026-10-17
+pr_number: 2731
+summary: >-
+  When you open your own profile, a banner at the top says "This is your
+  profile" with an "Edit my data" button. Any change you've asked staff for
+  shows there until they've looked at it.
+pro_tips:
+  - "Open it from \"My profile\" in the menu under your picture."
