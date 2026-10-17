@@ -5,7 +5,7 @@ released_on: 2026-10-12
 pr_number: 2636
 action_path: "/organizations/dedupe_index"
 summary: >-
-  Merging two organizations now folds identical addresses into one instead of
+  Merging two organizations now merges identical addresses into one instead of
   leaving the kept organization with duplicates, and keeps a single primary.
 description: >-
   This works the same way as merging people. When two organizations share the

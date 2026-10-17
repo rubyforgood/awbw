@@ -1,0 +1,18 @@
+name: "Addresses match across common spellings"
+area: people
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2706
+summary: >-
+  The portal now treats common spellings of one address as the same place, so
+  duplicates are caught and registrations update an address instead of saving
+  it again.
+pro_tips:
+  - "These count as the same: \"N Main St\" and \"North Main Street\", \"Suite 4\" and \"#4\", \"First Ave\" and \"1st Ave\", \"St. Louis\" and \"Saint Louis\", \"Texas\" and \"TX\", a ZIP+4 and its five-digit ZIP, and \"USA\" and \"United States\"."
+  - "A copy missing its ZIP or street matches the one full address it fits, and the kept copy picks up anything it was missing."
+  - "Registration forms use these rules, so a returning registrant's or organization's address is updated instead of saved again."
+  - "Merging two people or two organizations, and the Dedupe addresses page, merge addresses using the same rules."
+  - "The organization deduper's \"Shared address\" flag uses them too, so two orgs at one address spelled two ways are suggested as possible duplicates."
+  - "Saved addresses keep the spelling they were entered with — the rules only decide what counts as a match."
+  - "Typos aren't matched: a misspelling like \"Mian St\" stays a separate address."
+  - "Two different localities stay separate too — an address marked \"LA City\" won't match one marked \"Outside CA\" (\"Unknown\" matches either)."

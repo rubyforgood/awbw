@@ -9,6 +9,7 @@
     <% end %>
   </div>
 <% end %>
+<%= render "addresses/dedupe_back_link" %>
 <% if allowed_to?(:index?, MembershipInvoice) %>
   <%= render "people/multiple_memberships_warning", person: @person %>
 <% end %>

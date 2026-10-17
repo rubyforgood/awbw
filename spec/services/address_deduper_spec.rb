@@ -14,7 +14,7 @@ RSpec.describe AddressDeduper do
     create(:address, addressable: person, primary: primary, **attrs)
   end
 
-  it "folds identical addresses into one" do
+  it "merges identical addresses into one" do
     keep = address
     dup = address
 
@@ -22,6 +22,64 @@ RSpec.describe AddressDeduper do
 
     expect(person.addresses.reload.pluck(:id)).to eq([ keep.id ])
     expect(Address.exists?(dup.id)).to be false
+  end
+
+  it "merges an address spelled differently but naming the same place" do
+    keep = address(street_address: "1 Main Street", state: "California", zip_code: "90001-1234")
+    dup = address(street_address: "1 Main St.")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ keep.id ])
+    expect(Address.exists?(dup.id)).to be false
+  end
+
+  it "merges a copy missing its ZIP into the fuller address and keeps the ZIP" do
+    keep = address(zip_code: "")
+    full = address
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ keep.id ])
+    expect(keep.reload.zip_code).to eq(full.zip_code)
+  end
+
+  it "fills an unknown locality on the survivor from the merged copy" do
+    keep = address(locality: "Unknown")
+    address
+
+    described_class.new(person).call
+
+    expect(keep.reload.locality).to eq("LA City")
+  end
+
+  it "leaves a less complete copy alone when it fits more than one address" do
+    address(street_address: "")
+    address(street_address: "1 Main St")
+    address(street_address: "2 Other St")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.count).to eq(3)
+  end
+
+  it "merges a chain of less complete copies onto the fullest one" do
+    full = address
+    address(zip_code: "")
+    address(zip_code: "", street_address: "")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ full.id ])
+  end
+
+  it "keeps addresses of different types apart" do
+    address(address_type: "work")
+    address(address_type: "mailing")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.count).to eq(2)
   end
 
   it "keeps addresses that differ in any detail" do
@@ -33,7 +91,7 @@ RSpec.describe AddressDeduper do
     expect(person.addresses.reload.count).to eq(2)
   end
 
-  it "repoints a folded address's contact methods onto the survivor" do
+  it "repoints a merged address's contact methods onto the survivor" do
     keep = address
     dup = address
     method = create(:contact_method, contactable: person, address: dup)
@@ -53,7 +111,7 @@ RSpec.describe AddressDeduper do
     expect(other.reload.primary?).to be false
   end
 
-  it "folds into the active copy when an older duplicate is inactive" do
+  it "merges into the active copy when an older duplicate is inactive" do
     inactive = address(inactive: true)
     active = address
 
@@ -64,7 +122,7 @@ RSpec.describe AddressDeduper do
     expect(Address.exists?(inactive.id)).to be false
   end
 
-  it "folds into the primary copy when the duplicate is not primary" do
+  it "merges into the primary copy when the duplicate is not primary" do
     plain = address
     primary = address(primary: true)
 
@@ -74,7 +132,7 @@ RSpec.describe AddressDeduper do
     expect(Address.exists?(plain.id)).to be false
   end
 
-  it "carries a folded address's phone onto a survivor that has none" do
+  it "carries a merged address's phone onto a survivor that has none" do
     keep = address
     address(phone: "555-9000")
 
@@ -92,7 +150,7 @@ RSpec.describe AddressDeduper do
     expect(keep.reload.phone).to eq("555-1000")
   end
 
-  it "carries a folded address's geocoded districts onto a survivor that has none" do
+  it "carries a merged address's geocoded districts onto a survivor that has none" do
     keep = address(la_city_council_district: nil, la_service_planning_area: nil, la_supervisorial_district: nil)
     address(la_city_council_district: 4, la_service_planning_area: 2, la_supervisorial_district: 3)
 
@@ -101,5 +159,17 @@ RSpec.describe AddressDeduper do
     expect(keep.reload.la_city_council_district).to eq(4)
     expect(keep.la_service_planning_area).to eq(2)
     expect(keep.la_supervisorial_district).to eq(3)
+  end
+
+  describe ".merge_duplicates" do
+    it "keeps the owner's primary when its copy merges into an active duplicate" do
+      address(primary: true, inactive: true)
+      active = address
+      address(street_address: "2 Other St")
+
+      described_class.merge_duplicates(person)
+
+      expect(person.addresses.reload.where(primary: true)).to eq([ active ])
+    end
   end
 end

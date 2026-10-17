@@ -419,7 +419,7 @@ class PeopleController < ApplicationController
         @adopted_login_id = delete.user&.id unless keep.user
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
-      #   * redundant professional licenses within a kind (fold blank-number
+      #   * redundant professional licenses within a kind (merge blank-number
       #     placeholders into a real license — done first so any CE it moves is then
       #     collapsed by the CE deduper below);
       #   * duplicate CE registrations for one event (collapse them, preserving the
@@ -429,7 +429,7 @@ class PeopleController < ApplicationController
       #   * two live Pay customers (keep one default — the subscription-bearing one,
       #     else the survivor's own — and soft-delete the redundant sibling so
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
-      #   * duplicate addresses / contact methods (fold identical ones into one,
+      #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
       #   * a survivor gaining its first login (adopt the login's email as primary).
       after_merge: ->(keep) {

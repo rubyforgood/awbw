@@ -1,0 +1,40 @@
+module AddressServices
+  # People and organizations carrying two or more addresses that are one place
+  # (AddressDeduper.matching_sets) — the set the standalone address deduper merges.
+  # Only compares addresses within one owner: two orgs sharing a street are
+  # separate records, not duplicates.
+  class DuplicateFinder
+    Group = Struct.new(:addressable, :duplicate_sets, keyword_init: true) do
+      def label
+        addressable.try(:full_name).presence || addressable.name
+      end
+
+      def merged_count
+        duplicate_sets.sum { |addresses| addresses.size - 1 }
+      end
+    end
+
+    def initialize(scope = Address.all)
+      @scope = scope
+    end
+
+    def groups
+      @scope.includes(:addressable).order(:id).to_a
+        .group_by { |address| [ address.addressable_type, address.addressable_id ] }
+        .filter_map { |_owner, addresses| group_for(addresses) }
+        .sort_by { |group| group.label.to_s.downcase }
+    end
+
+    private
+
+    def group_for(addresses)
+      addressable = addresses.first.addressable
+      return unless addressable
+
+      duplicate_sets = AddressDeduper.matching_sets(addresses).select { |set| set.size > 1 }
+      return if duplicate_sets.empty?
+
+      Group.new(addressable: addressable, duplicate_sets: duplicate_sets)
+    end
+  end
+end

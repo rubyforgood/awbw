@@ -542,7 +542,7 @@ class EventRegistrationsController < ApplicationController
       # matches its allocation. A moved CE registration still points at the deleted
       # registrant's license (so it lands invalid and duplicates the keeper's own CE);
       # ReconcileMergedContinuingEducation repoints it to the kept registrant's license
-      # and folds the duplicates into one, keeping payments.
+      # and merges the duplicates into one, keeping payments.
       after_merge: ->(keep) {
         keep.scholarships.where.not(recipient_id: keep.registrant_id).find_each do |scholarship|
           scholarship.update!(recipient: keep.registrant)

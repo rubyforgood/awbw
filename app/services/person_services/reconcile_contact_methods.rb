@@ -1,14 +1,14 @@
 module PersonServices
   # After a person merge, the generic merge moves both people's contact methods onto
   # the keeper wholesale (contact_methods have no unique index), leaving identical
-  # duplicates and possibly two primary phones of the same kind. Fold contact methods
+  # duplicates and possibly two primary phones of the same kind. Merge contact methods
   # that share the same kind + value into one, then settle a single primary per kind:
   # the keeper's own pre-merge primary, or the deleted person's when the keeper had
   # none. Runs in the people deduper's after_merge.
   class ReconcileContactMethods
     IDENTITY_COLUMNS = %w[kind value contact_type].freeze
 
-    # Outside the identity, so a fold never drops the address link only one copy had.
+    # Outside the identity, so a merge never drops the address link only one copy had.
     CARRIED_COLUMNS = %w[address_id].freeze
 
     def self.signature(contact_method)
@@ -36,10 +36,10 @@ module PersonServices
 
     def call
       survivors = {}
-      fold_candidates.each do |contact_method|
+      merge_candidates.each do |contact_method|
         signature = self.class.signature(contact_method)
         if (survivor = survivors[signature])
-          fold(contact_method, into: survivor)
+          merge(contact_method, into: survivor)
         else
           survivors[signature] = contact_method
         end
@@ -50,16 +50,16 @@ module PersonServices
 
     private
 
-    # Active before inactive, then the primary, then oldest — so a fold keeps the
+    # Active before inactive, then the primary, then oldest — so a merge keeps the
     # copy still in use. `Person#phone_number` reads only active phones, so letting
     # an inactive duplicate win would leave the person looking phoneless.
-    def fold_candidates
+    def merge_candidates
       @person.contact_methods.reload.sort_by do |contact_method|
         [ contact_method.inactive? ? 1 : 0, contact_method.primary? ? 0 : 1, contact_method.id ]
       end
     end
 
-    def fold(loser, into:)
+    def merge(loser, into:)
       carry_over(loser, into)
       deduper.merge(into, loser)
     end

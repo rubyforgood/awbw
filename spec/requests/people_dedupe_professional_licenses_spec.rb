@@ -92,7 +92,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     let!(:keep_license) { license_with_ce(keep, number: "LIC-A") }
     let!(:delete_license) { license_with_ce(delete_rec, number: nil) }
 
-    it "folds the empty placeholder into the numbered license, keeping its CE" do
+    it "merges the empty placeholder into the numbered license, keeping its CE" do
       merge!(keep: keep, delete: delete_rec)
 
       follow_redirect!
@@ -125,7 +125,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     let!(:numbered_b) { license_with_ce(delete_rec, number: "LIC-B") }
     let!(:placeholder) { license_with_ce(delete_rec, number: nil) }
 
-    it "keeps both real numbers and folds the placeholder into one of them" do
+    it "keeps both real numbers and merges the placeholder into one of them" do
       merge!(keep: keep, delete: delete_rec)
 
       follow_redirect!
@@ -310,7 +310,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     let!(:delete_reg) { create(:event_registration, registrant: delete_rec, event: event) }
     let!(:keep_license) { create(:professional_license, :placeholder, person: keep, kind: "LMFT") }
     let!(:delete_license) { create(:professional_license, :placeholder, person: delete_rec, kind: "LMFT") }
-    # Each record was legitimately paid in full on its own; folding them onto one
+    # Each record was legitimately paid in full on its own; merging them onto one
     # $5,000 enrollment leaves $10,000 allocated. The merge keeps the real $5,000
     # cost (not an invented $10,000) and flags the over-allocation for a human.
     let!(:keep_ce) { create(:continuing_education_registration, event_registration: keep_reg, professional_license: keep_license, cost_cents: 5_000) }
@@ -469,7 +469,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       create(:address, addressable: person, primary: primary, **attrs)
     end
 
-    it "folds identical addresses into one on the survivor" do
+    it "merges identical addresses into one on the survivor" do
       person_address(keep)
       person_address(delete_rec)
 
@@ -512,7 +512,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
       expect(addresses.active.count).to eq(1)
     end
 
-    it "moves a folded address's contact method onto the surviving address" do
+    it "moves a merged address's contact method onto the surviving address" do
       keep_address = person_address(keep)
       dupe_address = person_address(delete_rec)
       method = create(:contact_method, contactable: delete_rec, address: dupe_address)
@@ -527,7 +527,7 @@ RSpec.describe "People dedupe — professional licenses", type: :request do
     let!(:keep) { create(:person) }
     let!(:delete_rec) { create(:person) }
 
-    it "folds identical contact methods and keeps one primary per kind" do
+    it "merges identical contact methods and keeps one primary per kind" do
       keep_method = create(:contact_method, contactable: keep, value: "555-1000", kind: "phone", primary: true)
       create(:contact_method, contactable: delete_rec, value: "555-1000", kind: "phone")
       create(:contact_method, contactable: delete_rec, value: "555-2000", kind: "phone", primary: true)

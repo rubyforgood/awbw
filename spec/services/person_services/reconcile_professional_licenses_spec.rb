@@ -9,7 +9,7 @@ RSpec.describe PersonServices::ReconcileProfessionalLicenses do
     create(:professional_license, person: person, number: number, kind: kind)
   end
 
-  it "folds an empty placeholder into the real license of the same kind" do
+  it "merges an empty placeholder into the real license of the same kind" do
     real = license(number: "LIC-A")
     placeholder = license(number: nil)
 
