@@ -9,7 +9,8 @@ import { Controller } from "@hotwired/stimulus"
 // still lead with the primary on display. The sector chip's leader (crown) flag is
 // independent and CSS-only, so it needs no JS here. An optional member checkbox
 // per chip (the grid's tag checkbox) stays in step: starring checks it, and
-// unchecking it clears the star.
+// unchecking it clears the star. A lone selected chip is starred, matching the
+// server's rule that a sole tag is the primary one.
 export default class extends Controller {
   static targets = ["chip", "primary", "member"]
   static classes = ["primary", "default"]
@@ -26,13 +27,20 @@ export default class extends Controller {
       const member = this.memberIn(this.chipFor(event.target))
       if (member) member.checked = true
     }
-    this.style()
+    this.promoteSole()
   }
 
   selectMember(event) {
-    if (event.target.checked) return
-    const primary = this.primaryIn(this.chipFor(event.target))
-    if (primary) primary.checked = false
+    if (!event.target.checked) {
+      const primary = this.primaryIn(this.chipFor(event.target))
+      if (primary) primary.checked = false
+    }
+    this.promoteSole()
+  }
+
+  promoteSole() {
+    const selected = this.primaryTargets.filter((primary) => this.isSelected(this.chipFor(primary)))
+    if (selected.length === 1) selected[0].checked = true
     this.style()
   }
 
@@ -45,6 +53,13 @@ export default class extends Controller {
       this.primaryClasses.forEach((klass) => chip.classList.toggle(klass, primary))
       this.defaultClasses.forEach((klass) => chip.classList.toggle(klass, !primary))
     })
+  }
+
+  // A grid chip counts when its tag is checked; a cocoon chip until it's removed (hidden).
+  isSelected(chip) {
+    if (!chip) return false
+    const member = this.memberIn(chip)
+    return member ? member.checked : chip.style.display !== "none"
   }
 
   chipFor(element) {
