@@ -86,7 +86,7 @@
                              (@person ? options_for_select([ [ @person.full_name, @person.id ] ], @person.id) : options_for_select([])),
                              include_blank: true, prompt: "e.g. Jane Doe",
                              "aria-label": "Filter to one person's activity",
-                             class: search_field_class,
+                             class: search_field_class(extra: "[&_.ts-control_input]:text-sm!"),
                              data: { controller: "remote-select navigate-select",
                                      remote_select_model_value: "person",
                                      remote_select_search_icon_value: false,

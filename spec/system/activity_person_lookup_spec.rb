@@ -11,6 +11,9 @@ RSpec.describe "Activity person lookup", type: :system, js: true do
 
     expect(page).to have_css(".ts-control input[placeholder='e.g. Jane Doe']")
     expect(page).to have_no_css(".remote-select-icon")
+    lookup_size = page.evaluate_script("getComputedStyle(document.querySelector('.ts-control input')).fontSize")
+    neighbor_size = page.evaluate_script("getComputedStyle(document.querySelector('#event_name'), '::placeholder').fontSize")
+    expect(lookup_size).to eq(neighbor_size)
 
     find(".ts-control").click
     find(".ts-control input").send_keys("Lookup")
