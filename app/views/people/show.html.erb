@@ -1,4 +1,4 @@
-<% content_for(:page_bg_class, "admin-or-owner-or-authsearchable") %>
+<% content_for(:page_bg_class, "admin-or-owner") %>
 <%# Returned from a registrant's profile link on the event registrants page. Shown
     above the profile topper; needs event_id since the profile isn't event-scoped. %>
 <% if params[:return_to] == "registrants" && params[:event_id].present? %>
