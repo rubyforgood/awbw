@@ -130,6 +130,38 @@ RSpec.describe TagAliasSeeder do
     expect { described_class.call(quiet: true) }.not_to change(TagAlias, :count)
   end
 
+  it "withdraws a proposed read the tables no longer name, so an edited proposal takes effect" do
+    stale = create(:tag_alias, name: "Inpatient Psychiatric Hopital", aliasable: Sector.find_by(name: "Health/Medical"),
+                               source: "filemaker", proposed: true)
+    stale_ignored = create(:tag_alias, name: "Family Resource Centers", aliasable: nil, ignored: true,
+                                       source: "filemaker", proposed: true)
+
+    described_class.call(quiet: true)
+
+    expect(TagAlias.exists?(stale.id)).to be false
+    expect(TagAlias.exists?(stale_ignored.id)).to be false
+    expect(TagTranslation.new.resolve("Family Resource Centers").sector_ids).to eq([ Sector.find_by(name: "Community Building").id ])
+  end
+
+  it "keeps a proposal staff have validated even once the tables drop it" do
+    validated = create(:tag_alias, name: "Inpatient Psychiatric Hopital", aliasable: Sector.find_by(name: "Health/Medical"),
+                                   source: "filemaker", proposed: false)
+
+    described_class.call(quiet: true)
+
+    expect(TagAlias.exists?(validated.id)).to be true
+  end
+
+  it "withdraws nothing while a proposal's tag is missing, since that proposal couldn't be matched" do
+    stale = create(:tag_alias, name: "Inpatient Psychiatric Hopital", aliasable: Sector.find_by(name: "Health/Medical"),
+                               source: "filemaker", proposed: true)
+    Sector.find_by(name: "Community Building").destroy
+
+    described_class.call(quiet: true)
+
+    expect(TagAlias.exists?(stale.id)).to be true
+  end
+
   it "leaves a term an admin recorded by hand alone" do
     sexual_assault = Sector.find_by(name: "Sexual Assault")
     admin_alias = create(:tag_alias, name: "Student Services", aliasable: sexual_assault, source: "portal")
