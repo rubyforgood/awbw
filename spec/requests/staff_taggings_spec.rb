@@ -20,6 +20,17 @@ RSpec.describe "/staff_taggings", type: :request do
         expect(response.body).to include("Highlight roster")
       end
 
+      it "shows the latest comment in the inline note" do
+        tagging = create(:staff_tagging)
+        create(:comment, commentable: tagging, body: "Older note", created_at: 2.days.ago)
+        create(:comment, commentable: tagging, body: "Newest note")
+
+        get staff_taggings_path, headers: turbo_headers
+
+        expect(response.body).to include("Latest comment")
+        expect(Nokogiri::HTML(response.body).at_css("textarea[name='note']").text.strip).to eq("Newest note")
+      end
+
       it "filters by staff tag" do
         wanted = create(:staff_tag, name: "Wanted")
         other = create(:staff_tag, name: "Other")
@@ -318,13 +329,15 @@ RSpec.describe "/staff_taggings", type: :request do
 
     it "edits the latest comment instead of piling up new ones" do
       tagging = create(:staff_tagging)
-      create(:comment, commentable: tagging, body: "first")
+      older = create(:comment, commentable: tagging, body: "first", created_at: 2.days.ago)
+      create(:comment, commentable: tagging, body: "second")
 
       expect {
         patch save_note_staff_tagging_path(tagging), params: { note: "edited" }
       }.not_to change { tagging.comments.count }
 
       expect(tagging.comments.first.body).to eq("edited")
+      expect(older.reload.body).to eq("first")
     end
   end
 
