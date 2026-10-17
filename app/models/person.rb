@@ -638,7 +638,7 @@ class Person < ApplicationRecord
     errors.add(:base, "Only one age range can be marked as primary")
   end
 
-  # Keep one tagging per age-range category. Prefer the persisted row, fold any
+  # Keep one tagging per age-range category. Prefer the persisted row, merge any
   # duplicate's primary flag onto the keeper, and drop the extras (destroy if
   # persisted, otherwise remove from the unsaved set).
   def dedupe_age_range_items

@@ -14,7 +14,7 @@ RSpec.describe PersonServices::ReconcileContactMethods do
                      state: "CA", zip_code: "90001", locality: "LA City")
   end
 
-  it "folds identical contact methods into one" do
+  it "merges identical contact methods into one" do
     keep = contact_method
     dup = contact_method
 
@@ -44,7 +44,7 @@ RSpec.describe PersonServices::ReconcileContactMethods do
     expect(other.reload.primary?).to be false
   end
 
-  it "folds into the active copy when an older duplicate is inactive" do
+  it "merges into the active copy when an older duplicate is inactive" do
     inactive = contact_method(inactive: true)
     active = contact_method
 
@@ -55,7 +55,7 @@ RSpec.describe PersonServices::ReconcileContactMethods do
     expect(ContactMethod.exists?(inactive.id)).to be false
   end
 
-  it "folds into the primary copy when the duplicate is not primary" do
+  it "merges into the primary copy when the duplicate is not primary" do
     plain = contact_method
     primary = contact_method(primary: true)
 
@@ -65,7 +65,7 @@ RSpec.describe PersonServices::ReconcileContactMethods do
     expect(ContactMethod.exists?(plain.id)).to be false
   end
 
-  it "carries a folded contact method's address onto a survivor that has none" do
+  it "carries a merged contact method's address onto a survivor that has none" do
     keep = contact_method
     contact_method(address: address)
 

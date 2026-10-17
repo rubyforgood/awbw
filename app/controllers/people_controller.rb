@@ -419,7 +419,7 @@ class PeopleController < ApplicationController
         @adopted_login_id = delete.user&.id unless keep.user
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
-      #   * redundant professional licenses within a kind (fold blank-number
+      #   * redundant professional licenses within a kind (merge blank-number
       #     placeholders into a real license — done first so any CE it moves is then
       #     collapsed by the CE deduper below);
       #   * duplicate CE registrations for one event (collapse them, preserving the
@@ -429,7 +429,7 @@ class PeopleController < ApplicationController
       #   * two live Pay customers (keep one default — the subscription-bearing one,
       #     else the survivor's own — and soft-delete the redundant sibling so
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
-      #   * duplicate addresses / contact methods (fold identical ones into one,
+      #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
       #   * a survivor gaining its first login (adopt the login's email as primary).
       after_merge: ->(keep) {
@@ -669,10 +669,12 @@ class PeopleController < ApplicationController
   end
 
   # Where to send the admin after a successful update. Defaults to the person's
-  # profile, but returns to the registration org-linking page when the edit was
-  # opened from one of its linked-org cards (preserving that page's own return_to).
+  # profile, but returns to Data health or the registration org-linking page when
+  # the edit was opened from there (preserving that page's own return_to).
   def person_update_return_path
-    if params[:return_to] == "registration_link" && params[:event_registration_id].present?
+    if params[:return_to] == "data_health"
+      helpers.data_health_return_path(params[:check])
+    elsif params[:return_to] == "registration_link" && params[:event_registration_id].present?
       link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence)
     else
       @person

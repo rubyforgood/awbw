@@ -1,0 +1,16 @@
+name: "More data health checks, plus duplicate and author credit counts"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2707
+action_path: "/admin/data_health"
+summary: >-
+  Data health flags eight more kinds of inconsistency, and counts possible
+  duplicates and author credit left to review, with links to each page.
+pro_tips:
+  - "New checks: people with more than one login, registrations paid beyond their cost, people with more than one primary sector or age range, stories without a specific workshop, resources with an agency name but no organization, emails stuck pending that nobody has resent, Contact us messages not marked responded, and \"Other\" form answers waiting for review."
+  - "Communication checks count only messages since January 1, 2026. Older ones from the previous system show as a separate count with a link."
+  - "Click any listed row to open that record in a new tab and fix it there."
+  - "Groups start collapsed with their count showing; use Expand all to open everything."
+  - "Stories linked only to a generic Adult or Children's Windows Workshop count as having no workshop."
+  - "\"Link organizations\" matches each resource's agency name to an organization with that exact name, and creates one when none exists."

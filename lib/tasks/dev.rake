@@ -29,6 +29,7 @@ namespace :db do
       form_results_showcase
       annual_evaluation
       fm_archive
+      address_duplicates
     ]
 
     desc "Generate representative sample data for development"
@@ -162,6 +163,11 @@ namespace :db do
     desc "Seed three fake FileMaker archive rows per table and link the first people/orgs to them (dev only)"
     task fm_archive: :environment do
       load Rails.root.join("db/seeds/dev/fm_archive.rb")
+    end
+
+    desc "Seed addresses that hit every address-dedupe matching rule, plus near-misses that stay separate"
+    task address_duplicates: :environment do
+      load Rails.root.join("db/seeds/dev/address_duplicates.rb")
     end
   end
 end

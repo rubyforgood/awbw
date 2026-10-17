@@ -1,11 +1,12 @@
 <%= turbo_frame_tag :profile_change_requests_results do %>
-  <div class="mt-4 flex flex-wrap gap-2">
+  <nav class="mt-4 inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Status filter">
     <% ProfileChangeRequest::STATUSES.each do |status| %>
-      <%= link_to status.capitalize,
-                  profile_change_requests_path(status: status, person_id: @person&.id),
-                  class: "rounded-full px-3 py-1 text-sm #{status == @status ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}" %>
+      <%= link_to profile_change_requests_path(status: status, person_id: @person&.id),
+                  class: "rounded-md px-3 py-1 transition-colors #{status == @status ? "bg-white text-gray-800 shadow-sm" : eyebrow_link_class}" do %>
+        <%= status.capitalize %> <span class="text-gray-400"><%= @status_counts[status].to_i %></span>
+      <% end %>
     <% end %>
-  </div>
+  </nav>
 
   <div class="mt-6 space-y-3">
     <% if @requests.any? %>

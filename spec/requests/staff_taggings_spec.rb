@@ -20,6 +20,20 @@ RSpec.describe "/staff_taggings", type: :request do
         expect(response.body).to include("Highlight roster")
       end
 
+      it "shows the latest comment in the inline note with who last edited it" do
+        tagging = create(:staff_tagging)
+        create(:comment, commentable: tagging, body: "Older note", created_at: 2.days.ago)
+        newest = create(:comment, commentable: tagging, body: "Newest note", created_by: admin)
+
+        get staff_taggings_path, headers: turbo_headers
+
+        expect(response.body).to include("Latest comment")
+        expect(Nokogiri::HTML(response.body).at_css("textarea[name='note']").text.strip).to eq("Newest note")
+        edited_at = newest.updated_at.in_time_zone(admin.time_zone || "Pacific Time (US & Canada)")
+        hint = Nokogiri::HTML(response.body).at_css("textarea[name='note'] + div").text.squish
+        expect(hint).to eq("#{admin.decorate.initials} #{edited_at.strftime("%-m/%-d/%Y %-I:%M %p")}")
+      end
+
       it "filters by staff tag" do
         wanted = create(:staff_tag, name: "Wanted")
         other = create(:staff_tag, name: "Other")
@@ -112,6 +126,19 @@ RSpec.describe "/staff_taggings", type: :request do
     end
   end
 
+  describe "GET /staff_taggings/new" do
+    before { sign_in admin }
+
+    it "points back to the staff tags list when opened from there" do
+      get new_staff_tagging_path(return_to: "staff_tags")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("← Staff tags")
+      expect(response.body).to include("comments-section")
+      expect(Nokogiri::HTML(response.body).at_css("input[name='return_to']")["value"]).to eq("staff_tags")
+    end
+  end
+
   describe "POST /staff_taggings (create)" do
     before { sign_in admin }
 
@@ -126,6 +153,31 @@ RSpec.describe "/staff_taggings", type: :request do
       expect(response).to redirect_to(staff_taggings_path)
       expect(StaffTagging.last.staff_taggable).to eq(person)
       expect(StaffTagging.last.staff_tag).to eq(tag)
+    end
+
+    it "logs a comment and a communication with the new tagging" do
+      person = create(:person)
+
+      post staff_taggings_path, params: {
+        staff_tagging: {
+          person_id: person.id,
+          staff_tag_id: create(:staff_tag).id,
+          comments_attributes: { "0" => { body: "Met at the spring training" } },
+          notifications_attributes: { "0" => { channel: "phone", email_subject: "Called to say hello" } }
+        }
+      }
+
+      tagging = StaffTagging.last
+      expect(tagging.comments.sole.body).to eq("Met at the spring training")
+      expect(tagging.comments.sole.created_by).to eq(admin)
+      expect(tagging.notifications.sole.email_subject).to eq("Called to say hello")
+      expect(tagging.notifications.sole.recipient_email).to eq(person.preferred_email.presence || "n/a")
+    end
+
+    it "returns to the staff tags list when started from there" do
+      post staff_taggings_path, params: { return_to: "staff_tags", staff_tagging: { person_id: create(:person).id, staff_tag_id: create(:staff_tag).id } }
+
+      expect(response).to redirect_to(staff_tags_path)
     end
 
     it "rejects a tagging with no person" do
@@ -278,15 +330,27 @@ RSpec.describe "/staff_taggings", type: :request do
       expect(tagging.comments.first.body).to eq("Called them")
     end
 
+    it "streams back the refreshed hint with the editor's initials" do
+      tagging = create(:staff_tagging)
+
+      patch save_note_staff_tagging_path(tagging), params: { note: "Called them" }, as: :turbo_stream
+
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include(%(target="#{ActionView::RecordIdentifier.dom_id(tagging, :note_hint)}"))
+      expect(response.body).to include(admin.decorate.initials)
+    end
+
     it "edits the latest comment instead of piling up new ones" do
       tagging = create(:staff_tagging)
-      create(:comment, commentable: tagging, body: "first")
+      older = create(:comment, commentable: tagging, body: "first", created_at: 2.days.ago)
+      create(:comment, commentable: tagging, body: "second")
 
       expect {
         patch save_note_staff_tagging_path(tagging), params: { note: "edited" }
       }.not_to change { tagging.comments.count }
 
       expect(tagging.comments.first.body).to eq("edited")
+      expect(older.reload.body).to eq("first")
     end
   end
 

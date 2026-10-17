@@ -1,0 +1,30 @@
+<%# Shared with the admin review queue's email preview so the two never drift.
+    Locals: request (decorated), outcome ("approved" / "resolved" / "declined"), note. %>
+<h1 style="margin: 0 0 16px; font-weight: bold;">Update on your change request</h1>
+
+<p style="margin: 0 0 16px; color:#374151;"><%= request.email_greeting %></p>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  Thank you for helping us keep your information up to date!
+</p>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  We've <strong><%= outcome %></strong> your request to <%= request.requested_change %>.
+</p>
+
+<% if outcome != "declined" && request.field == "primary_email" %>
+  <p style="margin: 0 0 16px; color:#374151;">
+    Check your inbox at <strong><%= request.requested_value %></strong> for a confirmation link to
+    finish the change.
+  </p>
+<% end %>
+
+<% if note.present? %>
+  <p style="margin: 0 0 8px; color:#6b7280;">Note from staff:</p>
+  <p style="margin: 0 0 16px; white-space: pre-line;"><%= note %></p>
+<% end %>
+
+<p style="margin: 0 0 16px; color:#374151;">
+  Thank you,<br>
+  AWBW Staff
+</p>

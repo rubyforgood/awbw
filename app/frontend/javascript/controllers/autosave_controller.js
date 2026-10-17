@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
+import { Turbo } from "@hotwired/turbo-rails"
 
 export default class extends Controller {
-  static values = { url: String, id: Number }
+  static values = { url: String, id: Number, stream: Boolean }
 
   save(event) {
     const field = event.target
@@ -25,11 +26,12 @@ export default class extends Controller {
       method: "PATCH",
       headers: {
         "X-CSRF-Token": csrfToken,
-        "Accept": "application/json"
+        "Accept": this.streamValue ? "text/vnd.turbo-stream.html" : "application/json"
       },
       body: formData
     }).then(response => {
       if (response.ok) {
+        if (this.streamValue) response.text().then(html => Turbo.renderStreamMessage(html))
         field.classList.add("ring-2", "ring-green-300")
         setTimeout(() => field.classList.remove("ring-2", "ring-green-300"), 1000)
       } else {

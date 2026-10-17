@@ -4,8 +4,15 @@
 <% subtitle = capture do %>
   Browse workshops, resources, and stories using our tagging system. For a more precise search, use <a href="#explore-by-combination" class="font-semibold text-blue-600 hover:text-blue-800">Explore by combination</a> to apply multiple filters at once.
 <% end %>
+<% actions = capture do %>
+  <% if allowed_to?(:matrix?, :tagging) %>
+    <%= link_to "Tagging counts",
+                taggings_matrix_path(return_to: "tags"),
+                class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100 whitespace-nowrap") %>
+  <% end %>
+<% end %>
 <%= render layout: "shared/index_page",
-           locals: { domain: :tags, eyebrow: "Browse", title: "Tags", subtitle: subtitle } do %>
+           locals: { domain: :tags, eyebrow: "Browse", title: "Tags", subtitle: subtitle, actions: actions } do %>
   <div class="mb-10 w-full">
 
     <div class="space-y-6">

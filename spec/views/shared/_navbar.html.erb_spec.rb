@@ -61,6 +61,23 @@ RSpec.describe "shared/_navbar", type: :view do
     end
   end
 
+  context "when a regular user can edit their own profile" do
+    before do
+      person = create(:person, user: regular_user)
+      regular_user.reload
+      allow(view).to receive(:current_user).and_return(regular_user)
+      allow(view).to receive(:user_signed_in?).and_return(true)
+      allow(view).to receive(:allowed_to?).and_return(false)
+      allow(view).to receive(:allowed_to?).with(:edit_own_profile?, person).and_return(true)
+      render_nav
+    end
+
+    it "shows My profile without the admin-only marker" do
+      expect(rendered).to have_link("My profile")
+      expect(rendered).not_to have_css(".admin-only", text: "My profile")
+    end
+  end
+
   context "when logged in as an admin" do
     before do
       create(:person, user: admin_user)

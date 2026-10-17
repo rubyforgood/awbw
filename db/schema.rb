@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_144711) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1736,12 +1736,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_144711) do
     t.text "reviewer_note"
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
-    t.bigint "professional_license_id"
-    t.string "proposed_email_type"
+    t.bigint "proposed_organization_address_id"
+    t.string "proposed_street_address"
+    t.string "proposed_city"
+    t.string "proposed_state"
+    t.string "proposed_zip_code"
     t.index ["affiliation_id"], name: "index_profile_change_requests_on_affiliation_id"
     t.index ["organization_id"], name: "index_profile_change_requests_on_organization_id"
     t.index ["person_id"], name: "index_profile_change_requests_on_person_id"
     t.index ["professional_license_id"], name: "index_profile_change_requests_on_professional_license_id"
+    t.index ["proposed_organization_address_id"], name: "idx_on_proposed_organization_address_id_262f2ec6a0"
     t.index ["requested_by_id"], name: "index_profile_change_requests_on_requested_by_id"
     t.index ["reviewed_by_id"], name: "index_profile_change_requests_on_reviewed_by_id"
     t.index ["status"], name: "index_profile_change_requests_on_status"
@@ -2798,6 +2802,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_144711) do
   add_foreign_key "people", "users", column: "created_by_id"
   add_foreign_key "people", "users", column: "updated_by_id"
   add_foreign_key "professional_licenses", "people"
+  add_foreign_key "profile_change_requests", "addresses", column: "proposed_organization_address_id", on_delete: :nullify
   add_foreign_key "profile_change_requests", "affiliations"
   add_foreign_key "profile_change_requests", "organizations"
   add_foreign_key "profile_change_requests", "people"

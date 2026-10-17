@@ -132,7 +132,7 @@ RSpec.describe "Person age ranges", type: :request do
       expect(response).to have_http_status(:found)
       person.reload
       expect(person.categorizable_items.where(category: children).count).to eq(1)
-      # The primary flag from the duplicate is folded onto the kept tagging.
+      # The primary flag from the duplicate is merged onto the kept tagging.
       expect(person.primary_age_groups).to contain_exactly(children)
     end
 

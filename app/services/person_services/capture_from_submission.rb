@@ -68,10 +68,10 @@ module PersonServices
       return if new_city.blank?
 
       new_state = field_value("mailing_state")&.strip
-      existing = @person.addresses.find_by(
-        "LOWER(city) = ? AND LOWER(COALESCE(state, '')) = ?",
-        new_city.downcase, new_state&.downcase.to_s
-      )
+      existing = @person.addresses.order(:id).find do |address|
+        AddressNormalizer.city(address.city) == AddressNormalizer.city(new_city) &&
+          AddressNormalizer.state(address.state) == AddressNormalizer.state(new_state)
+      end
 
       if existing
         existing.update!(

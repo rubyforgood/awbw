@@ -11,7 +11,10 @@
 
   <%# Carry the origin context through the save so #update can return the admin
       to where they came from (e.g. the registration org-linking page). %>
-  <% if params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
+  <% if params[:return_to] == "data_health" %>
+    <%= hidden_field_tag :return_to, "data_health" %>
+    <%= hidden_field_tag :check, params[:check] if params[:check].present? %>
+  <% elsif params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
     <%= hidden_field_tag :return_to, "registration_link" %>
     <%= hidden_field_tag :event_registration_id, params[:event_registration_id] %>
     <%= hidden_field_tag :link_org_return_to, params[:link_org_return_to] if params[:link_org_return_to].present? %>
@@ -110,6 +113,7 @@
       <h3 class="<%= heading_class %>"><%= allowed_to?(:manage?, Person) ? "Sectors" : "Sectors you work in" %></h3>
       <div class="flex flex-1 flex-wrap content-start items-center gap-2"
            data-controller="primary-tag"
+           data-action="cocoon:after-insert->primary-tag#promoteInserted cocoon:before-remove->primary-tag#promoteOnRemove"
            data-primary-tag-primary-class="border-lime-500 bg-lime-100"
            data-primary-tag-default-class="border-gray-300 bg-white">
         <% sectors_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
@@ -128,6 +132,7 @@
                                       locals: { collection: (@sectors_collection || [])
                                         .reject { |_, id| (@current_sector_ids || []).include?(id) },
                                                 show_person_flags: true } },
+                                    data: { association_insertion_node: "this" },
                                     class: button_classes(:secondary_outline) %>
         <%= render "people/other_sector_responses", responses: @person.other_sector_responses, dismissable: true, curatable: true, return_to: "person_edit" %>
       </div>
@@ -139,6 +144,7 @@
         <h3 class="<%= heading_class %>">Age ranges</h3>
         <div class="flex flex-1 flex-wrap content-start items-center gap-2"
              data-controller="primary-tag"
+             data-action="cocoon:after-insert->primary-tag#promoteInserted cocoon:before-remove->primary-tag#promoteOnRemove"
              data-primary-tag-primary-class="border-lime-500 bg-lime-100"
              data-primary-tag-default-class="border-gray-300 bg-white">
           <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
@@ -153,6 +159,7 @@
                                       render_options: {
                                         locals: { collection: (@age_ranges_collection || [])
                                           .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
+                                      data: { association_insertion_node: "this" },
                                       class: button_classes(:secondary_outline) %>
         </div>
       </div>

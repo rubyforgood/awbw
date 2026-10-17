@@ -90,6 +90,14 @@ RSpec.describe "Profile change requests", type: :request do
       expect(person.user.reload.unconfirmed_email).to eq("changed@example.com")
     end
 
+    it "keeps the reviewer note when approving" do
+      request = create(:profile_change_request, :secondary_email, person: person, requested_value: "second@example.com")
+
+      post approve_profile_change_request_path(request), params: { reviewer_note: "Updated for you" }
+
+      expect(request.reload.reviewer_note).to eq("Updated for you")
+    end
+
     it "approves a type-only primary email change without sending a confirmation" do
       person.update!(email_type: "work")
       request = create(:profile_change_request, :primary_email, person: person,
@@ -204,6 +212,120 @@ RSpec.describe "Profile change requests", type: :request do
       expect(request.reload).to be_resolved
     end
 
+    it "approves a work address change picked from the org's list by setting it" do
+      affiliation = create(:affiliation, person: person)
+      address = create(:address, addressable: affiliation.organization)
+      request = create(:profile_change_request, person: person, affiliation: affiliation,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                       proposed_organization_address: address, details: nil)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+      expect(response.body).to include(ERB::Util.html_escape(address.name), ">Approve<")
+
+      post approve_profile_change_request_path(request)
+
+      expect(affiliation.reload.organization_address).to eq(address)
+      expect(request.reload).to be_resolved
+    end
+
+    it "approves a typed work address by adding it to the organization" do
+      affiliation = create(:affiliation, person: person)
+      request = create(:profile_change_request, person: person, affiliation: affiliation, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV", proposed_zip_code: "89501")
+
+      expect {
+        post approve_profile_change_request_path(request)
+      }.to change { affiliation.organization.addresses.count }.by(1)
+
+      expect(affiliation.reload.organization_address).to have_attributes(street_address: "12 Elm St", city: "Reno", address_type: "work")
+      expect(request.reload).to be_resolved
+    end
+
+    it "reuses the organization's matching address when approving a typed one" do
+      affiliation = create(:affiliation, person: person)
+      existing = create(:address, addressable: affiliation.organization, street_address: "12 Elm Street", city: "Reno", state: "NV")
+      request = create(:profile_change_request, person: person, affiliation: affiliation, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      expect {
+        post approve_profile_change_request_path(request)
+      }.not_to change(Address, :count)
+
+      expect(affiliation.reload.organization_address).to eq(existing)
+    end
+
+    it "reactivates an inactive matching address when approving a typed one" do
+      affiliation = create(:affiliation, person: person)
+      existing = create(:address, addressable: affiliation.organization, street_address: "12 Elm St", city: "Reno", state: "NV", inactive: true)
+      request = create(:profile_change_request, person: person, affiliation: affiliation, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      post approve_profile_change_request_path(request)
+
+      expect(affiliation.reload.organization_address).to eq(existing)
+      expect(existing.reload).not_to be_inactive
+    end
+
+    it "sets the work address on the person's other active roles at that organization too" do
+      organization = create(:organization)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
+      ended = create(:affiliation, person: person, organization: organization, title: "Intern", start_date: 5.years.ago, end_date: 4.years.ago)
+      elsewhere = create(:affiliation, person: person, title: "Volunteer", start_date: 1.year.ago)
+      request = create(:profile_change_request, person: person, affiliation: facilitator, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      post approve_profile_change_request_path(request)
+
+      address = facilitator.reload.organization_address
+      expect(address).to have_attributes(street_address: "12 Elm St")
+      expect(job.reload.organization_address).to eq(address)
+      expect(ended.reload.organization_address).to be_nil
+      expect(elsewhere.reload.organization_address).to be_nil
+    end
+
+    it "sets the work address on an ended role that was asked about, plus the active roles at that organization" do
+      organization = create(:organization)
+      ended = create(:affiliation, person: person, organization: organization, title: "Intern", start_date: 5.years.ago, end_date: 4.years.ago)
+      active = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      request = create(:profile_change_request, person: person, affiliation: ended, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      post approve_profile_change_request_path(request)
+
+      address = ended.reload.organization_address
+      expect(address).to have_attributes(street_address: "12 Elm St")
+      expect(active.reload.organization_address).to eq(address)
+    end
+
+    it "sends the new address and each role it sets to the Ahoy change log" do
+      organization = create(:organization)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
+      request = create(:profile_change_request, person: person, affiliation: facilitator, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+      Analytics::LifecycleBuffer.store.clear
+      events = []
+      allow(Analytics::LifecycleBuffer).to receive(:flush) do
+        events.concat(Analytics::LifecycleBuffer.store)
+        Analytics::LifecycleBuffer.store.clear
+      end
+
+      post approve_profile_change_request_path(request)
+
+      address = facilitator.reload.organization_address
+      tracked = ->(name) { events.select { |event| event[:name] == name }.map { |event| event.dig(:properties, :resource_id) } }
+      expect(tracked.call("create.address")).to include(address.id)
+      expect(tracked.call("update.affiliation")).to include(facilitator.id, job.id)
+      expect(tracked.call("update.profile_change_request")).to include(request.id)
+    end
+
     it "approves an add-a-new-affiliation request by creating it" do
       org = create(:organization, name: "New Org")
       request = create(:profile_change_request, person: person, field: "affiliation",
@@ -263,6 +385,17 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response).to be_successful
       expect(response.body).to include("profile_change_requests_results")
       expect(response.body).to include("please fix my dates")
+    end
+
+    it "counts each status in the toggle strip" do
+      create(:profile_change_request, person: person)
+      create(:profile_change_request, person: person, status: "declined")
+
+      get profile_change_requests_path, headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to match(/Pending\s*<span[^>]*>1</)
+      expect(response.body).to match(/Declined\s*<span[^>]*>1</)
+      expect(response.body).to match(/Resolved\s*<span[^>]*>0</)
     end
   end
 

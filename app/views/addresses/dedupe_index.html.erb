@@ -1,0 +1,69 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:addresses) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
+  <div class="space-y-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+        <h1 class="text-primary mt-2 font-display text-2xl font-semibold">Dedupe addresses</h1>
+        <p class="mt-1 text-gray-500">
+          People and organizations with the same address saved more than once — including spellings
+          like "N Main St" and "North Main Street", and a copy missing its ZIP or street. Merging keeps
+          one copy — the active one, then the primary, then the oldest — fills in anything it's missing
+          from the others, and moves their contact methods, invoices, and affiliations onto it.
+        </p>
+      </div>
+    </div>
+
+    <% if @groups.any? %>
+      <div class="space-y-4">
+        <% @groups.each do |group| %>
+          <% anchor = "address-dedupe-#{group.addressable.model_name.singular}-#{group.addressable.id}" %>
+          <div id="<%= anchor %>" class="border-primary/10 scroll-mt-24 rounded-2xl border bg-white p-4">
+            <div class="mb-2 flex items-start justify-between gap-4">
+              <h3 class="font-semibold text-gray-900">
+                <%= link_to group.label.presence || "(no name)",
+                            polymorphic_path(group.addressable, return_to: "address_dedupe", anchor_id: anchor),
+                            class: "#{DomainTheme.text_class_for(group.addressable.model_name.plural.to_sym, intensity: 700)} hover:underline" %>
+                <span class="font-normal text-gray-400">· <%= group.addressable.model_name.human %></span>
+              </h3>
+              <%= button_to "Merge #{pluralize(group.merged_count, "duplicate")}",
+                            dedupe_perform_addresses_path,
+                            params: { addressable_sgid: group.addressable.to_sgid(for: AddressesController::DEDUPE_PURPOSE).to_s },
+                            class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap"),
+                            form_class: "shrink-0" %>
+            </div>
+            <div class="space-y-2">
+              <% group.duplicate_sets.each do |addresses| %>
+                <ul class="divide-y divide-gray-100 rounded-lg border border-gray-100 px-3">
+                  <% addresses.each_with_index do |address, index| %>
+                    <li class="flex items-center justify-between gap-3 py-1.5">
+                      <span class="text-gray-800">
+                        <%= address.name %>
+                        <span class="text-sm text-gray-400">
+                          · ID <%= address.id %>
+                          <% if address.address_type.present? %>· <%= address.address_type %><% end %>
+                          <% if address.primary? %>· primary<% end %>
+                          <% if address.inactive? %>· inactive<% end %>
+                        </span>
+                      </span>
+                      <% if index.zero? %>
+                        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">Keep</span>
+                      <% else %>
+                        <span class="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-600">Merge</span>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="border-primary/10 rounded-2xl border bg-white py-10 text-center">
+        <i class="fa-solid fa-circle-check mb-2 text-3xl text-emerald-500"></i>
+        <p class="text-gray-600">No duplicate addresses detected.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

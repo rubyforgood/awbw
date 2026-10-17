@@ -98,7 +98,11 @@ module OrganizationServices
 
     def address_keys(org)
       org.addresses.reject(&:inactive?).filter_map do |address|
-        parts = [ address.street_address, address.city, address.zip_code ].map { |part| part.to_s.strip.downcase }
+        parts = [
+          AddressNormalizer.street(address.street_address),
+          AddressNormalizer.city(address.city),
+          AddressNormalizer.zip(address.zip_code)
+        ]
         next if parts.all?(&:blank?)
         parts.join("|")
       end

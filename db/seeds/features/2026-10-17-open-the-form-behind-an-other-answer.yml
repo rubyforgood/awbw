@@ -1,0 +1,11 @@
+name: "Open the form behind an \"Other\" answer"
+area: people
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2707
+action_path: "/other_responses"
+summary: >-
+  On the Other responses page, the question name now links to the form it was
+  asked on, so you can see the question and its choices in context.
+pro_tips:
+  - "When answers in a group came from several forms, each form is listed under the question."

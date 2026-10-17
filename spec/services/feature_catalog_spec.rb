@@ -136,6 +136,38 @@ RSpec.describe FeatureCatalog do
     end
   end
 
+  describe "#missing_count" do
+    let(:seed_dir) { Pathname(Dir.mktmpdir("features_seed")) }
+
+    before do
+      %w[One Two].each do |label|
+        seed_dir.join("2026-08-01-seed-#{label.downcase}.yml").write(<<~YAML)
+          name: "Seed feature #{label}"
+          area: events
+          display_status: user_facing
+          summary: "Seeded."
+          released_on: 2026-08-01
+        YAML
+      end
+    end
+
+    after { FileUtils.remove_entry(seed_dir) }
+
+    subject(:catalog) { described_class.new(dir: seed_dir) }
+
+    it "counts seeds with no feature of that name yet, ignoring case" do
+      create(:feature, name: "seed feature one")
+
+      expect(catalog.missing_count).to eq(1)
+    end
+
+    it "is zero once everything is synced" do
+      catalog.import!
+
+      expect(catalog.missing_count).to eq(0)
+    end
+  end
+
   describe "the checked-in seeds (db/seeds/features/)" do
     subject(:entries) { described_class.new.entries }
 

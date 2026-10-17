@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   resources :invoices
 
   get "/addresses/options", to: "addresses#options"
+  get "/addresses/dedupe_index", to: "addresses#dedupe_index", as: :dedupe_index_addresses
+  post "/addresses/dedupe_perform", to: "addresses#dedupe_perform", as: :dedupe_perform_addresses
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
@@ -54,6 +56,9 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "/",                         to: "home#index" # admin home page
+    get "home/data_health_count",    to: "home#data_health_count", as: "home_data_health_count"
+    get "home/author_credit_count",  to: "home#author_credit_count", as: "home_author_credit_count"
+    get "home/unsynced_features_count", to: "home#unsynced_features_count", as: "home_unsynced_features_count"
     get "activities/events",         to: "ahoy_activities#index", as: "activities_events"
     get "activities/events/:id",    to: "ahoy_activities#show", as: "activities_event"
     get "activities/visits",         to: "ahoy_activities#visits", as: "activities_visits"
@@ -61,6 +66,8 @@ Rails.application.routes.draw do
     get "activities/counts",         to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
     get "data_health",               to: "data_health#index", as: "data_health"
+    get "data_health/worklists",     to: "data_health#worklists", as: "data_health_worklists"
+    get "data_health/:check/rows",   to: "data_health#rows", as: "data_health_rows"
     post "data_health/:check/repair", to: "data_health#repair", as: "data_health_repair"
     get "resource_roles",            to: "resource_roles#show", as: "resource_roles"
     patch "resource_roles",          to: "resource_roles#update"

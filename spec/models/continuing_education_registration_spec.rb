@@ -281,7 +281,7 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
 
     # The Allocation model blocks allocating past the cost, so an over-allocation
     # only arises when the cost is later lowered under existing payments — which is
-    # exactly what a merge does when it folds two paid records onto one.
+    # exactly what a merge does when it combines two paid records onto one.
     describe "#over_allocated?" do
       it "is false when allocations are within the cost" do
         pay(ce_reg, 5_000)

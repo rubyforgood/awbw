@@ -31,6 +31,17 @@ RSpec.describe OrganizationServices::LinkSubmittedOrganization do
       expect(person.affiliations.where(organization: organization).pluck(:title)).to eq([ "Counselor" ])
     end
 
+    it "records the submission answer behind an org-type 'Other'" do
+      field = create(:form_field, field_identifier: "organization_type")
+      submission = create(:form_submission, form: field.form, person: person)
+      answer = create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Other: Mobile clinic")
+
+      described_class.call(person: person, organization: organization, scenario: nil,
+                           entry: entry.merge(organization_type: "Other: Mobile clinic", submission: submission))
+
+      expect(organization.other_responses.sole.source_form_answer).to eq(answer)
+    end
+
     it "fills blank profile fields and reports them as saved" do
       result = described_class.call(person: person, organization: organization, entry: entry,
                                     scenario: "on_demand")

@@ -22,11 +22,14 @@ module OrganizationServices
   class CaptureFromSubmission
     Result = Struct.new(:organization, :autofill, keyword_init: true)
 
-    def self.call(form:, person:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil)
-      new(form:, person:, form_params:, facilitator_training:, training_date:, event_registration:).call
+    def self.call(form:, person:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
+                  submission: nil)
+      new(form:, person:, form_params:, facilitator_training:, training_date:, event_registration:, submission:).call
     end
 
-    def initialize(form:, person:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil)
+    def initialize(form:, person:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
+                   submission: nil)
+      @submission = submission
       @form = form
       @form_params = (form_params || {}).transform_keys(&:to_s)
       @person = person
@@ -42,7 +45,8 @@ module OrganizationServices
       profile_changes = SyncProfile.call(
         organization: organization,
         website: field_value("organization_website"),
-        organization_type: field_value("organization_type")
+        organization_type: field_value("organization_type"),
+        submission: @submission
       ).changes
 
       address_result = UpsertAddress.call(

@@ -381,6 +381,22 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(person.addresses.find_by(primary: true).country).to eq("USA")
     end
 
+    it "updates a returning registrant's address when the city and state are spelled differently" do
+      person = create(:person, email: "ada@example.com", first_name: "Ada", last_name: "Lin")
+      existing = create(:address, addressable: person, city: "Saint Louis", state: "Missouri", primary: true)
+      params = base_form_params(first_name: "Ada", last_name: "Lin", email: "ada@example.com").merge(
+        field_id("mailing_street") => "9 Elm Rd",
+        field_id("mailing_city") => "St. Louis",
+        field_id("mailing_state") => "MO",
+        field_id("mailing_zip") => "63101"
+      )
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(person.addresses.reload).to eq([ existing ])
+      expect(existing.reload.street_address).to eq("9 Elm Rd")
+    end
+
     context "with a matched organization" do
       let!(:organization) { create(:organization, name: "Helping Hands") }
 
@@ -536,6 +552,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       response = organization.other_responses.sole
       expect([ response.text, response.kind, response.promotable? ])
         .to eq([ "Equine therapy", "organization_type", false ])
+    end
+
+    it "records the form answer the org-type 'Other' came from, so the review page can link its form" do
+      register_with_organization_type("Other: Equine therapy")
+
+      response = organization.other_responses.sole
+      expect(response.source_form_answer.submitted_answer).to eq("Other: Equine therapy")
+      expect(response.source_form_answer.form_field.field_identifier).to eq("organization_type")
     end
 
     it "does not capture an OtherResponse for a non-'Other' classification" do

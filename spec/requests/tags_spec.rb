@@ -63,6 +63,7 @@ RSpec.describe "Tags index", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("Manage sectors")
       expect(response.body).not_to include("Manage categories")
+      expect(response.body).not_to include(taggings_matrix_path)
     end
   end
 
@@ -81,6 +82,11 @@ RSpec.describe "Tags index", type: :request do
       get tags_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Manage categories")
+    end
+
+    it "links to Tagging counts with a way back to Tags" do
+      get tags_path
+      expect(response.body).to include(%(href="#{taggings_matrix_path(return_to: "tags")}"))
     end
   end
 
