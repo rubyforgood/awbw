@@ -10,6 +10,7 @@ module Admin
       @reference_cards       = reference_cards
       @additional_data_cards = additional_data_cards
       @deduper_cards         = deduper_cards
+      @system_settings_cards = system_settings_cards
       @deprecated_data_cards = deprecated_data_cards
       @pending_change_requests_count = ProfileChangeRequest.pending.count
     end
