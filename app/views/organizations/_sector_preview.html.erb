@@ -1,0 +1,11 @@
+<%# Up to three sector chips, most-held first, then "+N more" to the full breakdown. %>
+<% link_options = local_assigns[:new_tab] ? { target: "_blank", rel: "noopener" } : {} %>
+<div class="flex flex-wrap gap-2">
+  <% sectors.first(3).each do |sector| %>
+    <%= render "sectors/tagging_label", sector: sector, is_primary: true %>
+  <% end %>
+  <% if sectors.size > 3 %>
+    <%= link_to "+#{sectors.size - 3} more", breakdown_path, **link_options,
+                class: "self-center px-2 text-sm font-medium #{eyebrow_link_class}" %>
+  <% end %>
+</div>

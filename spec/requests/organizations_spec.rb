@@ -180,11 +180,32 @@ RSpec.describe "/organizations", type: :request do
       expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary first")
     end
 
+    it "caps the edit page at three sectors with links to the breakdown that return to the edit page" do
+      breakdown = populations_served_organization_path(organization_with_sectors, return_to: "organization_edit")
+
+      get edit_organization_url(organization_with_sectors)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css("a[data-sector-name]", count: 3)
+      expect(page).to have_link("+1 more", href: breakdown)
+      expect(page).to have_link("See all sectors and age groups", href: breakdown)
+
+      get breakdown
+      expect(Capybara.string(response.body)).to have_link("Edit #{organization_with_sectors.name}", href: edit_organization_path(organization_with_sectors))
+      expect(response.body).to include("return_to=organization_edit&amp;sort=total")
+    end
+
+    it "points the breakdown eyebrow at the profile by default" do
+      get populations_served_organization_url(organization_with_sectors)
+
+      expect(Capybara.string(response.body)).to have_link(organization_with_sectors.name, href: organization_path(organization_with_sectors))
+    end
+
     it "shows the roll-up read-only on the edit page with a note on where it comes from" do
       get edit_organization_url(organization_with_sectors)
 
       page = Capybara.string(response.body)
-      %w[Alpha Bravo Charlie Delta].each { |name| expect(page).to have_content(name) }
+      %w[Alpha Bravo Charlie].each { |name| expect(page).to have_content(name) }
       expect(page).not_to have_content("Direct Sector 1")
       expect(page).to have_content("Not editable here")
       expect(page).not_to have_css("[name*='sectorable_items_attributes']")

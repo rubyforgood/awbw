@@ -54,18 +54,15 @@
       </div>
 
       <!-- Sectors & age groups (read-only roll-up) & Windows audience -->
+      <% breakdown_path = populations_served_organization_path(f.object, return_to: "organization_edit") if f.object.persisted? %>
       <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-[3fr_1fr]">
         <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <div class="mb-2 font-semibold text-gray-700">Sectors</div>
-              <% sectors = f.object.active_facilitator_sectors.sort_by { |sector| sector.name.to_s.downcase } %>
+              <% sectors = f.object.active_facilitator_sectors %>
               <% if sectors.any? %>
-                <div class="flex flex-wrap gap-2">
-                  <% sectors.each do |sector| %>
-                    <%= render "sectors/tagging_label", sector: sector, is_primary: true %>
-                  <% end %>
-                </div>
+                <%= render "organizations/sector_preview", sectors: sectors, breakdown_path: breakdown_path, new_tab: true %>
               <% else %>
                 <p class="text-sm text-gray-500 italic">None yet.</p>
               <% end %>
@@ -84,6 +81,13 @@
             <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
             Not editable here. These come from the primary sector and primary age group of each active facilitator at this organization — edit a facilitator's profile to change them.
           </p>
+          <% if breakdown_path %>
+            <div class="mt-2">
+              <%= link_to breakdown_path, target: "_blank", rel: "noopener", class: "text-sm #{eyebrow_link_class}" do %>
+                See all sectors and age groups <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+              <% end %>
+            </div>
+          <% end %>
         </div>
 
         <div>

@@ -81,6 +81,13 @@ class OrganizationDecorator < ApplicationDecorator
     name
   end
 
+  # [path, label] for the populations-served eyebrow, back to whichever page linked in.
+  def breakdown_return_link(return_to)
+    return [ h.edit_organization_path(object), "Edit #{name}" ] if return_to == "organization_edit"
+
+    [ h.organization_path(object), name ]
+  end
+
   # [tag, count] for each searched tag the org's active facilitators roll up to, in search order.
   def tag_search_totals(tag_names)
     by_name = object.active_facilitator_tag_counts.to_h { |tag, count| [ tag.name.downcase, [ tag, count ] ] }
