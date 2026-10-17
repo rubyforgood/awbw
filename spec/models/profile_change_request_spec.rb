@@ -28,12 +28,15 @@ RSpec.describe ProfileChangeRequest, type: :model do
       expect(request.errors[:details]).to be_present
     end
 
-    it "requires details for a work address request" do
-      affiliation = create(:affiliation)
-      request = build(:profile_change_request, person: affiliation.person, affiliation: affiliation,
-                                               requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, details: nil)
-      expect(request).not_to be_valid
-      expect(request.errors[:details]).to be_present
+    [ ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS, ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS ].each do |change|
+      it "requires details for a #{change.downcase} request" do
+        affiliation = create(:affiliation)
+        request = build(:profile_change_request, person: affiliation.person, affiliation: affiliation,
+                                                 requested_value: change, details: nil)
+        expect(request).not_to be_valid
+        expect(request.errors[:details]).to be_present
+        expect(request).not_to be_auto_appliable
+      end
     end
 
     describe "adding an organization that isn't in the portal" do

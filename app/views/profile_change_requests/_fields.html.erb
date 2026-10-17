@@ -82,6 +82,11 @@
   <% end %>
   <% if change == ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS %>
     <%= f.input :details, as: :text, label: "Your work address", hint: "Street, city, state, and zip code.", input_html: { rows: 3, class: "w-full text-lg" } %>
+  <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS %>
+    <% if current&.organization_address %>
+      <p class="text-gray-700">Right now: <span class="font-medium"><%= current.organization_address.name %></span></p>
+    <% end %>
+    <%= f.input :details, as: :text, label: "Your new work address", hint: "Street, city, state, and zip code.", input_html: { rows: 3, class: "w-full text-lg" } %>
   <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_OTHER %>
     <%= f.input :details, as: :text, label: "What would you like us to change?", input_html: { rows: 5, class: "w-full text-lg" } %>
   <% else %>

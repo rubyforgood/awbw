@@ -412,19 +412,18 @@ RSpec.describe PersonPolicy, type: :policy do
 
       expect(filtered.keys).to contain_exactly(
         "first_name", "email_type", "email_2_type", "sectorable_items_attributes",
-        "user_attributes", "professional_licenses_attributes", "affiliations_attributes"
+        "user_attributes", "professional_licenses_attributes"
       )
     end
 
-    it "narrows an owner's affiliation changes to the work address on existing rows" do
+    it "strips an owner's affiliation changes, including the work address" do
       submitted = ActionController::Parameters.new(affiliations_attributes: {
-        "0" => { id: "1", title: "Changed title", organization_address_id: "7" },
-        "1" => { organization_id: "9", title: "New row" }
+        "0" => { id: "1", title: "Changed title", organization_address_id: "7" }
       })
 
       filtered = policy_for(record: owned_person, user: owner_user).apply_scope(submitted, type: :action_controller_params)
 
-      expect(filtered[:affiliations_attributes].to_h).to eq("0" => { "id" => "1", "organization_address_id" => "7" })
+      expect(filtered).not_to have_key(:affiliations_attributes)
     end
 
     it "strips admin-only user attributes while retaining the rest" do

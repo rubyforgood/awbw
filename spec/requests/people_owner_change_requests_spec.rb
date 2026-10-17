@@ -117,14 +117,14 @@ RSpec.describe "Owner change requests on the person edit form", type: :request d
       expect(affiliation.reload.title).to eq("Facilitator")
     end
 
-    it "lets the owner pick their work address on an existing affiliation" do
+    it "can't change their work address through the edit form" do
       address = create(:address, addressable: organization)
 
       patch person_path(person), params: {
         person: { affiliations_attributes: { affiliation.id.to_s => { id: affiliation.id, organization_address_id: address.id } } }
       }
 
-      expect(affiliation.reload.organization_address_id).to eq(address.id)
+      expect(affiliation.reload.organization_address_id).to be_nil
     end
 
     it "can't add an affiliation through the edit form" do

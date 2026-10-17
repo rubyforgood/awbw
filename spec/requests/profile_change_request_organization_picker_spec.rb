@@ -77,6 +77,22 @@ RSpec.describe "Choosing which organization to change", type: :request do
     expect(response.body).not_to include("profile_change_request[proposed_start_date]")
   end
 
+  it "offers changing a work address alongside adding one" do
+    new_affiliation_request(affiliation_id: sunrise.id)
+
+    expect(response.body).to include("Change my work address", "Add my work address")
+  end
+
+  it "shows the current work address on a work address change" do
+    address = create(:address, addressable: sunrise.organization, street_address: "12 Elm St", city: "Reno", state: "NV", zip_code: "89501")
+    sunrise.update!(organization_address: address)
+
+    new_affiliation_request(affiliation_id: sunrise.id, change: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS)
+
+    expect(response.body).to include("Right now:", "12 Elm St, Reno, NV 89501")
+    expect(response.body).to include("Your new work address")
+  end
+
   it "saves a date change sent from the focused form" do
     post profile_change_requests_path(person_id: person), params: {
       profile_change_request: {
