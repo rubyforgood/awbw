@@ -6,7 +6,7 @@ class MembershipsController < ApplicationController
     @status_filter = params[:status].presence_in(Membership::DIRECTORY_STATUSES) || "all"
 
     if turbo_frame_request?
-      scope = authorized_scope(Membership.all)
+      scope = Membership.all
         .includes(person: [ :user, { pay_customers: :subscriptions } ], membership_invoices: :allocations)
         .by_person_name(params[:person_name])
       scope = scope.public_send(@status_filter) unless @status_filter == "all"
@@ -25,7 +25,7 @@ class MembershipsController < ApplicationController
   def update
     authorize! @membership
 
-    if @membership.update(authorized_scope(params.require(:membership)))
+    if @membership.update(membership_params)
       redirect_to person_memberships_path(@person),
         notice: update_notice, status: :see_other
     else
@@ -53,6 +53,10 @@ class MembershipsController < ApplicationController
   def set_membership
     @membership = Membership.find(params[:id])
     @person = @membership.person
+  end
+
+  def membership_params
+    params.expect(membership: [ :cost_dollars, :autorenewal_cancelled ])
   end
 
   def update_notice

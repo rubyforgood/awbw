@@ -14,8 +14,8 @@ module People
     def new
       authorize! :membership
 
-      @membership = @person.memberships.new
-      @membership.membership_invoices.new(
+      @membership = @person.memberships.build
+      @membership.membership_invoices.build(
         start_date: Date.current,
         cost_cents: Membership::ANNUAL_COST_CENTS
       )
@@ -24,7 +24,7 @@ module People
     def create
       authorize! :membership
 
-      @membership = @person.memberships.new(membership_params)
+      @membership = @person.memberships.build(membership_params)
 
       if @membership.save
         redirect_to person_memberships_path(@person),
