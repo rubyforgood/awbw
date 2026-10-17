@@ -303,7 +303,7 @@ RSpec.describe "Profile change requests", type: :request do
       expect(active.reload.organization_address).to eq(address)
     end
 
-    it "sends the new address and each role it sets to the Ahoy change log" do
+    it "logs the new address and each role it sets to Ahoy, stamped with the change request" do
       organization = create(:organization)
       facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
       job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
@@ -311,19 +311,15 @@ RSpec.describe "Profile change requests", type: :request do
                        requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
                        proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
       Analytics::LifecycleBuffer.store.clear
-      events = []
-      allow(Analytics::LifecycleBuffer).to receive(:flush) do
-        events.concat(Analytics::LifecycleBuffer.store)
-        Analytics::LifecycleBuffer.store.clear
-      end
+      tracked = []
+      allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, properties| tracked << [ name, properties ] }
 
       post approve_profile_change_request_path(request)
 
       address = facilitator.reload.organization_address
-      tracked = ->(name) { events.select { |event| event[:name] == name }.map { |event| event.dig(:properties, :resource_id) } }
-      expect(tracked.call("create.address")).to include(address.id)
-      expect(tracked.call("update.affiliation")).to include(facilitator.id, job.id)
-      expect(tracked.call("update.profile_change_request")).to include(request.id)
+      stamped = ->(name) { tracked.select { |event_name, properties| event_name == name && properties[:profile_change_request_id] == request.id }.map { |_, properties| properties[:resource_id] } }
+      expect(stamped.call("create.address")).to include(address.id)
+      expect(stamped.call("update.affiliation")).to include(facilitator.id, job.id)
     end
 
     it "approves an add-a-new-affiliation request by creating it" do
