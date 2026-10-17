@@ -199,15 +199,14 @@ module PersonServices
     def tag_service_areas(person, data)
       primary = translate(data, PRIMARY_TAG_FIELDS)
       additional = translate(data, ADDITIONAL_TAG_FIELDS)
-      sector_ids = primary.flat_map(&:sector_ids).uniq
-      age_group_ids = primary.flat_map(&:age_group_ids).uniq
-      age_primary_ids, age_additional_ids = split_age_primary(age_group_ids)
+      sector_primary_ids, sector_extra_ids = split_primary(primary.flat_map(&:sector_ids).uniq)
+      age_primary_ids, age_extra_ids = split_primary(primary.flat_map(&:age_group_ids).uniq)
 
       [
         apply_tags(person, :tag_sectors, Sector, person.sectorable_items.where(is_primary: true).pluck(:sector_id),
-                   primary_ids: sector_ids.first(1), additional_ids: sector_ids.drop(1) + additional.flat_map(&:sector_ids)),
+                   primary_ids: sector_primary_ids, additional_ids: sector_extra_ids + additional.flat_map(&:sector_ids)),
         apply_tags(person, :tag_age_groups, Category, person.primary_age_category_ids,
-                   primary_ids: age_primary_ids, additional_ids: age_additional_ids + additional.flat_map(&:age_group_ids))
+                   primary_ids: age_primary_ids, additional_ids: age_extra_ids + additional.flat_map(&:age_group_ids))
       ].compact
     end
 
@@ -224,9 +223,9 @@ module PersonServices
       fields.map { |field| @translation.resolve(data[field]) }
     end
 
-    # A person carries one primary age group, and an answer naming several — "Families"
-    # is every age range — has no first to pick, so they all land as additional.
-    def split_age_primary(ids)
+    # A primary answer naming several of a kind — "Families" is every age range — has no
+    # single one to pick, so they all land as additional.
+    def split_primary(ids)
       ids.one? ? [ ids, [] ] : [ [], ids ]
     end
 
