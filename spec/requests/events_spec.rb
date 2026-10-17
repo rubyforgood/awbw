@@ -229,7 +229,7 @@ RSpec.describe "Events", type: :request do
       end
     end
 
-    context "Pay for Others button styling across templates" do
+    context "Bulk payment form button styling across templates" do
       let(:cta_event) { create(:event, :published, :publicly_visible, title: "CTA event", cost_cents: 0) }
       let(:bulk_form) { create(:form) }
 
@@ -238,36 +238,36 @@ RSpec.describe "Events", type: :request do
         sign_in admin
       end
 
-      def pay_for_others_classes(template)
+      def bulk_payment_classes(template)
         cta_event.update!(template: template)
         get event_path(cta_event)
         expect(response).to have_http_status(:ok), "template #{template} failed to render"
         link = Nokogiri::HTML(response.body).at_css("a[href='#{new_event_bulk_payment_path(cta_event)}']")
-        expect(link).to be_present, "Pay for Others button missing on template #{template}"
+        expect(link).to be_present, "Bulk payment form button missing on template #{template}"
         link["class"]
       end
 
       it "pairs it as an orange outline on the legacy none template" do
-        classes = pay_for_others_classes("none")
+        classes = bulk_payment_classes("none")
         expect(classes).to include("border-2 border-accent text-accent hover:bg-accent hover:text-white")
       end
 
       it "pairs it as a navy-label gold outline on the branded light templates" do
         %w[centered editorial sidebar].each do |key|
-          classes = pay_for_others_classes(key)
+          classes = bulk_payment_classes(key)
           expect(classes).to include("border-brand-yellow-400", "text-brand-navy-900", "whitespace-nowrap", "text-xl"), "template #{key}"
           expect(classes).not_to include("text-brand-yellow-400"), "template #{key} should keep the navy label, not the dark-background gold one"
         end
       end
 
       it "flips the label to gold on the navy hero so it stays visible on the dark background" do
-        classes = pay_for_others_classes("hero")
+        classes = bulk_payment_classes("hero")
         expect(classes).to include("text-brand-yellow-400", "hover:text-brand-navy-900")
       end
 
       it "stays a secondary outline (never the solid CTA) on every template" do
         Event::TEMPLATE_KEYS.each do |key|
-          expect(pay_for_others_classes(key)).not_to include("shadow-brand-cta"), "template #{key} should stay a secondary outline"
+          expect(bulk_payment_classes(key)).not_to include("shadow-brand-cta"), "template #{key} should stay a secondary outline"
         end
       end
     end
