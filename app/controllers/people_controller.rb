@@ -206,7 +206,7 @@ class PeopleController < ApplicationController
         price_data: {
           currency: "usd",
           product_data: {
-            name: "Donation to A Window Between Worlds"
+            name: "Donation to #{Setting.app_organization_name}"
           },
           unit_amount: amount
         },

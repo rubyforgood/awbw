@@ -65,6 +65,12 @@ class Setting < ApplicationRecord
     @app_organization ||= organization || Organization.find_by(name: self.class.organization_name)
   end
 
+  # The name to print for this portal's organization.
+  def self.app_organization_name
+    app_organization&.name.presence || organization_name
+  end
+
+  # The configured name, which is also how an unflagged app organization is found.
   def self.organization_name
     ENV.fetch("ORGANIZATION_NAME", DEFAULT_ORGANIZATION_NAME)
   end

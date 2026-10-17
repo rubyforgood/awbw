@@ -145,7 +145,7 @@ class FormBuilderService
       "Anything else you'd like to share with us?"
     ],
     payment: [ "Payment method", "Will someone else be paying for your registration?" ],
-    consent: [ "I agree to receive email communications from A Window Between Worlds." ],
+    consent: [ "I agree to receive email communications from #{Setting.app_organization_name}." ],
     post_event_feedback: [ "How would you rate this event?", "What did you find most valuable?", "Any suggestions for improvement?" ],
     day_1_survey: [
       CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
@@ -680,10 +680,10 @@ class FormBuilderService
   def build_consent_fields(form, position)
     position = add_header(form, position, "Consent", group: "consent")
     position = add_field(form, position,
-                         "I agree to receive email communications from A Window Between Worlds.",
+                         "I agree to receive email communications from #{Setting.app_organization_name}.",
                          :multi_select_checkbox,
                          key: "communication_consent", group: "consent", required: true,
-                         subtitle: "By submitting this form, I consent to receive updates from A Window Between Worlds, " \
+                         subtitle: "By submitting this form, I consent to receive updates from #{Setting.app_organization_name}, " \
                                "including information about this event as well as upcoming events, training opportunities, resources, " \
                                "impact stories, and ways to support our mission. I understand I can unsubscribe at any time.",
                          options: [ "Yes" ])
