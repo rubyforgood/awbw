@@ -43,13 +43,11 @@
               <%= @person.first_name %>'s profile
             <% end %>
           <% end %>
-        </div>
-        <div class="mt-2 text-sm text-gray-500">
-          <%= render "count" %>
           <% if scoped %>
-            · <%= link_to "View everyone", admin_activities_events_path, class: "#{eyebrow_link_class} hover:underline" %>
+            <%= link_to "View everyone", admin_activities_events_path, class: "ml-auto text-sm #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
           <% end %>
         </div>
+        <div class="mt-2 text-sm text-gray-500"><%= render "count" %></div>
       </div>
 
       <div class="mb-6 text-sm min-h-10">
