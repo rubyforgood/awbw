@@ -1,0 +1,14 @@
+<%# Locals: title, total. One card per page heading; the block renders its checks. %>
+<section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div class="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3">
+    <h2 class="text-base font-semibold text-gray-900"><%= title %></h2>
+    <% if total.positive? %>
+      <span class="text-xs font-medium text-amber-800"><%= total %> to review</span>
+    <% else %>
+      <span class="text-xs font-medium text-green-700"><i class="fa-solid fa-circle-check mr-1"></i>All clear</span>
+    <% end %>
+  </div>
+  <div class="divide-y divide-gray-100">
+    <%= yield %>
+  </div>
+</section>

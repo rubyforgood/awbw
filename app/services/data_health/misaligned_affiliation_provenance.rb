@@ -35,9 +35,10 @@ module DataHealth
     end
 
     # Clearing the link is the conservative direction: the row becomes
-    # hand-entered, which reconciliation spares by default.
+    # hand-entered, which reconciliation spares by default. update_attribute runs
+    # the save callbacks, so each unlink lands in the activity history.
     def repair!
-      scope.to_a.each { |affiliation| affiliation.update_column(:event_registration_id, nil) }.size
+      scope.to_a.each { |affiliation| affiliation.update_attribute(:event_registration_id, nil) }.size
     end
 
     def describe(affiliation)

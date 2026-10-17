@@ -115,6 +115,19 @@ RSpec.describe DataHealth::MisalignedAffiliationProvenance do
     expect(offender).to be_persisted
     expect(described_class.new).not_to be_any
   end
+
+  it "logs each unlink in the activity history" do
+    create(:event_registration_organization, event_registration: registration, organization: other_organization)
+    create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                         start_date: 1.year.ago.to_date, event_registration: registration)
+    Current.user = create(:user, :admin)
+    allow(Analytics::LifecycleBuffer).to receive(:push).and_call_original
+
+    described_class.new.repair!
+
+    expect(Analytics::LifecycleBuffer).to have_received(:push)
+      .with(hash_including(name: "update.affiliation"))
+  end
 end
 
 RSpec.describe DataHealth::LegacyOrganizationStatusDrift do
@@ -293,6 +306,12 @@ RSpec.describe DataHealth::Worklists do
 
     expect(workshops.count).to eq(1)
     expect(workshops.path).to eq(Rails.application.routes.url_helpers.dedupe_index_workshops_path)
+  end
+
+  it "links each author credit count to its own section" do
+    legacy = described_class.new.author_credit.find { |entry| entry.label == "Legacy name" }
+
+    expect(legacy.path).to eq("/author_credit_divergences?section=legacy#section-legacy")
   end
 end
 

@@ -36,11 +36,17 @@ module DataHealth
     def author_credit
       result = AuthorCreditDivergenceQuery.new.call
       [
-        Entry.new("Preference drift", result.preference.size, "person", author_credit_divergences_path),
-        Entry.new("Legacy name", result.legacy.sum { |group| group.entries.size }, "record", author_credit_divergences_path),
-        Entry.new("Creator fallback", result.creator.size, "person", author_credit_divergences_path),
-        Entry.new("No author", result.unattributed.size, "record", author_credit_divergences_path)
+        Entry.new("Preference drift", result.preference.size, "person", author_credit_divergence_section_path("preference")),
+        Entry.new("Legacy name", result.legacy.sum { |group| group.entries.size }, "record", author_credit_divergence_section_path("legacy")),
+        Entry.new("Creator fallback", result.creator.size, "person", author_credit_divergence_section_path("creator")),
+        Entry.new("No author", result.unattributed.size, "record", author_credit_divergence_section_path("unattributed"))
       ]
+    end
+
+    private
+
+    def author_credit_divergence_section_path(section)
+      author_credit_divergences_path(section: section, anchor: "section-#{section}")
     end
   end
 end
