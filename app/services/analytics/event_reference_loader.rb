@@ -52,6 +52,12 @@ module Analytics
       end
     end
 
+    # The submission a form-driven write was stamped with (Analytics::LifecycleBuffer).
+    def self.form_submission_pair(properties)
+      id = properties["form_submission_id"].presence
+      [ "FormSubmission", id.to_i ] if id
+    end
+
     def initialize(events)
       @events = events
     end
@@ -67,7 +73,7 @@ module Analytics
     # A second pass picks up moved parents, whose type can come from the event's
     # own (first-pass) record.
     def load_records
-      map = fetch(@events.flat_map { |event| primary_pairs(event) + references_in(event.properties || {}) })
+      map = fetch(@events.flat_map { |event| primary_pairs(event) + submission_pairs(event) + references_in(event.properties || {}) })
       map.merge(fetch(@events.flat_map { |event| moved_parent_pairs(event, map) } - map.keys))
     rescue StandardError
       {}
@@ -95,6 +101,10 @@ module Analytics
       return [] if event.resource_type.blank? || event.resource_id.blank?
 
       [ [ event.resource_type.to_s, event.resource_id ] ]
+    end
+
+    def submission_pairs(event)
+      [ self.class.form_submission_pair(event.properties || {}) ].compact
     end
 
     def references_in(value)
