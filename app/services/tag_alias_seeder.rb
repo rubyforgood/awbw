@@ -1,7 +1,8 @@
 # Records what each legacy word for a sector or age group resolves to, as TagAlias rows.
 # The tables are ADR-0007; this is them as data, so an import can look a term up and a
 # reader can still see what a tag used to be called elsewhere. Idempotent: a term already
-# recorded for a tag is left alone, including whatever an admin has added by hand.
+# recorded for a tag is left alone, including whatever an admin has added by hand, and a
+# proposed row the tables no longer name is withdrawn.
 #
 # A term the portal already answers to by name needs no row — the lookup matches a tag's
 # own name first, case-insensitively, and drops a trailing parenthetical. Only wording
@@ -184,11 +185,11 @@ class TagAliasSeeder
     "Arts Education & Community Art Making" => [ "Education", "Community Building" ],
     "bereavement and complex care in hospital setting" => [ "Grief/Loss", "Health/Medical" ],
     "Cancer Survivorship" => [ "Health/Medical" ],
-    "Cases opened by Child protective services" => [ "Child Abuse/Neglect" ],
+    "Cases opened by Child protective services" => [ "Child Abuse/Neglect", "Foster Care/Adoption" ],
     "Children's Advocacy Center Children & Families" => [ "Child Abuse/Neglect" ],
     "College campus" => [ "Education" ],
     "Community Morale" => [ "Community Building" ],
-    "Community-based, youth diversion, juvenile hall" => [ "Incarceration", "Court/Legal System" ],
+    "Community-based, youth diversion, juvenile hall" => [ "Incarceration", "Restorative/Transformative Justice" ],
     "Critically ill children" => [ "Health/Medical" ],
     "Day Program for adults with developmental and intellectual disabilities" => [ "Disability Services" ],
     "Disaster Recovery - Wellness through Trauma informed Activities" => [ "Climate/Environmental" ],
@@ -196,7 +197,7 @@ class TagAliasSeeder
     "Domestic Violence, Sexual Violence and Stalking Advocacy Center" => [ "Domestic Violence", "Sexual Assault" ],
     "DV Resource Center" => [ "Domestic Violence" ],
     "Empowerment community groups" => [ "Community Building" ],
-    "Environmental education setting" => [ "Climate/Environmental", "Education" ],
+    "Environmental education setting" => [ "Climate/Environmental" ],
     "First Responders. doing workshops in Fire Stations and Law Enforcement Offices" =>
       [ "Staff/Organizational Development" ],
     "formerly incarcerated/formerly gang related" => [ "Incarceration", "Community Violence" ],
@@ -210,8 +211,8 @@ class TagAliasSeeder
     "In DV shelters" => [ "Domestic Violence" ],
     "Individual and Group counseling with students. In my office and in classrooms." =>
       [ "Education", "Mental Health" ],
-    "Individual counseling sessions with sexual assault survivors." => [ "Sexual Assault" ],
-    "Inpatient Psychiatric Hopital" => [ "Mental Health", "Health/Medical" ],
+    "Individual counseling sessions with sexual assault survivors." => [ "Sexual Assault", "Mental Health" ],
+    "Inpatient Psychiatric Hopital" => [ "Mental Health" ],
     "Intellectual Disabilities" => [ "Disability Services" ],
     "Intensive Outpatient programs" => [ "Mental Health" ],
     "Interpersonal violence and any gender based harassment and discrimination" =>
@@ -231,7 +232,7 @@ class TagAliasSeeder
     "Organizations and their staff who work in the primary prevention of intimate partner violence" =>
       [ "Domestic Violence", "Staff/Organizational Development" ],
     "Parents and children of whom we receive a referral for, mostly DCF involved families" =>
-      [ "Foster Care/Adoption", "Child Abuse/Neglect" ],
+      [ "Foster Care/Adoption" ],
     "Parents of children involved with DCF" => [ "Foster Care/Adoption" ],
     "personal development and life coaching" => [ "Self-Care/Personal Growth" ],
     "Political Assylum" => [ "Immigration" ],
@@ -240,7 +241,7 @@ class TagAliasSeeder
     "Re-Entry/social and community based work" => [ "Incarceration" ],
     "Resident low income housing" => [ "Homelessness" ],
     "Restorative/Self-Care work with Faculty who teach inside of prisons/jails, as well as currently " \
-      "incarcerated students" => [ "Incarceration", "Education", "Self-Care/Personal Growth" ],
+      "incarcerated students" => [ "Incarceration", "Self-Care/Personal Growth", "Restorative/Transformative Justice" ],
     "Social services workers" => [ "Staff/Organizational Development" ],
     "Staff Burnout and Wellness" => [ "Staff/Organizational Development" ],
     "Student counseling groups" => [ "Education", "Mental Health" ],
@@ -248,7 +249,7 @@ class TagAliasSeeder
       [ "Climate/Environmental", "Education" ],
     "Supervised visitation sessions for foster youth with their biological parents" => [ "Foster Care/Adoption" ],
     "Supportive Housing" => [ "Homelessness" ],
-    "Survivors with Disabilities ( Deafness)" => [ "Disability Services" ],
+    "Survivors with Disabilities ( Deafness)" => [ "Disability Services", "Domestic Violence" ],
     "Urban Native American Health Centers" => [ "Indigenous/Tribal Nation", "Health/Medical" ],
     "We are a Native American culturally specific dual sexual assault and domestic violence agency that " \
       "has programming for teens and adults, including elderly" =>
@@ -269,7 +270,10 @@ class TagAliasSeeder
       "foster/kinship placements, and with families reunifying with their children." => [ "Foster Care/Adoption" ],
     "Workplace (Workshops with Staff)" => [ "Staff/Organizational Development" ],
     "Youth who have been through trauma, re-entry youth, foster children, and sexually abused youth and children" =>
-      [ "Foster Care/Adoption", "Child Abuse/Neglect", "Sexual Assault", "Incarceration" ]
+      [ "Foster Care/Adoption", "Child Abuse/Neglect", "Incarceration" ],
+    "at meetings/convenings with partners in prevention" => [ "Staff/Organizational Development" ],
+    "coaching support services" => [ "Self-Care/Personal Growth" ],
+    "Family Resource Centers" => [ "Community Building" ]
   }.freeze
 
   # The same reads, where the term says which ages someone serves.
@@ -288,7 +292,7 @@ class TagAliasSeeder
     "Supervised visitation sessions for foster youth with their biological parents" => %w[Children Teens],
     "We are a Native American culturally specific dual sexual assault and domestic violence agency that " \
       "has programming for teens and adults, including elderly" => %w[Teens Adults Elders],
-    "With youth in foster care" => %w[Teens],
+    "With youth in foster care" => %w[Children Teens],
     "youth services" => %w[Children Teens],
     "Youth who have been through trauma, re-entry youth, foster children, and sexually abused youth and children" =>
       %w[Children Teens]
@@ -297,11 +301,10 @@ class TagAliasSeeder
   # Free text that names no tag at all — a venue, a delivery method, or a shrug. Proposed
   # rather than decided, since "it means nothing" is a judgment too.
   PROPOSED_IGNORED = [
-    "Art Events", "at meetings/convenings with partners in prevention", "coaching support services",
-    "Community based services as well", "Community Leaders and Workshop in the community.",
+    "Art Events", "Community based services as well", "Community Leaders and Workshop in the community.",
     "Community library program", "Community spaces",
     "Community workshops at an art-based non-profit as well collaborative partners",
-    "Family Resource Centers", "Gardens, parks, forests, beaches, outsise",
+    "Gardens, parks, forests, beaches, outsise",
     "Group facilitation at partner agencies", "In presentations for the community", "Libraries",
     "Participants and recipients of social services.", "trainings in the community",
     "Workshop / retail shop setting"
@@ -314,7 +317,9 @@ class TagAliasSeeder
   def initialize(quiet: false)
     @quiet = quiet
     @created = 0
+    @pruned = 0
     @missing = []
+    @proposed_ids = []
   end
 
   def call
@@ -330,6 +335,7 @@ class TagAliasSeeder
     record_sectors(PROPOSED_SECTORS, "filemaker", proposed: true)
     record_age_groups(PROPOSED_AGE_GROUPS, "filemaker", proposed: true)
     record_ignored(PROPOSED_IGNORED, "filemaker", proposed: true)
+    prune_stale_proposals
     report
     self
   end
@@ -357,21 +363,36 @@ class TagAliasSeeder
   def record_ignored(terms, source, proposed: false)
     terms.each do |term|
       alias_row = TagAlias.find_or_initialize_by(name: term.squish, aliasable_type: nil, aliasable_id: nil)
-      next unless alias_row.new_record?
-
-      alias_row.update!(source: source, ignored: true, proposed: proposed)
-      @created += 1
+      if alias_row.new_record?
+        alias_row.update!(source: source, ignored: true, proposed: proposed)
+        @created += 1
+      end
+      @proposed_ids << alias_row.id if proposed
     end
   end
 
   def record(term, type, id, source, name, proposed: false)
-    return @missing << name unless id
+    unless id
+      @missing << name
+      @proposal_unmatched ||= proposed
+      return
+    end
 
     alias_row = TagAlias.find_or_initialize_by(name: term.squish, aliasable_type: type, aliasable_id: id)
-    return unless alias_row.new_record?
+    if alias_row.new_record?
+      alias_row.update!(source: source, proposed: proposed)
+      @created += 1
+    end
+    @proposed_ids << alias_row.id if proposed
+  end
 
-    alias_row.update!(source: source, proposed: proposed)
-    @created += 1
+  # A proposed row is the seeder's own unreviewed guess, so one the tables no longer name is
+  # withdrawn. Staff-validated rows are decided and kept. Skipped while a proposal's tag is
+  # missing, since that proposal couldn't be matched this run.
+  def prune_stale_proposals
+    return if @proposal_unmatched
+
+    @pruned = TagAlias.proposed.where.not(id: @proposed_ids).destroy_all.size
   end
 
   # Published only, the same vocabulary TagTranslation resolves against, so a term aimed at
@@ -391,7 +412,7 @@ class TagAliasSeeder
   def report
     return if @quiet
 
-    puts "  #{@created} tag aliases added (#{TagAlias.count} recorded, #{TagAlias.proposed.count} awaiting staff validation)"
+    puts "  #{@created} tag aliases added, #{@pruned} stale proposals withdrawn (#{TagAlias.count} recorded, #{TagAlias.proposed.count} awaiting staff validation)"
     puts "  no published tag named: #{@missing.uniq.sort.join(', ')} — seed the sectors and age ranges first" if @missing.any?
   end
 end
