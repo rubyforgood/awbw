@@ -124,7 +124,11 @@ class TopicSubscriptionsController < ApplicationController
     authorize! @topic_subscription, to: :update?
     @topic_subscription.save_index_note(params[:note])
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: index_note_hint_stream(@topic_subscription) }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(helpers.dom_id(@topic_subscription, :note_hint),
+                                                  partial: "shared/index_note_hint",
+                                                  locals: { record: @topic_subscription, comment: @topic_subscription.comments.reload.first })
+      end
       format.any { head :ok }
     end
   end
