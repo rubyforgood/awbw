@@ -1,7 +1,7 @@
 <%# Persisted addresses start collapsed to a single-line header; new/blank ones
     stay expanded so their fields are ready to fill in. Native <details>/<summary>
     toggles the editable fields on click — no JavaScript needed. %>
-<details class="nested-fields group mb-3 rounded-lg border border-gray-200 bg-white p-3"<%= " open".html_safe unless f.object.persisted? %>>
+<details class="nested-fields group mb-3 rounded-lg border border-yellow-200 bg-yellow-100 p-3"<%= " open".html_safe unless f.object.persisted? %>>
   <summary class="flex cursor-pointer list-none items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
     <div class="text-lg font-semibold text-gray-800">
       Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
@@ -9,7 +9,7 @@
     <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
   </summary>
 
-  <hr class="my-3 border-gray-200">
+  <hr class="my-3 border-yellow-200">
 
   <!-- LOCATION + DISTRICT + LOCALITY -->
   <div class="grid grid-cols-1 gap-x-4 md:grid-cols-3">
