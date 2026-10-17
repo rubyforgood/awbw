@@ -27,6 +27,12 @@ module Admin
       render_count_badge(:author_credit_count) { DataHealth::Worklists.new.author_credit.sum(&:count) }
     end
 
+    def unsynced_features_count
+      authorize! Feature, to: :create?
+
+      render_count_badge(:unsynced_features_count) { FeatureCatalog.new.missing_count }
+    end
+
     private
 
     # A badge is a nicety, so a failing count renders an empty frame and leaves the button usable.

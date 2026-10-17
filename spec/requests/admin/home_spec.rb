@@ -66,12 +66,13 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include(%(href="#{organization_statuses_path}"))
   end
 
-  it "loads the Data health and Author credit counts in lazy frames" do
+  it "loads the action counts in lazy frames" do
     get "/admin"
 
     expect(response.body).to include(
       %(src="#{admin_home_data_health_count_path}"),
-      %(src="#{admin_home_author_credit_count_path}")
+      %(src="#{admin_home_author_credit_count_path}"),
+      %(src="#{admin_home_unsynced_features_count_path}")
     )
   end
 
@@ -95,6 +96,16 @@ RSpec.describe "Admin home", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(%(id="author_credit_count"))
       expect(response.body).to match(%r{<span[^>]*>5</span>})
+    end
+
+    it "renders how many seeded features aren't synced yet" do
+      allow_any_instance_of(FeatureCatalog).to receive(:missing_count).and_return(3)
+
+      get admin_home_unsynced_features_count_path, headers: { "Turbo-Frame" => "unsynced_features_count" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(id="unsynced_features_count"))
+      expect(response.body).to match(%r{<span[^>]*>3</span>})
     end
 
     it "renders no badge when nothing is waiting" do

@@ -170,6 +170,7 @@
                             class: button_classes(:primary_outline),
                             form: { data: { turbo_confirm: "Add any newly-shipped features and fill in missing details? Your existing edits are kept." } } do %>
                 <i class="fa-solid fa-arrows-rotate"></i> Sync features &amp; tips
+                <%= turbo_frame_tag :unsynced_features_count, src: admin_home_unsynced_features_count_path, loading: :lazy %>
               <% end %>
             <% end %>
           </div>
