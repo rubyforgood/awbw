@@ -29,6 +29,7 @@ module Events
         return
       end
 
+      Current.source = "bulk_payment"
       result = EventRegistrationServices::BulkPayment.call(
         event: @event,
         form: @form,
@@ -37,6 +38,7 @@ module Events
       )
 
       if result.success?
+        Current.form_submission_id = result.form_submission.id
         if @event.cost_cents.to_i > 0 && credit_card_payment?(@form_params)
           checkout_session = create_stripe_checkout_session(result.form_submission)
           redirect_to checkout_session.url, allow_other_host: true, status: :see_other
