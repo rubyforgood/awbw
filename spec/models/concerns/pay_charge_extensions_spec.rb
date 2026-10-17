@@ -274,4 +274,28 @@ RSpec.describe PayChargeExtensions do
         .to have_attributes(external_origin: false, person: member)
     end
   end
+
+  describe "membership invoice payments" do
+    let(:member) { create(:person) }
+    let(:membership) { create(:membership, person: member) }
+
+    it "allocates a one-off balance payment to the invoice it names, not the charge date's" do
+      target = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
+      current = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current, end_date: Date.current + 1.year - 1.day)
+
+      Pay::Charge.create!(
+        customer: pay_customer, processor_id: "ch_balance",
+        amount: 2_500, amount_refunded: 0, currency: "usd",
+        metadata: { "membership_id" => membership.id, "membership_invoice_id" => target.id },
+        object: { "id" => "ch_balance", "amount" => 2_500, "currency" => "usd", "paid" => true,
+                  "metadata" => {}, "refunds" => { "data" => [], "has_more" => false } }
+      )
+
+      expect(target.reload).to be_paid_in_full
+      expect(current.reload).not_to be_paid_in_full
+      expect(ExternalProcessorPayment.find_by(stripe_charge_id: "ch_balance").person).to eq(member)
+    end
+  end
 end

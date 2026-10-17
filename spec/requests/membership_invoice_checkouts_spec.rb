@@ -40,8 +40,8 @@ RSpec.describe "Membership invoice checkouts", type: :request do
     expect(response).to redirect_to("https://checkout.stripe.com/membership")
     expect(checkout_args[:mode]).to eq("payment")
     expect(checkout_args[:subscription_data]).to be_nil
-    expect(checkout_args[:metadata]).to eq({ membership_id: membership.id })
-    expect(checkout_args[:payment_intent_data]).to eq({ metadata: { membership_id: membership.id } })
+    expect(checkout_args[:metadata]).to eq({ membership_id: membership.id, membership_invoice_id: invoice.id })
+    expect(checkout_args[:payment_intent_data]).to eq({ metadata: { membership_id: membership.id, membership_invoice_id: invoice.id } })
     expect(checkout_args[:line_items].size).to eq(1)
     expect(checkout_args[:line_items][0][:price_data][:unit_amount]).to eq(invoice.remaining_cost)
     expect(checkout_args[:line_items][0][:price_data]).not_to have_key(:recurring)

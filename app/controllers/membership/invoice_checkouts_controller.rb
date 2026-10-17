@@ -18,7 +18,7 @@ class Membership::InvoiceCheckoutsController < ApplicationController
   private
 
   def balance_checkout_session(person, invoice)
-    metadata = stripe_metadata(membership_id: invoice.membership_id)
+    metadata = stripe_metadata(membership_id: invoice.membership_id, membership_invoice_id: invoice.id)
 
     person.payment_processor.checkout(
       mode: "payment",
