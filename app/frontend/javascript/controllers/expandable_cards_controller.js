@@ -3,20 +3,51 @@ import { Controller } from "@hotwired/stimulus"
 // Connects to data-controller="expandable-cards"
 // Expand/collapse-all control for a group of expandable-card controllers.
 // Broadcasts expandAll/collapseAll (caught via @window) so each card toggles
-// itself, and keeps the button's label and chevron in sync.
+// itself, and keeps the button's label and chevron in sync. With expandable-card
+// outlets, cards that connect later (e.g. a re-rendered results frame) adopt the
+// current state, including any row toggled on its own (remembered by its key).
 //
 // TODO(dedupe): the form builder added a parallel expand-all/field-options pair
 // (Outlets-based) that does the same job. Consolidate to one pattern — see
 // PR #1606.
 export default class extends Controller {
-  static targets = ["label", "icon"]
+  static targets = ["label", "icon", "toggle"]
+  static outlets = ["expandable-card"]
   static values = {
     expanded: { type: Boolean, default: true },
     expandedLabel: { type: String, default: "Collapse all" },
-    collapsedLabel: { type: String, default: "Expand all" }
+    collapsedLabel: { type: String, default: "Expand all" },
+    rowStates: { type: Object, default: {} }
+  }
+
+  expandableCardOutletConnected(card) {
+    card.expandedValue = this.rowStatesValue[card.keyValue] ?? this.expandedValue
+  }
+
+  // Wired to expandable-card:toggled — a single row flipped by its own chevron.
+  remember({ detail: { key, expanded } }) {
+    if (!key) return
+    this.rowStatesValue = { ...this.rowStatesValue, [key]: expanded }
+  }
+
+  labelTargetConnected() {
+    this.syncButton()
+  }
+
+  iconTargetConnected() {
+    this.syncButton()
+  }
+
+  // With expandable-card outlets, show the toggle only while some card has
+  // clipped text to reveal (wired to each card's expandable-card:measured).
+  refresh() {
+    if (!this.hasToggleTarget) return
+    const anyExpandable = this.expandableCardOutlets.some(card => card.overflowingValue)
+    this.toggleTarget.classList.toggle("hidden", !anyExpandable)
   }
 
   toggleAll() {
+    this.rowStatesValue = {}
     this.expandedValue = !this.expandedValue
     this.dispatch(this.expandedValue ? "expandAll" : "collapseAll")
   }
@@ -25,6 +56,10 @@ export default class extends Controller {
   // in toggleAll so it fires solely on an explicit click — not on connect, which
   // would otherwise force every card open regardless of its own initial state.
   expandedValueChanged() {
+    this.syncButton()
+  }
+
+  syncButton() {
     if (this.hasLabelTarget) {
       this.labelTarget.textContent = this.expandedValue ? this.expandedLabelValue : this.collapsedLabelValue
     }

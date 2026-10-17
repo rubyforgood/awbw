@@ -68,6 +68,7 @@ class NotificationsController < ApplicationController
     @notification.update!(notification_params)
     track_responded_change(responded_was)
     track_incoming_body_change(body_was)
+    combined_feed_person
 
     respond_to do |format|
       format.turbo_stream
@@ -121,8 +122,9 @@ class NotificationsController < ApplicationController
     GlobalID::Locator.locate_signed(params[:noticeable_sgid])
   end
 
-  # Set when the standalone composer on a person's combined feed posted this, so
-  # the log returns there instead of the global index.
+  # Set when a person's combined feed posted this — the composer lands the log
+  # back there instead of the global index, and an inline row edit re-renders
+  # with that person so its date link stays scoped to their feed.
   def combined_feed_person
     @combined_feed_person ||= Person.find_by(id: params[:for_person_id]) if params[:for_person_id].present?
   end

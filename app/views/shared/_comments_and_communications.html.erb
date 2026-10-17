@@ -25,10 +25,17 @@
 <% new_comments = can_manage_comments ? record.comments.select(&:new_record?) : [] %>
 
 <% entries = (comments + notifications).sort_by { |r| r.created_at || Time.current }.reverse %>
+<% link_dates = can_manage_comments && admin && record.persisted? %>
+<% date_path = ->(entry) { feed_entry_path(entry, person: (view_all_person if view_all_person&.persisted?), return_to: record) if link_dates } %>
 
 <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          id="comments-section"
-         data-controller="paginated-fields edit-toggle"
+         data-controller="paginated-fields edit-toggle expandable-cards"
+         data-action="expandable-card:measured->expandable-cards#refresh"
+         data-expandable-cards-expandable-card-outlet="#comments-section [data-controller~='expandable-card']"
+         data-expandable-cards-expanded-value="false"
+         data-expandable-cards-expanded-label-value="<%= t("communications.collapse_all") %>"
+         data-expandable-cards-collapsed-label-value="<%= t("communications.expand_all") %>"
          data-paginated-fields-per-page-value="10"
          data-paginated-fields-no-subject-label-value="<%= t("communications.no_subject") %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
@@ -36,12 +43,19 @@
       <i class="fa-solid fa-comments"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : comms_title %></h2>
+    <% if entries.any? %>
+      <span class="hidden" data-expandable-cards-target="toggle">
+        <%= render "comments_and_communications/expand_all_button", expanded: false %>
+      </span>
+    <% end %>
     <div class="ml-auto flex items-center gap-3">
+      <% if comments.any? && notifications.any? %>
+        <%= render "comments_and_communications/kind_select", name: "#{list_id}-kind", selected: nil,
+                   options: { data: { paginated_fields_target: "kindSelect", action: "paginated-fields#filterKind" } } %>
+      <% end %>
       <% if entries.size > 1 %>
-        <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
-          <%= check_box_tag "#{list_id}-group", "1", false, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", data: { action: "paginated-fields#toggleGrouping" } %>
-          <span class="text-xs text-gray-500"><%= t("communications.group_by_subject") %></span>
-        </label>
+        <%= render "comments_and_communications/group_by_subject_toggle", name: "#{list_id}-group", checked: false,
+                   options: { data: { action: "paginated-fields#toggleGrouping" } } %>
       <% end %>
       <%# Carry the origin so the feed can show a back eyebrow to this record. %>
       <%# Both must be saved: a form can build an unsaved person inline (the new
@@ -62,15 +76,16 @@
       <% entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
           <%= f.simple_fields_for :comments, entry do |cf| %>
-            <%= render "comments/comment_fields", f: cf %>
+            <%= render "comments/comment_fields", f: cf, date_path: date_path.(entry) %>
           <% end %>
         <% elsif editable_notifications.include?(entry) %>
           <%= f.simple_fields_for :notifications, own_notifications_by_id.fetch(entry.id, entry) do |nf| %>
-            <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
+            <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only, date_path: date_path.(entry) %>
           <% end %>
         <% else %>
-          <div data-paginated-fields-target="item" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
-            <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only,
+          <div data-paginated-fields-target="item" data-kind="communications" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
+            <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only, expandable: true,
+                       date_path: date_path.(entry), date_new_tab: true,
                        flag: (render("notifications/flag_indicator", notification: entry) if admin) %>
           </div>
         <% end %>

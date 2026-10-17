@@ -592,6 +592,25 @@ RSpec.describe "Notifications", type: :request do
           expect(contact_notification.reload).not_to be_flagged
         end
       end
+
+      context "saving an inline edit on a person's combined feed" do
+        let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html" } }
+        let(:person) { create(:person, email: "primary@example.com") }
+        let(:logged) do
+          create(:notification, noticeable: person, recipient_email: "primary@example.com", email_subject: "Phone call",
+                                kind: "manual_log", channel: "phone", recipient_role: "person", notification_type: 0)
+        end
+
+        it "keeps the re-rendered row's date link scoped to that person" do
+          patch notification_path(logged),
+                params: { combined: 1, for_person_id: person.id, notification: { email_subject: "Phone call again" } },
+                headers: turbo_headers
+
+          expect(response).to have_http_status(:ok)
+          expect(CGI.unescapeHTML(response.body))
+            .to include(comments_and_communications_path(person_id: person.id, notification_id: logged.id))
+        end
+      end
     end
 
     context "as a regular user" do
