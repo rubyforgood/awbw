@@ -50,7 +50,20 @@
           <tbody>
             <% @groups.each do |group| %>
               <tr id="<%= group[:anchor] %>" class="border-t border-gray-200 align-top scroll-mt-24 target:bg-yellow-50">
-                <td class="px-4 py-3 text-sm text-gray-600"><%= group[:question_label] %></td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                  <% if group[:forms].one? %>
+                    <%= link_to group[:question_label], edit_form_path(group[:forms].first),
+                          target: "_blank", rel: "noopener", title: "Open #{group[:forms].first.name}",
+                          class: "hover:text-blue-700 hover:underline" %>
+                  <% else %>
+                    <%= group[:question_label] %>
+                    <% if group[:forms].any? %>
+                      <span class="mt-1 block text-xs text-gray-500">
+                        On <%= safe_join(group[:forms].map { |form| link_to form.name, edit_form_path(form), target: "_blank", rel: "noopener", class: "hover:text-blue-700 hover:underline" }, ", ") %>
+                      </span>
+                    <% end %>
+                  <% end %>
+                </td>
                 <td class="px-4 py-3 text-sm text-gray-800">
                   <span class="font-medium"><%= group[:display_text] %></span>
                   <% notes = [] %>

@@ -3,11 +3,13 @@ class AuthorCreditDivergencesController < ApplicationController
 
   FILTER_KEYS = %i[person_id type preference include_reconciled].freeze
 
+  # A `section` renders the results with the page, so a link can scroll to that section's anchor.
   def index
-    return unless turbo_frame_request?
+    @section = params[:section].presence_in(AuthorCreditDivergenceQuery::SECTIONS)
+    return unless turbo_frame_request? || @section
 
     load_divergences
-    render :author_credit_divergences_results
+    render :author_credit_divergences_results if turbo_frame_request?
   end
 
   # Stamped reconciled so a deliberate divergence stops reappearing on the worklist.

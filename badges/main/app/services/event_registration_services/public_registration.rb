@@ -106,6 +106,7 @@ module EventRegistrationServices
           organization_link = connect_organization(existing, organization)
           submission = create_form_submission(person)
           organization_link&.record_form_submission(submission)
+          record_organization_type_source(organization, submission)
           save_scholarship_submission(person)
           save_continuing_education_submission(person)
           if reactivated
@@ -121,6 +122,7 @@ module EventRegistrationServices
         organization_link = connect_organization(event_registration, organization)
         submission = create_form_submission(person)
         organization_link&.record_form_submission(submission)
+        record_organization_type_source(organization, submission)
         save_scholarship_submission(person)
         save_continuing_education_submission(person)
 
@@ -324,6 +326,15 @@ module EventRegistrationServices
 
     def invoice_requested?
       additional_forms_selections.any? { |value| value.casecmp?(ADDITIONAL_FORMS_INVOICE) }
+    end
+
+    # The org is captured before the submission exists, so its org-type "Other"
+    # learns which answer typed it once the answers are saved.
+    def record_organization_type_source(organization, submission)
+      return unless organization
+
+      OtherResponse.record_source(owner: organization, submission: submission,
+                                  field_identifier: OtherResponse::ORGANIZATION_TYPE_FIELD_IDENTIFIER)
     end
 
     def create_form_submission(person)

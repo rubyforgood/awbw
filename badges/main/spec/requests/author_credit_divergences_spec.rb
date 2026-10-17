@@ -34,6 +34,21 @@ RSpec.describe "AuthorCreditDivergences", type: :request do
       expect(response.body).to include(person.full_name)
       expect(response.body).to include(story.title)
     end
+
+    # Data health links to one section; the results render with the page so the
+    # browser can scroll to that section's anchor.
+    it "renders the results with the page when a section is requested" do
+      sign_in admin
+      get author_credit_divergences_path(section: "preference")
+      expect(response.body).to include(story.title)
+      expect(response.body).to include('id="section-preference"')
+    end
+
+    it "keeps the results lazy without a section, or with an unknown one" do
+      sign_in admin
+      get author_credit_divergences_path(section: "bogus")
+      expect(response.body).not_to include(story.title)
+    end
   end
 
   describe "PATCH /author_credit_divergences/update_person" do

@@ -21,7 +21,11 @@ class TailwindPaginationRenderer < WillPaginate::ActionView::LinkRenderer
 
   protected
 
+  # `url_for_page:` (a lambda taking the page number) points the links at another
+  # endpoint — e.g. a frame that pages one list on a page holding several.
   def url(page)
+    return @options[:url_for_page].call(page) if @options[:url_for_page]
+
     params = @template.params.to_unsafe_h
                       .merge(page: page)               # set new page
                       .except(:controller, :action)    # avoid controller/action pollution

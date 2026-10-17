@@ -16,8 +16,12 @@
 
     <% result_src = author_credit_divergences_path(request.query_parameters) %>
 
-    <%= turbo_frame_tag :author_credit_divergences_results, src: result_src, data: { turbo: "temporary" } do %>
-      <%= render "results_skeleton" %>
+    <% if @result %>
+      <%= render template: "author_credit_divergences/author_credit_divergences_results" %>
+    <% else %>
+      <%= turbo_frame_tag :author_credit_divergences_results, src: result_src, data: { turbo: "temporary" } do %>
+        <%= render "results_skeleton" %>
+      <% end %>
     <% end %>
   </section>
 </div>

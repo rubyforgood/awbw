@@ -109,6 +109,36 @@ RSpec.describe OtherResponse, type: :model do
     end
   end
 
+  describe ".record_source" do
+    let(:organization) { create(:organization) }
+    let(:field) { create(:form_field, field_identifier: "organization_type") }
+    let(:submission) { create(:form_submission, form: field.form) }
+    let!(:answer) { create(:form_answer, form_submission: submission, form_field: field, submitted_answer: "Other: Mobile clinic") }
+
+    def org_type_response(text, **attrs)
+      create(:other_response, :organization_type, owner: organization, text: text, **attrs)
+    end
+
+    it "points the owner's matching response at the submission's answer" do
+      response = org_type_response("mobile clinic")
+
+      described_class.record_source(owner: organization, submission: submission, field_identifier: "organization_type")
+
+      expect(response.reload.source_form_answer).to eq(answer)
+    end
+
+    it "leaves a response with a different text, or one already sourced, alone" do
+      other = org_type_response("Food bank")
+      earlier = create(:form_answer, form_field: field, submitted_answer: "Other: Mobile clinic")
+      sourced = org_type_response("Mobile clinic", source_form_answer: earlier)
+
+      described_class.record_source(owner: organization, submission: submission, field_identifier: "organization_type")
+
+      expect(other.reload.source_form_answer).to be_nil
+      expect(sourced.reload.source_form_answer).to eq(earlier)
+    end
+  end
+
   describe "#review_anchor" do
     it "buckets sectors by kind, parameterized" do
       expect(create(:other_response, text: "Equine Therapy").review_anchor).to eq("other-sector-equine-therapy")

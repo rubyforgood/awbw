@@ -8,7 +8,25 @@ module Admin
       authorize! :data_health, to: :index?
       track_view("admin.data_health")
 
-      @checks = DataHealth.checks
+      @groups = DataHealth.grouped_checks
+      @open_check = params[:open]
+    end
+
+    def worklists
+      authorize! :data_health, to: :index?
+
+      @worklists = DataHealth::Worklists.new
+      render :data_health_worklists
+    end
+
+    def rows
+      authorize! :data_health, to: :index?
+
+      @check = DataHealth.find(params[:check])
+      return head :not_found unless @check
+
+      @page = params[:page].to_i.clamp(1, Float::INFINITY)
+      render :data_health_rows
     end
 
     def repair
@@ -18,7 +36,8 @@ module Admin
       return redirect_to admin_data_health_path, alert: "Unknown check." unless check&.repairable?
 
       repaired = check.repair!
-      redirect_to admin_data_health_path, notice: check.repaired_message(repaired)
+      redirect_to admin_data_health_path(open: check.key, anchor: "check-#{check.key}"),
+                  notice: check.repaired_message(repaired)
     end
   end
 end

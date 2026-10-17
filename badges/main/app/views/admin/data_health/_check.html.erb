@@ -1,0 +1,38 @@
+<%# Locals: check (a DataHealth::Check). One check inside its group's card. %>
+<div id="check-<%= check.key %>" class="scroll-mt-24 px-4 py-4">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h3 class="text-sm font-semibold text-gray-800">
+        <%= check.title %>
+        <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-medium <%= check.any? ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-500" %>">
+          <%= check.count %>
+        </span>
+      </h3>
+      <p class="mt-1 text-xs text-gray-500"><%= check.explanation %></p>
+      <% if (aside = check.aside)&.count&.positive? %>
+        <p class="mt-1 text-xs text-gray-400">
+          Not counted: <%= number_with_delimiter(aside.count) %> <%= aside.text %>.
+          <%= link_to "View them", aside.path, target: "_blank", rel: "noopener", class: "text-blue-700 hover:underline" %>
+        </p>
+      <% end %>
+    </div>
+
+    <% if check.any? && check.review_path %>
+      <%= link_to check.review_label, check.review_path,
+            class: button_classes(:secondary_outline, extra: "shrink-0") %>
+    <% end %>
+    <% if check.any? && check.repairable? %>
+      <%= button_to check.repair_label, admin_data_health_repair_path(check: check.key),
+            method: :post, class: button_classes(:danger_outline, extra: "shrink-0"),
+            form: { data: { turbo_confirm: "#{check.repair_label} for #{check.count} #{'record'.pluralize(check.count)}? This can't be undone." } } %>
+    <% elsif check.any? && !check.review_path %>
+      <span class="shrink-0 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500">
+        Review by hand
+      </span>
+    <% end %>
+  </div>
+
+  <% if check.any? %>
+    <%= render "rows", check: check, page: 1 %>
+  <% end %>
+</div>

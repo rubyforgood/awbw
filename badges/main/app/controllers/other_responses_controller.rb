@@ -11,7 +11,9 @@ class OtherResponsesController < ApplicationController
     # tag); with no filter the queue shows the reviewable set (promoted drops off).
     @status_filter = params[:status].presence_in(OtherResponse::STATUSES)
     statuses = @status_filter ? [ @status_filter ] : OtherResponse::REVIEWABLE_STATUSES
-    responses = OtherResponse.where(status: statuses).includes(:owner, :source_form_answer, :promotable)
+    responses = OtherResponse.where(status: statuses)
+      .includes(:owner, :promotable, source_form_answer: [ { form_field: :form }, { form_submission: :form } ]).to_a
+    @forms_asking = forms_asking(responses.map(&:field_identifier).uniq)
 
     @groups = responses
       .group_by { |response| [ response.group_key, response.normalized_text ] }
@@ -91,6 +93,7 @@ class OtherResponsesController < ApplicationController
       field_identifier: first.field_identifier,
       promotable: first.promotable?,
       question_label: question_label_for(first),
+      forms: forms_for(rows),
       display_text: first.text,
       normalized_text: first.normalized_text,
       anchor: first.review_anchor,
@@ -104,6 +107,20 @@ class OtherResponsesController < ApplicationController
       promoted_by_merge: promoted_sector.present? &&
         OtherResponse.normalize(promoted_sector.name) != first.normalized_text
     }
+  end
+
+  # The forms a group's answers came from. Org-type responses saved before their
+  # source answer was recorded fall back to every form asking that question.
+  def forms_for(rows)
+    answered_on = rows.filter_map { |r| r.source_form_answer&.form_field&.form || r.source_form_answer&.form_submission&.form }
+    forms = answered_on.presence || rows.map(&:field_identifier).uniq.flat_map { |identifier| @forms_asking.fetch(identifier, []) }
+    forms.uniq.sort_by { |form| form.name.to_s.downcase }
+  end
+
+  def forms_asking(field_identifiers)
+    FormField.where(field_identifier: field_identifiers).includes(:form)
+      .group_by(&:field_identifier)
+      .transform_values { |fields| fields.filter_map(&:form).uniq }
   end
 
   def question_label_for(response)
