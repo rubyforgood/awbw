@@ -242,6 +242,25 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to match(/<input[^>]*type="hidden"[^>]*name="person_id"[^>]*value="#{person.id}"/)
       end
 
+      it "titles the unscoped feed Everyone under a small Activity label" do
+        get index_path
+
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.at_css("h1").text.strip).to eq("Everyone")
+        expect(doc.css("a").map(&:text).map(&:strip)).not_to include("View everyone")
+      end
+
+      it "clears a person-scoped page back to the unscoped feed with a full-page load" do
+        person = create(:person)
+
+        get index_path, params: { person_id: person.id, time_period: "all_time" }
+
+        clear = Nokogiri::HTML(response.body).css("a").find { |a| a.text.strip == "Clear filters" }
+        expect(clear["href"]).to eq(index_path)
+        expect(clear["data-turbo-frame"]).to eq("_top")
+        expect(clear["data-action"]).to be_nil
+      end
+
       it "stays person-scoped (no org autochange leak) when a toggle re-submits with person_id" do
         person = create(:person)
         org = create(:organization)
