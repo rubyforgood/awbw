@@ -1,26 +1,26 @@
-# After a person or organization merge, the generic merge moves both records'
-# addresses onto the keeper wholesale (addresses have no unique index, so nothing
-# collapses them), leaving identical duplicates and possibly two primary addresses.
-# Fold addresses that share the same details into one — repointing their contact
-# methods, billing and affiliation references via ModelDeduper#merge — then settle a
-# single primary: the keeper's own pre-merge primary, or the deleted record's when the
-# keeper had none. Runs in the people and organizations dedupers' after_merge.
+# Folds a person's or organization's addresses that are one place into a single
+# address — repointing their contact methods, billing and affiliation references via
+# ModelDeduper#merge — then settles a single primary. Two addresses are one place when
+# their AddressNormalizer signatures match ("N Main St" / "North Main Street"), or when
+# a less complete copy (no ZIP, no street, …) fits exactly one fuller address.
+# Runs in the people and organizations dedupers' after_merge (addresses have no unique
+# index, so a merge leaves both records' copies on the keeper) and on the standalone
+# Dedupe addresses page.
 class AddressDeduper
-  IDENTITY_COLUMNS = %w[
-    street_address city state zip_code country county district address_type locality
-  ].freeze
-
-  # Columns outside the identity that a folded duplicate may carry, filled in on
-  # the survivor when it has none so a fold never drops a phone number or a
-  # geocoded district only one copy had.
+  # Filled in on the survivor from a folded copy when the survivor has none, so a
+  # fold never drops a phone number, a ZIP, or a geocoded district only one copy had.
   CARRIED_COLUMNS = %w[
+    street_address zip_code country county district address_type locality
     phone la_city_council_district la_service_planning_area la_supervisorial_district
   ].freeze
+
+  # Columns whose "unknown" value means never recorded.
+  UNKNOWN_AS_BLANK_COLUMNS = %w[address_type locality].freeze
 
   def self.signature(address)
     return unless address
 
-    IDENTITY_COLUMNS.map { |column| address.public_send(column).to_s.strip.downcase }
+    AddressNormalizer.signature(address)
   end
 
   # The signature of the primary address to preserve, read before the merge while
@@ -36,36 +36,49 @@ class AddressDeduper
     new(addressable, primary_signature: signature(addressable.addresses.find_by(primary: true))).call
   end
 
+  # The addresses that fold together, each set ordered survivor-first. A set of
+  # one is an address with no duplicate. Works from the fullest signature down so
+  # a chain of ever-less-complete copies all land on the fullest one.
+  def self.matching_sets(addresses)
+    sets = addresses.group_by { |address| signature(address) }
+    sets.keys.sort_by { |key| -key.count(&:present?) }.each do |key|
+      fuller = sets.keys.select { |other| other != key && covers?(other, key) }
+      sets[fuller.first].concat(sets.delete(key)) if fuller.one?
+    end
+    sets.values.map { |set| set.sort_by { |address| fold_order(address) } }
+            .sort_by { |set| fold_order(set.first) }
+  end
+
+  # Every part the partial signature has, the full one has too.
+  def self.covers?(full, partial)
+    partial.zip(full).all? { |part, full_part| part.blank? || part == full_part }
+  end
+
+  # Active before inactive, then the primary, then oldest — so a fold keeps the
+  # copy still in use. `Address.active` drives bill-to addresses, an org's program
+  # location and the geographic breakdowns, so letting an inactive duplicate win
+  # would drop the record out of all of them.
+  def self.fold_order(address)
+    [ address.inactive? ? 1 : 0, address.primary? ? 0 : 1, address.id ]
+  end
+
   def initialize(addressable, primary_signature: nil)
     @addressable = addressable
     @primary_signature = primary_signature
   end
 
   def call
-    survivors = {}
-    fold_candidates.each do |address|
-      signature = self.class.signature(address)
-      if (survivor = survivors[signature])
-        fold(address, into: survivor)
-      else
-        survivors[signature] = address
-      end
+    sets = self.class.matching_sets(@addressable.addresses.reload.to_a)
+    primary_set = sets.find { |set| set.any? { |address| self.class.signature(address) == @primary_signature } }
+
+    sets.each do |survivor, *losers|
+      losers.each { |loser| fold(loser, into: survivor) }
     end
 
-    settle_primary(survivors.values)
+    settle_primary(sets.map(&:first), primary_set&.first)
   end
 
   private
-
-  # Active before inactive, then the primary, then oldest — so a fold keeps the
-  # copy still in use. `Address.active` drives bill-to addresses, an org's program
-  # location and the geographic breakdowns, so letting an inactive duplicate win
-  # would drop the record out of all of them.
-  def fold_candidates
-    @addressable.addresses.reload.sort_by do |address|
-      [ address.inactive? ? 1 : 0, address.primary? ? 0 : 1, address.id ]
-    end
-  end
 
   def fold(loser, into:)
     carry_over(loser, into)
@@ -73,20 +86,23 @@ class AddressDeduper
   end
 
   def carry_over(loser, survivor)
-    filled = CARRIED_COLUMNS.select do |column|
-      survivor.public_send(column).blank? && loser.public_send(column).present?
-    end
+    filled = CARRIED_COLUMNS.select { |column| missing?(survivor, column) && !missing?(loser, column) }
     return if filled.empty?
 
     survivor.update!(filled.index_with { |column| loser.public_send(column) })
   end
 
-  def settle_primary(addresses)
+  def missing?(address, column)
+    value = address.public_send(column)
+    value.blank? || (UNKNOWN_AS_BLANK_COLUMNS.include?(column) && value.to_s.casecmp?("unknown"))
+  end
+
+  def settle_primary(survivors, primary)
     return if @primary_signature.nil?
 
-    addresses.each do |address|
-      primary = self.class.signature(address) == @primary_signature
-      address.update!(primary: primary) if address.primary? != primary
+    survivors.each do |address|
+      is_primary = address == primary
+      address.update!(primary: is_primary) if address.primary? != is_primary
     end
   end
 

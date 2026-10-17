@@ -6,9 +6,10 @@
         <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
         <h1 class="text-primary mt-2 font-display text-2xl font-semibold">Dedupe addresses</h1>
         <p class="mt-1 text-gray-500">
-          People and organizations with the same address saved more than once. Folding keeps one
-          copy — the active one, then the primary, then the oldest — and moves its contact methods,
-          invoices, and affiliations onto it.
+          People and organizations with the same address saved more than once — including spellings
+          like "N Main St" and "North Main Street", and a copy missing its ZIP or street. Folding keeps
+          one copy — the active one, then the primary, then the oldest — fills in anything it's missing
+          from the others, and moves their contact methods, invoices, and affiliations onto it.
         </p>
       </div>
       <% if @groups.any? %>
@@ -39,19 +40,28 @@
                             class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap"),
                             form_class: "shrink-0" %>
             </div>
-            <ul class="divide-y divide-gray-100">
+            <div class="space-y-2">
               <% group.duplicate_sets.each do |addresses| %>
-                <li class="py-1.5">
-                  <span class="text-gray-800"><%= addresses.first.name %></span>
-                  <span class="text-sm text-gray-400">
-                    · <%= addresses.size %> copies
-                    · IDs <%= addresses.map(&:id).join(", ") %>
-                    <% if addresses.any?(&:primary?) %>· primary<% end %>
-                    <% if addresses.any?(&:inactive?) %>· <%= addresses.count(&:inactive?) %> inactive<% end %>
-                  </span>
-                </li>
+                <ul class="divide-y divide-gray-100 rounded-lg border border-gray-100 px-3">
+                  <% addresses.each_with_index do |address, index| %>
+                    <li class="flex items-center justify-between gap-3 py-1.5">
+                      <span class="text-gray-800">
+                        <%= address.name %>
+                        <span class="text-sm text-gray-400">
+                          · ID <%= address.id %>
+                          <% if address.address_type.present? %>· <%= address.address_type %><% end %>
+                          <% if address.primary? %>· primary<% end %>
+                          <% if address.inactive? %>· inactive<% end %>
+                        </span>
+                      </span>
+                      <% if index.zero? %>
+                        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700">Kept</span>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
               <% end %>
-            </ul>
+            </div>
           </div>
         <% end %>
       </div>

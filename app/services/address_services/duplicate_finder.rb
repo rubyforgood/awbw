@@ -1,6 +1,6 @@
 module AddressServices
-  # People and organizations carrying two or more addresses with the same
-  # AddressDeduper signature — the set the standalone address deduper folds.
+  # People and organizations carrying two or more addresses that are one place
+  # (AddressDeduper.matching_sets) — the set the standalone address deduper folds.
   # Only compares addresses within one owner: two orgs sharing a street are
   # separate records, not duplicates.
   class DuplicateFinder
@@ -31,9 +31,7 @@ module AddressServices
       addressable = addresses.first.addressable
       return unless addressable
 
-      duplicate_sets = addresses.group_by { |address| AddressDeduper.signature(address) }
-                                .values
-                                .select { |set| set.size > 1 }
+      duplicate_sets = AddressDeduper.matching_sets(addresses).select { |set| set.size > 1 }
       return if duplicate_sets.empty?
 
       Group.new(addressable: addressable, duplicate_sets: duplicate_sets)

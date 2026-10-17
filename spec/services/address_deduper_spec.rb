@@ -24,6 +24,64 @@ RSpec.describe AddressDeduper do
     expect(Address.exists?(dup.id)).to be false
   end
 
+  it "folds an address spelled differently but naming the same place" do
+    keep = address(street_address: "1 Main Street", state: "California", zip_code: "90001-1234")
+    dup = address(street_address: "1 Main St.")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ keep.id ])
+    expect(Address.exists?(dup.id)).to be false
+  end
+
+  it "folds a copy missing its ZIP into the fuller address and keeps the ZIP" do
+    keep = address(zip_code: "")
+    full = address
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ keep.id ])
+    expect(keep.reload.zip_code).to eq(full.zip_code)
+  end
+
+  it "fills an unknown locality on the survivor from the folded copy" do
+    keep = address(locality: "Unknown")
+    address
+
+    described_class.new(person).call
+
+    expect(keep.reload.locality).to eq("LA City")
+  end
+
+  it "leaves a less complete copy alone when it fits more than one address" do
+    address(street_address: "")
+    address(street_address: "1 Main St")
+    address(street_address: "2 Other St")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.count).to eq(3)
+  end
+
+  it "folds a chain of less complete copies onto the fullest one" do
+    full = address
+    address(zip_code: "")
+    address(zip_code: "", street_address: "")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ full.id ])
+  end
+
+  it "keeps addresses of different types apart" do
+    address(address_type: "work")
+    address(address_type: "mailing")
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.count).to eq(2)
+  end
+
   it "keeps addresses that differ in any detail" do
     address
     address(street_address: "2 Other St")
