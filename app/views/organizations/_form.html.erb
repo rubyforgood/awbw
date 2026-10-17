@@ -53,30 +53,37 @@
         <% end %>
       </div>
 
-      <!-- Sectors & Windows audience -->
+      <!-- Sectors & age groups (read-only roll-up) & Windows audience -->
       <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-[3fr_1fr]">
-        <div class="form-group space-y-4">
-          <div class="mb-2 font-semibold text-gray-700">
-            Sectors
+        <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <div class="mb-2 font-semibold text-gray-700">Sectors</div>
+              <% sectors = f.object.active_people_sectors.sort_by { |sector| sector.name.to_s.downcase } %>
+              <% if sectors.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% sectors.each do |sector| %>
+                    <%= render "sectors/tagging_label", sector: sector %>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-sm text-gray-500 italic">None yet.</p>
+              <% end %>
+            </div>
+            <div>
+              <div class="mb-2 font-semibold text-gray-700">Age groups served</div>
+              <% age_groups = f.object.active_people_age_groups %>
+              <% if age_groups.any? %>
+                <%= render "shared/age_group_tags", primary: age_groups %>
+              <% else %>
+                <p class="text-sm text-gray-500 italic">None yet.</p>
+              <% end %>
+            </div>
           </div>
-
-          <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> mb-4 p-4 shadow-sm">
-            <%= f.simple_fields_for :sectorable_items do |sfi| %>
-              <%= render "shared/sectorable_item_fields", f: sfi %>
-            <% end %>
-
-            <%= link_to_add_association "➕ Add Sector",
-                                        f,
-                                        :sectorable_items,
-                                        partial: "shared/sectorable_item_fields",
-                                        render_options: {
-                                          locals: {
-                                            collection: (@sectors_collection || [])
-                                              .reject { |_, id| (@current_sector_ids || []).include?(id) }
-                                          }
-                                        },
-                                      class: button_classes(:secondary_outline) %>
-          </div>
+          <p class="mt-3 text-xs text-gray-500">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            Not editable here. These come from the primary sector and primary age group of each person actively affiliated with this organization — edit a person's profile to change them.
+          </p>
         </div>
 
         <div>
@@ -99,41 +106,27 @@
   </div>
 
   <!-- Profile-specific Categories (e.g. Workshop Settings) -->
+  <%# Saving replaces only the category types shown here, preserving any other type
+      (age ranges included) the form never shows. %>
+  <%= hidden_field_tag "organization[managed_category_type_ids][]", "" %>
+  <% (@managed_category_type_ids || []).each do |type_id| %>
+    <%= hidden_field_tag "organization[managed_category_type_ids][]", type_id %>
+  <% end %>
   <% if @org_categories_grouped.present? %>
-    <% primary_age_ids = @organization.primary_age_category_ids %>
     <div class="form-group mb-8 space-y-4">
-      <%# Ensures the primary-age param is always submitted so unchecking every
-          toggle clears the primary flags. %>
-      <%= hidden_field_tag "organization[primary_age_category_ids][]", "" %>
       <%# Keeps category_ids in the params when every picker is emptied, so saving clears them. %>
       <%= hidden_field_tag "organization[category_ids][]", "" %>
       <% @org_categories_grouped.each do |type, cats| %>
-        <% is_age = type.name == "AgeRange" %>
-        <% if is_age %>
-          <div class="mb-2 font-semibold text-gray-700"><%= type.display_label %></div>
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-            <p class="mb-3 text-sm text-gray-500">Check every age group served, then mark the primary ones.</p>
-            <div class="flex flex-wrap gap-3">
-              <% cats.each do |category| %>
-                <%= render "shared/category_checkbox", param_key: "organization", category: category,
-                           checked: @organization.category_ids.include?(category.id),
-                           is_age: true,
-                           primary_checked: primary_age_ids.include?(category.id) %>
-              <% end %>
-            </div>
-          </div>
-        <% else %>
-          <% select_id = "organization_category_ids_type_#{type.id}" %>
-          <%= label_tag select_id, type.display_label, class: "mb-2 block font-semibold text-gray-700" %>
-          <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm" data-controller="searchable-checkbox">
-            <%= select_tag "organization[category_ids][]",
-                           options_from_collection_for_select(cats, :id, :name, @organization.category_ids),
-                           id: select_id,
-                           multiple: true,
-                           class: "w-full rounded-lg border border-gray-300 bg-white",
-                           data: { searchable_checkbox_target: "select", placeholder: "Add #{type.display_label.downcase}…" } %>
-          </div>
-        <% end %>
+        <% select_id = "organization_category_ids_type_#{type.id}" %>
+        <%= label_tag select_id, type.display_label, class: "mb-2 block font-semibold text-gray-700" %>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm" data-controller="searchable-checkbox">
+          <%= select_tag "organization[category_ids][]",
+                         options_from_collection_for_select(cats, :id, :name, @organization.category_ids),
+                         id: select_id,
+                         multiple: true,
+                         class: "w-full rounded-lg border border-gray-300 bg-white",
+                         data: { searchable_checkbox_target: "select", placeholder: "Add #{type.display_label.downcase}…" } %>
+        </div>
       <% end %>
     </div>
   <% end %>
@@ -276,11 +269,6 @@
       <%= link_to_add_association "➕ Add Address",
                                   f,
                                   :addresses,
-                                  render_options: {
-                                    locals: {
-                                      collection: Sector.published.where.not(name: f.object.sector_list)
-                                    }
-                                  },
                                   class: button_classes(:secondary_outline) %>
     </div>
   </div>

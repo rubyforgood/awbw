@@ -112,18 +112,16 @@ RSpec.describe "/organizations", type: :request do
 
   describe "sector displays" do
     let!(:organization_with_sectors) do
-      affiliated_sector_1 = create(:sector, name: "Affiliated Sector 1")
-      affiliated_sector_2 = create(:sector, name: "Affiliated Sector 2")
-      person_1 = create(:person)
-      person_2 = create(:person)
-      create(:sectorable_item, sector: affiliated_sector_1, sectorable: person_1, is_primary: true)
-      create(:sectorable_item, sector: affiliated_sector_2, sectorable: person_2, is_primary: true)
-
       org = create(:organization, organization_status: organization_status)
       create(:sectorable_item, sector: create(:sector, name: "Direct Sector 1"), sectorable: org)
-      create(:sectorable_item, sector: create(:sector, name: "Direct Sector 2"), sectorable: org)
-      create(:affiliation, organization: org, person: person_1)
-      create(:affiliation, organization: org, person: person_2)
+      %w[Alpha Bravo Charlie Delta].each do |name|
+        person = create(:person)
+        create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: true)
+        create(:affiliation, organization: org, person: person)
+      end
+      former = create(:person)
+      create(:sectorable_item, sector: create(:sector, name: "Former Sector"), sectorable: former, is_primary: true)
+      create(:affiliation, organization: org, person: former, end_date: 1.year.ago)
       org
     end
 
@@ -131,33 +129,31 @@ RSpec.describe "/organizations", type: :request do
       get organization_url(organization_with_sectors)
 
       page = Capybara.string(response.body)
-      all_sector_names = organization_with_sectors.all_sectors.map(&:name).sort
-      expect(all_sector_names.length).to be > 3
-      all_sector_names.first(3).each { |name| expect(page).to have_content(name) }
-      expect(page).not_to have_content(all_sector_names[3])
-      expect(page).to have_content(/\+?[0-9]+ more|\.\.\./i)
+      %w[Alpha Bravo Charlie].each { |name| expect(page).to have_content(name) }
+      expect(page).not_to have_content("Delta")
+      expect(page).to have_content(/\.\.\./)
     end
 
-    it "lists all sectors with per-sector people counts on the populations served page" do
+    it "lists only active people's primary sectors with per-sector counts on the populations served page" do
       get populations_served_organization_url(organization_with_sectors)
 
       page = Capybara.string(response.body)
       expect(page).to have_content("Sector Distribution")
-      expect(page).to have_content(organization_with_sectors.name)
+      %w[Alpha Bravo Charlie Delta].each { |name| expect(page).to have_content(name) }
+      expect(page).to have_content("1 person", count: 4)
+      expect(page).not_to have_content("Direct Sector 1")
+      expect(page).not_to have_content("Former Sector")
+    end
 
-      organization_with_sectors.all_sectors.map(&:name).each do |name|
-        expect(page).to have_content(name)
-      end
+    it "shows the roll-up read-only on the edit page with a note on where it comes from" do
+      get edit_organization_url(organization_with_sectors)
 
-      people = organization_with_sectors.users.includes(person: :sectors).map(&:person).compact
-      expected_counts = Hash.new(0)
-      people.each do |person|
-        primary_sector = person.sectors.first
-        expected_counts[primary_sector.name] += 1 if primary_sector
-      end
-      expected_counts.each do |_sector_name, count|
-        expect(page).to have_content("#{count} #{count == 1 ? 'person' : 'people'}")
-      end
+      page = Capybara.string(response.body)
+      %w[Alpha Bravo Charlie Delta].each { |name| expect(page).to have_content(name) }
+      expect(page).not_to have_content("Direct Sector 1")
+      expect(page).to have_content("Not editable here")
+      expect(page).not_to have_css("[name*='sectorable_items_attributes']")
+      expect(page).not_to have_css("[name='organization[primary_age_category_ids][]']")
     end
   end
 
@@ -366,47 +362,33 @@ RSpec.describe "/organizations", type: :request do
     let!(:sector) { create(:sector, :published) }
     let(:organization) { Organization.create!(valid_attributes) }
 
-    it "saves sectors via nested attributes on create" do
-      post organizations_url, params: {
-        organization: valid_attributes.merge(
-          category_ids: [ "" ],
-          sectorable_items_attributes: {
-            "0" => { sector_id: sector.id, _destroy: "false" }
-          }
-        )
-      }
-
-      expect(Organization.last.sectors).to include(sector)
-    end
-
-    it "saves sectors via nested attributes on update" do
+    it "ignores submitted sectors" do
       patch organization_url(organization), params: {
         organization: {
           name: organization.name,
-          category_ids: [ "" ],
-          sectorable_items_attributes: {
-            "0" => { sector_id: sector.id, _destroy: "false" }
-          }
+          sectorable_items_attributes: { "0" => { sector_id: sector.id, _destroy: "false" } }
         }
       }
 
-      organization.reload
-      expect(organization.sectors).to include(sector)
+      expect(organization.reload.sectors).to be_empty
     end
 
-    it "preserves existing sectors when updating other fields" do
-      organization.sectorable_items.create!(sector: sector)
-      expect(organization.sectors).to include(sector)
+    it "preserves the org's existing age-range taggings when saving workshop settings" do
+      age_type = create(:category_type, name: "AgeRange", published: true)
+      teen = create(:category, :published, category_type: age_type, name: "13-17")
+      settings_type = create(:category_type, name: "WorkshopEnvironment", published: true, profile_specific: true)
+      clinical = create(:category, :published, category_type: settings_type, name: "Clinical setting")
+      organization.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
 
       patch organization_url(organization), params: {
         organization: {
-          name: "Updated Name",
-          category_ids: [ "" ]
+          name: organization.name,
+          category_ids: [ "", clinical.id.to_s ],
+          managed_category_type_ids: [ "", settings_type.id.to_s ]
         }
       }
 
-      organization.reload
-      expect(organization.sectors).to include(sector)
+      expect(organization.reload.categories).to contain_exactly(teen, clinical)
     end
   end
 

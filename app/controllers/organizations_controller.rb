@@ -8,10 +8,9 @@ class OrganizationsController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
       base_scope = authorized_scope(Organization.includes(
-        :organization_status, :sectors, :sectorable_items, :addresses, :affiliations,
-        { categorizable_items: { category: :category_type } },
+        :organization_status, :addresses,
         # Feeds the per-row sector and age-group roll-ups.
-        { people: Organization::PEOPLE_TAGGINGS },
+        { affiliations: { person: Organization::PEOPLE_TAGGINGS } },
         logo_attachment: :blob
       ))
       filtered = base_scope.search_by_params(params).order(:name)
@@ -160,9 +159,6 @@ class OrganizationsController < ApplicationController
   # Optional hooks for setting variables for forms or index
   def set_form_variables
     @organization_statuses = OrganizationStatus.all
-    @sectors_collection = Sector.published.order(:name).pluck(:name, :id)
-    @current_sector_ids = @organization.sectorable_items.map(&:sector_id)
-
     if @organization.persisted? && @organization.errors.empty?
       affiliations = @organization.affiliations
       affiliations = affiliations.includes(:person) unless affiliations.loaded?
@@ -199,8 +195,9 @@ class OrganizationsController < ApplicationController
       .published
       .order(:position, :name)
       .group_by(&:category_type)
-      .select { |type, _| type&.profile_specific? }
+      .select { |type, _| type&.profile_specific? && type.name != AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }
       .sort_by { |type, _| type&.name.to_s.downcase }
+    @managed_category_type_ids = @org_categories_grouped.map { |type, _| type.id }
   end
 
   def set_index_variables
@@ -215,14 +212,7 @@ class OrganizationsController < ApplicationController
   def populations_served
     authorize! @organization
 
-    people = @organization.users.includes(:person).map(&:person).compact
-
-    sector_counts = Hash.new(0)
-    people.each do |person|
-      primary_sector = person.sectors.first
-      sector_counts[primary_sector] += 1 if primary_sector
-    end
-    @sectors_by_people = sector_counts.sort_by { |_sector, count| -count }
+    @sectors_by_people = @organization.active_people.filter_map(&:primary_sector).tally.sort_by { |_sector, count| -count }
   end
 
   private
@@ -232,8 +222,7 @@ class OrganizationsController < ApplicationController
       :organization_status, :windows_type, :addresses,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
-      { sectorable_items: :sector },
-      affiliations: { person: :user }
+      affiliations: { person: [ :user, *Organization::PEOPLE_TAGGINGS ] }
     ).find(params[:id])
   end
 
@@ -246,12 +235,6 @@ class OrganizationsController < ApplicationController
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
-      category_ids: [],
-      sectorable_items_attributes: [
-        :id,
-        :sector_id,
-        :_destroy
-      ],
       affiliations_attributes: [
         :id,
         :person_id,

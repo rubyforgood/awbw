@@ -1,0 +1,13 @@
+name: "Organization sectors and age groups come from their people"
+area: people
+display_status: user_facing
+released_on: 2026-10-17
+pr_number: 2712
+summary: >-
+  An organization's sectors and age groups served are no longer entered on the
+  organization. They now show the primary sector and primary age group of each
+  person actively affiliated with it, on the profile, the organizations list,
+  and the edit page.
+pro_tips:
+  - "To change what an organization shows, update the primary sector or age group on its people's profiles."
+  - "People whose affiliation has ended no longer count toward the organization."

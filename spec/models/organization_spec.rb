@@ -345,53 +345,54 @@ RSpec.describe Organization do
     let!(:direct_org) { create(:organization, name: "Direct Org") }
     let!(:primary_person_org) { create(:organization, name: "Primary Person Org") }
     let!(:additional_person_org) { create(:organization, name: "Additional Person Org") }
-    let!(:untagged) { create(:organization, name: "Untagged Org") }
+    let!(:inactive_person_org) { create(:organization, name: "Inactive Person Org") }
 
     before do
-      # Tagged directly on the org (org's own tags count regardless of primary).
       direct_org.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
       direct_org.sectorable_items.create!(sector: sector, is_primary: false)
 
-      # An affiliated person's PRIMARY tags — should match.
       primary_person = create(:person)
       create(:affiliation, organization: primary_person_org, person: primary_person)
       primary_person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
       primary_person.sectorable_items.create!(sector: sector, is_primary: true)
 
-      # An affiliated person's ADDITIONAL / non-primary tags — should NOT match.
       additional_person = create(:person)
       create(:affiliation, organization: additional_person_org, person: additional_person)
       additional_person.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
       additional_person.sectorable_items.create!(sector: sector, is_primary: false)
+
+      former_person = create(:person)
+      create(:affiliation, organization: inactive_person_org, person: former_person, end_date: 1.year.ago)
+      former_person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      former_person.sectorable_items.create!(sector: sector, is_primary: true)
     end
 
-    it "matches a sector on the org or an affiliated person's primary, not their non-primary" do
-      results = Organization.search_by_params(sector_name: "Housing")
-      expect(results).to include(direct_org, primary_person_org)
-      expect(results).not_to include(additional_person_org, untagged)
+    it "matches a sector only through an actively affiliated person's primary" do
+      expect(Organization.search_by_params(sector_name: "Housing")).to contain_exactly(primary_person_org)
     end
 
-    it "matches an age group on the org or an affiliated person's primary, not their additional" do
-      results = Organization.search_by_params(age_group_name: "13-17")
-      expect(results).to include(direct_org, primary_person_org)
-      expect(results).not_to include(additional_person_org, untagged)
+    it "matches an age group only through an actively affiliated person's primary" do
+      expect(Organization.search_by_params(age_group_name: "13-17")).to contain_exactly(primary_person_org)
     end
   end
 
-  describe "#all_sectors" do
+  describe "#active_people_sectors" do
     let!(:housing) { create(:sector, :published, name: "Housing") }
     let!(:legal) { create(:sector, :published, name: "Legal") }
     let!(:other) { create(:sector, :published, name: "Other Services") }
     let(:organization) { create(:organization) }
 
-    it "includes the org's own sectors and affiliated people's primary sector only" do
-      organization.sectorable_items.create!(sector: housing, is_primary: false)
+    it "rolls up only actively affiliated people's primary sectors, ignoring the org's own tags" do
+      organization.sectorable_items.create!(sector: housing, is_primary: true)
       person = create(:person)
       create(:affiliation, organization: organization, person: person)
       person.sectorable_items.create!(sector: legal, is_primary: true)
       person.sectorable_items.create!(sector: other, is_primary: false)
+      former = create(:person)
+      create(:affiliation, organization: organization, person: former, end_date: 1.year.ago)
+      former.sectorable_items.create!(sector: housing, is_primary: true)
 
-      expect(organization.all_sectors).to contain_exactly(housing, legal)
+      expect(organization.active_people_sectors).to contain_exactly(legal)
     end
   end
 
@@ -424,7 +425,7 @@ RSpec.describe Organization do
     end
   end
 
-  describe "age groups served" do
+  describe "#active_people_age_groups" do
     let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
     let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
     let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
@@ -432,29 +433,21 @@ RSpec.describe Organization do
     let(:organization) { create(:organization) }
     let(:person_a) { create(:person) }
     let(:person_b) { create(:person) }
+    let(:former) { create(:person) }
 
     before do
       create(:affiliation, organization: organization, person: person_a)
       create(:affiliation, organization: organization, person: person_b)
+      create(:affiliation, organization: organization, person: former, end_date: 1.year.ago)
     end
 
-    it "includes org-direct age groups and affiliated people's primary (not their additional)" do
+    it "rolls up only actively affiliated people's primary age groups, ignoring the org's own tags" do
       organization.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [ teen.id ])
       person_a.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
-      person_b.tag_age_groups(primary_ids: [], additional_ids: [ young.id ])
+      person_b.tag_age_groups(primary_ids: [ young.id ], additional_ids: [ teen.id ])
+      former.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
 
-      # org primary (adult) + people's primary (young); org's own additional (teen)
-      # stays; person_b's additional (young) is ignored.
-      expect(organization.all_primary_age_groups).to contain_exactly(young, adult)
-      expect(organization.all_additional_age_groups).to contain_exactly(teen)
-    end
-
-    it "treats a group that is primary for any member as primary, never additional" do
-      person_a.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
-      person_b.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
-
-      expect(organization.all_primary_age_groups).to contain_exactly(teen)
-      expect(organization.all_additional_age_groups).to be_empty
+      expect(organization.active_people_age_groups).to contain_exactly(young)
     end
   end
 end

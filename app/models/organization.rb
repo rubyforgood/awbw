@@ -97,9 +97,6 @@ class Organization < ApplicationRecord
   # Nested attributes
   accepts_nested_attributes_for :addresses, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs.slice("locality", "city", "state", "street_address", "zip_code").values.all?(&:blank?) }
-  accepts_nested_attributes_for :sectorable_items, allow_destroy: true,
-                                reject_if: proc { |attrs| attrs["sector_id"].blank? }
-  after_save :remove_duplicate_sectorable_items
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
                                 reject_if: proc { |attrs| attrs["person_id"].blank? }
   accepts_nested_attributes_for :comments, allow_destroy: true, reject_if: proc { |attrs| attrs["body"].blank? }
@@ -171,31 +168,23 @@ class Organization < ApplicationRecord
     [ "Never active", "never_active" ]
   ].freeze
 
-  # Matches a tag on the org itself OR an affiliated person's PRIMARY tag —
-  # mirroring the aggregate the index/profile columns show.
-  scope :sector_name_including_people, ->(name) {
+  scope :active_people_sector_name, ->(name) {
     next all if name.blank?
-    term = name.to_s.downcase
-    direct = joins(:sectors).where("LOWER(sectors.name) = ?", term).select(:id)
-    via_people = joins(people: { sectorable_items: :sector })
-                   .where(sectorable_items: { is_primary: true })
-                   .where("LOWER(sectors.name) = ?", term)
-                   .select(Arel.sql("organizations.id"))
-    where(id: direct).or(where(id: via_people))
+    where(id: Affiliation.active.joins(person: { sectorable_items: :sector })
+                .where(sectorable_items: { is_primary: true })
+                .where("LOWER(sectors.name) = ?", name.to_s.downcase)
+                .select(:organization_id))
   }
 
-  scope :age_group_name_including_people, ->(name) {
+  scope :active_people_age_group_name, ->(name) {
     next all if name.blank?
     age_category_ids = Category.joins(:category_type)
                                .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
                                .where("LOWER(categories.name) = ?", name.to_s.downcase)
                                .select(:id)
-    direct = joins(:categories).where(categories: { id: age_category_ids }).select(:id)
-    via_people = joins(people: { categorizable_items: :category })
-                   .where(categorizable_items: { is_primary: true })
-                   .where(categories: { id: age_category_ids })
-                   .select(Arel.sql("organizations.id"))
-    where(id: direct).or(where(id: via_people))
+    where(id: Affiliation.active.joins(person: :categorizable_items)
+                .where(categorizable_items: { is_primary: true, category_id: age_category_ids })
+                .select(:organization_id))
   }
 
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
@@ -205,8 +194,8 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.sector_name_including_people(params[:sector_name]) if params[:sector_name].present?
-    organizations = organizations.age_group_name_including_people(params[:age_group_name]) if params[:age_group_name].present?
+    organizations = organizations.active_people_sector_name(params[:sector_name]) if params[:sector_name].present?
+    organizations = organizations.active_people_age_group_name(params[:age_group_name]) if params[:age_group_name].present?
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
@@ -316,41 +305,30 @@ class Organization < ApplicationRecord
     affiliations.active.exists?
   end
 
-  def sector_list
-    sectors.pluck(:name)
+  # Sectors and age groups are never entered on an org — they roll up from the
+  # primary tags of its actively affiliated people.
+  def active_people_sectors
+    active_people.filter_map(&:primary_sector).uniq
   end
 
-  def direct_sectors
-    sectors
- end
-
-  # Only affiliated people's PRIMARY sector; their others don't roll up to the org.
-  def affiliated_sectors
-    affiliated_people.flat_map { |person| person.sectorable_items.filter_map { |item| item.sector if item.is_primary? } }
+  def active_people_age_groups
+    active_people.flat_map(&:primary_age_groups).uniq
   end
 
-  def all_sectors
-    (direct_sectors + affiliated_sectors).uniq
-  end
-
-  # Age groups served across the organization — its own tags plus every
-  # affiliated person's — deduped so a category shared by several members shows
-  # once. A category that is primary anywhere wins over an additional tagging.
-  def all_primary_age_groups
-    collect_age_groups(:primary_age_groups)
-  end
-
-  # The org's OWN only — affiliated people contribute just their primary age groups.
-  def all_additional_age_groups
-    additional_age_groups - all_primary_age_groups
+  # Reads preloaded affiliations, so a list page that nests PEOPLE_TAGGINGS under
+  # them costs no queries per row.
+  def active_people
+    @active_people ||= begin
+      active = affiliations.loaded? ? affiliations.select(&:active?) : affiliations.active.includes(person: PEOPLE_TAGGINGS)
+      active.filter_map(&:person).uniq
+    end
   end
 
   # The roll-up cells aggregate across affiliated people, so retagging a person or
   # adding an affiliation leaves the organizations row untouched and `[organization]`
   # alone caches them stale. Reads preloaded associations, so it costs no queries.
   def rollup_cache_version
-    records = affiliations.to_a + sectorable_items.to_a + categorizable_items.to_a +
-      affiliated_people.flat_map { |person| person.sectorable_items.to_a + person.categorizable_items.to_a }
+    records = affiliations.to_a + active_people.flat_map { |person| person.sectorable_items.to_a + person.categorizable_items.to_a }
     [ records.size, records.filter_map(&:updated_at).max ]
   end
 
@@ -370,17 +348,6 @@ class Organization < ApplicationRecord
 
   private
 
-  # Union of the org's own age groups and its affiliated people's, deduped.
-  def collect_age_groups(kind)
-    ([ self ] + affiliated_people).flat_map { |record| record.public_send(kind) }.uniq
-  end
-
-  # Reused as-is when already preloaded — list pages preload `people` with the
-  # PEOPLE_TAGGINGS nest, and a bare `:people` would defeat that.
-  def affiliated_people
-    @affiliated_people ||= people.loaded? ? people.to_a : people.includes(PEOPLE_TAGGINGS).to_a
-  end
-
   def affiliation_dates_locked
     if start_date_changed?
       errors.add(:start_date, "is managed automatically by affiliations")
@@ -398,11 +365,5 @@ class Organization < ApplicationRecord
     elsif persisted? && descendants.any? { |org| org.id == parent_id }
       errors.add(:parent_id, "can't be one of this organization's nested organizations")
     end
-  end
-
-  def remove_duplicate_sectorable_items
-    sectorable_items
-      .group_by(&:sector_id)
-      .each_value { |dupes| dupes.drop(1).each(&:destroy) }
   end
 end
