@@ -1,6 +1,6 @@
 <% if params[:combined] %>
   <%= turbo_stream.replace dom_id(@notification) do %>
-    <%= render "comments_and_communications/communication_row", entry: @notification %>
+    <%= render "comments_and_communications/communication_row", entry: @notification, person: @combined_feed_person %>
   <% end %>
 <% else %>
   <%= turbo_stream.replace dom_id(@notification, :flag) do %>
