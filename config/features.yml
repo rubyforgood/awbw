@@ -976,7 +976,7 @@
   summary: >-
     The separate Comments and Communications boxes on record edit pages are now one
     "Comments & communications" section: a single newest-first feed of both, each in its own
-    card (comments purple, communications blue), with an add button for each.
+    card (comments blue, communications purple), with an add button for each.
   pro_tips:
     - "Communications now show the ones logged about the record you're viewing; a person's own page still shows their full history."
     - "An incoming communication's pill shows a checkbox — checked once it's been responded to."
@@ -4679,3 +4679,23 @@
   summary: >-
     Admin home now has a Timesheets button under Additional data, opening the
     cross-event timesheets report.
+
+- name: "Pick workshop settings from a list"
+  area: people
+  display_status: admin_facing
+  released_on: 2026-10-17
+  pr_number: 2709
+  summary: >-
+    Person and organization edit pages now show only the workshop settings
+    chosen. Click the box to search and add more, or click the x on one to remove it.
+
+- name: "Comments are blue, communications are purple"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-17
+  pr_number: 2709
+  summary: >-
+    Comments now show in blue and communications in purple. Comments are private
+    to admins, so they share the blue used for other admin-only information.
+  pro_tips:
+    - "The Incoming pill and the incoming/outgoing switch on a communication are purple too."

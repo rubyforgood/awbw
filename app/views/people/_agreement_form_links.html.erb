@@ -25,14 +25,14 @@
                                .order(created_at: :desc)
                                .group_by { |sent| sent.custom_message.to_s.sub(%r{\Ahttps?://[^/]+}, "") } %>
 
-<details id="agreement-links" class="mt-4 scroll-mt-24 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+<details id="agreement-links" class="mt-4 scroll-mt-24 overflow-hidden rounded-lg border border-blue-200 bg-blue-50 shadow-sm"
          <%= "open" if params[:agreement_links].present? %>>
-  <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
+  <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 hover:bg-blue-100 [&::-webkit-details-marker]:hidden">
     <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform [[open]_&]:rotate-180"></i>
     <span class="text-sm font-semibold text-gray-700">Email form links</span>
     <span class="text-xs text-gray-500">— email a form matching their scenario</span>
   </summary>
-  <div class="border-t border-gray-200 p-4">
+  <div class="border-t border-blue-200 p-4">
     <ul class="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
       <% if on_demand_training || upcoming_trainings.any? %>
         <li class="px-4 py-3">
