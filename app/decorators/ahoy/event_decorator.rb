@@ -153,9 +153,11 @@ module Ahoy
       return [] unless changes?
 
       moves = Analytics::EventReferenceLoader.polymorphic_changes(object.resource_type, change_diffs, resource_record)
+      references = Analytics::EventReferenceLoader.belongs_to_changes(object.resource_type, change_diffs)
       change_diffs.filter_map do |field, diff|
         name = field.to_s.delete_suffix("_id")
         next moved_parent_change(name, *moves[name]) if moves.key?(name)
+        next reference_change(name, *references[name]) if references.key?(name)
         next if moves.key?(field.to_s.delete_suffix("_type"))
 
         diff = {} unless diff.is_a?(Hash)
@@ -375,6 +377,12 @@ module Ahoy
     def moved_parent_change(name, before, after)
       from = parent_link(*before)
       to = parent_link(*after)
+      { field: humanize_key(name), before: from[:text], after: to[:text], before_path: from[:path], after_path: to[:path] }
+    end
+
+    def reference_change(name, type, before_id, after_id)
+      from = before_id.present? ? parent_link(type, before_id) : { text: "(empty)" }
+      to = after_id.present? ? parent_link(type, after_id) : { text: "(empty)" }
       { field: humanize_key(name), before: from[:text], after: to[:text], before_path: from[:path], after_path: to[:path] }
     end
 
