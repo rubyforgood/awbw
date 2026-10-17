@@ -187,6 +187,11 @@ class NotificationDecorator < ApplicationDecorator
   def detail(length: nil)
   end
 
+  # A pending send has no delivered_at, so the created date stands in for when it was queued.
+  def pending_label
+    "Pending (#{created_at.in_time_zone("Pacific Time (US & Canada)").strftime("%-m/%-d/%y")})"
+  end
+
   # Whole-row tint on the communications index: red error for a failed send,
   # amber warning for one stuck pending past the grace period, default hover
   # otherwise (delivered, or still within the fresh-send window).

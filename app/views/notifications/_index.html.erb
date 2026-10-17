@@ -27,7 +27,7 @@
           <span class="font-medium text-gray-400">Archived</span>
           <i class="fa-solid fa-circle-info ml-0.5 cursor-help text-gray-400" title="<%= Notification::ARCHIVED_HELP %>"></i>
         <% else %>
-          <span class="font-medium text-yellow-600">Pending</span>
+          <span class="font-medium text-yellow-600"><%= n.pending_label %></span>
           <%= render "resend_button", notification: notification %>
         <% end %>
         <%= render "resend_indicator", notification: notification %>
