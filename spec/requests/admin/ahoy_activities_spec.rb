@@ -129,6 +129,16 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
 
         expect(response.body).to include(%(href="#{form_submission_path(submission)}"))
       end
+
+      it "names a since-deleted submission without a link that would 404" do
+        get admin_activities_event_path(
+          create(:ahoy_event, name: "update.person", user: admin, visit: visit_for_admin, time: 1.hour.ago,
+                              properties: { "form_submission_id" => 999_999 })
+        )
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include(%(href="#{form_submission_path(999_999)}"))
+      end
     end
 
     describe "default filters" do
