@@ -1,19 +1,11 @@
 <%# Inline autosaving note for an index row — reuses the generic `autosave`
-    Stimulus controller (no new JS). Saves on blur to the row's `save_note` action,
-    which upserts the record's latest comment. Locals: record, url, comment. %>
-<% comment = comment&.decorate %>
+    Stimulus controller. Saves on blur to the row's `save_note` action, which
+    upserts the record's latest comment and streams back a fresh hint.
+    Locals: record, url, comment. %>
 <%= text_area_tag "note", comment&.body,
       rows: 1,
       placeholder: "Add a comment…",
       "aria-label": "Latest comment",
       class: "w-full min-w-[180px] rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none",
-      data: { controller: "autosave", autosave_url_value: url, autosave_id_value: record.id, action: "change->autosave#save" } %>
-<% if comment %>
-  <% editor = comment.last_editor %>
-  <% editor_color = chip_color(editor&.id) %>
-  <div class="mt-1 flex items-center gap-1.5 text-xs whitespace-nowrap text-gray-400">
-    <span class="<%= editor_color[0] %> <%= editor_color[1] %> cursor-default rounded px-1.5 py-0.5"
-          title="<%= editor&.full_name %>"><%= editor&.decorate&.initials.presence || "--" %></span>
-    <span><%= comment.edited_timestamp %></span>
-  </div>
-<% end %>
+      data: { controller: "autosave", autosave_url_value: url, autosave_id_value: record.id, autosave_stream_value: true, action: "change->autosave#save" } %>
+<%= render "shared/index_note_hint", record: record, comment: comment %>

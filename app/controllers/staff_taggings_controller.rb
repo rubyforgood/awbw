@@ -81,7 +81,10 @@ class StaffTaggingsController < ApplicationController
   def save_note
     authorize! @staff_tagging, to: :update?
     @staff_tagging.save_index_note(params[:note])
-    head :ok
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: index_note_hint_stream(@staff_tagging) }
+      format.any { head :ok }
+    end
   end
 
   private

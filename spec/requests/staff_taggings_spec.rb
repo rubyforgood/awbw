@@ -330,6 +330,16 @@ RSpec.describe "/staff_taggings", type: :request do
       expect(tagging.comments.first.body).to eq("Called them")
     end
 
+    it "streams back the refreshed hint with the editor's initials" do
+      tagging = create(:staff_tagging)
+
+      patch save_note_staff_tagging_path(tagging), params: { note: "Called them" }, as: :turbo_stream
+
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include(%(target="#{ActionView::RecordIdentifier.dom_id(tagging, :note_hint)}"))
+      expect(response.body).to include(admin.decorate.initials)
+    end
+
     it "edits the latest comment instead of piling up new ones" do
       tagging = create(:staff_tagging)
       older = create(:comment, commentable: tagging, body: "first", created_at: 2.days.ago)

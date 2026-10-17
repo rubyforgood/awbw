@@ -123,7 +123,10 @@ class TopicSubscriptionsController < ApplicationController
   def save_note
     authorize! @topic_subscription, to: :update?
     @topic_subscription.save_index_note(params[:note])
-    head :ok
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: index_note_hint_stream(@topic_subscription) }
+      format.any { head :ok }
+    end
   end
 
   private

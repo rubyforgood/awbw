@@ -589,6 +589,13 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(older.reload.body).to eq("Older note")
     end
 
+    it "streams back the refreshed note hint" do
+      patch save_note_topic_subscription_path(subscription), params: { note: "Left a voicemail" }, as: :turbo_stream
+
+      expect(response.media_type).to eq(Mime[:turbo_stream])
+      expect(response.body).to include(%(target="#{ActionView::RecordIdentifier.dom_id(subscription, :note_hint)}"))
+    end
+
     it "saves the inline note as a comment" do
       expect {
         patch save_note_topic_subscription_path(subscription), params: { note: "Left a voicemail" }

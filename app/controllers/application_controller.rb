@@ -49,6 +49,12 @@ class ApplicationController < ActionController::Base
     }.to_sentence
   end
 
+  def index_note_hint_stream(record)
+    turbo_stream.replace(helpers.dom_id(record, :note_hint),
+                         partial: "shared/index_note_hint",
+                         locals: { record: record, comment: record.comments.reload.first })
+  end
+
   def after_sign_out_path_for(resource_or_scope)
     if params[:reset_password].present? # needed for custom "log out and reset it" flow
       new_user_password_path
