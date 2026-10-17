@@ -11,7 +11,10 @@
 
   <%# Carry the origin context through the save so #update can return the admin
       to where they came from (e.g. the registration org-linking page). %>
-  <% if params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
+  <% if params[:return_to] == "data_health" %>
+    <%= hidden_field_tag :return_to, "data_health" %>
+    <%= hidden_field_tag :check, params[:check] if params[:check].present? %>
+  <% elsif params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
     <%= hidden_field_tag :return_to, "registration_link" %>
     <%= hidden_field_tag :event_registration_id, params[:event_registration_id] %>
     <%= hidden_field_tag :link_org_return_to, params[:link_org_return_to] if params[:link_org_return_to].present? %>

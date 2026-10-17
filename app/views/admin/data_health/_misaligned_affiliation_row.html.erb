@@ -1,0 +1,11 @@
+<%# Locals: record (an Affiliation). The person opens their edit page; the organization
+    opens the minting registration's Link organizations page, where the link is fixed. %>
+<% back = { return_to: "data_health", check: "misaligned_affiliation_provenance" } %>
+<% link_class = "font-medium text-gray-800 hover:text-blue-700 hover:underline" %>
+<% if record.person %>
+  <%= link_to record.person.name, edit_person_path(record.person, **back), target: "_blank", rel: "noopener", class: link_class %>
+<% end %>
+—
+<%= link_to record.organization&.name, link_organization_event_registration_path(record.event_registration, **back),
+      target: "_blank", rel: "noopener", class: link_class %>
+<span class="text-gray-500">(linked to a registration for <%= record.event_registration.event&.title %>)</span>

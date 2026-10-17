@@ -113,6 +113,21 @@ RSpec.describe "Admin::DataHealth", type: :request do
   describe "listed rows" do
     before { sign_in admin }
 
+    it "links a misaligned affiliation's person to their edit page and its org to the registration's Link organizations page" do
+      registration = create(:event_registration, event: create(:event, :ended, facilitator_training: true),
+                                                 registrant: person, status: "attended")
+      create(:event_registration_organization, event_registration: registration, organization: create(:organization))
+      create(:affiliation, person: person, organization: organization, title: "Facilitator",
+                           start_date: 1.year.ago.to_date, event_registration: registration)
+
+      get admin_data_health_path
+
+      back = { return_to: "data_health", check: "misaligned_affiliation_provenance" }
+      expect(response.body).to include(CGI.escapeHTML(edit_person_path(person, **back)))
+      expect(response.body).to include(CGI.escapeHTML(link_organization_event_registration_path(registration, **back)))
+      expect(response.body).not_to include("Unlink them")
+    end
+
     it "links each row to where it can be fixed, and the card to its review page" do
       person = create(:person)
       create(:user, person: person)

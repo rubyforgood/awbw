@@ -7,13 +7,15 @@ module DataHealth
   #
   # `reset_org_scoped_links_on_org_change` clears the FK when an admin repoints the
   # org through the affiliation editor. Rows that predate that guard, or that were
-  # repointed another way, are what this finds.
+  # repointed another way, are what this finds. Report-only: whether the person or
+  # the registration's linked organizations is wrong is a call made per row.
   class MisalignedAffiliationProvenance < Check
     def title = "Affiliations linked to a registration for another organization"
 
     def explanation
       "The registration recorded as creating each row is not linked to that row's organization, " \
-      "so reconciliation treats it as auto-created for an organization it never belonged to."
+      "so reconciliation treats it as auto-created for an organization it never belonged to. " \
+      "Fix the person's affiliations or the registration's linked organizations."
     end
 
     def scope
@@ -26,20 +28,7 @@ module DataHealth
         .includes(:person, :organization, event_registration: :event)
     end
 
-    def repairable? = true
-
-    def repair_label = "Unlink them"
-
-    def repaired_message(number)
-      "Unlinked #{number} #{'affiliation'.pluralize(number)} from their stale registration."
-    end
-
-    # Clearing the link is the conservative direction: the row becomes
-    # hand-entered, which reconciliation spares by default. update_attribute runs
-    # the save callbacks, so each unlink lands in the activity history.
-    def repair!
-      scope.to_a.each { |affiliation| affiliation.update_attribute(:event_registration_id, nil) }.size
-    end
+    def row_partial = "admin/data_health/misaligned_affiliation_row"
 
     def describe(affiliation)
       "#{affiliation.person&.name} — #{affiliation.organization&.name} " \

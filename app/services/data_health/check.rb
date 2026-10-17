@@ -60,9 +60,9 @@ module DataHealth
       record.to_s
     end
 
-    # A check whose rows are worth comparing side by side names its column
-    # headings here and a partial to render each row; the page falls back to the
-    # one-line #describe when both are nil.
+    # A partial to render each row (several links, chips); with `columns` too the
+    # rows line up in a grid under those headings. Without either, the page shows
+    # the one-line #describe.
     def columns = nil
 
     def row_partial = nil
