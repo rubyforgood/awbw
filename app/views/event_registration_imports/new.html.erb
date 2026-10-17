@@ -1,33 +1,51 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto max-w-3xl <%= DomainTheme.bg_class_for(:event_registrations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mb-4 flex flex-wrap justify-start gap-2">
-    <%= link_to "← Registrants", (@event ? registrants_event_path(@event) : events_path),
-                class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <% back_label, back_path = import_back_link %>
+    <%= link_to "← #{back_label}", back_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
   <h1 class="text-primary mb-3 font-display text-3xl font-semibold tracking-tight">
     Import registrants
   </h1>
-  <p class="mb-6 text-gray-600">
-    Upload a CSV of people who attended a training and we'll add each one to the
-    event as an <strong>attended</strong> registration, just as if they'd registered.
-    People already in the portal are matched by email and name — no duplicates. Matched
-    organizations are linked (and facilitator affiliations added on trainings); names we
-    don't recognize are queued for reconciliation on each registrant's link-organization
-    page. No emails are sent. You'll preview everything before anything is saved.
+  <p class="mb-4 text-gray-600">
+    Upload a CSV of people who registered for or attended an event — live or on-demand, training or not —
+    and we'll add each one as a registration, just as if they'd registered. People, organizations, and
+    addresses already in the portal are matched, not duplicated. No emails are sent, and you'll preview
+    everything before anything is saved.
   </p>
-  <p class="mb-6 text-sm text-gray-600">
-    Expected columns: <span class="font-medium">FirstName</span>,
-    <span class="font-medium">LastName</span>,
-    <span class="font-medium">Organization</span>,
-    <span class="font-medium">EMail</span>. Optionally add
-    <span class="font-medium">AmountPaid</span> (and
-    <span class="font-medium">PaymentType</span> — cash, check, or card — plus a
-    <span class="font-medium">CheckNumber</span> for checks) to record payment and
-    mark the registration paid — a partial amount is topped up with a discount so it
-    still reads as paid. Export your spreadsheet as a .csv first.
+  <p class="mb-2 text-sm text-gray-600">
+    Required: <span class="font-medium">FirstName</span> and <span class="font-medium">LastName</span>.
+    Every other column is optional — leave out what you don't have. Export your spreadsheet as a .csv first.
   </p>
-
+  <details class="mb-6 rounded-lg border border-gray-200 bg-white text-sm text-gray-600">
+    <summary class="cursor-pointer px-4 py-2 font-medium text-gray-700">Columns we read</summary>
+    <dl class="space-y-2 px-4 pb-4">
+      <% [
+        [ "Person", "EMail, Nickname, Pronouns, SecondaryEmail. Without an email we match by name at the " \
+                    "row's organization, then by a name only one person has; a new email-less person gets a " \
+                    "placeholder like 1@example.com." ],
+        [ "Status", "Status — Attended, Incomplete attendance, Registered, No show, or Cancelled. Blank means " \
+                    "Attended. Day 1 … Day 5 (Yes/No) record which days they came; Attended marks every day. " \
+                    "RegisteredOn sets the registration date." ],
+        [ "Organization", "Organization, Position, OrganizationWebsite, OrganizationType, and the organization's " \
+                          "address: OrganizationStreet, OrganizationCity, OrganizationState, OrganizationZip, OrganizationCountry." ],
+        [ "Contact", "Street, City, State, Zip, Country, AddressType (Work/Personal), Phone, PhoneType (Work/Personal)." ],
+        [ "Sectors & ages", "PrimarySector, AdditionalSectors, PrimaryAgeGroup, AdditionalAgeGroups — names as the " \
+                            "registration form lists them; separate several with commas." ],
+        [ "CE", "CE (Yes/No), LicenseType, LicenseNumber, LicenseState, LicenseExpires." ],
+        [ "Money", "Scholarship (amount awarded), AmountPaid, PaymentType (cash, check, or card), CheckNumber for " \
+                   "checks. A paying row's unpaid remainder is comped with a discount so it reads as paid." ],
+        [ "Follow-up", "SomeoneElseWillPay, InvoiceRequested, W9Requested (Yes/No); PostSurveyCompleted and " \
+                       "CertificateSent (a date, or Yes for the event's last day)." ]
+      ].each do |group, columns| %>
+        <div>
+          <dt class="font-medium text-gray-800"><%= group %></dt>
+          <dd><%= columns %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </details>
   <div class="rounded bg-white p-6">
     <% if flash.now[:alert].present? %>
       <div class="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -36,6 +54,7 @@
     <% end %>
 
     <%= form_with url: event_registration_import_path, method: :post, multipart: true do |f| %>
+      <%= hidden_field_tag :return_to, params[:return_to].presence %>
       <div class="mb-4">
         <%= f.label :event_id, "Event", class: "block text-sm font-medium text-gray-700 mb-1" %>
         <%= f.select :event_id,
@@ -50,7 +69,7 @@
       </div>
       <div class="flex items-center gap-2">
         <%= f.submit "Preview import", class: button_classes(:primary_outline, extra: "bg-blue-100") %>
-        <%= link_to "Cancel", (@event ? registrants_event_path(@event) : events_path),
+        <%= link_to "Cancel", back_path,
                     class: button_classes(:secondary_outline) %>
       </div>
     <% end %>

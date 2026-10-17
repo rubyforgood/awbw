@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto max-w-5xl <%= DomainTheme.bg_class_for(:event_registrations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mb-4 flex flex-wrap justify-start gap-2">
-    <%= link_to "← Choose a different file", new_event_registration_import_path(event_id: @event.id),
+    <%= link_to "← Choose a different file", new_event_registration_import_path(event_id: @event.id, return_to: params[:return_to].presence),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
@@ -18,14 +18,14 @@
       [ "New people", @result.people_created ],
       [ "Matched people", @result.people_matched ],
       [ "New registrations", @result.registrations_created ],
-      [ "Promoted to attended", @result.registrations_promoted ],
+      [ "Added beside an inactive one", @result.registrations_added_alongside ],
+      [ "Status updated", @result.registrations_updated ],
+      [ "Already up to date", @result.registrations_unchanged ],
       [ "Orgs to link", @result.organizations_linked ],
       [ "Orgs to reconcile", @result.organizations_to_reconcile ],
-      [ "Payments", @result.payments_recorded ],
-      [ "Amount", dollars_from_cents(@result.payments_amount_cents) ],
-      [ "Discounts", @result.discounts_recorded ],
+      [ "Scholarships", dollars_from_cents(@result.scholarships_amount_cents) ],
+      [ "Payments", dollars_from_cents(@result.payments_amount_cents) ],
       [ "Comped", dollars_from_cents(@result.discounts_amount_cents) ],
-      [ "Rows", @result.rows_processed ],
       [ "Skipped", @result.skipped.size ]
     ].each do |label, count| %>
       <div class="border-primary/10 rounded-2xl border bg-white p-3 text-center">
@@ -35,12 +35,27 @@
     <% end %>
   </div>
 
-  <p class="mb-6 text-sm text-gray-600">
-    Matched organizations are linked to each registration<%= " and add a facilitator affiliation" if @event.facilitator_training %>.
-    Unmatched names are queued on each registrant's
-    <span class="font-medium">link organization</span> page for reconciliation — no organizations are created here.
-    No emails are sent.
-  </p>
+  <% if @result.unrecognized_headers.any? %>
+    <div class="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+      Ignored columns we don't recognize: <span class="font-medium"><%= @result.unrecognized_headers.to_sentence %></span>.
+    </div>
+  <% end %>
+
+  <ul class="mb-6 list-disc space-y-1 pl-5 text-sm text-gray-600">
+    <li>
+      Matched organizations are linked to each registration<%= " and add a facilitator affiliation" if @event.facilitator_training %>.
+      Unmatched names are queued on each registrant's <span class="font-medium">link organization</span> page — no organizations are created here.
+    </li>
+    <li>People already in the portal keep their current address, phone, and sectors; the sheet only fills blanks and adds new addresses beside them.</li>
+    <li>A cancelled, no-show, or transferred-out registration is never overwritten — the row adds a second registration, listed on Data health.</li>
+    <% if @event.ce_eligible? && @event.ce_hours_cost_cents.to_i.positive? %>
+      <li>
+        CE costs <%= dollars_from_cents(@event.ce_hours_cost_cents) %> here. A row that asks for CE without an AmountPaid leaves the
+        CE unpaid, and that person can't get a CE certificate until it's paid.
+      </li>
+    <% end %>
+    <li>No emails are sent.</li>
+  </ul>
 
   <div class="border-primary/10 mb-6 overflow-hidden rounded-2xl border bg-white">
     <div class="overflow-x-auto">
@@ -53,45 +68,67 @@
             <th class="px-3 py-2 text-left">Person</th>
             <th class="px-3 py-2 text-left">Registration</th>
             <th class="px-3 py-2 text-left">Organization</th>
-            <th class="px-3 py-2 text-left">Payment</th>
+            <th class="px-3 py-2 text-left">Money</th>
+            <th class="px-3 py-2 text-left">Also saved</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
           <% @result.rows.each do |row| %>
-            <tr class="<%= "bg-red-50" if row.skipped_reason %>">
+            <tr class="<%= "bg-red-50" if row.skipped_reason %> align-top">
               <td class="px-3 py-2 text-gray-400"><%= row.number %></td>
               <td class="px-3 py-2 text-gray-900"><%= "#{row.first_name} #{row.last_name}".strip.presence || "—" %></td>
               <td class="px-3 py-2 text-gray-600"><%= row.email.presence || "—" %></td>
               <% if row.skipped_reason %>
-                <td class="px-3 py-2" colspan="4">
+                <td class="px-3 py-2" colspan="5">
                   <span class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs text-red-700">
                     Skipped — <%= row.skipped_reason %>
                   </span>
                 </td>
               <% else %>
                 <td class="px-3 py-2">
-                  <% if row.person_status == :new %>
+                  <% case row.person_status %>
+                  <% when :new %>
                     <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800">New person</span>
+                    <% if row.placeholder_email %>
+                      <div class="mt-1 text-xs text-gray-500" title="No email in the sheet — a placeholder keeps the address unique">
+                        as <%= row.placeholder_email %>
+                      </div>
+                    <% end %>
+                  <% when :matched_by_name_and_organization %>
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="No email — matched by name at this organization">Matched by name + org</span>
+                  <% when :matched_by_name %>
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="No email — the only person with this name">Matched by name</span>
                   <% else %>
                     <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800">Matched</span>
                   <% end %>
                 </td>
                 <td class="px-3 py-2">
+                  <% status_label = EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(row.status, row.status.to_s.humanize) %>
+                  <% previous_label = EventRegistration::ATTENDANCE_STATUS_LABELS[row.previous_status] %>
                   <% case row.registration_status %>
                   <% when :created %>
-                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800">Will add as attended</span>
-                  <% when :promoted %>
-                    <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs text-blue-800">Promote to attended</span>
-                  <% when :already_attended %>
-                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600">Already attended</span>
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800">Add as <%= status_label.downcase %></span>
+                  <% when :added_alongside %>
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="The existing registration is kept as is; this adds a second one">
+                      Add as <%= status_label.downcase %> beside the <%= previous_label.to_s.downcase %> one
+                    </span>
+                  <% when :updated %>
+                    <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs text-blue-800"><%= previous_label %> → <%= status_label.downcase %></span>
+                  <% when :unchanged %>
+                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600">Already <%= status_label.downcase %></span>
                   <% end %>
                 </td>
                 <td class="px-3 py-2">
                   <% case row.organization_status %>
                   <% when :linked %>
                     <span class="inline-flex items-center rounded-md bg-teal-100 px-2 py-1 text-xs text-teal-800" title="Matched — linked to the registration">
-                      Link: <%= row.organization_name %>
+                      Link: <%= row.organization_label %>
                     </span>
+                  <% when :linked_by_spelling %>
+                    <span class="inline-flex items-center rounded-md bg-teal-100 px-2 py-1 text-xs text-teal-800" title="“<%= row.organization_name %>” matched despite spelling differences">
+                      Link: <%= row.organization_label %>
+                    </span>
+                    <div class="mt-1 text-xs text-gray-500">typed “<%= row.organization_name %>”</div>
                   <% when :to_reconcile %>
                     <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="No organization by this name yet — queued for the link-organization reconciliation page">
                       Reconcile: <%= row.organization_name %>
@@ -100,14 +137,19 @@
                     <span class="text-gray-400">—</span>
                   <% end %>
                 </td>
-                <td class="px-3 py-2">
+                <td class="space-y-1 px-3 py-2">
+                  <% if row.scholarship_cents.present? %>
+                    <span class="inline-flex items-center rounded-md bg-indigo-100 px-2 py-1 text-xs text-indigo-800" title="Recorded as an accepted scholarship">
+                      <%= dollars_from_cents(row.scholarship_cents) %> scholarship
+                    </span>
+                  <% end %>
                   <% case row.payment_status %>
                   <% when :will_record %>
-                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="<%= row.payment_label %> — applied to the registration">
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="<%= row.payment_label %> — applied to the registration, then its CE">
                       <%= row.payment_label %> <%= dollars_from_cents(row.payment_amount_cents) %>
                     </span>
                     <% if row.discount_cents.present? %>
-                      <span class="ml-1 inline-flex items-center rounded-md bg-purple-100 px-2 py-1 text-xs text-purple-800" title="Remainder comped so the registration reads as paid">
+                      <span class="inline-flex items-center rounded-md bg-purple-100 px-2 py-1 text-xs text-purple-800" title="Remainder comped so the registration reads as paid">
                         + <%= dollars_from_cents(row.discount_cents) %> discount
                       </span>
                     <% end %>
@@ -128,6 +170,19 @@
                       Bad amount
                     </span>
                   <% else %>
+                    <% unless row.scholarship_cents.present? %>
+                      <span class="text-gray-400">—</span>
+                    <% end %>
+                  <% end %>
+                </td>
+                <td class="px-3 py-2">
+                  <% if row.details.any? %>
+                    <div class="text-xs text-gray-600"><%= row.details.join(" · ") %></div>
+                  <% end %>
+                  <% row.warnings.each do |warning| %>
+                    <div class="text-xs text-amber-700"><%= warning %></div>
+                  <% end %>
+                  <% if row.details.none? && row.warnings.none? %>
                     <span class="text-gray-400">—</span>
                   <% end %>
                 </td>
@@ -145,7 +200,7 @@
       <%= f.hidden_field :event_id, value: @event.id %>
       <div class="flex items-center gap-2">
         <%= f.submit "Import #{@result.registrations_total} registrations", class: button_classes(:primary_outline, extra: "bg-blue-100") %>
-        <%= link_to "Cancel", new_event_registration_import_path(event_id: @event.id), class: button_classes(:secondary_outline) %>
+        <%= link_to "Cancel", new_event_registration_import_path(event_id: @event.id, return_to: params[:return_to].presence), class: button_classes(:secondary_outline) %>
       </div>
     <% end %>
   </div>

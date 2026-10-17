@@ -579,11 +579,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.boolean "w9_requested", default: false, null: false
+    t.virtual "active_registrant_id", type: :bigint, as: "(case when (`status` in (_utf8mb4'cancelled',_utf8mb4'no_show',_utf8mb4'transferred_out')) then NULL else `registrant_id` end)", stored: true
+    t.index ["active_registrant_id", "event_id"], name: "index_event_registrations_on_active_registrant_id_and_event_id", unique: true
     t.index ["checkout_session_id"], name: "index_event_registrations_on_checkout_session_id"
     t.index ["created_by_id"], name: "index_event_registrations_on_created_by_id"
     t.index ["event_id"], name: "index_event_registrations_on_event_id"
     t.index ["payment_unresolved"], name: "index_event_registrations_on_payment_unresolved"
-    t.index ["registrant_id", "event_id"], name: "index_event_registrations_on_registrant_id_and_event_id", unique: true
     t.index ["registrant_id"], name: "index_event_registrations_on_registrant_id"
     t.index ["slug"], name: "index_event_registrations_on_slug", unique: true
     t.index ["transferred_from_registration_id"], name: "index_event_registrations_on_transferred_from_registration_id"

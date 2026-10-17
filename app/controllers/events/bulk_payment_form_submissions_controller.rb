@@ -108,7 +108,7 @@ module Events
       person = current_user&.person
       return unless person
 
-      @event.event_registrations.find_by(registrant_id: person.id)
+      @event.event_registrations.active_first.find_by(registrant_id: person.id)
     end
 
     def visible_form_fields

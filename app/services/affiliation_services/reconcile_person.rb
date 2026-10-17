@@ -159,11 +159,11 @@ module AffiliationServices
       @event.ended? && registration_here&.status == "registered"
     end
 
-    # One per (registrant, event) — the DB enforces it with a unique index.
+    # The active one when the person holds several for this event.
     def registration_here
       return @registration_here if defined?(@registration_here)
 
-      @registration_here = @registration || @person.event_registrations.find_by(event_id: @event.id)
+      @registration_here = @registration || @person.event_registrations.active_first.find_by(event_id: @event.id)
     end
 
     def minted_here?(affiliation)

@@ -22,6 +22,13 @@ RSpec.describe "Admin home", type: :request do
     )
   end
 
+  it "links to the registrant importer from the Actions section, returning here" do
+    get "/admin"
+
+    expect(response.body).to include("Import registrants")
+    expect(response.body).to include(%(href="#{new_event_registration_import_path(return_to: "admin_home")}"))
+  end
+
   it "links to the form submissions index" do
     get "/admin"
 
