@@ -4,7 +4,7 @@
     to re-render this same row in place. An autoemail is generated, not
     authored, so it renders through communication_row_readonly instead — this
     partial is only reached when entry.manual_log? is true. Locals: entry (a
-    Notification). %>
+    Notification). Optional: person (scopes the date link's feed). %>
 <% chip_class = "inline-flex shrink-0 items-center gap-1 rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-900" %>
 <% record = entry.noticeable %>
 <% source_chip = if record.present?
@@ -21,7 +21,7 @@
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
   <%= tag.div data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false) } do %>
     <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, expandable: true,
-               date_path: feed_entry_path(entry, person: @person),
+               date_path: feed_entry_path(entry, person: local_assigns[:person]),
                leading: source_chip, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
   <% end %>
 
