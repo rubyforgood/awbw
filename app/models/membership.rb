@@ -33,10 +33,10 @@ class Membership < ApplicationRecord
   scope :autorenewal_cancelled, -> { where.not(autorenewal_cancelled_at: nil) }
 
   scope :active, ->(as_of = Date.current) {
-    where(autorenewal_cancelled_at: nil).where(end_date: as_of..)
+    where(autorenewal_cancelled_at: nil).where(end_date: as_of..).where(start_date: ..as_of)
   }
   scope :ending, ->(as_of = Date.current) {
-    where.not(autorenewal_cancelled_at: nil).where(end_date: as_of..)
+    where.not(autorenewal_cancelled_at: nil).where(end_date: as_of..).where(start_date: ..as_of)
   }
   scope :lapsed, ->(as_of = Date.current) {
     where("end_date IS NULL OR end_date < ?", as_of)
@@ -62,11 +62,13 @@ class Membership < ApplicationRecord
   before_destroy :prepare_destroy, prepend: true
   before_destroy :cancel_stripe_subscription
 
-  def active? = end_date.present? && end_date >= Date.current
+  def active? = start_date.present? && start_date <= Date.current && end_date.present? && end_date >= Date.current
+
+  def upcoming? = start_date.present? && start_date > Date.current
 
   def owes? = membership_invoices.any?(&:overdue?)
 
-  def ended? = !active? && !owes?
+  def ended? = !active? && !owes? && !upcoming?
 
   def renewal_in_flight?
     return false unless person.payment_processor&.subscribed?
