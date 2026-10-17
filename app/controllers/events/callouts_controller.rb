@@ -373,7 +373,6 @@ module Events
         registration: @event_registration, callout: @callout, form: form,
         form_params: callout_form_params, clarity_params: callout_clarity_params
       )
-      Current.form_submission_id = service.submission.id
       # A profile write-through (anonymity / name questions) is Ahoy-tracked, and
       # staff get a heads-up on the submission. The CE callout runs its own flow, so
       # it opts out of the FYI.
