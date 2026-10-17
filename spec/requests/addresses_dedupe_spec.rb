@@ -26,6 +26,8 @@ RSpec.describe "Address dedupe", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Duplicate Org", person.full_name, "Merge all (3)")
+      expect(response.body.scan(">Kept<").size).to eq(2)
+      expect(response.body.scan(">Merged<").size).to eq(3)
     end
 
     it "merges one owner's duplicates" do
