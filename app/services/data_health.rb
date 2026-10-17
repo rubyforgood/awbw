@@ -14,8 +14,10 @@ module DataHealth
     "Payments" => [
       OverAllocatedRegistrations
     ],
-    "Content" => [
-      StoriesWithoutWorkshop,
+    "Stories" => [
+      StoriesWithoutWorkshop
+    ],
+    "Resources" => [
       UnresolvedResourceAgencies
     ],
     "Communications" => [
