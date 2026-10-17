@@ -15,7 +15,6 @@ RSpec.describe "StoryShareAdmin", type: :request do
       sign_in admin
       get story_share_admin_path
       expect(response.body).to include("Home")
-      expect(response.body).to include("Facilitator Spotlights")
       expect(response.body).to include("Additional Focus Areas")
       expect(response.body).to include("Always shown")
     end

@@ -108,12 +108,6 @@ class Story < ApplicationRecord
 
   # Admin hand-picks the Story Share home carousel: lowest number leads, blank = not in it.
   scope :story_share_carousel, -> { where.not(story_share_carousel_position: nil).order(:story_share_carousel_position) }
-  scope :facilitator_spotlights, ->(value = nil) {
-    return where.not(spotlighted_facilitator_id: nil) if value.blank?
-    ActiveModel::Type::Boolean.new.cast(value) ?
-      where.not(spotlighted_facilitator_id: nil) :
-      where(spotlighted_facilitator_id: nil)
-  }
 
   # A story credits either author, so both the author chip filter and the person
   # profile listing match on author_id or co_author_id.
@@ -160,7 +154,6 @@ class Story < ApplicationRecord
     end
 
     stories = stories.by_year(params[:year]) if params[:year].present? && params[:year].match?(/\A\d{4}\z/)
-    stories = stories.facilitator_spotlights(params[:facilitator_spotlights]) if params[:facilitator_spotlights].present?
     stories = stories.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
     stories = stories.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     stories = stories.where(organization_id: params[:organization_id]) if params[:organization_id].present?

@@ -180,7 +180,7 @@ story_seeds.each_with_index do |seed, i|
 end
 
 # Bulk stories so the Story Share portal, admin index, pagination, and the sector/
-# audience/year/spotlight filters all have realistic volume to exercise. Titles are
+# audience/year filters all have realistic volume to exercise. Titles are
 # deterministic ("Sample story 001: …") so re-running the seed is idempotent, and
 # attributes vary across the set.
 bulk_story_count = 50
