@@ -175,7 +175,8 @@ class Organization < ApplicationRecord
     parsed = TagFilterable.parse_names(names)
     next all if parsed.empty?
 
-    where(id: Organization.active_people_primary_sectors.where("LOWER(sectors.name) IN (?)", parsed)
+    where(id: Organization.active_people_primary_sectors.joins(person: { sectorable_items: :sector })
+                .where("LOWER(sectors.name) IN (?)", parsed)
                 .group(:organization_id)
                 .having("COUNT(DISTINCT LOWER(sectors.name)) = ?", parsed.size)
                 .select(:organization_id))
@@ -189,7 +190,8 @@ class Organization < ApplicationRecord
     own_names = parsed - age_names
     scope = all
     if age_names.any?
-      scope = scope.where(id: Organization.active_people_primary_age_groups.where("LOWER(categories.name) IN (?)", age_names)
+      scope = scope.where(id: Organization.active_people_primary_age_groups.joins(person: { categorizable_items: :category })
+                                .where("LOWER(categories.name) IN (?)", age_names)
                                 .group(:organization_id)
                                 .having("COUNT(DISTINCT LOWER(categories.name)) = ?", age_names.size)
                                 .select(:organization_id))
@@ -204,12 +206,25 @@ class Organization < ApplicationRecord
   }
 
   def self.active_people_primary_sectors
-    Affiliation.active.joins(person: { sectorable_items: :sector }).where(sectorable_items: { is_primary: true })
+    Affiliation.active.joins(person: :sectorable_items).where(sectorable_items: { is_primary: true })
   end
 
   def self.active_people_primary_age_groups
-    Affiliation.active.joins(person: { categorizable_items: :category })
+    Affiliation.active.joins(person: :categorizable_items)
                .where(categorizable_items: { is_primary: true, category_id: Category.age_ranges.select(:id) })
+  end
+
+  # EXISTS conditions for the public tag lists (Sector/Category.has_published_taggings),
+  # correlated on the outer sectors / categories row.
+  def self.sector_tagging_exists
+    active_people_primary_sectors.where("sectorable_items.sector_id = sectors.id").select("1").arel.exists
+  end
+
+  def self.category_tagging_exists
+    via_people = active_people_primary_age_groups.where("categorizable_items.category_id = categories.id")
+    own = published.joins(:categorizable_items).where("categorizable_items.category_id = categories.id")
+                   .where.not(categorizable_items: { category_id: Category.age_ranges.select(:id) })
+    via_people.select("1").arel.exists.or(own.select("1").arel.exists)
   end
 
   # Org counts per tag for the tag matrix, matching the tag-search scopes above.
