@@ -26,9 +26,9 @@
         <div class="flex flex-wrap items-center gap-3">
           <h1 class="text-primary font-display text-3xl">
             <% if @person %>
-              <%= link_to @person.full_name, person_path(@person), class: "hover:underline" %>
+              <%= tag.span(@person.full_name, title: @person.preferred_email) %>'s logs
             <% else %>
-              <%= scoped ? "Filtered" : "Everyone" %>
+              <%= scoped ? "Filtered logs" : "Everyone's logs" %>
             <% end %>
           </h1>
           <% if @person %>

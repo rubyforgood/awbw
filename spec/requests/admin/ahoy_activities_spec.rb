@@ -254,12 +254,24 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to match(/<input[^>]*type="hidden"[^>]*name="person_id"[^>]*value="#{person.id}"/)
       end
 
-      it "titles the unscoped feed Everyone under a small Activity label" do
+      it "titles the unscoped feed Everyone's logs under a small Activity label" do
         get index_path
 
         doc = Nokogiri::HTML(response.body)
-        expect(doc.at_css("h1").text.strip).to eq("Everyone")
+        expect(doc.at_css("h1").text.strip).to eq("Everyone's logs")
         expect(doc.css("a").map(&:text).map(&:strip)).not_to include("View everyone")
+      end
+
+      it "titles a person-scoped feed with the person's name, showing their email on hover" do
+        person = create(:person, first_name: "Aisha", last_name: "Sharma", email: "aisha@example.com")
+
+        get index_path, params: { person_id: person.id }
+
+        h1 = Nokogiri::HTML(response.body).at_css("h1")
+        expect(h1.text.strip).to eq("Aisha Sharma's logs")
+        name = h1.at_css("[title='#{person.preferred_email}']")
+        expect(name.text).to eq("Aisha Sharma")
+        expect(name.name).to eq("span")
       end
 
       it "clears a person-scoped page back to the unscoped feed with a full-page load" do

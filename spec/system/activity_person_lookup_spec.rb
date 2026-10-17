@@ -16,7 +16,7 @@ RSpec.describe "Activity person lookup", type: :system, js: true do
     find(".ts-control input").send_keys("Lookup")
     find(".ts-dropdown .option", text: "Lookup Target").click
 
-    expect(page).to have_css("h1", text: "Lookup Target")
+    expect(page).to have_css("h1", text: "Lookup Target's logs")
     expect(page).to have_current_path(/person_id=#{person.id}/)
   end
 end
