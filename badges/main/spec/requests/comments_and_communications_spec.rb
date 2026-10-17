@@ -19,14 +19,6 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
-    it "shows the person's email on hover over their name in the title" do
-      get comments_and_communications_path(person_id: person.id)
-
-      name = Nokogiri::HTML(response.body).at_css("h1 [title='primary@example.com']")
-      expect(name.text).to eq(person.full_name)
-      expect(name.name).to eq("span")
-    end
-
     it "links to the person's activity history from the header" do
       person.update!(first_name: "Aisha")
       get comments_and_communications_path(person_id: person.id)

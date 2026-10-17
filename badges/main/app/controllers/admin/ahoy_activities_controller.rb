@@ -67,6 +67,10 @@ module Admin
       # Filter by user (if viewing specific user activity)
       scope = scope.where(user: @users) if @users.present?
 
+      if params[:user_search].present?
+        scope = scope.where(user_id: User.activity_search(params[:user_search]).select(:id))
+      end
+
       # Time filter
       scope = scope.where(time: time_range) if time_range.present?
 

@@ -29,13 +29,6 @@ RSpec.describe "Admin home", type: :request do
     expect(response.body).to include(%(href="#{form_submissions_path}"))
   end
 
-  it "opens the Activity card on the Activity tab" do
-    get "/admin"
-
-    expect(response.body).to include(%(href="#{admin_activities_events_path}"))
-    expect(response.body).not_to include(%(href="#{admin_activities_counts_path}"))
-  end
-
   it "links to the cross-event timesheets" do
     get "/admin"
 

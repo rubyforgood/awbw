@@ -30,7 +30,7 @@
 
   any_filters = time_label || audience_labels.any? || params[:visit_id].present? || params[:event_name].present? || params[:props].present? || params[:user_search].present? || params[:ip].present? || params[:user_agent].present? || @person.present? || filtered_users.exists? || hidden_labels.any?
 %>
-<div id="active_filters" class="flex flex-wrap items-center gap-2">
+<div class="flex flex-wrap items-center gap-2">
   <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Filters applied</h3>
   <% if time_label %>
     <span class="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 font-medium text-indigo-800">
@@ -74,15 +74,13 @@
   <% end %>
   <% if @person.present? %>
     <%= link_to person_path(@person),
-                class: "inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-medium hover:bg-blue-200",
-                data: { turbo_frame: "_top" } do %>
+                class: "inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-medium hover:bg-blue-200" do %>
       Person: <%= @person.name %>
     <% end %>
   <% end %>
   <% filtered_users.each do |user| %>
     <%= link_to user_path(user),
-                class: "inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium hover:bg-green-200",
-                data: { turbo_frame: "_top" } do %>
+                class: "inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium hover:bg-green-200" do %>
       User: <%= user.full_name %>
     <% end %>
   <% end %>

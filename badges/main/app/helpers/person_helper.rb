@@ -157,9 +157,8 @@ module PersonHelper
   end
 
   # Opens on changelogs and communications; account and interaction noise start hidden.
-  # Takes a person or an id, e.g. the "__ID__" placeholder of a navigate-select URL template.
   def person_activity_path(person)
-    admin_activities_events_path(person_id: person, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
+    admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
   end
 
   def own_profile?(person)

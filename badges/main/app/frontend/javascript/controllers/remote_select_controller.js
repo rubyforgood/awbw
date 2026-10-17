@@ -2,12 +2,7 @@ import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
 export default class extends Controller {
-  static values = {
-    model: String,
-    exclude: String,
-    submitOnChange: Boolean,
-    searchIcon: { type: Boolean, default: true },
-  };
+  static values = { model: String, exclude: String, submitOnChange: Boolean };
 
   connect() {
     // TomSelect stamps itself on the element; bail if it's already initialized so
@@ -101,9 +96,6 @@ export default class extends Controller {
       .remote-select-container .ts-control {
         padding-left: 2rem !important;  /* Clear the search icon so it never overlaps the placeholder or value */
       }
-      .remote-select-container.remote-select-no-icon .ts-control {
-        padding-left: 0 !important;
-      }
       .ts-control {
         border: none !important;
         box-shadow: none !important;
@@ -133,15 +125,11 @@ export default class extends Controller {
     container.className = "remote-select-container";
     wrapper.parentNode.insertBefore(container, wrapper);
     container.appendChild(wrapper);
-    this.container = container;
-    if (!this.searchIconValue) {
-      container.classList.add("remote-select-no-icon");
-      return;
-    }
     const icon = document.createElement("i");
     icon.className = "fa-solid fa-magnifying-glass remote-select-icon";
     icon.setAttribute("aria-hidden", "true");
     container.appendChild(icon);
+    this.container = container;
   }
 
   // Deselect the current value so the control is ready for the next pick.
