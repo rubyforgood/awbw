@@ -5,21 +5,28 @@
 <% addresses = person.addresses.to_a %>
 <% staff_tag_names = person.staff_tags.map(&:name) %>
 <% topic_labels = person.topic_subscriptions.active.map(&:topic_label).compact_blank %>
-<div class="admin-only overflow-hidden rounded-2xl border-2 border-blue-200 bg-blue-50 shadow-sm">
+<div class="admin-only overflow-hidden rounded-2xl border-2 border-blue-200 bg-blue-50 shadow-sm"
+     data-controller="expandable-card"
+     data-expandable-card-expanded-value="true">
   <div class="flex items-center gap-3 border-b border-blue-200 bg-blue-100 px-5 py-4 sm:px-6">
-    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-200 text-blue-800">
-      <i class="fa-solid fa-lock"></i>
-    </span>
-    <h2 class="font-display text-2xl text-gray-900">Admin details</h2>
+    <button type="button" data-action="expandable-card#toggle" class="flex items-center gap-3 text-left">
+      <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-200 text-blue-800">
+        <i class="fa-solid fa-lock"></i>
+      </span>
+      <h2 class="font-display text-2xl text-gray-900">Admin details</h2>
+    </button>
     <div class="ml-auto flex items-center gap-2">
       <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
         <%= link_to "Activity", admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"),
                     class: admin_button_classes %>
       <% end %>
       <%= render "people/admin_only_badge" %>
+      <button type="button" data-action="expandable-card#toggle" aria-label="Show or hide admin details" class="px-1">
+        <i class="fa-solid fa-chevron-down rotate-180 text-gray-400 transition-transform" data-expandable-card-target="icon"></i>
+      </button>
     </div>
   </div>
-  <div class="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
+  <div class="space-y-6 px-4 py-5 sm:px-6 sm:py-6" data-expandable-card-target="body">
     <% program_categories = person.categorizable_items.filter_map(&:category).select { |c| c.category_type&.profile_specific? && c.category_type.name != "AgeRange" }.group_by(&:category_type) %>
     <% other_settings = person.other_workshop_setting_responses %>
     <% if program_categories.any? || other_settings.any? %>

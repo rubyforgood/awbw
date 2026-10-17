@@ -1,4 +1,5 @@
 <% content_for(:page_bg_class, "admin-or-owner") %>
+<% own_profile = allowed_to?(:edit_own_profile?, @person) && !allowed_to?(:manage?, Person) %>
 <% back = capture do %>
   <% if params[:return_to] == "onboarding" && params[:event_id].present? %>
     <div class="mb-2">
@@ -22,6 +23,12 @@
     <div class="mb-2">
       <%= link_to link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
         <i class="fa-solid fa-arrow-left text-xs"></i> Organization linking
+      <% end %>
+    </div>
+  <% elsif own_profile %>
+    <div class="mb-2">
+      <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> My profile
       <% end %>
     </div>
   <% end %>
@@ -57,7 +64,7 @@
   <%= link_to "Profile", person_path(@person), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
 <% end %>
 <%= render layout: "shared/form_page",
-           locals: { domain: :people, icon: "fas fa-user", eyebrow: "Edit person",
+           locals: { domain: :people, icon: "fas fa-user", eyebrow: own_profile ? "Edit my data" : "Edit person",
                      title: truncate(@person.name, length: 40),
                      back: back, actions: actions, width: "max-w-7xl",
                      sticky_header: true, card: false } do %>

@@ -71,7 +71,9 @@ Ask in order, and stop at the first yes:
 What each audience gets today, as of rubyforgood/awbw#2673. "Index" is the people index
 (`people_results`). Non-admins only see published people there, and on their own row the
 owner sees hidden pieces like an admin does. "Profile" is `people#show`. "Edit" is the
-person form.
+person form. Owners reach it from their profile's "Edit my data" button, and the
+`profile_show_*` toggles plus the search, display-name, and anonymity preferences also have
+their own owner page, "Choose what others see" (`people#visibility`).
 
 **Hidden pieces stay visible to the owner and admins.** When a `profile_show_*` toggle is
 off, the index marks that cell with an eye-slash, and the profile moves the piece into a

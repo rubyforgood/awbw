@@ -1,0 +1,60 @@
+<% content_for(:page_bg_class, "admin-or-owner") %>
+<% card_class = "border-primary/10 rounded-2xl border bg-white p-5 shadow-sm sm:p-6" %>
+<div class="mx-auto w-full max-w-4xl px-4 py-6">
+  <div class="mb-2">
+    <%= link_to person_path(@person), class: "text-sm #{eyebrow_link_class}" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Back to my profile
+    <% end %>
+  </div>
+  <h1 class="text-primary font-display text-3xl font-semibold">Choose what others see</h1>
+  <p class="mt-2 text-lg text-gray-700">
+    Turn on the parts of your profile other AWBW facilitators can see. AWBW staff can always see everything.
+  </p>
+  <%= simple_form_for @person, html: { class: "mt-6 space-y-6", data: { controller: "dirty-form" } } do |f| %>
+    <%= hidden_field_tag :return_to, "visibility" %>
+    <%= render "shared/errors", resource: @person if @person.errors.any? %>
+    <div class="<%= card_class %>">
+      <h2 class="mb-4 font-display text-2xl text-gray-900">Your name</h2>
+      <fieldset class="px-3 pb-2">
+        <legend class="sr-only">Show your name as</legend>
+        <p class="mb-3 text-gray-600">This is how your name shows throughout the site.</p>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <% current_preference = @person.display_name_preference.presence || "full_name" %>
+          <% Person::DISPLAY_NAME_PREFERENCE_LABELS.each do |preference, label| %>
+            <label class="has-checked:border-primary has-checked:bg-brand-cream has-checked:ring-primary flex cursor-pointer items-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition hover:border-gray-400 has-checked:ring-1">
+              <%= f.radio_button :display_name_preference, preference, checked: preference == current_preference,
+                                 class: "text-primary h-5 w-5 border-gray-300 focus:ring-blue-200" %>
+              <span class="flex min-w-0 flex-col">
+                <span class="text-primary truncate font-display text-xl font-semibold"><%= @person.name_for(preference).presence || label %></span>
+                <span class="text-sm text-gray-500"><%= label %></span>
+              </span>
+            </label>
+          <% end %>
+        </div>
+      </fieldset>
+    </div>
+    <div class="<%= card_class %>">
+      <h2 class="mb-2 font-display text-2xl text-gray-900">Your privacy</h2>
+      <div class="divide-y divide-gray-100">
+        <%= render "people/switch_row", f: f, attribute: :profile_is_searchable,
+                   label: "Let other AWBW facilitators find and see your profile", on_text: "Yes", off_text: "No" %>
+        <%= render "people/switch_row", f: f, attribute: :anonymous_contributions,
+                   label: "Stay anonymous on stories, workshops, and variations you write", on_text: "Yes", off_text: "No" %>
+      </div>
+    </div>
+    <% PersonDecorator::PROFILE_VISIBILITY_GROUPS.each do |heading, fields| %>
+      <div class="<%= card_class %>">
+        <h2 class="mb-2 font-display text-2xl text-gray-900"><%= heading %></h2>
+        <div class="divide-y divide-gray-100">
+          <% fields.each do |attribute, label| %>
+            <%= render "people/switch_row", f: f, attribute: attribute, label: label %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <div class="flex justify-end gap-3">
+      <%= link_to "Cancel", person_path(@person), class: button_classes(:secondary_outline), data: { action: "click->dirty-form#confirmCancel" } %>
+      <%= f.button :submit, "Save", class: button_classes(:primary, extra: "px-8 text-lg") %>
+    </div>
+  <% end %>
+</div>

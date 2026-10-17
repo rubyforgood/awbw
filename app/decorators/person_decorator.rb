@@ -1,4 +1,28 @@
 class PersonDecorator < ApplicationDecorator
+  PROFILE_VISIBILITY_GROUPS = {
+    "About you" => {
+      profile_show_pronouns: "Pronouns",
+      profile_show_credentials: "Credentials (like LCSW)",
+      profile_show_member_since: "When you became a facilitator",
+      profile_show_bio: "Bio",
+      profile_show_affiliations: "Organizations",
+      profile_show_sectors: "Sectors",
+      profile_show_age_ranges: "Age ranges"
+    },
+    "How to reach you" => {
+      profile_show_email: "Email",
+      profile_show_phone: "Phone",
+      profile_show_social_media: "Social media links"
+    },
+    "Your activity" => {
+      profile_show_events_registered: "Events you attended",
+      profile_show_workshops: "Workshops you wrote",
+      profile_show_workshop_variations: "Workshop variations you wrote",
+      profile_show_stories: "Stories you wrote or were featured in",
+      profile_show_resources: "Resources you wrote"
+    }
+  }.freeze
+
   # "(w)" for work, "(p)" for personal — short enough to sit after an address.
   def self.email_type_abbreviation(type)
     "(#{type.first})" if type.in?(Person::CONTACT_TYPES)
