@@ -83,6 +83,21 @@ RSpec.describe AhoyTrackable do
     end
   end
 
+  describe "polymorphic parent changes" do
+    it "logs the parent type beside a same-type move so the diff names both records" do
+      from = create(:person)
+      to = create(:person)
+      comment = create(:comment, commentable: from)
+      Analytics::LifecycleBuffer.store.clear
+
+      comment.update!(commentable: to)
+
+      changes = event_named("update.comment")[:properties][:changes]
+      expect(changes["commentable_id"]).to eq({ before: from.id, after: to.id })
+      expect(changes["commentable_type"]).to eq({ before: "Person", after: "Person" })
+    end
+  end
+
   describe "nested records" do
     it "records an added nested record on the parent's event" do
       registration = create(:event_registration)

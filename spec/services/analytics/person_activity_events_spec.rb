@@ -73,6 +73,46 @@ RSpec.describe Analytics::PersonActivityEvents do
 
     # These records only reach a person through a parent, so the mapping is the
     # only thing putting them on the history — one example per hop.
+    describe "comments that have left the person" do
+      it "includes a deleted comment's events, found through its delete snapshot" do
+        created = event(resource_type: "Comment", resource_id: 9_001, name: "create.comment")
+        deleted = event(resource_type: "Comment", resource_id: 9_001, name: "destroy.comment",
+                        properties: { "attributes" => { "commentable_type" => "Person", "commentable_id" => person.id } })
+
+        expect(described_class.new(person).relation).to include(created, deleted)
+      end
+
+      it "includes a comment moved off the person's records, typed by its logged diff" do
+        comment = create(:comment, commentable: create(:user))
+        moved = event(resource_type: "Comment", resource_id: comment.id, name: "update.comment",
+                      properties: { "changes" => {
+                        "commentable_id" => { "before" => person.id, "after" => comment.commentable_id },
+                        "commentable_type" => { "before" => "Person", "after" => "User" }
+                      } })
+
+        expect(described_class.new(person).relation).to include(moved)
+      end
+
+      it "includes a same-type move logged without its type, read off the comment" do
+        comment = create(:comment, commentable: create(:person))
+        moved = event(resource_type: "Comment", resource_id: comment.id, name: "update.comment",
+                      properties: { "changes" => { "commentable_id" => { "before" => person.id, "after" => comment.commentable_id } } })
+
+        expect(described_class.new(person).relation).to include(moved)
+      end
+
+      it "excludes deleted and moved comments that were never on the person's records" do
+        other = create(:person)
+        comment = create(:comment, commentable: create(:person))
+        deleted = event(resource_type: "Comment", resource_id: 9_002, name: "destroy.comment",
+                        properties: { "attributes" => { "commentable_type" => "Person", "commentable_id" => other.id } })
+        moved = event(resource_type: "Comment", resource_id: comment.id, name: "update.comment",
+                      properties: { "changes" => { "commentable_id" => { "before" => other.id, "after" => comment.commentable_id } } })
+
+        expect(described_class.new(person).relation).not_to include(deleted, moved)
+      end
+    end
+
     describe "records that reach the person through a parent" do
       let(:registration) { create(:event_registration, registrant: person) }
 
