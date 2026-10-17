@@ -68,6 +68,31 @@ RSpec.describe "Story primary sector and category stars", type: :system, js: tru
     expect(primary(:sector, health)).not_to be_checked
   end
 
+  it "moves the star to a remaining checked tag when the starred one is unchecked" do
+    story.sectorable_items.create!(sector: health, is_primary: true)
+    story.sectorable_items.create!(sector: education, is_primary: false)
+
+    visit edit_story_path(story)
+    find("label[for='story_sector_ids_#{health.id}']").click
+
+    expect(primary(:sector, health)).not_to be_checked
+    expect(primary(:sector, education)).to be_checked
+  end
+
+  it "saves a picked tag with no primary once its star is cleared" do
+    visit edit_story_path(story)
+
+    find("label[for='story_sector_ids_#{health.id}']").click
+    star(:sector, health).click
+    expect(primary(:sector, health)).not_to be_checked
+
+    find(".action-buttons [type=submit]").click
+
+    expect(page).to have_current_path(story_path(story), ignore_query: true)
+    expect(story.reload.sectors).to contain_exactly(health)
+    expect(story.primary_sector).to be_nil
+  end
+
   it "clears the star when its tag is unchecked" do
     story.sectorable_items.create!(sector: health, is_primary: true)
 

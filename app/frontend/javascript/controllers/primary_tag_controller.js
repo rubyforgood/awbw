@@ -10,7 +10,8 @@ import { Controller } from "@hotwired/stimulus"
 // independent and CSS-only, so it needs no JS here. An optional member checkbox
 // per chip (the grid's tag checkbox) stays in step: starring checks it, and
 // unchecking it clears the star. A newly picked chip is starred by default when
-// none of the selected chips is.
+// none of the selected chips is, and unchecking or removing the starred chip
+// passes the star to the first remaining one. A star cleared by hand stays clear.
 export default class extends Controller {
   static targets = ["chip", "primary", "member"]
   static classes = ["primary", "default"]
@@ -31,18 +32,32 @@ export default class extends Controller {
   }
 
   selectMember(event) {
-    const primary = this.primaryIn(this.chipFor(event.target))
+    const chip = this.chipFor(event.target)
     if (event.target.checked) {
-      this.promotePicked(primary)
+      this.promotePicked(this.primaryIn(chip))
       return
     }
-    if (primary) primary.checked = false
-    this.style()
+    this.passStarFrom(chip)
   }
 
   // cocoon:after-insert — the inserted chip is the new pick.
   promoteInserted(event) {
     this.promotePicked(this.primaryIn(event.detail.item))
+  }
+
+  // cocoon:before-remove, while the chip is still in the DOM.
+  promoteOnRemove(event) {
+    this.passStarFrom(event.detail.item)
+  }
+
+  passStarFrom(chip) {
+    const primary = this.primaryIn(chip)
+    if (primary?.checked) {
+      primary.checked = false
+      const next = this.primaryTargets.find((other) => other !== primary && this.isSelected(this.chipFor(other)))
+      if (next) next.checked = true
+    }
+    this.style()
   }
 
   promotePicked(primary) {
