@@ -49,14 +49,14 @@ Either option below will get you a working development environment. Pick whichev
    - mise will automatically install and manage the Ruby version specified in [`.ruby-version`](.ruby-version) with `mise i`
    - Verify that mise is working by running `mise --version`
 2. Install MySQL
-   - **macOS**: [Use Homebrew](https://formulae.brew.sh/formula/mysql@8.0)
+   - **macOS**: [Use Homebrew](https://formulae.brew.sh/formula/mysql@8.4)
      ```
-     brew install mysql@8.0
-     brew services start mysql@8.0
+     brew install mysql@8.4
+     brew services start mysql@8.4
      ```
-     `mysql@8.0` is keg-only, so add its `bin` to your PATH (or `brew link mysql@8.0`) — otherwise `bin/setup` can't find the `mysql` client:
+     `mysql@8.4` is keg-only, so add its `bin` to your PATH (or `brew link mysql@8.4`) — otherwise `bin/setup` can't find the `mysql` client:
      ```
-     echo 'export PATH="$(brew --prefix)/opt/mysql@8.0/bin:$PATH"' >> ~/.zshrc
+     echo 'export PATH="$(brew --prefix)/opt/mysql@8.4/bin:$PATH"' >> ~/.zshrc
      ```
    - **Windows**: Use WSL2 with Ubuntu - follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)
    - **Linux/Ubuntu**: Follow [the MariaDB install guide from digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-20-04#step-1-installing-mariadb)
