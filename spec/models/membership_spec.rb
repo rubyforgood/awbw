@@ -96,6 +96,29 @@ RSpec.describe Membership, type: :model do
     end
   end
 
+  describe "#invoices_due" do
+    let(:membership) { create(:membership) }
+
+    it "returns unpaid invoices, newest first" do
+      older = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
+      newer = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+        start_date: Date.current - 1.month, end_date: Date.current + 11.months)
+
+      expect(membership.invoices_due.to_a).to eq([ newer, older ])
+    end
+
+    it "excludes paid and comped invoices" do
+      create(:membership_invoice, :comped, membership: membership,
+        start_date: Date.current - 2.years, end_date: Date.current - 1.year - 1.day)
+      paid = create(:membership_invoice, membership: membership)
+      create(:allocation, source: create(:payment, amount_cents: paid.cost_cents),
+        allocatable: paid, amount: paid.cost_cents)
+
+      expect(membership.invoices_due).to be_empty
+    end
+  end
+
   describe "#stripe_subscription" do
     it "finds the Pay::Subscription carrying this membership's id in its metadata" do
       membership = create(:membership)

@@ -238,6 +238,17 @@ RSpec.describe MembershipInvoice, type: :model do
     end
   end
 
+  describe "#upcoming?" do
+    it "is true for an invoice whose term hasn't started" do
+      expect(create(:membership_invoice, start_date: Date.current + 1)).to be_upcoming
+    end
+
+    it "is false once the term has started" do
+      expect(create(:membership_invoice, start_date: Date.current)).not_to be_upcoming
+      expect(create(:membership_invoice, start_date: Date.current - 1)).not_to be_upcoming
+    end
+  end
+
   describe "#registrant" do
     it "is the subscription's person, so payment code can stay type-agnostic" do
       invoice = create(:membership_invoice)

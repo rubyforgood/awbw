@@ -59,4 +59,40 @@ RSpec.describe "Person profile membership card", type: :request do
     expect(response.body).to include(membership_invoice_checkouts_path)
     expect(response.body).to include('name="invoice_id"')
   end
+
+  it "offers Pay for an invoice that starts today" do
+    membership = create(:membership, person: person)
+    create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current, end_date: Date.current + 1.year - 1.day)
+    sign_in user
+
+    get person_path(person)
+
+    expect(response.body).to include('name="invoice_id"')
+  end
+
+  it "shows an upcoming invoice without a Pay button" do
+    membership = create(:membership, person: person)
+    create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current + 1.month, end_date: Date.current + 1.month + 1.year - 1.day)
+    sign_in user
+
+    get person_path(person)
+
+    expect(response.body).to include("Upcoming")
+    expect(response.body).not_to include('name="invoice_id"')
+  end
+
+  it "does not show a fully paid invoice" do
+    membership = create(:membership, person: person)
+    paid = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current - 30.days, end_date: Date.current - 30.days + 1.year - 1.day)
+    create(:allocation, source: create(:payment, amount_cents: paid.cost_cents),
+      allocatable: paid, amount: paid.cost_cents)
+    sign_in user
+
+    get person_path(person)
+
+    expect(response.body).not_to include('name="invoice_id"')
+  end
 end

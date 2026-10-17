@@ -101,6 +101,12 @@ class Membership < ApplicationRecord
     membership_invoices.find { |invoice| invoice.active_on?(Date.current) } || membership_invoices.first
   end
 
+  # Invoices that still owe money (comped and paid ones excluded), newest first —
+  # what the profile card lists.
+  def invoices_due
+    membership_invoices.not_paid_in_full
+  end
+
   def stripe_subscription
     return if person.blank?
 

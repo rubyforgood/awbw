@@ -78,6 +78,10 @@ class MembershipInvoice < ApplicationRecord
     start_date && start_date < as_of && !paid_in_full?
   end
 
+  def upcoming?(as_of = Date.current)
+    start_date.present? && start_date > as_of
+  end
+
   def cost_dollars
     cost_cents.to_d / 100 if cost_cents
   end

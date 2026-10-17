@@ -23,15 +23,19 @@
       <p class="text-sm text-gray-700"><%= membership.coverage_label %> <span class="font-medium"><%= membership.end_date.strftime("%b %-d, %Y") %></span></p>
     <% end %>
 
-    <% invoice = membership&.current_invoice %>
-    <% if invoice&.outstanding_started? %>
-      <div class="flex flex-wrap items-center gap-2">
-        <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice %></ul>
-        <% if owner %>
-          <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
-          <%= button_to "Pay", membership_invoice_checkouts_path, params: { invoice_id: invoice.id },
-                        class: button_classes(:primary, size: :sm),
-                        data: { turbo: false } %>
+    <% invoices_due = membership&.invoices_due %>
+    <% if invoices_due&.any? %>
+      <div class="space-y-2">
+        <% invoices_due.each do |invoice| %>
+          <div class="flex flex-wrap items-center gap-2">
+            <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice %></ul>
+            <% if owner && !invoice.upcoming? %>
+              <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
+              <%= button_to "Pay", membership_invoice_checkouts_path, params: { invoice_id: invoice.id },
+                            class: button_classes(:primary, size: :sm),
+                            data: { turbo: false } %>
+            <% end %>
+          </div>
         <% end %>
       </div>
     <% end %>
