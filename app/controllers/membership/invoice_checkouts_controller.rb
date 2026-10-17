@@ -4,7 +4,7 @@ class Membership::InvoiceCheckoutsController < ApplicationController
     invoice = person&.membership_invoices&.find_by(id: params[:invoice_id])
     authorize! invoice, to: :checkout?, with: MembershipInvoicePolicy
 
-    unless invoice.outstanding_started?
+    unless invoice.remaining_cost.positive?
       return redirect_to(person_path(person), alert: "This invoice has no balance to pay.", status: :see_other)
     end
 

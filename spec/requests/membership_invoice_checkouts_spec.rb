@@ -57,13 +57,25 @@ RSpec.describe "Membership invoice checkouts", type: :request do
   end
 
   it "refuses an invoice with nothing to pay" do
+    create(:allocation, source: create(:payment, amount_cents: invoice.cost_cents),
+      allocatable: invoice, amount: invoice.cost_cents)
+    sign_in user
+
+    post membership_invoice_checkouts_path, params: { invoice_id: invoice.id }
+
+    expect(response).to redirect_to(person_path(person))
+  end
+
+  it "pays a not-yet-started invoice that still has a balance" do
     future = create(:membership_invoice, membership: membership,
       start_date: invoice.end_date + 1.day, end_date: invoice.end_date + 1.year)
     sign_in user
 
     post membership_invoice_checkouts_path, params: { invoice_id: future.id }
 
-    expect(response).to redirect_to(person_path(person))
+    expect(response).to redirect_to("https://checkout.stripe.com/membership")
+    expect(checkout_args[:mode]).to eq("payment")
+    expect(checkout_args[:line_items][0][:price_data][:unit_amount]).to eq(future.remaining_cost)
   end
 
   it "is refused while membership is disabled" do
