@@ -1,0 +1,8 @@
+name: "Cancellation emails"
+area: communications
+display_status: public_facing
+released_on: 2026-03-01
+action_path: "/events"
+pr_number: 1287
+summary: >-
+  Cancelling an event registration sends the registrant a cancellation email.

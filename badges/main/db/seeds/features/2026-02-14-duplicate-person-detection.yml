@@ -1,0 +1,8 @@
+name: "Duplicate person detection"
+area: people
+display_status: admin_facing
+released_on: 2026-02-14
+action_path: "/people/check_duplicates"
+pr_number: 990
+summary: >-
+  Creating a person or user warns about likely duplicates before you save.

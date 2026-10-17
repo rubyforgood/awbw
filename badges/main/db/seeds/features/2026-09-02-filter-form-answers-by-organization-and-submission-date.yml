@@ -1,0 +1,10 @@
+name: "Filter form answers by organization and submission date"
+area: reporting
+display_status: admin_facing
+released_on: 2026-09-02
+summary: >-
+  The Form answers list gained an Organization filter and a submitted-date
+  range. The dates read the date the form was submitted, so they answer the
+  same question a form's Results page does.
+action_path: /form_answers
+pr_number: 2508

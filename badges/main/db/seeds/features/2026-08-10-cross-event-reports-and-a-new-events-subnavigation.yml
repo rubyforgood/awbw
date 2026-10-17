@@ -1,0 +1,12 @@
+name: "Cross-event reports and a new events subnavigation"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-10
+action_path: "/events/reports"
+pr_number: 2113
+summary: >-
+  Events have a subnavigation linking revenue, participation, and scholarship
+  reports across every training, with breakdowns that filter themselves as you
+  drill into a sector, age group, or location.
+pro_tips:
+  - "Click any slice of a breakdown to see just the people behind that number."

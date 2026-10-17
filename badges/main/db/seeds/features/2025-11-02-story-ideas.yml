@@ -1,0 +1,7 @@
+name: "Story ideas"
+area: stories
+display_status: user_facing
+released_on: 2025-11-02
+action_path: "/story_ideas"
+summary: >-
+  Facilitators submit story ideas that admins can promote into published stories.

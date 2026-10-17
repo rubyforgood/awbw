@@ -1,0 +1,9 @@
+name: "Meet-the-staff section on the event form"
+area: events
+display_status: admin_facing
+released_on: 2026-08-09
+action_path: "/events/1/staff"
+pr_number: 2130
+summary: >-
+  Add and manage the staff shown on an event's "Meet the staff" roster directly
+  from the edit-event form.

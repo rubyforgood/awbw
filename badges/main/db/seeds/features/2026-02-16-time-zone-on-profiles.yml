@@ -1,0 +1,9 @@
+name: "Time zone on profiles"
+area: people
+display_status: admin_facing
+released_on: 2026-02-16
+action_path: "/people/1"
+pr_number: 1001
+summary: >-
+  A person can have a time zone set on their profile, so times shown to them line up
+  with where they are.

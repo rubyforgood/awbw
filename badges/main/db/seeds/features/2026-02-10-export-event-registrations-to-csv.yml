@@ -1,0 +1,8 @@
+name: "Export event registrations to CSV"
+area: reporting
+display_status: admin_facing
+released_on: 2026-02-10
+action_path: "/events/1/registrants"
+pr_number: 888
+summary: >-
+  Download an event's registrations as a CSV.

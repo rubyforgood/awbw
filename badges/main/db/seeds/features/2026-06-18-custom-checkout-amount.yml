@@ -1,0 +1,8 @@
+name: "Custom checkout amount"
+area: payments
+display_status: public_facing
+released_on: 2026-06-18
+action_path: "/events"
+pr_number: 1733
+summary: >-
+  Payers can enter a custom amount at checkout rather than only a fixed price.

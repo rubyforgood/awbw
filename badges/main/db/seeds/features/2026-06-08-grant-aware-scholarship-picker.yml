@@ -1,0 +1,9 @@
+name: "Grant-aware scholarship picker"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-06-08
+action_path: "/scholarships"
+pr_number: 1597
+summary: >-
+  Awarding a scholarship shows each grant's remaining-of-total funds as you pick
+  the funding source.

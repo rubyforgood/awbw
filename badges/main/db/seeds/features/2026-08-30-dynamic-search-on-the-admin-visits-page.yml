@@ -1,0 +1,11 @@
+name: "Dynamic search on the admin visits page"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-30
+action_path: "/admin/activities/visits"
+summary: >-
+  The admin Visits page now filters as you type — no more full-page reloads — and
+  adds IP address and user agent search plus sortable columns.
+pro_tips:
+  - "Search by IP address (exact) or user agent (partial) to trace a single device or session."
+  - "Click the Started, User, Activities, or Duration column headers to sort."

@@ -1,0 +1,8 @@
+name: "W-9 download on the ticket"
+area: payments
+display_status: public_facing
+released_on: 2026-06-17
+action_path: "/registration/sample"
+pr_number: 1707
+summary: >-
+  Registrants can download AWBW's W-9 from the payment callout on their ticket.

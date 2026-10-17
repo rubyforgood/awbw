@@ -1,0 +1,9 @@
+name: "Continuing education registration"
+area: registration
+display_status: public_facing
+released_on: 2026-06-29
+action_path: "/registration/sample"
+pr_number: 1916
+summary: >-
+  Registrants can request continuing-education hours against a professional
+  license, with fees, deadlines, and a certificate tracked per event.

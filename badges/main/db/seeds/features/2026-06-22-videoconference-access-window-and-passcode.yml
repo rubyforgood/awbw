@@ -1,0 +1,8 @@
+name: "Videoconference access window and passcode"
+area: events
+display_status: public_facing
+released_on: 2026-06-22
+action_path: "/registration/sample"
+summary: >-
+  Videoconference links, passcodes, and room details appear on the ticket only
+  around the event time and for paid registrants.

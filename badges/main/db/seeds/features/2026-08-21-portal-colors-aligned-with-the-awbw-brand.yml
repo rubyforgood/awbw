@@ -1,0 +1,17 @@
+name: "Portal colors aligned with the AWBW brand"
+area: content
+display_status: public_facing
+released_on: 2026-08-21
+pr_number: 2282
+external_url: "https://github.com/rubyforgood/awbw/blob/main/app/assets/images/brand/awbw-brand-guide.pdf"
+summary: >-
+  The portal's core colors now match AWBW's official brand palette, so it looks like
+  the rest of AWBW. The primary blue, the green on action buttons, and the orange
+  accent all use the exact brand values.
+description: >-
+  We reconciled the portal's theme with the official AWBW brand guide. The primary
+  color moved from a darker navy to the true brand blue (#24479E), the green on
+  "registered" and confirmation buttons is now the brand green (#4E8324), and the
+  orange accent is the brand orange (#D56027). These carry across buttons, links,
+  banners, and highlights throughout the portal. The brand guide is linked below for
+  reference.

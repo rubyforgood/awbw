@@ -1,0 +1,10 @@
+name: "FileMaker archive tables grouped by area"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-12
+pr_number: 2660
+action_path: "/fm_archives"
+summary: >-
+  The FileMaker archive now sorts its 44 tables into labeled groups — people,
+  organizations, events, payments, funding and more — so the table you want
+  is easier to find.

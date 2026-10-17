@@ -1,0 +1,11 @@
+name: "Comments & communications on grants"
+area: communications
+display_status: admin_facing
+released_on: 2026-09-30
+summary: >-
+  A grant's edit page now has the same combined "Comments & communications" section as
+  scholarships and people, so you can record notes about a grant and log calls or emails
+  with its funder right on the grant.
+pro_tips:
+  - "A logged communication is addressed to the grant's funder, so you never type the email."
+  - "When the funder is a person, the grant's comments also show in that person's combined feed."

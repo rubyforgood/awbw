@@ -1,0 +1,9 @@
+name: "Event participation report and statistics hub"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-02
+action_path: "/events/participation"
+pr_number: 2036
+summary: >-
+  A cross-event participation report counts unique people trained versus seats
+  filled by year, anchored by an events statistics hub.

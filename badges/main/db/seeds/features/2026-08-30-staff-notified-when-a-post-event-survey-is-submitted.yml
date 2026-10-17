@@ -1,0 +1,11 @@
+name: "Staff notified when a post-event survey is submitted"
+area: registration
+display_status: admin_facing
+released_on: 2026-08-30
+summary: >-
+  Every post-event survey submission — Day 1, Day 2, or the recipients survey —
+  sends a FYI email with the submitter's answers to the default notification
+  address, so staff see feedback without opening the registrant's record.
+pro_tips:
+  - "The email lists the submitted answers and links the submitter and event."
+  - "It sends on each submission; the subject says \"New\" for a first submission and \"Updated\" when the registrant edits their answers."

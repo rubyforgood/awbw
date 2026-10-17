@@ -1,0 +1,7 @@
+name: "Calendar links on events"
+area: events
+display_status: public_facing
+released_on: 2025-11-19
+action_path: "/events/1"
+summary: >-
+  Add-to-calendar links and location/zoom details on event pages.

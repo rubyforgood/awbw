@@ -1,0 +1,8 @@
+name: "Tags, categories, and sectors"
+area: content
+display_status: admin_facing
+released_on: 2025-12-22
+action_path: "/tags"
+summary: >-
+  A tagging system of categories and sectors, with admin CRUD, that organizes
+  content across the portal.

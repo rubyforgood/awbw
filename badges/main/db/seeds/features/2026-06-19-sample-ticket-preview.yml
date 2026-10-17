@@ -1,0 +1,11 @@
+name: "Sample ticket preview"
+area: events
+display_status: admin_facing
+released_on: 2026-06-19
+action_path: "/events/1/sample_ticket"
+pr_number: 1793
+summary: >-
+  Preview an event's registration ticket as a typical registrant would see it,
+  without creating any data.
+pro_tips:
+  - "The sample uses a throwaway \"Sample Person\" — nothing is saved and it never shows up in counts or rosters."

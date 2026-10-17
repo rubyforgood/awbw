@@ -1,0 +1,8 @@
+name: "User accounts"
+area: people
+display_status: admin_facing
+released_on: 2025-09-13
+action_path: "/users"
+summary: >-
+  Manage portal login accounts, tied to people, with confirmation and invite
+  states.

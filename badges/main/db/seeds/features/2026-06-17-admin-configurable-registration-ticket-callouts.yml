@@ -1,0 +1,9 @@
+name: "Admin-configurable registration ticket callouts"
+area: registration
+display_status: admin_facing
+released_on: 2026-06-17
+action_path: "/events/1"
+pr_number: 1721
+summary: >-
+  Admins add call-out cards to an event's registration ticket — for payment,
+  handouts, videoconference, and more — each linking to its own detail page.

@@ -1,0 +1,9 @@
+name: "Credit a second author on a story idea"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-04
+summary: >-
+  Story ideas can now credit a second author and a second-author credit
+  preference, matching stories. Admins set them on the idea's edit page, and both
+  — along with the first author — carry over when the idea is promoted to a story.
+action_path: "/story_ideas"

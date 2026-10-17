@@ -1,0 +1,10 @@
+name: "Admin account-flow reference"
+area: people
+display_status: admin_facing
+released_on: 2026-03-28
+action_path: "/users/flow_diagram"
+pr_number: 1442
+summary: >-
+  A reference page (linked from the users index) diagramming how invitations, password
+  resets, email changes, and account lockout/unlock work, with an admin triage cheat
+  sheet for common "I can't sign in" situations.

@@ -1,0 +1,9 @@
+name: "Tag grants with sectors and categories"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-08-14
+action_path: "/grants"
+pr_number: 2199
+summary: >-
+  Grants can be tagged with sectors and categories, like other records, so they're
+  easier to group and find.

@@ -1,0 +1,8 @@
+name: "Communications and notifications system"
+area: communications
+display_status: admin_facing
+released_on: 2026-01-18
+action_path: "/communications"
+summary: >-
+  A unified system that sends, tracks, and records the portal's emails and
+  notifications, with delivery status.

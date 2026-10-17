@@ -1,0 +1,9 @@
+name: "\"Someone else will pay\" toggle on registration"
+area: registration
+display_status: public_facing
+released_on: 2026-08-09
+action_path: "/registration/sample"
+pr_number: 2139
+summary: >-
+  Registrants can indicate that someone else will pay for them, and that answer
+  is carried onto their registration for admins to see.

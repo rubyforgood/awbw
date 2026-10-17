@@ -1,0 +1,8 @@
+name: "Admin activity feed"
+area: reporting
+display_status: admin_facing
+released_on: 2026-01-18
+action_path: "/admin/activities/events"
+summary: >-
+  A searchable, filterable feed of visits and events across the portal for admins,
+  powered by activity tracking.

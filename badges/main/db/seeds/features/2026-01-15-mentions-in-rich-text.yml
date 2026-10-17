@@ -1,0 +1,9 @@
+name: "@mentions in rich text"
+area: content
+display_status: admin_facing
+released_on: 2026-01-15
+action_path: "/workshops"
+pr_number: 662
+summary: >-
+  Mention people and records inside rich-text fields, with links back to what you
+  referenced.

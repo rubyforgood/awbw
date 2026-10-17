@@ -1,0 +1,15 @@
+name: "Close a program with a form"
+area: people
+display_status: admin_facing
+released_on: 2026-09-03
+summary: >-
+  A new "Close program" form lets a facilitator or organization tell us their
+  AWBW program is ending. Submitting it end-dates their affiliations at the
+  named organization — automatically on an exact name match, or after an admin
+  links the organization — with a comment recording why.
+action_path: /forms
+pr_number: 2518
+pro_tips:
+  - >-
+    The organization's status closes to Inactive on its own once the last
+    active Facilitator affiliation ends.

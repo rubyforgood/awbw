@@ -1,0 +1,14 @@
+name: "FileMaker archive records show their names"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-12
+pr_number: 2664
+action_path: "/fm_archives"
+summary: >-
+  FileMaker archive lists and record pages now show each record's name — a
+  person, organization, event title, or similar — instead of only its ID.
+pro_tips:
+  - "Each table words its names its own way, so a person's payment, registration, and volunteer shift never look alike, and an art sale reads like \"After the Rain — purchased for $250\"."
+  - "Link rows with no name of their own, like committee members, name the FileMaker IDs they connect."
+  - "An ID field that points at another archive record, like a rolodex OrgID, reads like the phone and address rows: the ID sits beside the field name and the record's name links to it. A struck-through ID means the archive has no such record."
+  - "A payment's RefID now links to the event or funding it was for."

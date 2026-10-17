@@ -1,0 +1,8 @@
+name: "People filter: staff tag"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/people"
+pr_number: 2312
+summary: >-
+  Filter people by staff tag. Pick a tag to see everyone carrying it.

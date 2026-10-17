@@ -1,0 +1,10 @@
+name: "Topic subscriptions"
+area: communications
+display_status: admin_facing
+released_on: 2026-08-04
+action_path: "/topic_subscriptions"
+pr_number: 2070
+summary: >-
+  Facilitators can subscribe to the topics they want to hear about — upcoming
+  trainings, news, resources — and admins manage the list of topics and who's
+  subscribed.

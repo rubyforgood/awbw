@@ -2,33 +2,36 @@ require "rails_helper"
 
 RSpec.describe FeatureCatalog do
   describe "#import!" do
-    let(:seed_path) { Rails.root.join("spec/fixtures/files/features_seed.yml") }
+    let(:seed_dir) { Pathname(Dir.mktmpdir("features_seed")) }
 
     before do
-      File.write(seed_path, <<~YAML)
-        - name: "Seed feature one"
-          area: events
-          display_status: user_facing
-          summary: "First seeded feature."
-          released_on: 2026-08-01
-          action_path: "/events"
-          pr_number: 1234
-          pro_tips:
-            - "Tip A"
-            - "Tip B"
-          external_url: "https://docs.example.com/one"
-          description: "<p>Longer write-up.</p>"
-        - name: "Seed feature two"
-          area: scholarships
-          display_status: admin_facing
-          summary: "Second seeded feature."
-          released_on: 2026-08-05
+      seed_dir.join("2026-08-01-seed-feature-one.yml").write(<<~YAML)
+        name: "Seed feature one"
+        area: events
+        display_status: user_facing
+        summary: "First seeded feature."
+        released_on: 2026-08-01
+        action_path: "/events"
+        pr_number: 1234
+        pro_tips:
+          - "Tip A"
+          - "Tip B"
+        external_url: "https://docs.example.com/one"
+        description: "<p>Longer write-up.</p>"
       YAML
+      seed_dir.join("2026-08-05-seed-feature-two.yml").write(<<~YAML)
+        name: "Seed feature two"
+        area: scholarships
+        display_status: admin_facing
+        summary: "Second seeded feature."
+        released_on: 2026-08-05
+      YAML
+      seed_dir.join("README.md").write("Not a seed.")
     end
 
-    after { File.delete(seed_path) if File.exist?(seed_path) }
+    after { FileUtils.remove_entry(seed_dir) }
 
-    subject(:catalog) { described_class.new(path: seed_path) }
+    subject(:catalog) { described_class.new(dir: seed_dir) }
 
     it "creates a Feature per seed entry" do
       expect { catalog.import! }.to change(Feature, :count).by(2)
@@ -57,6 +60,13 @@ RSpec.describe FeatureCatalog do
       )
       expect(feature.pro_tips_list).to eq([ "Tip A", "Tip B" ])
       expect(feature.rhino_description.to_plain_text).to include("Longer write-up")
+    end
+
+    it "matches an existing feature whose name differs only in case" do
+      existing = create(:feature, name: "SEED FEATURE ONE")
+
+      expect { catalog.import! }.to change(Feature, :count).by(1)
+      expect(existing.reload.pr_number).to eq(1234)
     end
 
     it "does not overwrite admin-written content (summary)" do
@@ -126,12 +136,17 @@ RSpec.describe FeatureCatalog do
     end
   end
 
-  describe "the checked-in seed (config/features.yml)" do
+  describe "the checked-in seeds (db/seeds/features/)" do
     subject(:entries) { described_class.new.entries }
 
-    it "is a non-empty list" do
-      expect(entries).to be_an(Array)
+    it "is a non-empty list of one feature per file" do
       expect(entries).not_to be_empty
+      expect(entries).to all(be_a(Hash))
+    end
+
+    it "has unique names" do
+      names = entries.map { |entry| entry["name"].downcase }
+      expect(names.tally.select { |_, count| count > 1 }.keys).to be_empty
     end
 
     it "has every required field with a valid area and audience" do
