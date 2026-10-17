@@ -94,7 +94,6 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/profile_change_requests/choose_affiliation_change.html.erb" => "admin-or-owner",
     "app/views/organizations/show.html.erb"            => "admin-or-owner",
     "app/views/people/show.html.erb"                   => "admin-or-owner",
-    "app/views/organizations/edit.html.erb"            => "admin-or-owner",
     "app/views/people/edit.html.erb"                   => "admin-or-owner",
 
     "app/views/reports/show.html.erb"                  => "admin-or-owner-or-member",
@@ -265,6 +264,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshop_variation_ideas/edit.html.erb" => "admin-only bg-blue-100",
     "app/views/scholarships/edit.html.erb"             => "admin-only bg-blue-100",
     "app/views/grants/edit.html.erb"                   => "admin-only bg-blue-100",
+    "app/views/organizations/edit.html.erb"            => "admin-only bg-blue-100",
     "app/views/payments/edit.html.erb"                 => "admin-only bg-blue-100",
     "app/views/professional_licenses/index.html.erb"   => "admin-only bg-blue-100",
     "app/views/professional_licenses/new.html.erb"     => "admin-only bg-blue-100",
