@@ -35,7 +35,7 @@ module DomainTheme
     banners:                  :yellow,
     users:                    :rose,
     notifications:            :purple,
-    comments:                 :sky,
+    comments:                 :blue,
     topic_subscriptions:      :stone,
     topic_subscription_types: :stone,
     memberships:              :orange,
