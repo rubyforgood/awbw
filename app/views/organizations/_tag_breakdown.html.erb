@@ -1,5 +1,5 @@
 <%# One column of the populations-served breakdown: each tag the org's active
-    people hold, with a bar split into primary and additional holders. %>
+    facilitators hold, with a bar split into primary and additional holders. %>
 <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
   <div class="mb-4 flex items-baseline justify-between gap-3">
     <h2 class="font-display text-2xl text-gray-900"><%= title %></h2>
@@ -14,9 +14,9 @@
         <li>
           <div class="mb-1 flex items-baseline justify-between gap-3 text-sm">
             <%= link_to row.tag.name, taggings_path(link_param => row.tag.name), class: "font-medium text-gray-800 hover:underline" %>
-            <span class="whitespace-nowrap text-gray-600"><span class="font-semibold text-gray-900"><%= row.primary_count %></span> primary · <%= row.additional_count %> additional</span>
+            <span class="whitespace-nowrap text-gray-600"><span class="font-semibold text-gray-900"><%= row.total %> total</span> · <%= row.primary_count %> primary · <%= row.additional_count %> additional</span>
           </div>
-          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100" title="<%= pluralize(row.total, "person") %> of <%= facilitator_count %>">
+          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100" title="<%= pluralize(row.total, "facilitator") %> of <%= facilitator_count %>">
             <div class="<%= DomainTheme.bg_class_for(domain, intensity: 500) %>" style="width: <%= 100.0 * row.primary_count / facilitator_count %>%"></div>
             <div class="<%= DomainTheme.bg_class_for(domain, intensity: 200) %>" style="width: <%= 100.0 * row.additional_count / facilitator_count %>%"></div>
           </div>

@@ -211,6 +211,7 @@ class OrganizationsController < ApplicationController
 
   def populations_served
     authorize! @organization
+    @sort = params[:sort].presence_in(Organization::BREAKDOWN_SORTS) || Organization::BREAKDOWN_SORTS.first
   end
 
   private

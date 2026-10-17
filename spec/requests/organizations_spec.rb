@@ -140,7 +140,7 @@ RSpec.describe "/organizations", type: :request do
       expect(page).not_to have_content("Former Sector")
     end
 
-    it "lists every sector and age group active people hold, primary and additional, on the breakdown page" do
+    it "lists every sector and age group active facilitators hold, primary and additional, on the breakdown page" do
       age_type = create(:category_type, name: "AgeRange", published: true)
       teen = create(:category, :published, category_type: age_type, name: "Teens")
       person = organization_with_sectors.affiliations.first.person
@@ -152,9 +152,32 @@ RSpec.describe "/organizations", type: :request do
       page = Capybara.string(response.body)
       expect(page).to have_content("Sectors and age groups")
       %w[Alpha Bravo Charlie Delta Echo Teens].each { |name| expect(page).to have_content(name) }
-      expect(page).to have_content("0 primary · 1 additional", count: 2)
+      expect(page).to have_content("1 total · 0 primary · 1 additional", count: 2)
       expect(page).not_to have_content("Direct Sector 1")
       expect(page).not_to have_content("Former Sector")
+    end
+
+    it "sorts the breakdown by the chosen option, defaulting to primary first" do
+      person = organization_with_sectors.affiliations.first.person
+      %w[Echo Foxtrot].each { |name| create(:sectorable_item, sector: create(:sector, name: name), sectorable: person, is_primary: false) }
+      second = create(:person)
+      create(:affiliation, organization: organization_with_sectors, person: second)
+      create(:sectorable_item, sector: Sector.find_by!(name: "Echo"), sectorable: second, is_primary: false)
+
+      sector_order = -> { Capybara.string(response.body).all("section", text: "Sectors").first.all("li a").map(&:text) }
+
+      get populations_served_organization_url(organization_with_sectors)
+      expect(sector_order.call).to eq(%w[Alpha Bravo Charlie Delta Echo Foxtrot])
+      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary first")
+
+      get populations_served_organization_url(organization_with_sectors, sort: "total")
+      expect(sector_order.call).to eq(%w[Echo Alpha Bravo Charlie Delta Foxtrot])
+
+      get populations_served_organization_url(organization_with_sectors, sort: "name")
+      expect(sector_order.call).to eq(%w[Alpha Bravo Charlie Delta Echo Foxtrot])
+
+      get populations_served_organization_url(organization_with_sectors, sort: "bogus")
+      expect(Capybara.string(response.body)).to have_css("a[aria-current='true']", exact_text: "Primary first")
     end
 
     it "shows the roll-up read-only on the edit page with a note on where it comes from" do
