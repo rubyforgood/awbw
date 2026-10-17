@@ -189,8 +189,17 @@ module Ahoy
       return if id.blank?
 
       request = find_referenced_record("ProfileChangeRequest", id)
-      path = request && h.profile_change_requests_path(status: request.status, person_id: request.person_id, anchor: h.dom_id(request))
-      { label: "From change request", depth: 0, link: { text: request&.decorate&.requester_summary || "Change request ##{id}", path: path } }
+      { label: "From change request", depth: 0,
+        link: { text: request&.decorate&.requester_summary || "Change request ##{id}", path: change_request_path(request) } }
+    end
+
+    # The queue filtered to that person and status, scrolled to the card and
+    # highlighting it (the queue renders the card up front for a highlight link).
+    def change_request_path(request)
+      return nil unless request
+
+      h.profile_change_requests_path(status: request.status, person_id: request.person_id,
+                                     highlight: request.id, anchor: h.dom_id(request))
     end
 
     def compute_resource_link

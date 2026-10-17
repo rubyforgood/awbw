@@ -389,6 +389,16 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response.body).to include("profile_change_requests_results")
     end
 
+    it "renders the card up front for a highlight link, so the anchor can scroll to it" do
+      request = create(:profile_change_request, person: person, details: "please fix my dates")
+
+      get profile_change_requests_path(person_id: person.id, highlight: request.id, anchor: "profile_change_request_#{request.id}")
+
+      expect(response.body).to include("please fix my dates")
+      expect(response.body).to match(/id="profile_change_request_#{request.id}"/)
+      expect(response.body).to include("ring-yellow-500")
+    end
+
     it "lists requests in the results frame" do
       create(:profile_change_request, person: person, details: "please fix my dates")
 

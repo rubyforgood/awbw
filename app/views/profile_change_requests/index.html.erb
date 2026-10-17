@@ -23,9 +23,16 @@
     </p>
   <% end %>
 
+  <%# A link to one card (highlight + anchor, from a change log) arrives with the
+      requests already loaded, so the card is in this response for the browser to
+      scroll to; everything else loads the queue lazily through the frame. %>
   <%= turbo_frame_tag :profile_change_requests_results,
-                      src: profile_change_requests_path(status: @status, person_id: @person&.id),
+                      src: (profile_change_requests_path(status: @status, person_id: @person&.id) unless @requests),
                       data: { turbo: "temporary" } do %>
-    <p class="mt-6 text-gray-400">Loading…</p>
+    <% if @requests %>
+      <%= render "profile_change_requests/results" %>
+    <% else %>
+      <p class="mt-6 text-gray-400">Loading…</p>
+    <% end %>
   <% end %>
 </div>

@@ -333,7 +333,8 @@ RSpec.describe Ahoy::EventDecorator do
       request = create(:profile_change_request, status: "resolved")
       event = decorate("profile_change_request_id" => request.id, "source" => "import")
       path = Rails.application.routes.url_helpers.profile_change_requests_path(
-        status: "resolved", person_id: request.person_id, anchor: "profile_change_request_#{request.id}"
+        status: "resolved", person_id: request.person_id, highlight: request.id,
+        anchor: "profile_change_request_#{request.id}"
       )
 
       expect(event.detail_rows).to eq(

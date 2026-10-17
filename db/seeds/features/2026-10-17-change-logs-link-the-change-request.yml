@@ -8,4 +8,4 @@ summary: >-
   When you approve a profile change request, every record it changes logs a
   "From change request" link back to that request.
 pro_tips:
-  - "The link opens the request's card in the change request queue, filtered to that person."
+  - "The link opens the change request queue filtered to that person, scrolled to the request's card and highlighting it."
