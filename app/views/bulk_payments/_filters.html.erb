@@ -17,11 +17,11 @@
       <%= text_field_tag :search, params[:search], placeholder: "Name, email, organization, or details", class: search_field_class %>
     </div>
 
-    <%= render "events/filter_select", param: :payment_method, label: "Payment method",
+    <%= render "shared/filter_select", param: :payment_method, label: "Payment method",
           options: FormSubmission::PAYMENT_METHOD_FILTER_OPTIONS, selected: params[:payment_method],
           blank: "Any payment method", field_class: search_field_class, wrapper_class: "w-full sm:w-40" %>
 
-    <%= render "events/filter_select", param: :payment_status, label: "Payment status",
+    <%= render "shared/filter_select", param: :payment_status, label: "Payment status",
           options: FormSubmission::PAYMENT_STATUS_FILTER_OPTIONS, selected: params[:payment_status],
           blank: "Any status", field_class: search_field_class, wrapper_class: "w-full sm:w-40" %>
 

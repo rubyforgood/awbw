@@ -52,19 +52,19 @@
       <p class="mb-3 text-xs font-semibold tracking-wide text-blue-800 uppercase">Admin-only filters</p>
       <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <!-- Role -->
-        <%= render "events/filter_select", param: :role, label: "Role",
+        <%= render "shared/filter_select", param: :role, label: "Role",
               options: Person::ROLE_FILTER_OPTIONS, selected: params[:role],
               blank: "All people", field_class: search_field_class,
               wrapper_class: "w-full" %>
 
         <!-- Facilitator status -->
-        <%= render "events/filter_select", param: :facilitator_status, label: "Facilitator status",
+        <%= render "shared/filter_select", param: :facilitator_status, label: "Facilitator status",
               options: Person::FACILITATOR_STATUS_FILTER_OPTIONS, selected: params[:facilitator_status],
               blank: "Any status", field_class: search_field_class,
               wrapper_class: "w-full" %>
 
         <!-- Membership status -->
-        <%= render "events/filter_select", param: :membership_status, label: "Membership status",
+        <%= render "shared/filter_select", param: :membership_status, label: "Membership status",
               options: Person::MEMBERSHIP_STATUS_FILTER_OPTIONS, selected: params[:membership_status],
               blank: "Any status", field_class: search_field_class,
               wrapper_class: "w-full" %>
