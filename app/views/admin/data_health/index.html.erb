@@ -9,8 +9,9 @@
 
   <h1 class="mb-2 text-2xl font-semibold text-gray-900">Data health</h1>
   <p class="mb-6 text-sm text-gray-600">
-    Consistency checks that span every record. Repairs are logged like any other change.
-    <%= link_to "History", admin_activities_events_path, class: "text-indigo-600 hover:underline" %>
+    Consistency checks that span every record. Repairs are logged in the
+    <%= link_to "activity history", admin_activities_events_path, class: "text-indigo-600 hover:underline" %>
+    like any other change.
   </p>
 
   <% if clean %>
