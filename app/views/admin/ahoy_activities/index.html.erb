@@ -20,10 +20,28 @@
         </div>
       </div>
 
-      <div class="flex items-baseline gap-3 mb-6 leading-none">
-        <h1 class="font-display text-2xl font-semibold text-primary leading-none">Activity</h1>
-        <%= render "count" %>
-      </div>
+      <% if @person %>
+        <div class="mb-6">
+          <span class="text-2xs font-semibold tracking-widest uppercase <%= DomainTheme.text_class_for(:people, intensity: 700) %>">Activity</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <h1 class="text-primary font-display text-3xl">
+              <%= link_to @person.full_name, person_path(@person), class: "hover:underline" %>
+            </h1>
+            <% if allowed_to?(:manage?, Comment) %>
+              <%= link_to comments_and_communications_path(person_id: @person.id), class: button_classes(:primary_outline) do %>
+                <i class="fa-solid fa-comments"></i>
+                <%= @person.first_name %>'s comments &amp; communications
+              <% end %>
+            <% end %>
+          </div>
+          <div class="mt-2"><%= render "count" %></div>
+        </div>
+      <% else %>
+        <div class="flex items-baseline gap-3 mb-6 leading-none">
+          <h1 class="font-display text-2xl font-semibold text-primary leading-none">Activity</h1>
+          <%= render "count" %>
+        </div>
+      <% end %>
 
       <div class="mb-6 text-sm min-h-10">
         <%= render "admin/shared/active_filters_subheader",

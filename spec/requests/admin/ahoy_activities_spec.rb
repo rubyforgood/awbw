@@ -424,6 +424,17 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include("Person: #{person.name}")
       end
 
+      it "heads a person-scoped page with the person and a link to their comments and communications" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.at_css("h1").text).to include("Ada Lovelace")
+        link = doc.css("a").find { |a| a.text.strip == "Ada's comments & communications" }
+        expect(link["href"]).to eq(comments_and_communications_path(person_id: person.id))
+      end
+
       it "shows a back-to-person eyebrow (not Admin) when scoped to a person" do
         person = create(:person, first_name: "Ada", last_name: "Lovelace")
 

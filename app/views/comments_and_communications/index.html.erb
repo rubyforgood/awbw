@@ -35,7 +35,7 @@
   <% if @person && allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
     <%= link_to person_activity_path(@person), class: button_classes(:primary_outline, extra: "ml-3 align-middle font-sans") do %>
       <i class="fa-solid fa-clock-rotate-left"></i>
-      <%= @person.first_name.presence || @person.full_name %>'s activity
+      <%= @person.first_name %>'s activity
     <% end %>
   <% end %>
 <% end %>
