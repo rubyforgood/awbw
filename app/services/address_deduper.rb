@@ -3,9 +3,8 @@
 # ModelDeduper#merge — then settles a single primary. Two addresses are one place when
 # their AddressNormalizer signatures match ("N Main St" / "North Main Street"), or when
 # a less complete copy (no ZIP, no street, …) fits exactly one fuller address.
-# Runs in the people and organizations dedupers' after_merge (addresses have no unique
-# index, so a merge leaves both records' copies on the keeper) and on the standalone
-# Dedupe addresses page.
+# Runs in the people and organizations dedupers' after_merge — a merge moves both
+# records' copies onto the keeper — and on the standalone Dedupe addresses page.
 class AddressDeduper
   # Filled in on the survivor from a merged copy when the survivor has none, so a
   # merge never drops a phone number, a ZIP, or a geocoded district only one copy had.

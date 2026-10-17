@@ -711,6 +711,10 @@ module ApplicationHelper
     @app_organization ||= Setting.app_organization
   end
 
+  def app_organization_name
+    app_organization&.name.presence || Setting.organization_name
+  end
+
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 
