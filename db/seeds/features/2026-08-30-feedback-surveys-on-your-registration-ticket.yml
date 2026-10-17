@@ -1,0 +1,12 @@
+name: "Feedback surveys on your registration ticket"
+area: registration
+display_status: user_facing
+released_on: 2026-08-30
+summary: >-
+  Training feedback surveys now live on your registration ticket. A "Feedback
+  surveys" callout opens the Day 1 / Day 2 evaluations and an overall post-event
+  survey, each on its own date; submit one and it collapses to a "Completed"
+  toggle you can reopen to edit.
+pro_tips:
+  - "Scholarship recipients get their recipients survey on their own scholarship page, once their agreement is signed and their tasks are complete."
+  - "Reopen any completed survey to review or edit your answers."

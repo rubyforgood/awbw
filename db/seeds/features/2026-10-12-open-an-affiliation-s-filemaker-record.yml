@@ -1,0 +1,10 @@
+name: "Open an affiliation's FileMaker record"
+area: people
+display_status: admin_facing
+released_on: 2026-10-12
+pr_number: 2649
+summary: >-
+  An affiliation's edit page now links its FileMaker code to the archive, and
+  the archive record links back to the affiliation.
+pro_tips:
+  - "An affiliation's code is usually its program's FileMaker project ID (like P2775), and occasionally a personnel ID (like PS9999)."

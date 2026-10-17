@@ -1,0 +1,12 @@
+name: "Merging people keeps both FileMaker codes"
+area: people
+display_status: admin_facing
+released_on: 2026-10-12
+pr_number: 2647
+action_path: "/people/dedupe_index"
+summary: >-
+  Merging two people who each came from FileMaker now keeps both of their
+  FileMaker codes on the kept person instead of dropping one.
+pro_tips:
+  - "A record can answer to several codes — they're shown as a comma-separated list, and each one links to its own row in the archive."
+  - "The duplicate list now reads two records as a match when their codes overlap, rather than flagging them as conflicting."

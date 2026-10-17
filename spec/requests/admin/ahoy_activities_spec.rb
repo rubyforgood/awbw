@@ -165,6 +165,22 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect_frame_breakout(response.body, reports_events_path)
       end
 
+      it "shows a moved comment's old and new parents as links beside its note" do
+        from = create(:person, first_name: "Ada", last_name: "Park")
+        to = create(:person, first_name: "Bo", last_name: "Lee")
+        comment = create(:comment, commentable: to, body: "Moved note marker")
+        create(:ahoy_event, name: "update.comment", user: user, visit: visit_for_user, time: 1.hour.ago,
+                            resource_type: "Comment", resource_id: comment.id,
+                            properties: { "changes" => { "commentable_id" => { "before" => from.id, "after" => to.id } } })
+
+        get index_path, params: { time_period: "all_time", audience: %w[visitors users staff], hide_interactions: "0" }, headers: frame_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Moved note marker")
+        expect_frame_breakout(response.body, edit_person_path(from))
+        expect(response.body).to include("Ada Park")
+      end
+
       it "filters by prefixes=auth" do
         get index_path, params: { prefixes: "auth" }, headers: frame_headers
 

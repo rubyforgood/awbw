@@ -1,0 +1,8 @@
+name: "Story image carousel"
+area: stories
+display_status: public_facing
+released_on: 2026-08-16
+action_path: "/stories"
+pr_number: 2221
+summary: >-
+  Story pages show their images as a hero-first carousel.

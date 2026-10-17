@@ -1,0 +1,11 @@
+name: "Log a note or communication against any of a person's records"
+area: communications
+display_status: admin_facing
+released_on: 2026-09-23
+pr_number: 2555
+action_path: "/comments_and_communications"
+summary: >-
+  The "Log it against" picker in the comment and communication composer now
+  offers every record a person is tied to — form submissions, affiliations,
+  staff tags, reports, and the workshops and stories they're credited on — not
+  just a handful, so a note can hang off whatever it's actually about.

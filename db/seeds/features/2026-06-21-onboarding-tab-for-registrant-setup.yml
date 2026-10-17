@@ -1,0 +1,9 @@
+name: "Onboarding tab for registrant setup"
+area: registration
+display_status: admin_facing
+released_on: 2026-06-21
+action_path: "/events/1/onboarding"
+pr_number: 1788
+summary: >-
+  A per-event Onboarding tab tracks each registrant through their setup steps
+  with a checkbox matrix.

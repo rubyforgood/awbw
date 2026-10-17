@@ -1,0 +1,10 @@
+name: "Turn payment methods on or off per form"
+area: payments
+display_status: admin_facing
+released_on: 2026-09-20
+summary: >-
+  The Payment method question in the form builder now shows each method
+  (credit card now, credit card later, check) as a checkbox you can turn on
+  or off — so a form can drop "pay later" and offer only check and credit
+  card. The labels stay fixed because they're wired to payment processing.
+action_path: "/forms"

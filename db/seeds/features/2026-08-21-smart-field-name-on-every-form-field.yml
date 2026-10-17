@@ -1,0 +1,10 @@
+name: "Smart field name on every form field"
+area: content
+display_status: admin_facing
+released_on: 2026-08-21
+action_path: "/forms"
+pr_number: 2273
+summary: >-
+  Every form field now shows its "smart field name" — the identifier that wires a
+  field to backend logic — with a "What's this?" link to a reference page, instead
+  of hiding it behind a URL flag.

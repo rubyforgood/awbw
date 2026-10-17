@@ -1,0 +1,8 @@
+name: "Printable completion certificate"
+area: registration
+display_status: public_facing
+released_on: 2026-08-04
+action_path: "/registration/sample"
+pr_number: 2081
+summary: >-
+  A clean, one-page printable certificate of completion for a training registrant.

@@ -1,0 +1,15 @@
+name: "Reinstatement agreement"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/forms"
+pr_number: 2304
+summary: >-
+  A returning facilitator signs the reinstatement agreement at its public
+  form link. Linking their organization adds a fresh Facilitator affiliation
+  dated to the submission (and a job affiliation from their position) only
+  where no active one exists — nothing is ended, history is kept.
+pro_tips:
+  - Each submission shows a processing panel with the person's affiliations
+    and portal account status, so reinstating and re-inviting happens in one
+    place.

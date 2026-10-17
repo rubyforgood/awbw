@@ -1,0 +1,9 @@
+name: "Richer communications log with delivery flags"
+area: communications
+display_status: admin_facing
+released_on: 2026-08-13
+action_path: "/communications"
+pr_number: 2177
+summary: >-
+  The communications log now marks each message's direction and audience, flags
+  bulk sends, and highlights undelivered emails with warning styling.

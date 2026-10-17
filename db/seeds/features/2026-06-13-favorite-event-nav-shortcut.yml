@@ -1,0 +1,8 @@
+name: "Favorite event nav shortcut"
+area: events
+display_status: admin_facing
+released_on: 2026-06-13
+action_path: "/events/1"
+pr_number: 1666
+summary: >-
+  Pin a favorite event for a one-click shortcut to it in the nav.

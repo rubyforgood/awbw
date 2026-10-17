@@ -1,0 +1,9 @@
+name: "People filter: topic subscription"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/people"
+pr_number: 2312
+summary: >-
+  Filter people by topic subscription. Pick a topic to see everyone still
+  subscribed to it; anyone who unsubscribed is left out.

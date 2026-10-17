@@ -1,0 +1,9 @@
+name: "Per-event dashboard"
+area: reporting
+display_status: admin_facing
+released_on: 2026-06-06
+action_path: "/events/1/dashboard"
+pr_number: 1565
+summary: >-
+  Each event has a dashboard summarizing registrants, organizations, sectors,
+  locations, scholarships, and payments, with drill-in filters.

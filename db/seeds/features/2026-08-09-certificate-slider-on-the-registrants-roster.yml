@@ -1,0 +1,9 @@
+name: "Certificate slider on the registrants roster"
+area: registration
+display_status: admin_facing
+released_on: 2026-08-09
+action_path: "/events/1/roster"
+pr_number: 2107
+summary: >-
+  Mark a registrant's certificate as sent right from the roster with a slider —
+  it stays in sync with the certificate date on their registration.

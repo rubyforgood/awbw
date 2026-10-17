@@ -1,0 +1,8 @@
+name: "Scholarship recipient tracking"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-02-28
+action_path: "/scholarships"
+pr_number: 1262
+summary: >-
+  Track scholarship recipients against event registrations.

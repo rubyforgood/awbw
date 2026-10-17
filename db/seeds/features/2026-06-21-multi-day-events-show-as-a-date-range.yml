@@ -1,0 +1,8 @@
+name: "Multi-day events show as a date range"
+area: events
+display_status: public_facing
+released_on: 2026-06-21
+action_path: "/events"
+pr_number: 1791
+summary: >-
+  Events spanning several days display as a date range with a single daily time.

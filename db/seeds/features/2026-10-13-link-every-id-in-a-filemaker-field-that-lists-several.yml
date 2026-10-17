@@ -1,0 +1,13 @@
+name: "Link every ID in a FileMaker field that lists several"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-13
+pr_number: 2666
+action_path: "/fm_archives"
+summary: >-
+  When a FileMaker archive field holds several IDs — like an activity sent to
+  many people, or a group's member list — each ID now links to its own record
+  instead of the whole list showing as not found.
+pro_tips:
+  - "Long lists show the first 10; click \"Show more\" for the rest."
+  - "A struck-through ID in the list means the archive has no record for it."

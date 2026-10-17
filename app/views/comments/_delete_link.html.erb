@@ -1,0 +1,7 @@
+<%# Deletes right away, outside any surrounding form; data-turbo re-enables Turbo
+    inside record forms that turn it off. Optional: class_name (layout classes). %>
+<%= link_to comment_path(comment),
+            class: "#{local_assigns.fetch(:class_name, "ml-auto")} text-sm text-gray-400 hover:text-red-600",
+            data: { turbo: true, turbo_method: :delete, turbo_confirm: "Delete this comment? This can't be undone." } do %>
+  <i class="fa-solid fa-trash text-2xs"></i> Delete
+<% end %>

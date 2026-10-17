@@ -19,9 +19,9 @@
   <% card_class = "rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm" %>
   <% heading_class = "mb-3 font-semibold text-gray-700" %>
 
-  <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start"><%= f.input :first_name, wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal First Name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { class: "w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "e.g. Oom-BEAR-toh", wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { class: "w-full" } %><div class="w-full md:ml-auto md:w-auto"><%= render "shared/form_image_field", f: f, field_name: :avatar, compact: true %></div></div>
+  <div class="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start"><%= f.input :first_name, hint: "Can be a nickname", wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { value: f.object.first_name || @user&.first_name, class: "w-full" } %><%= f.input :legal_first_name, label: "Legal first name", hint: "If different from first name", wrapper_html: { class: "w-full md:w-fit md:flex-none" }, input_html: { class: "w-full md:w-0 md:min-w-full" } %><%= f.input :last_name, wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { value: f.object.last_name || @user&.last_name, class: "w-full" } %><%= f.input :pronunciation, hint: "e.g. AHN-dray-ah", wrapper_html: { class: "w-full md:w-auto md:flex-1 md:basis-36" }, input_html: { class: "w-full" } %><%= f.input :pronouns, wrapper_html: { class: "w-full md:w-28 md:flex-none" }, input_html: { class: "w-full" } %><div class="w-full md:ml-auto md:w-auto"><%= render "shared/form_image_field", f: f, field_name: :avatar, compact: true %></div></div>
 
-  <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
     <div id="emails" class="emails <%= card_class %> scroll-mt-4">
       <h3 class="<%= heading_class %>">Emails</h3>
       <% if allowed_to?(:manage?, Person) %>
@@ -32,7 +32,7 @@
               <span class="font-medium text-gray-900"><%= f.object.user.email %></span>
               <%= render "people/pending_email_change_badge", person: f.object %>
               <p class="mt-1 text-sm text-gray-500">
-                Only <%= link_to "editable by admins", edit_user_path(f.object.user), class: "underline" %>
+                Edit on <%= link_to "user account", edit_user_path(f.object.user), class: "underline" %>
               </p>
             </div>
           <% else %>
@@ -73,6 +73,7 @@
                                   f,
                                   :contact_methods,
                                   partial: "contact_methods/contact_method_fields",
+                                  data: { association_insertion_node: "this" },
                                   class: button_classes(:secondary_outline) %>
     </div>
   </div>
@@ -86,6 +87,7 @@
     <%= link_to_add_association "➕ Add address",
                                 f,
                                 :addresses,
+                                data: { association_insertion_node: "this" },
                                 class: button_classes(:secondary_outline) %>
   </div>
 
@@ -133,11 +135,11 @@
 
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
-      <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
         <h3 class="<%= heading_class %>">Age ranges</h3>
         <div class="flex flex-1 flex-wrap content-start items-center gap-2"
              data-controller="primary-tag"
-             data-primary-tag-primary-class="border-amber-300 bg-amber-50"
+             data-primary-tag-primary-class="border-lime-500 bg-lime-100"
              data-primary-tag-default-class="border-gray-300 bg-white">
           <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
           <%= f.simple_fields_for :age_range_categorizable_items, age_owner.age_range_items_ordered do |afi| %>
@@ -156,6 +158,33 @@
       </div>
     <% end %>
   </div>
+
+  <!-- Profile-specific Categories (other than age ranges) -->
+  <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
+  <% if other_category_types.present? %>
+    <div class="form-group space-y-4">
+      <% other_category_types.each do |type, cats| %>
+        <div class="<%= card_class %>">
+          <% select_id = "person_category_ids_type_#{type.id}" %>
+          <%= label_tag select_id, type.display_label, class: "block #{heading_class}" %>
+          <div data-controller="searchable-checkbox">
+            <%= select_tag "person[category_ids][]",
+                           options_from_collection_for_select(cats, :id, :name, @selected_category_ids || @person.category_ids),
+                           id: select_id,
+                           multiple: true,
+                           class: "w-full rounded-lg border border-gray-300 bg-white",
+                           data: { searchable_checkbox_target: "select", placeholder: "Add #{type.display_label.downcase}…" } %>
+          </div>
+        </div>
+      <% end %>
+      <% workshop_other = @person.other_workshop_setting_responses %>
+      <% if workshop_other.any? %>
+        <div class="flex flex-wrap gap-2">
+          <%= render "people/other_responses", responses: workshop_other %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 
   <!-- Staff tags (internal, admin-only) -->
   <% if allowed_to?(:manage?, StaffTag) %>
@@ -183,43 +212,17 @@
     </div>
   <% end %>
 
-  <!-- Profile-specific Categories (other than age ranges) -->
-  <% other_category_types = (@person_categories_grouped || {}).reject { |type, _| type.name == "AgeRange" } %>
-  <% if other_category_types.present? %>
-    <div class="form-group space-y-4">
-      <% other_category_types.each do |type, cats| %>
-        <div class="<%= card_class %>">
-          <h3 class="<%= heading_class %>"><%= type.display_label %></h3>
-          <div class="flex flex-wrap gap-3">
-            <% cats.each do |category| %>
-              <%= render "shared/category_checkbox", param_key: "person", category: category,
-                         checked: (@selected_category_ids || @person.category_ids).include?(category.id),
-                         is_age: false,
-                         primary_checked: false %>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-      <% workshop_other = @person.other_workshop_setting_responses %>
-      <% if workshop_other.any? %>
-        <div class="flex flex-wrap gap-2">
-          <%= render "people/other_responses", responses: workshop_other %>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-
   <!-- Organization Affiliations -->
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
   <% if allowed_to?(:manage?, Person) %>
-    <div id="affiliations" class="form-group admin-only scroll-mt-4 rounded-lg border border-gray-200 bg-blue-50 p-4 shadow-sm">
+    <div id="affiliations" class="form-group admin-only scroll-mt-4 rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm">
       <h3 class="<%= heading_class %>">
         Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
       </h3>
 
       <% if params[:admin].present? %>
-        <div class="admin-only mb-4 rounded-lg bg-blue-100 p-4">
+        <div class="admin-only mb-4 rounded-lg border border-blue-200 bg-white p-4">
           <%= f.input :member_since,
                       as: :date,
                       discard_day: true,
@@ -295,6 +298,36 @@
     <%= render "people/owner_affiliations", f: f %>
   <% end %>
 
+  <% if allowed_to?(:manage?, Person) %>
+    <div class="admin-only grid grid-cols-1 items-start gap-x-6 rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+      <%= f.input :racial_ethnic_identity,
+                  label: "Racial/ethnic identity",
+                  input_html: { class: "w-full" } %>
+
+      <%= f.input :filemaker_code,
+                  label: "FileMaker code",
+                  hint: filemaker_code_hint(f.object),
+                  input_html: { class: "w-full" } %>
+
+      <% if person.persisted? %>
+        <div class="mb-4">
+          <div class="mb-1 block font-medium text-gray-700">Mailing list</div>
+          <%= link_to decorated.news_subscriptions_path,
+                      class: "inline-flex items-center gap-1.5 text-sm #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 700)} #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 800, hover: true)}" do %>
+            <i class="fa-solid fa-envelope-open-text"></i>
+            News subscriptions
+          <% end %>
+          <p class="mt-1 text-xs text-gray-500">Mailing-list interest is tracked in topic subscriptions.</p>
+        </div>
+      <% end %>
+
+      <%= f.input :blog_contributor,
+                  as: :boolean,
+                  label: "Blog contributor",
+                  hint: "Adds a badge to their profile." %>
+    </div>
+  <% end %>
+
   <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
     <div class="form-group <%= card_class %>">
       <h3 class="<%= heading_class %>">Background</h3>
@@ -343,36 +376,6 @@
     </div>
   </div>
 
-  <% if allowed_to?(:manage?, Person) %>
-    <div class="admin-only grid grid-cols-1 items-start gap-x-6 rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
-      <%= f.input :racial_ethnic_identity,
-                  label: "Racial/ethnic identity",
-                  input_html: { class: "w-full" } %>
-
-      <%= f.input :filemaker_code,
-                  label: "FileMaker code",
-                  hint: filemaker_code_hint(f.object),
-                  input_html: { class: "w-full" } %>
-
-      <% if person.persisted? %>
-        <div class="mb-4">
-          <div class="mb-1 block font-medium text-gray-700">Mailing list</div>
-          <%= link_to decorated.news_subscriptions_path,
-                      class: "inline-flex items-center gap-1.5 text-sm #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 700)} #{DomainTheme.text_class_for(:topic_subscriptions, intensity: 800, hover: true)}" do %>
-            <i class="fa-solid fa-envelope-open-text"></i>
-            News subscriptions
-          <% end %>
-          <p class="mt-1 text-xs text-gray-500">Mailing-list interest is tracked in topic subscriptions.</p>
-        </div>
-      <% end %>
-
-      <%= f.input :blog_contributor,
-                  as: :boolean,
-                  label: "Blog contributor",
-                  hint: "Adds a badge to their profile." %>
-    </div>
-  <% end %>
-
   <div id="professional-licenses" class="form-group <%= card_class %> scroll-mt-4">
     <h3 class="mb-1 font-semibold text-gray-700">Professional licenses</h3>
     <p class="mb-3 text-sm text-gray-500">Used for continuing-education credit. Once a license has CE registrations it can't be removed, and only an admin can edit it.</p>
@@ -403,7 +406,7 @@
       Updating these preferences applies to how you show up sitewide: stories, workshop variations, the people index, and more.
     </p>
 
-    <div class="grid grid-cols-1 gap-x-6 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-x-6 md:grid-cols-[auto_1fr_1fr]">
       <%= f.input :profile_is_searchable,
                   hint: ("Findable on " + (link_to "people index",
                                                   people_path,

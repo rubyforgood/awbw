@@ -1,0 +1,9 @@
+name: "Feature a recipient shout-out"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-08-09
+action_path: "/events/1/recipients"
+pr_number: 2134
+summary: >-
+  Highlight a scholarship recipient as a shout-out straight from the recipients
+  page.

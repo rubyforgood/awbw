@@ -1,0 +1,14 @@
+name: "People filter: facilitator status"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/people"
+pr_number: 2312
+summary: >-
+  Filter people by their facilitator standing: active, inactive, boomerang (left
+  and came back), or formerly active.
+description: >-
+  Active — a current facilitator term. Inactive — has facilitator terms but none
+  current. Boomerang — left and came back: a current term that began after an
+  earlier facilitator term had ended. Formerly active — a past term genuinely
+  ended and none is current.

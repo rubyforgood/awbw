@@ -1,6 +1,7 @@
 <%# One subject-line group on the combined feed (grouping toggle on). Header shows
     the shared subject and item count; entries render newest-first below. Locals:
-    group (a PersonCommentAndCommunicationAggregator::Group). %>
+    group (a PersonCommentAndCommunicationAggregator::Group). Optional: person and
+    record_targets, passed through to comment rows. %>
 <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
   <div class="mb-2 flex items-center gap-2">
     <i class="fa-solid fa-layer-group text-xs text-gray-400" aria-hidden="true"></i>
@@ -9,7 +10,8 @@
   </div>
   <div class="space-y-2">
     <% group.entries.each do |entry| %>
-      <%= render "comments_and_communications/entry_row", entry: entry %>
+      <%= render "comments_and_communications/entry_row", entry: entry,
+                 person: local_assigns[:person], record_targets: local_assigns[:record_targets] %>
     <% end %>
   </div>
 </div>

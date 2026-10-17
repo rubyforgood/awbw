@@ -1,0 +1,8 @@
+name: "Shareable story links"
+area: stories
+display_status: public_facing
+released_on: 2026-07-08
+action_path: "/stories/1"
+pr_number: 1951
+summary: >-
+  Every story has a friendly, shareable slug URL.

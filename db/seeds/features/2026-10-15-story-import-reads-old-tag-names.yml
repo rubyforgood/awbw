@@ -1,0 +1,13 @@
+name: "Story import reads old tag names"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-15
+pr_number: 2698
+action_path: "/stories/import/new"
+summary: >-
+  The story import now recognizes an old word for a sector or category — like
+  Story Share's own wording — and tags the story with the portal tag it stands for.
+pro_tips:
+  - "A tag's current name always wins; an old word is only checked when nothing goes by that name today."
+  - "A word recorded as meaning nothing on purpose is left off the story without being flagged as missing."
+  - "If an old word stands for more than one tag as the primary sector or population, the story gets all of them and the first one recorded is starred as primary."

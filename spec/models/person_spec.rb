@@ -836,7 +836,7 @@ RSpec.describe Person, type: :model do
       end
     end
 
-    context "age_range_names_all" do
+    context "age_range_ids" do
       let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
       let(:teens) { create(:category, :published, name: "Teens", category_type: age_type) }
       let(:seniors) { create(:category, :published, name: "Seniors", category_type: age_type) }
@@ -845,17 +845,17 @@ RSpec.describe Person, type: :model do
         person_alice.categorizable_items.create!(category: teens)
         person_bob.categorizable_items.create!(category: seniors)
 
-        results = Person.search_by_params(age_range_names_all: "Teens")
+        results = Person.search_by_params(age_range_ids: [ teens.id ])
         expect(results).to include(person_alice)
         expect(results).not_to include(person_bob)
       end
 
-      it "does not match a same-named category from another category type" do
+      it "ignores an ID that isn't an age range category" do
         other_type = create(:category_type, name: "Setting", published: true)
-        other_teens = create(:category, :published, name: "Teens", category_type: other_type)
-        person_bob.categorizable_items.create!(category: other_teens)
+        setting = create(:category, :published, name: "Outdoors", category_type: other_type)
+        person_bob.categorizable_items.create!(category: setting)
 
-        results = Person.search_by_params(age_range_names_all: "Teens")
+        results = Person.search_by_params(age_range_ids: [ setting.id ])
         expect(results).not_to include(person_bob)
       end
     end

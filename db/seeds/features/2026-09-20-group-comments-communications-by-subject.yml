@@ -1,0 +1,9 @@
+name: "Group comments & communications by subject"
+area: communications
+display_status: admin_facing
+released_on: 2026-09-20
+summary: >-
+  A new "Group by subject" toggle clusters items that share a subject line — a
+  comment's topic or an email's subject — instead of one flat list. Off by
+  default, on both the full feed and each record's section.
+action_path: "/comments_and_communications"

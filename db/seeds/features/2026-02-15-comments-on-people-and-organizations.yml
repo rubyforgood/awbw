@@ -1,0 +1,9 @@
+name: "Comments on people and organizations"
+area: people
+display_status: admin_facing
+released_on: 2026-02-15
+action_path: "/people/1"
+pr_number: 996
+summary: >-
+  Leave threaded comments on a person or organization, with optional topic and
+  follow-up flags.

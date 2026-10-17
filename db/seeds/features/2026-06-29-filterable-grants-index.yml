@@ -1,0 +1,8 @@
+name: "Filterable grants index"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-06-29
+action_path: "/grants"
+pr_number: 1920
+summary: >-
+  Browse grants in a fast, filterable list with scholarship theming.

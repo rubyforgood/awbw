@@ -69,9 +69,10 @@ Rails.application.routes.draw do
 
   resources :fm_archives, only: [ :index, :show ]
 
-  # Top-level update lets the aggregated feed flag/edit any comment by id, even
-  # when its commentable has no nested comments route (affiliations, staff tags…).
-  resources :comments, only: [ :index, :update ]
+  # Top-level update/destroy lets the aggregated feeds flag, edit, or delete any
+  # comment by id, even when its commentable has no nested comments route
+  # (affiliations, staff tags…).
+  resources :comments, only: [ :index, :update, :destroy ]
 
   resources :banners
   resources :bookmarks do

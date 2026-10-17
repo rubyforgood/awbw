@@ -86,7 +86,7 @@
       <% end %>
 
       <div data-file-preview-target="filename"
-           class="<%= class_names("max-w-[8rem] text-sm break-all text-gray-500", compact ? "text-left" : "text-center") %>">
+           class="<%= class_names("text-sm break-all text-gray-500", compact ? "w-0 min-w-full text-left" : "max-w-[8rem] text-center") %>">
         <%= if blob.present? && blob.respond_to?(:persisted?) && blob.persisted?
               link_to(blob.filename.to_s, url_for(file), class: "underline cursor-zoom-in", target: "_blank", rel: "noopener noreferrer", title: "Open image in a new tab")
             else

@@ -1,0 +1,9 @@
+name: "Collapsible sections on ticket callout pages"
+area: registration
+display_status: public_facing
+released_on: 2026-07-14
+action_path: "/registration/sample"
+pr_number: 1979
+summary: >-
+  Callout detail pages render expandable sections from the admin's content, so
+  long instructions and FAQs stay tidy.

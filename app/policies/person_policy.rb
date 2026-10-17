@@ -28,8 +28,8 @@ class PersonPolicy < ApplicationPolicy
 
   SHARED_ONLY_FILTERS = {
     contact_info: :shared_contact_info,
-    sector_names_all: :shared_sector_names_all,
-    age_range_names_all: :shared_age_range_names_all,
+    sector_ids: :shared_sector_ids,
+    age_range_ids: :shared_age_range_ids,
     organization_name: :shared_organization_name,
     organization_id: :shared_organization_id
   }.freeze

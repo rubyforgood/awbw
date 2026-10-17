@@ -17,37 +17,38 @@ class PersonCommentAggregator
   end
 
   def comments
-    scopes = [
-      scope_for("Person", [ @person.id ]),
-      scope_for("Affiliation", affiliation_ids),
-      scope_for("EventRegistration", registration_ids),
-      scope_for("Scholarship", scholarship_ids),
-      scope_for("ContinuingEducationRegistration", ce_registration_ids),
-      scope_for("TopicSubscription", topic_subscription_ids),
-      scope_for("FormSubmission", form_submission_ids),
-      scope_for("StaffTagging", staff_tagging_ids),
-      scope_for("Report", monthly_report_ids),
-      scope_for("WorkshopIdea", workshop_idea_ids),
-      scope_for("WorkshopLog", workshop_log_ids),
-      scope_for("WorkshopVariation", workshop_variation_ids),
-      scope_for("WorkshopVariationIdea", workshop_variation_idea_ids),
-      scope_for("Story", story_ids),
-      scope_for("StoryIdea", story_idea_ids),
-      scope_for("Grant", grant_ids),
-      scope_for("User", user_ids)
-    ]
+    scopes = commentable_ids_by_type.map { |type, ids| Comment.where(commentable_type: type, commentable_id: ids) }
     scopes.reduce { |combined, scope| combined.or(scope) }
       .includes(:commentable, :created_by, :updated_by)
       .newest_first
   end
 
+  # commentable_type => ids of the person's records that can carry comments.
+  def commentable_ids_by_type
+    @commentable_ids_by_type ||= {
+      "Person" => [ @person.id ],
+      "Affiliation" => affiliation_ids,
+      "EventRegistration" => registration_ids,
+      "Scholarship" => scholarship_ids,
+      "ContinuingEducationRegistration" => ce_registration_ids,
+      "TopicSubscription" => topic_subscription_ids,
+      "FormSubmission" => form_submission_ids,
+      "StaffTagging" => staff_tagging_ids,
+      "Report" => monthly_report_ids,
+      "WorkshopIdea" => workshop_idea_ids,
+      "WorkshopLog" => workshop_log_ids,
+      "WorkshopVariation" => workshop_variation_ids,
+      "WorkshopVariationIdea" => workshop_variation_idea_ids,
+      "Story" => story_ids,
+      "StoryIdea" => story_idea_ids,
+      "Grant" => grant_ids,
+      "User" => user_ids
+    }
+  end
+
   private
 
   attr_reader :person
-
-  def scope_for(type, ids)
-    Comment.where(commentable_type: type, commentable_id: ids)
-  end
 
   def affiliation_ids
     person.affiliations.ids

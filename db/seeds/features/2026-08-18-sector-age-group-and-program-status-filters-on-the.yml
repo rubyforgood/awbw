@@ -1,0 +1,12 @@
+name: "Sector, age group and program-status filters on the organization index"
+area: people
+display_status: user_facing
+released_on: 2026-08-18
+action_path: "/organizations"
+pr_number: 1993
+summary: >-
+  The organization list gains Sectors and Age group columns, filterable by sector,
+  age group and program status.
+pro_tips:
+  - Sector and age group match the organization's own tags plus its affiliated
+    people's primary tags.

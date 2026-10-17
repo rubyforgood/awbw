@@ -1,0 +1,9 @@
+name: "Pay for others in one submission"
+area: payments
+display_status: public_facing
+released_on: 2026-06-08
+action_path: "/events"
+pr_number: 1600
+summary: >-
+  A bulk-payment ticket lets one payer cover several participants at once and
+  allocate the total across them.

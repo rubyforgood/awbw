@@ -1,0 +1,10 @@
+name: "Bulk portal login invites from the reminders page"
+area: communications
+display_status: admin_facing
+released_on: 2026-08-11
+action_path: "/events/1/preview_reminder"
+pr_number: 2168
+summary: >-
+  Switch the bulk reminder tool into invite mode to send portal login invitations
+  to a filtered set of registrants in one pass, creating accounts for anyone who
+  doesn't have one yet.

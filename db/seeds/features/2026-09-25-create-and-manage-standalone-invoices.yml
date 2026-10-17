@@ -1,0 +1,10 @@
+name: "Create and manage standalone invoices"
+area: payments
+display_status: admin_facing
+released_on: 2026-09-25
+pr_number: 2558
+action_path: "/invoices"
+summary: >-
+  Admins can now create, edit, and delete one-off invoices right in the portal
+  — each with its own billed-to details and any number of line items — from a
+  new Invoices page, for charges that don't come from an event registration.

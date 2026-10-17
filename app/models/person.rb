@@ -311,14 +311,17 @@ class Person < ApplicationRecord
     joins(:topic_subscriptions)
       .where(topic_subscriptions: { topic_subscription_type_id: ids, unsubscribed_at: nil })
       .distinct }
-  scope :age_range_names_all, ->(name) {
-    return all if name.blank?
-    joins(categories: :category_type)
-      .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
-      .where("LOWER(categories.name) = ?", name.to_s.strip.downcase)
-      .distinct }
-  scope :shared_sector_names_all, ->(names) { where(profile_show_sectors: true).sector_names_all(names) }
-  scope :shared_age_range_names_all, ->(name) { where(profile_show_age_ranges: true).age_range_names_all(name) }
+  scope :with_sector_ids, ->(ids) {
+    ids = Array(ids).compact_blank
+    return all if ids.empty?
+    where(id: SectorableItem.where(sectorable_type: polymorphic_name, sector_id: ids).select(:sectorable_id)) }
+  scope :with_age_range_ids, ->(ids) {
+    ids = Array(ids).compact_blank
+    return all if ids.empty?
+    age_range_ids = Category.age_ranges.where(id: ids).select(:id)
+    where(id: CategorizableItem.where(categorizable_type: polymorphic_name, category_id: age_range_ids).select(:categorizable_id)) }
+  scope :shared_sector_ids, ->(ids) { where(profile_show_sectors: true).with_sector_ids(ids) }
+  scope :shared_age_range_ids, ->(ids) { where(profile_show_age_ranges: true).with_age_range_ids(ids) }
   scope :shared_organization_name, ->(name) { where(profile_show_affiliations: true).organization_name(name) }
   scope :shared_organization_id, ->(organization_id) { where(profile_show_affiliations: true).organization_id(organization_id) }
   scope :by_role, ->(role) {
@@ -380,10 +383,10 @@ class Person < ApplicationRecord
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
     results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?
     results = results.subscribed_to_topic(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
-    results = results.sector_names_all(params[:sector_names_all]) if params[:sector_names_all].present?
-    results = results.shared_sector_names_all(params[:shared_sector_names_all]) if params[:shared_sector_names_all].present?
-    results = results.age_range_names_all(params[:age_range_names_all]) if params[:age_range_names_all].present?
-    results = results.shared_age_range_names_all(params[:shared_age_range_names_all]) if params[:shared_age_range_names_all].present?
+    results = results.with_sector_ids(params[:sector_ids]) if params[:sector_ids].present?
+    results = results.shared_sector_ids(params[:shared_sector_ids]) if params[:shared_sector_ids].present?
+    results = results.with_age_range_ids(params[:age_range_ids]) if params[:age_range_ids].present?
+    results = results.shared_age_range_ids(params[:shared_age_range_ids]) if params[:shared_age_range_ids].present?
     results = results.category_names_all(params[:category_names_all]) if params[:category_names_all].present?
     results = results.organization_name(params[:organization_name]) if params[:organization_name].present?
     results = results.shared_organization_name(params[:shared_organization_name]) if params[:shared_organization_name].present?

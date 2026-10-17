@@ -1,0 +1,9 @@
+name: "Filter form submissions by several forms at once"
+area: content
+display_status: admin_facing
+released_on: 2026-08-25
+action_path: /form_submissions
+summary: >-
+  The Form filter on the form submissions list is now multi-select, so you can view submissions
+  across several forms together — e.g. a collaboration agreement alongside its new-job and
+  reinstatement copies.

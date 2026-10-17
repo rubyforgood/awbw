@@ -1,0 +1,12 @@
+name: "Auto-filled organization details when linking a registration"
+area: people
+display_status: admin_facing
+released_on: 2026-08-11
+action_path: "/events/1/registrants"
+pr_number: 2140
+summary: >-
+  Linking a registrant to an organization now fills in the org's type, website,
+  and address from what the registrant typed, and records exactly what changed.
+pro_tips:
+  - "The linking page lists every value that was filled in, so you can double-check before moving on."
+  - "Existing org details are never overwritten — the portal only fills blanks and flags anything that conflicts."

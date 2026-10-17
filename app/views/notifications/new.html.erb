@@ -30,7 +30,7 @@
 
           <div>
             <span class="mb-1 block text-sm font-medium text-gray-700">From</span>
-            <span class="inline-flex items-center gap-2 rounded bg-sky-100 px-2 py-1 text-sm text-sky-800">
+            <span class="inline-flex items-center gap-2 rounded <%= DomainTheme.bg_class_for(:notifications, intensity: 100) %> px-2 py-1 text-sm <%= DomainTheme.text_class_for(:notifications) %>">
               <i class="fa-solid fa-user text-xs"></i><%= current_user.full_name %>
             </span>
             <p class="mt-1 text-xs text-gray-500">You are recorded as the sender.</p>

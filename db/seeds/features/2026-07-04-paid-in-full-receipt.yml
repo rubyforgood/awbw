@@ -1,0 +1,8 @@
+name: "Paid-in-full receipt"
+area: payments
+display_status: public_facing
+released_on: 2026-07-04
+action_path: "/events"
+pr_number: 1830
+summary: >-
+  A receipt is available once a registration is paid in full.

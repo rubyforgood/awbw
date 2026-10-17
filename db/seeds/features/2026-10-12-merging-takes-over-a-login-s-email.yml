@@ -1,0 +1,13 @@
+name: "Merging takes over a login's email"
+area: people
+display_status: admin_facing
+released_on: 2026-10-12
+pr_number: 2644
+action_path: "/people/dedupe_index"
+summary: >-
+  When the person you keep has no login but the other person does, the kept
+  person takes over that login and their primary email becomes the login email,
+  the same as linking a login.
+pro_tips:
+  - "The merge preview warns you when this will happen. The email you chose there is kept as the secondary email."
+  - "If the kept person already has their own login, their primary email is left as you chose it."

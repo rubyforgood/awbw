@@ -1,0 +1,9 @@
+name: "Resend a stuck or failed communication from the list"
+area: communications
+display_status: admin_facing
+released_on: 2026-10-05
+summary: >-
+  A pending or failed communication now has a Resend button right on the
+  communications list, so you can re-send a stuck email without opening it first.
+pro_tips:
+  - "Resending takes you to that communication's page with a confirmation; Devise emails (password resets, confirmations) have no button because they carry a one-time security token."

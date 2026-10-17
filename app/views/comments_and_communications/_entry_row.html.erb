@@ -1,7 +1,9 @@
 <%# Dispatches one feed entry to its row partial: a comment, a manually-logged
-    communication (editable), or an automated email (read-only). Locals: entry. %>
+    communication (editable), or an automated email (read-only). Locals: entry.
+    Optional: person and record_targets, passed through to comment rows. %>
 <% if entry.is_a?(Comment) %>
-  <%= render "comments_and_communications/comment_row", entry: entry %>
+  <%= render "comments_and_communications/comment_row", entry: entry,
+             person: local_assigns[:person], record_targets: local_assigns[:record_targets] %>
 <% elsif entry.manual_log? %>
   <%= render "comments_and_communications/communication_row", entry: entry %>
 <% else %>

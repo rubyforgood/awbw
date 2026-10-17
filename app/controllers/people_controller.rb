@@ -142,6 +142,7 @@ class PeopleController < ApplicationController
     @person = @person.decorate
 
     base = PersonCommentAggregator.new(@person).comments
+    @comment_targets = helpers.person_record_targets(@person)
 
     if turbo_frame_request?
       filtered = base.search_by_params(params)
@@ -153,7 +154,6 @@ class PeopleController < ApplicationController
       @total_count = base.count
       @flagged_count = base.flagged.count
       @new_comment = Comment.new
-      @comment_targets = helpers.person_record_targets(@person)
       track_view("person_all_comments", { person_id: @person.id })
     end
   end
