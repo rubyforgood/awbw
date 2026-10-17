@@ -25,12 +25,12 @@ class NotificationDecorator < ApplicationDecorator
   PORTAL_SENDER_NAME = "AWBW Portal".freeze
 
   # At-a-glance audience pill for the compact row/index and detail page — only
-  # the two exceptions are flagged: a dark comms-blue for an incoming message (the
+  # the two exceptions are flagged: a dark comms color for an incoming message (the
   # person wrote to us — see #incoming_badge, which darkens it further than the
   # channel chip) and teal for an admin "FYI" copy (recipient_role "admin"). A
   # regular message to the person is the norm and shows no pill.
   AUDIENCE_META = {
-    "incoming" => { label: "Incoming", classes: "bg-sky-100 text-sky-800" },
+    "incoming" => { label: "Incoming", classes: "#{DomainTheme.bg_class_for(:notifications, intensity: 100)} #{DomainTheme.text_class_for(:notifications)}" },
     "fyi" => { label: "FYI", classes: "bg-teal-100 text-teal-800" }
   }.freeze
 

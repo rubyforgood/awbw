@@ -3,6 +3,10 @@ class AddressDecorator < ApplicationDecorator
     name
   end
 
+  def address_type_label
+    address_type&.humanize
+  end
+
   def detail(length: nil)
     "Address for #{addressable&.name}"
   end

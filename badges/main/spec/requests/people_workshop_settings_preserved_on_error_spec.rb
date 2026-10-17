@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# Workshop-settings category checkboxes are applied through
+# Workshop-settings category selections are applied through
 # TagAssignable#assign_associations, which only runs on a successful save. When a
 # validation error (e.g. a malformed email) re-renders the edit form, the just-
 # submitted selections must still reflect what the admin checked — not silently
@@ -12,8 +12,8 @@ RSpec.describe "People edit — workshop settings preserved on validation error"
 
   before { sign_in create(:user, :admin) }
 
-  def checkbox_for(category)
-    Nokogiri::HTML(response.body).at_css("#person_category_ids_#{category.id}")
+  def option_for(category)
+    Nokogiri::HTML(response.body).at_css("#person_category_ids_type_#{category.category_type_id} option[value='#{category.id}']")
   end
 
   it "keeps a newly-checked workshop setting checked after an email validation error" do
@@ -26,7 +26,7 @@ RSpec.describe "People edit — workshop settings preserved on validation error"
     }
 
     expect(response).to have_http_status(:unprocessable_content)
-    expect(checkbox_for(category)&.[]("checked")).to eq("checked")
+    expect(option_for(category)["selected"]).to eq("selected")
   end
 
   it "keeps an unchecked workshop setting unchecked after an email validation error" do
@@ -41,6 +41,6 @@ RSpec.describe "People edit — workshop settings preserved on validation error"
     }
 
     expect(response).to have_http_status(:unprocessable_content)
-    expect(checkbox_for(category)&.[]("checked")).to be_nil
+    expect(option_for(category)["selected"]).to be_nil
   end
 end
