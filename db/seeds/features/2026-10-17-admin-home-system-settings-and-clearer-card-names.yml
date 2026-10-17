@@ -1,4 +1,4 @@
-name: "Admin home: system settings & details section and clearer card names"
+name: "Admin home: system settings & details section, action counts, and clearer card names"
 area: reporting
 display_status: admin_facing
 released_on: 2026-10-17
@@ -11,3 +11,4 @@ summary: >-
 pro_tips:
   - "Renamed cards: Portal activity is now Activity, Licenses is now Professional licenses, and Resource roles is now Smart resource settings."
   - "Tagging counts now sits in Base data next to the categories, sectors, and staff tags it counts."
+  - "Data health and Author credit divergences show how many items are waiting. The counts load a moment after the page."
