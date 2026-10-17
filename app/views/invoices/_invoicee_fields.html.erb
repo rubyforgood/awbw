@@ -15,9 +15,10 @@
   <div class="hidden" data-invoicee-target="addressContainer">
     <%= f.input :bill_to_address_id,
           as: :select,
-          collection: invoice.bill_to_address.present? ? [ [ invoice.bill_to_address.name, invoice.bill_to_address_id ] ] : [],
+          collection: invoice.bill_to_address.present? ? [ [ invoice.bill_to_address.decorate.picker_label, invoice.bill_to_address_id ] ] : [],
           include_blank: "No address",
           label: "Address",
+          hint: "Any of the invoicee's addresses can be billed to. One marked as their invoice address is listed first, and is the one dynamic invoices use.",
           input_html: { class: "bg-white", data: { invoicee_target: "addressSelect" } } %>
   </div>
 

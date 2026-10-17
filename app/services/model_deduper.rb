@@ -309,16 +309,35 @@ class ModelDeduper
     scope
   end
 
-  # Columns (other than the FK) of a unique index that includes the FK. A
-  # soft-delete index (one containing `deleted_at`) is skipped: MySQL treats NULLs
-  # as distinct, so `[owner, deleted_at]` does NOT bound live rows to one per owner
-  # (pay_customers), and collapsing on it would destroy a row the DB happily keeps.
+  # Columns (other than the FK) of a unique index that includes the FK. An index
+  # keyed on a NULL-distinct marker is skipped, because MySQL treats NULLs as
+  # distinct so it does NOT bound rows to one per owner, and collapsing on it would
+  # destroy rows the DB happily keeps: a soft-delete index (`[owner, deleted_at]`,
+  # on pay_customers), and a role-flag index (`[owner, invoice_address]`, on
+  # addresses, where NULL means "not the flagged one" so an owner may hold many).
+  NULL_DISTINCT_MARKERS = %w[ deleted_at invoice_address ].freeze
+
+  # Role flags an owner may hold on at most one of its rows. The survivor's flag wins a
+  # merge, so the dupe's is released before its rows move onto the survivor and meet the
+  # flag's unique index.
+  ROLE_FLAG_COLUMNS = %w[ invoice_address ].freeze
+
+  def release_role_flags(primary, dupe, join)
+    flags = join[:join_class].column_names & ROLE_FLAG_COLUMNS
+    flags.each do |flag|
+      next unless join_references(join, primary.id).where(flag => true).exists?
+
+      released = join_references(join, dupe.id).where(flag => true).update_all(flag => nil)
+      logger.info "  released #{released} #{join[:join_class].name} #{flag}" if released > 0
+    end
+  end
+
   def natural_key_columns(join_klass, fk)
     join_klass.connection.indexes(join_klass.table_name)
       .select(&:unique)
       .map { |index| Array(index.columns) }
       .select { |cols| cols.include?(fk) }
-      .reject { |cols| cols.include?("deleted_at") }
+      .reject { |cols| cols.intersect?(NULL_DISTINCT_MARKERS) }
       .map { |cols| (cols - [ fk ]).map(&:to_sym) }
       .find(&:present?) || []
   end
@@ -426,6 +445,7 @@ class ModelDeduper
     natural_key = join[:natural_key]
 
     detach_self_reference(primary, dupe, join)
+    release_role_flags(primary, dupe, join)
 
     if natural_key.empty?
       moved = join_references(join, dupe.id).update_all(fk => primary.id)

@@ -16,6 +16,17 @@ RSpec.describe "Addresses", type: :request do
       expect(response.parsed_body["addresses"].first["label"]).to include("2 New St")
     end
 
+    it "names the address marked for invoices and lists it first" do
+      older.update!(invoice_address: true)
+
+      get "/addresses/options", params: { addressable_sgid: person.to_sgid.to_s }
+
+      labels = response.parsed_body["addresses"].map { |a| a["label"] }
+      expect(labels.first).to include("1 Old St").and include("invoice address")
+      expect(labels.last).to include("2 New St")
+      expect(labels.last).not_to include("invoice address")
+    end
+
     it "leaves out inactive addresses" do
       older.update!(inactive: true)
 

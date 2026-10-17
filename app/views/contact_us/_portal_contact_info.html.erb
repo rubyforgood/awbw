@@ -10,7 +10,7 @@
     <div class="mb-1 text-sm font-semibold tracking-wide text-gray-500 uppercase">
       Email
     </div>
-    <%= mail_to Organization.info_email,
+    <%= mail_to Setting.info_email,
                 class: "text-blue-600 hover:text-blue-800 font-medium" %>
   </div>
   <div>
@@ -18,10 +18,13 @@
       Mailing address
     </div>
     <address class="leading-relaxed text-gray-700 not-italic">
-      Attn: Zachery Scott, Executive Director<br>
-      A Window Between Worlds<br>
-      1029 1/2 W 24th Street<br>
-      Los Angeles, CA 90007
+      <% if (attention = Setting.contact_attention) %>
+        Attn: <%= attention %><br>
+      <% end %>
+      <%= app_organization_name %>
+      <% if (address_lines = Setting.organization_address_lines).any? %>
+        <br><%= safe_join(address_lines, tag.br) %>
+      <% end %>
     </address>
   </div>
 </div>

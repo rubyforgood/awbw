@@ -153,7 +153,7 @@ module Events
         noticeable: event_registration,
         kind: :event_registration_confirmation_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0
       )
     end

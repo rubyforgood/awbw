@@ -12,13 +12,13 @@ class EventMailer < ApplicationMailer
     @notification_type = "Event registration confirmation"
 
     @time_zone = @person.user&.time_zone || Time.zone.name
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
     @organization_website  = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: confirmation_subject(changes)
     )
   end
@@ -42,12 +42,12 @@ class EventMailer < ApplicationMailer
     # Itemized invoice for this payment — public to the payer (no account) for
     # bulk-payment submissions, same as their ticket. Returns to the ticket page.
     @invoice_url = event_invoice_url(@submission.event, submission_id: @submission.id, return_to: "bulk_payment_ticket") if @submission.event.present?
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
 
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: "AWBW Portal: Payment submission received for #{@event&.title}"
     )
   end
@@ -72,7 +72,7 @@ class EventMailer < ApplicationMailer
     @notification_type = "Event registration reminder"
 
     @time_zone = @person.user&.time_zone || Time.zone.name
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
     @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
 
     # Admins can override the subject from the bulk-reminder page; fall back to
@@ -80,8 +80,8 @@ class EventMailer < ApplicationMailer
     # page's pre-fill so the preview and the delivered email can't drift apart.
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: @custom_subject || @event.default_reminder_subject(time_zone: @time_zone)
     )
   end
@@ -101,13 +101,13 @@ class EventMailer < ApplicationMailer
     @hide_ticket_button = hide_ticket_button
     @notification_type = "Event registration reminder"
     @time_zone = Time.zone.name
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
 
     count = @recipient_labels.size
     mail(
-      to: Organization.programs_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      to: Setting.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: "AWBW Portal: [FYI] Reminder sent to #{count} registrant#{'s' if count != 1} for #{@event.title}"
     )
   end
@@ -121,12 +121,12 @@ class EventMailer < ApplicationMailer
 
     @time_zone = @person.user&.time_zone || Time.zone.name
     @event_url = event_url(@event, reg: @event_registration.slug)
-    @organization_name = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    @organization_name = Setting.app_organization_name
 
     mail(
       to: @person.preferred_email,
-      from: self.class.sender(Organization.no_reply_email),
-      reply_to: Organization.programs_email,
+      from: self.class.sender(Setting.no_reply_email),
+      reply_to: Setting.programs_email,
       subject: "AWBW Portal: #{@event_registration.registration_subject_noun.capitalize} cancelled for #{@event.title}"
     )
   end
