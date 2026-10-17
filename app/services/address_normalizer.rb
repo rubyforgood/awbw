@@ -41,7 +41,8 @@ module AddressNormalizer
   }.freeze
 
   US_COUNTRY = "us"
-  US_COUNTRY_NAMES = [ "us", "usa", "united states", "united states of america", "america" ].freeze
+  # Compared with spaces removed, so spaced initials ("U. S. A.") match too.
+  US_COUNTRY_NAMES = %w[us usa america unitedstates unitedstatesofamerica usofamerica].freeze
   US_STATES = Address::US_STATE_ABBREVIATIONS.map(&:downcase).to_set.freeze
 
   def street(value)
@@ -73,8 +74,8 @@ module AddressNormalizer
 
   # A blank country on an address in a US state is the US.
   def country(value, in_state: nil)
-    key = words(value).join(" ")
-    return US_COUNTRY if US_COUNTRY_NAMES.include?(key)
+    key = words(value).join(" ").delete_prefix("the ")
+    return US_COUNTRY if US_COUNTRY_NAMES.include?(key.delete(" "))
     return US_COUNTRY if key.blank? && US_STATES.include?(state(in_state))
 
     key

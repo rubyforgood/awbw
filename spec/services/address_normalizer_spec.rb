@@ -53,6 +53,13 @@ RSpec.describe AddressNormalizer do
     expect(described_class.country("Canada")).to eq("canada")
   end
 
+  it "reads spaced initials and a leading \"the\" in a US country name as the US" do
+    [ "U. S. A.", "U. S.", "U.S. of America", "the United States" ].each do |value|
+      expect(described_class.country(value)).to eq("us"), value
+    end
+    expect(described_class.country("United Kingdom")).to eq(described_class.country("united  kingdom."))
+  end
+
   it "drops a trailing county" do
     expect(described_class.county("Los Angeles County")).to eq(described_class.county("los angeles"))
   end
