@@ -1,0 +1,29 @@
+<%# One column of the populations-served breakdown: each tag the org's active
+    people hold, with a bar split into primary and additional holders. %>
+<section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+  <div class="mb-4 flex items-baseline justify-between gap-3">
+    <h2 class="font-display text-2xl text-gray-900"><%= title %></h2>
+    <span class="flex items-center gap-3 text-xs text-gray-500">
+      <span class="inline-flex items-center gap-1"><span class="h-2 w-3 rounded-sm <%= DomainTheme.bg_class_for(domain, intensity: 500) %>"></span>Primary</span>
+      <span class="inline-flex items-center gap-1"><span class="h-2 w-3 rounded-sm <%= DomainTheme.bg_class_for(domain, intensity: 200) %>"></span>Additional</span>
+    </span>
+  </div>
+  <% if rows.any? %>
+    <ul class="space-y-3">
+      <% rows.each do |row| %>
+        <li>
+          <div class="mb-1 flex items-baseline justify-between gap-3 text-sm">
+            <%= link_to row.tag.name, taggings_path(link_param => row.tag.name), class: "font-medium text-gray-800 hover:underline" %>
+            <span class="whitespace-nowrap text-gray-600"><span class="font-semibold text-gray-900"><%= row.primary_count %></span> primary · <%= row.additional_count %> additional</span>
+          </div>
+          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100" title="<%= pluralize(row.total, "person") %> of <%= people_count %>">
+            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 500) %>" style="width: <%= 100.0 * row.primary_count / people_count %>%"></div>
+            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 200) %>" style="width: <%= 100.0 * row.additional_count / people_count %>%"></div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-gray-500 italic">None listed by active people.</p>
+  <% end %>
+</section>

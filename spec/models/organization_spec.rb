@@ -348,7 +348,7 @@ RSpec.describe Organization do
     let!(:inactive_person_org) { create(:organization, name: "Inactive Person Org") }
 
     before do
-      direct_org.tag_age_groups(primary_ids: [], additional_ids: [ teen.id ])
+      direct_org.categorizable_items.create!(category: teen)
       direct_org.sectorable_items.create!(sector: sector, is_primary: false)
 
       primary_person = create(:person)
@@ -442,7 +442,7 @@ RSpec.describe Organization do
     end
 
     it "rolls up only actively affiliated people's primary age groups, ignoring the org's own tags" do
-      organization.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [ teen.id ])
+      organization.categorizable_items.create!(category: adult, is_primary: true)
       person_a.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
       person_b.tag_age_groups(primary_ids: [ young.id ], additional_ids: [ teen.id ])
       former.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])

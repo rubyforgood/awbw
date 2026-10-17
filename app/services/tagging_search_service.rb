@@ -70,7 +70,7 @@ class TaggingSearchService
               end,
 
       organizations: authorized_scope(Organization.all)
-                  .includes(:sectors)
+                  .includes(affiliations: { person: Organization::PEOPLE_TAGGINGS })
                   .sector_names_all(sector_names_all)
                   .category_names_all(category_names_all)
                   .order(:name)

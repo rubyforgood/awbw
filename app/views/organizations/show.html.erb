@@ -176,11 +176,6 @@
                 <% else %>
                   <p class="text-gray-500 italic">None listed by active people.</p>
                 <% end %>
-                <div class="mt-4">
-                  <%= link_to "Explore sector data",
-                              populations_served_organization_path(@organization),
-                              class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-                </div>
               </div>
             <% end %>
             <% if show_age %>
@@ -188,6 +183,11 @@
                 <h2 class="mb-3 font-display text-2xl text-gray-900">Age groups served</h2>
                 <%= render "shared/age_group_tags", primary: age_groups %>
               </div>
+            <% end %>
+          </div>
+          <div class="mt-4">
+            <%= link_to populations_served_organization_path(@organization), class: "text-sm #{eyebrow_link_class} px-2 py-1" do %>
+              See all sectors and age groups <i class="fa-solid fa-arrow-right text-xs"></i>
             <% end %>
           </div>
         </div>

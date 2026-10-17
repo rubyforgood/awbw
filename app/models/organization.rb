@@ -1,5 +1,5 @@
 class Organization < ApplicationRecord
-  include RemoteSearchable, TagFilterable, Trendable, WindowsTypeFilterable, SectorsTaggable, AgeGroupTaggable # Publishable
+  include RemoteSearchable, Trendable, WindowsTypeFilterable # Publishable
   include Communicable
   include FilemakerCoded
   filemaker_archived_in FmProject, FmOrganization
@@ -168,24 +168,60 @@ class Organization < ApplicationRecord
     [ "Never active", "never_active" ]
   ].freeze
 
-  scope :active_people_sector_name, ->(name) {
-    next all if name.blank?
-    where(id: Affiliation.active.joins(person: { sectorable_items: :sector })
-                .where(sectorable_items: { is_primary: true })
-                .where("LOWER(sectors.name) = ?", name.to_s.downcase)
+  # Tag search for orgs: like TagFilterable (matches ALL names), but sectors and
+  # age ranges match through actively affiliated people's primary tags. Other
+  # category types (workshop settings) are still entered on the org itself.
+  scope :sector_names_all, ->(names) {
+    parsed = TagFilterable.parse_names(names)
+    next all if parsed.empty?
+
+    where(id: Organization.active_people_primary_sectors.where("LOWER(sectors.name) IN (?)", parsed)
+                .group(:organization_id)
+                .having("COUNT(DISTINCT LOWER(sectors.name)) = ?", parsed.size)
                 .select(:organization_id))
   }
 
-  scope :active_people_age_group_name, ->(name) {
-    next all if name.blank?
-    age_category_ids = Category.joins(:category_type)
-                               .where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE })
-                               .where("LOWER(categories.name) = ?", name.to_s.downcase)
-                               .select(:id)
-    where(id: Affiliation.active.joins(person: :categorizable_items)
-                .where(categorizable_items: { is_primary: true, category_id: age_category_ids })
-                .select(:organization_id))
+  scope :category_names_all, ->(names) {
+    parsed = TagFilterable.parse_names(names)
+    next all if parsed.empty?
+
+    age_names = Category.age_ranges.where("LOWER(categories.name) IN (?)", parsed).pluck(Arel.sql("LOWER(categories.name)")).uniq
+    own_names = parsed - age_names
+    scope = all
+    if age_names.any?
+      scope = scope.where(id: Organization.active_people_primary_age_groups.where("LOWER(categories.name) IN (?)", age_names)
+                                .group(:organization_id)
+                                .having("COUNT(DISTINCT LOWER(categories.name)) = ?", age_names.size)
+                                .select(:organization_id))
+    end
+    if own_names.any?
+      scope = scope.where(id: Organization.unscoped.joins(:categories).where("LOWER(categories.name) IN (?)", own_names)
+                                .group("organizations.id")
+                                .having("COUNT(DISTINCT LOWER(categories.name)) = ?", own_names.size)
+                                .select("organizations.id"))
+    end
+    scope
   }
+
+  def self.active_people_primary_sectors
+    Affiliation.active.joins(person: { sectorable_items: :sector }).where(sectorable_items: { is_primary: true })
+  end
+
+  def self.active_people_primary_age_groups
+    Affiliation.active.joins(person: { categorizable_items: :category })
+               .where(categorizable_items: { is_primary: true, category_id: Category.age_ranges.select(:id) })
+  end
+
+  # Org counts per tag for the tag matrix, matching the tag-search scopes above.
+  def self.sector_tag_counts
+    active_people_primary_sectors.group("sectorable_items.sector_id").distinct.count(:organization_id)
+  end
+
+  def self.category_tag_counts
+    own = published.joins(:categories).where.not(categories: { id: Category.age_ranges.select(:id) })
+                   .group("categories.id").count
+    own.merge(active_people_primary_age_groups.group("categorizable_items.category_id").distinct.count(:organization_id))
+  end
 
   scope :organization_ids, ->(organization_ids) { where(id: organization_ids.to_s.split("-").map(&:to_i)) }
   scope :project_ids, ->(project_ids) { where(id: project_ids.to_s.split("-").map(&:to_i)) }
@@ -194,8 +230,8 @@ class Organization < ApplicationRecord
   def self.search_by_params(params)
     organizations = is_a?(ActiveRecord::Relation) ? self : all
     organizations = organizations.search(params[:query]) if params[:query].present?
-    organizations = organizations.active_people_sector_name(params[:sector_name]) if params[:sector_name].present?
-    organizations = organizations.active_people_age_group_name(params[:age_group_name]) if params[:age_group_name].present?
+    organizations = organizations.sector_names_all(params[:sector_names_all].presence || params[:sector_name])
+    organizations = organizations.category_names_all(params[:category_names_all].presence || params[:age_group_name])
     organizations = organizations.address(params[:address]) if params[:address].present?
     organizations = organizations.organization_ids(params[:organization_ids]) if params[:organization_ids].present?
     organizations = organizations.program_status(params[:program_status]) if params[:program_status].present?
@@ -315,6 +351,28 @@ class Organization < ApplicationRecord
     active_people.flat_map(&:primary_age_groups).uniq
   end
 
+  # How many active people hold each primary sector / age group, keyed by the tag.
+  def active_people_tag_counts
+    active_people.flat_map { |person| [ person.primary_sector, *person.primary_age_groups ].compact }.tally
+  end
+
+  TagBreakdown = Data.define(:tag, :primary_count, :additional_count) do
+    def total = primary_count + additional_count
+  end
+
+  # Every sector active people hold, primary or additional, for the full breakdown page.
+  def active_people_sector_breakdown
+    tag_breakdown(active_people.flat_map { |person|
+      person.sectorable_items.filter_map { |item| [ item.sector, item.is_primary? ] if item.sector && item.sector.name != Sector::OTHER_SECTOR_NAME }
+    })
+  end
+
+  def active_people_age_group_breakdown
+    tag_breakdown(active_people.flat_map { |person|
+      person.primary_age_groups.map { |group| [ group, true ] } + person.additional_age_groups.map { |group| [ group, false ] }
+    })
+  end
+
   # Reads preloaded affiliations, so a list page that nests PEOPLE_TAGGINGS under
   # them costs no queries per row.
   def active_people
@@ -347,6 +405,13 @@ class Organization < ApplicationRecord
   end
 
   private
+
+  # Most-held first, then alphabetical.
+  def tag_breakdown(tag_and_primary_pairs)
+    tag_and_primary_pairs.group_by(&:first)
+      .map { |tag, pairs| TagBreakdown.new(tag:, primary_count: pairs.count(&:last), additional_count: pairs.count { |pair| !pair.last }) }
+      .sort_by { |row| [ -row.total, row.tag.name.to_s.downcase ] }
+  end
 
   def affiliation_dates_locked
     if start_date_changed?

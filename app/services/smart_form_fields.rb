@@ -111,15 +111,14 @@ class SmartFormFields
       title: "Sector and age group tagging",
       summary: "These answers are record ids, not text: the options come from Sector and Age range " \
                "records rather than from options typed into the form editor. The tags are applied to " \
-               "the registrant and to their linked organization. Submitting both a primary and an " \
-               "additional selection overwrites the person's tags with the latest; submitting only a " \
-               "primary reassigns it and leaves their other tags in place. An organization's tags " \
-               "accumulate across its members rather than being overwritten.",
+               "the registrant only; an organization shows its active people's primary tags. Submitting " \
+               "both a primary and an additional selection overwrites the person's tags with the latest; " \
+               "submitting only a primary reassigns it and leaves their other tags in place.",
       fields: [
-        [ "primary_sector", "Primary sector", "Tags the person and organization with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
-        [ "additional_sectors", "Additional sectors", "Tags the person and organization with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],
-        [ "primary_age_group", "Primary age group(s) served", "Tags the person and organization with the primary age range served." ],
-        [ "additional_age_groups", "Additional age group(s) served", "Tags the person and organization with additional age ranges served." ]
+        [ "primary_sector", "Primary sector", "Tags the person with one primary sector. Offers no \"Other\" — a primary sector must be a real sector." ],
+        [ "additional_sectors", "Additional sectors", "Tags the person with any number of additional sectors. An \"Other\" answer goes to the Other responses review queue, where it can be promoted into a real sector." ],
+        [ "primary_age_group", "Primary age group(s) served", "Tags the person with the primary age range served." ],
+        [ "additional_age_groups", "Additional age group(s) served", "Tags the person with additional age ranges served." ]
       ]
     },
     {

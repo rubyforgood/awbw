@@ -81,6 +81,12 @@ class OrganizationDecorator < ApplicationDecorator
     name
   end
 
+  # [tag, count] for each searched tag the org's active people roll up to, in search order.
+  def tag_search_totals(tag_names)
+    by_name = object.active_people_tag_counts.to_h { |tag, count| [ tag.name.downcase, [ tag, count ] ] }
+    TagFilterable.parse_names(tag_names).filter_map { |name| by_name[name] }
+  end
+
   def affiliated_since_date
     @affiliated_since_date ||= affiliations.minimum(:start_date)
   end

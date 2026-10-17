@@ -211,8 +211,6 @@ class OrganizationsController < ApplicationController
 
   def populations_served
     authorize! @organization
-
-    @sectors_by_people = @organization.active_people.filter_map(&:primary_sector).tally.sort_by { |_sector, count| -count }
   end
 
   private

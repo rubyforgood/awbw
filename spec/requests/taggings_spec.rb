@@ -130,4 +130,33 @@ RSpec.describe "Taggings index", type: :request do
       expect(response.body).to include("Art for Healing")
     end
   end
+
+  describe "organization results" do
+    let!(:organization) { create(:organization, name: "Sunrise Center") }
+
+    before do
+      2.times do
+        person = create(:person)
+        create(:sectorable_item, sector: sector_2, sectorable: person, is_primary: true)
+        create(:affiliation, organization: organization, person: person)
+      end
+      sign_in create(:user, :admin)
+    end
+
+    it "shows each org's active-people total for the searched sector, linking to its profile" do
+      get taggings_path(sector_names_all: "Youth")
+
+      page = Capybara.string(response.body)
+      expect(page).to have_link("Sunrise Center", href: organization_path(organization))
+      expect(page).to have_content("Youth 2*")
+      expect(page).to have_content("* Number of people actively affiliated")
+    end
+
+    it "counts the org on the tag matrix from its active people" do
+      get taggings_matrix_path
+
+      expect(response).to have_http_status(:ok)
+      expect(Organization.sector_tag_counts).to eq(sector_2.id => 1)
+    end
+  end
 end

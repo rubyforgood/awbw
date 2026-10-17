@@ -88,7 +88,8 @@ class Sector < ApplicationRecord
     end
   end
   scope :has_published_taggings, -> {
-    subqueries = Tag::TAGGABLE_META.map do |_key, data|
+    # Organizations carry no sectors of their own; theirs roll up from their people.
+    subqueries = Tag::TAGGABLE_META.except(:organizations).map do |_key, data|
       klass = data[:klass]
       klass.published
            .joins(:sectorable_items)

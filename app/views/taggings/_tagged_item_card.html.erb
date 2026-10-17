@@ -65,6 +65,19 @@
         <% end %>
       </div>
 
+      <% if item.is_a?(OrganizationDecorator) %>
+        <% totals = item.tag_search_totals(local_assigns[:tag_names]) %>
+        <% if totals.any? %>
+          <div class="mb-2 flex flex-wrap gap-1.5">
+            <% totals.each do |tag, count| %>
+              <span class="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-700">
+                <%= tag.name %> <span class="font-semibold"><%= count %>*</span>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+
       <!-- OPTIONAL DESCRIPTION -->
       <% if item.detail.present? %>
         <p class="line-clamp-3 text-sm leading-snug text-gray-600">
