@@ -77,12 +77,13 @@
                            placeholder: "Reason or note (shared with the requester) — optional when resolving, please add one when declining",
                            class: "w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-200" %>
         <div class="flex flex-wrap gap-2">
-          <%= form.submit "Mark as resolved", class: button_classes(:secondary_outline, size: :sm) %>
+          <%= form.submit "Mark as resolved", class: button_classes(:secondary_outline, size: :sm),
+                          data: { turbo_confirm: request.resolve_confirm } %>
           <button type="submit"
                   formaction="<%= decline_profile_change_request_path(request.object) %>"
                   formmethod="post"
                   class="<%= button_classes(:danger_outline, size: :sm) %>"
-                  data-turbo-confirm="Decline this request?">Decline</button>
+                  data-turbo-confirm="<%= request.decline_confirm %>">Decline</button>
         </div>
       <% end %>
     </div>

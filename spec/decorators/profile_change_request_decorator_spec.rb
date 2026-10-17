@@ -32,4 +32,26 @@ RSpec.describe ProfileChangeRequestDecorator do
       expect(request.profile_return_path).to eq("/people/#{request.person.to_param}/edit")
     end
   end
+
+  describe "review confirm prompts" do
+    let(:requester) { build_stubbed(:user, email: "requester@example.com") }
+    let(:request) { build_stubbed(:profile_change_request, :other, requested_by: requester).decorate }
+
+    it "tells the admin approving that the requester gets an email" do
+      expect(request.approve_confirm).to eq("Approve and apply this change now? This emails #{requester.full_name} (requester@example.com).")
+    end
+
+    it "tells the admin resolving that the requester gets an email with the note" do
+      expect(request.resolve_confirm).to eq("Mark this request as resolved? This emails #{requester.full_name} (requester@example.com), including your note.")
+    end
+
+    it "tells the admin declining that the requester gets an email with the note" do
+      expect(request.decline_confirm).to eq("Decline this request? This emails #{requester.full_name} (requester@example.com), including your note.")
+    end
+
+    it "skips the email notice when the requester has no email" do
+      request = build_stubbed(:profile_change_request, :other, requested_by: nil).decorate
+      expect(request.decline_confirm).to eq("Decline this request?")
+    end
+  end
 end

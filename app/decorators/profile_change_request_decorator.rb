@@ -69,9 +69,22 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     h.edit_person_path(person, anchor: anchor)
   end
 
-  # Confirmation prompt for "Approve", spelling out the blast radius where the
-  # change reaches beyond this one person (renaming a shared organization).
+  # Every review action emails the requester, so each prompt says who gets it.
   def approve_confirm
+    with_email_notice(approve_change_confirm)
+  end
+
+  def resolve_confirm
+    with_email_notice("Mark this request as resolved?", with_note: true)
+  end
+
+  def decline_confirm
+    with_email_notice("Decline this request?", with_note: true)
+  end
+
+  # Spells out the blast radius where the change reaches beyond this one person
+  # (renaming a shared organization).
+  def approve_change_confirm
     case field
     when "primary_email"
       "Approve and send a confirmation email to #{requested_value}?"
@@ -102,6 +115,14 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
   def org_rename_confirm(org, new_name)
     count = org ? org.affiliations.count : 0
     "Rename \"#{org&.name}\" to \"#{new_name}\"? #{helpers.pluralize(count, "affiliation")} across the portal use this organization."
+  end
+
+  def with_email_notice(prompt, with_note: false)
+    email = requested_by&.email
+    return prompt if email.blank?
+
+    notice = "#{prompt} This emails #{requested_by.full_name} (#{email})"
+    with_note ? "#{notice}, including your note." : "#{notice}."
   end
 
   # Where "Update manually" sends an admin to make the edit by hand.

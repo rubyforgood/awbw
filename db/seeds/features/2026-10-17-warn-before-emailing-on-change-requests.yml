@@ -1,0 +1,10 @@
+name: "Warning before a change request review emails the requester"
+area: people
+display_status: admin_facing
+released_on: 2026-10-17
+action_path: "/profile_change_requests"
+summary: >-
+  Approve, Mark as resolved, and Decline each email the person who asked for
+  the change. Each button now asks you to confirm first and says who gets the email.
+pro_tips:
+  - "Your note goes into the email when you resolve or decline, so write it for the requester."
