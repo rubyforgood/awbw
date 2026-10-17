@@ -7,7 +7,7 @@
         <h1 class="text-primary mt-2 font-display text-2xl font-semibold">Dedupe addresses</h1>
         <p class="mt-1 text-gray-500">
           People and organizations with the same address saved more than once — including spellings
-          like "N Main St" and "North Main Street", and a copy missing its ZIP or street. Folding keeps
+          like "N Main St" and "North Main Street", and a copy missing its ZIP or street. Merging keeps
           one copy — the active one, then the primary, then the oldest — fills in anything it's missing
           from the others, and moves their contact methods, invoices, and affiliations onto it.
         </p>
@@ -16,8 +16,8 @@
         <%= button_to dedupe_perform_addresses_path,
                       class: button_classes(:primary, extra: "whitespace-nowrap"),
                       form_class: "shrink-0",
-                      form: { data: { turbo_confirm: "Fold duplicate addresses on all #{pluralize(@groups.size, "record")}?" } } do %>
-          <i class="fa-solid fa-broom"></i> Fold all (<%= @groups.sum(&:folded_count) %>)
+                      form: { data: { turbo_confirm: "Merge duplicate addresses on all #{pluralize(@groups.size, "record")}?" } } do %>
+          <i class="fa-solid fa-broom"></i> Merge all (<%= @groups.sum(&:merged_count) %>)
         <% end %>
       <% end %>
     </div>
@@ -34,7 +34,7 @@
                             class: "#{DomainTheme.text_class_for(group.addressable.model_name.plural.to_sym, intensity: 700)} hover:underline" %>
                 <span class="font-normal text-gray-400">· <%= group.addressable.model_name.human %></span>
               </h3>
-              <%= button_to "Fold #{pluralize(group.folded_count, "duplicate")}",
+              <%= button_to "Merge #{pluralize(group.merged_count, "duplicate")}",
                             dedupe_perform_addresses_path,
                             params: { addressable_sgid: group.addressable.to_sgid(for: AddressesController::DEDUPE_PURPOSE).to_s },
                             class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap"),

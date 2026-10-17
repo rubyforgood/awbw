@@ -23,15 +23,15 @@ class AddressesController < ApplicationController
   def dedupe_perform
     authorize! :dedupe, to: :dedupe?
     addressables = dedupe_targets
-    folded = addressables.sum { |addressable| fold_addresses(addressable) }
+    merged = addressables.sum { |addressable| merge_addresses(addressable) }
 
-    track_event("dedupe.address", { owners: addressables.size, addresses_folded: folded })
+    track_event("dedupe.address", { owners: addressables.size, addresses_merged: merged })
     redirect_to dedupe_index_addresses_path,
-      notice: "Folded #{helpers.pluralize(folded, "duplicate address")} across #{helpers.pluralize(addressables.size, "record")}."
+      notice: "Merged #{helpers.pluralize(merged, "duplicate address")} across #{helpers.pluralize(addressables.size, "record")}."
   rescue ActionPolicy::Unauthorized
     raise
   rescue StandardError => e
-    redirect_to dedupe_index_addresses_path, alert: "Error folding addresses: #{e.message}"
+    redirect_to dedupe_index_addresses_path, alert: "Error merging addresses: #{e.message}"
   end
 
   private
@@ -45,7 +45,7 @@ class AddressesController < ApplicationController
     [ addressable ]
   end
 
-  def fold_addresses(addressable)
+  def merge_addresses(addressable)
     ActiveRecord::Base.transaction do
       before = addressable.addresses.count
       AddressDeduper.fold(addressable)

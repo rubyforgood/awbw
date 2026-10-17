@@ -25,10 +25,10 @@ RSpec.describe "Address dedupe", type: :request do
       get dedupe_index_addresses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Duplicate Org", person.full_name, "Fold all (3)")
+      expect(response.body).to include("Duplicate Org", person.full_name, "Merge all (3)")
     end
 
-    it "folds one owner's duplicates" do
+    it "merges one owner's duplicates" do
       contact_method = create(:contact_method, contactable: org, address: org_addresses.last)
 
       post dedupe_perform_addresses_path, params: { addressable_sgid: sgid(org) }
@@ -40,7 +40,7 @@ RSpec.describe "Address dedupe", type: :request do
       expect(person.addresses.count).to eq(3)
     end
 
-    it "folds every owner when no record is given" do
+    it "merges every owner when no record is given" do
       post dedupe_perform_addresses_path
 
       expect(flash[:notice]).to include("3 duplicate addresses across 2 records")
@@ -51,7 +51,7 @@ RSpec.describe "Address dedupe", type: :request do
     it "rejects a signed id minted for another purpose" do
       post dedupe_perform_addresses_path, params: { addressable_sgid: org.to_sgid.to_s }
 
-      expect(flash[:alert]).to include("Error folding addresses")
+      expect(flash[:alert]).to include("Error merging addresses")
       expect(org.addresses.count).to eq(2)
     end
   end
@@ -59,7 +59,7 @@ RSpec.describe "Address dedupe", type: :request do
   context "as a regular user" do
     before { sign_in create(:user) }
 
-    it "denies the page and the fold" do
+    it "denies the page and the merge" do
       get dedupe_index_addresses_path
       expect(response).to redirect_to(root_path)
 

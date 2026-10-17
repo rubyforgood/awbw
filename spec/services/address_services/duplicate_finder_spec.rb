@@ -20,7 +20,7 @@ RSpec.describe AddressServices::DuplicateFinder do
 
     expect(groups.map(&:addressable)).to eq([ org ])
     expect(groups.first.duplicate_sets).to eq([ [ first, second ] ])
-    expect(groups.first.folded_count).to eq(1)
+    expect(groups.first.merged_count).to eq(1)
   end
 
   it "ignores the same address on different owners" do

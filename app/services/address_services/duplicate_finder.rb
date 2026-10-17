@@ -9,7 +9,7 @@ module AddressServices
         addressable.try(:full_name).presence || addressable.name
       end
 
-      def folded_count
+      def merged_count
         duplicate_sets.sum { |addresses| addresses.size - 1 }
       end
     end
