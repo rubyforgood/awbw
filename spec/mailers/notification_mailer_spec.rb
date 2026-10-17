@@ -1,6 +1,22 @@
 require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
+  describe "#profile_change_reviewed" do
+    let(:request) { create(:profile_change_request, :secondary_email, status: "declined", reviewer_note: "Please send proof") }
+    let(:notification) do
+      create(:notification, kind: "profile_change_reviewed", noticeable: request,
+             recipient_role: "person", recipient_email: "requester@example.com")
+    end
+
+    it "tells the requester the outcome and includes the staff note" do
+      mail = described_class.profile_change_reviewed(notification)
+
+      expect(mail.subject).to eq(NotificationMailer::PROFILE_CHANGE_REVIEWED_SUBJECT)
+      expect(mail.html_part.body.decoded).to include("<strong>declined</strong>")
+      expect(mail.html_part.body.decoded).to include("Please send proof")
+    end
+  end
+
   describe "#bulk_payment_confirmation_fyi" do
     let(:event) { create(:event) }
     let(:form) do

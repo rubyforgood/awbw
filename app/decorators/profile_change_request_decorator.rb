@@ -82,11 +82,9 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     with_email_notice("Decline this request?")
   end
 
-  def review_email_notice
+  def review_email_recipient
     email = requested_by&.email
-    return if email.blank?
-
-    "Approve, Mark as resolved, and Decline each email #{requested_by.full_name} (#{email}), including your note."
+    "#{requested_by.full_name} <#{email}>" if email.present?
   end
 
   # Spells out the blast radius where the change reaches beyond this one person

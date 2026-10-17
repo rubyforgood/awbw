@@ -1,0 +1,13 @@
+<div class="group relative ml-auto inline-flex cursor-help items-center gap-1 text-xs text-gray-500">
+  <i class="fa-solid fa-envelope"></i> An email will be sent
+  <div class="absolute right-0 bottom-full z-50 mb-1 hidden w-96 rounded-lg bg-white text-left text-sm whitespace-normal text-gray-700 shadow-lg ring-1 ring-gray-200 group-hover:block">
+    <div class="space-y-0.5 rounded-t-lg border-b border-gray-200 bg-gray-50 px-4 py-2 text-xs text-gray-500">
+      <div><span class="font-medium text-gray-700">To:</span> <%= request.review_email_recipient %></div>
+      <div><span class="font-medium text-gray-700">Subject:</span> <%= NotificationMailer::PROFILE_CHANGE_REVIEWED_SUBJECT %></div>
+    </div>
+    <div class="px-4 pt-3 pb-1">
+      <%= render "notification_mailer/profile_change_reviewed_body", request: request.object,
+                 outcome: "completed (or declined)", note: "[Your note, if you add one]" %>
+    </div>
+  </div>
+</div>

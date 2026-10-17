@@ -80,13 +80,8 @@
                 formaction="<%= decline_profile_change_request_path(request.object) %>"
                 class="<%= button_classes(:danger_outline, size: :sm) %>"
                 data-turbo-confirm="<%= request.decline_confirm %>">Decline</button>
-        <% if request.review_email_notice %>
-          <span class="group relative ml-auto inline-flex cursor-help items-center gap-1 text-xs text-gray-500">
-            <i class="fa-solid fa-envelope"></i> An email will be sent
-            <span class="absolute right-0 bottom-full z-50 mb-1 hidden w-64 rounded-lg bg-blue-100 p-3 text-xs whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover:block">
-              <%= request.review_email_notice %>
-            </span>
-          </span>
+        <% if request.review_email_recipient %>
+          <%= render "profile_change_requests/email_preview", request: request %>
         <% end %>
       </div>
     <% end %>

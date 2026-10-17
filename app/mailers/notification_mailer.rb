@@ -5,6 +5,7 @@ class NotificationMailer < ApplicationMailer
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
+  PROFILE_CHANGE_REVIEWED_SUBJECT = "#{SUBJECT_PREFIX} Update on your change request".freeze
 
   def event_registration_confirmation_fyi(notification)
     @event_registration = notification.noticeable
@@ -261,7 +262,7 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       to: notification.recipient_email,
-      subject: "#{SUBJECT_PREFIX} Update on your change request"
+      subject: PROFILE_CHANGE_REVIEWED_SUBJECT
     )
   end
 

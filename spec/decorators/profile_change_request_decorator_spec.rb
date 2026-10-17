@@ -49,14 +49,14 @@ RSpec.describe ProfileChangeRequestDecorator do
       expect(request.decline_confirm).to eq("Decline this request? This emails #{requester.full_name} (requester@example.com), including your note.")
     end
 
-    it "explains who gets emailed for the hover hint" do
-      expect(request.review_email_notice).to include("each email #{requester.full_name} (requester@example.com)")
+    it "names who gets emailed for the email preview" do
+      expect(request.review_email_recipient).to eq("#{requester.full_name} <requester@example.com>")
     end
 
     it "skips the email notice when the requester has no email" do
       request = build_stubbed(:profile_change_request, :other, requested_by: nil).decorate
       expect(request.decline_confirm).to eq("Decline this request?")
-      expect(request.review_email_notice).to be_nil
+      expect(request.review_email_recipient).to be_nil
     end
   end
 end
