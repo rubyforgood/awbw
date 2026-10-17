@@ -192,10 +192,9 @@ module PersonServices
       [ Date::MONTHNAMES, Date::ABBR_MONTHNAMES ].filter_map { |names| names.index { |name| name&.casecmp?(value) } }.first
     end
 
-    # The archive's who-they-serve fields tag the person through the same seam a
-    # submission uses — additive, since the import is never the whole picture. A primary
-    # the person already holds stays; the archive's then lands as additional and is
-    # returned as a difference to note.
+    # The archive's who-they-serve fields tag the person additively, since the import is
+    # never the whole picture. A primary the person already holds stays; the archive's
+    # then lands as additional and is returned as a difference to note.
     def tag_service_areas(person, data)
       primary = translate(data, PRIMARY_TAG_FIELDS)
       additional = translate(data, ADDITIONAL_TAG_FIELDS)
@@ -215,7 +214,7 @@ module PersonServices
         difference = [ PRIMARY_TAG_LABELS[tag_with], names(model, held_ids), names(model, primary_ids) ] unless (primary_ids - held_ids).empty?
         primary_ids, additional_ids = [], primary_ids + additional_ids
       end
-      SubmissionTagging.apply(person:, organizations: [], tag_with:, primary_ids:, additional_ids:)
+      person.public_send(tag_with, primary_ids:, additional_ids:) if (primary_ids + additional_ids).any?
       difference
     end
 
