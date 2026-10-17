@@ -6,7 +6,8 @@
 # FileMaker, the older forms, Story Share or the portal's earlier sector list.
 #
 # Idempotent and safe to re-run: a term already recorded for a tag is left alone, so an
-# alias an admin added by hand survives. Run after the sectors and age ranges are seeded —
+# alias an admin added by hand survives, while a proposed row the tables no longer name is
+# withdrawn so an edited proposal takes effect. Run after the sectors and age ranges are seeded —
 # a term whose tag doesn't exist yet is reported, not created.
 #
 #   bin/rails data:seed_tag_aliases
