@@ -153,5 +153,50 @@ RSpec.describe "Person aggregated comments", type: :request do
       expect(comment.reload.body).to eq("Edited")
       expect(response.body).to include("Edited")
     end
+
+    it "offers the person's records in a Logged against picker with the current one selected" do
+      user = create(:user, person: person)
+      comment = create(:comment, commentable: user, body: "On the account")
+
+      get all_comments_person_path(person), headers: frame_headers
+
+      picker = Nokogiri::HTML(response.body).at_css("##{ActionView::RecordIdentifier.dom_id(comment, :commentable_sgid)}")
+      expect(picker.css("option").map(&:text)).to include("Profile", "User account")
+      expect(picker.at_css("option[selected]").text).to eq("User account")
+    end
+
+    it "moves the comment to the record chosen in the picker" do
+      user = create(:user, person: person)
+      comment = create(:comment, commentable: user, body: "Meant for the profile")
+
+      patch person_comment_path(person, comment),
+            params: { aggregated: "1", for_person_id: person.id, commentable_sgid: person.to_sgid.to_s, comment: { body: "Meant for the profile" } },
+            as: :turbo_stream
+
+      expect(comment.reload.commentable).to eq(person)
+    end
+
+    it "keeps the comment where it is when the target can't be resolved" do
+      comment = create(:comment, commentable: person, body: "Stay put")
+
+      patch person_comment_path(person, comment),
+            params: { aggregated: "1", for_person_id: person.id, commentable_sgid: "tampered", comment: { body: "Stay put" } },
+            as: :turbo_stream
+
+      expect(comment.reload.commentable).to eq(person)
+    end
+
+    it "shows a Delete link that removes the comment and its row" do
+      comment = create(:comment, commentable: person, body: "Mistake")
+
+      get all_comments_person_path(person), headers: frame_headers
+      row = Nokogiri::HTML(response.body).at_css("##{ActionView::RecordIdentifier.dom_id(comment)}")
+      expect(row.at_css("a[data-turbo-method='delete'][href='#{comment_path(comment)}']")).to be_present
+
+      expect {
+        delete comment_path(comment), as: :turbo_stream
+      }.to change(Comment, :count).by(-1)
+      expect(response.body).to include(%(action="remove"), ActionView::RecordIdentifier.dom_id(comment))
+    end
   end
 end

@@ -36,4 +36,22 @@ RSpec.describe "Comments", type: :request do
       expect(comment.reload).not_to be_flagged
     end
   end
+
+  describe "DELETE /comments/:id" do
+    it "deletes the comment" do
+      comment = create(:comment, commentable: person, body: "Filed by mistake.")
+
+      expect {
+        delete comment_path(comment), headers: { "HTTP_REFERER" => edit_person_path(person) }
+      }.to change(Comment, :count).by(-1)
+      expect(response).to redirect_to(edit_person_path(person))
+    end
+
+    it "forbids non-admins" do
+      comment = create(:comment, commentable: person, body: "Staff only.")
+      sign_in create(:user)
+
+      expect { delete comment_path(comment) }.not_to change(Comment, :count)
+    end
+  end
 end

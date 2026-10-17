@@ -41,12 +41,25 @@ class CommentsController < ApplicationController
   def update
     @comment = Comment.find(params[:id])
     authorize! @comment
+    target = commentable_target
+    @comment.commentable = target if target
     @comment.update(comment_params)
-    setup_aggregated_context if aggregated?
+    setup_aggregated_context
 
     respond_to do |format|
       format.turbo_stream
       format.html { redirect_back fallback_location: root_path }
+    end
+  end
+
+  def destroy
+    @comment = Comment.find(params[:id])
+    authorize! @comment
+    @comment.destroy!
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back fallback_location: root_path, notice: "Comment deleted." }
     end
   end
 
@@ -82,7 +95,7 @@ class CommentsController < ApplicationController
     # chosen record as a signed GlobalID rather than a per-target route. Signed,
     # so the type/id can't be tampered with.
     if params[:commentable_sgid].present?
-      @commentable = GlobalID::Locator.locate_signed(params[:commentable_sgid])
+      @commentable = commentable_target
       redirect_to(root_path, alert: "Invalid commentable resource") unless @commentable
     elsif params[:person_id]
       @commentable = Person.find(params[:person_id])
@@ -103,6 +116,12 @@ class CommentsController < ApplicationController
     else
       redirect_to root_path, alert: "Invalid commentable resource"
     end
+  end
+
+  def commentable_target
+    return if params[:commentable_sgid].blank?
+
+    GlobalID::Locator.locate_signed(params[:commentable_sgid])
   end
 
   def comment_params

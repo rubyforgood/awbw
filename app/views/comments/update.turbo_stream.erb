@@ -1,10 +1,10 @@
 <% if params[:combined] %>
   <%= turbo_stream.replace dom_id(@comment) do %>
-    <%= render "comments_and_communications/comment_row", entry: @comment %>
+    <%= render "comments_and_communications/comment_row", entry: @comment, person: @aggregator_person, record_targets: @comment_targets %>
   <% end %>
 <% elsif params[:aggregated] %>
   <%= turbo_stream.replace dom_id(@comment) do %>
-    <%= render "comments/aggregated_comment", comment: @comment.decorate, person: @aggregator_person %>
+    <%= render "comments/aggregated_comment", comment: @comment.decorate, person: @aggregator_person, record_targets: @comment_targets %>
   <% end %>
 <% else %>
   <%= turbo_stream.replace dom_id(@comment, :flag) do %>
