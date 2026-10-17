@@ -77,7 +77,8 @@
     </div>
 
     <div class="shrink-0 pb-1">
-      <%= render "shared/search_clear", url: clear_path %>
+      <%# The header names the person, so clearing their feed reloads the whole page. %>
+      <%= render "shared/search_clear", url: clear_path, full_page: person.present? %>
     </div>
   </div>
 
