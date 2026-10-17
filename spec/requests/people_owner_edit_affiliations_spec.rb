@@ -29,4 +29,11 @@ RSpec.describe "Owner view of affiliations on the person edit form", type: :requ
     expect(response.body).to include("Add an organization")
     expect(response.body).not_to include("field=organization_name")
   end
+
+  it "makes the whole role row open its change request" do
+    get edit_person_path(person)
+
+    row_link = Nokogiri::HTML(response.body).at_css("a[href*='field=affiliation']")
+    expect(row_link.text).to include("Facilitator", "Jan 2018 – Jun 2020", "Request a change")
+  end
 end
