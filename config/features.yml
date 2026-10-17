@@ -4688,3 +4688,14 @@
   summary: >-
     Person and organization edit pages now show only the workshop settings
     chosen. Click the box to search and add more, or click the x on one to remove it.
+
+- name: "Comments are blue, communications are purple"
+  area: communications
+  display_status: admin_facing
+  released_on: 2026-10-17
+  pr_number: 2709
+  summary: >-
+    Comments now show in blue and communications in purple. Comments are private
+    to admins, so they share the blue used for other admin-only information.
+  pro_tips:
+    - "The Incoming pill and the incoming/outgoing switch on a communication are purple too."
