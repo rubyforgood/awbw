@@ -29,22 +29,17 @@
       </div>
     </div>
 
-    <!-- Sector name -->
-    <div class="w-full md:flex-1">
-      <%= label_tag :sector_names_all, "Sector name(s)", class: search_label_class %>
-      <div class="relative">
-        <%= text_field_tag :sector_names_all, params[:sector_names_all],
-                           class: search_field_class(extra: "pr-10"),
-                           placeholder: "" %>
-        <%= render "shared/search_submit" %>
-      </div>
-    </div>
+    <!-- Sector -->
+    <%= render "shared/filter_multiselect", param: :sector_ids, label: "Sector",
+          options: Sector.published.excluding_other.order(:name).map { |s| [ s.name, s.id ] },
+          selected: Array(params[:sector_ids]).map(&:to_i), placeholder: "Any sector",
+          wrapper_class: "w-full md:flex-1" %>
 
     <!-- Age range -->
-    <%= render "events/filter_select", param: :age_range_names_all, label: "Age range",
-          options: Category.age_ranges.published.ordered_by_position_and_name.map { |c| [ c.decorate.age_group_label, c.name ] },
-          selected: params[:age_range_names_all], blank: "Any age range",
-          field_class: search_field_class, wrapper_class: "w-full md:w-56" %>
+    <%= render "shared/filter_multiselect", param: :age_range_ids, label: "Age range",
+          options: Category.age_ranges.published.ordered_by_position_and_name.map { |c| [ c.decorate.age_group_label, c.id ] },
+          selected: Array(params[:age_range_ids]).map(&:to_i), placeholder: "Any age range",
+          wrapper_class: "w-full md:flex-1" %>
 
     <!-- Clear filters -->
     <div class="w-full md:ml-auto md:w-auto">
@@ -57,26 +52,26 @@
       <p class="mb-3 text-xs font-semibold tracking-wide text-blue-800 uppercase">Admin-only filters</p>
       <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <!-- Role -->
-        <%= render "events/filter_select", param: :role, label: "Role",
+        <%= render "shared/filter_select", param: :role, label: "Role",
               options: Person::ROLE_FILTER_OPTIONS, selected: params[:role],
               blank: "All people", field_class: search_field_class,
               wrapper_class: "w-full" %>
 
         <!-- Facilitator status -->
-        <%= render "events/filter_select", param: :facilitator_status, label: "Facilitator status",
+        <%= render "shared/filter_select", param: :facilitator_status, label: "Facilitator status",
               options: Person::FACILITATOR_STATUS_FILTER_OPTIONS, selected: params[:facilitator_status],
               blank: "Any status", field_class: search_field_class,
               wrapper_class: "w-full" %>
 
         <!-- Membership status -->
-        <%= render "events/filter_select", param: :membership_status, label: "Membership status",
+        <%= render "shared/filter_select", param: :membership_status, label: "Membership status",
               options: Person::MEMBERSHIP_STATUS_FILTER_OPTIONS, selected: params[:membership_status],
               blank: "Any status", field_class: search_field_class,
               wrapper_class: "w-full" %>
 
         <!-- Staff tag -->
         <% if allowed_to?(:index?, StaffTag) %>
-          <%= render "events/filter_multiselect", param: :staff_tag_ids, label: "Staff tag",
+          <%= render "shared/filter_multiselect", param: :staff_tag_ids, label: "Staff tag",
                 options: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
                 selected: Array(params[:staff_tag_ids]).map(&:to_i), placeholder: "Any",
                 wrapper_class: "w-full",
@@ -84,7 +79,7 @@
         <% end %>
 
         <!-- Topic subscription -->
-        <%= render "events/filter_multiselect", param: :topic_subscription_type_id, label: "Topic subscription",
+        <%= render "shared/filter_multiselect", param: :topic_subscription_type_id, label: "Topic subscription",
               options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
               selected: Array(params[:topic_subscription_type_id]).map(&:to_i), placeholder: "Any topic",
               wrapper_class: "w-full",

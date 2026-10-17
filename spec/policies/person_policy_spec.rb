@@ -341,12 +341,12 @@ RSpec.describe PersonPolicy, type: :policy do
       ActionController::Parameters.new(
         contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
         topic_subscription_type_id: [ "2" ], facilitator_status: "active",
-        membership_status: "paid", sector_names_all: "Arts", age_range_names_all: "Teens",
+        membership_status: "paid", sector_ids: [ "4" ], age_range_ids: [ "5" ],
         organization_name: "Acme", organization_id: "3"
       )
     end
 
-    let(:shared_filter_keys) { %w[shared_contact_info shared_sector_names_all shared_age_range_names_all shared_organization_name shared_organization_id] }
+    let(:shared_filter_keys) { %w[shared_contact_info shared_sector_ids shared_age_range_ids shared_organization_name shared_organization_id] }
 
     def index_filters_for(user)
       policy_for(record: Person, user: user)
@@ -371,8 +371,8 @@ RSpec.describe PersonPolicy, type: :policy do
 
     it "narrows a non-admin's sector and age range filters to what profiles share" do
       filters = index_filters_for(regular_user)
-      expect(filters[:shared_sector_names_all]).to eq("Arts")
-      expect(filters[:shared_age_range_names_all]).to eq("Teens")
+      expect(filters[:shared_sector_ids]).to eq([ "4" ])
+      expect(filters[:shared_age_range_ids]).to eq([ "5" ])
     end
 
     it "narrows a non-admin's organization filters to shared affiliations" do
