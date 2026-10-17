@@ -25,7 +25,7 @@ RSpec.describe "Address dedupe", type: :request do
       get dedupe_index_addresses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Duplicate Org", person.full_name, "Merge 1 duplicate", "Merge 2 duplicates")
+      expect(response.body).to include("Duplicate Org", person.full_name, "Merge 1 duplicate", "Merge 2 duplicates", "Merge all (3)")
       expect(response.body.scan(">Keep<").size).to eq(2)
       expect(response.body.scan(">Merge<").size).to eq(3)
     end
@@ -50,6 +50,14 @@ RSpec.describe "Address dedupe", type: :request do
       expect(person.addresses.count).to eq(3)
     end
 
+    it "queues a background merge of every record" do
+      expect { post dedupe_perform_all_addresses_path }.to have_enqueued_job(MergeDuplicateAddressesJob)
+
+      expect(response).to redirect_to(dedupe_index_addresses_path)
+      expect(flash[:notice]).to include("in the background")
+      expect(org.addresses.count).to eq(2)
+    end
+
     it "rejects a signed id minted for another purpose" do
       post dedupe_perform_addresses_path, params: { addressable_sgid: org.to_sgid.to_s }
 
@@ -68,6 +76,8 @@ RSpec.describe "Address dedupe", type: :request do
       post dedupe_perform_addresses_path
       expect(response).to redirect_to(root_path)
       expect(org.addresses.count).to eq(2)
+
+      expect { post dedupe_perform_all_addresses_path }.not_to have_enqueued_job(MergeDuplicateAddressesJob)
     end
   end
 
