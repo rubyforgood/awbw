@@ -12,8 +12,8 @@
   <% editor = comment.last_editor %>
   <% editor_color = chip_color(editor&.id) %>
   <div class="mt-1 flex items-center gap-1.5 text-xs whitespace-nowrap text-gray-400">
-    <span>Last edited <%= comment.edited_timestamp %></span>
     <span class="<%= editor_color[0] %> <%= editor_color[1] %> cursor-default rounded px-1.5 py-0.5"
           title="<%= editor&.full_name %>"><%= editor&.decorate&.initials.presence || "--" %></span>
+    <span><%= comment.edited_timestamp %></span>
   </div>
 <% end %>

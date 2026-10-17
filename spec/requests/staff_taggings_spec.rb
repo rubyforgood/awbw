@@ -30,8 +30,8 @@ RSpec.describe "/staff_taggings", type: :request do
         expect(response.body).to include("Latest comment")
         expect(Nokogiri::HTML(response.body).at_css("textarea[name='note']").text.strip).to eq("Newest note")
         edited_at = newest.updated_at.in_time_zone(admin.time_zone || "Pacific Time (US & Canada)")
-        expect(response.body).to include("Last edited #{edited_at.strftime("%-m/%-d/%Y %-I:%M %p")}")
-        expect(response.body).to include(admin.decorate.initials)
+        hint = Nokogiri::HTML(response.body).at_css("textarea[name='note'] + div").text.squish
+        expect(hint).to eq("#{admin.decorate.initials} #{edited_at.strftime("%-m/%-d/%Y %-I:%M %p")}")
       end
 
       it "filters by staff tag" do
