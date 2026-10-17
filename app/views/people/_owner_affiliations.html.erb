@@ -14,7 +14,7 @@
             <% decorated = affiliation.decorate %>
             <% pending = pending_requests[affiliation.id] %>
             <% work_addresses = organization.addresses.select { |address| !address.inactive? || address.id == affiliation.organization_address_id } %>
-            <div class="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto] sm:gap-4">
+            <div class="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_16rem_auto] sm:gap-4">
               <div class="min-w-0">
                 <p class="text-gray-800"><%= decorated.display_title %></p>
                 <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500"><%= decorated.status_badge %> <%= decorated.period_label %></p>
@@ -29,7 +29,7 @@
                   <%= f.simple_fields_for :affiliations, affiliation, child_index: affiliation.id do |af| %>
                     <%= af.input :organization_address_id, label: "Work address", required: false,
                                  collection: work_addresses.map { |address| [ address.name, address.id ] }, include_blank: "Not picked yet",
-                                 hint: missing_address_link, wrapper_html: { class: "mb-0" }, label_html: { class: "text-sm" }, input_html: { class: "w-full" } %>
+                                 hint: missing_address_link, wrapper_html: { class: "mb-0" }, label_html: { class: "text-sm" }, input_html: { class: "w-full truncate" } %>
                   <% end %>
                 <% else %>
                   <p class="text-sm font-medium text-gray-700">Work address</p>
