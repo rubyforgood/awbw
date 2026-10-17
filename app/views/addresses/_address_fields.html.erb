@@ -7,7 +7,12 @@
       <% if f.object.persisted? && (type_label = f.object.decorate.address_type_label) %>
         <span class="rounded-full bg-yellow-200 px-2 py-0.5 text-xs font-medium text-yellow-900"><%= type_label %></span>
       <% end %>
-      <span>Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %></span>
+      <% numbered = f.object.addressable&.addresses&.size.to_i > 1 %>
+      <% if f.object.persisted? %>
+        <span><%= "Address ##{f.index.to_i + 1}: " if numbered %><%= f.object.name %></span>
+      <% else %>
+        <span>Address</span>
+      <% end %>
     </div>
     <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
   </summary>
