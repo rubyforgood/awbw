@@ -18,6 +18,7 @@
 %>
 <%= turbo_frame_tag :visit_results do %>
   <%= turbo_stream.replace "visits_count", partial: "visit_count" %>
+  <%= turbo_stream.replace "active_filters", partial: "admin/shared/active_filters_subheader" %>
 
   <div class="border-primary/10 overflow-hidden rounded-2xl border bg-white shadow-sm blur-on-submit">
     <table class="min-w-full divide-y divide-gray-200 text-sm">

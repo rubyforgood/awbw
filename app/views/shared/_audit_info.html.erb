@@ -20,7 +20,7 @@
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
                       class: "ml-1 text-indigo-600 hover:underline",
-                      title: "View creation event in Ahoy" do %>
+                      title: "View creation activity in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
           <% end %>
         <% end %>
@@ -37,7 +37,7 @@
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
           <%= link_to admin_activities_events_path(resource_type: model.class.name, resource_id: resource.id),
                       class: "ml-1 text-indigo-600 hover:underline",
-                      title: "View update events in Ahoy" do %>
+                      title: "View update activity in Ahoy" do %>
             <i class="fas fa-chart-line"></i>
           <% end %>
         <% end %>
