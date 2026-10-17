@@ -56,7 +56,6 @@ module AdminCardsHelper
                  params: { published: true }),
       model_card(:topic_subscription_types, icon: "✉️", intensity: 100, title: "Subscription topics"),
       custom_card("Staff tags", staff_tags_path, icon: "🏷️", color: :lime, intensity: 100),
-      custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :lime, intensity: 100),
       custom_card("Windows audiences", windows_types_path, icon: "🪟")
     ]
   end
@@ -115,6 +114,7 @@ module AdminCardsHelper
       custom_card("CE registrations", continuing_education_registrations_path, icon: "📜", color: :sky, intensity: 100),
       custom_card("Comments", comments_path, icon: "💬", color: :sky, intensity: 100),
       custom_card(t("communications.title"), notifications_path, icon: "🔔", color: :sky, intensity: 100),
+      custom_card("Tagging counts", taggings_matrix_path, icon: "🧮", color: :sky, intensity: 100),
       custom_card("Invoices", invoices_path, icon: "🧾", color: :sky, intensity: 100),
       custom_card("Timesheets", signins_events_path, icon: "⏱️", color: :sky, intensity: 100),
       disabled_card("Affiliations", icon: "🤝"),

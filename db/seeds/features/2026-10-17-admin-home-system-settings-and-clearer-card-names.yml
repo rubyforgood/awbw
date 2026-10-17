@@ -10,5 +10,5 @@ summary: >-
   same names as the rest of the portal.
 pro_tips:
   - "Renamed cards: Portal activity is now Activity, Licenses is now Professional licenses, and Resource roles is now Smart resource settings."
-  - "Tagging counts now sits in Base data next to the categories, sectors, and staff tags it counts."
+  - "Admins can open Tagging counts from a button at the top of the Tags page."
   - "Data health and Author credit divergences show how many items are waiting, and Sync features & tips shows how many new entries are ready to add. The counts load a moment after the page."

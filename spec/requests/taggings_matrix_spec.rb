@@ -22,6 +22,16 @@ RSpec.describe "Taggings matrix", type: :request do
   end
 
   describe "GET /taggings/matrix" do
+    it "links back to Tags when opened from the Tags page" do
+      get taggings_matrix_path(return_to: "tags")
+      expect(response.body).to include("← Tags", %(href="#{tags_path}"))
+    end
+
+    it "links back to admin home by default" do
+      get taggings_matrix_path
+      expect(response.body).to include("← Admin", %(href="#{admin_path}"))
+    end
+
     it "renders successfully" do
       get taggings_matrix_path
       expect(response).to have_http_status(:ok)
