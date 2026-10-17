@@ -10,11 +10,13 @@
     marks the headline so edit-toggle can sync unsaved edits into it), leading (a
     chip to open the headline with in place of the type chip — the aggregated feed
     passes the neutral source chip, whose icon already conveys the type), trailing
-    (HTML to close the headline row with). %>
+    (HTML to close the headline row with), expandable (default false — marks the
+    clamped body and adds a chevron; the caller wires expandable_feed_row_data). %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
 <% body_target = local_assigns.fetch(:body_target, false) %>
 <% leading = local_assigns[:leading] %>
 <% trailing = local_assigns[:trailing] %>
+<% expandable = local_assigns.fetch(:expandable, false) && truncate_body %>
 <% created_user = comment.created_by %>
 <% updated_user = comment.updated_by %>
 <% show_updated = updated_user.present? && updated_user != created_user %>
@@ -42,6 +44,7 @@
     <%= comment.decorate.type_chip %>
     <span class="line-clamp-2 min-w-0 flex-1"
           <% if body_target %>data-edit-toggle-target="body"<% end %>
+          <% if expandable %>data-expandable-card-target="body"<% end %>
           title="<%= [ comment.topic, comment.body ].compact_blank.join(" — ") %>">
       <% if comment.topic.present? %><span class="font-bold"><%= comment.topic %></span> <% end %><%= comment.body %>
     </span>
@@ -53,4 +56,5 @@
     <div class="pt-1 whitespace-pre-line"><%= comment.body %></div>
   </div>
 <% end %>
+<%= render "shared/expand_chevron" if expandable %>
 <%= trailing %>

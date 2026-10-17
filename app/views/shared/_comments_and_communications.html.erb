@@ -28,7 +28,10 @@
 
 <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          id="comments-section"
-         data-controller="paginated-fields edit-toggle"
+         data-controller="paginated-fields edit-toggle expandable-cards"
+         data-expandable-cards-expanded-value="false"
+         data-expandable-cards-expanded-label-value="<%= t("communications.collapse_all") %>"
+         data-expandable-cards-collapsed-label-value="<%= t("communications.expand_all") %>"
          data-paginated-fields-per-page-value="10"
          data-paginated-fields-no-subject-label-value="<%= t("communications.no_subject") %>">
   <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
@@ -36,6 +39,14 @@
       <i class="fa-solid fa-comments"></i>
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : comms_title %></h2>
+    <% if entries.any? %>
+      <button type="button"
+              class="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+              data-action="expandable-cards#toggleAll">
+        <span data-expandable-cards-target="label"><%= t("communications.expand_all") %></span>
+        <i class="fa-solid fa-chevron-down text-2xs transition-transform" data-expandable-cards-target="icon"></i>
+      </button>
+    <% end %>
     <div class="ml-auto flex items-center gap-3">
       <% if entries.size > 1 %>
         <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
@@ -70,7 +81,7 @@
           <% end %>
         <% else %>
           <div data-paginated-fields-target="item" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
-            <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only,
+            <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only, expandable: true,
                        flag: (render("notifications/flag_indicator", notification: entry) if admin) %>
           </div>
         <% end %>

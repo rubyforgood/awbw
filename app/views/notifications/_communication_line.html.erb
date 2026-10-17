@@ -6,12 +6,14 @@
     line underneath, and — since a card-wide link can hold no other links — makes
     the subject the link to the communication so `leading` can be a link too (the
     neutral source chip, pointing at that record's edit page, with the channel icon
-    inside it). %>
+    inside it). Optional expandable (truncated rows only) adds a chevron that
+    unclamps the row, outside the card link so it doesn't navigate. %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
 <% leading = local_assigns[:leading] %>
 <% trailing = local_assigns[:trailing] %>
+<% expandable = local_assigns.fetch(:expandable, false) && truncate_body %>
 <% decorated = notification.decorate %>
 <% body_admin_only = notification.channel != "autoemail" %>
 <% show_body = admin || !body_admin_only %>
@@ -20,7 +22,6 @@
 <% from_name = decorated.from_name %>
 <% from_first = from_name.to_s.split.first.presence || from_name %>
 <% chip = chip_color(notification.incoming? ? decorated.contact_person&.id : notification.sender_id) %>
-<% card = "rounded-md border #{communication_card_class} px-3 py-2" %>
 <% body_class = if body_admin_only && mark_admin_only
                   "admin-only rounded bg-blue-100 px-1 text-gray-700"
                 elsif body_admin_only
@@ -44,10 +45,12 @@
       <div class="flex min-w-0 flex-1 items-start gap-1 text-sm">
         <%= decorated.event_chip %>
         <%= decorated.channel_chip %>
-        <span class="line-clamp-2 min-w-0 flex-1">
+        <span class="line-clamp-2 min-w-0 flex-1"
+              <% if expandable %>data-expandable-card-target="body"<% end %>
+              title="<%= [ subject, body ].compact_blank.join(" — ") %>">
           <%= decorated.flag_badges %>
           <span class="font-semibold text-gray-900"><%= subject %></span>
-          <% if body.present? %><span class="<%= body_class %>" title="<%= body %>"><%= body %></span><% end %>
+          <% if body.present? %><span class="<%= body_class %>"><%= body %></span><% end %>
         </span>
       </div>
     <% else %>
@@ -73,9 +76,18 @@
     <%= trailing %>
   </div>
 <% end %>
-<% if admin && truncate_body %>
-  <%= link_to row, notification_path(notification), target: "_blank", rel: "noopener",
-              class: "block #{card} transition-colors #{DomainTheme.bg_class_for(:notifications, intensity: 50, hover: true)}" %>
+<% if truncate_body %>
+  <% card_hover = "transition-colors #{DomainTheme.bg_class_for(:notifications, intensity: 50, hover: true)}" if admin %>
+  <%= tag.div class: "flex items-start rounded-md border #{communication_card_class} #{card_hover}", data: (expandable_feed_row_data if expandable) do %>
+    <% if admin %>
+      <%= link_to row, notification_path(notification), target: "_blank", rel: "noopener", class: "block min-w-0 flex-1 px-3 py-2" %>
+    <% else %>
+      <div class="min-w-0 flex-1 px-3 py-2"><%= row %></div>
+    <% end %>
+    <% if expandable %>
+      <div class="py-2 pr-2"><%= render "shared/expand_chevron" %></div>
+    <% end %>
+  <% end %>
 <% else %>
-  <div class="<%= card %>"><%= row %></div>
+  <div class="rounded-md border <%= communication_card_class %> px-3 py-2"><%= row %></div>
 <% end %>

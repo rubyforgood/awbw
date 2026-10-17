@@ -3,9 +3,11 @@ import { Controller } from "@hotwired/stimulus"
 // Connects to data-controller="expandable-card"
 // Collapses or expands a single card's body and rotates its chevron. Also
 // responds to expand-/collapse-all events broadcast by the parent
-// expandable-cards controller.
+// expandable-cards controller. With a collapsed class (e.g. line-clamp-2), the
+// body stays visible and only that class is toggled.
 export default class extends Controller {
   static targets = ["body", "icon"]
+  static classes = ["collapsed"]
   static values = { expanded: { type: Boolean, default: true } }
 
   toggle() {
@@ -41,7 +43,11 @@ export default class extends Controller {
   }
 
   expandedValueChanged() {
-    this.bodyTarget.classList.toggle("hidden", !this.expandedValue)
+    if (this.hasCollapsedClass) {
+      this.collapsedClasses.forEach(name => this.bodyTarget.classList.toggle(name, !this.expandedValue))
+    } else {
+      this.bodyTarget.classList.toggle("hidden", !this.expandedValue)
+    }
     if (this.hasIconTarget) {
       this.iconTarget.classList.toggle("rotate-180", this.expandedValue)
     }

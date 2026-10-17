@@ -1,4 +1,15 @@
 module CommentsHelper
+  # Stimulus wiring for a one-line feed row that the chevron and the section's
+  # "Expand all" unclamp to show the full entry.
+  def expandable_feed_row_data
+    {
+      controller: "expandable-card",
+      expandable_card_expanded_value: false,
+      expandable_card_collapsed_class: "line-clamp-2",
+      action: "expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"
+    }
+  end
+
   # Human-readable label for a record a comment or communication hangs off, used
   # for both the aggregated composer's target picker and each feed row's chip so
   # the two never drift. For event-bound records we spell out the event and its

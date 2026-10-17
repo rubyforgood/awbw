@@ -16,9 +16,9 @@
     </label>
     <div class="grow">
     <% if f.object.persisted? %>
-      <div class="flex items-start gap-x-1" data-edit-toggle-target="view">
-        <%= render "comments/comment_line", comment: f.object, body_target: true %>
-      </div>
+      <%= tag.div class: "flex items-start gap-x-1", data: { edit_toggle_target: "view", **expandable_feed_row_data } do %>
+        <%= render "comments/comment_line", comment: f.object, body_target: true, expandable: true %>
+      <% end %>
       <div class="flex hidden items-start gap-x-1" data-edit-toggle-target="edit">
         <span class="mt-2 w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
           <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
