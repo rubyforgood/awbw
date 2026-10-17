@@ -5,6 +5,9 @@ released_on: 2026-10-17
 action_path: "/profile_change_requests"
 summary: >-
   Approve, Mark as resolved, and Decline each email the person who asked for
-  the change. Each button now asks you to confirm first and says who gets the email.
+  the change. The buttons now sit in one row with an "An email will be sent"
+  hint, and each asks you to confirm first and says who gets the email.
 pro_tips:
-  - "Your note goes into the email when you resolve or decline, so write it for the requester."
+  - "Hover the hint to see who gets the email."
+  - "Your note goes into the email, so write it for the requester."
+  - "The Pending / Resolved / Declined strip shows how many requests are in each."

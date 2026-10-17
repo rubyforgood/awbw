@@ -37,8 +37,8 @@ RSpec.describe ProfileChangeRequestDecorator do
     let(:requester) { build_stubbed(:user, email: "requester@example.com") }
     let(:request) { build_stubbed(:profile_change_request, :other, requested_by: requester).decorate }
 
-    it "tells the admin approving that the requester gets an email" do
-      expect(request.approve_confirm).to eq("Approve and apply this change now? This emails #{requester.full_name} (requester@example.com).")
+    it "tells the admin approving that the requester gets an email with the note" do
+      expect(request.approve_confirm).to eq("Approve and apply this change now? This emails #{requester.full_name} (requester@example.com), including your note.")
     end
 
     it "tells the admin resolving that the requester gets an email with the note" do
@@ -49,9 +49,14 @@ RSpec.describe ProfileChangeRequestDecorator do
       expect(request.decline_confirm).to eq("Decline this request? This emails #{requester.full_name} (requester@example.com), including your note.")
     end
 
+    it "explains who gets emailed for the hover hint" do
+      expect(request.review_email_notice).to include("each email #{requester.full_name} (requester@example.com)")
+    end
+
     it "skips the email notice when the requester has no email" do
       request = build_stubbed(:profile_change_request, :other, requested_by: nil).decorate
       expect(request.decline_confirm).to eq("Decline this request?")
+      expect(request.review_email_notice).to be_nil
     end
   end
 end

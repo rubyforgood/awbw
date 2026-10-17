@@ -75,11 +75,18 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
   end
 
   def resolve_confirm
-    with_email_notice("Mark this request as resolved?", with_note: true)
+    with_email_notice("Mark this request as resolved?")
   end
 
   def decline_confirm
-    with_email_notice("Decline this request?", with_note: true)
+    with_email_notice("Decline this request?")
+  end
+
+  def review_email_notice
+    email = requested_by&.email
+    return if email.blank?
+
+    "Approve, Mark as resolved, and Decline each email #{requested_by.full_name} (#{email}), including your note."
   end
 
   # Spells out the blast radius where the change reaches beyond this one person
@@ -117,12 +124,11 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     "Rename \"#{org&.name}\" to \"#{new_name}\"? #{helpers.pluralize(count, "affiliation")} across the portal use this organization."
   end
 
-  def with_email_notice(prompt, with_note: false)
+  def with_email_notice(prompt)
     email = requested_by&.email
     return prompt if email.blank?
 
-    notice = "#{prompt} This emails #{requested_by.full_name} (#{email})"
-    with_note ? "#{notice}, including your note." : "#{notice}."
+    "#{prompt} This emails #{requested_by.full_name} (#{email}), including your note."
   end
 
   # Where "Update manually" sends an admin to make the edit by hand.
