@@ -12,14 +12,14 @@
     <% if @groups %>
       <% if @groups.any? %>
         <% @groups.each do |group| %>
-          <%= render "comments_and_communications/subject_group", group: group %>
+          <%= render "comments_and_communications/subject_group", group: group, person: @person, record_targets: @record_targets %>
         <% end %>
       <% else %>
         <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
       <% end %>
     <% elsif @entries.any? %>
       <% @entries.each do |entry| %>
-        <%= render "comments_and_communications/entry_row", entry: entry %>
+        <%= render "comments_and_communications/entry_row", entry: entry, person: @person, record_targets: @record_targets %>
       <% end %>
     <% else %>
       <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>

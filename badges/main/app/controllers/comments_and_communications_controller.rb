@@ -11,6 +11,7 @@ class CommentsAndCommunicationsController < ApplicationController
     authorize! Notification, to: :index?
 
     @person = Person.find(params[:person_id]).decorate if params[:person_id].present?
+    @record_targets = helpers.person_record_targets(@person) if @person
 
     if turbo_frame_request?
       feed = PersonCommentAndCommunicationAggregator.new(@person, params)
@@ -32,7 +33,6 @@ class CommentsAndCommunicationsController < ApplicationController
       if @person
         @new_comment = Comment.new
         @new_notification = Notification.new
-        @record_targets = helpers.person_record_targets(@person)
       end
       track_view("person_comments_and_communications", { person_id: @person&.id })
     end

@@ -7,7 +7,7 @@
 <% updated_color = show_updated ? chip_color(updated_user.id) : nil %>
 <% current_color = chip_color(current_user&.id) %>
 <% is_age_range_data = f.object.persisted? && f.object.body&.include?("[AGE_RANGE_DATA]") %>
-<div class="nested-fields" data-paginated-fields-target="item" data-subject="<%= f.object.topic %>" data-created-at="<%= (f.object.created_at || Time.current).to_i %>">
+<div <% if f.object.persisted? %>id="<%= dom_id(f.object) %>" <% end %>class="nested-fields" data-paginated-fields-target="item" data-subject="<%= f.object.topic %>" data-created-at="<%= (f.object.created_at || Time.current).to_i %>">
   <%= f.hidden_field :id if f.object.persisted? %>
   <div class="flex items-start gap-x-1 rounded-md border <%= comment_card_class(warning: is_age_range_data) %> px-3 py-2">
     <label class="mt-0.5 inline-flex w-4 shrink-0 cursor-pointer justify-center leading-none" title="Flag for follow-up">
@@ -48,8 +48,7 @@
                             data: { field_required_target: "field required" },
                             class: "grow bg-white rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
         </div>
-        <%= link_to_remove_association "Remove", f,
-              class: "text-sm text-gray-400 hover:text-red-600 underline whitespace-nowrap mt-2 shrink-0" %>
+        <%= render "comments/delete_link", comment: f.object, class_name: "mt-2 shrink-0 whitespace-nowrap" %>
       </div>
     <% else %>
       <% current_first_name = current_user&.person&.first_name || current_user&.name.to_s.split.first %>

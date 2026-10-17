@@ -5,5 +5,6 @@
   <%= render "comments/feed",
              comments: @comments,
              person: @person,
+             record_targets: @comment_targets,
              pagination_params: params.slice(:source, :query, :author_id, :from, :to, :flagged).permit! %>
 <% end %>
