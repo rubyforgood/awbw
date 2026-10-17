@@ -87,7 +87,6 @@ class ApplicationController < ActionController::Base
                                                   .affiliations
                                                   .active
                                                   .includes(:organization)
-                                                  .references(:organization)
                                                   .load
   end
 
