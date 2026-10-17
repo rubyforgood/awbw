@@ -132,7 +132,7 @@
                 </td>
 
                 <td class="px-4 py-2 text-sm">
-                  <%= render "shared/index_note", record: subscription, url: save_note_topic_subscription_path(subscription), body: subscription.comments.first&.body %>
+                  <%= render "shared/index_note", record: subscription, url: save_note_topic_subscription_path(subscription), comment: subscription.comments.first %>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500">

@@ -20,15 +20,18 @@ RSpec.describe "/staff_taggings", type: :request do
         expect(response.body).to include("Highlight roster")
       end
 
-      it "shows the latest comment in the inline note" do
+      it "shows the latest comment in the inline note with who last edited it" do
         tagging = create(:staff_tagging)
         create(:comment, commentable: tagging, body: "Older note", created_at: 2.days.ago)
-        create(:comment, commentable: tagging, body: "Newest note")
+        newest = create(:comment, commentable: tagging, body: "Newest note", created_by: admin)
 
         get staff_taggings_path, headers: turbo_headers
 
         expect(response.body).to include("Latest comment")
         expect(Nokogiri::HTML(response.body).at_css("textarea[name='note']").text.strip).to eq("Newest note")
+        edited_at = newest.updated_at.in_time_zone(admin.time_zone || "Pacific Time (US & Canada)")
+        expect(response.body).to include("Last edited #{edited_at.strftime("%-m/%-d/%Y %-I:%M %p")}")
+        expect(response.body).to include(admin.decorate.initials)
       end
 
       it "filters by staff tag" do

@@ -7,7 +7,7 @@ class StaffTaggingsController < ApplicationController
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable, :comments))
+      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable, comments: { created_by: :person, updated_by: :person }))
       filtered = base_scope.search_by_params(params.to_unsafe_h)
       @sort = %w[person staff_tag marked created_at].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"

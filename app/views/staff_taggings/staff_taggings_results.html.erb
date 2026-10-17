@@ -47,7 +47,7 @@
                   <%= render "mark_switch", tagging: tagging %>
                 </td>
                 <td class="px-4 py-2 text-sm">
-                  <%= render "shared/index_note", record: tagging, url: save_note_staff_tagging_path(tagging), body: tagging.comments.first&.body %>
+                  <%= render "shared/index_note", record: tagging, url: save_note_staff_tagging_path(tagging), comment: tagging.comments.first %>
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-600">
                   <% if tagging.created_by&.person %>by <%= tagging.created_by.full_name %><br><% end %>

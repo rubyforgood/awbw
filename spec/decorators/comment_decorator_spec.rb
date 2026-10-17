@@ -125,4 +125,29 @@ RSpec.describe CommentDecorator do
       expect(comment.decorate.event_chip).to eq("")
     end
   end
+
+  describe "#last_editor" do
+    it "is whoever last updated the comment" do
+      author = create(:user)
+      editor = create(:user)
+      comment = create(:comment, created_by: author, updated_by: editor)
+
+      expect(comment.decorate.last_editor).to eq(editor)
+    end
+
+    it "falls back to the author for an unedited comment" do
+      author = create(:user)
+      comment = create(:comment, created_by: author, updated_by: nil)
+
+      expect(comment.decorate.last_editor).to eq(author)
+    end
+  end
+
+  describe "#edited_timestamp" do
+    it "formats when the comment was last updated" do
+      comment = build(:comment, updated_at: Time.zone.local(2026, 10, 17, 13, 5))
+
+      expect(comment.decorate.edited_timestamp).to eq("10/17/2026 1:05 PM")
+    end
+  end
 end
