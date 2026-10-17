@@ -18,8 +18,8 @@
     </div>
   </div>
   <% if pending_requests.any? %>
-    <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900">
-      <p class="font-semibold"><i class="fa-solid fa-clock"></i> AWBW staff are looking at your request</p>
+    <div class="border-primary/10 bg-brand-cream mt-4 rounded-xl border p-4 text-gray-800">
+      <p class="text-primary font-semibold"><i class="fa-solid fa-clock"></i> AWBW staff are looking at your <%= "request".pluralize(pending_requests.size) %></p>
       <ul class="mt-2 space-y-1">
         <% pending_requests.each do |request| %>
           <li>
