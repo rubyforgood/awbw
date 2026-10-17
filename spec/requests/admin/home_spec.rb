@@ -48,11 +48,12 @@ RSpec.describe "Admin home", type: :request do
     )
   end
 
-  it "groups Features & tips and Smart resource settings under System settings & details" do
+  it "groups Banners, Features & tips, and Smart resource settings under System settings & details" do
     get "/admin"
 
     expect(response.body).to include("System settings &amp; details", "Smart resource settings")
     expect(response.body).to include(
+      %(href="#{banners_path}"),
       %(href="#{features_path}"),
       %(href="#{admin_resource_roles_path}")
     )

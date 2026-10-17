@@ -16,7 +16,6 @@ module AdminCardsHelper
       model_card(:workshops, icon: "🎨"),
       model_card(:workshop_variations, icon: "🔀"),
       model_card(:video_recordings, icon: "🎬", title: "Video Gallery"),
-      model_card(:banners, icon: "📣"),
       model_card(:community_news, icon: "📰"),
       model_card(:faqs, icon: "❔", title: "FAQs")
     ]
@@ -83,6 +82,7 @@ module AdminCardsHelper
   # -----------------------------
   def system_settings_cards
     [
+      model_card(:banners, icon: "📣"),
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
       custom_card("Smart resource settings", admin_resource_roles_path, icon: "📌", color: :sky, intensity: 100)
     ]
