@@ -27,28 +27,27 @@
 <% subtitle = capture do %>
   <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
 <% end %>
-<%# Title: the person's name (or "Everyone"), with a "View everyone" reset link on
-    a person's feed. The person picker that scopes the feed lives in the filter row
+<%# Title: the person's name (or "Everyone"), with their activity beside it on a
+    person's feed. The person picker that scopes the feed lives in the filter row
     below (Filter to one person). %>
 <% title = capture do %>
   <%= @person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone" %>
-  <% if @person %>
-    <%= link_to "View everyone", comments_and_communications_path,
-                class: "ml-3 align-middle text-sm font-sans font-normal #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
+  <% if @person && allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+    <%= link_to person_activity_path(@person), class: button_classes(:primary_outline, extra: "ml-3 align-middle font-sans") do %>
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <%= @person.first_name.presence || @person.full_name %>'s activity
+    <% end %>
   <% end %>
 <% end %>
 
-<%# Person feed: the composer triggers sit top-right by the name; their panels open
-    in the body, sharing the card-level panel-toggle scope (content_data). Everyone
-    feed has no target person yet, so its add flow stays in a body card. %>
+<%# Person feed: a "View everyone" reset and the composer triggers sit top-right;
+    the composer panels open in the body, sharing the card-level panel-toggle scope
+    (content_data). Everyone feed has no target person yet, so its add flow stays
+    in a body card. %>
 <% actions = capture do %>
   <% if @person %>
-    <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-      <%= link_to person_activity_path(@person), class: button_classes(:primary_outline) do %>
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <%= @person.first_name.presence || @person.full_name %>'s activity
-      <% end %>
-    <% end %>
+    <%= link_to "View everyone", comments_and_communications_path,
+                class: "text-sm #{eyebrow_link_class} whitespace-nowrap hover:underline" %>
     <%= render "comments_and_communications/add_buttons" %>
   <% end %>
 <% end %>
