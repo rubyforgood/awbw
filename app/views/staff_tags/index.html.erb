@@ -28,7 +28,7 @@
                 <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Description</th>
                 <th class="px-4 py-2 text-center text-sm font-medium text-gray-700">Status</th>
                 <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">People tagged</th>
-                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Taggings</th>
+                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Taggings index</th>
               </tr>
             </thead>
 
@@ -59,9 +59,9 @@
                 </td>
 
                 <td class="px-4 py-2 text-gray-700">
-                  <%= link_to "View taggings",
+                  <%= link_to @taggings_counts.fetch(staff_tag.id, 0),
                               staff_taggings_path(staff_tag_ids: staff_tag.id),
-                              class: button_classes(:secondary_outline) %>
+                              class: button_classes(nil) %>
                 </td>
               </tr>
             <% end %>
