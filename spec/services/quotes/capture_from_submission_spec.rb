@@ -10,6 +10,10 @@ RSpec.describe Quotes::CaptureFromSubmission do
     create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
   end
 
+  def field_for(identifier)
+    form.form_fields.find_by(field_identifier: identifier)
+  end
+
   it "saves a quote-field answer as an unpublished quote sourced from the submission" do
     answer("quote", "Painting gave me a voice")
 
@@ -88,6 +92,48 @@ RSpec.describe Quotes::CaptureFromSubmission do
     described_class.call(submission)
 
     expect { described_class.call(submission) }.not_to change(Quote, :count)
+  end
+
+  it "rewrites the quote it captured when the answer is edited" do
+    answer("quote", "First try")
+    described_class.call(submission)
+    submission.form_answers.sole.update!(submitted_answer: "Second try, typo fixed")
+
+    expect { described_class.call(submission) }.not_to change(Quote, :count)
+    expect(submission.quotes.reload.sole)
+      .to have_attributes(body: "Second try, typo fixed", original_body: "Second try, typo fixed")
+  end
+
+  it "refreshes the speaker and age alongside a rewritten body" do
+    answer("quote", "First try")
+    speaker = answer("quote_speaker_name", "Jordn")
+    described_class.call(submission)
+    submission.form_answers.find_by(form_field: field_for("quote")).update!(submitted_answer: "Second try")
+    speaker.update!(submitted_answer: "Jordan")
+
+    described_class.call(submission)
+
+    expect(submission.quotes.reload.sole).to have_attributes(body: "Second try", speaker_name: "Jordan")
+  end
+
+  it "leaves an admin's reworded quote alone and captures the edited answer as its own" do
+    answer("quote", "First try")
+    described_class.call(submission)
+    admin_quote = submission.quotes.sole
+    admin_quote.update!(body: "A refined version")
+    submission.form_answers.sole.update!(submitted_answer: "Second try")
+
+    expect { described_class.call(submission) }.to change(Quote, :count).by(1)
+    expect(admin_quote.reload.body).to eq("A refined version")
+  end
+
+  it "leaves a published quote alone and captures the edited answer as its own" do
+    answer("quote", "First try")
+    described_class.call(submission)
+    submission.quotes.sole.update!(published: true)
+    submission.form_answers.sole.update!(submitted_answer: "Second try")
+
+    expect { described_class.call(submission) }.to change(Quote, :count).by(1)
   end
 
   it "still recognizes the answer after an admin edited the published body" do

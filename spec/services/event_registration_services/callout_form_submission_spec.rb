@@ -76,6 +76,15 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     expect { submit({ quote_field.id.to_s => "Art helped me heal." }) }.not_to change(Quote, :count)
   end
 
+  it "rewrites the captured quote when the registrant edits their answer" do
+    quote_field = create(:form_field, form:, field_identifier: FormField::QUOTE_FIELD_IDENTIFIER)
+    submit({ quote_field.id.to_s => "Art helped me heel." })
+
+    submission = submit({ quote_field.id.to_s => "Art helped me heal." })
+
+    expect(submission.quotes.pluck(:body)).to eq([ "Art helped me heal." ])
+  end
+
   describe "a survey-role form's side effects" do
     let(:form) { create(:form, role: "recipient_survey") }
     let!(:clarity_field) do
