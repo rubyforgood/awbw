@@ -42,6 +42,13 @@ RSpec.describe Analytics::EventReferenceLoader do
       expect(map[[ "Workshop", workshop.id ]]).to eq(workshop)
     end
 
+    it "loads the parent a polymorphic id + type pair points at" do
+      person = create(:person)
+      events = [ event("attributes" => { "commentable_id" => person.id, "commentable_type" => "Person" }) ]
+
+      expect(described_class.new(events).records[[ "Person", person.id ]]).to eq(person)
+    end
+
     it "omits records that no longer exist" do
       events = [ event("associated_records" => [ { "record_type" => "Workshop", "record_id" => 0 } ]) ]
       expect(described_class.new(events).records).to eq({})

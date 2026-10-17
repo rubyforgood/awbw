@@ -96,6 +96,16 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.comment_note).to eq(topic: "Follow-up", body: "Called to confirm.")
     end
 
+    it "points a deleted comment at the record it was left on, read from its snapshot" do
+      person = create(:person)
+      event = create(:ahoy_event, name: "destroy.comment", resource_type: "Comment", resource_id: 0,
+                                  properties: { "resource_title" => "4",
+                                                "attributes" => { "commentable_id" => person.id, "commentable_type" => "Person" } }).decorate
+
+      expect(event.resource_link[:text]).to eq("Profile")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
+    end
+
     it "flags a flagged comment" do
       comment = create(:comment, commentable: create(:person), flagged: true)
       event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
@@ -294,6 +304,25 @@ RSpec.describe Ahoy::EventDecorator do
       legacy = decorate("page_result_count" => 21)
       expect(current.detail_rows).to eq([ { label: "Results found", value: "8", depth: 0 } ])
       expect(legacy.detail_rows).to eq([ { label: "Results found", value: "21", depth: 0 } ])
+    end
+
+    it "collapses a polymorphic id + type pair into one link to the parent record" do
+      person = create(:person, first_name: "Ada", last_name: "Park")
+      event = decorate("attributes" => { "body" => "Hi", "commentable_id" => person.id, "commentable_type" => "Person" })
+
+      expect(event.detail_rows).to eq(
+        [
+          { label: "Attributes", value: nil, depth: 0 },
+          { label: "Body", value: "Hi", depth: 1 },
+          { label: "Commentable", depth: 1,
+            link: { text: "Ada Park", path: Rails.application.routes.url_helpers.edit_person_path(person) } }
+        ]
+      )
+    end
+
+    it "keeps an unlinked label when the polymorphic parent is gone" do
+      event = decorate("commentable_id" => 0, "commentable_type" => "Person")
+      expect(event.detail_rows).to eq([ { label: "Commentable", depth: 0, link: { text: "Person #0", path: nil } } ])
     end
 
     it "indents a nested hash under its label" do

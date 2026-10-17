@@ -23,6 +23,18 @@ module Analytics
       [ (item["type"] || item["record_type"]).to_s, item["id"] || item["record_id"] ]
     end
 
+    # Polymorphic belongs_to columns in an attribute snapshot (commentable_id +
+    # commentable_type), keyed by association name: { "commentable" => [type, id] }.
+    def self.polymorphic_references(hash)
+      hash.each_with_object({}) do |(key, type), refs|
+        name = key.to_s.delete_suffix("_type")
+        next if name == key.to_s || type.blank?
+
+        id = hash["#{name}_id"]
+        refs[name] = [ type.to_s, id ] if id.present?
+      end
+    end
+
     def initialize(events)
       @events = events
     end
@@ -61,7 +73,8 @@ module Analytics
       when Hash
         return [ self.class.pair(value) ] if self.class.reference?(value)
 
-        value.each_value.flat_map { |nested| references_in(nested) }
+        self.class.polymorphic_references(value).values +
+          value.each_value.flat_map { |nested| references_in(nested) }
       when Array
         value.flat_map { |nested| references_in(nested) }
       else

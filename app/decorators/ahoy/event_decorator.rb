@@ -102,8 +102,7 @@ module Ahoy
     # The record a comment was left on, labeled and linked. Reuses the same
     # record-specific labels as direct events, falling back to the shared comment
     # feed helper (CommentsHelper) so the two never drift.
-    def commentable_link
-      commentable = comment.commentable
+    def commentable_link(commentable = comment.commentable)
       custom_resource_link(commentable) ||
         { text: h.commentable_label(commentable), path: h.record_edit_path(commentable) }
     end
@@ -180,7 +179,8 @@ module Ahoy
     private
 
     def compute_resource_link
-      return commentable_link if comment&.commentable
+      commentable = comment&.commentable || deleted_commentable
+      return commentable_link(commentable) if commentable
       return story_share_menu_link if story_share_menu?
 
       record = find_referenced_record(object.resource_type, object.resource_id)
@@ -240,6 +240,15 @@ module Ahoy
     def story_share_menu_link
       { text: properties_hash["resource_title"].presence || "Story share menu",
         path: h.story_share_admin_path }
+    end
+
+    # A deleted comment's parent, read from the destroy snapshot — the parent
+    # usually outlives the comment, so the row can still point at it.
+    def deleted_commentable
+      return nil unless comment?
+
+      type, id = Analytics::EventReferenceLoader.polymorphic_references(properties_hash["attributes"].to_h)["commentable"]
+      find_referenced_record(type, id) if type
     end
 
     # The Comment this event is about, from the page cache (no extra query); nil
@@ -334,12 +343,28 @@ module Ahoy
 
       rows = label ? [ { label: label, value: nil, depth: depth } ] : []
       child_depth = label ? depth + 1 : depth
+      polymorphics = Analytics::EventReferenceLoader.polymorphic_references(hash)
       heading_first(hash).each do |key, val|
+        next if polymorphics.key?(key.to_s.delete_suffix("_type"))
+
+        if (reference = polymorphics[key.to_s.delete_suffix("_id")])
+          rows << polymorphic_row(key.to_s.delete_suffix("_id"), *reference, child_depth)
+          next
+        end
+
         child_rows = flatten_rows(val, humanize_key(key), child_depth)
         child_rows.first[:emphasis] = true if HEADING_KEYS.include?(key.to_s) && child_rows.one?
         rows.concat(child_rows)
       end
       rows
+    end
+
+    # A polymorphic parent (a comment's commentable) as one row linked to the
+    # record, which often still exists after the child was deleted.
+    def polymorphic_row(name, type, id, depth)
+      record = find_referenced_record(type, id)
+      text = custom_resource_link(record)&.dig(:text).presence || safe_label(record) || "#{type} ##{id}"
+      { label: humanize_key(name), depth: depth, link: { text: text, path: edit_path_for(record) } }
     end
 
     # A comment's topic titles its body rather than sitting beside it, so it leads.

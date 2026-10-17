@@ -4725,3 +4725,12 @@
     your picks.
   pro_tips:
     - "A filter matches a person's primary and additional tags, even though each row shows only the primary ones."
+
+- name: "Deleted comments link to the record they were on"
+  area: reporting
+  display_status: admin_facing
+  released_on: 2026-10-17
+  action_path: /admin/activities/events
+  summary: >-
+    In the activity feed, a deleted comment now links to the profile, registration,
+    or other record it was left on, as long as that record still exists.
