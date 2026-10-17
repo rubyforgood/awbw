@@ -70,6 +70,10 @@ class PersonPolicy < ApplicationPolicy
     admin? || (profiles_visible_to_users? && owner?)
   end
 
+  def visibility?
+    edit?
+  end
+
   def edit_own_profile?
     profiles_visible_to_users? && owner?
   end
