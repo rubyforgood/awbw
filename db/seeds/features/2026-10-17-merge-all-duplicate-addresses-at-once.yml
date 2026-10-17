@@ -1,0 +1,13 @@
+name: "Merge all duplicate addresses at once"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2708
+action_path: "/addresses/dedupe_index"
+summary: >-
+  The Dedupe addresses page has a Merge all button that merges every listed
+  person's and organization's duplicate addresses in the background.
+pro_tips:
+  - "Refresh the page after a few minutes to see what's left."
+  - "If one record can't be merged, the rest still are — it stays on the page so you can merge it by hand."
+  - "Clicking Merge all again while a run is going does nothing extra."

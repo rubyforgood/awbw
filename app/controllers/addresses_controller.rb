@@ -34,6 +34,15 @@ class AddressesController < ApplicationController
     redirect_to dedupe_index_addresses_path, alert: "Error merging addresses: #{e.message}"
   end
 
+  def dedupe_perform_all
+    authorize! :dedupe, to: :dedupe?
+    MergeDuplicateAddressesJob.perform_later
+
+    track_event("dedupe.address_all", {})
+    redirect_to dedupe_index_addresses_path,
+      notice: "Merging duplicate addresses in the background. Refresh in a few minutes to see what's left."
+  end
+
   private
 
   def merge_addresses(addressable)
