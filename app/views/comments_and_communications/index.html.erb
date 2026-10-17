@@ -21,7 +21,7 @@
   <div class="flex flex-wrap items-center gap-1">
     <%= link_to "Events", events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
     <%= link_to "People", people_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
-    <%= link_to "Activity", admin_activities_events_path(person_id: @person&.id), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "Activity", admin_activities_events_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 <% end %>
 <% subtitle = capture do %>
@@ -44,6 +44,12 @@
 <% actions = capture do %>
   <% if @person %>
     <%= render "comments_and_communications/add_buttons" %>
+    <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+      <%= link_to person_activity_path(@person), class: button_classes(:primary_outline, extra: "admin-only bg-blue-100") do %>
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        Activity
+      <% end %>
+    <% end %>
   <% end %>
 <% end %>
 
