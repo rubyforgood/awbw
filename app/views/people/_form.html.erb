@@ -32,7 +32,7 @@
               <span class="font-medium text-gray-900"><%= f.object.user.email %></span>
               <%= render "people/pending_email_change_badge", person: f.object %>
               <p class="mt-1 text-sm text-gray-500">
-                Only <%= link_to "editable by admins", edit_user_path(f.object.user), class: "underline" %>
+                Edit on <%= link_to "user account", edit_user_path(f.object.user), class: "underline" %>
               </p>
             </div>
           <% else %>

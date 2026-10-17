@@ -175,13 +175,14 @@ RSpec.describe FilemakerHelper, type: :helper do
     it "lists each code as an archive link" do
       html = helper.filemaker_code_hint(build(:person, filemaker_code: "00006"))
 
+      expect(html).to include("Comma separated if multiple")
       expect(html).to include("In the archive:")
       expect(html).to include(%(href="#{fm_archive_path("00006", table: "rolodexes")}"))
       expect(html).to include("00006</a>")
     end
 
-    it "returns nothing for a record without codes" do
-      expect(helper.filemaker_code_hint(build(:person, filemaker_code: nil))).to be_nil
+    it "explains the comma-separated format for a record without codes" do
+      expect(helper.filemaker_code_hint(build(:person, filemaker_code: nil))).to eq("Comma separated if multiple")
     end
   end
 
