@@ -2,7 +2,7 @@ class MembershipBillingPortalsController < ApplicationController
   def create
     person = current_user.person
     membership = person&.current_membership
-    authorize! membership || :membership, to: :billing_portal?
+    authorize! membership, to: :billing_portal?, with: MembershipPolicy
 
     return redirect_to(person_path(person), alert: "No active autopay subscription.", status: :see_other) unless person.pay_subscriptions.active.exists?
 
