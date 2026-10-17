@@ -7,7 +7,7 @@ require "rails_helper"
 # registration onto the keeper. But that CE still points at the deleted registrant's
 # license, so it lands invalid (license belongs to the other person) and duplicates
 # the keeper's own CE for the same enrollment. The merge must repoint it to the kept
-# registrant's equivalent license and fold the duplicates into one, keeping payments.
+# registrant's equivalent license and merge the duplicates into one, keeping payments.
 RSpec.describe "Event registration dedupe — continuing education", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:event) { create(:event) }

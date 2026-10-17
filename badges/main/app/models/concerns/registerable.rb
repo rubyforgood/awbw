@@ -60,7 +60,7 @@ module Registerable
   end
 
   # True when more has been allocated (payments, scholarships, discounts) than the
-  # record costs — an overage an admin needs to reconcile. A merge folding two paid
+  # record costs — an overage an admin needs to reconcile. A merge combining two paid
   # records onto one, or a $0 cost still carrying a payment, can produce it.
   def over_allocated?
     allocations_sum > cost_cents.to_i

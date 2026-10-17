@@ -11,7 +11,7 @@ summary: >-
   and age range.
 description: >-
   When both records hold the same license (or a placeholder with no number on
-  file), the merge folds them into one and moves the CE history onto the
+  file), the merge combines them into one and moves the CE history onto the
   surviving license, so nothing is lost and the merge no longer fails on a
   license that has CE credit attached. Two CE registrations for the same
   enrollment collapse into one, keeping both records' payments. The kept person
@@ -20,5 +20,5 @@ description: >-
   kept as an additional tag. The deleted person's profile photo moves over when
   the kept person has none.
 pro_tips:
-  - "If folding two paid CE records onto one enrollment leaves more paid than it costs, the CE registration shows a \"Check payments\" flag so you can reconcile the payments — the cost is never inflated to hide it."
+  - "If merging two paid CE records onto one enrollment leaves more paid than it costs, the CE registration shows a \"Check payments\" flag so you can reconcile the payments — the cost is never inflated to hide it."
   - "The preview tells you what will move before you merge. It still can't be undone."

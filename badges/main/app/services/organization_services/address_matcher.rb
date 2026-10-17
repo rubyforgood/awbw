@@ -10,8 +10,11 @@ module OrganizationServices
   #      submission that merely adds the state/country we were missing
   #   3. same street + same ZIP, in any city — a ZIP pins a place far more tightly
   #      than a city name, so this reunites an address whose city was respelled
-  #      between submissions ("St. Louis" / "Saint Louis") without merging two real
+  #      between submissions ("Ventura" / "San Buenaventura") without merging two real
   #      offices that share a street name in different towns
+  #
+  # Every comparison goes through AddressNormalizer, so "St. Louis" matches
+  # "Saint Louis" and "123 N Main St" matches "123 North Main Street".
   #
   # Because 3 can match across cities, the city the caller submitted may differ
   # from the one on file; UpsertAddress keeps the saved city and ProfileDiff flags
@@ -20,14 +23,15 @@ module OrganizationServices
     module_function
 
     def call(organization, city:, state: nil, street_address: nil, zip_code: nil)
-      city = city&.strip
+      city = AddressNormalizer.city(city)
       return if city.blank?
 
       addresses = organization.addresses.to_a
-      in_city = addresses.select { |address| address.city.to_s.strip.casecmp?(city) }
-      street = street_address&.strip
+      in_city = addresses.select { |address| AddressNormalizer.city(address.city) == city }
+      street = AddressNormalizer.street(street_address)
 
-      in_state = in_city.select { |address| address.state.to_s.strip.casecmp?(state&.strip.to_s) }
+      state_key = AddressNormalizer.state(state)
+      in_state = in_city.select { |address| AddressNormalizer.state(address.state) == state_key }
       by_state = same_street(in_state, street) || in_state.first
       return by_state if by_state
 
@@ -36,17 +40,17 @@ module OrganizationServices
       by_street = same_street(in_city, street)
       return by_street if by_street
 
-      zip = zip_code&.strip
+      zip = AddressNormalizer.zip(zip_code)
       return if zip.blank?
       addresses.find do |address|
-        address.street_address.to_s.strip.casecmp?(street) && address.zip_code.to_s.strip.casecmp?(zip)
+        AddressNormalizer.street(address.street_address) == street && AddressNormalizer.zip(address.zip_code) == zip
       end
     end
 
     def same_street(addresses, street)
       return if street.blank?
 
-      addresses.find { |address| address.street_address.to_s.strip.casecmp?(street) }
+      addresses.find { |address| AddressNormalizer.street(address.street_address) == street }
     end
   end
 end
