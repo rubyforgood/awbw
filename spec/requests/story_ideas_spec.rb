@@ -130,17 +130,6 @@ RSpec.describe "/story_ideas", type: :request do
         expect(story_idea.primary_category).to eq(children)
         expect(story_idea.categorizable_items.where(is_primary: true).count).to eq(1)
       end
-
-      it "stars the only sector and audience category selected" do
-        post story_ideas_url, params: { story_idea: valid_attributes.merge(
-          sector_ids: [ education.id ], primary_sector_id: "",
-          category_ids: [ teens.id ], primary_category_id: ""
-        ) }
-
-        story_idea = StoryIdea.last
-        expect(story_idea.primary_sector).to eq(education)
-        expect(story_idea.primary_category).to eq(teens)
-      end
     end
 
     describe "GET /update" do

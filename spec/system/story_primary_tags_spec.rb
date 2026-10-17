@@ -45,7 +45,7 @@ RSpec.describe "Story primary sector and category stars", type: :system, js: tru
     expect(story.primary_category).to eq(teens)
   end
 
-  it "stars a lone checked tag, and the remaining one when another is unchecked" do
+  it "stars the first checked tag and keeps it starred as more are checked" do
     visit edit_story_path(story)
 
     find("label[for='story_sector_ids_#{health.id}']").click
@@ -54,9 +54,6 @@ RSpec.describe "Story primary sector and category stars", type: :system, js: tru
     find("label[for='story_sector_ids_#{education.id}']").click
     expect(primary(:sector, health)).to be_checked
     expect(primary(:sector, education)).not_to be_checked
-
-    find("label[for='story_sector_ids_#{health.id}']").click
-    expect(primary(:sector, education)).to be_checked
   end
 
   it "stars a newly checked tag when none of the checked ones is starred" do

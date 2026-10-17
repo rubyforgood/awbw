@@ -9,9 +9,8 @@ import { Controller } from "@hotwired/stimulus"
 // still lead with the primary on display. The sector chip's leader (crown) flag is
 // independent and CSS-only, so it needs no JS here. An optional member checkbox
 // per chip (the grid's tag checkbox) stays in step: starring checks it, and
-// unchecking it clears the star. A newly picked chip is starred when none of the
-// others is, and a lone remaining chip is starred, matching the server's rule
-// that a sole tag is the primary one.
+// unchecking it clears the star. A newly picked chip is starred by default when
+// none of the selected chips is.
 export default class extends Controller {
   static targets = ["chip", "primary", "member"]
   static classes = ["primary", "default"]
@@ -28,7 +27,7 @@ export default class extends Controller {
       const member = this.memberIn(this.chipFor(event.target))
       if (member) member.checked = true
     }
-    this.promoteSole()
+    this.style()
   }
 
   selectMember(event) {
@@ -38,7 +37,7 @@ export default class extends Controller {
       return
     }
     if (primary) primary.checked = false
-    this.promoteSole()
+    this.style()
   }
 
   // cocoon:after-insert — the inserted chip is the new pick.
@@ -47,18 +46,9 @@ export default class extends Controller {
   }
 
   promotePicked(primary) {
-    if (primary && !this.selectedPrimaries().some((other) => other.checked)) primary.checked = true
+    const starred = this.primaryTargets.some((other) => other.checked && this.isSelected(this.chipFor(other)))
+    if (primary && !starred) primary.checked = true
     this.style()
-  }
-
-  promoteSole() {
-    const selected = this.selectedPrimaries()
-    if (selected.length === 1) selected[0].checked = true
-    this.style()
-  }
-
-  selectedPrimaries() {
-    return this.primaryTargets.filter((primary) => this.isSelected(this.chipFor(primary)))
   }
 
   // Reflect each chip's primary state: highlight the starred chip, reset the rest.

@@ -152,7 +152,6 @@ class Person < ApplicationRecord
   # CategorizableItem uniqueness validation can't catch — both are unsaved, so
   # both INSERT and hit the DB unique index. Collapse duplicates before validation.
   before_validation :dedupe_age_range_items
-  before_validation :promote_sole_primary_tags
   accepts_nested_attributes_for :user, update_only: true
   # Only a new row needs an organization; an owner's work-address pick sends just id + address.
   accepts_nested_attributes_for :affiliations, allow_destroy: true,
@@ -636,16 +635,6 @@ class Person < ApplicationRecord
     return if primary_count <= 1
 
     errors.add(:base, "Only one age range can be marked as primary")
-  end
-
-  # Applied only when the tagging is edited in this save, so untouched legacy rows stay as they are.
-  def promote_sole_primary_tags
-    [ sectorable_items, age_range_categorizable_items ].each do |items|
-      next unless items.target.any? { |item| item.new_record? || item.changed? || item.marked_for_destruction? }
-
-      live = items.reject(&:marked_for_destruction?)
-      live.first.is_primary = true if live.one? && live.none?(&:is_primary?)
-    end
   end
 
   # Keep one tagging per age-range category. Prefer the persisted row, merge any

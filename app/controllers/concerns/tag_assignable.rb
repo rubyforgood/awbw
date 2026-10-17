@@ -42,16 +42,15 @@ module TagAssignable
     if params[key].key?(:primary_age_category_ids) && record.respond_to?(:apply_primary_age_groups!)
       record.apply_primary_age_groups!(Array(params[key][:primary_age_category_ids]))
     end
-    # The single-star primary picker (stories, story ideas) sends one id per kind;
-    # with no star, a lone selection is the primary.
+    # The single-star primary picker (stories, story ideas) sends one id per kind.
     primary_changes = {}
     if params[key].key?(:primary_sector_id)
-      primary_sector_id = primary_tag_ids(key, :primary_sector_id).first || sole_id(record.sectors)
-      primary_changes[:primary_sector] = assign_primary_tag(record.sectorable_items, :sector, primary_sector_id)
+      primary_changes[:primary_sector] =
+        assign_primary_tag(record.sectorable_items, :sector, primary_tag_ids(key, :primary_sector_id).first)
     end
     if params[key].key?(:primary_category_id)
-      primary_category_id = primary_category_ids(key).first || sole_id(record.categories.audiences)
-      primary_changes[:primary_category] = assign_primary_tag(record.categorizable_items, :category, primary_category_id)
+      primary_changes[:primary_category] =
+        assign_primary_tag(record.categorizable_items, :category, primary_category_ids(key).first)
     end
 
     # These memberships change outside the record's dirty tracking, so hand the
@@ -72,11 +71,6 @@ module TagAssignable
   # The story forms star only audience categories (age range or story population).
   def primary_category_ids(key)
     Category.audiences.where(id: primary_tag_ids(key, :primary_category_id)).ids
-  end
-
-  def sole_id(tags)
-    ids = tags.ids
-    ids.first if ids.one?
   end
 
   # Returns the tags promoted/demoted, so the record's change log shows the primary moving.
