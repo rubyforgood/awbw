@@ -32,7 +32,7 @@
           <%= render "shared/search_submit" %>
         </div>
       </div>
-      <%= render "events/filter_multiselect", param: :topic_subscription_type_id, label: "Topic",
+      <%= render "shared/filter_multiselect", param: :topic_subscription_type_id, label: "Topic",
             options: TopicSubscriptionType.active.ordered.map { |t| [ t.name, t.id ] },
             selected: Array(params[:topic_subscription_type_id]).map(&:to_i), placeholder: "All topics",
             wrapper_class: "min-w-[220px]" %>
