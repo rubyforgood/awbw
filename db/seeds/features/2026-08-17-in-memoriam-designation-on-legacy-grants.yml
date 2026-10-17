@@ -1,0 +1,11 @@
+name: "\"In memoriam\" designation on legacy grants"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-08-17
+action_path: "/grants"
+pr_number: 2244
+summary: >-
+  Legacy Circle grants can be flagged "in memoriam" so memorial gifts are
+  distinguishable from other legacy scholarships, with a chip on the grant.
+pro_tips:
+  - "The designation is for recognizing memorial gifts on the Story Share pages."

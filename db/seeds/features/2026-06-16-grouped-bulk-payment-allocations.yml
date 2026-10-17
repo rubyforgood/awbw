@@ -1,0 +1,8 @@
+name: "Grouped bulk-payment allocations"
+area: payments
+display_status: admin_facing
+released_on: 2026-06-16
+action_path: "/events/1/bulk_payments"
+pr_number: 1679
+summary: >-
+  Allocate a bulk payment across unpaid registrants with a clear allocation UI.

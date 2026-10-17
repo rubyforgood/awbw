@@ -1,0 +1,9 @@
+name: "Account activity tracking"
+area: people
+display_status: admin_facing
+released_on: 2026-03-01
+action_path: "/people/1"
+pr_number: 1277
+summary: >-
+  Track account changes — email changes, password resets, confirmations — with
+  dynamic search on a person's account activity.

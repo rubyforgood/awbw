@@ -1,0 +1,8 @@
+name: "Drag-and-drop category ordering"
+area: content
+display_status: admin_facing
+released_on: 2026-01-25
+action_path: "/categories"
+pr_number: 712
+summary: >-
+  Reorder categories within a category type by dragging them.

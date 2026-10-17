@@ -1,0 +1,9 @@
+name: "Start a new communication from the index"
+area: communications
+display_status: admin_facing
+released_on: 2026-08-04
+action_path: "/communications"
+pr_number: 2091
+summary: >-
+  Compose and send a one-off communication to a person straight from the
+  communications index, without going through a record first.

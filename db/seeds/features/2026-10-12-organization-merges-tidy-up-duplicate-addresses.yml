@@ -1,0 +1,18 @@
+name: "Organization merges tidy up duplicate addresses"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-12
+pr_number: 2636
+action_path: "/organizations/dedupe_index"
+summary: >-
+  Merging two organizations now folds identical addresses into one instead of
+  leaving the kept organization with duplicates, and keeps a single primary.
+description: >-
+  This works the same way as merging people. When two organizations share the
+  same address, the merge keeps just one copy and moves anything pointing at the
+  duplicate (like a person's affiliation address or an invoice's bill-to address)
+  onto the survivor. The copy it keeps is the one still in use — an active
+  address always wins over one marked inactive — and any detail only the other
+  copy had, like a phone number, is filled in rather than lost. It also settles
+  a single primary: the kept organization's own if it had one, otherwise the
+  other organization's. Addresses that genuinely differ are all kept.

@@ -1,0 +1,13 @@
+name: "Nest organizations under a parent"
+area: people
+display_status: admin_facing
+released_on: 2026-08-31
+pr_number: 2473
+summary: >-
+  An organization can now sit under a parent “roof” organization — so a program
+  that used to be split into separate records (e.g. one for Adult Windows and
+  one for Children's Windows) can be grouped under one org.
+pro_tips:
+  - "Set the parent from the “Parent organization” picker on the org edit page."
+  - "The profile shows a “Part of …” link up to the parent and a “Nested organizations” list down to the children."
+  - "Deleting a parent org un-nests its children rather than deleting them."

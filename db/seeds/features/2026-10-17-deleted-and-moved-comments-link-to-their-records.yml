@@ -1,0 +1,12 @@
+name: "Deleted and moved comments link to their records"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+action_path: /admin/activities/events
+pr_number: 2715
+summary: >-
+  In the activity feed, a deleted comment now links to the profile, registration,
+  or other record it was left on. A moved comment names and links both the record
+  it came from and the one it moved to.
+pro_tips:
+  - "A person's history keeps comments that were deleted or moved off their records."

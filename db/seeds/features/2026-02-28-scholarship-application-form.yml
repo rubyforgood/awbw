@@ -1,0 +1,9 @@
+name: "Scholarship application form"
+area: scholarships
+display_status: public_facing
+released_on: 2026-02-28
+action_path: "/events"
+pr_number: 1253
+summary: >-
+  A dedicated scholarship application form, whose answers surface wherever the
+  scholarship is reviewed.

@@ -1,0 +1,9 @@
+name: "Scholarship agreement before an award shows"
+area: scholarships
+display_status: public_facing
+released_on: 2026-07-14
+action_path: "/registration/sample"
+pr_number: 1794
+summary: >-
+  Recipients accept a scholarship agreement before the award is shown as granted,
+  so acceptance is on record.

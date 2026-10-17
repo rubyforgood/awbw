@@ -1,0 +1,13 @@
+name: "Repeat registration submissions no longer create duplicates"
+area: registration
+display_status: user_facing
+released_on: 2026-08-31
+summary: >-
+  If someone submits an event registration more than once — two submissions in a
+  row, or coming back to register again later — they now stay a single person with
+  one registration for that event, instead of appearing as duplicates on your
+  roster. Every submission is still saved, so no answers are lost.
+pr_number: 2465
+pro_tips:
+  - "The registrant's confirmation page shows their most recent submission."
+  - "Each submission is kept in full, so you can see what changed between them."

@@ -1,0 +1,8 @@
+name: "Registrants-by-state map and location breakdowns"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-02
+action_path: "/events/1/roster"
+summary: >-
+  Rosters and the attendees page include a US map coloring states by registrant
+  count, plus city and location breakdowns.

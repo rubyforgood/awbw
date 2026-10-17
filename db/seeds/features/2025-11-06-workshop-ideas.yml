@@ -1,0 +1,8 @@
+name: "Workshop ideas"
+area: content
+display_status: admin_facing
+released_on: 2025-11-06
+action_path: "/workshop_ideas"
+summary: >-
+  Facilitators submit workshop ideas that admins can review and promote into full
+  workshops.

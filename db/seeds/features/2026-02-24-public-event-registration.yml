@@ -1,0 +1,9 @@
+name: "Public event registration"
+area: registration
+display_status: public_facing
+released_on: 2026-02-24
+action_path: "/events"
+pr_number: 1206
+summary: >-
+  Events can accept registrations from the public through a polished registration
+  form, gated by a per-event toggle.

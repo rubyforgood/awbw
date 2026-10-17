@@ -1,0 +1,9 @@
+name: "Credit content to any person"
+area: content
+display_status: admin_facing
+released_on: 2026-07-09
+action_path: "/workshops"
+pr_number: 1940
+summary: >-
+  Workshops, stories, resources, and community news can be credited to any
+  person, not just people with active login accounts.

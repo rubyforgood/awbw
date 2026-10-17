@@ -1,0 +1,9 @@
+name: "Filter bulk-email recipients by topic subscription"
+area: communications
+display_status: admin_facing
+released_on: 2026-08-13
+action_path: "/events/1/preview_reminder"
+pr_number: 2179
+summary: >-
+  When picking who gets a bulk email, filter the recipients by the topics people
+  have subscribed to.

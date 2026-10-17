@@ -1,0 +1,16 @@
+name: "One program status, explained on hover"
+area: people
+display_status: admin_facing
+released_on: 2026-08-18
+action_path: "/organizations"
+pr_number: 1993
+summary: >-
+  New / Ongoing / Reinstated now means the same thing everywhere and is judged on
+  the event's own date, so the dashboard, roster, onboarding matrix and
+  organization pages always agree. Hover any badge to see why it says what it says.
+pro_tips:
+  - The hover names the date the status was judged on and the facilitator periods
+    behind it.
+  - An organization's overall status comes from its facilitator affiliations, not
+    the old status field — the edit form flags where the two disagree.
+  - A first-time organization reads New at its own training, not Ongoing.

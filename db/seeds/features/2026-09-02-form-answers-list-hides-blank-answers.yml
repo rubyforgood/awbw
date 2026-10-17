@@ -1,0 +1,10 @@
+name: "Form answers list hides blank answers"
+area: reporting
+display_status: admin_facing
+released_on: 2026-09-02
+summary: >-
+  An optional question nobody filled in used to leave a blank row in the Form
+  answers list, so its counts disagreed with a form's Results page. Those rows
+  are now hidden. Switch "Empty answers" to Included to see them again.
+action_path: /form_answers
+pr_number: 2508

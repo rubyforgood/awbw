@@ -1,0 +1,8 @@
+name: "Social share on event pages"
+area: events
+display_status: public_facing
+released_on: 2026-02-21
+action_path: "/events/1"
+pr_number: 1144
+summary: >-
+  A social-share sidebar lets visitors share an event page.

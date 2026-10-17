@@ -1,10 +1,11 @@
 require "yaml"
 
-# Syncs config/features.yml into the DB behind /features. `import!` creates
-# missing features, re-syncs CATALOG_FIELDS from the seed, and only fills BLANK
-# CONTENT_FIELDS. A feature edited in-app (Feature#edited?) is left entirely alone.
+# Syncs the seed files in db/seeds/features/ (one per feature) into the DB behind
+# /features. `import!` creates missing features, re-syncs CATALOG_FIELDS from the
+# seed, and only fills BLANK CONTENT_FIELDS. A feature edited in-app
+# (Feature#edited?) is left entirely alone.
 class FeatureCatalog
-  DATA_PATH = Rails.root.join("config/features.yml")
+  DATA_DIR = Rails.root.join("db/seeds/features")
 
   # Always re-synced from the seed (so corrections reach existing records).
   CATALOG_FIELDS = %i[ area display_status released_on action_path pr_number ].freeze
@@ -17,19 +18,20 @@ class FeatureCatalog
     def any? = total.positive?
   end
 
-  def initialize(path: DATA_PATH)
-    @path = path
+  def initialize(dir: DATA_DIR)
+    @dir = dir
   end
 
   def import!
     created = 0
     updated = 0
     skipped = 0
+    seeds = entries.map { |entry| attributes_for(entry) }
+    existing = existing_features(seeds.map { |attributes| attributes[:name] })
     # Sync writes leave updated_at alone so they never register as an in-app edit.
     Feature.no_touching do
-      entries.each do |entry|
-        attributes = attributes_for(entry)
-        feature = Feature.find_by(name: attributes[:name])
+      seeds.each do |attributes|
+        feature = existing[attributes[:name].downcase]
 
         if feature.nil?
           Feature.create!(attributes)
@@ -49,10 +51,17 @@ class FeatureCatalog
   end
 
   def entries
-    YAML.safe_load_file(@path, permitted_classes: [ Date ]) || []
+    Dir[File.join(@dir, "*.yml")].sort.map do |path|
+      YAML.safe_load_file(path, permitted_classes: [ Date ])
+    end
   end
 
   private
+
+  # Keyed by downcased name to match the case-insensitive column collation.
+  def existing_features(names)
+    Feature.with_rich_text_rhino_description.where(name: names).index_by { |feature| feature.name.downcase }
+  end
 
   def attributes_for(entry)
     {

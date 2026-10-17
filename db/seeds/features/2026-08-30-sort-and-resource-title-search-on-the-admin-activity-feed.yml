@@ -1,0 +1,11 @@
+name: "Sort and resource-title search on the admin activity feed"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-30
+action_path: "/admin/activities/events"
+summary: >-
+  The admin activity feed gains a Resource title search (find activity by the name
+  of the workshop, resource, or record it touched) and sortable Time, Activity, and
+  User columns.
+pro_tips:
+  - "Resource title searches the name captured on each activity, which is more precise than the broader Details search."

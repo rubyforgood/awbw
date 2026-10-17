@@ -1,0 +1,8 @@
+name: "Bulk portal invitations"
+area: communications
+display_status: admin_facing
+released_on: 2026-02-22
+action_path: "/users"
+pr_number: 1162
+summary: >-
+  Send welcome instructions to many people at once as a background job.

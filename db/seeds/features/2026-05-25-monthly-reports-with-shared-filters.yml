@@ -1,0 +1,9 @@
+name: "Monthly reports with shared filters"
+area: reporting
+display_status: admin_facing
+released_on: 2026-05-25
+action_path: "/monthly_reports"
+pr_number: 1530
+summary: >-
+  Monthly reports use standard list screens with the same search and filters as
+  the rest of the portal.

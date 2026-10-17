@@ -1,0 +1,15 @@
+name: "On-demand training agreement"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/forms"
+pr_number: 2304
+summary: >-
+  Someone finishing the on-demand training signs up on the on-demand training
+  event's public registration form, like any other training. Linking their
+  organization creates their job affiliation and a Facilitator affiliation
+  dated to their sign-up.
+pro_tips:
+  - Email the registration link from their person edit page — the "Email form
+    links" section lists the current on-demand training and every upcoming
+    one, with how many times each link has been sent and by whom.

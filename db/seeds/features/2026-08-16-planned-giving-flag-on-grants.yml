@@ -1,0 +1,8 @@
+name: "Planned-giving flag on grants"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-08-16
+action_path: "/grants"
+pr_number: 2203
+summary: >-
+  Mark a grant as planned giving so it stands apart from other funding.

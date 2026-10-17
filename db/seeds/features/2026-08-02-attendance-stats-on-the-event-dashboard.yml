@@ -1,0 +1,9 @@
+name: "Attendance stats on the event dashboard"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-02
+action_path: "/events/1/dashboard"
+pr_number: 2037
+summary: >-
+  The per-event dashboard shows how many registrants actually attended alongside
+  the registration and revenue figures.

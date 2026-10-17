@@ -1,0 +1,10 @@
+name: "Communications stay attached after an email change"
+area: communications
+display_status: admin_facing
+released_on: 2026-09-23
+pr_number: 2547
+action_path: "/comments_and_communications"
+summary: >-
+  A person's message history now stays linked to them even after they change
+  their email address, so messages sent to a former address keep showing in
+  their comments & communications feed instead of dropping off.

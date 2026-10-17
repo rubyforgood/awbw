@@ -1,0 +1,10 @@
+name: "Filter a form's results"
+area: reporting
+display_status: admin_facing
+released_on: 2026-09-02
+summary: >-
+  A form's Results page gained a filter row at the top — narrow the rolled-up
+  answers by question name, event (for forms used by several events),
+  organization, or the date a form was submitted, and clear the lot with one
+  button.
+pr_number: 2508

@@ -1,0 +1,8 @@
+name: "Sortable registrants table"
+area: events
+display_status: admin_facing
+released_on: 2026-06-11
+action_path: "/events/1/registrants"
+pr_number: 1630
+summary: >-
+  Sort the registrants table by clicking its column headers.
