@@ -152,7 +152,7 @@ RSpec.describe "/organizations", type: :request do
       page = Capybara.string(response.body)
       expect(page).to have_content("Sectors and age groups")
       %w[Alpha Bravo Charlie Delta Echo Teens].each { |name| expect(page).to have_content(name) }
-      expect(page).to have_content("1 total · 0 primary · 1 additional", count: 2)
+      expect(page).to have_css("li[title='1 total · 0 primary · 1 additional']", count: 2)
       expect(page).not_to have_content("Direct Sector 1")
       expect(page).not_to have_content("Former Sector")
     end

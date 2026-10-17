@@ -11,12 +11,22 @@
   <% if rows.any? %>
     <ul class="space-y-3">
       <% rows.each do |row| %>
-        <li>
-          <div class="mb-1 flex items-baseline justify-between gap-3 text-sm">
+        <% summary = "#{row.total} total · #{row.primary_count} primary · #{row.additional_count} additional" %>
+        <li title="<%= summary %>">
+          <div class="mb-1 flex items-center justify-between gap-3 text-sm">
             <%= link_to row.tag.name, taggings_path(link_param => row.tag.name), class: "font-medium text-gray-800 hover:underline" %>
-            <span class="whitespace-nowrap text-gray-600"><span class="font-semibold text-gray-900"><%= row.total %> total</span> · <%= row.primary_count %> primary · <%= row.additional_count %> additional</span>
+            <span class="flex items-center gap-1.5 whitespace-nowrap">
+              <span class="font-semibold text-gray-900" aria-hidden="true"><%= row.total %></span>
+              <% if row.primary_count.positive? %>
+                <span class="rounded px-1.5 text-xs font-semibold <%= DomainTheme.bg_class_for(domain, intensity: 500) %> <%= DomainTheme.text_class_for(domain, intensity: 950) %>" aria-hidden="true"><%= row.primary_count %></span>
+              <% end %>
+              <% if row.additional_count.positive? %>
+                <span class="rounded px-1.5 text-xs font-medium <%= DomainTheme.bg_class_for(domain, intensity: 200) %> <%= DomainTheme.text_class_for(domain, intensity: 800) %>" aria-hidden="true"><%= row.additional_count %></span>
+              <% end %>
+              <span class="sr-only"><%= summary %></span>
+            </span>
           </div>
-          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100" title="<%= pluralize(row.total, "facilitator") %> of <%= facilitator_count %>">
+          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100">
             <div class="<%= DomainTheme.bg_class_for(domain, intensity: 500) %>" style="width: <%= 100.0 * row.primary_count / facilitator_count %>%"></div>
             <div class="<%= DomainTheme.bg_class_for(domain, intensity: 200) %>" style="width: <%= 100.0 * row.additional_count / facilitator_count %>%"></div>
           </div>
