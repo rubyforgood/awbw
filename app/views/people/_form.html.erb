@@ -133,11 +133,11 @@
 
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
-      <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+      <div class="form-group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
         <h3 class="<%= heading_class %>">Age ranges</h3>
         <div class="flex flex-1 flex-wrap content-start items-center gap-2"
              data-controller="primary-tag"
-             data-primary-tag-primary-class="border-amber-300 bg-amber-50"
+             data-primary-tag-primary-class="border-lime-500 bg-lime-100"
              data-primary-tag-default-class="border-gray-300 bg-white">
           <% age_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
           <%= f.simple_fields_for :age_range_categorizable_items, age_owner.age_range_items_ordered do |afi| %>
