@@ -189,14 +189,15 @@
     <div class="form-group space-y-4">
       <% other_category_types.each do |type, cats| %>
         <div class="<%= card_class %>">
-          <h3 class="<%= heading_class %>"><%= type.display_label %></h3>
-          <div class="flex flex-wrap gap-3">
-            <% cats.each do |category| %>
-              <%= render "shared/category_checkbox", param_key: "person", category: category,
-                         checked: (@selected_category_ids || @person.category_ids).include?(category.id),
-                         is_age: false,
-                         primary_checked: false %>
-            <% end %>
+          <% select_id = "person_category_ids_type_#{type.id}" %>
+          <%= label_tag select_id, type.display_label, class: "block #{heading_class}" %>
+          <div data-controller="searchable-checkbox">
+            <%= select_tag "person[category_ids][]",
+                           options_from_collection_for_select(cats, :id, :name, @selected_category_ids || @person.category_ids),
+                           id: select_id,
+                           multiple: true,
+                           class: "w-full rounded-lg border border-gray-300 bg-white",
+                           data: { searchable_checkbox_target: "select", placeholder: "Add #{type.display_label.downcase}…" } %>
           </div>
         </div>
       <% end %>
