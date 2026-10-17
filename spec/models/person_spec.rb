@@ -229,6 +229,60 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "a sole sector or age range becomes primary" do
+    let(:person) { create(:person) }
+    let(:sector_a) { create(:sector, :published) }
+    let(:sector_b) { create(:sector, :published) }
+    let(:age_type) { create(:category_type, :published, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE) }
+    let(:children) { create(:category, :published, category_type: age_type) }
+    let(:adults) { create(:category, :published, category_type: age_type) }
+
+    it "stars the only sector selected" do
+      person.sectorable_items.build(sector: sector_a, is_primary: false)
+      person.save!
+
+      expect(person.reload.primary_sector).to eq(sector_a)
+    end
+
+    it "stars the only age range selected" do
+      person.age_range_categorizable_items.build(category: children, is_primary: false)
+      person.save!
+
+      expect(person.reload.primary_age_groups).to contain_exactly(children)
+    end
+
+    it "stars the sector left over when the other is removed" do
+      person.sectorable_items.create!(sector: sector_a, is_primary: false)
+      doomed = person.sectorable_items.create!(sector: sector_b, is_primary: true)
+      person.reload
+
+      person.update!(sectorable_items_attributes: [ { id: doomed.id, _destroy: "1" } ])
+
+      expect(person.reload.primary_sector).to eq(sector_a)
+    end
+
+    it "leaves several unstarred selections alone" do
+      person.sectorable_items.build(sector: sector_a, is_primary: false)
+      person.sectorable_items.build(sector: sector_b, is_primary: false)
+      person.age_range_categorizable_items.build(category: children, is_primary: false)
+      person.age_range_categorizable_items.build(category: adults, is_primary: false)
+      person.save!
+
+      person.reload
+      expect(person.primary_sector).to be_nil
+      expect(person.primary_age_groups).to be_empty
+    end
+
+    it "leaves an untouched sole sector alone on an unrelated save" do
+      person.sectorable_items.create!(sector: sector_a, is_primary: false)
+      person.reload
+
+      person.update!(bio: "updated")
+
+      expect(person.reload.primary_sector).to be_nil
+    end
+  end
+
   describe "#sectorable_items_primary_first" do
     it "orders the primary sector first, then the rest alphabetically" do
       person = create(:person)

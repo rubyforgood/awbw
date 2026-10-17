@@ -1,0 +1,9 @@
+name: "A lone sector or age group is starred primary"
+area: people
+display_status: user_facing
+released_on: 2026-10-17
+pr_number: 2714
+summary: >-
+  When you pick just one sector or age range for a person, or one sector or
+  "Who is this story about?" tag for a story or story idea, it's saved as the
+  primary one, so you don't have to star it yourself.

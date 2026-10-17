@@ -611,17 +611,42 @@ RSpec.describe "/stories", type: :request do
         story.sectorable_items.create!(sector: health, is_primary: true)
         story.sectorable_items.create!(sector: education, is_primary: false)
         story.categorizable_items.create!(category: children, is_primary: true)
+        story.categorizable_items.create!(category: teens, is_primary: false)
 
         patch story_url(story), params: { story: {
           sector_ids: [ health.id, education.id ], primary_sector_id: education.id,
-          category_ids: [ children.id ], primary_category_id: ""
+          category_ids: [ children.id, teens.id ], primary_category_id: ""
         } }
 
         expect(response).to have_http_status(:see_other)
         expect(story.reload.primary_sector).to eq(education)
         expect(story.sectorable_items.where(is_primary: true).count).to eq(1)
         expect(story.primary_category).to be_nil
-        expect(story.categories).to contain_exactly(children)
+        expect(story.categories).to contain_exactly(children, teens)
+      end
+
+      it "stars the only sector and audience category selected" do
+        theme = create(:category, :published)
+
+        post stories_url, params: { story: base_attributes.merge(
+          sector_ids: [ health.id ], primary_sector_id: "",
+          category_ids: [ children.id, theme.id ], primary_category_id: ""
+        ) }
+
+        story = Story.order(:created_at).last
+        expect(story.primary_sector).to eq(health)
+        expect(story.primary_category).to eq(children)
+      end
+
+      it "leaves several unstarred selections without a primary" do
+        post stories_url, params: { story: base_attributes.merge(
+          sector_ids: [ health.id, education.id ], primary_sector_id: "",
+          category_ids: [ children.id, teens.id ], primary_category_id: ""
+        ) }
+
+        story = Story.order(:created_at).last
+        expect(story.primary_sector).to be_nil
+        expect(story.primary_category).to be_nil
       end
 
       it "marks a starred age range primary" do
