@@ -3,8 +3,11 @@
     toggles the editable fields on click — no JavaScript needed. %>
 <details class="nested-fields group mb-3 overflow-hidden rounded-lg border border-yellow-200 bg-white"<%= " open".html_safe unless f.object.persisted? %>>
   <summary class="flex cursor-pointer list-none items-center justify-between gap-2 bg-yellow-50 p-3 [&::-webkit-details-marker]:hidden">
-    <div class="text-lg font-semibold text-gray-800">
-      Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
+    <div class="flex items-center gap-2 text-lg font-semibold text-gray-800">
+      <% if f.object.persisted? && (type_label = f.object.decorate.address_type_label) %>
+        <span class="rounded-full bg-yellow-200 px-2 py-0.5 text-xs font-medium text-yellow-900"><%= type_label %></span>
+      <% end %>
+      <span>Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %></span>
     </div>
     <i class="fa-solid fa-chevron-down text-gray-400 transition-transform group-open:rotate-180"></i>
   </summary>

@@ -6,6 +6,7 @@
 @source "../../javascript/**/*.js";
 @source "../../helpers/**/*.rb";
 @source "../../decorators/**/*.rb";
+@source "../../../config/initializers/simple_form*.rb";
 
 @theme {
   --color-primary: #24479e;

@@ -73,6 +73,7 @@
                                   f,
                                   :contact_methods,
                                   partial: "contact_methods/contact_method_fields",
+                                  data: { association_insertion_node: "this" },
                                   class: button_classes(:secondary_outline) %>
     </div>
   </div>
@@ -86,6 +87,7 @@
     <%= link_to_add_association "➕ Add address",
                                 f,
                                 :addresses,
+                                data: { association_insertion_node: "this" },
                                 class: button_classes(:secondary_outline) %>
   </div>
 
