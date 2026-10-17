@@ -171,7 +171,9 @@ class Organization < ApplicationRecord
 
   # Org search: like TagFilterable (matches ALL names), but sectors and age ranges
   # match through any tag, primary or additional, an active facilitator holds.
-  # Other category types (workshop settings) are still entered on the org itself.
+  # Other category types (workshop settings) are still entered on the org itself,
+  # and like the tag counts below they only surface while the org has an active
+  # facilitator, so search and the tag matrix report the same organizations.
   scope :sector_names_all, ->(names) {
     parsed = TagFilterable.parse_names(names)
     next all if parsed.empty?
@@ -198,7 +200,8 @@ class Organization < ApplicationRecord
                                 .select(:organization_id))
     end
     if own_names.any?
-      scope = scope.where(id: Organization.unscoped.joins(:categories).where("LOWER(categories.name) IN (?)", own_names)
+      scope = scope.where(id: Organization.unscoped.with_active_facilitators
+                                .joins(:categories).where("LOWER(categories.name) IN (?)", own_names)
                                 .group("organizations.id")
                                 .having("COUNT(DISTINCT LOWER(categories.name)) = ?", own_names.size)
                                 .select("organizations.id"))
@@ -359,14 +362,16 @@ class Organization < ApplicationRecord
 
   # Sectors and age groups are never entered on an org — they roll up from the
   # primary tags of its active facilitators.
-  # Most-held first, then alphabetical, so a capped list shows the most representative.
+  # Most-held first, so a capped list shows the most representative; ties break
+  # alphabetically for sectors and on age position for age groups.
   def active_facilitator_sectors
     active_facilitators.filter_map(&:primary_sector).tally
       .sort_by { |sector, count| [ -count, sector.name.to_s.downcase ] }.map(&:first)
   end
 
   def active_facilitator_age_groups
-    active_facilitators.flat_map(&:primary_age_groups).uniq
+    active_facilitators.flat_map(&:primary_age_groups).tally
+      .sort_by { |group, count| [ -count, group.position || 0, group.name.to_s ] }.map(&:first)
   end
 
   BREAKDOWN_SORT_OPTIONS = [ [ "Primary first", "primary" ], [ "Total", "total" ], [ "A–Z", "name" ] ].freeze

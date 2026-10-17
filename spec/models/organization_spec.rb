@@ -382,6 +382,28 @@ RSpec.describe Organization do
     end
   end
 
+  describe ".category_names_all for the org's own category types" do
+    let(:settings_type) { create(:category_type, name: "WorkshopEnvironment", published: true, profile_specific: true) }
+    let!(:clinical) { create(:category, :published, category_type: settings_type, name: "Clinical setting") }
+
+    def tagged_org(name, affiliation_attrs)
+      create(:organization, name: name).tap do |organization|
+        organization.categorizable_items.create!(category: clinical)
+        create(:affiliation, { organization: organization }.merge(affiliation_attrs))
+      end
+    end
+
+    it "matches only organizations that also have an active facilitator, like the matrix counts" do
+      facilitating = tagged_org("Facilitating Org", {})
+      tagged_org("Staff Only Org", title: "Director")
+      tagged_org("Former Org", end_date: 1.year.ago)
+
+      expect(Organization.category_names_all("Clinical setting")).to contain_exactly(facilitating)
+      expect(Organization.category_tag_counts).to eq(clinical.id => 1)
+      expect(Category.has_published_taggings).to contain_exactly(clinical)
+    end
+  end
+
   describe "#active_facilitator_sectors" do
     let!(:housing) { create(:sector, :published, name: "Housing") }
     let!(:legal) { create(:sector, :published, name: "Legal") }
@@ -485,6 +507,19 @@ RSpec.describe Organization do
       staff.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
 
       expect(organization.active_facilitator_age_groups).to contain_exactly(young)
+    end
+
+    it "orders by how many facilitators hold it as primary, then by age position" do
+      person_a.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
+      person_b.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      third = create(:person)
+      create(:affiliation, organization: organization, person: third)
+      third.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      fourth = create(:person)
+      create(:affiliation, organization: organization, person: fourth)
+      fourth.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
+
+      expect(organization.active_facilitator_age_groups).to eq([ teen, young, adult ])
     end
   end
 end

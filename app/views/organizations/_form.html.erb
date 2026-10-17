@@ -54,7 +54,10 @@
       </div>
 
       <!-- Sectors & age groups (read-only roll-up) & Windows audience -->
-      <% breakdown_path = populations_served_organization_path(f.object, return_to: "organization_edit") if f.object.persisted? %>
+      <%# The breakdown only lists what the profile preferences allow, so with both off
+          there's nothing on the other end to link to. %>
+      <% breakdown_shown = f.object.profile_show_sectors? || f.object.profile_show_age_ranges? %>
+      <% breakdown_path = populations_served_organization_path(f.object, return_to: "organization_edit") if f.object.persisted? && breakdown_shown %>
       <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-[3fr_1fr]">
         <div class="rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

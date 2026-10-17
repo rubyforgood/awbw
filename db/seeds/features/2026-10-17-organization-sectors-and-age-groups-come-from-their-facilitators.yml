@@ -13,3 +13,4 @@ pro_tips:
   - "Searching organizations by sector or age group finds any organization with an active facilitator who lists it, as a primary or additional tag."
   - "In tag search, the number with an asterisk on an organization is how many of its active facilitators list that tag."
   - "\"See all sectors and age groups\" on an organization's profile lists everything its active facilitators hold, primary and additional."
+  - "The \"Show sectors\" and \"Show age ranges\" profile settings also control that breakdown page — turn both off and the link disappears."

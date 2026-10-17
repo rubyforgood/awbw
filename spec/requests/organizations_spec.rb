@@ -211,6 +211,50 @@ RSpec.describe "/organizations", type: :request do
       expect(page).not_to have_css("[name*='sectorable_items_attributes']")
       expect(page).not_to have_css("[name='organization[primary_age_category_ids][]']")
     end
+
+    describe "profile display preferences" do
+      let!(:teen) do
+        age_type = create(:category_type, name: "AgeRange", published: true)
+        create(:category, :published, category_type: age_type, name: "Teens").tap do |category|
+          organization_with_sectors.affiliations.first.person.tag_age_groups(primary_ids: [ category.id ], additional_ids: [])
+        end
+      end
+
+      it "drops the breakdown section an organization hides on its profile" do
+        organization_with_sectors.update!(profile_show_sectors: false)
+
+        get populations_served_organization_url(organization_with_sectors)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("h2", exact_text: "Age groups served")
+        expect(page).not_to have_css("h2", exact_text: "Sectors")
+        expect(page).not_to have_content("Alpha")
+      end
+
+      it "shows nothing to break down when both are hidden" do
+        organization_with_sectors.update!(profile_show_sectors: false, profile_show_age_ranges: false)
+
+        get populations_served_organization_url(organization_with_sectors)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_content("This organization doesn't show sectors or age groups on its profile.")
+        expect(page).not_to have_css("section h2")
+        expect(page).not_to have_link("Primary first")
+      end
+
+      it "hides the profile and edit links to the breakdown when both are hidden" do
+        organization_with_sectors.update!(profile_show_sectors: false, profile_show_age_ranges: false)
+
+        get organization_url(organization_with_sectors)
+        expect(Capybara.string(response.body)).not_to have_link("See all sectors and age groups")
+
+        get edit_organization_url(organization_with_sectors)
+        page = Capybara.string(response.body)
+        expect(page).not_to have_link("See all sectors and age groups")
+        expect(page).not_to have_link("+1 more")
+        expect(page).to have_content("+1 more")
+      end
+    end
   end
 
   describe "GET /new" do

@@ -1,11 +1,17 @@
-<%# Up to three sector chips, most-held first, then "+N more" to the full breakdown. %>
+<%# Up to three sector chips, most-held first, then "+N more" to the full breakdown —
+    plain text when there's no breakdown to link to. %>
 <% link_options = local_assigns[:new_tab] ? { target: "_blank", rel: "noopener" } : {} %>
 <div class="flex flex-wrap gap-2">
   <% sectors.first(3).each do |sector| %>
     <%= render "sectors/tagging_label", sector: sector, is_primary: true %>
   <% end %>
   <% if sectors.size > 3 %>
-    <%= link_to "+#{sectors.size - 3} more", breakdown_path, **link_options,
-                class: "self-center px-2 text-sm font-medium #{eyebrow_link_class}" %>
+    <% overflow_label = "+#{sectors.size - 3} more" %>
+    <% if breakdown_path.present? %>
+      <%= link_to overflow_label, breakdown_path, **link_options,
+                  class: "self-center px-2 text-sm font-medium #{eyebrow_link_class}" %>
+    <% else %>
+      <span class="self-center px-2 text-sm font-medium text-gray-500"><%= overflow_label %></span>
+    <% end %>
   <% end %>
 </div>
