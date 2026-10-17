@@ -69,9 +69,9 @@
                 <span class="text-gray-400">—</span>
               <% end %>
             </td>
-            <td class="px-4 py-2 text-sm text-gray-700">
+            <td class="px-4 py-2 text-gray-700">
               <%= link_to type.topic_subscriptions.count, topic_subscriptions_path(topic_subscription_type_id: type.id),
-                    class: "text-blue-600 hover:text-blue-800 hover:underline" %>
+                    class: button_classes(nil) %>
             </td>
             <td class="px-4 py-2 text-sm">
               <% if type.archived? %>
