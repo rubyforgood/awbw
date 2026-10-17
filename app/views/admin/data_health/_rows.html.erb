@@ -1,0 +1,41 @@
+<%# Locals: check, page. One page of a check's rows, in a frame so paging swaps just this list. %>
+<% records = check.page(page) %>
+<%= turbo_frame_tag "data_health_rows_#{check.key}" do %>
+  <div class="mt-3 overflow-hidden rounded-lg border border-gray-200">
+    <% if check.row_partial %>
+      <%# display:contents on each row so its cells land in this grid and the
+          columns line up across records. %>
+      <ol class="grid grid-cols-[1fr_max-content_max-content] items-center gap-x-4 px-3 pb-2 text-sm">
+        <li class="contents text-xs font-medium tracking-wide text-gray-400 uppercase">
+          <% check.columns.each do |heading| %><span class="pt-2"><%= heading %></span><% end %>
+        </li>
+        <% records.each do |record| %>
+          <li class="contents">
+            <%= render check.row_partial, record: record %>
+          </li>
+        <% end %>
+      </ol>
+    <% else %>
+      <ul class="divide-y divide-gray-100 text-sm">
+        <% records.each do |record| %>
+          <li class="px-3 py-2 text-gray-700">
+            <% if (path = check.path_for(record)) %>
+              <%= link_to check.describe(record), path, target: "_blank", rel: "noopener",
+                    class: "hover:text-blue-700 hover:underline" %>
+            <% else %>
+              <%= check.describe(record) %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+  <% if records.total_pages > 1 %>
+    <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+      <span>
+        <%= records.offset + 1 %>–<%= records.offset + records.size %> of <%= check.count %><% if check.repairable? %> · a repair covers all <%= check.count %><% end %>
+      </span>
+      <%= tailwind_paginate records, url_for_page: ->(number) { admin_data_health_rows_path(check: check.key, page: number) } %>
+    </div>
+  <% end %>
+<% end %>

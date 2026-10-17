@@ -15,25 +15,35 @@
   </p>
 
   <% if clean %>
-    <div class="rounded-xl border border-green-200 bg-green-50 p-6 text-center text-sm text-green-800">
+    <div class="mb-4 rounded-xl border border-green-200 bg-green-50 p-6 text-center text-sm text-green-800">
       <i class="fa-solid fa-circle-check mr-1"></i>
       Everything checks out — no inconsistencies found.
     </div>
   <% end %>
 
-  <div class="space-y-6">
-    <% @groups.each do |group, checks| %>
-      <%= render "group_card", title: group, total: checks.sum(&:count) do %>
-        <% checks.each do |check| %>
-          <%= render "check", check: check %>
+  <div data-controller="expandable-cards" data-expandable-cards-expanded-value="false">
+    <div class="mb-3 flex justify-end">
+      <button type="button" data-action="expandable-cards#toggleAll"
+              class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+        <span data-expandable-cards-target="label">Expand all</span>
+        <i class="fa-solid fa-chevron-down text-xs transition-transform" data-expandable-cards-target="icon"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3">
+      <% @groups.each do |group, checks| %>
+        <%= render "group_card", title: group, total: checks.sum(&:count) do %>
+          <% checks.each do |check| %>
+            <%= render "check", check: check %>
+          <% end %>
         <% end %>
       <% end %>
-    <% end %>
 
-    <%= turbo_frame_tag :data_health_worklists, src: admin_data_health_worklists_path, loading: :lazy, target: "_top" do %>
-      <div class="animate-pulse rounded-xl border border-gray-200 bg-white px-4 py-6 text-sm text-gray-400 shadow-sm">
-        Counting possible duplicates and author credit…
-      </div>
-    <% end %>
+      <%= turbo_frame_tag :data_health_worklists, src: admin_data_health_worklists_path, loading: :lazy, target: "_top" do %>
+        <div class="animate-pulse rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-400 shadow-sm">
+          Counting possible duplicates and author credit…
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>

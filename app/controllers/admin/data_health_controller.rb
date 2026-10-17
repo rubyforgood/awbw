@@ -18,6 +18,16 @@ module Admin
       render :data_health_worklists
     end
 
+    def rows
+      authorize! :data_health, to: :index?
+
+      @check = DataHealth.find(params[:check])
+      return head :not_found unless @check
+
+      @page = params[:page].to_i.clamp(1, Float::INFINITY)
+      render :data_health_rows
+    end
+
     def repair
       authorize! :data_health, to: :repair?
 

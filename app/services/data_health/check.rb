@@ -6,12 +6,12 @@ module DataHealth
   # (`repairable?` / `repair!`). Everything on the page is derived from those, so
   # adding a check is one subclass plus a line in `DataHealth::CHECKS`.
   #
-  # `scope` must be a relation — the page counts it without loading, and only the
-  # first `PREVIEW_LIMIT` rows are rendered.
+  # `scope` must be a relation — the page counts it without loading, and lists
+  # its rows `PER_PAGE` at a time.
   class Check
     include Rails.application.routes.url_helpers
 
-    PREVIEW_LIMIT = 25
+    PER_PAGE = 10
 
     def self.key = name.demodulize.underscore
 
@@ -23,11 +23,9 @@ module DataHealth
 
     def any? = count.positive?
 
-    def preview
-      @preview ||= scope.limit(PREVIEW_LIMIT).to_a
+    def page(number)
+      ordered_scope.paginate(page: number, per_page: PER_PAGE, total_entries: count)
     end
-
-    def more_than_preview = count - preview.size
 
     # Checks that can only report are the honest default: a wrong row is not
     # always a row we know how to put right (see OrphanedProvenance).
@@ -74,5 +72,15 @@ module DataHealth
     def review_path = nil
 
     def review_label = "Review"
+
+    private
+
+    # Pages need a stable order; a scope without one is ordered by primary key.
+    def ordered_scope
+      relation = scope
+      return relation if relation.order_values.any?
+
+      relation.order(relation.arel_table[relation.primary_key])
+    end
   end
 end

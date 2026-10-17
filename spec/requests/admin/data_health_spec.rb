@@ -26,8 +26,17 @@ RSpec.describe "Admin::DataHealth", type: :request do
     it "groups checks under headings" do
       get admin_data_health_path
 
-      headings = Nokogiri::HTML(response.body).css("h2").map { |h| h.text.strip }
-      expect(headings).to include("Affiliations", "People", "Payments", "Stories", "Resources", "Communications")
+      headings = Nokogiri::HTML(response.body).css("h2 button > span:first-child").map { |h| h.text.strip }
+      expect(headings).to eq([ "Affiliations", "People", "Payments", "Stories", "Resources", "Communications" ])
+    end
+
+    it "starts every group collapsed, with an expand-all control" do
+      get admin_data_health_path
+
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.css("[data-controller='expandable-card']").map { |c| c["data-expandable-card-expanded-value"] }.uniq).to eq([ "false" ])
+      expect(doc.css("[data-expandable-card-target='body']").all? { |b| b["class"].split.include?("hidden") }).to be(true)
+      expect(doc.at_css("[data-action='expandable-cards#toggleAll']").text).to include("Expand all")
     end
 
     it "lists an offending row with enough context to recognise it" do
@@ -101,6 +110,43 @@ RSpec.describe "Admin::DataHealth", type: :request do
 
       expect(response.body).to include(%(href="#{person_path(person)}"))
       expect(response.body).to include(%(href="#{dedupe_index_users_path}"))
+    end
+  end
+
+  describe "GET rows" do
+    before { sign_in admin }
+
+    def stories_without_workshop(number)
+      number.times { |n| create(:story, title: "Unlinked story #{n.to_s.rjust(2, '0')}", workshop: nil) }
+    end
+
+    it "lists ten rows at a time, with a pager into the check's own frame" do
+      stories_without_workshop(12)
+
+      get admin_data_health_path
+
+      frame = Nokogiri::HTML(response.body).at_css("turbo-frame#data_health_rows_stories_without_workshop")
+      expect(frame.css("li").size).to eq(10)
+      expect(frame.text).to include("1–10 of 12")
+      expect(frame.to_html).to include(CGI.escapeHTML(admin_data_health_rows_path(check: "stories_without_workshop", page: 2)))
+    end
+
+    it "renders a later page into the same frame" do
+      stories_without_workshop(12)
+
+      get admin_data_health_rows_path(check: "stories_without_workshop", page: 2),
+          headers: { "Turbo-Frame" => "data_health_rows_stories_without_workshop" }
+
+      expect(response).to have_http_status(:ok)
+      frame = Nokogiri::HTML(response.body).at_css("turbo-frame#data_health_rows_stories_without_workshop")
+      expect(frame.css("li").size).to eq(2)
+      expect(frame.text).to include("11–12 of 12")
+    end
+
+    it "is a 404 for an unknown check" do
+      get admin_data_health_rows_path(check: "no_such_check")
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 

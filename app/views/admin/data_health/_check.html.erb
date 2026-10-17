@@ -27,39 +27,6 @@
   </div>
 
   <% if check.any? %>
-    <div class="mt-3 overflow-hidden rounded-lg border border-gray-200">
-      <% if check.row_partial %>
-        <%# display:contents on each row so its cells land in this grid and the
-            columns line up across records. %>
-        <ol class="grid grid-cols-[1fr_max-content_max-content] items-center gap-x-4 px-3 pb-2 text-sm">
-          <li class="contents text-xs font-medium tracking-wide text-gray-400 uppercase">
-            <% check.columns.each do |heading| %><span class="pt-2"><%= heading %></span><% end %>
-          </li>
-          <% check.preview.each do |record| %>
-            <li class="contents">
-              <%= render check.row_partial, record: record %>
-            </li>
-          <% end %>
-        </ol>
-      <% else %>
-        <ul class="divide-y divide-gray-100 text-sm">
-          <% check.preview.each do |record| %>
-            <li class="px-3 py-2 text-gray-700">
-              <% if (path = check.path_for(record)) %>
-                <%= link_to check.describe(record), path, target: "_blank", rel: "noopener",
-                      class: "hover:text-blue-700 hover:underline" %>
-              <% else %>
-                <%= check.describe(record) %>
-              <% end %>
-            </li>
-          <% end %>
-        </ul>
-      <% end %>
-      <% if check.more_than_preview.positive? %>
-        <p class="border-t border-gray-100 px-3 py-2 text-xs text-gray-400">
-          …and <%= check.more_than_preview %> more. A repair covers all <%= check.count %>, not just the ones listed.
-        </p>
-      <% end %>
-    </div>
+    <%= render "rows", check: check, page: 1 %>
   <% end %>
 </div>

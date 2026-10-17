@@ -19,6 +19,12 @@ RSpec.describe DataHealth do
     expect(keys.uniq).to eq(keys)
   end
 
+  it "pages every check's rows in a stable order" do
+    described_class.checks.each do |check|
+      expect(check.page(1).order_values).to be_present, "#{check.key} pages without an order"
+    end
+  end
+
   it "keeps every check's scope a relation, so counting doesn't load the table" do
     described_class.checks.each do |check|
       expect(check.scope).to be_a(ActiveRecord::Relation), "#{check.key} returned #{check.scope.class}"
@@ -188,7 +194,7 @@ RSpec.describe DataHealth::OverAllocatedRegistrations do
 
     check = described_class.new
     expect(check.scope).to contain_exactly(registration)
-    expect(check.describe(check.preview.first)).to include("over by $5")
+    expect(check.describe(check.page(1).first)).to include("over by $5")
   end
 
   it "finds a registration whose CE registration is over-allocated" do
