@@ -204,6 +204,32 @@ RSpec.describe "Profile change requests", type: :request do
       expect(request.reload).to be_resolved
     end
 
+    it "approves a work address change picked from the org's list by setting it" do
+      affiliation = create(:affiliation, person: person)
+      address = create(:address, addressable: affiliation.organization)
+      request = create(:profile_change_request, person: person, affiliation: affiliation,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                       proposed_organization_address: address, details: nil)
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+      expect(response.body).to include(ERB::Util.html_escape(address.name), ">Approve<")
+
+      post approve_profile_change_request_path(request)
+
+      expect(affiliation.reload.organization_address).to eq(address)
+      expect(request.reload).to be_resolved
+    end
+
+    it "leaves a typed work address change for a manual update" do
+      affiliation = create(:affiliation, person: person)
+      request = create(:profile_change_request, person: person, affiliation: affiliation,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                       details: "12 Elm St, Reno, NV 89501")
+
+      get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+      expect(response.body).not_to include(">Approve<")
+    end
+
     it "approves an add-a-new-affiliation request by creating it" do
       org = create(:organization, name: "New Org")
       request = create(:profile_change_request, person: person, field: "affiliation",

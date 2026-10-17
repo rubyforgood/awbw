@@ -93,6 +93,19 @@ RSpec.describe "Choosing which organization to change", type: :request do
     expect(response.body).to include("Your new work address")
   end
 
+  it "offers the organization's other addresses on a work address change" do
+    current = create(:address, addressable: sunrise.organization, street_address: "12 Elm St")
+    other = create(:address, addressable: sunrise.organization, street_address: "40 Oak Ave")
+    sunrise.update!(organization_address: current)
+
+    new_affiliation_request(affiliation_id: sunrise.id, change: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS)
+
+    expect(response.body).to include("profile_change_request[proposed_organization_address_id]")
+    expect(response.body).to include(%(<option value="#{other.id}">))
+    expect(response.body).not_to include(%(<option value="#{current.id}">))
+    expect(response.body).to include("Not on the list? Type it here")
+  end
+
   it "saves a date change sent from the focused form" do
     post profile_change_requests_path(person_id: person), params: {
       profile_change_request: {

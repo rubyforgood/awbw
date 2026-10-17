@@ -33,6 +33,7 @@ module ProfileChangeRequests
       when ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION then apply_affiliation_organization
       when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE then apply_affiliation_remove
       when ProfileChangeRequest::AFFILIATION_CHANGE_ADD then apply_affiliation_add
+      when ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS then apply_affiliation_work_address
       else Result.new(applied: false, message: "This request needs a manual update.")
       end
     end
@@ -74,6 +75,20 @@ module ProfileChangeRequests
 
       affiliation.update(inactive: true, inactive_supplied: true, end_date: affiliation.end_date || Date.current)
       Result.new(applied: true, message: "Affiliation ended and marked inactive.")
+    end
+
+    def apply_affiliation_work_address
+      affiliation = @request.affiliation
+      return Result.new(applied: false, message: "The affiliation no longer exists.") unless affiliation
+
+      address = @request.proposed_organization_address
+      return Result.new(applied: false, message: "This request needs a manual update.") unless address
+
+      if affiliation.update(organization_address: address)
+        Result.new(applied: true, message: "Work address changed to #{address.name}.")
+      else
+        Result.new(applied: false, message: affiliation.errors.full_messages.to_sentence)
+      end
     end
 
     def apply_affiliation_add

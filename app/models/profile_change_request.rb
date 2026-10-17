@@ -7,6 +7,7 @@ class ProfileChangeRequest < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :affiliation, optional: true
   belongs_to :professional_license, optional: true
+  belongs_to :proposed_organization_address, class_name: "Address", optional: true
 
   OTHER_FIELD = "other".freeze
   LICENSE_FIELD = "professional_license".freeze
@@ -44,9 +45,9 @@ class ProfileChangeRequest < ApplicationRecord
     AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
     AFFILIATION_CHANGE_OTHER
   ].freeze
-  AFFILIATION_FREE_TEXT_CATEGORIES = [ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ].freeze
-  # These carry a structured value Approve can apply directly; the free-text ones an admin handles by hand.
-  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - AFFILIATION_FREE_TEXT_CATEGORIES).freeze
+  AFFILIATION_FREE_TEXT_CATEGORIES = [ AFFILIATION_CHANGE_WORK_ADDRESS, AFFILIATION_CHANGE_OTHER ].freeze
+  # Approve applies these directly. A work address change joins them only when it picks one of the org's addresses.
+  AFFILIATION_AUTO_CATEGORIES = (AFFILIATION_CHANGE_TYPES - AFFILIATION_FREE_TEXT_CATEGORIES - [ AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS ]).freeze
 
   validates :field, inclusion: { in: FIELDS }
   validates :status, inclusion: { in: STATUSES }
@@ -81,6 +82,8 @@ class ProfileChangeRequest < ApplicationRecord
 
   def auto_appliable?
     return true if field.in?(AUTO_APPLIABLE_FIELDS)
+    return proposed_organization_address_id.present? if requested_value == AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS
+
     field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES) && !new_organization?
   end
 
@@ -102,6 +105,7 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_DATES then proposed_dates_label
     when AFFILIATION_CHANGE_ORGANIZATION then proposed_organization_name
     when AFFILIATION_CHANGE_REMOVE then "End-date and mark inactive"
+    when AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS then proposed_organization_address&.name
     when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name || new_organization_label, proposed_dates_label ].compact_blank.join(" · ")
     end
   end
@@ -190,6 +194,7 @@ class ProfileChangeRequest < ApplicationRecord
     end
     self.proposed_organization_name = nil unless requested_value.in?([ AFFILIATION_CHANGE_ORGANIZATION, AFFILIATION_CHANGE_ADD ])
     self.proposed_organization_name = nil if requested_value == AFFILIATION_CHANGE_ADD && organization_id.present?
+    self.proposed_organization_address_id = nil unless requested_value == AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS
   end
 
   def affiliation_belongs_to_person
@@ -227,6 +232,11 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_ADD
       errors.add(:base, "Pick an organization, or type its name if it's not on the list") if organization_id.blank? && proposed_organization_name.blank?
       errors.add(:proposed_title, "can't be blank") if proposed_title.blank?
+    when AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS
+      errors.add(:base, "Pick an address from the list, or type your new one") if proposed_organization_address_id.blank? && details.blank?
+      if proposed_organization_address && proposed_organization_address.addressable != affiliation&.organization
+        errors.add(:proposed_organization_address, "isn't one of this organization's addresses")
+      end
     end
   end
 

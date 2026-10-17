@@ -4,6 +4,9 @@ display_status: user_facing
 released_on: 2026-10-17
 summary: >-
   Each role on your profile now shows its work address right under the title.
-  To add or change it, use that role's "Request a change" button and pick
-  "Change my work address" or "Add my work address."
+  To change it, use that role's "Request a change" button and pick
+  "Change my work address" to choose another of your organization's addresses.
+pro_tips:
+  - "Not on the list? Type the new address instead, or pick \"Add my work address\" if none is on file yet."
+  - "Admins: a change picked from the list can be approved in one click, which sets the work address for you."
 pr_number: 2722
