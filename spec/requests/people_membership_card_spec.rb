@@ -60,6 +60,17 @@ RSpec.describe "Person profile membership card", type: :request do
     expect(response.body).to include('name="invoice_id"')
   end
 
+  it "hides the Pay action from an admin viewing someone else's outstanding invoice" do
+    membership = create(:membership, person: person)
+    create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current - 30.days, end_date: Date.current - 30.days + 1.year - 1.day)
+    sign_in create(:user, :admin)
+
+    get person_path(person)
+
+    expect(response.body).not_to include(memberships_invoice_checkouts_path)
+  end
+
   it "offers Pay for an invoice that starts today" do
     membership = create(:membership, person: person)
     create(:membership_invoice, membership: membership, cost_cents: 2_500,

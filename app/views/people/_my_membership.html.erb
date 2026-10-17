@@ -1,4 +1,3 @@
-<% owner = allowed_to?(:own_membership?, person) %>
 <div class="overflow-hidden rounded-2xl border-2 shadow-sm <%= profile_hidden_wash_class %>"
      data-controller="expandable-card"
      data-expandable-card-expanded-value="true">
@@ -29,7 +28,7 @@
         <% invoices_due.each do |invoice| %>
           <div class="flex flex-wrap items-center gap-2">
             <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice %></ul>
-            <% if owner && !invoice.upcoming? %>
+            <% if allowed_to?(:pay?, invoice) && !invoice.upcoming? %>
               <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
               <%= button_to "Pay", memberships_invoice_checkouts_path, params: { invoice_id: invoice.id },
                             class: button_classes(:primary, size: :sm),
@@ -40,7 +39,7 @@
       </div>
     <% end %>
 
-    <% if owner %>
+    <% if allowed_to?(:manage_subscription?, membership) %>
       <div>
         <% if autopay_cancelling %>
           <p class="mb-3 text-sm text-gray-700">

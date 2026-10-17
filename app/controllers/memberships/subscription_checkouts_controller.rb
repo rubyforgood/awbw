@@ -3,7 +3,7 @@ module Memberships
     def create
       person = current_user.person
       membership = person&.current_membership
-      authorize! membership, to: :checkout?, with: MembershipPolicy
+      authorize! membership, to: :set_up_subscription?, with: MembershipPolicy # needs with policy if membership is nil
 
       if membership.owes?
         return redirect_to(person_path(person), alert: "Please pay the current balance first.", status: :see_other)

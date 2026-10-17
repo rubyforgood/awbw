@@ -54,7 +54,7 @@ class PeopleController < ApplicationController
     @membership = membership_for(@person)
     membership_sub = @person.payment_processor&.subscription
 
-    @membership_autopay = allowed_to?(:own_membership?, @person) &&
+    @membership_autopay = @membership && allowed_to?(:manage_subscription?, @membership) &&
                           membership_sub.present? &&
                           @person.payment_processor&.subscribed?
 

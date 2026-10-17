@@ -31,53 +31,53 @@ RSpec.describe MembershipPolicy, type: :policy do
     end
   end
 
-  describe "#checkout?" do
+  describe "#set_up_subscription?" do
     it "allows the member who owns a live membership" do
-      expect(policy_for(user: owner)).to be_allowed_to(:checkout?)
+      expect(policy_for(user: owner)).to be_allowed_to(:set_up_subscription?)
     end
 
     it "denies a cancelled membership" do
       cancelled = create(:membership, :autorenewal_cancelled, person: owner.person)
 
-      expect(policy_for(user: owner, record: cancelled)).not_to be_allowed_to(:checkout?)
+      expect(policy_for(user: owner, record: cancelled)).not_to be_allowed_to(:set_up_subscription?)
     end
 
     it "denies another member's membership" do
-      expect(policy_for(user: other)).not_to be_allowed_to(:checkout?)
+      expect(policy_for(user: other)).not_to be_allowed_to(:set_up_subscription?)
     end
 
     it "denies when there is no membership record" do
-      expect(policy_for(user: owner, record: nil)).not_to be_allowed_to(:checkout?)
+      expect(policy_for(user: owner, record: nil)).not_to be_allowed_to(:set_up_subscription?)
     end
 
     it "denies while membership is disabled" do
       allow(Membership).to receive(:enabled?).and_return(false)
 
-      expect(policy_for(user: owner)).not_to be_allowed_to(:checkout?)
+      expect(policy_for(user: owner)).not_to be_allowed_to(:set_up_subscription?)
     end
   end
 
-  describe "#billing_portal?" do
+  describe "#manage_subscription?" do
     it "allows the member who owns the membership" do
-      expect(policy_for(user: owner)).to be_allowed_to(:billing_portal?)
+      expect(policy_for(user: owner)).to be_allowed_to(:manage_subscription?)
     end
 
     it "denies a member looking at someone else's membership" do
-      expect(policy_for(user: other, record: membership)).not_to be_allowed_to(:billing_portal?)
+      expect(policy_for(user: other, record: membership)).not_to be_allowed_to(:manage_subscription?)
     end
 
     it "denies when no membership record is given" do
-      expect(policy_for(user: owner, record: :membership)).not_to be_allowed_to(:billing_portal?)
+      expect(policy_for(user: owner, record: :membership)).not_to be_allowed_to(:manage_subscription?)
     end
 
     it "denies an admin who does not own the membership" do
-      expect(policy_for(user: admin, record: membership)).not_to be_allowed_to(:billing_portal?)
+      expect(policy_for(user: admin, record: membership)).not_to be_allowed_to(:manage_subscription?)
     end
 
     it "denies while membership is disabled" do
       allow(Membership).to receive(:enabled?).and_return(false)
 
-      expect(policy_for(user: owner)).not_to be_allowed_to(:billing_portal?)
+      expect(policy_for(user: owner)).not_to be_allowed_to(:manage_subscription?)
     end
   end
 end
