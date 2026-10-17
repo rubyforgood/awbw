@@ -263,7 +263,7 @@ RSpec.describe "OtherResponses", type: :request do
       expect(dismissed.owner.sectors).to include(sector)
     end
 
-    it "also tags the org the person registered with (derived via the response's submission)" do
+    it "tags only the person, never the org they registered with" do
       sign_in admin
       sector = create(:sector, name: "Equine Therapy")
       person = create(:person)
@@ -281,8 +281,7 @@ RSpec.describe "OtherResponses", type: :request do
            params: { kind: "sector", normalized_text: "equine therapy", sector_id: sector.id }
 
       expect(person.sectors).to include(sector)
-      expect(organization.sectors).to include(sector)
-      expect(organization.sectorable_items.find_by(sector: sector).is_primary).to be(false)
+      expect(SectorableItem.where(sectorable: organization)).to be_empty
     end
 
     it "mints a new published sector when given a name" do

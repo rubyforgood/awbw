@@ -90,6 +90,8 @@ class Sector < ApplicationRecord
   scope :has_published_taggings, -> {
     subqueries = Tag::TAGGABLE_META.map do |_key, data|
       klass = data[:klass]
+      next klass.sector_tagging_exists if klass.respond_to?(:sector_tagging_exists)
+
       klass.published
            .joins(:sectorable_items)
            .where("sectorable_items.sector_id = sectors.id")

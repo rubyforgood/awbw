@@ -64,27 +64,17 @@ class TaggingsController < ApplicationController
 
     Tag::TAGGABLE_META.each do |key, data|
       klass = data[:klass]
-      @model_heatmap_stats[key] = { sector: {}, category: {} }
-
-      klass
-        .published
-        .includes(:sectors)
-        .joins(:sectors)
-        .group("sectors.id")
-        .count
-        .each do |sector_id, count|
-          @model_heatmap_stats[key][:sector][sector_id] = count
-        end
-
-      klass
-        .published
-        .includes(:categories)
-        .joins(:categories)
-        .group("categories.id")
-        .count
-        .each do |category_id, count|
-          @model_heatmap_stats[key][:category][category_id] = count
-        end
+      sector_counts = if klass.respond_to?(:sector_tag_counts)
+        klass.sector_tag_counts
+      else
+        klass.published.joins(:sectors).group("sectors.id").count
+      end
+      category_counts = if klass.respond_to?(:category_tag_counts)
+        klass.category_tag_counts
+      else
+        klass.published.joins(:categories).group("categories.id").count
+      end
+      @model_heatmap_stats[key] = { sector: sector_counts, category: category_counts }
     end
 
     # ------------------------------------------------------------------

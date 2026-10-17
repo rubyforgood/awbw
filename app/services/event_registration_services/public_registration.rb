@@ -87,8 +87,7 @@ module EventRegistrationServices
         PersonServices::CaptureFromSubmission.call(
           person: person,
           form: @registration_form,
-          form_params: @form_params,
-          organizations: [ organization ].compact
+          form_params: @form_params
         )
 
         if existing

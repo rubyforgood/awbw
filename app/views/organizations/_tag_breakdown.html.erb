@@ -1,0 +1,44 @@
+<%# One column of the populations-served breakdown: each tag the org's active
+    facilitators hold, with a bar split into primary and additional holders. %>
+<section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+  <div class="mb-4 flex items-baseline justify-between gap-3">
+    <h2 class="font-display text-2xl text-gray-900"><%= title %></h2>
+    <span class="flex items-center gap-3 text-xs text-gray-500">
+      <span class="inline-flex items-center gap-1"><span class="h-2 w-3 rounded-sm <%= DomainTheme.bg_class_for(domain, intensity: 500) %>"></span>Primary</span>
+      <span class="inline-flex items-center gap-1"><span class="h-2 w-3 rounded-sm <%= DomainTheme.bg_class_for(domain, intensity: 200) %>"></span>Additional</span>
+    </span>
+  </div>
+  <% if rows.any? %>
+    <ul class="space-y-3">
+      <% rows.each do |row| %>
+        <% summary = "#{row.total} total · #{row.primary_count} primary · #{row.additional_count} additional" %>
+        <li title="<%= summary %>">
+          <div class="mb-1 flex items-center justify-between gap-3 text-sm">
+            <%= link_to row.tag.name, taggings_path(link_param => row.tag.name), class: "font-medium text-gray-800 hover:underline" %>
+            <span class="flex items-center gap-1.5 whitespace-nowrap">
+              <%# Fixed-width slots keep primary and additional in their own columns even when one is zero. %>
+              <% if row.primary_count.positive? %>
+                <span class="w-7 rounded text-center text-xs font-semibold <%= DomainTheme.bg_class_for(domain, intensity: 500) %> <%= DomainTheme.text_class_for(domain, intensity: 950) %>" aria-hidden="true"><%= row.primary_count %></span>
+              <% else %>
+                <span class="w-7" aria-hidden="true"></span>
+              <% end %>
+              <% if row.additional_count.positive? %>
+                <span class="w-7 rounded text-center text-xs font-medium <%= DomainTheme.bg_class_for(domain, intensity: 200) %> <%= DomainTheme.text_class_for(domain, intensity: 800) %>" aria-hidden="true"><%= row.additional_count %></span>
+              <% else %>
+                <span class="w-7" aria-hidden="true"></span>
+              <% end %>
+              <span class="w-6 text-right font-semibold text-gray-900" aria-hidden="true"><%= row.total %></span>
+              <span class="sr-only"><%= summary %></span>
+            </span>
+          </div>
+          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100">
+            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 500) %>" style="width: <%= 100.0 * row.primary_count / facilitator_count %>%"></div>
+            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 200) %>" style="width: <%= 100.0 * row.additional_count / facilitator_count %>%"></div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-gray-500 italic">None listed by active facilitators.</p>
+  <% end %>
+</section>
