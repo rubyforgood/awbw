@@ -22,6 +22,22 @@ RSpec.describe EventRegistrationServices::BulkPayment do
     }.merge(overrides)
   end
 
+  describe "change attribution" do
+    it "attributes the request's changes to the bulk payment submission" do
+      result = described_class.call(event: event, form: form, form_params: base_form_params)
+
+      expect(Current.form_submission_id).to eq(result.form_submission.id)
+    end
+
+    it "attributes nothing when the payment fails and rolls back" do
+      allow(Quotes::CaptureFromSubmission).to receive(:call).and_raise(ActiveRecord::RecordInvalid.new(Person.new))
+
+      result = described_class.call(event: event, form: form, form_params: base_form_params)
+
+      expect([ result.success?, Current.form_submission_id ]).to eq([ false, nil ])
+    end
+  end
+
   describe "matching the payer" do
     it "reuses an existing person whose email is stored as their secondary email" do
       existing = create(:person, first_name: "Pat", last_name: "Payer", email: "pat.work@example.com", email_2: "pat@example.com")
