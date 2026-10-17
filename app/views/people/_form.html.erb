@@ -214,7 +214,7 @@
   <% person = f.object.respond_to?(:object) ? f.object.object : f.object %>
   <% decorated = person.decorate %>
   <% if allowed_to?(:manage?, Person) %>
-    <div id="affiliations" class="form-group admin-only scroll-mt-4 rounded-lg border border-gray-200 bg-blue-50 p-4 shadow-sm">
+    <div id="affiliations" class="form-group admin-only scroll-mt-4 rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm">
       <h3 class="<%= heading_class %>">
         Affiliations<span class="text-sm font-normal text-gray-500"> (only editable by admins)</span>
       </h3>
