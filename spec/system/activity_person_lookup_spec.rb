@@ -9,6 +9,9 @@ RSpec.describe "Activity person lookup", type: :system, js: true do
   it "searches people remotely and opens the picked person's activity" do
     visit admin_activities_events_path
 
+    expect(page).to have_css(".ts-control input[placeholder='e.g. Jane Doe']")
+    expect(page).to have_no_css(".remote-select-icon")
+
     find(".ts-control").click
     find(".ts-control input").send_keys("Lookup")
     find(".ts-dropdown .option", text: "Lookup Target").click

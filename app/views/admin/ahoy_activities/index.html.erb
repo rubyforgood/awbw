@@ -78,29 +78,30 @@
           <div class="flex flex-wrap gap-4 lg:flex-nowrap">
 
             <%# Picking a person reloads the page scoped to them, since the header names the person. %>
-            <div class="min-w-0 flex-1">
+            <div class="min-w-0 flex-[2]">
               <label for="jump_person_id" class="<%= search_label_class %>">
                 Person
               </label>
               <%= select_tag :jump_person_id,
                              (@person ? options_for_select([ [ @person.full_name, @person.id ] ], @person.id) : options_for_select([])),
-                             include_blank: true, prompt: "Search people…",
+                             include_blank: true, prompt: "e.g. Jane Doe",
                              "aria-label": "Filter to one person's activity",
                              class: search_field_class,
                              data: { controller: "remote-select navigate-select",
                                      remote_select_model_value: "person",
+                                     remote_select_search_icon_value: false,
                                      remote_select_exclude_value: @person&.id,
                                      navigate_select_url_template_value: person_activity_path("__ID__"),
                                      action: "change->navigate-select#navigate" } %>
             </div>
 
-            <div class="min-w-0 flex-[2]">
+            <div class="min-w-0 flex-[1.5]">
               <label class="<%= search_label_class %>">
-                Activity
+                Activity title
               </label>
               <%= text_field_tag :event_name,
                                  params[:event_name],
-                                 placeholder: "e.g. new workshop, a resource name",
+                                 placeholder: "e.g. new workshop",
                                  class: search_field_class %>
             </div>
 
@@ -110,7 +111,7 @@
               </label>
               <%= text_field_tag :props,
                                  params[:props],
-                                 placeholder: "Search details...",
+                                 placeholder: "e.g. an email",
                                  class: search_field_class %>
             </div>
 
