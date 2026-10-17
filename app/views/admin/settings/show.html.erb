@@ -53,6 +53,11 @@
         Chosen from the organization's addresses. The header carries the return address;
         cheques go to the remittance address.
       </p>
+      <%= f.input :contact_attention,
+                  label: "Attention line",
+                  placeholder: Setting.contact_attention,
+                  hint: "Who post should be addressed to, shown above the mailing address on the contact page",
+                  input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
       <% addresses = (org = Setting.app_organization) ? org.addresses.active.to_a : [] %>
       <% if addresses.any? %>
         <% address_options = addresses.map { |address| [ address.decorate.picker_label, address.id ] } %>

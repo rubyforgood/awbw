@@ -75,6 +75,13 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(Setting.current.remittance_address).to eq(remittance_address)
     end
 
+    it "saves the attention line shown on the contact page" do
+      patch admin_settings_path, params: { setting: { contact_attention: "Front Desk, Operations" } }
+
+      expect(response).to redirect_to(admin_settings_path)
+      expect(Setting.contact_attention).to eq("Front Desk, Operations")
+    end
+
     it "re-renders with errors on a malformed email" do
       patch admin_settings_path, params: { setting: { info_email: "nope" } }
 

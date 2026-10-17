@@ -120,6 +120,18 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".contact_attention" do
+    it "is blank until someone is named" do
+      expect(described_class.contact_attention).to be_nil
+    end
+
+    it "returns the stored line" do
+      described_class.create!(contact_attention: "Front Desk, Operations")
+
+      expect(described_class.contact_attention).to eq("Front Desk, Operations")
+    end
+  end
+
   describe "validations" do
     it "rejects a malformed email" do
       setting = described_class.new(info_email: "not-an-email")

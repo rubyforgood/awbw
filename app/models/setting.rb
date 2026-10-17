@@ -102,6 +102,13 @@ class Setting < ApplicationRecord
   end
   private_class_method :app_organization_invoice_address_lines
 
+  # Who mail should be addressed to, shown above the mailing address on the contact
+  # page. Blank until an admin names someone, so a staffing change never leaves a
+  # former colleague's name on a public page.
+  def self.contact_attention
+    stored(:contact_attention)
+  end
+
   # The public contact mailbox, shown on the contact page, the story-share footer,
   # and the invoice/receipt header.
   def self.info_email

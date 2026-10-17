@@ -2051,6 +2051,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_110524) do
     t.datetime "updated_at", null: false
     t.bigint "return_address_id"
     t.bigint "remittance_address_id"
+    t.string "contact_attention"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["organization_id"], name: "index_settings_on_organization_id"
     t.index ["remittance_address_id"], name: "index_settings_on_remittance_address_id"
