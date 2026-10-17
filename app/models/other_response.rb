@@ -82,6 +82,18 @@ class OtherResponse < ApplicationRecord
     value.to_s.strip.downcase
   end
 
+  # Points an owner's unsourced responses to a question at the submission answer
+  # that typed them — for "Other"s captured before their submission's answers
+  # were saved (the org-type capture in a registration).
+  def self.record_source(owner:, submission:, field_identifier:)
+    answer = submission.form_answers.joins(:form_field).find_by(form_fields: { field_identifier: field_identifier })
+    return unless answer
+
+    texts = OtherOption.texts(answer.submitted_answer).map { |text| normalize(text) }
+    where(owner: owner, field_identifier: field_identifier, normalized_text: texts, source_form_answer_id: nil)
+      .find_each { |response| response.update!(source_form_answer: answer) }
+  end
+
   # Stable DOM id for a review-page group, so a chip can deep-link to its row.
   def self.review_anchor(bucket, normalized_text)
     "other-#{bucket}-#{normalized_text}".parameterize

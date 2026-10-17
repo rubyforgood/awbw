@@ -109,8 +109,8 @@ class OtherResponsesController < ApplicationController
     }
   end
 
-  # The forms a group's answers came from. Org-type responses are captured before
-  # their submission's answers exist, so they fall back to every form asking it.
+  # The forms a group's answers came from. Org-type responses saved before their
+  # source answer was recorded fall back to every form asking that question.
   def forms_for(rows)
     answered_on = rows.filter_map { |r| r.source_form_answer&.form_field&.form || r.source_form_answer&.form_submission&.form }
     forms = answered_on.presence || rows.map(&:field_identifier).uniq.flat_map { |identifier| @forms_asking.fetch(identifier, []) }

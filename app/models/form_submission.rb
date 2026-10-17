@@ -130,6 +130,7 @@ class FormSubmission < ApplicationRecord
     answers = answers_by_identifier
     read = ->(identifier) { answers[identifier].presence }
     {
+      submission: self,
       org_name: read.call(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER),
       position: read.call(FormField::ORGANIZATION_POSITION_FIELD_IDENTIFIER),
       website: read.call("organization_website"),

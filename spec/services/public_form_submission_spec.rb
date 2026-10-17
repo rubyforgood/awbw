@@ -222,6 +222,13 @@ RSpec.describe PublicFormSubmission do
       expect(result.form_submission.reload.linked_organizations).to include(org)
     end
 
+    it "records the form answer behind an org-type 'Other'" do
+      result = described_class.call(form: form, form_params: org_params(org_type_field.id.to_s => "Other: Mobile clinic"))
+
+      response = org.reload.other_responses.sole
+      expect(response.source_form_answer.form_submission).to eq(result.form_submission)
+    end
+
     it "never creates an organization from an unmatched name — it's left for an admin" do
       expect {
         described_class.call(form: form, form_params: org_params(org_name_field.id.to_s => "Ghost Org"))
