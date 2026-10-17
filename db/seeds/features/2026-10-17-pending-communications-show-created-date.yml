@@ -1,0 +1,9 @@
+name: "Pending communications show when they were created"
+area: communications
+display_status: admin_facing
+released_on: 2026-10-17
+action_path: "/notifications"
+summary: >-
+  A communication that hasn't been sent yet now shows the date it was created
+  next to its Pending status, for example "Pending (8/12/26)", so you can spot
+  ones that have been waiting a while.
