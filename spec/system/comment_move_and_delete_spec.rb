@@ -41,6 +41,7 @@ RSpec.describe "Moving and deleting a comment", type: :system do
 
     visit edit_person_path(person)
 
+    expand_section("comments-section")
     within "#comments-section" do
       click_button "Edit"
       accept_confirm { click_link "Delete" }
@@ -56,6 +57,7 @@ RSpec.describe "Moving and deleting a comment", type: :system do
 
     visit edit_affiliation_path(affiliation)
 
+    expand_section("comments-section")
     within "#comments-section" do
       click_button "Edit"
       accept_confirm { click_link "Delete" }

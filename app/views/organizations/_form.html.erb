@@ -156,10 +156,6 @@
               <% end %>
             </details>
           <% end %>
-                </div>
-              </div>
-            </details>
-          <% end %>
         </div>
       <% end %>
     </div>
@@ -167,7 +163,7 @@
     <!-- RIGHT SIDE (1/4) -->
     <div class="flex items-center justify-center">
       <!-- Logo -->
-      <div class="flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :logo, size: "w-24 h-24" %></div>
+      <div class="flex flex-col items-center gap-4"><%= render "shared/form_image_field", f: f, field_name: :logo, compact: true %></div>
     </div>
   </div>
 
@@ -175,14 +171,14 @@
 <%# Collapsible like Workshop settings above. Stays open on a new org (required
       fields) or when the form has errors so nothing hides behind the summary. %>
   <% background_open = !@organization.persisted? || @organization.errors.any? %>
-  <details class="form-group mb-8 group"<%= " open".html_safe if background_open %>>
-    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+  <details class="form-group group mb-8"<%= " open".html_safe if background_open %>>
+    <summary class="flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-semibold">Background Info:</span>
       <span class="text-sm text-gray-500"><%= f.object.decorate.background_summary %></span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
     </summary>
 
-<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-4 shadow-sm mt-2">
+<div class="mt-2 mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
 
   <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
     <div class="flex flex-col">
@@ -312,14 +308,14 @@
      else
        pluralize(org_addresses.size, "address")
      end %>
-  <details id="addresses" class="form-group mb-8 scroll-mt-20 group/section"<%= " open".html_safe if addresses_open %>>
-    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+  <details id="addresses" class="form-group group/section mb-8 scroll-mt-20"<%= " open".html_safe if addresses_open %>>
+    <summary class="flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-semibold">Addresses:</span>
       <span class="text-sm text-gray-500"><%= address_summary %></span>
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
     </summary>
 
-<div class="rounded-lg border border-gray-200 bg-yellow-50 p-4 mb-4 shadow-sm mt-2">
+<div class="mt-2 mb-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm">
       <div class="flex flex-wrap items-center gap-4 p-3">
         <%= f.simple_fields_for :addresses do |sfi| %>
           <%= render "organizations/address_fields", f: sfi %>
@@ -339,8 +335,8 @@
   </details>
 
   <% affiliations_open = !f.object.persisted? || f.object.errors.any? %>
-  <details id="affiliations" class="form-group mb-8 scroll-mt-20 group/section"<%= " open".html_safe if affiliations_open %>>
-    <summary class="flex items-baseline gap-2 flex-wrap cursor-pointer list-none [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+  <details id="affiliations" class="form-group group/section mb-8 scroll-mt-20"<%= " open".html_safe if affiliations_open %>>
+    <summary class="flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-semibold">Affiliations</span>
       <% org_summary_decorated = f.object.decorate %>
       <% facilitator_since = org_summary_decorated.facilitator_since_summary %>
@@ -354,7 +350,7 @@
       <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform group-open/section:rotate-180"></i>
     </summary>
 
-    <div class="relative rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> p-4 mb-4 shadow-sm mt-2">
+    <div class="relative rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:people) %> mt-2 mb-4 p-4 shadow-sm">
       <% if show_status_select %>
         <div class="absolute top-4 right-4 z-10 w-56">
           <%= f.input :organization_status_id,

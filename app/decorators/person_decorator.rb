@@ -140,39 +140,30 @@ class PersonDecorator < ApplicationDecorator
 
   # Profile display toggles in form order, mapped to the noun used on each
   # checkbox ("Show email" => "email"). Drives the collapsed form section's
-  # one-line summary.
+  # one-line summary, so it lists exactly the toggles the form renders.
   PROFILE_DISPLAY_LABELS = {
     profile_show_credentials: "credentials",
     profile_show_pronouns: "pronouns",
     profile_show_email: "email",
     profile_show_phone: "phone",
     profile_show_social_media: "social media",
-    profile_show_member_since: "facilitator since",
     profile_show_bio: "bio",
+    profile_show_member_since: "facilitator since",
     profile_show_affiliations: "affiliations",
     profile_show_sectors: "sectors",
     profile_show_age_ranges: "age ranges",
-    profile_show_monthly_reports: "monthly reports",
-    profile_show_workshops: "workshops",
-    profile_show_workshop_variations: "workshop variations",
-    profile_show_stories: "stories",
-    profile_show_resources: "resources",
     profile_show_events_registered: "registrations",
-    profile_show_story_ideas: "story ideas",
-    profile_show_workshop_ideas: "workshop ideas",
-    profile_show_workshop_variation_ideas: "variation ideas",
-    profile_show_workshop_logs: "workshop logs"
+    profile_show_resources: "resources",
+    profile_show_stories: "stories",
+    profile_show_workshop_variations: "workshop variations",
+    profile_show_workshops: "workshops"
   }.freeze
 
   # One-line summary of the profile display preferences for the collapsed form
   # section. Most people show everything, so it names only what's hidden
-  # ("Hide phone and bio") and says "All shown" when nothing is hidden. Skips the
-  # monthly-reports toggle unless the person has reports, matching the checkbox
-  # the form renders.
+  # ("Hide phone and bio") and says "All shown" when nothing is hidden.
   def profile_display_summary
-    labels = PROFILE_DISPLAY_LABELS
-    labels = labels.except(:profile_show_monthly_reports) unless object.any_monthly_reports?
-    hidden = labels.reject { |attr, _| object.public_send(attr) }.values
+    hidden = PROFILE_DISPLAY_LABELS.reject { |attr, _| object.public_send(attr) }.values
     hidden.any? ? "Hide #{hidden.to_sentence}" : "All shown"
   end
 

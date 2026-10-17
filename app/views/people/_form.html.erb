@@ -34,7 +34,7 @@
     <% email_summary = [ primary_email, f.object.email_2.presence ].compact %>
     <% contacts_open = !f.object.persisted? || f.object.errors.any? %>
     <details id="emails" class="emails group <%= card_class %> scroll-mt-4"<%= " open".html_safe if contacts_open %>>
-      <summary class="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-3">
+      <summary class="mb-3 flex cursor-pointer list-none items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
         <span class="font-semibold">Emails:</span>
         <span class="text-sm text-gray-500"><%= email_summary.any? ? email_summary.to_sentence : "None" %></span>
         <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
@@ -76,7 +76,7 @@
 
     <% phone_values = f.object.contact_methods.reject(&:marked_for_destruction?).filter_map { |cm| cm.value.presence } %>
     <details class="phones group <%= card_class %> scroll-mt-4" id="phones"<%= " open".html_safe if contacts_open %>>
-      <summary class="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-3">
+      <summary class="mb-3 flex cursor-pointer list-none items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
         <span class="font-semibold">Phones:</span>
         <span class="text-sm text-gray-500"><%= phone_values.any? ? phone_values.to_sentence : "None" %></span>
         <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
@@ -108,7 +108,7 @@
        pluralize(person_addresses.size, "address")
      end %>
   <details class="addresses group scroll-mt-4 rounded-lg border border-gray-200 bg-yellow-50 p-4 shadow-sm" id="addresses"<%= " open".html_safe if addresses_open %>>
-    <summary class="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-3">
+    <summary class="mb-3 flex cursor-pointer list-none items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-semibold">Mailing addresses:</span>
       <span class="text-sm text-gray-500"><%= address_summary %></span>
       <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
@@ -175,7 +175,7 @@
     <!-- Age ranges -->
     <% if @age_ranges_collection.present? %>
       <details class="form-group group flex min-w-[20rem] flex-1 flex-col rounded-lg border border-gray-200 <%= DomainTheme.bg_class_for(:sectors) %> p-4 shadow-sm"<%= " open".html_safe if tags_open %>>
-        <summary class="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-3">
+        <summary class="mb-3 flex cursor-pointer list-none items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
           <span class="shrink-0 font-semibold">Age ranges:</span>
           <span class="min-w-0 flex-1 text-sm text-gray-500"><%= f.object.decorate.age_ranges_summary %></span>
           <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
@@ -233,7 +233,7 @@
   <% if allowed_to?(:manage?, StaffTag) %>
     <% staff_owner = f.object.respond_to?(:object) ? f.object.object : f.object %>
     <details class="form-group group admin-only space-y-2 rounded-lg bg-blue-100 p-4"<%= " open".html_safe if tags_open %>>
-      <summary class="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600">
+      <summary class="flex cursor-pointer list-none items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
         <span class="shrink-0 font-semibold">Staff tags:</span>
         <span class="min-w-0 flex-1 text-sm text-gray-500"><%= f.object.decorate.staff_tags_summary %></span>
         <%# Safe inside the summary: the click opens a new tab, and the toggle it
@@ -265,7 +265,7 @@
   <% if allowed_to?(:manage?, Person) %>
     <% affiliations_open = !person.persisted? || person.errors.any? %>
     <details id="affiliations" class="form-group group/section admin-only scroll-mt-4 rounded-lg border border-gray-200 bg-blue-100 p-4 shadow-sm"<%= " open".html_safe if affiliations_open %>>
-      <summary class="flex cursor-pointer list-none items-baseline gap-2 flex-wrap [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-3">
+      <summary class="mb-3 flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
         <span class="font-semibold">Affiliations</span>
         <% facilitator_since = decorated.facilitator_since_summary %>
         <% if facilitator_since %>
@@ -443,7 +443,7 @@
   <% licenses = f.object.professional_licenses.reject(&:marked_for_destruction?) %>
   <% licenses_open = !f.object.persisted? || f.object.errors.any? %>
   <details id="professional-licenses" class="form-group group <%= card_class %> scroll-mt-4"<%= " open".html_safe if licenses_open %>>
-    <summary class="flex cursor-pointer list-none items-baseline gap-2 flex-wrap [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-1">
+    <summary class="mb-1 flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-semibold">Professional licenses:</span>
       <span class="text-sm text-gray-500"><%= licenses.any? ? licenses.map(&:name).to_sentence : "None" %></span>
       <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
@@ -460,7 +460,7 @@
   </details>
 
   <details class="profile-preferences-section group <%= card_class %>">
-    <summary class="flex cursor-pointer list-none items-baseline gap-2 flex-wrap [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-3">
+    <summary class="mb-3 flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-semibold">Social media links</span>
       <span class="text-sm text-gray-500"><%= f.object.decorate.social_media_summary %></span>
       <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
@@ -475,7 +475,7 @@
   </details>
 
   <details id="profile-preferences" class="profile-preferences-section group <%= card_class %> scroll-mt-4">
-    <summary class="flex cursor-pointer list-none items-baseline gap-2 flex-wrap [&::-webkit-details-marker]:hidden text-gray-700 hover:text-blue-600 mb-1">
+    <summary class="mb-1 flex cursor-pointer list-none flex-wrap items-baseline gap-2 text-gray-700 hover:text-blue-600 [&::-webkit-details-marker]:hidden">
       <span class="font-semibold">Profile display preferences</span>
       <span class="text-sm text-gray-500"><%= f.object.decorate.profile_display_summary %></span>
       <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs text-gray-400 transition-transform group-open:rotate-180"></i>
