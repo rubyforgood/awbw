@@ -94,7 +94,7 @@ RSpec.describe "the Active/Inactive split on the affiliation editor", type: :req
   it "adds new rows into the active group only" do
     get edit_person_path(person)
 
-    adder = parsed.at_css("[data-association-insertion-node]")
+    adder = parsed.at_css("[data-association='affiliation'][data-association-insertion-node]")
     expect(adder["data-association-insertion-node"]).to eq("#person_affiliation_rows_active")
   end
 

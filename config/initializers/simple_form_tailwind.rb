@@ -7,7 +7,7 @@ SimpleForm.setup do |config|
   input_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none placeholder:text-sm placeholder:text-gray-400"
 
   # Browsers size a native <select> from its font, ignoring line-height, so pin it to the text-input height.
-  { tailwind_form: input_class, tailwind_select: "#{input_class} min-h-10.5" }.each do |wrapper_name, wrapper_input_class|
+  { tailwind_form: input_class, tailwind_select: "#{input_class} min-h-10.5 select-chevron" }.each do |wrapper_name, wrapper_input_class|
     config.wrappers wrapper_name, class: "mb-4" do |b|
       b.use :html5
       b.use :placeholder
@@ -93,6 +93,9 @@ SimpleForm.setup do |config|
     radio_buttons: :tailwind_boolean,
     file: :tailwind_file,
     select: :tailwind_select,
+    country: :tailwind_select,
+    time_zone: :tailwind_select,
+    date: :tailwind_select,
     range: :tailwind_form
   }
 end
