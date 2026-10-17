@@ -30,13 +30,13 @@
     </div>
 
     <!-- Sector -->
-    <%= render "events/filter_multiselect", param: :sector_ids, label: "Sector",
+    <%= render "shared/filter_multiselect", param: :sector_ids, label: "Sector",
           options: Sector.published.excluding_other.order(:name).map { |s| [ s.name, s.id ] },
           selected: Array(params[:sector_ids]).map(&:to_i), placeholder: "Any sector",
           wrapper_class: "w-full md:flex-1" %>
 
     <!-- Age range -->
-    <%= render "events/filter_multiselect", param: :age_range_ids, label: "Age range",
+    <%= render "shared/filter_multiselect", param: :age_range_ids, label: "Age range",
           options: Category.age_ranges.published.ordered_by_position_and_name.map { |c| [ c.decorate.age_group_label, c.id ] },
           selected: Array(params[:age_range_ids]).map(&:to_i), placeholder: "Any age range",
           wrapper_class: "w-full md:flex-1" %>
@@ -71,7 +71,7 @@
 
         <!-- Staff tag -->
         <% if allowed_to?(:index?, StaffTag) %>
-          <%= render "events/filter_multiselect", param: :staff_tag_ids, label: "Staff tag",
+          <%= render "shared/filter_multiselect", param: :staff_tag_ids, label: "Staff tag",
                 options: StaffTag.published.ordered.map { |t| [ t.name, t.id ] },
                 selected: Array(params[:staff_tag_ids]).map(&:to_i), placeholder: "Any",
                 wrapper_class: "w-full",
@@ -79,7 +79,7 @@
         <% end %>
 
         <!-- Topic subscription -->
-        <%= render "events/filter_multiselect", param: :topic_subscription_type_id, label: "Topic subscription",
+        <%= render "shared/filter_multiselect", param: :topic_subscription_type_id, label: "Topic subscription",
               options: TopicSubscriptionType.active.ordered.pluck(:name, :id),
               selected: Array(params[:topic_subscription_type_id]).map(&:to_i), placeholder: "Any topic",
               wrapper_class: "w-full",

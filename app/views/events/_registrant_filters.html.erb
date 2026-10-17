@@ -122,7 +122,7 @@
   <%# Picker-only: registrants with an active subscription to a topic subscription
       list. Only rendered when the caller supplies the topic types. %>
   <% if topic_subscription_types.any? %>
-    <%= render "events/filter_multiselect", param: :topic_subscription, label: "Topic subscription list",
+    <%= render "shared/filter_multiselect", param: :topic_subscription, label: "Topic subscription list",
           options: topic_subscription_types.map { |t| [ t.name, t.id ] },
           selected: Array(params[:topic_subscription]).map(&:to_i), placeholder: "Any topic" %>
   <% end %>
