@@ -109,6 +109,32 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     expect(response).to redirect_to(person_path(person))
   end
 
+  it "refuses the subscription when the current balance's term starts today" do
+    membership = create(:membership, person: person)
+    create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current, end_date: Date.current + 1.year - 1.day)
+    sign_in user
+
+    post memberships_subscription_checkouts_path
+
+    expect(response).to redirect_to(person_path(person))
+  end
+
+  it "allows the subscription when the only unpaid invoice is upcoming" do
+    membership = create(:membership, person: person)
+    paid = create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: Date.current - 3.months, end_date: Date.current - 3.months + 1.year - 1.day)
+    create(:allocation, source: create(:payment, amount_cents: paid.cost_cents),
+      allocatable: paid, amount: paid.cost_cents)
+    create(:membership_invoice, membership: membership, cost_cents: 2_500,
+      start_date: paid.end_date + 1.day, end_date: paid.end_date + 1.year)
+    sign_in user
+
+    post memberships_subscription_checkouts_path
+
+    expect(response).to redirect_to("https://checkout.stripe.com/membership")
+  end
+
   it "is refused while membership is disabled" do
     allow(Membership).to receive(:enabled?).and_return(false)
     sign_in user

@@ -5,7 +5,7 @@ module Memberships
       membership = person&.current_membership
       authorize! membership, to: :checkout?, with: MembershipPolicy
 
-      if membership.current_invoice&.outstanding_started?
+      if membership.owes?
         return redirect_to(person_path(person), alert: "Please pay the current balance first.", status: :see_other)
       end
 

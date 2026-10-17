@@ -222,6 +222,12 @@ RSpec.describe MembershipInvoice, type: :model do
       expect(described_class.overdue).to include(invoice)
     end
 
+    it "treats an unpaid invoice whose term starts today as overdue" do
+      invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current)
+      expect(invoice).to be_overdue
+      expect(described_class.overdue).to include(invoice)
+    end
+
     it "does not treat an unpaid invoice whose term hasn't started as overdue" do
       invoice = create(:membership_invoice, cost_cents: 2_500, start_date: Date.current + 1)
       expect(invoice).not_to be_overdue

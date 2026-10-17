@@ -71,13 +71,6 @@ class MembershipInvoice < ApplicationRecord
     start_date <= as_of
   end
 
-  # The year has started and still owes its balance — the profile's membership
-  # button becomes "Pay for current membership fee" and the checkout debits it
-  # one-time rather than folding it into the subscription session.
-  def outstanding_started?(as_of = Date.current)
-    start_date && start_date < as_of && !paid_in_full?
-  end
-
   def upcoming?(as_of = Date.current)
     start_date.present? && start_date > as_of
   end
