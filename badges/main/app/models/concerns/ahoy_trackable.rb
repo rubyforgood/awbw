@@ -74,7 +74,8 @@ module AhoyTrackable
   def track_update_event
     return if previously_new_record? # Skip the fake "update" that happens right after create
 
-    changes = previous_changes.except("updated_at", "created_at", "created_by_id", "updated_by_id").merge(@_pending_rich_text_changes.to_h)
+    changes = with_polymorphic_types(previous_changes.except("updated_at", "created_at", "created_by_id", "updated_by_id"))
+      .merge(@_pending_rich_text_changes.to_h)
     assoc_changes = collect_association_changes
 
     return if changes.empty? && assoc_changes.empty?
@@ -85,6 +86,17 @@ module AhoyTrackable
     extra[:association_changes] = assoc_changes if assoc_changes.present?
 
     track_lifecycle_event("update", extra)
+  end
+
+  # A move between two parents of the same type changes only the id, so the type
+  # rides along to let the diff name both records on its own.
+  def with_polymorphic_types(changes)
+    self.class.reflect_on_all_associations(:belongs_to).select(&:polymorphic?).each_with_object(changes.dup) do |assoc, all|
+      next if !all.key?(assoc.foreign_key.to_s) || all.key?(assoc.foreign_type.to_s)
+
+      type = public_send(assoc.foreign_type)
+      all[assoc.foreign_type.to_s] = [ type, type ]
+    end
   end
 
   # Autosave writes children, rich text, and attachments *after* this record's own

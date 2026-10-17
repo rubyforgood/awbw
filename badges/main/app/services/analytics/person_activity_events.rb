@@ -29,9 +29,39 @@ module Analytics
     private
 
     def resource_scopes
-      resource_ids_by_type.map do |type, ids|
+      scopes = resource_ids_by_type.map do |type, ids|
         Ahoy::Event.where(resource_type: type, resource_id: ids)
       end
+      departed = departed_comment_ids
+      scopes << Ahoy::Event.where(resource_type: "Comment", resource_id: departed) if departed.any?
+      scopes
+    end
+
+    def comment_aggregator
+      @comment_aggregator ||= PersonCommentAggregator.new(@person)
+    end
+
+    # A deleted comment, or one moved to someone else's record, no longer joins
+    # to the person — so it's matched by the parent its delete snapshot or move
+    # diff recorded, and its whole history comes along.
+    def departed_comment_ids
+      owned = comment_aggregator.commentable_ids_by_type.flat_map { |type, ids| ids.map { |id| [ type, id ] } }.to_set
+      events = departure_events.to_a
+      comments = Comment.where(id: events.map(&:resource_id)).index_by(&:id)
+      events.filter_map { |event| event.resource_id if former_parents(event, comments[event.resource_id]).intersect?(owned) }.uniq
+    end
+
+    def departure_events
+      Ahoy::Event.where(resource_type: "Comment")
+        .where("ahoy_events.name = 'destroy.comment' OR JSON_CONTAINS_PATH(ahoy_events.properties, 'one', '$.changes.commentable_id')")
+        .select(:id, :resource_id, :properties)
+    end
+
+    def former_parents(event, comment)
+      properties = event.properties || {}
+      snapshot = EventReferenceLoader.polymorphic_references(properties["attributes"].to_h).values
+      moves = EventReferenceLoader.polymorphic_changes("Comment", properties["changes"], comment).values.flatten(1)
+      (snapshot + moves).filter_map { |type, id| [ type.to_s, id.to_i ] if type.present? && id.present? }.to_set
     end
 
     # resource_type => ids (arrays or id-only subqueries). Mirrors the records in
@@ -46,7 +76,7 @@ module Analytics
         "ContactMethod" => @person.contact_methods.select(:id),
         # Every comment connected to the person, not just profile comments —
         # reuses PersonCommentAggregator so History and the comments page agree.
-        "Comment" => PersonCommentAggregator.new(@person).comments.reorder(nil).select(:id),
+        "Comment" => comment_aggregator.comments.reorder(nil).select(:id),
         "EventRegistration" => registration_ids,
         "ContinuingEducationRegistration" => ce_registration_ids,
         "EventRegistrationChecklistCompletion" => EventRegistrationChecklistCompletion.where(event_registration_id: registration_ids).select(:id),
