@@ -34,6 +34,17 @@ RSpec.describe "Comments & communications expandable rows and type filter", type
     end
   end
 
+  scenario "filtering or grouping keeps rows expanded" do
+    within "#comments-section" do
+      click_button "Expand all"
+      select "Comments", from: "person-activity-list-kind"
+      find("label", text: "Group by subject").click
+
+      expect(page).to have_no_css("[data-expandable-card-target='body'].line-clamp-2")
+      expect(page).to have_button("Collapse all")
+    end
+  end
+
   scenario "the dropdown narrows the list to just comments or just communications" do
     within "#comments-section" do
       select "Comments", from: "person-activity-list-kind"

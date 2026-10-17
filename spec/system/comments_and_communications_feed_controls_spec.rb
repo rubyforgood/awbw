@@ -26,6 +26,30 @@ RSpec.describe "Comments & communications feed results controls", type: :system 
     end
   end
 
+  scenario "changing Show or Group by subject keeps collapsed rows and a row reopened on its own" do
+    comment = person.comments.first
+
+    within "turbo-frame#comments_and_communications_results" do
+      click_button "Collapse all"
+      within("#comment_#{comment.id}") { click_button "Show full entry" }
+      expect(page).to have_content("Talked through the schedule.")
+
+      select "Comments", from: "kind"
+      expect(page).to have_no_content("Welcome")
+      expect(page).to have_content("Talked through the schedule.")
+      expect(page).to have_button("Expand all")
+
+      select "All", from: "kind"
+      expect(page).to have_content("Welcome")
+      expect(page).to have_no_content("Glad to have you.")
+
+      check "Group by subject"
+      expect(page).to have_css("h3", text: "Welcome")
+      expect(page).to have_no_content("Glad to have you.")
+      expect(page).to have_content("Talked through the schedule.")
+    end
+  end
+
   scenario "the Show dropdown and Group by subject sit in the results header and filter the feed" do
     within "turbo-frame#comments_and_communications_results" do
       select "Comments", from: "kind"

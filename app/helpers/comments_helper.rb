@@ -15,14 +15,16 @@ module CommentsHelper
 
   # Stimulus wiring for a feed row the chevron and "Expand/Collapse all" toggle.
   # clamp: a one-line row unclamped to show the full entry; otherwise a full row
-  # whose body hides on collapse.
-  def expandable_feed_row_data(clamp: true)
+  # whose body hides on collapse. key lets expandable-cards remember a row toggled
+  # on its own across a results reload.
+  def expandable_feed_row_data(clamp: true, key: nil)
     data = {
       controller: "expandable-card",
       expandable_card_expanded_value: !clamp,
       action: "expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"
     }
     data[:expandable_card_collapsed_class] = "line-clamp-2" if clamp
+    data[:expandable_card_key_value] = key if key
     data
   end
 

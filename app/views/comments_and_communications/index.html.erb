@@ -76,9 +76,16 @@
                clear_path: comments_and_communications_path(person_id: @person&.id),
                frame: "comments_and_communications_results", person: @person %>
 
-    <% result_src = comments_and_communications_path(request.query_parameters) %>
-    <%= turbo_frame_tag "comments_and_communications_results", src: result_src, data: { turbo: "temporary" } do %>
-      <div class="py-6 text-center text-sm text-gray-400">Loading comments &amp; communications…</div>
-    <% end %>
+    <%# Expand/collapse state lives outside the frame so a filter reload keeps it. %>
+    <div data-controller="expandable-cards"
+         data-expandable-cards-expanded-label-value="<%= t("communications.collapse_all") %>"
+         data-expandable-cards-collapsed-label-value="<%= t("communications.expand_all") %>"
+         data-expandable-cards-expandable-card-outlet="#comments_and_communications_results [data-controller~='expandable-card']"
+         data-action="expandable-card:toggled->expandable-cards#remember">
+      <% result_src = comments_and_communications_path(request.query_parameters) %>
+      <%= turbo_frame_tag "comments_and_communications_results", src: result_src, data: { turbo: "temporary" } do %>
+        <div class="py-6 text-center text-sm text-gray-400">Loading comments &amp; communications…</div>
+      <% end %>
+    </div>
   </div>
 <% end %>

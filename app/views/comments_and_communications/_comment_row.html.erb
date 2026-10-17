@@ -20,7 +20,7 @@
                               data: { action: "edit-toggle#toggle" }) %>
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
   <%= tag.div class: "rounded-md border #{comment_card_class(warning: entry.body&.include?("[AGE_RANGE_DATA]"))} px-3 py-2",
-              data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false) } do %>
+              data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false, key: dom_id(entry)) } do %>
     <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
       <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none"><%= render "comments/flag_toggle", comment: entry %></span>
       <%= render "comments/comment_line", comment: entry, truncate: false, leading: source_chip, trailing: edit_button, expandable: true,

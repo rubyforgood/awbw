@@ -19,7 +19,7 @@
 <% trailing = content_tag(:span, safe_join([ render("notifications/responded_checkbox", notification: entry), edit_button ]),
                            class: "ml-auto flex shrink-0 items-center gap-3") %>
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
-  <%= tag.div data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false) } do %>
+  <%= tag.div data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false, key: dom_id(entry)) } do %>
     <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, expandable: true,
                date_path: feed_entry_path(entry, person: local_assigns[:person]),
                leading: source_chip, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>

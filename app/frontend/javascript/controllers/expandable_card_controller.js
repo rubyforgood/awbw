@@ -11,7 +11,8 @@ export default class extends Controller {
   static classes = ["collapsed"]
   static values = {
     expanded: { type: Boolean, default: true },
-    overflowing: { type: Boolean, default: false }
+    overflowing: { type: Boolean, default: false },
+    key: String
   }
 
   connect() {
@@ -38,6 +39,7 @@ export default class extends Controller {
 
   toggle() {
     this.expandedValue = !this.expandedValue
+    this.dispatch("toggled", { detail: { key: this.keyValue, expanded: this.expandedValue } })
   }
 
   expand() {
