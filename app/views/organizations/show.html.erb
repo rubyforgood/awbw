@@ -153,8 +153,8 @@
       </div>
       <!-- Sectors + Age groups served (two columns on desktop; stack on narrow viewports) -->
       <% show_sectors = @organization.profile_show_sectors? %>
-      <% sectors = show_sectors ? @organization.active_people_sectors.sort_by { |s| s&.name.to_s } : [] %>
-      <% age_groups = @organization.profile_show_age_ranges? ? @organization.active_people_age_groups : [] %>
+      <% sectors = show_sectors ? @organization.active_facilitator_sectors.sort_by { |s| s&.name.to_s } : [] %>
+      <% age_groups = @organization.profile_show_age_ranges? ? @organization.active_facilitator_age_groups : [] %>
       <% show_age = age_groups.any? %>
       <% if show_sectors || show_age %>
         <div class="md:col-span-2">
@@ -164,17 +164,12 @@
                 <h2 class="mb-3 font-display text-2xl text-gray-900">Sectors</h2>
                 <% if sectors.any? %>
                   <div class="flex flex-wrap gap-2">
-                    <% sectors.first(3).each do |sector| %>
-                      <%= render "sectors/tagging_label",
-                                 sector: sector,
-                                 display_leader: true %>
-                    <% end %>
-                    <% if sectors.length > 3 %>
-                      <span class="px-2 text-gray-500">...</span>
+                    <% sectors.each do |sector| %>
+                      <%= render "sectors/tagging_label", sector: sector, is_primary: true %>
                     <% end %>
                   </div>
                 <% else %>
-                  <p class="text-gray-500 italic">None listed by active people.</p>
+                  <p class="text-gray-500 italic">None listed by active facilitators.</p>
                 <% end %>
               </div>
             <% end %>

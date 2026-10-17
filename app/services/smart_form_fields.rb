@@ -111,7 +111,7 @@ class SmartFormFields
       title: "Sector and age group tagging",
       summary: "These answers are record ids, not text: the options come from Sector and Age range " \
                "records rather than from options typed into the form editor. The tags are applied to " \
-               "the registrant only; an organization shows its active people's primary tags. Submitting " \
+               "the registrant only; an organization shows its active facilitators' primary tags. Submitting " \
                "both a primary and an additional selection overwrites the person's tags with the latest; " \
                "submitting only a primary reassigns it and leaves their other tags in place.",
       fields: [

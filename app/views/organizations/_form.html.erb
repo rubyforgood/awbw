@@ -59,11 +59,11 @@
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <div class="mb-2 font-semibold text-gray-700">Sectors</div>
-              <% sectors = f.object.active_people_sectors.sort_by { |sector| sector.name.to_s.downcase } %>
+              <% sectors = f.object.active_facilitator_sectors.sort_by { |sector| sector.name.to_s.downcase } %>
               <% if sectors.any? %>
                 <div class="flex flex-wrap gap-2">
                   <% sectors.each do |sector| %>
-                    <%= render "sectors/tagging_label", sector: sector %>
+                    <%= render "sectors/tagging_label", sector: sector, is_primary: true %>
                   <% end %>
                 </div>
               <% else %>
@@ -72,7 +72,7 @@
             </div>
             <div>
               <div class="mb-2 font-semibold text-gray-700">Age groups served</div>
-              <% age_groups = f.object.active_people_age_groups %>
+              <% age_groups = f.object.active_facilitator_age_groups %>
               <% if age_groups.any? %>
                 <%= render "shared/age_group_tags", primary: age_groups %>
               <% else %>
@@ -82,7 +82,7 @@
           </div>
           <p class="mt-3 text-xs text-gray-500">
             <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-            Not editable here. These come from the primary sector and primary age group of each person actively affiliated with this organization — edit a person's profile to change them.
+            Not editable here. These come from the primary sector and primary age group of each active facilitator at this organization — edit a facilitator's profile to change them.
           </p>
         </div>
 

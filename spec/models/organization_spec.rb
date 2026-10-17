@@ -346,6 +346,7 @@ RSpec.describe Organization do
     let!(:primary_person_org) { create(:organization, name: "Primary Person Org") }
     let!(:additional_person_org) { create(:organization, name: "Additional Person Org") }
     let!(:inactive_person_org) { create(:organization, name: "Inactive Person Org") }
+    let!(:staff_org) { create(:organization, name: "Staff Org") }
 
     before do
       direct_org.categorizable_items.create!(category: teen)
@@ -365,24 +366,29 @@ RSpec.describe Organization do
       create(:affiliation, organization: inactive_person_org, person: former_person, end_date: 1.year.ago)
       former_person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
       former_person.sectorable_items.create!(sector: sector, is_primary: true)
+
+      staff_person = create(:person)
+      create(:affiliation, organization: staff_org, person: staff_person, title: "Director")
+      staff_person.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
+      staff_person.sectorable_items.create!(sector: sector, is_primary: true)
     end
 
-    it "matches a sector only through an actively affiliated person's primary" do
+    it "matches a sector only through an active facilitator's primary" do
       expect(Organization.search_by_params(sector_name: "Housing")).to contain_exactly(primary_person_org)
     end
 
-    it "matches an age group only through an actively affiliated person's primary" do
+    it "matches an age group only through an active facilitator's primary" do
       expect(Organization.search_by_params(age_group_name: "13-17")).to contain_exactly(primary_person_org)
     end
   end
 
-  describe "#active_people_sectors" do
+  describe "#active_facilitator_sectors" do
     let!(:housing) { create(:sector, :published, name: "Housing") }
     let!(:legal) { create(:sector, :published, name: "Legal") }
     let!(:other) { create(:sector, :published, name: "Other Services") }
     let(:organization) { create(:organization) }
 
-    it "rolls up only actively affiliated people's primary sectors, ignoring the org's own tags" do
+    it "rolls up only active facilitators' primary sectors, ignoring the org's own tags and other staff" do
       organization.sectorable_items.create!(sector: housing, is_primary: true)
       person = create(:person)
       create(:affiliation, organization: organization, person: person)
@@ -391,8 +397,11 @@ RSpec.describe Organization do
       former = create(:person)
       create(:affiliation, organization: organization, person: former, end_date: 1.year.ago)
       former.sectorable_items.create!(sector: housing, is_primary: true)
+      staff = create(:person)
+      create(:affiliation, organization: organization, person: staff, title: "Director")
+      staff.sectorable_items.create!(sector: other, is_primary: true)
 
-      expect(organization.active_people_sectors).to contain_exactly(legal)
+      expect(organization.active_facilitator_sectors).to contain_exactly(legal)
     end
   end
 
@@ -425,7 +434,7 @@ RSpec.describe Organization do
     end
   end
 
-  describe "#active_people_age_groups" do
+  describe "#active_facilitator_age_groups" do
     let(:age_type) { create(:category_type, name: "AgeRange", published: true) }
     let!(:young) { create(:category, :published, category_type: age_type, name: "3-5") }
     let!(:teen) { create(:category, :published, category_type: age_type, name: "13-17") }
@@ -441,13 +450,16 @@ RSpec.describe Organization do
       create(:affiliation, organization: organization, person: former, end_date: 1.year.ago)
     end
 
-    it "rolls up only actively affiliated people's primary age groups, ignoring the org's own tags" do
+    it "rolls up only active facilitators' primary age groups, ignoring the org's own tags and other staff" do
       organization.categorizable_items.create!(category: adult, is_primary: true)
       person_a.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
       person_b.tag_age_groups(primary_ids: [ young.id ], additional_ids: [ teen.id ])
       former.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [])
+      staff = create(:person)
+      create(:affiliation, organization: organization, person: staff, title: "Director")
+      staff.tag_age_groups(primary_ids: [ teen.id ], additional_ids: [])
 
-      expect(organization.active_people_age_groups).to contain_exactly(young)
+      expect(organization.active_facilitator_age_groups).to contain_exactly(young)
     end
   end
 end

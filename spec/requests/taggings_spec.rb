@@ -149,7 +149,7 @@ RSpec.describe "Taggings index", type: :request do
       page = Capybara.string(response.body)
       expect(page).to have_link("Sunrise Center", href: organization_path(organization))
       expect(page).to have_content("Youth 2*")
-      expect(page).to have_content("* Number of people actively affiliated")
+      expect(page).to have_content("* Number of the organization's active facilitators")
     end
 
     it "counts the org on the tag matrix from its active people" do

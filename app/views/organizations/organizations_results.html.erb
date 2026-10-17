@@ -33,14 +33,14 @@
 
               <td class="px-4 py-2 text-sm">
                 <div class="flex flex-wrap items-center gap-1">
-                  <% organization.active_people_sectors.sort_by { |s| s&.name.to_s }.each do |sector| %>
-                    <%= render "sectors/tagging_label", sector: sector %>
+                  <% organization.active_facilitator_sectors.sort_by { |s| s&.name.to_s }.each do |sector| %>
+                    <%= render "sectors/tagging_label", sector: sector, is_primary: true %>
                   <% end %>
                 </div>
               </td>
 
               <td class="px-4 py-2 text-sm">
-                <% age_groups = organization.active_people_age_groups %>
+                <% age_groups = organization.active_facilitator_age_groups %>
                 <% if age_groups.any? %>
                   <%= render "shared/age_group_tags", primary: age_groups, compact: true %>
                 <% else %>

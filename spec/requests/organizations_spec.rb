@@ -125,13 +125,14 @@ RSpec.describe "/organizations", type: :request do
       org
     end
 
-    it "truncates sectors to the first 3 with a 'more' indicator on the show page" do
+    it "shows every active facilitator's primary sector, starred, on the show page" do
       get organization_url(organization_with_sectors)
 
       page = Capybara.string(response.body)
-      %w[Alpha Bravo Charlie].each { |name| expect(page).to have_content(name) }
-      expect(page).not_to have_content("Delta")
-      expect(page).to have_content(/\.\.\./)
+      %w[Alpha Bravo Charlie Delta].each { |name| expect(page).to have_link(name) }
+      expect(page).to have_css("a[data-sector-name] i.fa-star", count: 4)
+      expect(page).not_to have_content("Direct Sector 1")
+      expect(page).not_to have_content("Former Sector")
     end
 
     it "lists every sector and age group active people hold, primary and additional, on the breakdown page" do

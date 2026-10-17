@@ -16,14 +16,14 @@
             <%= link_to row.tag.name, taggings_path(link_param => row.tag.name), class: "font-medium text-gray-800 hover:underline" %>
             <span class="whitespace-nowrap text-gray-600"><span class="font-semibold text-gray-900"><%= row.primary_count %></span> primary · <%= row.additional_count %> additional</span>
           </div>
-          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100" title="<%= pluralize(row.total, "person") %> of <%= people_count %>">
-            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 500) %>" style="width: <%= 100.0 * row.primary_count / people_count %>%"></div>
-            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 200) %>" style="width: <%= 100.0 * row.additional_count / people_count %>%"></div>
+          <div class="flex h-2 overflow-hidden rounded-full bg-gray-100" title="<%= pluralize(row.total, "person") %> of <%= facilitator_count %>">
+            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 500) %>" style="width: <%= 100.0 * row.primary_count / facilitator_count %>%"></div>
+            <div class="<%= DomainTheme.bg_class_for(domain, intensity: 200) %>" style="width: <%= 100.0 * row.additional_count / facilitator_count %>%"></div>
           </div>
         </li>
       <% end %>
     </ul>
   <% else %>
-    <p class="text-gray-500 italic">None listed by active people.</p>
+    <p class="text-gray-500 italic">None listed by active facilitators.</p>
   <% end %>
 </section>
