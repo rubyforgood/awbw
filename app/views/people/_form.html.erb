@@ -403,7 +403,7 @@
       Updating these preferences applies to how you show up sitewide: stories, workshop variations, the people index, and more.
     </p>
 
-    <div class="grid grid-cols-1 gap-x-6 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-x-6 md:grid-cols-[auto_1fr_1fr]">
       <%= f.input :profile_is_searchable,
                   hint: ("Findable on " + (link_to "people index",
                                                   people_path,
