@@ -85,6 +85,7 @@ RSpec.describe "Admin home", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(%(id="data_health_count"))
       expect(response.body).to match(%r{<span[^>]*>5</span>})
+      expect(response.body).to include("Data checks only")
     end
 
     it "renders the Author credit total inside its frame" do
