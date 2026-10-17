@@ -12,14 +12,6 @@
           from the others, and moves their contact methods, invoices, and affiliations onto it.
         </p>
       </div>
-      <% if @groups.any? %>
-        <%= button_to dedupe_perform_addresses_path,
-                      class: button_classes(:primary, extra: "whitespace-nowrap"),
-                      form_class: "shrink-0",
-                      form: { data: { turbo_confirm: "Merge duplicate addresses on all #{pluralize(@groups.size, "record")}?" } } do %>
-          <i class="fa-solid fa-broom"></i> Merge all (<%= @groups.sum(&:merged_count) %>)
-        <% end %>
-      <% end %>
     </div>
 
     <% if @groups.any? %>

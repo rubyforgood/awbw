@@ -22,12 +22,12 @@ class AddressesController < ApplicationController
 
   def dedupe_perform
     authorize! :dedupe, to: :dedupe?
-    addressables = dedupe_targets
-    merged = addressables.sum { |addressable| merge_addresses(addressable) }
+    addressable = GlobalID::Locator.locate_signed(params[:addressable_sgid], for: DEDUPE_PURPOSE)
+    raise ActiveRecord::RecordNotFound, "Record not found" unless addressable.respond_to?(:addresses)
 
-    track_event("dedupe.address", { owners: addressables.size, addresses_merged: merged })
-    redirect_to dedupe_index_addresses_path,
-      notice: "Merged #{helpers.pluralize(merged, "duplicate address")} across #{helpers.pluralize(addressables.size, "record")}."
+    merged = merge_addresses(addressable)
+    track_event("dedupe.address", { resource_type: addressable.class.name, resource_id: addressable.id, addresses_merged: merged })
+    redirect_to dedupe_index_addresses_path, notice: "Merged #{helpers.pluralize(merged, "duplicate address")}."
   rescue ActionPolicy::Unauthorized
     raise
   rescue StandardError => e
@@ -35,15 +35,6 @@ class AddressesController < ApplicationController
   end
 
   private
-
-  def dedupe_targets
-    return AddressServices::DuplicateFinder.new.groups.map(&:addressable) if params[:addressable_sgid].blank?
-
-    addressable = GlobalID::Locator.locate_signed(params[:addressable_sgid], for: DEDUPE_PURPOSE)
-    raise ActiveRecord::RecordNotFound, "Record not found" unless addressable.respond_to?(:addresses)
-
-    [ addressable ]
-  end
 
   def merge_addresses(addressable)
     ActiveRecord::Base.transaction do

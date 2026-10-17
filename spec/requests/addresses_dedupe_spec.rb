@@ -25,7 +25,7 @@ RSpec.describe "Address dedupe", type: :request do
       get dedupe_index_addresses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Duplicate Org", person.full_name, "Merge all (3)")
+      expect(response.body).to include("Duplicate Org", person.full_name, "Merge 1 duplicate", "Merge 2 duplicates")
       expect(response.body.scan(">Keep<").size).to eq(2)
       expect(response.body.scan(">Merge<").size).to eq(3)
     end
@@ -42,12 +42,12 @@ RSpec.describe "Address dedupe", type: :request do
       expect(person.addresses.count).to eq(3)
     end
 
-    it "merges every owner when no record is given" do
+    it "merges nothing without a record" do
       post dedupe_perform_addresses_path
 
-      expect(flash[:notice]).to include("3 duplicate addresses across 2 records")
-      expect(org.addresses.count).to eq(1)
-      expect(person.addresses.count).to eq(1)
+      expect(flash[:alert]).to include("Error merging addresses")
+      expect(org.addresses.count).to eq(2)
+      expect(person.addresses.count).to eq(3)
     end
 
     it "rejects a signed id minted for another purpose" do
