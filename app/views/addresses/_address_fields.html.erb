@@ -2,7 +2,7 @@
     stay expanded so their fields are ready to fill in. Native <details>/<summary>
     toggles the editable fields on click — no JavaScript needed. %>
 <details class="nested-fields group mb-3 overflow-hidden rounded-lg border border-yellow-200 bg-white"<%= " open".html_safe unless f.object.persisted? %>>
-  <summary class="flex cursor-pointer list-none items-center justify-between gap-2 bg-yellow-100 p-3 [&::-webkit-details-marker]:hidden">
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-2 bg-yellow-50 p-3 [&::-webkit-details-marker]:hidden">
     <div class="text-lg font-semibold text-gray-800">
       Address <%= "#" + (f.index.to_i + 1).to_s if f.object.persisted? %><%= ": " + f.object.name if f.object.persisted? %>
     </div>
