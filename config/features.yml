@@ -976,7 +976,7 @@
   summary: >-
     The separate Comments and Communications boxes on record edit pages are now one
     "Comments & communications" section: a single newest-first feed of both, each in its own
-    card (comments purple, communications blue), with an add button for each.
+    card (comments blue, communications purple), with an add button for each.
   pro_tips:
     - "Communications now show the ones logged about the record you're viewing; a person's own page still shows their full history."
     - "An incoming communication's pill shows a checkbox — checked once it's been responded to."
