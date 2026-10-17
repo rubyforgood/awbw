@@ -242,6 +242,25 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to match(/<input[^>]*type="hidden"[^>]*name="person_id"[^>]*value="#{person.id}"/)
       end
 
+      it "titles the unscoped feed Everyone under a small Activity label" do
+        get index_path
+
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.at_css("h1").text.strip).to eq("Everyone")
+        expect(doc.css("a").map(&:text).map(&:strip)).not_to include("View everyone")
+      end
+
+      it "clears a person-scoped page back to the unscoped feed with a full-page load" do
+        person = create(:person)
+
+        get index_path, params: { person_id: person.id, time_period: "all_time" }
+
+        clear = Nokogiri::HTML(response.body).css("a").find { |a| a.text.strip == "Clear filters" }
+        expect(clear["href"]).to eq(index_path)
+        expect(clear["data-turbo-frame"]).to eq("_top")
+        expect(clear["data-action"]).to be_nil
+      end
+
       it "stays person-scoped (no org autochange leak) when a toggle re-submits with person_id" do
         person = create(:person)
         org = create(:organization)
@@ -422,6 +441,21 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Person: #{person.name}")
+      end
+
+      it "heads a person-scoped page with the person and a link to their comments and communications" do
+        person = create(:person, first_name: "Ada", last_name: "Lovelace")
+
+        get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }
+
+        doc = Nokogiri::HTML(response.body)
+        expect(doc.at_css("h1").text).to include("Ada Lovelace")
+        link = doc.css("a").find { |a| a.text.strip == "Ada's comments & communications" }
+        expect(link["href"]).to eq(comments_and_communications_path(person_id: person.id))
+        profile = doc.css("a").find { |a| a.text.strip == "Ada's profile" }
+        expect(profile["href"]).to eq(person_path(person))
+        everyone = doc.css("a").find { |a| a.text.strip == "View everyone" }
+        expect(everyone["href"]).to eq(admin_activities_events_path)
       end
 
       it "shows a back-to-person eyebrow (not Admin) when scoped to a person" do

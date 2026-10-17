@@ -1,0 +1,10 @@
+name: "Jump between a person's activity and their comments and communications"
+area: communications
+display_status: admin_facing
+released_on: 2026-10-17
+action_path: "/comments_and_communications"
+summary: >-
+  A person's comments and communications page has an "Aisha's activity" button
+  beside their name, and their activity page now leads with their name and an
+  "Aisha's comments & communications" button, so you can move between the two
+  without going through their edit page.
