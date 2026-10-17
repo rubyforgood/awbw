@@ -14,7 +14,9 @@
         <% org_affiliations.each do |affiliation| %>
           <% decorated = affiliation.decorate %>
           <% pending = pending_requests[affiliation.id] %>
-          <div class="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4">
+          <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id),
+                      target: "_blank", rel: "noopener",
+                      class: "group -mx-2 grid grid-cols-1 items-center gap-3 rounded-lg px-2 py-1 hover:bg-gray-100 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4" do %>
             <div class="min-w-0 space-y-1">
               <p class="flex flex-wrap items-baseline gap-x-2">
                 <span class="text-gray-800"><%= decorated.display_title %></span>
@@ -26,12 +28,11 @@
             </div>
             <div class="flex items-center gap-2">
               <%= render "people/pending_request_icon", request: pending if pending %>
-              <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id),
-                          target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
+              <span class="<%= button_classes(:secondary_outline, size: :sm, extra: "group-hover:bg-secondary group-hover:text-white") %>">
                 <%= pending ? "See your request" : "Request a change" %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-              <% end %>
+              </span>
             </div>
-          </div>
+          <% end %>
         <% end %>
       </div>
     </div>
