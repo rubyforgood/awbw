@@ -13,6 +13,7 @@ RSpec.describe "page_bg_class alignment with policies" do
   SKIPS = [].freeze
 
   # Expected mapping: view path => expected page_bg_class value
+  # Person and org profile pages are marked for profiles live in production (ignore !production gates).
   # Bg class values and their policy meanings:
   #   "public"                                        → true
   #   "admin-or-auth"                                 → authenticated?
@@ -20,6 +21,8 @@ RSpec.describe "page_bg_class alignment with policies" do
   #   "admin-or-owner-or-public-or-authpublished"     → the same, plus owner? — an
   #                                                     event owner sees their own
   #                                                     draft/past event page
+  #   "admin-or-authpublished"                        → admin? || (authenticated? && published?)
+  #   "admin-or-owner-or-authsearchable"              → admin? || owner? || (authenticated? && published?)
   #   "admin-or-owner"                                → admin? || owner? (manage?,
   #                                                     dashboard?, edit?, the report
   #                                                     suite — a bg-* utility may ride
@@ -74,6 +77,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/workshops/show.html.erb"                => "admin-or-public-or-authpublished",
     "app/views/story_shares/show.html.erb"             => "admin-or-public-or-authpublished",
 
+    "app/views/organizations/show.html.erb"            => "admin-or-authpublished",
     "app/views/organizations/populations_served.html.erb" => "admin-or-authpublished",
     "app/views/features/show.html.erb"                 => "admin-or-authpublished",
 
@@ -92,7 +96,6 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/profile_change_requests/edit.html.erb"  => "admin-or-owner",
     "app/views/profile_change_requests/choose_affiliation.html.erb" => "admin-or-owner",
     "app/views/profile_change_requests/choose_affiliation_change.html.erb" => "admin-or-owner",
-    "app/views/organizations/show.html.erb"            => "admin-or-owner-or-authsearchable",
     "app/views/people/show.html.erb"                   => "admin-or-owner-or-authsearchable",
     "app/views/people/edit.html.erb"                   => "admin-or-owner",
 
