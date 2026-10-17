@@ -50,6 +50,12 @@ class FeatureCatalog
     Result.new(created, updated, skipped)
   end
 
+  def missing_count
+    names = entries.map { |entry| entry.fetch("name") }
+    existing = Feature.where(name: names).pluck(:name).to_set(&:downcase)
+    names.count { |name| existing.exclude?(name.downcase) }
+  end
+
   def entries
     Dir[File.join(@dir, "*.yml")].sort.map do |path|
       YAML.safe_load_file(path, permitted_classes: [ Date ])
