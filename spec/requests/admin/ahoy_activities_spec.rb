@@ -397,6 +397,17 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).not_to include('name="user_search"')
       end
 
+      it "keeps password managers out of the filter text boxes" do
+        get index_path
+
+        doc = Nokogiri::HTML(response.body)
+        %w[event_name props visit_id].each do |name|
+          field = doc.at_css("input[name='#{name}']")
+          expect(field["data-lpignore"]).to eq("true"), "expected #{name} to opt out of LastPass"
+          expect(field["data-1p-ignore"]).to eq("true")
+        end
+      end
+
       it "preselects the scoped person in the lookup" do
         person = create(:person)
 

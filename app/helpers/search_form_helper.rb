@@ -12,12 +12,19 @@ module SearchFormHelper
 
   SEARCH_LABEL_CLASSES = "block text-xs font-semibold uppercase text-gray-500 tracking-wide mb-1".freeze
 
+  PASSWORD_MANAGER_IGNORE_DATA = { lpignore: "true", "1p-ignore": "true", bwignore: "true", "form-type": "other" }.freeze
+
   def search_field_class(extra: nil)
     [ SEARCH_FIELD_CLASSES, extra ].compact.join(" ")
   end
 
   def search_label_class(extra: nil)
     [ SEARCH_LABEL_CLASSES, extra ].compact.join(" ")
+  end
+
+  # Filter text boxes look like login fields to LastPass, 1Password, and Bitwarden; this keeps them from offering to fill.
+  def password_manager_ignore_data
+    PASSWORD_MANAGER_IGNORE_DATA
   end
 
   # Tag a date FILTER input `date-filter-empty` while its param is blank, so the
