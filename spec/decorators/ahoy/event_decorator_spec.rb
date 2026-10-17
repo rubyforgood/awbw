@@ -355,6 +355,23 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.detail_rows).to eq([ { label: "Commentable", depth: 0, link: { text: "Person #0", path: nil } } ])
     end
 
+    it "links the form submission a change came from" do
+      submission = create(:form_submission)
+      event = decorate("form_submission_id" => submission.id)
+
+      expect(event.detail_rows).to eq(
+        [ { label: "Form submission", depth: 0, link: { text: submission.title, path: "/form_submissions/#{submission.id}" } } ]
+      )
+    end
+
+    it "names a since-deleted form submission by its id, unlinked" do
+      event = decorate("form_submission_id" => 999_999)
+
+      expect(event.detail_rows).to eq(
+        [ { label: "Form submission", depth: 0, link: { text: "Form submission #999999", path: nil } } ]
+      )
+    end
+
     it "indents a nested hash under its label" do
       event = decorate("keywords" => { "full_text" => "watercolor" })
       expect(event.detail_rows).to eq(

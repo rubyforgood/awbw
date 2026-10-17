@@ -38,10 +38,13 @@ module EventRegistrationServices
         @edited = !@submission.previously_new_record?
         @submission.record_callout_collection!(@callout)
         save_answers
-        # These run for any callout form and self-gate on the form's own fields:
-        # clarity fans out only per-resource fields, and the profile write-through
-        # only fires when the form asks the identified anonymity / name questions.
+        # These four run for any callout form and self-gate on the form's own
+        # fields: clarity fans out only per-resource fields, the "Other" and quote
+        # captures only fire on those smart fields, and the profile write-through
+        # only when the form asks the identified anonymity / name questions.
         save_clarity_answers
+        OtherResponses::CaptureFromSubmission.call(@submission)
+        Quotes::CaptureFromSubmission.call(@submission)
         sync_profile(person)
         stamp_scholarship_form_completion
       end
