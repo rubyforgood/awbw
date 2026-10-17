@@ -1,7 +1,11 @@
 Update on your change request
 
-Your request to update your <%= @request.field_label.downcase %> has been <%= @outcome %> by AWBW staff.
-<% if @request.resolved? && @request.field == "primary_email" -%>
+<%= @request.email_greeting %>
+
+Thank you for helping us keep your information up to date!
+
+We've <%= @request.review_outcome %> your request to <%= @request.requested_change %>.
+<% if !@request.declined? && @request.field == "primary_email" -%>
 
 Check your inbox at <%= @request.requested_value %> for a confirmation link to finish the change.
 <% end -%>
@@ -10,3 +14,6 @@ Check your inbox at <%= @request.requested_value %> for a confirmation link to f
 Note from staff:
 <%= @request.reviewer_note %>
 <% end -%>
+
+Thank you,
+AWBW Staff

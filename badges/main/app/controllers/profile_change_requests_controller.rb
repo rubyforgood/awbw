@@ -7,9 +7,9 @@ class ProfileChangeRequestsController < ApplicationController
     @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
     return unless turbo_frame_request?
 
-    @requests = authorized_scope(ProfileChangeRequest.all)
-                  .where(status: @status)
-                  .where(@person ? { person: @person } : {})
+    scope = authorized_scope(ProfileChangeRequest.all).where(@person ? { person: @person } : {})
+    @status_counts = scope.group(:status).count
+    @requests = scope.where(status: @status)
                   .includes(:person, :requested_by, :reviewed_by)
                   .newest_first
     render :profile_change_requests_results
@@ -71,7 +71,7 @@ class ProfileChangeRequestsController < ApplicationController
       return
     end
 
-    @request.resolve!(method: "approved", reviewer: current_user)
+    @request.resolve!(method: "approved", reviewer: current_user, note: review_note)
     notify_reviewed(@request)
     respond_with_updated_row("Approved. #{result.message}")
   end

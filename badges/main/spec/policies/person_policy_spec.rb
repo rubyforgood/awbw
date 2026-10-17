@@ -219,6 +219,25 @@ RSpec.describe PersonPolicy, type: :policy do
     end
   end
 
+  describe "#edit_own_profile?" do
+    context "with owner" do
+      subject { policy_for(record: owned_person, user: owner_user) }
+
+      it { is_expected.to be_allowed_to(:edit_own_profile?) }
+
+      it "is denied in production" do
+        in_production
+        is_expected.not_to be_allowed_to(:edit_own_profile?)
+      end
+    end
+
+    context "with admin looking at someone else" do
+      subject { policy_for(record: searchable_person, user: admin_user) }
+
+      it { is_expected.not_to be_allowed_to(:edit_own_profile?) }
+    end
+  end
+
   describe "#destroy?" do
     context "when person has authored stories" do
       let(:admin) { create(:user, :admin) }

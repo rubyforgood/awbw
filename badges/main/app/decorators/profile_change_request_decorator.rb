@@ -69,9 +69,70 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     h.edit_person_path(person, anchor: anchor)
   end
 
-  # Confirmation prompt for "Approve", spelling out the blast radius where the
-  # change reaches beyond this one person (renaming a shared organization).
+  # Every review action emails the requester, so each prompt says who gets it.
   def approve_confirm
+    with_email_notice(approve_change_confirm)
+  end
+
+  def resolve_confirm
+    with_email_notice("Mark this request as resolved?")
+  end
+
+  def decline_confirm
+    with_email_notice("Decline this request?")
+  end
+
+  def review_outcome
+    return "declined" if declined?
+    resolution_method == "approved" ? "approved" : "resolved"
+  end
+
+  def email_greeting
+    name = requested_by&.person&.first_name.presence || requested_by&.first_name.presence
+    name ? "Dear #{name}," : "Hello,"
+  end
+
+  def requested_change
+    from = previous_value ? " from #{previous_value}" : ""
+    case field
+    when *ProfileChangeRequest::EMAIL_FIELDS then "change your #{field_label.downcase}#{from} to #{requested_display}"
+    when "organization_name" then "change your organization name#{from} to #{requested_value}"
+    when "affiliation" then affiliation_requested_change
+    else "update your #{field_label.downcase}"
+    end
+  end
+
+  # The live value is the old one only while the change is unapplied: Devise keeps
+  # the old login until the new address is confirmed, and a decline changes nothing.
+  def previous_value
+    return unless field == "primary_email" || declined?
+
+    value = current_display
+    value if value.present? && value != requested_display
+  end
+
+  def affiliation_requested_change
+    org = (affiliation&.organization || organization)&.name || proposed_organization_name
+    with_org = org ? " with #{org}" : ""
+    at_org = org ? " at #{org}" : ""
+    case requested_value
+    when ProfileChangeRequest::AFFILIATION_CHANGE_ADD then "add an affiliation#{with_org}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE then "end your affiliation#{with_org}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION then "change your organization's name to #{proposed_organization_name}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_TITLE then "change your title or role#{at_org} to #{proposed_title}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_DATES then "change your start or end dates#{at_org}"
+    else "update your affiliation#{with_org}"
+    end
+  end
+
+  def review_email_recipient
+    email = requested_by&.email
+    "#{requested_by.full_name} <#{email}>" if email.present?
+  end
+
+  # Spells out the blast radius where the change reaches beyond this one person
+  # (renaming a shared organization).
+  def approve_change_confirm
     case field
     when "primary_email"
       "Approve and send a confirmation email to #{requested_value}?"
@@ -102,6 +163,13 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
   def org_rename_confirm(org, new_name)
     count = org ? org.affiliations.count : 0
     "Rename \"#{org&.name}\" to \"#{new_name}\"? #{helpers.pluralize(count, "affiliation")} across the portal use this organization."
+  end
+
+  def with_email_notice(prompt)
+    email = requested_by&.email
+    return prompt if email.blank?
+
+    "#{prompt} This emails #{requested_by.full_name} (#{email}), including your note."
   end
 
   # Where "Update manually" sends an admin to make the edit by hand.
