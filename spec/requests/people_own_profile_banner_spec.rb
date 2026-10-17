@@ -28,6 +28,15 @@ RSpec.describe "Own profile banner", type: :request do
       expect(response.body).to include(edit_profile_change_request_path(request))
     end
 
+    it "pluralizes the heading for more than one request" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: owner_user)
+      create(:profile_change_request, :other, person: person, requested_by: owner_user)
+
+      get person_path(person)
+
+      expect(response.body).to include("AWBW staff are looking at your requests")
+    end
+
     it "hides the banner in production" do
       allow(Rails.env).to receive(:production?).and_return(true)
 
