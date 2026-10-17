@@ -62,15 +62,7 @@ class PeopleController < ApplicationController
                                      membership_sub.canceled? &&
                                      !membership_sub.ended?
 
-    if params[:checkout] == "success"
-      flash[:notice] = "Thank you for your donation!"
-    elsif params[:checkout] == "cancelled"
-      flash[:alert] = "Donation was cancelled."
-    elsif params[:membership_checkout] == "success"
-      flash[:notice] = "Your annual membership is set up. Thank you!"
-    elsif params[:membership_checkout] == "cancelled"
-      flash[:alert] = "Membership setup was cancelled."
-    end
+    set_checkout_flash
 
     # Handle paginated sections for Turbo Frame requests
     if turbo_frame_request?
@@ -722,5 +714,23 @@ class PeopleController < ApplicationController
     return unless Membership.enabled? && allowed_to?(:show?, person)
 
     person.current_membership&.decorate
+  end
+
+  # Stripe redirects back here with an outcome param; each checkout names its own
+  # so a one-off invoice payment doesn't land on the subscription's copy.
+  def set_checkout_flash
+    if params[:checkout] == "success"
+      flash[:notice] = "Thank you for your donation!"
+    elsif params[:checkout] == "cancelled"
+      flash[:alert] = "Donation was cancelled."
+    elsif params[:membership_subscription_checkout] == "success"
+      flash[:notice] = "Your annual membership is set up. Thank you!"
+    elsif params[:membership_subscription_checkout] == "cancelled"
+      flash[:alert] = "Membership setup was cancelled."
+    elsif params[:membership_invoice_checkout] == "success"
+      flash[:notice] = "Thank you! Your membership payment was received."
+    elsif params[:membership_invoice_checkout] == "cancelled"
+      flash[:alert] = "Payment was cancelled."
+    end
   end
 end

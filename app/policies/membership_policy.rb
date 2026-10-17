@@ -6,7 +6,7 @@ class MembershipPolicy < ApplicationPolicy
     owner? || manage?
   end
 
-  def checkout? = Membership.enabled? && user&.person.present?
+  def checkout? = Membership.enabled? && owner? && !record.autorenewal_cancelled?
 
   def billing_portal? = Membership.enabled? && owner?
 

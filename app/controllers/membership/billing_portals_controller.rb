@@ -1,4 +1,4 @@
-class MembershipBillingPortalsController < ApplicationController
+class Membership::BillingPortalsController < ApplicationController
   def create
     person = current_user.person
     membership = person&.current_membership

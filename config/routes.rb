@@ -368,8 +368,12 @@ Rails.application.routes.draw do
   end
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ]
-  resources :membership_checkouts, only: [ :create ]
-  resources :membership_billing_portals, only: [ :create ]
+
+  namespace :membership do
+    resources :subscription_checkouts, only: [ :create ]
+    resources :invoice_checkouts, only: [ :create ]
+    resources :billing_portals, only: [ :create ]
+  end
 
   resources :refunds, only: [ :new, :create, :show ]
   resources :organization_statuses

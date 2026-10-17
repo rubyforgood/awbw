@@ -32,12 +32,22 @@ RSpec.describe MembershipPolicy, type: :policy do
   end
 
   describe "#checkout?" do
-    it "allows a signed-in user who has a person" do
+    it "allows the member who owns a live membership" do
       expect(policy_for(user: owner)).to be_allowed_to(:checkout?)
     end
 
-    it "denies a signed-in user with no person" do
-      expect(policy_for(user: create(:user), record: :membership)).not_to be_allowed_to(:checkout?)
+    it "denies a cancelled membership" do
+      cancelled = create(:membership, :autorenewal_cancelled, person: owner.person)
+
+      expect(policy_for(user: owner, record: cancelled)).not_to be_allowed_to(:checkout?)
+    end
+
+    it "denies another member's membership" do
+      expect(policy_for(user: other)).not_to be_allowed_to(:checkout?)
+    end
+
+    it "denies when there is no membership record" do
+      expect(policy_for(user: owner, record: nil)).not_to be_allowed_to(:checkout?)
     end
 
     it "denies while membership is disabled" do
