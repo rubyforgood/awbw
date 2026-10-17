@@ -41,7 +41,7 @@
   <%= filemaker_code_links(@person, label: "Rolodex", linked_only: true,
                            link_class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1") %>
   <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-    <%= link_to "Activity", person_activity_path(@person), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
+    <%= link_to "Activity logs", person_activity_path(@person), class: "admin-only bg-blue-100 text-sm #{eyebrow_link_class} px-2 py-1" %>
   <% end %>
   <% latest_request = @person.profile_change_requests.newest_first.first if allowed_to?(:index?, ProfileChangeRequest) %>
   <% if latest_request %>
