@@ -7,7 +7,7 @@
   </div>
 
   <%= turbo_frame_tag :memberships_results,
-        src: memberships_path(status: @status, person_name: params[:person_name]),
+        src: memberships_path(status: @status_filter, person_name: params[:person_name]),
         data: { turbo: "temporary" } do %>
     <%= render "memberships/results_skeleton" %>
   <% end %>

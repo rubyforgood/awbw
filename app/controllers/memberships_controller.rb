@@ -3,10 +3,15 @@ class MembershipsController < ApplicationController
 
   def index
     authorize!
-    @status = status_filter
+    @status_filter = params[:status].presence_in(Membership::DIRECTORY_STATUSES) || "all"
 
     if turbo_frame_request?
-      @memberships = directory_memberships
+      scope = authorized_scope(Membership.all)
+        .includes(person: [ :user, { pay_customers: :subscriptions } ], membership_invoices: :allocations)
+        .by_person_name(params[:person_name])
+      scope = scope.public_send(@status_filter) unless @status_filter == "all"
+      @memberships = scope.order(start_date: :desc).paginate(page: params[:page], per_page: 25)
+
       render "memberships/memberships_results"
     else
       render :index
@@ -55,18 +60,5 @@ class MembershipsController < ApplicationController
     return "Membership cancelled. Autorenewal turned off." if @membership.autorenewal_cancelled?
 
     "Membership resumed. Autorenewal turned back on."
-  end
-
-  def directory_memberships
-    scope = authorized_scope(Membership.all)
-      .includes(person: [ :user, { pay_customers: :subscriptions } ], membership_invoices: :allocations)
-      .by_person_name(params[:person_name])
-    scope = scope.public_send(status_filter) unless status_filter == "all"
-
-    scope.order(start_date: :desc).paginate(page: params[:page], per_page: 25)
-  end
-
-  def status_filter
-    params[:status].presence_in(Membership::DIRECTORY_STATUSES) || "active"
   end
 end
