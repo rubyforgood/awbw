@@ -1,0 +1,5 @@
+<%# Locals: name, checked, options (extra check_box_tag options, e.g. data or form). %>
+<label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
+  <%= check_box_tag name, "1", checked, { class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }.merge(options) %>
+  <span class="text-xs text-gray-500"><%= t("communications.group_by_subject") %></span>
+</label>

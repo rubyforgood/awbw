@@ -19,10 +19,10 @@
 <% trailing = content_tag(:span, safe_join([ render("notifications/responded_checkbox", notification: entry), edit_button ]),
                            class: "ml-auto flex shrink-0 items-center gap-3") %>
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
-  <div data-edit-toggle-target="view">
-    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false,
+  <%= tag.div data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false) } do %>
+    <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, expandable: true,
                leading: source_chip, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
-  </div>
+  <% end %>
 
   <div data-edit-toggle-target="edit" class="hidden rounded-md border <%= communication_card_class %> px-3 py-2">
     <%= simple_form_for entry, url: notification_path(entry), method: :patch do |f| %>

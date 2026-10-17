@@ -1,18 +1,19 @@
-<%# Filter bar for the combined feed. Keyword, Show and Attached-to stay visible;
+<%# Filter bar for the combined feed. Keyword and Attached-to stay visible;
     the rest sit behind a "More filters" chevron toggle so a non-technical user
     isn't met by a wall of fields. Most filters are shared: the two models name the
     same idea differently, so each side answers on its own column (author/from,
     subject/topic, attached-to, follow-up). Only "Email topic" is communications-only.
     Auto-submits into `frame` (collection Stimulus); the toggle reuses the
     expandable-card text-link+chevron pattern. The Person field navigates (full-page
-    swap) rather than filtering the frame. Locals: url, frame, clear_path, person. %>
+    swap) rather than filtering the frame. Show and Group by subject live in the
+    results header, joined to this form by its id. Locals: url, frame, clear_path, person. %>
 <%# The record each entry hangs off — commentable_type for a comment,
     noticeable_type for a communication. %>
 <% attached_to_options = (PersonCommentAggregator::SOURCE_TYPES | Notification::NOTICEABLE_TYPES).sort.map { |type| [ type.underscore.humanize, type ] } %>
 <%# Open the advanced panel on load when any of its filters is already applied, so
     an active filter is never hidden from the person looking at the results. %>
 <% advanced_active = params[:subject].present? || params[:author_id].present? || params[:follow_up].present? || params[:flagged].present? || params[:from].present? || params[:to].present? || params[:email_topic].present? %>
-<%= form_with url: url, method: :get,
+<%= form_with url: url, method: :get, id: CommentsHelper::FEED_FILTER_FORM_ID,
               data: { controller: "collection expandable-card", turbo_frame: frame, expandable_card_expanded_value: advanced_active },
               html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-100 p-4" do |f| %>
   <div class="flex items-center gap-2 text-gray-600">
@@ -51,25 +52,10 @@
     </div>
 
     <div class="w-40">
-      <label for="kind" class="<%= search_label_class %>">Show</label>
-      <%= f.select :kind,
-                   options_for_select([ [ "Comments & communications", "" ], [ "Comments only", "comments" ], [ "Communications only", "communications" ] ], params[:kind]), {},
-                   class: search_field_class(extra: "truncate bg-white search-select-placeholder"),
-                   onchange: "this.form.requestSubmit()" %>
-    </div>
-
-    <div class="w-40">
       <label for="source" class="<%= search_label_class %>">Attached to</label>
       <%= f.select :source, options_for_select(attached_to_options, params[:source]), { include_blank: "All records" },
                    class: search_field_class(extra: "bg-white search-select-placeholder"),
                    onchange: "this.form.requestSubmit()" %>
-    </div>
-
-    <div class="shrink-0 pb-2">
-      <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
-        <%= check_box_tag :group_by_subject, "1", params[:group_by_subject].present?, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", onchange: "this.form.requestSubmit()" %>
-        <span class="text-sm text-gray-600">Group by subject</span>
-      </label>
     </div>
 
     <div class="shrink-0 pb-2">

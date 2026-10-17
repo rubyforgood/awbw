@@ -29,6 +29,8 @@
 <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          id="comments-section"
          data-controller="paginated-fields edit-toggle expandable-cards"
+         data-action="expandable-card:measured->expandable-cards#refresh"
+         data-expandable-cards-expandable-card-outlet="#comments-section [data-controller~='expandable-card']"
          data-expandable-cards-expanded-value="false"
          data-expandable-cards-expanded-label-value="<%= t("communications.collapse_all") %>"
          data-expandable-cards-collapsed-label-value="<%= t("communications.expand_all") %>"
@@ -40,27 +42,18 @@
     </span>
     <h2 class="text-sm font-semibold text-gray-700"><%= can_manage_comments ? t("communications.section_title") : comms_title %></h2>
     <% if entries.any? %>
-      <button type="button"
-              class="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-              data-action="expandable-cards#toggleAll">
-        <span data-expandable-cards-target="label"><%= t("communications.expand_all") %></span>
-        <i class="fa-solid fa-chevron-down text-2xs transition-transform" data-expandable-cards-target="icon"></i>
-      </button>
+      <span class="hidden" data-expandable-cards-target="toggle">
+        <%= render "comments_and_communications/expand_all_button", expanded: false %>
+      </span>
     <% end %>
     <div class="ml-auto flex items-center gap-3">
       <% if comments.any? && notifications.any? %>
-        <%= select_tag "#{list_id}-kind",
-                       options_for_select([ [ t("communications.show_all"), "" ], [ t("communications.show_comments"), "comment" ], [ t("communications.show_communications"), "communication" ] ]),
-                       aria: { label: t("communications.show_label") },
-                       autocomplete: "off",
-                       class: "w-auto rounded-md border border-gray-300 bg-transparent py-1 pr-8 pl-2 text-xs text-gray-600 focus:border-blue-500 focus:ring-blue-200",
-                       data: { paginated_fields_target: "kindSelect", action: "paginated-fields#filterKind" } %>
+        <%= render "comments_and_communications/kind_select", name: "#{list_id}-kind", selected: nil,
+                   options: { data: { paginated_fields_target: "kindSelect", action: "paginated-fields#filterKind" } } %>
       <% end %>
       <% if entries.size > 1 %>
-        <label class="inline-flex cursor-pointer items-center gap-1.5 select-none" title="Group entries that share a subject line">
-          <%= check_box_tag "#{list_id}-group", "1", false, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500", data: { action: "paginated-fields#toggleGrouping" } %>
-          <span class="text-xs text-gray-500"><%= t("communications.group_by_subject") %></span>
-        </label>
+        <%= render "comments_and_communications/group_by_subject_toggle", name: "#{list_id}-group", checked: false,
+                   options: { data: { action: "paginated-fields#toggleGrouping" } } %>
       <% end %>
       <%# Carry the origin so the feed can show a back eyebrow to this record. %>
       <%# Both must be saved: a form can build an unsaved person inline (the new
@@ -88,7 +81,7 @@
             <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
           <% end %>
         <% else %>
-          <div data-paginated-fields-target="item" data-kind="communication" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
+          <div data-paginated-fields-target="item" data-kind="communications" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
             <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only, expandable: true,
                        flag: (render("notifications/flag_indicator", notification: entry) if admin) %>
           </div>

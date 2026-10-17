@@ -9,11 +9,20 @@ import { Controller } from "@hotwired/stimulus"
 // (Outlets-based) that does the same job. Consolidate to one pattern — see
 // PR #1606.
 export default class extends Controller {
-  static targets = ["label", "icon"]
+  static targets = ["label", "icon", "toggle"]
+  static outlets = ["expandable-card"]
   static values = {
     expanded: { type: Boolean, default: true },
     expandedLabel: { type: String, default: "Collapse all" },
     collapsedLabel: { type: String, default: "Expand all" }
+  }
+
+  // With expandable-card outlets, show the toggle only while some card has
+  // clipped text to reveal (wired to each card's expandable-card:measured).
+  refresh() {
+    if (!this.hasToggleTarget) return
+    const anyExpandable = this.expandableCardOutlets.some(card => card.overflowingValue)
+    this.toggleTarget.classList.toggle("hidden", !anyExpandable)
   }
 
   toggleAll() {

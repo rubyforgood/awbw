@@ -1,0 +1,8 @@
+<%# Expand/Collapse-all for the feed rows; drives the enclosing expandable-cards
+    controller. Locals: expanded (whether rows start expanded, picks the label). %>
+<button type="button"
+        class="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+        data-action="expandable-cards#toggleAll">
+  <span data-expandable-cards-target="label"><%= expanded ? t("communications.collapse_all") : t("communications.expand_all") %></span>
+  <i class="fa-solid fa-chevron-down <%= "rotate-180" if expanded %> text-2xs transition-transform" data-expandable-cards-target="icon"></i>
+</button>

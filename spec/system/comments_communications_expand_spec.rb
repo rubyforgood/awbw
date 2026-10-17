@@ -59,6 +59,18 @@ RSpec.describe "Comments & communications expandable rows and type filter", type
     end
   end
 
+  scenario "rows that already fit show no chevron and no Expand all" do
+    short_person = create(:person)
+    create(:comment, commentable: short_person, topic: "Quick", body: "Short note.", created_by: admin)
+    visit edit_person_path(short_person)
+
+    within "#comments-section" do
+      expect(page).to have_content("Short note.")
+      expect(page).to have_no_button("Show full entry")
+      expect(page).to have_no_button("Expand all")
+    end
+  end
+
   scenario "hovering a communication row shows its subject alongside the body" do
     within "#comments-section" do
       expect(page).to have_css("[title^='Welcome — Long note.']")

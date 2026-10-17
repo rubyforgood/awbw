@@ -4,11 +4,37 @@ import { Controller } from "@hotwired/stimulus"
 // Collapses or expands a single card's body and rotates its chevron. Also
 // responds to expand-/collapse-all events broadcast by the parent
 // expandable-cards controller. With a collapsed class (e.g. line-clamp-2), the
-// body stays visible and only that class is toggled.
+// body stays visible and only that class is toggled; a toggle target then shows
+// only while the clamp actually cuts text off.
 export default class extends Controller {
-  static targets = ["body", "icon"]
+  static targets = ["body", "icon", "toggle"]
   static classes = ["collapsed"]
-  static values = { expanded: { type: Boolean, default: true } }
+  static values = {
+    expanded: { type: Boolean, default: true },
+    overflowing: { type: Boolean, default: false }
+  }
+
+  connect() {
+    if (!this.hasCollapsedClass || !this.hasToggleTarget) return
+    // Fires on first layout and whenever the row is resized or un-hidden (paging, filtering).
+    this.observer = new ResizeObserver(() => this.measure())
+    this.observer.observe(this.bodyTarget)
+  }
+
+  disconnect() {
+    this.observer?.disconnect()
+  }
+
+  measure() {
+    if (this.expandedValue || !this.bodyTarget.clientHeight) return
+    this.overflowingValue = this.bodyTarget.scrollHeight > this.bodyTarget.clientHeight + 1
+  }
+
+  overflowingValueChanged() {
+    if (!this.hasToggleTarget) return
+    this.toggleTarget.classList.toggle("invisible", !this.overflowingValue)
+    this.dispatch("measured")
+  }
 
   toggle() {
     this.expandedValue = !this.expandedValue
@@ -43,6 +69,7 @@ export default class extends Controller {
   }
 
   expandedValueChanged() {
+    if (!this.hasBodyTarget) return
     if (this.hasCollapsedClass) {
       this.collapsedClasses.forEach(name => this.bodyTarget.classList.toggle(name, !this.expandedValue))
     } else {

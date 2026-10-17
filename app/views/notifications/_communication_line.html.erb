@@ -6,19 +6,19 @@
     line underneath, and — since a card-wide link can hold no other links — makes
     the subject the link to the communication so `leading` can be a link too (the
     neutral source chip, pointing at that record's edit page, with the channel icon
-    inside it). Optional expandable (truncated rows only) adds a chevron that
-    unclamps the row, outside the card link so it doesn't navigate. %>
+    inside it). Optional expandable adds a chevron that unclamps a truncated row
+    (outside the card link so it doesn't navigate) or hides a full row's body. %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
 <% leading = local_assigns[:leading] %>
 <% trailing = local_assigns[:trailing] %>
-<% expandable = local_assigns.fetch(:expandable, false) && truncate_body %>
 <% decorated = notification.decorate %>
 <% body_admin_only = notification.channel != "autoemail" %>
 <% show_body = admin || !body_admin_only %>
 <% subject = notification.email_subject.presence || notification.kind.to_s.humanize %>
 <% body = notification.email_body_text.to_s if show_body %>
+<% expandable = local_assigns.fetch(:expandable, false) && (truncate_body || body.present?) %>
 <% from_name = decorated.from_name %>
 <% from_first = from_name.to_s.split.first.presence || from_name %>
 <% chip = chip_color(notification.incoming? ? decorated.contact_person&.id : notification.sender_id) %>
@@ -69,11 +69,12 @@
           <% end %>
         </span>
         <% if body.present? %>
-          <div class="pt-1 whitespace-pre-line <%= body_class %>"><%= body %></div>
+          <div class="pt-1 whitespace-pre-line <%= body_class %>" <% if expandable %>data-expandable-card-target="body"<% end %>><%= body %></div>
         <% end %>
       </div>
     <% end %>
     <%= trailing %>
+    <%= render "shared/expand_chevron" if expandable && !truncate_body %>
   </div>
 <% end %>
 <% if truncate_body %>
@@ -85,7 +86,7 @@
       <div class="min-w-0 flex-1 px-3 py-2"><%= row %></div>
     <% end %>
     <% if expandable %>
-      <div class="py-2 pr-2"><%= render "shared/expand_chevron" %></div>
+      <div class="py-2 pr-2"><%= render "shared/expand_chevron", clamp: true %></div>
     <% end %>
   <% end %>
 <% else %>

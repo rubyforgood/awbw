@@ -1,34 +1,44 @@
 <%= turbo_frame_tag "comments_and_communications_results" do %>
-  <div class="mb-3 border-t border-gray-100 pt-4">
-    <h2 class="flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-      <i class="fa-solid fa-comments"></i>
-      Results
-      <span class="font-normal text-gray-400 normal-case">· <%= @count_display %><%= " comments & communications" unless @groups %></span>
-    </h2>
-  </div>
+  <% paged = @groups || @entries %>
+  <% filter_form = { form: CommentsHelper::FEED_FILTER_FORM_ID, onchange: "this.form.requestSubmit()" } %>
+  <div data-controller="expandable-cards"
+       data-expandable-cards-expanded-label-value="<%= t("communications.collapse_all") %>"
+       data-expandable-cards-collapsed-label-value="<%= t("communications.expand_all") %>">
+    <div class="mb-3 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
+      <h2 class="flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+        <i class="fa-solid fa-comments"></i>
+        Results
+        <span class="font-normal text-gray-400 normal-case">· <%= @count_display %><%= " comments & communications" unless @groups %></span>
+      </h2>
+      <%= render "comments_and_communications/expand_all_button", expanded: true if paged.any? %>
+      <div class="ml-auto flex items-center gap-3">
+        <%= render "comments_and_communications/kind_select", name: :kind, selected: params[:kind], options: filter_form %>
+        <%= render "comments_and_communications/group_by_subject_toggle", name: :group_by_subject, checked: params[:group_by_subject].present?, options: filter_form %>
+      </div>
+    </div>
 
-<% paged = @groups || @entries %>
-  <div class="space-y-2">
-    <% if @groups %>
-      <% if @groups.any? %>
-        <% @groups.each do |group| %>
-          <%= render "comments_and_communications/subject_group", group: group, person: @person, record_targets: @record_targets %>
+    <div class="space-y-2">
+      <% if @groups %>
+        <% if @groups.any? %>
+          <% @groups.each do |group| %>
+            <%= render "comments_and_communications/subject_group", group: group, person: @person, record_targets: @record_targets %>
+          <% end %>
+        <% else %>
+          <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
+        <% end %>
+      <% elsif @entries.any? %>
+        <% @entries.each do |entry| %>
+          <%= render "comments_and_communications/entry_row", entry: entry, person: @person, record_targets: @record_targets %>
         <% end %>
       <% else %>
         <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
       <% end %>
-    <% elsif @entries.any? %>
-      <% @entries.each do |entry| %>
-        <%= render "comments_and_communications/entry_row", entry: entry, person: @person, record_targets: @record_targets %>
-      <% end %>
-    <% else %>
-      <p class="py-6 text-center text-sm text-gray-500"><%= t("communications.all_section_none") %></p>
+    </div>
+
+    <% if paged.total_pages > 1 %>
+      <div class="mt-4 flex justify-center">
+        <%= tailwind_paginate paged, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :flagged, :from, :to, :email_topic, :group_by_subject).permit! %>
+      </div>
     <% end %>
   </div>
-
-  <% if paged.total_pages > 1 %>
-    <div class="mt-4 flex justify-center">
-      <%= tailwind_paginate paged, params: params.slice(:person_id, :query, :subject, :author_id, :kind, :source, :follow_up, :flagged, :from, :to, :email_topic, :group_by_subject).permit! %>
-    </div>
-  <% end %>
 <% end %>

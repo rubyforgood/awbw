@@ -1,13 +1,17 @@
 module CommentsHelper
-  # Stimulus wiring for a one-line feed row that the chevron and the section's
-  # "Expand all" unclamp to show the full entry.
-  def expandable_feed_row_data
-    {
+  FEED_FILTER_FORM_ID = "comments-and-communications-filters"
+
+  # Stimulus wiring for a feed row the chevron and "Expand/Collapse all" toggle.
+  # clamp: a one-line row unclamped to show the full entry; otherwise a full row
+  # whose body hides on collapse.
+  def expandable_feed_row_data(clamp: true)
+    data = {
       controller: "expandable-card",
-      expandable_card_expanded_value: false,
-      expandable_card_collapsed_class: "line-clamp-2",
+      expandable_card_expanded_value: !clamp,
       action: "expandable-cards:expandAll@window->expandable-card#expand expandable-cards:collapseAll@window->expandable-card#collapse"
     }
+    data[:expandable_card_collapsed_class] = "line-clamp-2" if clamp
+    data
   end
 
   # Human-readable label for a record a comment or communication hangs off, used
