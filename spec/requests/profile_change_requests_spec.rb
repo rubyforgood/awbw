@@ -90,6 +90,14 @@ RSpec.describe "Profile change requests", type: :request do
       expect(person.user.reload.unconfirmed_email).to eq("changed@example.com")
     end
 
+    it "keeps the reviewer note when approving" do
+      request = create(:profile_change_request, :secondary_email, person: person, requested_value: "second@example.com")
+
+      post approve_profile_change_request_path(request), params: { reviewer_note: "Updated for you" }
+
+      expect(request.reload.reviewer_note).to eq("Updated for you")
+    end
+
     it "approves a type-only primary email change without sending a confirmation" do
       person.update!(email_type: "work")
       request = create(:profile_change_request, :primary_email, person: person,
@@ -263,6 +271,17 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response).to be_successful
       expect(response.body).to include("profile_change_requests_results")
       expect(response.body).to include("please fix my dates")
+    end
+
+    it "counts each status in the toggle strip" do
+      create(:profile_change_request, person: person)
+      create(:profile_change_request, person: person, status: "declined")
+
+      get profile_change_requests_path, headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+      expect(response.body).to match(/Pending\s*<span[^>]*>1</)
+      expect(response.body).to match(/Declined\s*<span[^>]*>1</)
+      expect(response.body).to match(/Resolved\s*<span[^>]*>0</)
     end
   end
 
