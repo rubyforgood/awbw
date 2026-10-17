@@ -1,57 +1,37 @@
 <%# locals: (f:) %>
 <% person = f.object %>
-<% affiliations = person.affiliations.select(&:organization).sort_by { |a| [ a.active? ? 0 : 1, a.organization.name.downcase ] } %>
+<% affiliations = person.affiliations.select(&:organization).sort_by { |a| a.organization.name.downcase } %>
+<% active_affiliations, inactive_affiliations = affiliations.partition(&:active?) %>
 <% pending_requests = person.profile_change_requests.pending.where(field: "affiliation").index_by(&:affiliation_id) %>
-<div id="affiliations" class="form-group scroll-mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
-  <h3 class="mb-1 font-semibold text-gray-700">Affiliations</h3>
-  <p class="mb-3 text-sm text-gray-600">AWBW staff keep your organizations up to date. Tell us what's different and we'll change it.</p>
-  <div class="divide-y divide-gray-200">
-    <% affiliations.group_by(&:organization).each do |organization, org_affiliations| %>
-      <div class="py-3 first:pt-0">
-        <p class="font-medium text-gray-900"><%= organization.name %></p>
-        <div class="mt-2 space-y-4 border-l-2 border-gray-200 pl-4">
-          <% org_affiliations.each do |affiliation| %>
-            <% decorated = affiliation.decorate %>
-            <% pending = pending_requests[affiliation.id] %>
-            <% work_addresses = organization.addresses.select { |address| !address.inactive? || address.id == affiliation.organization_address_id } %>
-            <div class="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto] sm:gap-4">
-              <div class="min-w-0">
-                <p class="text-gray-800"><%= decorated.display_title %></p>
-                <p class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500"><%= decorated.status_badge %> <%= decorated.period_label %></p>
-              </div>
-              <div class="min-w-0">
-                <% missing_address_link = link_to(new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id,
-                                                                                  change: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS),
-                                                  target: "_blank", rel: "noopener", class: "underline hover:text-blue-800") do %>
-                  <%= work_addresses.any? ? "Address not listed?" : "Tell us your work address" %> <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
-                <% end %>
-                <% if work_addresses.any? %>
-                  <%= f.simple_fields_for :affiliations, affiliation, child_index: affiliation.id do |af| %>
-                    <%= af.input :organization_address_id, label: "Work address", required: false,
-                                 collection: work_addresses.map { |address| [ address.name, address.id ] }, include_blank: "Not picked yet",
-                                 hint: missing_address_link, wrapper_html: { class: "mb-0" }, label_html: { class: "text-sm" }, input_html: { class: "w-full" } %>
-                  <% end %>
-                <% else %>
-                  <p class="text-sm font-medium text-gray-700">Work address</p>
-                  <p class="text-sm text-gray-500">None on file yet. <%= missing_address_link %></p>
-                <% end %>
-              </div>
-              <div class="flex items-center gap-2 sm:pt-7">
-                <%= render "people/pending_request_icon", request: pending if pending %>
-                <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: affiliation.id),
-                            target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm) do %>
-                  <%= pending ? "See your request" : "Request a change" %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      </div>
+<% tab_base = "cursor-pointer select-none rounded-md px-3 py-1 text-gray-500 transition-colors hover:text-gray-700" %>
+<div id="affiliations" class="form-group group/owneraff scroll-mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <h3 class="font-semibold text-gray-700">Affiliations</h3>
+    <% if affiliations.any? %>
+      <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium">
+        <input type="radio" id="owner-aff-tab-active" name="owner_affiliation_tab" form="owner_affiliation_tab_none"
+               checked class="peer/active sr-only">
+        <input type="radio" id="owner-aff-tab-inactive" name="owner_affiliation_tab" form="owner_affiliation_tab_none"
+               class="peer/inactive sr-only">
+        <label for="owner-aff-tab-active"
+               class="<%= tab_base %> peer-checked/active:bg-white peer-checked/active:text-gray-800 peer-checked/active:shadow-sm">
+          Active <span class="text-gray-400"><%= active_affiliations.size %></span>
+        </label>
+        <label for="owner-aff-tab-inactive"
+               class="<%= tab_base %> peer-checked/inactive:bg-white peer-checked/inactive:text-gray-800 peer-checked/inactive:shadow-sm">
+          Inactive <span class="text-gray-400"><%= inactive_affiliations.size %></span>
+        </label>
+      </nav>
     <% end %>
   </div>
-  <% if affiliations.empty? %>
-    <p class="mb-3 text-gray-500 italic">No organizations yet.</p>
-  <% end %>
+  <div class="group-has-[#owner-aff-tab-inactive:checked]/owneraff:hidden">
+    <%= render "people/owner_affiliation_rows", person: person, affiliations: active_affiliations, pending_requests: pending_requests,
+                                                empty_label: affiliations.any? ? "No active affiliations." : "No organizations yet." %>
+  </div>
+  <div class="hidden group-has-[#owner-aff-tab-inactive:checked]/owneraff:block">
+    <%= render "people/owner_affiliation_rows", person: person, affiliations: inactive_affiliations, pending_requests: pending_requests,
+                                                empty_label: "No inactive affiliations." %>
+  </div>
   <%= link_to new_profile_change_request_path(person_id: person, field: "affiliation", add: 1),
               target: "_blank", rel: "noopener", class: button_classes(:secondary_outline, size: :sm, extra: "mt-3") do %>
     <i class="fa-solid fa-plus"></i> Add an organization <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
