@@ -6,7 +6,7 @@ RSpec.describe "Event registration imports", type: :request do
   let(:event) { create(:event) }
 
   before do
-    create(:organization, name: "A New Leaf")
+    create(:organization, name: "Sample Org")
     form = create(:form, name: "Registration form")
     create(:event_form, event: event, form: form, role: "registration")
     %w[first_name last_name primary_email organization_name].each do |identifier|
@@ -31,6 +31,13 @@ RSpec.describe "Event registration imports", type: :request do
 
       expect(response).to be_successful
       expect(response.body).to include("Import registrants")
+    end
+
+    it "points the back link at admin home when opened from there" do
+      sign_in admin
+      get new_event_registration_import_path(return_to: "admin_home")
+
+      expect(response.body).to include("← Admin home", %(href="#{admin_path}"))
     end
 
     it "redirects non-admins" do
@@ -61,7 +68,7 @@ RSpec.describe "Event registration imports", type: :request do
       post event_registration_import_path, params: { event_id: event.id, file: extended }
 
       expect(response).to have_http_status(:unprocessable_content)
-      expect(response.body).to include("Link: A New Leaf", "typed “A New Leaf Inc.”")
+      expect(response.body).to include("Link: Sample Org", "typed “Sample Org Inc.”")
       expect(response.body).to include("as 1@example.com", "Add as no show")
       expect(response.body).to include("Already no show")
       expect(response.body).to include("Unknown sector “Astronomy”", "FavoriteColor")

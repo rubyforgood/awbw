@@ -1,7 +1,7 @@
 <% content_for(:page_bg_class, "admin-only bg-blue-100") %>
 <div class="mx-auto max-w-5xl <%= DomainTheme.bg_class_for(:event_registrations) %> border-primary/10 rounded-2xl border p-6 shadow-sm">
   <div class="mb-4 flex flex-wrap justify-start gap-2">
-    <%= link_to "← Choose a different file", new_event_registration_import_path(event_id: @event.id),
+    <%= link_to "← Choose a different file", new_event_registration_import_path(event_id: @event.id, return_to: params[:return_to].presence),
                 class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
 
@@ -48,6 +48,12 @@
     </li>
     <li>People already in the portal keep their current address, phone, and sectors; the sheet only fills blanks and adds new addresses beside them.</li>
     <li>A cancelled, no-show, or transferred-out registration is never overwritten — the row adds a second registration, listed on Data health.</li>
+    <% if @event.ce_eligible? && @event.ce_hours_cost_cents.to_i.positive? %>
+      <li>
+        CE costs <%= dollars_from_cents(@event.ce_hours_cost_cents) %> here. A row that asks for CE without an AmountPaid leaves the
+        CE unpaid, and that person can't get a CE certificate until it's paid.
+      </li>
+    <% end %>
     <li>No emails are sent.</li>
   </ul>
 
@@ -194,7 +200,7 @@
       <%= f.hidden_field :event_id, value: @event.id %>
       <div class="flex items-center gap-2">
         <%= f.submit "Import #{@result.registrations_total} registrations", class: button_classes(:primary_outline, extra: "bg-blue-100") %>
-        <%= link_to "Cancel", new_event_registration_import_path(event_id: @event.id), class: button_classes(:secondary_outline) %>
+        <%= link_to "Cancel", new_event_registration_import_path(event_id: @event.id, return_to: params[:return_to].presence), class: button_classes(:secondary_outline) %>
       </div>
     <% end %>
   </div>

@@ -9,5 +9,5 @@ summary: >-
   CE licenses, and scholarships. It matches existing people, organizations, and
   addresses instead of duplicating them, even when a row has no email.
 pro_tips:
-  - "Open an event's Registrants page, then Bulk actions → Import registrants. Expand “Columns we read” for the full list."
+  - "Start from Admin home → Import registrants, or an event's Registrants page → Bulk actions. Expand “Columns we read” for the full list."
   - "A cancelled or no-show registration is never overwritten. The import adds a second one, and Data health lists anyone registered twice for an event."

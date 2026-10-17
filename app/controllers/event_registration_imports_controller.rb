@@ -57,6 +57,15 @@ class EventRegistrationImportsController < ApplicationController
 
   private
 
+  # Back to admin home when the importer was opened from there, else the event's registrants.
+  def import_back_link
+    return [ "Admin home", admin_path ] if params[:return_to] == "admin_home"
+    return [ "Registrants", registrants_event_path(@event) ] if @event
+
+    [ "Events", events_path ]
+  end
+  helper_method :import_back_link
+
   def run_import(path, dry_run:, source: @filename)
     EventRegistrationImporter.call(
       file_path: path, event: @event,
