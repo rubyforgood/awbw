@@ -1,12 +1,13 @@
 class StaffTaggingsController < ApplicationController
   before_action :set_staff_tagging, only: [ :edit, :update, :destroy, :toggle_marked, :save_note ]
+  helper_method :new_tagging_return_path
 
   def index
     authorize!
 
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 25
-      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable, :comments))
+      base_scope = authorized_scope(StaffTagging.includes(:staff_tag, :created_by, :staff_taggable, comments: { created_by: :person, updated_by: :person }))
       filtered = base_scope.search_by_params(params.to_unsafe_h)
       @sort = %w[person staff_tag marked created_at].include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
@@ -41,7 +42,7 @@ class StaffTaggingsController < ApplicationController
     authorize! @staff_tagging
 
     if @staff_tagging.save
-      redirect_to staff_taggings_path, notice: "Staff tagging created.", status: :see_other
+      redirect_to new_tagging_return_path, notice: "Staff tagging created.", status: :see_other
     else
       render :new, status: :unprocessable_content
     end
@@ -80,7 +81,14 @@ class StaffTaggingsController < ApplicationController
   def save_note
     authorize! @staff_tagging, to: :update?
     @staff_tagging.save_index_note(params[:note])
-    head :ok
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(helpers.dom_id(@staff_tagging, :note_hint),
+                                                  partial: "shared/index_note_hint",
+                                                  locals: { record: @staff_tagging, comment: @staff_tagging.comments.reload.first })
+      end
+      format.any { head :ok }
+    end
   end
 
   private
@@ -91,7 +99,7 @@ class StaffTaggingsController < ApplicationController
 
   def create_params
     person = Person.find_by(id: params.dig(:staff_tagging, :person_id))
-    { staff_tag_id: params.dig(:staff_tagging, :staff_tag_id), staff_taggable: person, marked: params.dig(:staff_tagging, :marked) == "1" }
+    staff_tagging_params.merge(staff_taggable: person)
   end
 
   # When the list is filtered to a single tag, the Mark column header takes that
@@ -110,6 +118,10 @@ class StaffTaggingsController < ApplicationController
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
     )
+  end
+
+  def new_tagging_return_path
+    params[:return_to] == "staff_tags" ? staff_tags_path : staff_taggings_path
   end
 
   def staff_tagging_return_path
