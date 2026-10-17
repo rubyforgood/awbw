@@ -46,6 +46,24 @@ RSpec.describe "Events::BulkPaymentFormSubmissions", type: :request do
          params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: { org_field.id.to_s => answer } } }
   end
 
+  describe "POST create change attribution" do
+    it "records a signed-out payer's writes against the bulk payment submission" do
+      sign_out admin
+      tracked = []
+      allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, props| tracked << [ name, props ] }
+
+      post event_bulk_payment_path(event), params: { bulk_payment: { Honeypot::FIELD_NAME => "", form_fields: {
+        org_field.id.to_s => "this answer has enough words for validation",
+        payer_first_name_field.id.to_s => "Jane",
+        payer_last_name_field.id.to_s => "Doe",
+        payer_email_field.id.to_s => "jane@example.com"
+      } } }
+
+      person_event = tracked.find { |name, _| name == "create.person" }
+      expect(person_event&.last&.dig(:form_submission_id)).to eq(FormSubmission.bulk_payment.last.id)
+    end
+  end
+
   describe "POST create with the honeypot tripped" do
     it "silently bounces a bot without recording a submission" do
       expect {

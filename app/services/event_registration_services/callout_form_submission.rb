@@ -47,6 +47,7 @@ module EventRegistrationServices
         sync_profile(person)
         stamp_scholarship_form_completion
       end
+      Current.form_submission_id = @submission.id
       @submission
     end
 

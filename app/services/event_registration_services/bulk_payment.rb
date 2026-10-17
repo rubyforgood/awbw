@@ -24,6 +24,7 @@ module EventRegistrationServices
         backfill_payer_fields(person)
         submission = create_form_submission(person)
         send_notifications(submission, person)
+        Current.form_submission_id = submission.id
         Result.new(success?: true, form_submission: submission, errors: [])
       end
     rescue ActiveRecord::RecordInvalid => e

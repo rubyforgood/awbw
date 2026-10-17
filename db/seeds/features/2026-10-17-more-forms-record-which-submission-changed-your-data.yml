@@ -1,0 +1,9 @@
+name: "More forms record which submission changed your data"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2710
+summary: >-
+  Bulk payments, ticket forms like surveys, and linking an organization from a
+  submission's page now record which submission made each change, so change
+  logs link to it the same as registrations and public forms.
