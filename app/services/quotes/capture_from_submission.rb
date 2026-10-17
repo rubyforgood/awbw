@@ -12,8 +12,8 @@ module Quotes
   # keys on the untouched `original_body`, so an admin editing the published
   # `body` doesn't cause a re-capture.
   #
-  # Shared by the registration, scholarship, bulk-payment, and public-form
-  # submission paths.
+  # Shared by the registration, scholarship, bulk-payment, ticket-callout, and
+  # public-form submission paths.
   class CaptureFromSubmission
     def self.call(submission)
       new(submission).call

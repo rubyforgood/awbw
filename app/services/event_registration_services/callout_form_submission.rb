@@ -42,6 +42,8 @@ module EventRegistrationServices
         # clarity fans out only per-resource fields, and the profile write-through
         # only fires when the form asks the identified anonymity / name questions.
         save_clarity_answers
+        OtherResponses::CaptureFromSubmission.call(@submission)
+        Quotes::CaptureFromSubmission.call(@submission)
         sync_profile(person)
         stamp_scholarship_form_completion
       end
