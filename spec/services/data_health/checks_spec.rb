@@ -304,6 +304,34 @@ RSpec.describe DataHealth::UnboundNotifications do
   end
 end
 
+RSpec.describe DataHealth::StuckNotifications do
+  def stuck(**attrs)
+    create(:notification, kind: "event_registration_confirmation", created_at: 2.hours.ago, **attrs)
+  end
+
+  it "finds a portal email pending past the grace period" do
+    notification = stuck
+
+    expect(described_class.new.scope).to include(notification)
+  end
+
+  it "leaves one that has since been resent" do
+    original = stuck
+    create(:notification, parent_notification: original, root_notification: original)
+
+    expect(described_class.new.scope).not_to include(original)
+  end
+
+  it "leaves delivered, failed, fresh, and Devise emails alone" do
+    delivered = stuck(delivered_at: 1.hour.ago)
+    failed = stuck(error_at: 1.hour.ago)
+    fresh = create(:notification, kind: "event_registration_confirmation")
+    devise = stuck(kind: "reset_password")
+
+    expect(described_class.new.scope).not_to include(delivered, failed, fresh, devise)
+  end
+end
+
 RSpec.describe DataHealth::Worklists do
   it "counts possible duplicates per type, with a link to each dedupe page" do
     create_list(:workshop, 2, title: "Anger Volcano")

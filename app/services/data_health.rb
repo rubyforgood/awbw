@@ -21,6 +21,7 @@ module DataHealth
       UnresolvedResourceAgencies
     ],
     "Communications" => [
+      StuckNotifications,
       UnboundNotifications
     ]
   }.freeze
