@@ -76,7 +76,7 @@
   <%# Page-specific collapsed text fields (e.g. the picker's Organization/Name
       boxes). Funder/City/Comment text below are shared across both pages. %>
   <% more_text.each do |f| %>
-    <%= render "events/filter_text", param: f[:param], label: f[:label],
+    <%= render "shared/filter_text", param: f[:param], label: f[:label],
           placeholder: f[:placeholder], field_class: field_class %>
   <% end %>
 
@@ -105,7 +105,7 @@
 
     <%# Free-text on the funder behind a scholarship. Param :funder_name stays
         clear of the awbw/external :funder funding-source scope. %>
-    <%= render "events/filter_text", param: :funder_name, label: "Funder",
+    <%= render "shared/filter_text", param: :funder_name, label: "Funder",
           placeholder: "Funder name", field_class: field_class %>
   <% end %>
 
@@ -127,7 +127,7 @@
           selected: Array(params[:topic_subscription]).map(&:to_i), placeholder: "Any topic" %>
   <% end %>
 
-  <%= render "events/filter_text", param: :city, label: "City",
+  <%= render "shared/filter_text", param: :city, label: "City",
         placeholder: "City name", field_class: field_class %>
 
   <% if @dashboard&.states&.any? %>
@@ -145,7 +145,7 @@
         options: EventRegistration::COMMENT_STATUS_FILTER_OPTIONS,
         selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
 
-  <%= render "events/filter_text", param: :comment, label: "Comment text",
+  <%= render "shared/filter_text", param: :comment, label: "Comment text",
         placeholder: "Topic or content", field_class: field_class %>
 
   <%# Registration date range — filters on when the registration was created

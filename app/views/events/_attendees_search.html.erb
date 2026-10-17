@@ -90,7 +90,7 @@
 
   <%# Free-text on the funder behind a scholarship. Param :funder_name stays clear
       of the awbw/external :funder funding-source drill-in. %>
-  <%= render "events/filter_text", param: :funder_name, label: "Funder",
+  <%= render "shared/filter_text", param: :funder_name, label: "Funder",
         placeholder: "Funder name", field_class: field_class %>
 
   <%= render "shared/filter_select", param: :ce_status, label: "CE status",
@@ -107,7 +107,7 @@
           selected: Array(params[:topic_subscription]).map(&:to_i), placeholder: "Any topic" %>
   <% end %>
 
-  <%= render "events/filter_text", param: :city, label: "City",
+  <%= render "shared/filter_text", param: :city, label: "City",
         placeholder: "City name", field_class: field_class %>
 
   <%= render "shared/filter_select", param: :state, label: "State",
@@ -122,7 +122,7 @@
         options: EventRegistration::COMMENT_STATUS_FILTER_OPTIONS,
         selected: params[:comment_status], blank: "Any comments", field_class: field_class %>
 
-  <%= render "events/filter_text", param: :comment, label: "Comment text",
+  <%= render "shared/filter_text", param: :comment, label: "Comment text",
         placeholder: "Topic or content", field_class: field_class %>
 <% end %>
 
