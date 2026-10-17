@@ -86,6 +86,7 @@ module ProfileChangeRequests
       address = @request.proposed_organization_address || find_or_create_typed_address(affiliation.organization)
       return Result.new(applied: false, message: address.errors.full_messages.to_sentence) unless address.persisted?
 
+      address.update(inactive: false) if address.inactive?
       if affiliation.update(organization_address: address)
         Result.new(applied: true, message: "Work address set to #{address.name}.")
       else

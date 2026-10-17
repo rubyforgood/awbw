@@ -248,6 +248,19 @@ RSpec.describe "Profile change requests", type: :request do
       expect(affiliation.reload.organization_address).to eq(existing)
     end
 
+    it "reactivates an inactive matching address when approving a typed one" do
+      affiliation = create(:affiliation, person: person)
+      existing = create(:address, addressable: affiliation.organization, street_address: "12 Elm St", city: "Reno", state: "NV", inactive: true)
+      request = create(:profile_change_request, person: person, affiliation: affiliation, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_UPDATE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      post approve_profile_change_request_path(request)
+
+      expect(affiliation.reload.organization_address).to eq(existing)
+      expect(existing.reload).not_to be_inactive
+    end
+
     it "approves an add-a-new-affiliation request by creating it" do
       org = create(:organization, name: "New Org")
       request = create(:profile_change_request, person: person, field: "affiliation",
