@@ -92,15 +92,23 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     name ? "Dear #{name}," : "Hello,"
   end
 
-  # Names the new value only: the review email goes out after Approve applies the
-  # change, so the live current value already shows the new one.
   def requested_change
+    from = previous_value ? " from #{previous_value}" : ""
     case field
-    when *ProfileChangeRequest::EMAIL_FIELDS then "change your #{field_label.downcase} to #{requested_display}"
-    when "organization_name" then "change your organization name to #{requested_value}"
+    when *ProfileChangeRequest::EMAIL_FIELDS then "change your #{field_label.downcase}#{from} to #{requested_display}"
+    when "organization_name" then "change your organization name#{from} to #{requested_value}"
     when "affiliation" then affiliation_requested_change
     else "update your #{field_label.downcase}"
     end
+  end
+
+  # The live value is the old one only while the change is unapplied: Devise keeps
+  # the old login until the new address is confirmed, and a decline changes nothing.
+  def previous_value
+    return unless field == "primary_email" || declined?
+
+    value = current_display
+    value if value.present? && value != requested_display
   end
 
   def affiliation_requested_change

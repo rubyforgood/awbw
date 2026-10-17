@@ -92,6 +92,24 @@ RSpec.describe ProfileChangeRequestDecorator do
       expect(request.decorate.requested_change).to eq("change your organization name to Riverside Center")
     end
 
+    it "names the old login for a primary email, which Devise keeps until confirmation" do
+      person = build_stubbed(:person, email_type: nil, user: build_stubbed(:user, email: "old@example.com", email_type: nil))
+      request = build_stubbed(:profile_change_request, :primary_email, person: person, status: "resolved", proposed_email_type: nil)
+      expect(request.decorate.requested_change).to eq("change your primary email from old@example.com to new@example.com")
+    end
+
+    it "names the old value for a declined request, which changed nothing" do
+      person = build_stubbed(:person, email_2: "old2@example.com", email_2_type: nil)
+      request = build_stubbed(:profile_change_request, :secondary_email, person: person, status: "declined", proposed_email_type: nil)
+      expect(request.decorate.requested_change).to eq("change your secondary email from old2@example.com to second@example.com")
+    end
+
+    it "leaves out the old value once an applied change has overwritten it" do
+      person = build_stubbed(:person, email_2: "second@example.com", email_2_type: nil)
+      request = build_stubbed(:profile_change_request, :secondary_email, person: person, status: "resolved", proposed_email_type: nil)
+      expect(request.decorate.requested_change).to eq("change your secondary email to second@example.com")
+    end
+
     it "falls back to the topic for free-text requests" do
       expect(build_stubbed(:profile_change_request, :other).decorate.requested_change).to eq("update your profile data")
     end
