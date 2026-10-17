@@ -369,7 +369,7 @@ Rails.application.routes.draw do
 
   resources :membership_invoices, only: [ :index, :show, :edit, :update, :destroy ]
 
-  namespace :membership do
+  namespace :memberships do
     resources :subscription_checkouts, only: [ :create ]
     resources :invoice_checkouts, only: [ :create ]
     resources :billing_portals, only: [ :create ]

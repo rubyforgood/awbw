@@ -27,7 +27,7 @@ RSpec.describe "Membership invoice checkouts", type: :request do
   end
 
   it "requires a signed-in user" do
-    post membership_invoice_checkouts_path, params: { invoice_id: invoice.id }
+    post memberships_invoice_checkouts_path, params: { invoice_id: invoice.id }
 
     expect(response).to redirect_to(new_user_session_path)
   end
@@ -35,7 +35,7 @@ RSpec.describe "Membership invoice checkouts", type: :request do
   it "charges an already-started, unpaid year one-time and returns to the profile" do
     sign_in user
 
-    post membership_invoice_checkouts_path, params: { invoice_id: invoice.id }
+    post memberships_invoice_checkouts_path, params: { invoice_id: invoice.id }
 
     expect(response).to redirect_to("https://checkout.stripe.com/membership")
     expect(checkout_args[:mode]).to eq("payment")
@@ -51,7 +51,7 @@ RSpec.describe "Membership invoice checkouts", type: :request do
   it "refuses another person's invoice" do
     sign_in create(:user, :with_person)
 
-    post membership_invoice_checkouts_path, params: { invoice_id: invoice.id }
+    post memberships_invoice_checkouts_path, params: { invoice_id: invoice.id }
 
     expect(response).to redirect_to(root_path)
   end
@@ -61,7 +61,7 @@ RSpec.describe "Membership invoice checkouts", type: :request do
       allocatable: invoice, amount: invoice.cost_cents)
     sign_in user
 
-    post membership_invoice_checkouts_path, params: { invoice_id: invoice.id }
+    post memberships_invoice_checkouts_path, params: { invoice_id: invoice.id }
 
     expect(response).to redirect_to(person_path(person))
   end
@@ -71,7 +71,7 @@ RSpec.describe "Membership invoice checkouts", type: :request do
       start_date: invoice.end_date + 1.day, end_date: invoice.end_date + 1.year)
     sign_in user
 
-    post membership_invoice_checkouts_path, params: { invoice_id: future.id }
+    post memberships_invoice_checkouts_path, params: { invoice_id: future.id }
 
     expect(response).to redirect_to("https://checkout.stripe.com/membership")
     expect(checkout_args[:mode]).to eq("payment")
@@ -82,7 +82,7 @@ RSpec.describe "Membership invoice checkouts", type: :request do
     allow(Membership).to receive(:enabled?).and_return(false)
     sign_in user
 
-    post membership_invoice_checkouts_path, params: { invoice_id: invoice.id }
+    post memberships_invoice_checkouts_path, params: { invoice_id: invoice.id }
 
     expect(response).to redirect_to(root_path)
   end

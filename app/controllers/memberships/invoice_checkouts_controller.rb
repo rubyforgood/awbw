@@ -1,4 +1,4 @@
-class Membership::InvoiceCheckoutsController < ApplicationController
+class Memberships::InvoiceCheckoutsController < ApplicationController
   def create
     person = current_user.person
     invoice = person&.membership_invoices&.find_by(id: params[:invoice_id])

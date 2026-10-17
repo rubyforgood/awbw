@@ -31,7 +31,7 @@
             <ul class="flex-1"><%= render "membership_invoices/invoice_row", invoice: invoice %></ul>
             <% if owner && !invoice.upcoming? %>
               <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
-              <%= button_to "Pay", membership_invoice_checkouts_path, params: { invoice_id: invoice.id },
+              <%= button_to "Pay", memberships_invoice_checkouts_path, params: { invoice_id: invoice.id },
                             class: button_classes(:primary, size: :sm),
                             data: { turbo: false } %>
             <% end %>
@@ -46,12 +46,12 @@
           <p class="mb-3 text-sm text-gray-700">
             Your automatic payment for membership is set to stop renewing at the end of the current billing cycle. You can change this or update your card below.
           </p>
-          <%= button_to "Manage autopay", membership_billing_portals_path,
+          <%= button_to "Manage autopay", memberships_billing_portals_path,
                         class: button_classes(:secondary_outline, size: :sm),
                         data: { turbo: false } %>
         <% elsif autopay %>
           <p class="mb-3 text-sm text-gray-700">Your membership renews automatically with the card you have on file.</p>
-          <%= button_to "Manage autopay", membership_billing_portals_path,
+          <%= button_to "Manage autopay", memberships_billing_portals_path,
                         class: button_classes(:secondary_outline, size: :sm),
                         data: { turbo: false } %>
         <% elsif membership&.ended? %>
@@ -61,7 +61,7 @@
         <% else %>
           <p class="mb-3 text-sm text-gray-700">Set up your membership to renew automatically each year at <%= dollars_from_cents(membership&.cost_cents || Membership::ANNUAL_COST_CENTS) %>.</p>
           <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
-          <%= button_to "Set up automatic renewal", membership_subscription_checkouts_path,
+          <%= button_to "Set up automatic renewal", memberships_subscription_checkouts_path,
                         class: button_classes(:primary),
                         data: { turbo: false } %>
         <% end %>

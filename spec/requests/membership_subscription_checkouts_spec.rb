@@ -22,7 +22,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
   end
 
   it "requires a signed-in user" do
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(response).to redirect_to(new_user_session_path)
   end
@@ -30,7 +30,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
   it "refuses a user with no person record" do
     sign_in create(:user)
 
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(response).to redirect_to(root_path)
   end
@@ -38,7 +38,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
   it "refuses a member with no membership rather than creating one" do
     sign_in user
 
-    expect { post membership_subscription_checkouts_path }.not_to change { Membership.count }
+    expect { post memberships_subscription_checkouts_path }.not_to change { Membership.count }
 
     expect(response).to redirect_to(root_path)
   end
@@ -47,14 +47,14 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     create(:membership, person: person)
     sign_in user
 
-    expect { post membership_subscription_checkouts_path }.not_to change { Membership.count }
+    expect { post memberships_subscription_checkouts_path }.not_to change { Membership.count }
   end
 
   it "charges the member's own locked rate, not the standard one" do
     create(:membership, person: person, cost_cents: 1_500)
     sign_in user
 
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(checkout_args[:mode]).to eq("subscription")
     expect(checkout_args.dig(:line_items, 0, :price_data, :unit_amount)).to eq(1_500)
@@ -65,7 +65,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     create(:membership, person: person)
     sign_in user
 
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(checkout_args[:subscription_data]).not_to have_key(:billing_cycle_anchor)
     expect(checkout_args[:subscription_data]).not_to have_key(:trial_end)
@@ -79,7 +79,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     create(:allocation, source: create(:payment, amount_cents: 2_500), allocatable: invoice, amount: 2_500)
     sign_in user
 
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(checkout_args[:subscription_data][:billing_cycle_anchor])
       .to eq(Time.use_zone(Membership::TIME_ZONE) { (invoice.end_date + 1.day).beginning_of_day.to_i })
@@ -91,7 +91,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     membership = create(:membership, person: person)
     sign_in user
 
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(checkout_args[:metadata]).to eq({ membership_id: membership.id })
     expect(checkout_args[:subscription_data][:metadata]).to eq({ membership_id: membership.id })
@@ -104,7 +104,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
       start_date: Date.current - 30.days, end_date: Date.current - 30.days + 1.year - 1.day)
     sign_in user
 
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(response).to redirect_to(person_path(person))
   end
@@ -113,7 +113,7 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     allow(Membership).to receive(:enabled?).and_return(false)
     sign_in user
 
-    post membership_subscription_checkouts_path
+    post memberships_subscription_checkouts_path
 
     expect(response).to redirect_to(root_path)
   end

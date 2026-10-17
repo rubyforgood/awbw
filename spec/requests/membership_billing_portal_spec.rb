@@ -27,7 +27,7 @@ RSpec.describe "Membership billing portal", type: :request do
   end
 
   it "requires a signed-in user" do
-    post membership_billing_portals_path
+    post memberships_billing_portals_path
 
     expect(response).to redirect_to(new_user_session_path)
   end
@@ -35,7 +35,7 @@ RSpec.describe "Membership billing portal", type: :request do
   it "refuses a user with no person record" do
     sign_in create(:user)
 
-    post membership_billing_portals_path
+    post memberships_billing_portals_path
 
     expect(response).to redirect_to(root_path)
   end
@@ -43,7 +43,7 @@ RSpec.describe "Membership billing portal", type: :request do
   it "refuses someone with no membership record" do
     sign_in user
 
-    post membership_billing_portals_path
+    post memberships_billing_portals_path
 
     expect(response).to redirect_to(root_path)
   end
@@ -52,7 +52,7 @@ RSpec.describe "Membership billing portal", type: :request do
     create(:membership, person: person)
     sign_in user
 
-    post membership_billing_portals_path
+    post memberships_billing_portals_path
 
     expect(response).to redirect_to(person_path(person))
   end
@@ -62,7 +62,7 @@ RSpec.describe "Membership billing portal", type: :request do
     create_active_subscription
     sign_in user
 
-    post membership_billing_portals_path
+    post memberships_billing_portals_path
 
     expect(response).to redirect_to("https://billing.stripe.com/membership")
     expect(portal_args[:return_url]).to eq(person_url(person))
@@ -74,7 +74,7 @@ RSpec.describe "Membership billing portal", type: :request do
     allow(fake_processor).to receive(:billing_portal).and_raise(Stripe::StripeError.new("down"))
     sign_in user
 
-    post membership_billing_portals_path
+    post memberships_billing_portals_path
 
     expect(response).to redirect_to(person_path(person))
   end
@@ -83,7 +83,7 @@ RSpec.describe "Membership billing portal", type: :request do
     allow(Membership).to receive(:enabled?).and_return(false)
     sign_in user
 
-    post membership_billing_portals_path
+    post memberships_billing_portals_path
 
     expect(response).to redirect_to(root_path)
   end

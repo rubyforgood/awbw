@@ -1,4 +1,4 @@
-class Membership::SubscriptionCheckoutsController < ApplicationController
+class Memberships::SubscriptionCheckoutsController < ApplicationController
   def create
     person = current_user.person
     membership = person&.current_membership

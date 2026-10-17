@@ -32,7 +32,7 @@ RSpec.describe "Person profile membership card", type: :request do
     get person_path(person)
 
     expect(response.body).to include("Set up automatic renewal")
-    expect(response.body).to include(membership_subscription_checkouts_path)
+    expect(response.body).to include(memberships_subscription_checkouts_path)
   end
 
   it "hides the action buttons from an admin viewing someone else's profile" do
@@ -43,8 +43,8 @@ RSpec.describe "Person profile membership card", type: :request do
 
     expect(response.body).to include("Annual membership")
     expect(response.body).not_to include("Set up automatic renewal")
-    expect(response.body).not_to include(membership_subscription_checkouts_path)
-    expect(response.body).not_to include(membership_billing_portals_path)
+    expect(response.body).not_to include(memberships_subscription_checkouts_path)
+    expect(response.body).not_to include(memberships_billing_portals_path)
   end
 
   it "offers a Pay action on an outstanding invoice, carrying its id" do
@@ -56,7 +56,7 @@ RSpec.describe "Person profile membership card", type: :request do
     get person_path(person)
 
     expect(response.body).to include("Pay")
-    expect(response.body).to include(membership_invoice_checkouts_path)
+    expect(response.body).to include(memberships_invoice_checkouts_path)
     expect(response.body).to include('name="invoice_id"')
   end
 
