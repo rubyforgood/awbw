@@ -16,11 +16,16 @@
           <div class="mb-1 flex items-center justify-between gap-3 text-sm">
             <%= link_to row.tag.name, taggings_path(link_param => row.tag.name), class: "font-medium text-gray-800 hover:underline" %>
             <span class="flex items-center gap-1.5 whitespace-nowrap">
+              <%# Fixed-width slots keep primary and additional in their own columns even when one is zero. %>
               <% if row.primary_count.positive? %>
-                <span class="rounded px-1.5 text-xs font-semibold <%= DomainTheme.bg_class_for(domain, intensity: 500) %> <%= DomainTheme.text_class_for(domain, intensity: 950) %>" aria-hidden="true"><%= row.primary_count %></span>
+                <span class="w-7 rounded text-center text-xs font-semibold <%= DomainTheme.bg_class_for(domain, intensity: 500) %> <%= DomainTheme.text_class_for(domain, intensity: 950) %>" aria-hidden="true"><%= row.primary_count %></span>
+              <% else %>
+                <span class="w-7" aria-hidden="true"></span>
               <% end %>
               <% if row.additional_count.positive? %>
-                <span class="rounded px-1.5 text-xs font-medium <%= DomainTheme.bg_class_for(domain, intensity: 200) %> <%= DomainTheme.text_class_for(domain, intensity: 800) %>" aria-hidden="true"><%= row.additional_count %></span>
+                <span class="w-7 rounded text-center text-xs font-medium <%= DomainTheme.bg_class_for(domain, intensity: 200) %> <%= DomainTheme.text_class_for(domain, intensity: 800) %>" aria-hidden="true"><%= row.additional_count %></span>
+              <% else %>
+                <span class="w-7" aria-hidden="true"></span>
               <% end %>
               <span class="w-6 text-right font-semibold text-gray-900" aria-hidden="true"><%= row.total %></span>
               <span class="sr-only"><%= summary %></span>
