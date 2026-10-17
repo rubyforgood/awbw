@@ -256,9 +256,7 @@ class NotificationMailer < ApplicationMailer
   end
 
   def profile_change_reviewed(notification)
-    @request = notification.noticeable
-    @person = @request.person
-    @outcome = @request.declined? ? "declined" : "completed"
+    @request = notification.noticeable.decorate
 
     mail(
       to: notification.recipient_email,

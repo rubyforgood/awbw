@@ -1,3 +1,1 @@
-<h1 style="margin: 0 0 16px;">Update on your change request</h1>
-
-<%= render "notification_mailer/profile_change_reviewed_body", request: @request, outcome: @outcome, note: @request.reviewer_note %>
+<%= render "notification_mailer/profile_change_reviewed_body", request: @request, outcome: @request.review_outcome, note: @request.reviewer_note %>

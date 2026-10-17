@@ -2,18 +2,25 @@ require "rails_helper"
 
 RSpec.describe NotificationMailer, type: :mailer do
   describe "#profile_change_reviewed" do
-    let(:request) { create(:profile_change_request, :secondary_email, status: "declined", reviewer_note: "Please send proof") }
+    let(:requester) { create(:user, :with_person, first_name: "Amy") }
+    let(:request) do
+      create(:profile_change_request, :secondary_email, person: requester.person, requested_by: requester,
+             requested_value: "amy.work@example.com", status: "declined", reviewer_note: "Please send proof")
+    end
     let(:notification) do
       create(:notification, kind: "profile_change_reviewed", noticeable: request,
              recipient_role: "person", recipient_email: "requester@example.com")
     end
 
-    it "tells the requester the outcome and includes the staff note" do
+    it "greets the requester, names the outcome and change, and includes the staff note" do
       mail = described_class.profile_change_reviewed(notification)
+      html = mail.html_part.body.decoded
 
       expect(mail.subject).to eq(NotificationMailer::PROFILE_CHANGE_REVIEWED_SUBJECT)
-      expect(mail.html_part.body.decoded).to include("<strong>declined</strong>")
-      expect(mail.html_part.body.decoded).to include("Please send proof")
+      expect(html).to include("Dear #{requester.person.first_name},")
+      expect(html).to include("We've <strong>declined</strong> your request to change your secondary email to amy.work@example.com")
+      expect(html).to include("Please send proof")
+      expect(mail.text_part.body.decoded).to include("We've declined your request to change your secondary email")
       expect(mail.text_part.body.decoded).to include("Thank you,\nAWBW Staff")
     end
   end

@@ -59,4 +59,41 @@ RSpec.describe ProfileChangeRequestDecorator do
       expect(request.review_email_recipient).to be_nil
     end
   end
+
+  describe "#review_outcome" do
+    it "says approved for an auto-applied request" do
+      expect(build_stubbed(:profile_change_request, status: "resolved", resolution_method: "approved").decorate.review_outcome).to eq("approved")
+    end
+
+    it "says resolved for a manually resolved request" do
+      expect(build_stubbed(:profile_change_request, status: "resolved", resolution_method: "manual").decorate.review_outcome).to eq("resolved")
+    end
+
+    it "says declined for a declined request" do
+      expect(build_stubbed(:profile_change_request, status: "declined").decorate.review_outcome).to eq("declined")
+    end
+  end
+
+  describe "#email_greeting" do
+    it "greets the requester by first name" do
+      requester = build_stubbed(:user, person: build_stubbed(:person, first_name: "Amy"))
+      expect(build_stubbed(:profile_change_request, requested_by: requester).decorate.email_greeting).to eq("Dear Amy,")
+    end
+  end
+
+  describe "#requested_change" do
+    it "names the new email" do
+      request = build_stubbed(:profile_change_request, :secondary_email, requested_value: "new@example.com", proposed_email_type: nil)
+      expect(request.decorate.requested_change).to eq("change your secondary email to new@example.com")
+    end
+
+    it "names the new organization name" do
+      request = build_stubbed(:profile_change_request, field: "organization_name", requested_value: "Riverside Center")
+      expect(request.decorate.requested_change).to eq("change your organization name to Riverside Center")
+    end
+
+    it "falls back to the topic for free-text requests" do
+      expect(build_stubbed(:profile_change_request, :other).decorate.requested_change).to eq("update your profile data")
+    end
+  end
 end

@@ -82,6 +82,41 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     with_email_notice("Decline this request?")
   end
 
+  def review_outcome
+    return "declined" if declined?
+    resolution_method == "approved" ? "approved" : "resolved"
+  end
+
+  def email_greeting
+    name = requested_by&.person&.first_name.presence || requested_by&.first_name.presence
+    name ? "Dear #{name}," : "Hello,"
+  end
+
+  # Names the new value only: the review email goes out after Approve applies the
+  # change, so the live current value already shows the new one.
+  def requested_change
+    case field
+    when *ProfileChangeRequest::EMAIL_FIELDS then "change your #{field_label.downcase} to #{requested_display}"
+    when "organization_name" then "change your organization name to #{requested_value}"
+    when "affiliation" then affiliation_requested_change
+    else "update your #{field_label.downcase}"
+    end
+  end
+
+  def affiliation_requested_change
+    org = (affiliation&.organization || organization)&.name || proposed_organization_name
+    with_org = org ? " with #{org}" : ""
+    at_org = org ? " at #{org}" : ""
+    case requested_value
+    when ProfileChangeRequest::AFFILIATION_CHANGE_ADD then "add an affiliation#{with_org}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE then "end your affiliation#{with_org}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION then "change your organization's name to #{proposed_organization_name}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_TITLE then "change your title or role#{at_org} to #{proposed_title}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_DATES then "change your start or end dates#{at_org}"
+    else "update your affiliation#{with_org}"
+    end
+  end
+
   def review_email_recipient
     email = requested_by&.email
     "#{requested_by.full_name} <#{email}>" if email.present?
