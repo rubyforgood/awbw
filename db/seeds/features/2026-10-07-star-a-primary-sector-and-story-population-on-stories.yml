@@ -7,9 +7,11 @@ summary: >-
   When sharing a story idea or tagging a story, star one sector and one story
   population as its primary — like a person's sectors and age ranges. Story
   Share shows just those two on each story's picture.
+description: >-
+  <ul><li>A story with no starred sector shows its first sector on its
+  picture.</li><li>A story's full tag list leads with its starred tags, marked
+  with a star.</li></ul>
 pro_tips:
   - "Starring a tag also checks it, and unchecking a starred tag clears the star."
   - "Promoting a story idea into a story carries its starred sector and story population over."
-  - "A story with no starred sector shows its first sector on its picture."
-  - "A story's full tag list leads with its starred tags, marked with a star."
 action_path: "/story_share"
