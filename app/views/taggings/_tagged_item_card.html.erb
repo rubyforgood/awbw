@@ -69,9 +69,10 @@
         <% totals = item.tag_search_totals(local_assigns[:tag_names]) %>
         <% if totals.any? %>
           <div class="mb-2 flex flex-wrap gap-1.5">
-            <% totals.each do |tag, count| %>
-              <span class="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-700">
-                <%= tag.name %> <span class="font-semibold"><%= count %>*</span>
+            <% totals.each do |row| %>
+              <span class="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-700"
+                    title="<%= row.total %> total · <%= row.primary_count %> primary · <%= row.additional_count %> additional">
+                <%= row.tag.name %> <span class="font-semibold"><%= row.total %>*</span>
               </span>
             <% end %>
           </div>

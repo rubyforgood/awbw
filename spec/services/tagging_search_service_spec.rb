@@ -179,7 +179,7 @@ RSpec.describe TaggingSearchService do
         create(:affiliation, organization: organization, person: person)
       end
 
-      it "returns organizations whose active people hold the sector as primary, with their totals" do
+      it "returns organizations whose active facilitators hold the sector, with their totals" do
         own_only = create(:organization, name: "Own Tag Org")
         create(:sectorable_item, sector: sector, sectorable: own_only)
         former_only = create(:organization, name: "Former Org")
@@ -192,7 +192,8 @@ RSpec.describe TaggingSearchService do
         )
 
         expect(results[:organizations].map(&:title)).to contain_exactly("Tagged Org")
-        expect(results[:organizations].first.tag_search_totals("Youth")).to eq([ [ sector, 1 ] ])
+        row = results[:organizations].first.tag_search_totals("Youth").sole
+        expect([ row.tag, row.total, row.primary_count ]).to eq([ sector, 1, 1 ])
       end
 
       it "hides organizations from non-admins in production" do

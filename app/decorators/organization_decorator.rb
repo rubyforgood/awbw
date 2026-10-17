@@ -88,9 +88,10 @@ class OrganizationDecorator < ApplicationDecorator
     [ h.organization_path(object), name ]
   end
 
-  # [tag, count] for each searched tag the org's active facilitators roll up to, in search order.
+  # Breakdown rows (tag + primary/additional counts) for each searched tag, in search order.
   def tag_search_totals(tag_names)
-    by_name = object.active_facilitator_tag_counts.to_h { |tag, count| [ tag.name.downcase, [ tag, count ] ] }
+    rows = object.active_facilitator_sector_breakdown + object.active_facilitator_age_group_breakdown
+    by_name = rows.index_by { |row| row.tag.name.downcase }
     TagFilterable.parse_names(tag_names).filter_map { |name| by_name[name] }
   end
 

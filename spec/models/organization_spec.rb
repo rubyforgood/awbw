@@ -373,12 +373,12 @@ RSpec.describe Organization do
       staff_person.sectorable_items.create!(sector: sector, is_primary: true)
     end
 
-    it "matches a sector only through an active facilitator's primary" do
-      expect(Organization.search_by_params(sector_name: "Housing")).to contain_exactly(primary_person_org)
+    it "matches a sector through an active facilitator's primary or additional tag" do
+      expect(Organization.search_by_params(sector_name: "Housing")).to contain_exactly(primary_person_org, additional_person_org)
     end
 
-    it "matches an age group only through an active facilitator's primary" do
-      expect(Organization.search_by_params(age_group_name: "13-17")).to contain_exactly(primary_person_org)
+    it "matches an age group through an active facilitator's primary or additional tag" do
+      expect(Organization.search_by_params(age_group_name: "13-17")).to contain_exactly(primary_person_org, additional_person_org)
     end
   end
 
