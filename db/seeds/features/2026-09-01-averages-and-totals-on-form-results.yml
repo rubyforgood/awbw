@@ -1,0 +1,11 @@
+name: "Averages and totals on form results"
+area: reporting
+display_status: admin_facing
+released_on: 2026-09-01
+pr_number: 2477
+summary: >-
+  The form results page now summarizes number questions with their average,
+  total, and number of responses, instead of listing every raw figure — so a
+  count question like "individuals served" reads as a running total.
+pro_tips:
+  - "This covers any question set to a number input type. Text and choice questions are unaffected."

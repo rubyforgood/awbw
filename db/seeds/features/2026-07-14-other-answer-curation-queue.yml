@@ -1,0 +1,11 @@
+name: "\"Other\" answer curation queue"
+area: people
+display_status: admin_facing
+released_on: 2026-07-14
+action_path: "/other_responses"
+pr_number: 1939
+summary: >-
+  Free-text "Other" answers people type on forms (like a sector that isn't
+  listed) are captured as records you can promote, keep, or dismiss.
+pro_tips:
+  - "Promoting a sector \"Other\" turns it into a real sector tag on the person and their organization."

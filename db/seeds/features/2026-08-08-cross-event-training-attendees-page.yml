@@ -1,0 +1,10 @@
+name: "Cross-event training attendees page"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-08
+action_path: "/events/attendees"
+pr_number: 2101
+summary: >-
+  A single attendees page lists everyone who registered across all trainings, with
+  the same roster columns and breakdown charts as a single event, filterable and
+  drillable.

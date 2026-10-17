@@ -1,0 +1,10 @@
+name: "Associated records on person and organization pages"
+area: people
+display_status: admin_facing
+released_on: 2026-07-04
+action_path: "/people/1"
+pr_number: 1889
+summary: >-
+  Person and organization edit and profile pages gather links to everything related
+  to that record — registrations, scholarships, affiliations, the login account, and
+  more — so you can jump straight to any of it from one place.

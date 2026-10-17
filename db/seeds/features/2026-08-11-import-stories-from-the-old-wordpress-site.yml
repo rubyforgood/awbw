@@ -1,0 +1,12 @@
+name: "Import stories from the old WordPress site"
+area: stories
+display_status: admin_facing
+released_on: 2026-08-11
+action_path: "/stories/import/new"
+pr_number: 2163
+summary: >-
+  Bring stories over from a WordPress export, translating the old categories, tags,
+  authors, and organizations into the portal's sectors and records, with a preview
+  before anything is saved.
+pro_tips:
+  - "You get a row-by-row dry-run preview first, so you can check the mapping before importing for real."

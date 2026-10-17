@@ -1,0 +1,10 @@
+name: "Reach the registration deduper from the admin home"
+area: registration
+display_status: admin_facing
+released_on: 2026-09-14
+pr_number: 2537
+action_path: "/event_registrations/dedupe_index"
+summary: >-
+  The admin home Dedupers section now has a "Dedupe event registrations" card,
+  so admins can jump straight to the registration deduper alongside the people,
+  organizations, categories, and sectors dedupers.

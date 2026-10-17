@@ -1,0 +1,11 @@
+name: "Browse the legacy FileMaker archive"
+area: reporting
+display_status: admin_facing
+released_on: 2026-09-10
+pr_number: 2532
+action_path: "/fm_archives"
+summary: >-
+  Admins can browse the data migrated from AWBW's old FileMaker system in a
+  read-only archive — rolodex, organizations, events, payments, participants,
+  invoices, campaigns, committees, donors, and more — so historical records
+  stay reachable without opening FileMaker.

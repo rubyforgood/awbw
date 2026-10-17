@@ -1,0 +1,16 @@
+name: "What a tag used to be called"
+area: people
+display_status: admin_facing
+released_on: 2026-10-15
+pr_number: 2691
+summary: >-
+  The portal now records what FileMaker, the older registration and scholarship
+  forms, Story Share and the portal's earlier sector list each called a sector or
+  age group, so an old word still resolves to the right tag today.
+pro_tips:
+  - "This is how an import knows that \"Student Services\" means Education and that \"C & T\" means both Children and Teens."
+  - "A word can be recorded as meaning nothing on purpose — FileMaker's \"Virtually\" described where someone worked, not who they served."
+  - "A retired tag never comes back by accident — but a word can be pointed at one deliberately, which is how FileMaker's \"Poverty\" still finds the sector that already carries it."
+  - "Someone recorded as serving families is tagged with every age range, since that's what serving families means."
+  - "Where an old answer was typed by hand, the reading of it is marked as proposed, so staff can check the list and correct anything that reads wrong."
+  - "The mapping is written up in ADR-0007 for anyone who needs to see the whole picture."

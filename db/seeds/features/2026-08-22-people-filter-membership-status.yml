@@ -1,0 +1,13 @@
+name: "People filter: membership status"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/people"
+pr_number: 2312
+summary: >-
+  Filter people by membership standing, read from their current invoice: active,
+  inactive, paid, due, or overdue.
+description: >-
+  Active — membership not cancelled. Inactive — has a membership but it's
+  cancelled. Paid — the current invoice is covered. Due — still owes but within
+  the grace period. Overdue — past the grace period.

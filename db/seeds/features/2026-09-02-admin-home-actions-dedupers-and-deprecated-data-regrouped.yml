@@ -1,0 +1,10 @@
+name: "Admin home actions, dedupers, and deprecated data regrouped"
+area: reporting
+display_status: admin_facing
+released_on: 2026-09-02
+summary: >-
+  The admin home page is tidied up: Data health and Author credit divergences
+  now sit as buttons in the Actions box, the record dedupers get their own
+  "Dedupers" panel, and Organization statuses moves to a full-width
+  "Deprecated data" section.
+action_path: "/admin"

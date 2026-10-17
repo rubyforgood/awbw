@@ -1,0 +1,18 @@
+name: "Filter form submissions by date, event, person, organization, and role"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/form_submissions"
+summary: >-
+  The form submissions index now has a full filter bar — narrow submissions by submission
+  date range, event, person, organization, and role, on top of the existing form filter.
+description: >-
+  The admin form submissions index used to filter by form only. It now has a filter bar
+  matching the other index pages: a submitted-from / submitted-to date range, searchable
+  Event, Person, and Organization pickers, and a Role dropdown. Filters stack, and a
+  "Clear filters" button appears once any is set. The chosen filters carry over when you
+  open a submission and come back, so you land on the same filtered list.
+pro_tips:
+  - "The Organization filter matches a submission only when that organization is linked directly to it in the org-linking editor."
+  - "Set the organization-linking filter to \"Pending\" for a work queue of submissions that named an org but haven't been linked yet."
+  - "Use the column toggles above the table to show or hide the Role, Event, Submitted date, and User account columns; your choices stick as you filter."

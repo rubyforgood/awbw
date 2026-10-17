@@ -1,0 +1,9 @@
+name: "Custom form builder with roles"
+area: registration
+display_status: admin_facing
+released_on: 2026-06-06
+action_path: "/forms"
+pr_number: 1563
+summary: >-
+  Build registration, scholarship, and other forms from composable sections and
+  fields, with per-field width, hints, options, and visibility rules.

@@ -1,0 +1,9 @@
+name: "Payment due date on the ticket"
+area: registration
+display_status: public_facing
+released_on: 2026-08-11
+action_path: "/registration/sample"
+pr_number: 2173
+summary: >-
+  Events can set a payment due date, and it shows on the registration ticket so
+  registrants know by when they need to pay.

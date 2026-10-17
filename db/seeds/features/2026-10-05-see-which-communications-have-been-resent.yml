@@ -1,0 +1,8 @@
+name: "See which communications have been resent"
+area: communications
+display_status: admin_facing
+released_on: 2026-10-05
+summary: >-
+  Any communication that's part of a resend chain now shows a small "Resent N
+  times" or "Resend #N" tag next to its status, whatever its own delivery
+  state — so you can tell at a glance which ones have already been handled.

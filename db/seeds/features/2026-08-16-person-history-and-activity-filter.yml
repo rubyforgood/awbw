@@ -1,0 +1,9 @@
+name: "Person history and activity filter"
+area: people
+display_status: admin_facing
+released_on: 2026-08-16
+action_path: "/people"
+pr_number: 2207
+summary: >-
+  A person's profile shows a history card, and the portal activity log can be
+  filtered down to a single person.

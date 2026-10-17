@@ -1,0 +1,8 @@
+name: "Admin review of form submissions"
+area: registration
+display_status: admin_facing
+released_on: 2026-07-06
+action_path: "/form_submissions/1"
+pr_number: 1943
+summary: >-
+  Admins can review the raw answers a registrant submitted on any form.

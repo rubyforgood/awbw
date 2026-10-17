@@ -1,0 +1,9 @@
+name: "Image carousels loop back to the start"
+area: content
+display_status: user_facing
+released_on: 2026-10-12
+pr_number: 2651
+summary: >-
+  The image carousel on workshop variations and stories now loops: the right
+  arrow on the last image goes back to the first, and the left arrow on the
+  first image goes to the last.

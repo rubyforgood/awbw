@@ -1,0 +1,11 @@
+name: "Filter the people directory by role, status, age range, topic, and staff tag"
+area: people
+display_status: admin_facing
+released_on: 2026-08-22
+action_path: "/people"
+pr_number: 2312
+summary: >-
+  The people directory gains a row of dropdown filters — role, facilitator
+  status, membership status, age range, topic subscription, and staff tag —
+  together in a blue admin panel. Each filter's values are explained in its own
+  entry below.

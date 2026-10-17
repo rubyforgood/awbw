@@ -1,0 +1,7 @@
+name: "Events"
+area: events
+display_status: public_facing
+released_on: 2025-09-13
+action_path: "/events"
+summary: >-
+  Create and publish events with public event pages and registrations.

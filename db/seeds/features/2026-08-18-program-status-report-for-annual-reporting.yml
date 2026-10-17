@@ -1,0 +1,13 @@
+name: "Program status report for annual reporting"
+area: reporting
+display_status: admin_facing
+released_on: 2026-08-18
+action_path: "/events/program_statuses"
+pr_number: 1993
+summary: >-
+  A cross-event report counting how many organizations were New, Ongoing or
+  Reinstated at each facilitator training, with year totals for annual reporting.
+pro_tips:
+  - The table counts an organization once per training it attended; the
+    distinct-organization table below counts each one once for the period.
+  - Filter by year or event type, then read the year total row.

@@ -1,0 +1,9 @@
+name: "Event-specific staff bio"
+area: events
+display_status: admin_facing
+released_on: 2026-06-13
+action_path: "/events/1/staff"
+pr_number: 1664
+summary: >-
+  Give a staff member a bio written just for one event, alongside their profile
+  bio.

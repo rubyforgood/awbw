@@ -1,0 +1,13 @@
+name: "Comments and communications in one section"
+area: communications
+display_status: admin_facing
+released_on: 2026-08-23
+pr_number: 2355
+summary: >-
+  The separate Comments and Communications boxes on record edit pages are now one
+  "Comments & communications" section: a single newest-first feed of both, each in its own
+  card (comments blue, communications purple), with an add button for each.
+pro_tips:
+  - "Communications now show the ones logged about the record you're viewing; a person's own page still shows their full history."
+  - "An incoming communication's pill shows a checkbox — checked once it's been responded to."
+  - "On a person's own page the comment cards carry the blue admin-only wash, since comments are staff-only and the person can view that page."

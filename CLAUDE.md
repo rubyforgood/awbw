@@ -50,7 +50,7 @@ When changing a model or controller, check whether these related files need upda
 | Decorator | Decorator spec |
 | Mailer (add/remove) | Mailer spec, mailer preview (follow existing patterns) |
 | Add/remove model, concern, service, or gem | AGENTS.md |
-| Ship a user-facing feature **or improvement/change** | `config/features.yml` (the Features & tips seed — see below) |
+| Ship a user-facing feature **or improvement/change** | a new file in `db/seeds/features/` (the Features & tips seeds — see below) |
 
 ## Code Style
 
@@ -344,13 +344,17 @@ in-app by super-admins — the rich `description` uses the Rhino WYSIWYG (so pag
 can carry screenshots), and each feature can link an external process doc.
 
 **Keep it current as you ship.** When you ship anything a facilitator or admin
-would want to know about, append an entry to `config/features.yml` (the checked-in
-**seed**). This is **not just brand-new features** — a user-facing *improvement,
+would want to know about, add a new file to `db/seeds/features/` (the checked-in
+**seeds**, one file per feature named `YYYY-MM-DD-slug.yml` so parallel PRs never
+conflict; field guide in that folder's `README.md`). This is **not just brand-new features** — a user-facing *improvement,
 change, or enhancement* to something that already exists (a new filter, an extra
 column, a reworked flow) belongs here too. If in doubt whether a change is "big
 enough," add it: a short entry is cheap and the page is where non-devs discover
 what changed.
 
+- **The seeds hydrate the `features` table; they are not the table.** Sync never
+  regenerates or deletes records from the folder — removing a file leaves its
+  record, and renaming an entry's `name` creates a new record.
 - **There is no separate "feature vs. update" flag** — every entry is just a
   `Feature` row, and audience is the only axis (`display_status`). Signal that an
   entry is a smaller update through its `summary`/`name` wording (e.g. "Filter

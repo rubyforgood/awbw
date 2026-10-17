@@ -1,0 +1,8 @@
+name: "Membership sign-up and dues"
+area: payments
+display_status: user_facing
+released_on: 2026-08-05
+action_path: "/people/1/checkout"
+pr_number: 2094
+summary: >-
+  Members can sign up for a recurring membership and pay dues through the portal.

@@ -1,0 +1,10 @@
+name: "Scholarship recipients grouped by funder"
+area: scholarships
+display_status: admin_facing
+released_on: 2026-08-09
+action_path: "/scholarships"
+pr_number: 2054
+summary: >-
+  The scholarship recipients page groups awards by funder and links each
+  recipient's age chips back to their registration, so it's easy to see who
+  funded whom.

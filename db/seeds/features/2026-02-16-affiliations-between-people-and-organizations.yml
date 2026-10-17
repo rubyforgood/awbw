@@ -1,0 +1,8 @@
+name: "Affiliations between people and organizations"
+area: people
+display_status: admin_facing
+released_on: 2026-02-16
+action_path: "/people/1"
+summary: >-
+  Connect people to organizations with titles and date ranges, distinguishing
+  facilitator affiliations.

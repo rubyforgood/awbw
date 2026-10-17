@@ -1,0 +1,9 @@
+name: "\"Events attended\" on organization profiles"
+area: people
+display_status: admin_facing
+released_on: 2026-06-21
+action_path: "/organizations/1"
+pr_number: 1816
+summary: >-
+  An organization's profile lists the events its people attended, mirroring the
+  events list already shown on person profiles.

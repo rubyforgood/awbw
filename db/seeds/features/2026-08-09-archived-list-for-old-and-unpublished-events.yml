@@ -1,0 +1,9 @@
+name: "Archived list for old and unpublished events"
+area: events
+display_status: admin_facing
+released_on: 2026-08-09
+action_path: "/events"
+pr_number: 2131
+summary: >-
+  Unpublished and long-past events collapse into a tidy archive list on the
+  events index, so admins see current events first without losing the old ones.

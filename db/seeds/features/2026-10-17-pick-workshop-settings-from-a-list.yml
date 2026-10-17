@@ -1,0 +1,8 @@
+name: "Pick workshop settings from a list"
+area: people
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2709
+summary: >-
+  Person and organization edit pages now show only the workshop settings
+  chosen. Click the box to search and add more, or click the x on one to remove it.

@@ -1,0 +1,9 @@
+name: "Compound payer picker on allocations"
+area: payments
+display_status: admin_facing
+released_on: 2026-06-20
+action_path: "/allocations/new"
+pr_number: 1722
+summary: >-
+  Choose who paid — a person or organization — and designate additional payers on
+  the allocation form.
