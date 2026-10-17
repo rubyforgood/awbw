@@ -1,4 +1,7 @@
 <%# locals: (f:, affiliation:) %>
+<% if affiliation&.organization %>
+  <p class="text-sm text-gray-600">We'll use it for all your active roles at <%= affiliation.organization.name %>.</p>
+<% end %>
 <% if affiliation&.organization_address %>
   <p class="text-gray-700">Right now: <span class="font-medium"><%= affiliation.organization_address.name %></span></p>
 <% end %>

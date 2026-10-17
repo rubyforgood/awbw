@@ -7,6 +7,7 @@ summary: >-
   To add or change it, use that role's "Request a change" button, then pick
   one of your organization's addresses or enter the street, city, state, and ZIP.
 pro_tips:
+  - "Your work address applies to all your active roles at that organization, so you only need to ask once."
   - "Use \"Anything else you'd like us to know?\" for context, like when you moved."
   - "Admins: Approve sets the work address in one click. A newly entered address is added to the organization, or matched to one it already has."
 pr_number: 2722

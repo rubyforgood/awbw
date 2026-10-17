@@ -91,6 +91,7 @@ RSpec.describe "Choosing which organization to change", type: :request do
 
     expect(response.body).to include("Right now:", "12 Elm St, Reno, NV 89501")
     expect(response.body).to include("Your work address", "profile_change_request[proposed_city]")
+    expect(response.body).to include("for all your active roles at Sunrise Center")
     expect(response.body).to include("Anything else you&#39;d like us to know? (optional)")
   end
 

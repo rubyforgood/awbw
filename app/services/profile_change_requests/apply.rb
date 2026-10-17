@@ -87,11 +87,17 @@ module ProfileChangeRequests
       return Result.new(applied: false, message: address.errors.full_messages.to_sentence) unless address.persisted?
 
       address.update(inactive: false) if address.inactive?
-      if affiliation.update(organization_address: address)
-        Result.new(applied: true, message: "Work address set to #{address.name}.")
-      else
-        Result.new(applied: false, message: affiliation.errors.full_messages.to_sentence)
-      end
+      roles = work_address_roles(affiliation)
+      Affiliation.transaction { roles.each { |role| role.update!(organization_address: address) } }
+      Result.new(applied: true, message: "Work address set to #{address.name} for #{roles.size} #{"role".pluralize(roles.size)} at #{affiliation.organization.name}.")
+    rescue ActiveRecord::RecordInvalid => e
+      Result.new(applied: false, message: e.record.errors.full_messages.to_sentence)
+    end
+
+    # A person works at one address per organization, so it applies to every active role there.
+    def work_address_roles(affiliation)
+      others = @request.person.affiliations.where(organization_id: affiliation.organization_id).where.not(id: affiliation.id).select(&:active?)
+      [ affiliation, *others ]
     end
 
     # Reuses the org's address when the street and city already match, so approving doesn't add a duplicate.

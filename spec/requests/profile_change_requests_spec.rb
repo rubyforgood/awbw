@@ -261,6 +261,25 @@ RSpec.describe "Profile change requests", type: :request do
       expect(existing.reload).not_to be_inactive
     end
 
+    it "sets the work address on the person's other active roles at that organization too" do
+      organization = create(:organization)
+      facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
+      job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
+      ended = create(:affiliation, person: person, organization: organization, title: "Intern", start_date: 5.years.ago, end_date: 4.years.ago)
+      elsewhere = create(:affiliation, person: person, title: "Volunteer", start_date: 1.year.ago)
+      request = create(:profile_change_request, person: person, affiliation: facilitator, details: nil,
+                       requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
+                       proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
+
+      post approve_profile_change_request_path(request)
+
+      address = facilitator.reload.organization_address
+      expect(address).to have_attributes(street_address: "12 Elm St")
+      expect(job.reload.organization_address).to eq(address)
+      expect(ended.reload.organization_address).to be_nil
+      expect(elsewhere.reload.organization_address).to be_nil
+    end
+
     it "approves an add-a-new-affiliation request by creating it" do
       org = create(:organization, name: "New Org")
       request = create(:profile_change_request, person: person, field: "affiliation",
