@@ -118,17 +118,18 @@ test_people = [
 ]
 
 test_people.each do |data|
+  email = data[:email] || "#{data[:first_name].downcase.gsub(' ', '')}.#{data[:last_name].downcase.gsub(' ', '')}@example.com"
   next if Person.where(
     "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(COALESCE(email, '')) = ?",
     data[:first_name].downcase,
     data[:last_name].downcase,
-    (data[:email] || "").downcase
+    email.downcase
   ).exists?
 
   person_attrs = {
     first_name: data[:first_name],
     last_name: data[:last_name],
-    email: data[:email],
+    email: email,
     email_2: data[:email_2],
     profile_is_searchable: data[:searchable],
     # Spread the credit preferences across seeded people so the author credit
@@ -140,9 +141,8 @@ test_people.each do |data|
   }
 
   if data[:with_user]
-    user_email = data[:email] || "#{data[:first_name].downcase.gsub(' ', '')}.#{data[:last_name].downcase.gsub(' ', '')}@example.com"
-    user = User.where(email: user_email).first_or_create!(
-      email: user_email,
+    user = User.where(email: email).first_or_create!(
+      email: email,
       first_name: data[:first_name],
       last_name: data[:last_name],
       password: "password",
@@ -197,6 +197,7 @@ unless Person.exists?(first_name: "Grace", last_name: "Legacy")
   demo = Person.create!(
     first_name: "Grace",
     last_name: "Legacy",
+    email: "grace.legacy@example.com",
     profile_is_searchable: true,
     member_since: Date.new(2016, 1, 1),
     created_by: admin_user,

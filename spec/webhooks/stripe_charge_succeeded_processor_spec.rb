@@ -97,12 +97,13 @@ RSpec.describe StripeChargeSucceededProcessor do
       epp = ExternalProcessorPayment.last
       expect(epp.person.first_name).to eq("External")
       expect(epp.person.last_name).to eq("Payer")
+      expect(epp.person.email).to eq(Person::PLACEHOLDER_EMAIL)
     end
 
     it "reuses existing External Payer record" do
       other_id = "ch_no_pc"
       allow(stripe_charge).to receive(:id).and_return(other_id)
-      existing = Person.find_or_create_by!(first_name: "External", last_name: "Payer")
+      existing = create(:person, user: nil, first_name: "External", last_name: "Payer")
 
       expect { processor.call(event) }.not_to change(Person, :count)
       expect(ExternalProcessorPayment.last.person).to eq(existing)
