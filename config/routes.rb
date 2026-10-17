@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "/addresses/options", to: "addresses#options"
   get "/addresses/dedupe_index", to: "addresses#dedupe_index", as: :dedupe_index_addresses
   post "/addresses/dedupe_perform", to: "addresses#dedupe_perform", as: :dedupe_perform_addresses
+  post "/addresses/dedupe_perform_all", to: "addresses#dedupe_perform_all", as: :dedupe_perform_all_addresses
 
   # mount Ckeditor::Engine, at: '/admin/ckeditor', as: 'ckeditor'
   authenticate :user, ->(user) { user.super_user? } do
