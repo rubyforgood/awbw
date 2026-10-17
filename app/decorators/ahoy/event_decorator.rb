@@ -111,6 +111,21 @@ module Ahoy
       comment&.flagged? || false
     end
 
+    # A deleted comment rebuilt from its destroy snapshot, for read-only display.
+    # A deleted parent reads as its type ("Affiliation (deleted)"), unlinked.
+    def deleted_comment
+      attributes = properties_hash["attributes"].to_h
+      author = find_referenced_record("User", attributes["created_by_id"])
+      {
+        topic: attributes["topic"].presence,
+        body: attributes["body"].presence,
+        author_name: author&.full_name || "System",
+        deleted_by_name: object.user&.full_name || "System",
+        deleted_at: object.time&.strftime("%-m/%-d/%Y %-I:%M %p"),
+        parent_link: deleted_comment_parent_link
+      }
+    end
+
     # A comment's topic + body, read from the record so it shows in Details
     # regardless of how the body was captured in properties. nil for non-comments
     # and for a comment with nothing to show (e.g. a since-deleted record).
@@ -256,6 +271,14 @@ module Ahoy
 
       type, id = Analytics::EventReferenceLoader.polymorphic_references(properties_hash["attributes"].to_h)["commentable"]
       find_referenced_record(type, id) if type
+    end
+
+    def deleted_comment_parent_link
+      parent = deleted_commentable
+      return commentable_link(parent) if parent
+
+      type, = Analytics::EventReferenceLoader.polymorphic_references(properties_hash["attributes"].to_h)["commentable"]
+      { text: "#{type.to_s.underscore.humanize} (deleted)", path: nil }
     end
 
     # The Comment this event is about, from the page cache (no extra query); nil

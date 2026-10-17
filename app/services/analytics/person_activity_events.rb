@@ -56,13 +56,20 @@ module Analytics
 
     def relation
       scopes = resource_scopes
-      scopes << auth_scope if @person.user
+      scopes << auth_scope if user_ids.any?
       return Ahoy::Event.none if scopes.empty?
       scopes.reduce(:or)
     end
 
     def count
       relation.count
+    end
+
+    # destroy.comment events for comments deleted while on the person's records,
+    # including those removed along with a deleted parent. Newest first.
+    def deleted_comment_events
+      departure_events.where(name: "destroy.comment").order(time: :desc)
+        .select { |event| snapshot_parents(event).intersect?(owned_commentables) }
     end
 
     private
@@ -157,25 +164,37 @@ module Analytics
     # to the person — so it's matched by the parent its delete snapshot or move
     # diff recorded, and its whole history comes along.
     def departed_comment_ids
-      commentables = comment_aggregator.commentable_ids_by_type.flat_map { |type, ids| ids.map { |id| [ type, id ] } }
-      deleted_parents = deleted_record_ids.flat_map { |type, ids| ids.map { |id| [ owner_key(type), id ] } }
-      owned = (commentables + deleted_parents).to_set
       events = departure_events.to_a
       comments = Comment.where(id: events.map(&:resource_id)).index_by(&:id)
-      events.filter_map { |event| event.resource_id if former_parents(event, comments[event.resource_id]).intersect?(owned) }.uniq
+      events.filter_map do |event|
+        parents = snapshot_parents(event) | moved_parents(event, comments[event.resource_id])
+        event.resource_id if parents.intersect?(owned_commentables)
+      end.uniq
+    end
+
+    def owned_commentables
+      @owned_commentables ||= begin
+        commentables = comment_aggregator.commentable_ids_by_type.flat_map { |type, ids| ids.map { |id| [ type, id ] } }
+        deleted_parents = deleted_record_ids.flat_map { |type, ids| ids.map { |id| [ owner_key(type), id ] } }
+        (commentables + deleted_parents).to_set
+      end
     end
 
     def departure_events
       Ahoy::Event.where(resource_type: "Comment")
         .where("ahoy_events.name = 'destroy.comment' OR JSON_CONTAINS_PATH(ahoy_events.properties, 'one', '$.changes.commentable_id')")
-        .select(:id, :resource_id, :properties)
     end
 
-    def former_parents(event, comment)
-      properties = event.properties || {}
-      snapshot = EventReferenceLoader.polymorphic_references(properties["attributes"].to_h).values
-      moves = EventReferenceLoader.polymorphic_changes("Comment", properties["changes"], comment).values.flatten(1)
-      (snapshot + moves).filter_map { |type, id| [ type.to_s, id.to_i ] if type.present? && id.present? }.to_set
+    def snapshot_parents(event)
+      parent_pairs(EventReferenceLoader.polymorphic_references(event.properties.to_h["attributes"].to_h).values)
+    end
+
+    def moved_parents(event, comment)
+      parent_pairs(EventReferenceLoader.polymorphic_changes("Comment", event.properties.to_h["changes"], comment).values.flatten(1))
+    end
+
+    def parent_pairs(references)
+      references.filter_map { |type, id| [ type.to_s, id.to_i ] if type.present? && id.present? }.to_set
     end
 
     # resource_type => ids (arrays or id-only subqueries). Mirrors the records in
@@ -272,10 +291,15 @@ module Analytics
       Ahoy::Event
         .where("ahoy_events.name LIKE 'auth.%'")
         .where(
-          "CAST(JSON_EXTRACT(ahoy_events.properties, '$.record_id') AS UNSIGNED) = :id AND " \
+          "CAST(JSON_EXTRACT(ahoy_events.properties, '$.record_id') AS UNSIGNED) IN (:ids) AND " \
           "JSON_UNQUOTE(JSON_EXTRACT(ahoy_events.properties, '$.record_type')) = 'User'",
-          id: @person.user.id
+          ids: user_ids
         )
+    end
+
+    # The person's live account plus any deleted ones, whose logins stay theirs.
+    def user_ids
+      @user_ids ||= [ @person.user&.id, *deleted_record_ids["User"] ].compact.uniq
     end
   end
 end

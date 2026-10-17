@@ -164,6 +164,15 @@ RSpec.describe Analytics::PersonActivityEvents do
         expect(described_class.new(person).relation).to include(comment)
       end
 
+      it "includes the login events of the person's deleted user account" do
+        person.user.update_columns(person_id: nil)
+        deleted("User", 9_114, "person_id" => person.id)
+        login = create(:ahoy_event, visit: visit, name: "auth.login",
+                                    properties: { "record_id" => 9_114, "record_type" => "User" })
+
+        expect(described_class.new(person).relation).to include(login)
+      end
+
       it "excludes deleted records that belonged to someone else" do
         other = create(:person)
         theirs = deleted("Affiliation", 9_112, "person_id" => other.id)
@@ -186,6 +195,27 @@ RSpec.describe Analytics::PersonActivityEvents do
             expect(known).to be(true), "#{type} has no #{column} column or polymorphic belongs_to"
           end
         end
+      end
+    end
+
+    describe "#deleted_comment_events" do
+      def deleted_comment(id, commentable_type, commentable_id)
+        event(resource_type: "Comment", resource_id: id, name: "destroy.comment",
+              properties: { "attributes" => { "commentable_type" => commentable_type, "commentable_id" => commentable_id } })
+      end
+
+      it "lists comments deleted from the person's live and deleted records, newest first" do
+        on_profile = deleted_comment(9_201, "Person", person.id)
+        event(resource_type: "Affiliation", resource_id: 9_202, name: "destroy.affiliation",
+              properties: { "attributes" => { "person_id" => person.id } })
+        on_deleted_parent = deleted_comment(9_203, "Affiliation", 9_202)
+
+        expect(described_class.new(person).deleted_comment_events).to eq([ on_deleted_parent, on_profile ])
+      end
+
+      it "leaves out comments deleted from someone else's records" do
+        deleted_comment(9_204, "Person", create(:person).id)
+        expect(described_class.new(person).deleted_comment_events).to be_empty
       end
     end
 
