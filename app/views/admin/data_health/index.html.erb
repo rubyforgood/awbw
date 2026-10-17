@@ -9,8 +9,8 @@
 
   <h1 class="mb-2 text-2xl font-semibold text-gray-900">Data health</h1>
   <p class="mb-6 text-sm text-gray-600">
-    Consistency checks that span every record, not one page at a time. A check with nothing to report
-    stays quiet. Repairs are logged like any other change, so you can see what ran and when.
+    Consistency checks that span every record. Repairs are logged like any other change.
+    <%= link_to "History", admin_activities_events_path, class: "text-indigo-600 hover:underline" %>
   </p>
 
   <% if clean %>
