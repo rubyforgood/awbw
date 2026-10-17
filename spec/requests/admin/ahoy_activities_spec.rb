@@ -718,21 +718,62 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         end
       end
 
-      it "credits content to the user or admin card so the two add up to the total" do
-        create(:bookmark, user: user)
-        create(:bookmark, user: admin)
-        create(:bookmark, user: admin)
-
-        get charts_path
-
-        doc = Nokogiri::HTML(response.body)
-        bookmark_count = ->(card) do
-          card_node = doc.css("h3").find { |h| h.text.strip == card }.parent
-          card_node.css("li").find { |li| li.text.include?("Bookmarks") }.at_css("span").text.strip
+      describe "content creation cards" do
+        def content_row(card, label)
+          card_node = Nokogiri::HTML(response.body).css("h3").find { |h| h.text.strip == card }.parent
+          card_node.css("li").find { |li| li.text.include?(label) }
         end
-        expect(bookmark_count.call("User-generated content")).to eq("1")
-        expect(bookmark_count.call("Admin-generated content")).to eq("2")
-        expect(bookmark_count.call("Total content created")).to eq("3")
+
+        def content_count(card, label)
+          content_row(card, label).at_css("span").text.strip
+        end
+
+        it "credits content to the user or admin card so the two add up to the total" do
+          create(:bookmark, user: user)
+          create(:bookmark, user: admin)
+          create(:bookmark, user: admin)
+
+          get charts_path
+
+          expect(content_count("User-generated content", "Bookmarks")).to eq("1")
+          expect(content_count("Admin-generated content", "Bookmarks")).to eq("2")
+          expect(content_count("Total content created", "Bookmarks")).to eq("3")
+        end
+
+        it "shows admin-made content even though the default audience excludes staff" do
+          create(:event, created_by: admin)
+
+          get charts_path
+
+          expect(content_count("Admin-generated content", "Events")).to eq("1")
+          expect(content_count("Total content created", "Events")).to eq("1")
+        end
+
+        it "notes promoted and unpromoted ideas on the user card" do
+          facilitator = create(:user, :with_person)
+          workshop = create(:workshop, created_by: admin)
+          idea = create(:story_idea, created_by: facilitator, workshop: workshop)
+          create(:story, created_by: admin, author: facilitator.person, story_idea: idea, workshop: workshop)
+          create(:story_idea, created_by: facilitator, workshop: workshop)
+
+          get charts_path
+
+          stories = content_row("User-generated content", "Stories")
+          expect(stories.at_css("span").text.strip).to eq("2")
+          expect(stories.text.squish).to include("(incl 1 promoted and 1 unpromoted ideas)")
+          expect(content_count("Admin-generated content", "Stories")).to eq("0")
+        end
+
+        it "only counts content inside the selected time period" do
+          create(:bookmark, user: user, created_at: 2.months.ago)
+          create(:bookmark, user: user)
+
+          get charts_path, params: { time_period: "past_month" }
+          expect(content_count("Total content created", "Bookmarks")).to eq("1")
+
+          get charts_path, params: { time_period: "all_time" }
+          expect(content_count("Total content created", "Bookmarks")).to eq("2")
+        end
       end
     end
 
