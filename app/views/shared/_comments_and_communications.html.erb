@@ -25,6 +25,8 @@
 <% new_comments = can_manage_comments ? record.comments.select(&:new_record?) : [] %>
 
 <% entries = (comments + notifications).sort_by { |r| r.created_at || Time.current }.reverse %>
+<% link_dates = can_manage_comments && admin && record.persisted? %>
+<% date_path = ->(entry) { feed_entry_path(entry, person: (view_all_person if view_all_person&.persisted?), return_to: record) if link_dates } %>
 
 <section class="scroll-mt-24 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
          id="comments-section"
@@ -74,15 +76,16 @@
       <% entries.each do |entry| %>
         <% if entry.is_a?(Comment) %>
           <%= f.simple_fields_for :comments, entry do |cf| %>
-            <%= render "comments/comment_fields", f: cf %>
+            <%= render "comments/comment_fields", f: cf, date_path: date_path.(entry) %>
           <% end %>
         <% elsif editable_notifications.include?(entry) %>
           <%= f.simple_fields_for :notifications, own_notifications_by_id.fetch(entry.id, entry) do |nf| %>
-            <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only %>
+            <%= render "notifications/notification_fields", f: nf, record: record, mark_admin_only: mark_admin_only, date_path: date_path.(entry) %>
           <% end %>
         <% else %>
           <div data-paginated-fields-target="item" data-kind="communications" data-subject="<%= entry.email_subject %>" data-created-at="<%= (entry.created_at || Time.current).to_i %>">
             <%= render "notifications/communication_line", notification: entry, admin: admin, mark_admin_only: mark_admin_only, expandable: true,
+                       date_path: date_path.(entry), date_new_tab: true,
                        flag: (render("notifications/flag_indicator", notification: entry) if admin) %>
           </div>
         <% end %>

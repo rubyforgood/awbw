@@ -16,6 +16,7 @@ class CommentsAndCommunicationsController < ApplicationController
     if turbo_frame_request?
       feed = PersonCommentAndCommunicationAggregator.new(@person, params)
       @total_count = feed.total_count
+      @single_entry = feed.single_entry?
       if feed.grouped?
         @groups = feed.grouped_paginate(params[:page], 20)
         count = feed.subject_group_count

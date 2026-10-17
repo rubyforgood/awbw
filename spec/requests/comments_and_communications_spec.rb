@@ -30,6 +30,23 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Welcome aboard")
     end
 
+    it "narrows the results frame to the one entry a date link points at" do
+      comment = create(:comment, commentable: person, body: "The linked note", created_by: admin)
+      create(:comment, commentable: person, body: "Another note", created_by: admin)
+      notification = create(:notification, recipient_email: "primary@example.com", email_subject: "The linked email",
+                                           kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+      frame = { "Turbo-Frame" => "comments_and_communications_results" }
+
+      get comments_and_communications_path(person_id: person.id, comment_id: comment.id), headers: frame
+      expect(response.body).to include("The linked note", "Showing one entry")
+      expect(response.body).not_to include("Another note")
+      expect(response.body).not_to include("The linked email")
+
+      get comments_and_communications_path(person_id: person.id, notification_id: notification.id), headers: frame
+      expect(response.body).to include("The linked email")
+      expect(response.body).not_to include("The linked note")
+    end
+
     it "groups entries by subject in the results frame when the toggle is on" do
       create(:comment, commentable: person, topic: "Scholarship", body: "A note about it", created_by: admin)
       create(:notification, recipient_email: "primary@example.com", email_subject: "Scholarship",

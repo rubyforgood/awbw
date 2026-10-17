@@ -71,6 +71,16 @@ RSpec.describe "Comments & communications expandable rows and type filter", type
     end
   end
 
+  scenario "each row's date links to the full feed narrowed to that entry" do
+    comment = person.comments.first
+    notification = Notification.find_by!(email_subject: "Welcome")
+
+    within "#comments-section" do
+      expect(page).to have_css("a[href*='comment_id=#{comment.id}']", text: %r{\A\d+/\d+/\d{4}})
+      expect(page).to have_css("a[href*='notification_id=#{notification.id}']", text: %r{\A\d+/\d+/\d{4}})
+    end
+  end
+
   scenario "hovering a communication row shows its subject alongside the body" do
     within "#comments-section" do
       expect(page).to have_css("[title^='Welcome — Long note.']")

@@ -7,7 +7,8 @@
     the subject the link to the communication so `leading` can be a link too (the
     neutral source chip, pointing at that record's edit page, with the channel icon
     inside it). Optional expandable adds a chevron that unclamps a truncated row
-    (outside the card link so it doesn't navigate) or hides a full row's body. %>
+    (outside the card link so it doesn't navigate) or hides a full row's body;
+    date_path (+ date_new_tab) links the timestamp to the feed narrowed to this entry. %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
@@ -29,66 +30,70 @@
                 else
                   "text-gray-500"
                 end %>
-<% row = capture do %>
-  <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
-    <%# Follow-up flag, mirroring a comment row's. A `flag` local (the single-click
-        toggle) is passed on the combined feed; elsewhere the column stays empty. %>
-    <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none"><%= local_assigns[:flag] %></span>
-    <span class="w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
-      <%= notification.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
-    </span>
-    <span class="inline-flex w-20 shrink-0 items-center">
-      <span class="<%= chip[0] %> <%= chip[1] %> max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= decorated.from_title.presence || from_name %>"><%= truncate(from_first.to_s, length: 10, omission: "..") %></span>
-    </span>
-    <%# Subject and body share one column so the body starts flush with the subject. %>
-    <% if truncate_body %>
-      <div class="flex min-w-0 flex-1 items-start gap-1 text-sm">
+<%# Flag and date sit outside the whole-card link so the date can link on its own. %>
+<% lead = capture do %>
+  <%# Follow-up flag, mirroring a comment row's. A `flag` local (the single-click
+      toggle) is passed on the combined feed; elsewhere the column stays empty. %>
+  <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none"><%= local_assigns[:flag] %></span>
+  <%= render "comments_and_communications/entry_date", time: notification.created_at,
+             path: local_assigns[:date_path], new_tab: local_assigns[:date_new_tab] %>
+<% end %>
+<% main = capture do %>
+  <span class="inline-flex w-20 shrink-0 items-center">
+    <span class="<%= chip[0] %> <%= chip[1] %> max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= decorated.from_title.presence || from_name %>"><%= truncate(from_first.to_s, length: 10, omission: "..") %></span>
+  </span>
+  <%# Subject and body share one column so the body starts flush with the subject. %>
+  <% if truncate_body %>
+    <div class="flex min-w-0 flex-1 items-start gap-1 text-sm">
+      <%= decorated.event_chip %>
+      <%= decorated.channel_chip %>
+      <span class="line-clamp-2 min-w-0 flex-1"
+            <% if expandable %>data-expandable-card-target="body"<% end %>
+            title="<%= [ subject, body ].compact_blank.join(" — ") %>">
+        <%= decorated.flag_badges %>
+        <span class="font-semibold text-gray-900"><%= subject %></span>
+        <% if body.present? %><span class="<%= body_class %>"><%= body %></span><% end %>
+      </span>
+    </div>
+  <% else %>
+    <div class="min-w-0 flex-1 text-sm">
+      <span>
+        <%# A leading source chip already links to the record here, so the event
+            chip stays a plain span to avoid a second link to the same place. %>
         <%= decorated.event_chip %>
-        <%= decorated.channel_chip %>
-        <span class="line-clamp-2 min-w-0 flex-1"
-              <% if expandable %>data-expandable-card-target="body"<% end %>
-              title="<%= [ subject, body ].compact_blank.join(" — ") %>">
-          <%= decorated.flag_badges %>
+        <%= leading || decorated.channel_chip %>
+        <%= decorated.flag_badges %>
+        <% if !admin %>
           <span class="font-semibold text-gray-900"><%= subject %></span>
-          <% if body.present? %><span class="<%= body_class %>"><%= body %></span><% end %>
-        </span>
-      </div>
-    <% else %>
-      <div class="min-w-0 flex-1 text-sm">
-        <span>
-          <%# A leading source chip already links to the record here, so the event
-              chip stays a plain span to avoid a second link to the same place. %>
-          <%= decorated.event_chip %>
-          <%= leading || decorated.channel_chip %>
-          <%= decorated.flag_badges %>
-          <% if !admin %>
-            <span class="font-semibold text-gray-900"><%= subject %></span>
-          <% else %>
-            <%= link_to subject, notification_path(notification), target: "_blank", rel: "noopener",
-                        class: "font-semibold text-gray-900 hover:underline" %>
-          <% end %>
-        </span>
-        <% if body.present? %>
-          <div class="pt-1 whitespace-pre-line <%= body_class %>" <% if expandable %>data-expandable-card-target="body"<% end %>><%= body %></div>
+        <% else %>
+          <%= link_to subject, notification_path(notification), target: "_blank", rel: "noopener",
+                      class: "font-semibold text-gray-900 hover:underline" %>
         <% end %>
-      </div>
-    <% end %>
-    <%= trailing %>
-    <%= render "shared/expand_chevron" if expandable && !truncate_body %>
-  </div>
+      </span>
+      <% if body.present? %>
+        <div class="pt-1 whitespace-pre-line <%= body_class %>" <% if expandable %>data-expandable-card-target="body"<% end %>><%= body %></div>
+      <% end %>
+    </div>
+  <% end %>
+  <%= trailing %>
+  <%= render "shared/expand_chevron" if expandable && !truncate_body %>
 <% end %>
 <% if truncate_body %>
   <% card_hover = "transition-colors #{DomainTheme.bg_class_for(:notifications, intensity: 50, hover: true)}" if admin %>
+  <% main_class = "flex min-w-0 flex-1 flex-wrap items-start gap-x-1 gap-y-1 py-2 pr-3 pl-1" %>
   <%= tag.div class: "flex items-start rounded-md border #{communication_card_class} #{card_hover}", data: (expandable_feed_row_data if expandable) do %>
+    <div class="flex shrink-0 items-start gap-x-1 py-2 pl-3"><%= lead %></div>
     <% if admin %>
-      <%= link_to row, notification_path(notification), target: "_blank", rel: "noopener", class: "block min-w-0 flex-1 px-3 py-2" %>
+      <%= link_to main, notification_path(notification), target: "_blank", rel: "noopener", class: main_class %>
     <% else %>
-      <div class="min-w-0 flex-1 px-3 py-2"><%= row %></div>
+      <div class="<%= main_class %>"><%= main %></div>
     <% end %>
     <% if expandable %>
       <div class="py-2 pr-2"><%= render "shared/expand_chevron", clamp: true %></div>
     <% end %>
   <% end %>
 <% else %>
-  <div class="rounded-md border <%= communication_card_class %> px-3 py-2"><%= row %></div>
+  <div class="rounded-md border <%= communication_card_class %> px-3 py-2">
+    <div class="flex flex-wrap items-start gap-x-1 gap-y-1"><%= lead %><%= main %></div>
+  </div>
 <% end %>

@@ -17,12 +17,12 @@
     <div class="grow">
     <% if f.object.persisted? %>
       <%= tag.div class: "flex items-start gap-x-1", data: { edit_toggle_target: "view", **expandable_feed_row_data } do %>
-        <%= render "comments/comment_line", comment: f.object, body_target: true, expandable: true %>
+        <%= render "comments/comment_line", comment: f.object, body_target: true, expandable: true,
+                   date_path: local_assigns[:date_path], date_new_tab: true %>
       <% end %>
       <div class="flex hidden items-start gap-x-1" data-edit-toggle-target="edit">
-        <span class="mt-2 w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
-          <%= f.object.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
-        </span>
+        <%= render "comments_and_communications/entry_date", time: f.object.created_at, css: "mt-2",
+                   path: local_assigns[:date_path], new_tab: true %>
         <span class="mt-2 inline-flex w-20 shrink-0 items-center gap-x-1">
           <% if show_updated %>
             <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_user&.decorate&.initials.presence || "--" %></span>

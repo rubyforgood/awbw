@@ -1,6 +1,18 @@
 module CommentsHelper
   FEED_FILTER_FORM_ID = "comments-and-communications-filters"
 
+  # The full feed narrowed to one comment or communication, carrying the person
+  # it's about and the record to return to for the eyebrow.
+  def feed_entry_path(entry, person: nil, return_to: nil)
+    id_param = entry.is_a?(Comment) ? :comment_id : :notification_id
+    comments_and_communications_path({
+      person_id: person&.id,
+      id_param => entry.id,
+      return_to_type: return_to&.model_name&.name,
+      return_to_id: return_to&.id
+    }.compact)
+  end
+
   # Stimulus wiring for a feed row the chevron and "Expand/Collapse all" toggle.
   # clamp: a one-line row unclamped to show the full entry; otherwise a full row
   # whose body hides on collapse.

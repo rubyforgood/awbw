@@ -11,7 +11,8 @@
     chip to open the headline with in place of the type chip — the aggregated feed
     passes the neutral source chip, whose icon already conveys the type), trailing
     (HTML to close the headline row with), expandable (default false — marks the
-    body and adds a chevron; the caller wires expandable_feed_row_data). %>
+    body and adds a chevron; the caller wires expandable_feed_row_data), date_path
+    (+ date_new_tab — links the timestamp to the feed narrowed to this comment). %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
 <% body_target = local_assigns.fetch(:body_target, false) %>
 <% leading = local_assigns[:leading] %>
@@ -25,9 +26,8 @@
 <% created_color = chip_color(created_user&.id) %>
 <% is_age_range_data = comment.body&.include?("[AGE_RANGE_DATA]") %>
 <% body_class = is_age_range_data ? "text-amber-700" : "text-gray-900" %>
-<span class="w-32 shrink-0 text-xs whitespace-nowrap text-gray-400">
-  <%= comment.created_at.strftime("%-m/%-d/%Y %-I:%M %p") %>
-</span>
+<%= render "comments_and_communications/entry_date", time: comment.created_at,
+           path: local_assigns[:date_path], new_tab: local_assigns[:date_new_tab] %>
 <span class="inline-flex w-20 shrink-0 items-center gap-x-1">
   <% if show_updated %>
     <% updated_color = chip_color(updated_user.id) %>
