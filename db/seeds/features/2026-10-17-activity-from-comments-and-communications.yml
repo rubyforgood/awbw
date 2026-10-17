@@ -4,6 +4,6 @@ display_status: admin_facing
 released_on: 2026-10-17
 action_path: "/comments_and_communications"
 summary: >-
-  When the comments and communications page is filtered to one person, a
-  button beside the search heading (e.g. "Aisha's activity") opens their full
-  history without going through their edit page.
+  When the comments and communications page is filtered to one person, an
+  "Aisha's activity"-style button beside New comment opens their full history
+  without going through their edit page.

@@ -43,6 +43,12 @@
     feed has no target person yet, so its add flow stays in a body card. %>
 <% actions = capture do %>
   <% if @person %>
+    <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
+      <%= link_to person_activity_path(@person), class: button_classes(:primary_outline) do %>
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <%= @person.first_name.presence || @person.full_name %>'s activity
+      <% end %>
+    <% end %>
     <%= render "comments_and_communications/add_buttons" %>
   <% end %>
 <% end %>
@@ -67,17 +73,9 @@
   <%# ── Browse zone: filter the existing entries, then the results frame. The
       filter sits in a cool gray toolbar so it doesn't blend into the Add panel. %>
   <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h2 class="flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-        <i class="fa-solid fa-magnifying-glass"></i> Search comments & communications
-      </h2>
-      <% if @person && allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
-        <%= link_to person_activity_path(@person), class: admin_button_classes do %>
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          <%= @person.first_name.presence || @person.full_name %>'s activity
-        <% end %>
-      <% end %>
-    </div>
+    <h2 class="flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+      <i class="fa-solid fa-magnifying-glass"></i> Search comments & communications
+    </h2>
 
     <%= render "comments_and_communications/comments_and_communications_filters",
                url: comments_and_communications_path(person_id: @person&.id),

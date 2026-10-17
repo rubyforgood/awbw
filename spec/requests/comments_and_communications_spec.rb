@@ -19,7 +19,7 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
-    it "links to the person's activity history beside the search heading" do
+    it "links to the person's activity history from the header" do
       person.update!(first_name: "Aisha")
       get comments_and_communications_path(person_id: person.id)
 
