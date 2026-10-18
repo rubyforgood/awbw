@@ -33,8 +33,7 @@ class RegistrantCeForm
     return unless form
 
     form.form_submissions.find_by(person: @event_registration.registrant,
-                                  event: @event_registration.event,
-                                  role: form.role)
+                                  event: @event_registration.event)
   end
 
   # Every required field answered — the read-time "form complete" signal, since

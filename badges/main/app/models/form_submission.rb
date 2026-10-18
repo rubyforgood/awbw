@@ -260,6 +260,8 @@ class FormSubmission < ApplicationRecord
   # uploads); everything else stores the (comma-joined) text. Shared by every
   # submission flow — event registration, public forms, and bulk payment.
   def persist_answer(field, raw_value)
+    return persist_per_resource_answers(field, raw_value) if field.per_resource?
+
     record = form_answers.find_or_initialize_by(form_field: field)
     record.question_name_when_answered = field.name
 
@@ -268,6 +270,18 @@ class FormSubmission < ApplicationRecord
     else
       record.update!(submitted_answer: answer_text(raw_value))
     end
+  end
+
+  # A fanned-out field's stored answers as [resource, answer] pairs in link order;
+  # answer is nil for a copy left unanswered.
+  def per_resource_answers(field)
+    answers = form_answers.select { |answer| answer.form_field_id.nil? }.index_by(&:question_name_when_answered)
+    field.fanned_resources.map { |resource| [ resource, answers[field.per_resource_question(resource)] ] }
+  end
+
+  # The same answers keyed by resource id, the shape the form partial prefills from.
+  def per_resource_values(field)
+    per_resource_answers(field).to_h { |resource, answer| [ resource.id.to_s, answer&.submitted_answer ] }
   end
 
   def bulk_payment?
@@ -421,6 +435,19 @@ class FormSubmission < ApplicationRecord
   end
 
   private
+
+  # One answer per linked resource, keyed by the sentence it was asked under
+  # (form_field stays nil) so renaming or unlinking the resource leaves it readable.
+  def persist_per_resource_answers(field, raw_values)
+    values = raw_values.is_a?(Hash) ? raw_values.transform_keys(&:to_s) : {}
+    field.fanned_resources.each do |resource|
+      raw_value = values[resource.id.to_s]
+      next if raw_value.nil?
+
+      form_answers.find_or_initialize_by(form_field: nil, question_name_when_answered: field.per_resource_question(resource))
+        .update!(submitted_answer: answer_text(raw_value))
+    end
+  end
 
   def answer_text(raw_value)
     raw_value.is_a?(Array) ? raw_value.reject(&:blank?).join(", ") : raw_value.to_s

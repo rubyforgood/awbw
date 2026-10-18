@@ -1590,6 +1590,20 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include("Ticket forms")
         expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
       end
+
+      it "still shows a submission made before the form's role changed" do
+        form = create(:form, name: "Day 1 survey", role: "day_1_survey")
+        field = create(:form_field, form:, name: "How was it?")
+        callout = create(:registration_ticket_callout, event:, form:, title: "Feedback surveys")
+        EventRegistrationServices::CalloutFormSubmission.call(
+          registration:, callout:, form:, form_params: { field.id.to_s => "Great" }
+        )
+        form.update!(role: "general")
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(registration_callout_form_path(registration.slug, callout, anchor: "form-#{form.id}"))
+      end
     end
 
     context "Send bulk emails link" do

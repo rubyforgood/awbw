@@ -71,5 +71,12 @@ RSpec.describe RegistrantCeForm do
         form_params: { required_field.id.to_s => "Great" })
       expect(described_class.new(registration)).to be_complete
     end
+
+    it "still finds the submission after the form's role changes" do
+      EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:,
+        form_params: { required_field.id.to_s => "Great" })
+      form.update!(role: "general")
+      expect(described_class.new(registration)).to be_complete
+    end
   end
 end
