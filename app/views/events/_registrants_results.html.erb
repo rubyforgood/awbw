@@ -199,11 +199,11 @@
     <% form_submissions = event_form_ids.any? ? FormSubmission.where(event_id: @event.id, person_id: @event_registrations.map(&:registrant_id)).joins(:form).where(form_id: event_form_ids).pluck(:person_id, :created_at, Arel.sql("forms.name")).group_by(&:first).transform_values { |rows| rows.map { |_, ts, name| [ name, ts ] } } : {} %>
     <% scholarship_form = @event.scholarship_form %>
     <% scholarship_submitter_ids = scholarship_form ? FormSubmission.where(event_id: @event.id, form_id: scholarship_form.id, role: "scholarship", person_id: @event_registrations.map(&:registrant_id)).joins(:form_answers).distinct.pluck(:person_id).to_set : Set.new %>
-    <%# Completion of each callout form, keyed [person_id, form_id, role] → submitted_at. %>
+    <%# Completion of each callout form, keyed [person_id, form_id] → submitted_at. %>
     <% callout_form_completion = form_columns.any? ?
          FormSubmission.where(event_id: @event.id, form_id: form_columns.map { |_, form| form.id }.uniq, person_id: @event_registrations.map(&:registrant_id))
-           .pluck(:person_id, :form_id, :role, :created_at)
-           .each_with_object({}) { |(pid, fid, role, ts), map| map[[ pid, fid, role ]] = ts } : {} %>
+           .pluck(:person_id, :form_id, :created_at)
+           .each_with_object({}) { |(pid, fid, ts), map| map[[ pid, fid ]] = ts } : {} %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
@@ -564,7 +564,7 @@
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>
                 <% form_columns.each do |callout, form| %>
-                  <% submitted_at = callout_form_completion[[ registration.registrant_id, form.id, form.role ]] %>
+                  <% submitted_at = callout_form_completion[[ registration.registrant_id, form.id ]] %>
                   <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="ticket_forms">
                     <% if submitted_at %>
                       <%= link_to registration_callout_form_path(registration.slug, callout, anchor: "form-#{form.id}"), target: "_blank", rel: "noopener",
