@@ -29,7 +29,7 @@
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Payer</dt>
-      <dd class="mt-1 text-sm text-gray-900"><%= @payment.payer.name %></dd>
+      <dd class="mt-1 text-sm text-gray-900"><%= person_name(@payment.payer) %></dd>
     </div>
     <div>
       <dt class="text-sm font-medium text-gray-500">Amount</dt>
@@ -162,7 +162,7 @@
               <tr>
                 <td class="px-4 py-3 text-sm text-gray-900">
                   <% if refund.recipient.present? %>
-                    <%= refund.recipient.name %>
+                    <%= person_name(refund.recipient) %>
                   <% else %>
                     <%= refund.recipient_type.underscore.titleize %>
                   <% end %>

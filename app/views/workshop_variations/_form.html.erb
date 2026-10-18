@@ -131,7 +131,7 @@
                             as: :select,
                             label: "Variation idea",
                             collection: WorkshopVariationIdea.includes(:workshop, :windows_type, :created_by).order(:name),
-                            label_method: ->(idea) { "#{idea.name} (#{idea.windows_type&.short_name&.first || 'C'}) by #{idea.created_by&.name || '?'} — #{idea.workshop&.title || 'No workshop'} (#{idea.workshop&.windows_type&.short_name&.first || 'C'})" },
+                            label_method: ->(idea) { "#{idea.name} (#{idea.windows_type&.short_name&.first || 'C'}) by #{person_name(idea.created_by) || '?'} — #{idea.workshop&.title || 'No workshop'} (#{idea.workshop&.windows_type&.short_name&.first || 'C'})" },
                             value_method: :id,
                             include_blank: "Select a variation idea",
                             selected: (f.object.workshop_variation_idea_id || @workshop_variation_idea&.id),

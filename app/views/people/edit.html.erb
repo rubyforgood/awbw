@@ -58,7 +58,7 @@
 <% end %>
 <%= render layout: "shared/form_page",
            locals: { domain: :people, icon: "fas fa-user", eyebrow: "Edit person",
-                     title: truncate(@person.name, length: 40),
+                     title: truncate(person_name(@person), length: 40),
                      back: back, actions: actions, width: "max-w-7xl",
                      sticky_header: true, card: false } do %>
   <% if allowed_to?(:index?, User) %>

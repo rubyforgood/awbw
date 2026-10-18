@@ -109,7 +109,7 @@ module Events
 
       if event_registration
         submission.link_registration!(event_registration.id)
-        flash.now[:notice] = "Linked #{event_registration.registrant.name}."
+        flash.now[:notice] = "Linked #{helpers.person_name(event_registration.registrant)}."
       else
         flash.now[:alert] = "Registration not found."
       end
@@ -131,7 +131,7 @@ module Events
 
       if event_registration
         submission.unlink_registration!(event_registration.id)
-        flash.now[:notice] = "Unlinked #{event_registration.registrant.name}."
+        flash.now[:notice] = "Unlinked #{helpers.person_name(event_registration.registrant)}."
       else
         flash.now[:alert] = "Registration not found."
       end

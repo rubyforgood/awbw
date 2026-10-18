@@ -58,7 +58,7 @@
                   if user.failed_attempts >= Devise.maximum_attempts
                     lock_info += " (too many failed login attempts)"
                   elsif user.updated_by.present?
-                    lock_info += " by #{user.updated_by.name}"
+                    lock_info += " by #{person_name(user.updated_by)}"
                   end
                 %>
                 <i class="fa-solid fa-lock text-red-500" title="<%= lock_info %>"></i>
@@ -68,7 +68,7 @@
               <% end %>
               <% if !user.inactive? && !user.locked_at.present? && user.confirmed_at.present? %>
                 <% created_info = user.created_at.present? ? "Created #{l(user.created_at, format: :long)}" : ""
-                  created_info += " by #{user.created_by.name}" if user.created_by.present? %>
+                  created_info += " by #{person_name(user.created_by)}" if user.created_by.present? %>
                 <span class="fa fa-check-circle text-gray-300" title="<%= created_info %>"></span>
               <% end %>
             </td>
@@ -76,7 +76,7 @@
             <!-- Admin -->
             <td class="px-4 py-2 text-center">
               <% if user.super_user? %>
-                <i class="fa-solid fa-user-shield text-blue-600" title="<%= "Granted at #{l(user.updated_at, format: :long)}" if user.updated_at.present? %><%= " by #{user.updated_by.name}" if user.updated_by.present? %>"></i>
+                <i class="fa-solid fa-user-shield text-blue-600" title="<%= "Granted at #{l(user.updated_at, format: :long)}" if user.updated_at.present? %><%= " by #{person_name(user.updated_by)}" if user.updated_by.present? %>"></i>
               <% else %>
                 <span>--</span>
               <% end %>

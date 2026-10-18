@@ -90,7 +90,7 @@
             <td class="block px-4 pt-3 pb-1 text-sm sm:table-cell sm:py-1.5 sm:whitespace-nowrap"
                 data-sort-first="<%= person.first_name.to_s.downcase %>"
                 data-sort-last="<%= person.last_name.to_s.downcase %>">
-              <%= link_to person.name, person_link, class: "font-bold text-gray-900 hover:underline text-base sm:text-sm", data: { turbo_frame: "_top" } %>
+              <%= link_to person_name(person), person_link, class: "font-bold text-gray-900 hover:underline text-base sm:text-sm", data: { turbo_frame: "_top" } %>
             </td>
             <%# Primary sector + age group — one column, each independently
                 sortable (data-sort-sector / data-sort-age), mirroring the

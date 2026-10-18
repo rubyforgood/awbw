@@ -251,8 +251,8 @@ RSpec.describe Person, type: :model do
       expect(person.display_name_preference).to eq("first_name_last_initial")
     end
 
-    it "hides pronouns, phone, and social media" do
-      expect(person).to have_attributes(profile_show_pronouns: false, profile_show_phone: false, profile_show_social_media: false)
+    it "hides pronouns, email, phone, and social media" do
+      expect(person).to have_attributes(profile_show_pronouns: false, profile_show_email: false, profile_show_phone: false, profile_show_social_media: false)
     end
 
     it "shows the rest of the profile" do
@@ -570,6 +570,7 @@ RSpec.describe Person, type: :model do
 
     it 'filters by shared_contact_info matching a shared email but not a hidden one' do
       person_alice.update!(email: 'alice@example.com', profile_show_email: false)
+      person_bob.update!(profile_show_email: true)
 
       expect(Person.search_by_params(shared_contact_info: 'bob@example')).to include(person_bob)
       expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)

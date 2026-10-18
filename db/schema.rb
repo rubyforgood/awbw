@@ -1666,7 +1666,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_235715) do
     t.boolean "profile_show_age_ranges", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
     t.boolean "profile_show_credentials", default: true, null: false
-    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_email", default: false, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false
     t.boolean "profile_show_monthly_reports", default: true, null: false

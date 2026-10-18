@@ -32,9 +32,9 @@
       <% contributors.each do |contributor| %>
         <li>
           <%= link_to registrants_event_path(event, registrant_ids: contributor.person.id),
-                title: contributor.person.name,
+                title: person_name(contributor.person),
                 class: "group/revlink flex items-baseline justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-100" do %>
-            <span class="min-w-0 truncate group-hover/revlink:underline"><%= contributor.person.name %></span>
+            <span class="min-w-0 truncate group-hover/revlink:underline"><%= person_name(contributor.person) %></span>
             <span class="shrink-0 text-gray-600 tabular-nums"><%= dollars_from_cents(contributor.cents) %></span>
           <% end %>
         </li>

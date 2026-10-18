@@ -1,4 +1,12 @@
 module PersonHelper
+  # Takes a Person or a User (resolved to their person); any other record keeps its own name.
+  def person_name(record)
+    person = record.is_a?(User) ? record.person : record
+    return record&.name unless person.is_a?(Person)
+
+    allowed_to?(:full_name?, person) ? person.full_name : person.name
+  end
+
   def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, tint: nil, path_params: {}, width_class: "w-full", compact: false)
     # Compact mode shrinks the whole control (padding, avatar, type) for dense
     # tables like the registrants roster where horizontal space is at a premium.
@@ -10,7 +18,7 @@ module PersonHelper
     palette = person_button_palette(tint:, inactive:)
     shadow = tint ? "shadow-none" : "shadow-sm"
 
-    full_name = display_name || person.try(:name) || person.to_s
+    full_name = display_name || person_name(person) || person.to_s
     hover_title = [ full_name, subtitle ].compact_blank.join(" — ")
 
     # Only touch person.user when the viewer is actually allowed to see a pending
@@ -35,13 +43,13 @@ module PersonHelper
         image_tag person.avatar.variant(:thumbnail),
                   class: "#{avatar_size} rounded-full object-cover border border-gray-300 shadow-sm flex-shrink-0"
       else
-        content_tag(:span, person.name.to_s.first.to_s.upcase,
+        content_tag(:span, person_name(person).to_s.first.to_s.upcase,
                     class: "#{avatar_size} rounded-full flex items-center justify-center
                             bg-sky-200 text-sky-700 font-bold #{initial_text_size}
                             border border-sky-300 shadow-sm flex-shrink-0")
       end
 
-      display_name = display_name || person.name.to_s
+      display_name = display_name || person_name(person).to_s
       display_name = truncate(display_name, length: truncate_at) if truncate_at
 
       name = content_tag(

@@ -61,12 +61,12 @@
                       edit, so the badge is a plain pill (no nested link). %>
                   <div class="flex items-center gap-2">
                     <%= link_to edit_topic_subscription_path(subscription, topic_subscription_index_filters.merge(return_to: "index")),
-                                title: [ person.name, person.preferred_email ].compact_blank.join(" — "),
+                                title: [ person_name(person), person.preferred_email ].compact_blank.join(" — "),
                                 class: "group flex items-center gap-2 w-56 max-w-full px-2 py-1 rounded-lg border shadow-sm leading-tight transition-colors duration-200 overflow-hidden #{card_classes}",
                                 data: { turbo_frame: "_top", turbo_prefetch: false } do %>
                       <i class="fa-solid fa-envelope-open-text flex-shrink-0 <%= icon_classes %>"></i>
                       <div class="flex min-w-0 flex-col justify-center">
-                        <span class="truncate text-xs font-semibold"><%= truncate(person.name.to_s, length: 30) %></span>
+                        <span class="truncate text-xs font-semibold"><%= truncate(person_name(person).to_s, length: 30) %></span>
                         <% if person.preferred_email.present? %>
                           <!--email_off--><span class="truncate text-xs font-normal <%= email_classes %>"><%= person.preferred_email %></span><!--email_on-->
                         <% end %>

@@ -38,7 +38,7 @@
            data-controller="flip-card"
            data-action="click->flip-card#toggle keydown.enter->flip-card#toggle keydown.space:prevent->flip-card#toggle"
            tabindex="0" role="button" aria-pressed="false"
-           aria-label="<%= person.name %> — flip card for details">
+           aria-label="<%= person_name(person) %> — flip card for details">
         <div class="relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d]"
              data-flip-card-target="inner">
 
@@ -58,7 +58,7 @@
                             class: "w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow mb-2" %>
             <% else %>
               <span class="w-20 h-20 rounded-full flex items-center justify-center <%= DomainTheme.bg_class_for(:events, intensity: 200) %> <%= DomainTheme.text_class_for(:events, intensity: 700) %> font-bold text-2xl border-2 <%= DomainTheme.border_class_for(:events) %> shadow mb-2">
-                <%= person.name.to_s.first.to_s.upcase %>
+                <%= person_name(person).to_s.first.to_s.upcase %>
               </span>
             <% end %>
 
@@ -67,7 +67,7 @@
               <p class="text-lg font-bold text-gray-900 leading-tight"><%= person.first_name %></p>
               <p class="text-sm font-medium text-gray-600 leading-tight"><%= person.last_name %></p>
             <% else %>
-              <p class="text-lg font-bold text-gray-900 leading-tight"><%= person.name %></p>
+              <p class="text-lg font-bold text-gray-900 leading-tight"><%= person_name(person) %></p>
             <% end %>
 
             <% if credentials.present? %>
@@ -120,7 +120,7 @@
 
           <%# Back %>
           <div class="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm p-4 overflow-hidden">
-            <p class="font-semibold text-gray-900 leading-tight text-center mb-2"><%= person.name %></p>
+            <p class="font-semibold text-gray-900 leading-tight text-center mb-2"><%= person_name(person) %></p>
 
             <div class="relative flex-1 min-h-0">
               <div class="h-full overflow-y-auto text-sm text-gray-700 text-left pr-1"

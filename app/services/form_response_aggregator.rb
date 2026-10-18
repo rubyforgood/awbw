@@ -208,7 +208,7 @@ class FormResponseAggregator
       submission = submission_by_id[answer.form_submission_id]
       TextResponse.new(
         text: text,
-        person_name: submission&.person&.name,
+        person_name: submission&.person&.full_name,
         submitted_at: submission&.created_at,
         submission_id: answer.form_submission_id
       )

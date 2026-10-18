@@ -1,5 +1,5 @@
 class ChangePersonProfileDefaults < ActiveRecord::Migration[8.1]
-  HIDDEN_BY_DEFAULT = %i[profile_show_pronouns profile_show_phone profile_show_social_media].freeze
+  HIDDEN_BY_DEFAULT = %i[profile_show_pronouns profile_show_email profile_show_phone profile_show_social_media].freeze
 
   def up
     change_column_default :people, :display_name_preference, from: nil, to: "first_name_last_initial"
