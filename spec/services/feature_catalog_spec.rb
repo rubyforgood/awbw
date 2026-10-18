@@ -69,42 +69,28 @@ RSpec.describe FeatureCatalog do
       expect(existing.reload.pr_number).to eq(1234)
     end
 
-    it "does not overwrite admin-written content (summary)" do
-      existing = create(:feature, name: "Seed feature one", summary: "Edited in-app")
-
-      expect { catalog.import! }.to change(Feature, :count).by(1) # only "two" is new
-      expect(existing.reload.summary).to eq("Edited in-app")
-    end
-
-    it "fills in blank content fields (missing info)" do
-      existing = create(:feature, name: "Seed feature one", summary: "Edited in-app",
-                                  external_url: nil)
+    it "overwrites content on a same-name feature nobody edited" do
+      existing = create(:feature, name: "Seed feature one", summary: "Old summary", external_url: nil,
+                                  pro_tips: "Old 1\nOld 2\nOld 3", rhino_description: "<p>Old write-up.</p>")
 
       result = catalog.import!
 
       expect(result.updated).to eq(1)
-      expect(existing.reload.external_url).to eq("https://docs.example.com/one")
-      expect(existing.summary).to eq("Edited in-app") # admin content left alone
-    end
-
-    it "replaces the tips and description on a feature nobody edited when the seed revises them" do
-      existing = create(:feature, name: "Seed feature one", pro_tips: "Old 1\nOld 2\nOld 3",
-                                  rhino_description: "<p>Old write-up.</p>")
-
-      result = catalog.import!
-
-      expect(result.updated).to eq(1)
-      expect(existing.reload.pro_tips_list).to eq([ "Tip A", "Tip B" ])
+      expect(existing.reload).to have_attributes(summary: "First seeded feature.",
+                                                 external_url: "https://docs.example.com/one")
+      expect(existing.pro_tips_list).to eq([ "Tip A", "Tip B" ])
       expect(existing.rhino_description.to_plain_text).to eq("Longer write-up.")
     end
 
-    it "keeps tips and a description the seed leaves out" do
+    it "keeps fields the seed leaves out" do
       existing = create(:feature, name: "Seed feature two", pro_tips: "Kept tip",
+                                  external_url: "https://docs.example.com/kept",
                                   rhino_description: "<p>Kept write-up.</p>")
 
       catalog.import!
 
       expect(existing.reload.pro_tips_list).to eq([ "Kept tip" ])
+      expect(existing.external_url).to eq("https://docs.example.com/kept")
       expect(existing.rhino_description.to_plain_text).to eq("Kept write-up.")
     end
 
@@ -126,13 +112,13 @@ RSpec.describe FeatureCatalog do
 
     it "leaves a feature edited in-app untouched, even blank fields and drifted classification" do
       existing = create(:feature, name: "Seed feature one", area: "reporting", external_url: nil,
-                                  pro_tips: "Admin tip", created_at: 2.days.ago, updated_at: 1.day.ago)
+                                  summary: "Admin summary", created_at: 2.days.ago, updated_at: 1.day.ago)
 
       result = catalog.import!
 
       expect(result.updated).to eq(0)
       expect(result.skipped).to eq(1)
-      expect(existing.reload).to have_attributes(area: "reporting", external_url: nil, pro_tips: "Admin tip")
+      expect(existing.reload).to have_attributes(area: "reporting", external_url: nil, summary: "Admin summary")
     end
 
     it "does not count its own sync as an in-app edit" do

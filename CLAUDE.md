@@ -360,7 +360,7 @@ what changed.
   entry is a smaller update through its `summary`/`name` wording (e.g. "Filter
   registrants by registration date"), not a schema field. (If we ever want the UI
   to visually separate launches from tweaks, that's a `kind:` column on `Feature` +
-  `CATALOG_FIELDS` + a decorator badge — a deliberate change, not something to
+  `SYNCED_FIELDS` + a decorator badge — a deliberate change, not something to
   fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
@@ -373,13 +373,11 @@ what changed.
   this in its relation scope, not just in the UI).
 
 An admin clicks **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
-matched by `name`) to pull newly-shipped features from the seed, **re-align the
-catalog-owned classification** on existing records (`CATALOG_FIELDS` — area,
-`display_status`, `released_on`, `action_path`, `pr_number`, so a seed fix like a
-wrong audience propagates), **replace the tips and description** whenever the seed
-carries them (`SEED_REVISED_FIELDS` — `pro_tips`, `description`, so trimming a seed's
-tips reaches existing records), **and fill in blank content** (`CONTENT_FIELDS` —
-`summary`, `external_url`) without overwriting it. **A feature edited in-app since creation (`Feature#edited?`) is skipped
+matched by `name`) to pull newly-shipped features from the seed **and overwrite
+existing same-name records with the seed** (`SYNCED_FIELDS` — area, `display_status`,
+`released_on`, `action_path`, `pr_number`, `summary`, `pro_tips`, `external_url`,
+`description`; a field the seed leaves blank keeps its value), so seed fixes and
+trims propagate. **A feature edited in-app since creation (`Feature#edited?`) is skipped
 entirely** — sync writes don't bump `updated_at`, so only admin saves count as edits.
 
 - **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind

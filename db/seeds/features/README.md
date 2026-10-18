@@ -8,11 +8,9 @@ doc links). An admin clicks **Sync latest updates** on `/features`
 (`FeatureCatalog#import!`) to hydrate the table from these files:
 
 - Creates a record for any seed whose `name` isn't in the table yet.
-- Re-aligns classification fields (`area`, `display_status`, `released_on`,
-  `action_path`, `pr_number`) on records not edited in-app.
-- Replaces `pro_tips` and `description` with the seed's, when the seed has them,
-  on records not edited in-app — so trimming a seed's tips reaches the page.
-- Fills blank `summary` and `external_url`, never overwriting them.
+- Overwrites a same-name record with the seed's fields when nobody has edited
+  it in-app. A field the seed leaves blank keeps its value.
+- Never touches a record an admin has edited.
 
 The table is never regenerated from this folder. Deleting or renaming a file
 leaves its record in place; renaming a feature's `name` here creates a new record.
