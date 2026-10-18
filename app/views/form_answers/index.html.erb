@@ -28,6 +28,7 @@
       <% if params[:return_to].present? %><%= hidden_field_tag :return_to, params[:return_to] %><% end %>
       <%# Keeps a results drill-down pinned to its exact question while the Question box still names it. %>
       <% if params[:form_field_id].present? %><%= hidden_field_tag :form_field_id, params[:form_field_id] %><% end %>
+      <% if params[:resource_id].present? %><%= hidden_field_tag :resource_id, params[:resource_id] %><% end %>
       <div class="mb-3 flex items-center gap-2 text-gray-600">
         <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
         <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>

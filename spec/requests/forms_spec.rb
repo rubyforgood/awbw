@@ -1017,6 +1017,26 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("120")
       end
 
+      it "gives each per-resource copy of a fanned-out question its own card and drill-downs" do
+        form = create(:form, :standalone, name: "Survey")
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        collage = create(:resource, title: "Collage")
+        masks = create(:resource, title: "Masks")
+        create(:form_field_resource, form_field: clarity, resource: collage)
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_answer, form_submission: create(:form_submission, form: form), form_field: nil,
+               question_name_when_answered: "How clear was Masks", submitted_answer: "Very clear")
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        masks_card = doc.at_css("#form-question-#{clarity.id}-#{masks.id}")
+        expect(doc.at_css("#form-question-#{clarity.id}-#{collage.id}").text).to include("How clear was Collage")
+        expect(masks_card.text).to include("Very clear")
+        hrefs = masks_card.css("a").map { |a| a["href"] }
+        expect(hrefs).to include(a_string_including("resource_id=#{masks.id}"))
+      end
+
       it "shows an empty state when the form has no submissions" do
         form = create(:form, :standalone, name: "Untouched")
         get results_form_path(form)

@@ -175,6 +175,24 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("sibling-answer")
       end
 
+      it "pins a results drill-down to one per-resource copy of a fanned-out question" do
+        form = create(:form)
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        masks = create(:resource, title: "Masks")
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_field_resource, form_field: clarity, resource: create(:resource, title: "Masks advanced"))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks",
+               submitted_answer: "pinned-answer", form_submission: create(:form_submission, form: form))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks advanced",
+               submitted_answer: "sibling-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "How clear was Masks",
+                              form_field_id: clarity.id, resource_id: masks.id), headers: frame_headers
+
+        expect(response.body).to include("pinned-answer")
+        expect(response.body).not_to include("sibling-answer")
+      end
+
       it "searches by name again once the question box no longer names the pinned question" do
         form = create(:form)
         email = create(:form_field, form: form, name: "Email")
@@ -209,6 +227,20 @@ RSpec.describe "FormAnswers", type: :request do
 
         expect(response.body).to include(CGI.escapeHTML(
           results_form_path(form, anchor: "form-question-#{field.id}")
+        ))
+      end
+
+      it "anchors the way back to a fanned-out copy's own card" do
+        form = create(:form, name: "Volunteer interest")
+        field = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        masks = create(:resource, title: "Masks")
+        create(:form_field_resource, form_field: field, resource: masks)
+
+        get form_answers_path(form_id: form.id, return_to: "form_results", question: "How clear was Masks",
+                              form_field_id: field.id, resource_id: masks.id)
+
+        expect(response.body).to include(CGI.escapeHTML(
+          results_form_path(form, anchor: "form-question-#{field.id}-#{masks.id}")
         ))
       end
 

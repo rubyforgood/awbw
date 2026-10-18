@@ -1,0 +1,11 @@
+name: "Form results show per-workshop answers"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-18
+summary: >-
+  A question asked once per workshop now gets its own results card for each
+  workshop, so you can see how each one landed instead of the answers being
+  left out.
+pro_tips:
+  - "Search the questions box for a workshop title to see just its cards."
+  - "Each card's answer count and View submissions link open only that workshop's answers."

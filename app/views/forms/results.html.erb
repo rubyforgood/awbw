@@ -126,7 +126,7 @@
       <% @aggregator.field_reports.each do |report| %>
         <%# scroll-mt clears the card of the top of the viewport when a return link
             anchors here. %>
-        <div id="<%= form_results_card_id(report.field.id) %>" class="mb-6 scroll-mt-24 break-inside-avoid">
+        <div id="<%= form_results_card_id(report.field.id, report.resource&.id) %>" class="mb-6 scroll-mt-24 break-inside-avoid">
           <% case report.kind %>
           <% when :select %>
             <%= render "events/breakdown_card", title: report.label, data: report.rows,
