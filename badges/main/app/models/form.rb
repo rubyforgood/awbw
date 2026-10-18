@@ -32,7 +32,8 @@ class Form < ApplicationRecord
   ].freeze
 
   # Each survey role marks the one form the built-in callouts deliver for it.
-  SURVEY_ROLES = %w[day_1_survey day_2_survey post_event_survey recipient_survey].freeze
+  SURVEY_ROLES = ROLE_OPTIONS.map(&:last).select { |role| role.include?("survey") }.freeze
+  SURVEY_HEADERS = { "recipient_survey" => "Scholarship survey" }.freeze
 
   # The questions that identify a public respondent (used to build their Person).
   IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
@@ -69,6 +70,10 @@ class Form < ApplicationRecord
 
   def self.survey(role)
     standalone.find_by(role:)
+  end
+
+  def self.survey_header(role)
+    SURVEY_HEADERS.fetch(role) { ROLE_OPTIONS.rassoc(role)&.first || role.to_s.humanize }
   end
 
   def survey_role?
