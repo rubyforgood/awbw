@@ -21,7 +21,7 @@
     <% form_fields = submission.form.form_fields.reorder(position: :asc) %>
     <% responses = submission.form_answers.index_by(&:form_field_id) %>
 
-    <div>
+    <div id="form-submission-<%= submission.id %>" class="scroll-mt-24">
       <div class="mb-5 border-b-2 border-gray-300 pb-1.5">
         <h2 class="text-lg font-semibold text-gray-900"><%= submission.form.name %></h2>
         <p class="text-xs text-gray-500">Submitted <%= submission.created_at.strftime("%B %d, %Y at %l:%M %P") %><%= render "form_submissions/via_callout_badge", submission: submission %></p>

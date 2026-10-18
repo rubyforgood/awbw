@@ -52,6 +52,24 @@ RSpec.describe Form do
       create(:form, role: "general")
       expect(build(:form, role: "general")).to be_valid
     end
+
+    it "treats every role option naming a survey as a survey role, in dropdown order" do
+      expect(Form::SURVEY_ROLES).to eq(%w[day_1_survey day_2_survey post_event_survey recipient_survey])
+    end
+  end
+
+  describe ".survey_header" do
+    it "uses the role's dropdown label" do
+      expect(Form.survey_header("post_event_survey")).to eq("Post-event survey")
+    end
+
+    it "calls the recipients survey the scholarship survey" do
+      expect(Form.survey_header("recipient_survey")).to eq("Scholarship survey")
+    end
+
+    it "humanizes a role outside the dropdown" do
+      expect(Form.survey_header("legacy_survey")).to eq("Legacy survey")
+    end
   end
 
   describe ".owned / .standalone" do

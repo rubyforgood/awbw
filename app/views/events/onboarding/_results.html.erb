@@ -1,6 +1,6 @@
 <%= turbo_frame_tag :onboarding_results do %>
   <% day_count = @event.day_count %>
-  <% columns = visible_onboarding_columns(@event, @hidden_columns) %>
+  <% columns = visible_onboarding_columns(@event, @hidden_columns, @survey_completions.roles) %>
   <% align_class = { "left" => "text-left", "center" => "text-center", "right" => "text-right" } %>
   <% current_filter = params[:status_filter].presence || "active" %>
   <% filter_params = { keyword: params[:keyword].presence, hide: params[:hide].presence } %>
@@ -28,7 +28,7 @@
         </summary>
         <div class="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p class="mb-2 text-xs font-semibold tracking-wide text-gray-400 uppercase">Show columns</p>
-          <% onboarding_toggle_entries(@event).each do |key, label| %>
+          <% onboarding_toggle_entries(@event, @survey_completions.roles).each do |key, label| %>
             <% is_hidden = @hidden_columns.include?(key) %>
             <% new_hide = (is_hidden ? @hidden_columns - [ key ] : @hidden_columns + [ key ]).uniq.join(",") %>
             <%= link_to onboarding_event_path(@event, status_filter: params[:status_filter].presence, keyword: params[:keyword].presence, hide: new_hide.presence),
@@ -71,7 +71,8 @@
                     registration: registration,
                     event: @event,
                     columns: columns,
-                    day_count: day_count %>
+                    day_count: day_count,
+                    survey_completions: @survey_completions %>
             <% end %>
           </tbody>
         </table>
