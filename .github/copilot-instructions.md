@@ -349,7 +349,7 @@ what changed.
   entry is a smaller update through its `summary`/`name` wording (e.g. "Filter
   registrants by registration date"), not a schema field. (If we ever want the UI
   to visually separate launches from tweaks, that's a `kind:` column on `Feature` +
-  `CATALOG_FIELDS` + a decorator badge — a deliberate change, not something to
+  `SYNCED_FIELDS` + a decorator badge — a deliberate change, not something to
   fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
@@ -360,10 +360,9 @@ what changed.
 - `admin_facing` features are visible to super-admins only (`FeaturePolicy`).
 
 Admins click **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
-matched by `name`) to add newly-shipped features, **re-sync catalog classification**
-on existing records (`CATALOG_FIELDS` — area, audience, links, date, PR — so seed
-fixes propagate) and **fill blank content** (`CONTENT_FIELDS` — summary, tips,
-guide, description) without overwriting admin writing. A feature edited in-app
+matched by `name`) to add newly-shipped features and **overwrite existing same-name
+records with the seed** (`SYNCED_FIELDS` — classification plus summary, tips, guide,
+description; a field the seed leaves blank keeps its value). A feature edited in-app
 since creation (`Feature#edited?`) is skipped entirely. New area → add it to
 `Feature::AREAS` (label + FA icon + safelisted Tailwind hue).
 
