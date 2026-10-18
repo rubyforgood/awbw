@@ -28,6 +28,15 @@ RSpec.describe TagAliasSeeder do
     expect(translation.resolve("Sytems/Policy Change").sector_ids).to eq([ Sector.find_by(name: "Systems/Policy Change").id ])
   end
 
+  it "finds a tag whose stored name carries stray whitespace" do
+    grief = Sector.find_by(name: "Grief/Loss")
+    grief.update_columns(name: "Grief/Loss ")
+
+    described_class.call(quiet: true)
+
+    expect(TagAlias.find_by(name: "Grief and loss").aliasable).to eq(grief)
+  end
+
   it "records a term that names two age groups once for each" do
     described_class.call(quiet: true)
 
