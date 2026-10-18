@@ -12,11 +12,15 @@ class FormResponseAggregator
   #   :text   — responses
   #   :file   — answered_count only
   FieldReport = Struct.new(
-    :field, :resource, :label, :kind, :answered_count,
+    :field, :label, :kind, :answered_count,
     :rows, :chart, :multi, :specify_rows, :responses,
     :average, :total, :minimum, :maximum, :integer_valued, :percent,
     keyword_init: true
   )
+
+  # One card's question: a field, or one fanned-out copy of it (answers saved with
+  # no field, under the copy's sentence).
+  Question = Struct.new(:field, :label, :fanned, keyword_init: true)
 
   # One free-text answer, carrying enough context to list it and link back to
   # the full submission.
@@ -92,12 +96,16 @@ class FormResponseAggregator
   end
 
   def input_fields
-    @input_fields ||= @form.form_fields.includes(form_field_resources: :resource)
+    @input_fields ||= @form.form_fields.includes(:form_field_resources)
       .select(&:collects_input?).sort_by { |field| field.position.to_i }
   end
 
   def questions
-    @questions ||= input_fields.flat_map { |field| FormQuestion.for_field(field) }
+    @questions ||= input_fields.flat_map do |field|
+      next [ Question.new(field: field, label: field.name, fanned: false) ] unless field.per_resource?
+
+      field.per_resource_questions.map { |label| Question.new(field: field, label: label, fanned: true) }
+    end
   end
 
   # The questions to render as cards — every one, or just those whose wording
@@ -117,7 +125,7 @@ class FormResponseAggregator
   end
 
   def answers_for(question)
-    return fanned_answers_by_label.fetch(question.label, []) if question.resource
+    return fanned_answers_by_label.fetch(question.label, []) if question.fanned
 
     answers_by_field_id.fetch(question.field.id, [])
   end
@@ -135,7 +143,7 @@ class FormResponseAggregator
   end
 
   def report_for(question, **attributes)
-    FieldReport.new(field: question.field, resource: question.resource, label: question.label, **attributes)
+    FieldReport.new(field: question.field, label: question.label, **attributes)
   end
 
   # Sliders and number-typed free-form fields hold a figure worth averaging and

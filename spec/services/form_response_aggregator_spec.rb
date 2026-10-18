@@ -334,7 +334,6 @@ RSpec.describe FormResponseAggregator do
       reports = described_class.new(form).field_reports
 
       expect(reports.map(&:label)).to eq([ "Part One: How clear was Collage", "Part One: How clear was Masks" ])
-      expect(reports.map(&:resource)).to eq([ collage, masks ])
       expect(reports.map(&:kind)).to all(eq(:select))
       expect(reports.first.rows).to eq([ [ "Very clear", 2 ] ])
       expect(reports.last.rows).to eq([ [ "Unclear", 1 ] ])

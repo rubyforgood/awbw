@@ -23,6 +23,17 @@ class FormAnswer < ApplicationRecord
   # left blank still has an answer row. Only these count as responses.
   scope :answered, -> { where.not(submitted_answer: [ nil, "" ]) }
 
+  # Answers to one question as worded on its form: the field's own under its name,
+  # or a fanned-out copy's (saved with no field) under its sentence. nil for any
+  # other wording.
+  def self.for_question(field, question)
+    return where(form_field: field) if question == field.name
+    return unless field.per_resource_questions.include?(question)
+
+    where(form_field_id: nil, question_name_when_answered: question,
+      form_submission_id: FormSubmission.where(form_id: field.form_id).select(:id))
+  end
+
   def name
     "#{question_name_when_answered.presence || form_field&.name}: #{submitted_answer}"
   end

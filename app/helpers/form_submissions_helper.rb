@@ -7,7 +7,7 @@ module FormSubmissionsHelper
     {
       event_id: params[:event_id].presence,
       form_field_id: params[:form_field_id].presence,
-      resource_id: params[:resource_id].presence,
+      question: params[:question].presence,
       organization_id: params[:organization_id].presence,
       role: params[:role].presence,
       search: params[:search].presence,

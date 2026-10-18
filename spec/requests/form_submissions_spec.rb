@@ -152,7 +152,7 @@ RSpec.describe "FormSubmissions", type: :request do
         create(:form_answer, form_submission: other_copy, form_field: nil,
                question_name_when_answered: "How clear was Collage", submitted_answer: "Very clear")
 
-        get form_submissions_path(form_id: form.id, form_field_id: clarity.id, resource_id: masks.id), headers: frame_headers
+        get form_submissions_path(form_id: form.id, form_field_id: clarity.id, question: "How clear was Masks"), headers: frame_headers
 
         expect(response.body).to include(form_submission_path(answered))
         expect(response.body).not_to include(form_submission_path(other_copy))

@@ -69,8 +69,8 @@ module FormsHelper
   # Stable anchor for a question's card on the results page, so a page reached
   # from that card can scroll back to exactly the card it opened. Mirrors
   # FormSubmissionsHelper#form_submission_row_id.
-  def form_results_card_id(field_id, resource_id = nil)
-    "form-question-#{[ field_id, resource_id.presence ].compact.join("-")}"
+  def form_results_card_id(field_id, question = nil)
+    "form-question-#{[ field_id, question.to_s.parameterize.presence ].compact.join("-")}"
   end
 
   # The same state read back off a page the results linked to, for its eyebrow —
@@ -83,19 +83,19 @@ module FormsHelper
       start_date: params[:start_date].presence,
       end_date: params[:end_date].presence,
       question: params[:results_question].presence,
-      anchor: params[:form_field_id].presence && form_results_card_id(params[:form_field_id], params[:resource_id])
+      anchor: params[:form_field_id].presence && form_results_card_id(params[:form_field_id], params[:question])
     }.compact
   end
 
   # A results card's footer link to the Form submissions list: the submissions
-  # that answered this question, narrowed like the rollup. form_field_id (plus
-  # resource_id for a fanned-out copy) both filters that list and names the card
-  # for its eyebrow to return to.
+  # that answered this question, narrowed like the rollup. form_field_id plus the
+  # question's wording both filter that list and name the card for its eyebrow to
+  # return to.
   def form_results_submissions_params(form, report)
     {
       form_id: form.id,
       form_field_id: report.field.id,
-      resource_id: report.resource&.id,
+      question: report.label,
       return_to: "form_results",
       **form_results_link_params
     }.compact
@@ -111,7 +111,6 @@ module FormsHelper
       form_id: form.id,
       question: report.label,
       form_field_id: report.field&.id,
-      resource_id: report.resource&.id,
       return_to: "form_results",
       **form_results_link_params
     }.compact

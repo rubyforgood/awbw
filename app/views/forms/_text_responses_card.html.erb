@@ -21,7 +21,7 @@
           <% byline = [ response.person_name.presence, response.submitted_at&.to_date&.to_fs(:long) ].compact %>
           <%= link_to byline.join(" · ").presence || "Submission ##{response.submission_id}",
                 form_submission_path(response.submission_id, return_to: "form_results",
-                  form_id: form.id, form_field_id: report.field.id, resource_id: report.resource&.id, **form_results_link_params),
+                  form_id: form.id, form_field_id: report.field.id, question: report.label, **form_results_link_params),
                 class: "mt-1 inline-block text-xs text-gray-400 #{DomainTheme.text_class_for(:forms, intensity: 700, hover: true)} hover:underline" %>
         </li>
       <% end %>

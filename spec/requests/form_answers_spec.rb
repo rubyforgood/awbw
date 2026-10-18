@@ -187,7 +187,7 @@ RSpec.describe "FormAnswers", type: :request do
                submitted_answer: "sibling-answer", form_submission: create(:form_submission, form: form))
 
         get form_answers_path(form_id: form.id, question: "How clear was Masks",
-                              form_field_id: clarity.id, resource_id: masks.id), headers: frame_headers
+                              form_field_id: clarity.id), headers: frame_headers
 
         expect(response.body).to include("pinned-answer")
         expect(response.body).not_to include("sibling-answer")
@@ -226,7 +226,7 @@ RSpec.describe "FormAnswers", type: :request do
                               question: "Any thoughts", form_field_id: field.id)
 
         expect(response.body).to include(CGI.escapeHTML(
-          results_form_path(form, anchor: "form-question-#{field.id}")
+          results_form_path(form, anchor: "form-question-#{field.id}-any-thoughts")
         ))
       end
 
@@ -237,10 +237,10 @@ RSpec.describe "FormAnswers", type: :request do
         create(:form_field_resource, form_field: field, resource: masks)
 
         get form_answers_path(form_id: form.id, return_to: "form_results", question: "How clear was Masks",
-                              form_field_id: field.id, resource_id: masks.id)
+                              form_field_id: field.id)
 
         expect(response.body).to include(CGI.escapeHTML(
-          results_form_path(form, anchor: "form-question-#{field.id}-#{masks.id}")
+          results_form_path(form, anchor: "form-question-#{field.id}-how-clear-was-masks")
         ))
       end
 

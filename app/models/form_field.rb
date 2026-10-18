@@ -228,6 +228,10 @@ class FormField < ApplicationRecord
     form_field_resources.includes(:resource).filter_map(&:resource)
   end
 
+  def per_resource_questions
+    fanned_resources.map { |resource| per_resource_question(resource) }
+  end
+
   # The sentence one fanned-out copy is asked, stored, and shown under. The answer
   # keeps a nil form_field, so this string is also its key: the subtitle leads so two
   # fan-out questions sharing a name (the clarity pair, which differ only by their

@@ -58,8 +58,8 @@ class FormAnswersController < ApplicationController
   # would otherwise also sweep in a sibling question whose name contains this
   # one's ("Email" pulling in "Email 2") and disagree with the card's count.
   def question_scoped(scope)
-    question = pinned_question
-    return scope.where(id: question.answers.select(:id)) if question
+    pinned = pinned_answers
+    return scope.merge(pinned) if pinned
     return scope if params[:question].blank?
 
     term = "%#{FormField.sanitize_sql_like(params[:question])}%"
@@ -70,11 +70,11 @@ class FormAnswersController < ApplicationController
 
   # The pinned question, while the box still holds its wording — editing or
   # clearing the box releases the pin and the term searches normally again.
-  def pinned_question
+  def pinned_answers
     return if params[:form_field_id].blank? || params[:question].blank?
 
-    question = FormQuestion.find(params[:form_field_id], params[:resource_id])
-    question if question&.label == params[:question]
+    field = FormField.find_by(id: params[:form_field_id])
+    field && FormAnswer.for_question(field, params[:question])
   end
 
   # By when the submission was made, not when the answer row was written, so this
