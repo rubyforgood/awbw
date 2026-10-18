@@ -1,0 +1,29 @@
+<%# Labeled text filter box shared by the index search bars and the event filter
+    bars, so every free-text filter renders the same markup. Locals:
+      param         – input name/id (Symbol or String)
+      label         – optional field label (omitted when nil)
+      placeholder   – optional input placeholder
+      value         – optional input value (defaults to params[param])
+      submit        – true adds the magnifier search button inside the field
+      field_class   – optional <input> classes (defaults to search_field_class)
+      label_class   – optional <label> classes (defaults to search_label_class)
+      wrapper_class – optional wrapper classes (defaults to w-full md:w-48; nil for none)
+      input_options – optional extra text_field_tag options (e.g. data:, oninput:) %>
+<% label_text = local_assigns[:label] %>
+<% submit = local_assigns.fetch(:submit, false) %>
+<% field_class = local_assigns.fetch(:field_class, search_field_class) %>
+<% input = text_field_tag param, local_assigns.fetch(:value, params[param]),
+             class: submit ? "#{field_class} pr-10" : field_class,
+             placeholder: local_assigns[:placeholder],
+             **local_assigns.fetch(:input_options, {}) %>
+<%= tag.div class: local_assigns.fetch(:wrapper_class, "w-full md:w-48") do %>
+  <%= label_tag param, label_text, class: local_assigns.fetch(:label_class, search_label_class) if label_text %>
+  <% if submit %>
+    <div class="relative">
+      <%= input %>
+      <%= render "shared/search_submit" %>
+    </div>
+  <% else %>
+    <%= input %>
+  <% end %>
+<% end %>
