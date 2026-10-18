@@ -302,6 +302,11 @@ module Ahoy
     # points at what it's allocated to, not the payment row.
     def custom_resource_link(record)
       case record
+      when Person
+        { text: record.full_name.strip.presence || h.commentable_label(record), path: edit_path_for(record) }
+      when User
+        name = record.full_name.presence || h.commentable_label(record)
+        { text: "#{name} (user)", path: edit_path_for(record) }
       when Affiliation
         { text: [ record.title.presence, record.organization&.name, affiliation_dates(record) ].compact.join(" · "),
           path: edit_path_for(record) }
