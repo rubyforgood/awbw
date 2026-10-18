@@ -488,6 +488,35 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(broken.reload.filemaker_code).to be_nil
   end
 
+  describe "re-running named rows" do
+    it "links the match that failed, leaving the one that already carries the ID alone" do
+      broken = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      # A legacy value the email validation rejects, so the first run can't save this person.
+      broken.update_columns(email_2: "not-an-email")
+      good = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada.l@example.com",
+                             email_2: "ada@example.com", pronouns: "she/her")
+      rolodex("00025", EMail: "ada@example.com", Pronouns: "they/them", BestTimeToCall: "Mornings")
+
+      described_class.new.call
+      broken.update!(email_2: nil)
+      import = described_class.new(scope: FmRolodex.where(fm_id: "00025"), relink: true).call
+
+      expect(import.results[:linked].sole).to include("##{broken.id}", "##{good.id}")
+      expect(broken.reload).to have_attributes(filemaker_code: "00025", best_time_to_call: "Mornings")
+      expect(broken.comments).to be_empty
+      expect(good.reload.comments.count).to eq(1)
+      expect(import.differences).to be_empty
+    end
+
+    it "leaves the already-imported guard in place without it" do
+      rolodex("00026", EMail: "ada@example.com")
+
+      described_class.new.call
+
+      expect(described_class.new(scope: FmRolodex.where(fm_id: "00026")).call.results[:already_imported].size).to eq(1)
+    end
+  end
+
   it "skips agencies, deleted rows, and nameless rows" do
     rolodex("00013", isAgency__c: "1")
     rolodex("00014", Delete: "Yes")

@@ -21,6 +21,12 @@ module PersonServices
   # A row whose name + email matches nobody is created, even when someone already shares
   # the name or the email: folding the occasional duplicate with the person deduper beats
   # hand-resolving every collision in a 39,000-row archive.
+  #
+  # `relink: true` reads a row whose ID a person already carries anyway, which is how a
+  # match that failed the first time is picked up once the person is valid: the matches
+  # already holding the ID are left as they are and only the rest are filled. Meant for a
+  # named handful of rows (the task's FM_IDS), since a row whose created person has since
+  # changed their email no longer matches and would be created again.
   class ImportFromRolodex
     OUTCOMES = %i[created linked already_imported skipped failed].freeze
     FALSE_FLAGS = %w[0 n no false].freeze
@@ -41,8 +47,9 @@ module PersonServices
 
     attr_reader :results, :differences
 
-    def initialize(scope: FmRolodex.all)
+    def initialize(scope: FmRolodex.all, relink: false)
       @scope = scope
+      @relink = relink
       @results = OUTCOMES.index_with { [] }
       @differences = []
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
@@ -69,7 +76,7 @@ module PersonServices
       last_name = Person.normalize_name(data["LastName"]).to_s
       label = "#{rolodex.fm_id} #{first_name} #{last_name}".squish
 
-      return record(:already_imported, label) if @imported_codes.include?(rolodex.fm_id)
+      return record(:already_imported, label) if !@relink && @imported_codes.include?(rolodex.fm_id)
       return record(:skipped, "#{label}: agency") if flag?(data["isAgency__c"])
       return record(:skipped, "#{label}: marked deleted") if flag?(data["Delete"])
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
@@ -99,8 +106,11 @@ module PersonServices
     end
 
     # One match of the row, reported and left out when it doesn't validate so the row's
-    # other matches still take the code.
+    # other matches still take the code. A re-run reaches the matches that already carry
+    # the ID as well, and filling them again would note every difference a second time.
     def link_person(person, rolodex, label)
+      return true if person.filemaker_codes.include?(rolodex.fm_id)
+
       person.filemaker_code = Person.join_filemaker_codes(person.filemaker_code, rolodex.fm_id)
       kept = fill(person, rolodex)
       return failed(person, label) unless person.save
