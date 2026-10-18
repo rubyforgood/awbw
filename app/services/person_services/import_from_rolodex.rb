@@ -28,7 +28,8 @@ module PersonServices
     # A two-digit year below this is read as 20xx, at or above it as 19xx.
     TWO_DIGIT_YEAR_PIVOT = 10
     CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
-                      "mobile" => "personal", "work" => "work", "mailing" => "mailing" }.freeze
+                      "mobile" => "personal", "work" => "work", "business" => "work",
+                      "professional" => "work", "mailing" => "mailing" }.freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
     UNKNOWN_LOCALITY = "Unknown"
     STRING_LIMIT = 255
@@ -137,7 +138,7 @@ module PersonServices
       kept = profile_attributes(rolodex.data).filter_map do |attribute, value|
         next if value.blank?
         next person[attribute] = value if person[attribute].blank?
-        next if same?(person[attribute], value)
+        next if same?(person[attribute], value) || value == Person::UNKNOWN_CONTACT_TYPE
 
         [ Person.human_attribute_name(attribute), person[attribute], value ]
       end
@@ -172,8 +173,13 @@ module PersonServices
       { created_at: entered, updated_at: parse_date(data["DateTimeModified"]) || entered }.compact
     end
 
+    # A typed value the portal has no word for ("Preferred", a name) still says the
+    # archive typed it, so it reads as unknown; only a blank stays untyped.
     def email_type(value)
-      CONTACT_TYPES[value.to_s.strip.downcase].presence_in(Person::CONTACT_TYPES)
+      key = value.to_s.strip.downcase
+      return if key.blank?
+
+      CONTACT_TYPES[key].presence_in(Person::CONTACT_TYPES) || Person::UNKNOWN_CONTACT_TYPE
     end
 
     # FileMaker keeps the facilitator's start as a separate month and year; the portal

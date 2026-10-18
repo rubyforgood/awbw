@@ -395,11 +395,11 @@ module Events
       keys << "first_name" if person.first_name.present?
       keys << "last_name" if person.last_name.present?
       keys << "primary_email" << "confirm_email" if person.email.present?
-      keys << "primary_email_type" if person.email_type.present?
+      keys << "primary_email_type" if person.known_email_type?
       keys << "nickname" if person.legal_first_name.present? || person.first_name.present?
       keys << "pronouns" if person.pronouns.present?
       keys << "secondary_email" if person.email_2.present?
-      keys << "secondary_email_type" if person.email_2_type.present?
+      keys << "secondary_email_type" if person.known_email_2_type?
 
       if person.addresses.exists?
         address = person.addresses.find_by(primary: true) || person.addresses.first

@@ -145,6 +145,16 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(person).to be_valid
     end
 
+    it "reads the archive's email types, typing anything it can't place as unknown" do
+      { "00090" => "Business", "00091" => "Professional", "00092" => "Preferred", "00093" => "Attn: someone", "00094" => "" }
+        .each_with_index { |(fm_id, type), i| rolodex(fm_id, FirstName: "Ada#{i}", EMail: "ada#{i}@example.com", EmailType: type) }
+
+      described_class.new.call
+
+      expect(Person.where(filemaker_code: %w[00090 00091 00092 00093 00094]).order(:filemaker_code).pluck(:email_type))
+        .to eq([ "work", "work", "unknown", "unknown", nil ])
+    end
+
     it "reads a facilitator year with no month as January, and a month name" do
       rolodex("00051", FirstName: "Grace", EMail: "grace@example.com", FacilitatorSinceYear: "2018")
       rolodex("00052", FirstName: "Hedy", EMail: "hedy@example.com", FacilitatorSinceMonth: "June",
@@ -277,6 +287,16 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(person.reload.pronouns).to eq("she/her")
       expect(person.comments.sole.body).to include("00071", "Pronouns", "they/them", "she/her")
       expect(import.differences.sole).to include("00071", "##{person.id}", "Pronouns", "they/them", "she/her")
+    end
+
+    it "doesn't note an archive email type it could only read as unknown" do
+      person.update!(email_type: "work")
+      rolodex("00074", EMail: "ada@example.com", EmailType: "Preferred")
+
+      import = described_class.new.call
+
+      expect(person.reload.email_type).to eq("work")
+      expect(import.differences).to be_empty
     end
 
     it "doesn't note a value that only differs in case or spacing" do
