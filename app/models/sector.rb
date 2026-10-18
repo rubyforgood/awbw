@@ -58,6 +58,7 @@ class Sector < ApplicationRecord
   has_many :quotes, through: :workshops
 
   # Validations
+  normalizes :name, with: ->(name) { name.squish }
   validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
 
   # Cache expiration
