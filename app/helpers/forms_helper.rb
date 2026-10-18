@@ -1,4 +1,9 @@
 module FormsHelper
+  # Placeholder that names an input and its length limit, e.g. "Option text (255 char max)".
+  def max_length_placeholder(label, max)
+    "#{label} (#{number_with_delimiter(max)} char max)"
+  end
+
   # Sibling-page subnav shared across a form's Results / Submissions / Preview /
   # Edit / Edit sections pages so each reads like a set of tabs linking to the
   # others. `current` renders the active page as plain text instead of a link;

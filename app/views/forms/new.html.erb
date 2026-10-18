@@ -22,7 +22,8 @@
                 <label class="mb-1 block text-sm font-medium text-gray-700">Form name</label>
                 <input type="text" name="name" value="<%= params[:name] %>"
                        class="w-full rounded border-gray-300 px-3 py-2 text-2xl font-bold shadow-sm"
-                       placeholder="e.g. Short Event Registration">
+                       maxlength="<%= Form::NAME_MAX_LENGTH %>"
+                       placeholder="<%= max_length_placeholder("e.g. Short Event Registration", Form::NAME_MAX_LENGTH) %>">
               </div>
 
               <div class="sm:w-56">

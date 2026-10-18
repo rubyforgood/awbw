@@ -775,7 +775,7 @@ RSpec.describe "Forms", type: :request do
         }.not_to change(AnswerOption, :count)
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(response.body).to include("Answer option is too long")
+        expect(response.body).to include("is too long (#{long_option.strip.length} characters; the limit is 255)")
         expect(choice.reload.form_field_answer_options).to be_empty
       end
 
@@ -797,11 +797,17 @@ RSpec.describe "Forms", type: :request do
         expect(untouched.reload.name).to eq("How was the training?")
       end
 
+      it "shows each length limit as placeholder text" do
+        get edit_form_path(form)
+
+        expect(response.body).to include("Form name (255 char max)", "Question text (1,000 char max)", "Option text (255 char max)")
+      end
+
       it "opens the over-long question's settings so the error is visible" do
         submit_edits(form_field_answer_options_attributes: { "0" => { option_name: long_option } })
 
         row = Nokogiri::HTML(response.body).at_css("#form_field_#{choice.id}")
-        expect(row["class"]).to include("border-red")
+        expect(row["data-field-errors"]).not_to be_nil
         expect(row.at_css("[data-field-options-expanded-value='true']")).to be_present
         expect(row.at_css("input[value='#{long_option.strip}']")).to be_present
       end

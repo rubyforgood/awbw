@@ -113,11 +113,14 @@ class FormField < ApplicationRecord
   # hold the min_words minimum, which would make the field impossible to submit.
   MIN_CHARS_PER_WORD = 6
 
+  NAME_MAX_LENGTH = 1000
+
   # Validations
   validates_presence_of :name
   # Keeps an over-long name as a friendly validation error instead of a
   # database ValueTooLong exception (the column is text, this is the UX cap).
-  validates :name, length: { maximum: 1000 }
+  validates :name, length: { maximum: NAME_MAX_LENGTH,
+    message: ->(field, _) { "is too long (#{field.name.length} characters; the limit is #{NAME_MAX_LENGTH})" } }
   # A field_identifier wires a field to backend logic (Stripe, sectors,
   # email checks, etc.), so the same identifier must not appear twice on one form
   # or that logic would target an ambiguous field. Ordinary fields carry no

@@ -88,13 +88,11 @@ class FormsController < ApplicationController
 
     if fixed_option_field_emptied?
       @form.errors.add(:base, "A payment method question must offer at least one option.")
-      @form_fields = @form.form_fields.reorder(position: :asc)
-      render :edit, status: :unprocessable_content
+      render_edit_with_unsaved_changes
     elsif @form.save
       redirect_to edit_form_path(@form, event_id: params[:event_id]), notice: "Form updated."
     else
-      @form_fields = @form.form_fields.reorder(position: :asc)
-      render :edit, status: :unprocessable_content
+      render_edit_with_unsaved_changes
     end
   end
 
@@ -161,6 +159,13 @@ class FormsController < ApplicationController
   end
 
   private
+
+  # Renders the submitted (unsaved) fields rather than re-reading them, so a
+  # rejected save keeps every edit on the page for the admin to fix and resubmit.
+  def render_edit_with_unsaved_changes
+    @form_fields = @form.form_fields.sort_by { |field| [ field.position || Float::INFINITY, field.id || Float::INFINITY ] }
+    render :edit, status: :unprocessable_content
+  end
 
   # Sorts the standalone forms for the index frame. Count columns join their
   # association and order by the aggregate; direction is a symbol resolved from

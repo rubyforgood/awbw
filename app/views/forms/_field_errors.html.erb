@@ -1,0 +1,7 @@
+<% if messages.any? %>
+  <ul class="mt-2 space-y-0.5 text-sm text-red-700">
+    <% messages.each do |message| %>
+      <li><i class="fa-solid fa-circle-exclamation mr-1"></i><%= message %></li>
+    <% end %>
+  </ul>
+<% end %>

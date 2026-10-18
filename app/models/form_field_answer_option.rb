@@ -4,6 +4,8 @@ class FormFieldAnswerOption < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
+  validate :option_name_fits
+
   def name
     answer_option.name if answer_option
   end
@@ -17,10 +19,21 @@ class FormFieldAnswerOption < ApplicationRecord
   # would change every other field that uses the same option.
   def option_name=(value)
     value = value.to_s.strip
-    self.answer_option = if value.present?
+    self.answer_option = if value.length > AnswerOption::NAME_MAX_LENGTH
+      # Held unsaved so the editor can redisplay the text alongside the length error.
+      AnswerOption.new(name: value)
+    elsif value.present?
       AnswerOption.find_or_create_by!(name: value) do |option|
         option.position = (AnswerOption.maximum(:position) || 0) + 1
       end
     end
+  end
+
+  private
+
+  def option_name_fits
+    return if option_name.to_s.length <= AnswerOption::NAME_MAX_LENGTH
+
+    errors.add(:option_name, "is too long (#{option_name.length} characters; the limit is #{AnswerOption::NAME_MAX_LENGTH})")
   end
 end
