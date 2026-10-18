@@ -14,8 +14,14 @@ class PersonMatcher
   end
 
   def call
-    return if @email.blank? || @last_name.blank?
-    return if @first_names&.empty?
+    matches.first
+  end
+
+  # Everyone the name + email reaches, for a caller that has to tell one match from
+  # several rather than take the first.
+  def matches
+    return Person.none if @email.blank? || @last_name.blank?
+    return Person.none if @first_names&.empty?
 
     scope = Person.left_joins(:user)
       .where("LOWER(people.last_name) = ?", @last_name)
@@ -24,6 +30,6 @@ class PersonMatcher
       "LOWER(people.first_name) IN (:names) OR LOWER(COALESCE(people.legal_first_name, '')) IN (:names)",
       names: @first_names
     ) if @first_names
-    scope.first
+    scope
   end
 end

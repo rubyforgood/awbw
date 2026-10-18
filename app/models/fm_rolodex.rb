@@ -123,6 +123,8 @@ class FmRolodex < ApplicationRecord
     "FacilitatorSinceYear" => "people.member_since (with FacilitatorSinceMonth)",
     "PrimaryServiceArea" => "the person's primary sector",
     "OtherServiceArea" => "the person's additional sectors",
+    "Settings" => "the person's additional sectors",
+    "LifeExperiences" => "the person's additional sectors",
     "PrimaryAgeGroup" => "the person's primary age group",
     "DateEntered" => "people.created_at",
     "DateTimeModified" => "people.updated_at",

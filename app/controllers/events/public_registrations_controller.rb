@@ -404,7 +404,7 @@ module Events
       if person.addresses.exists?
         address = person.addresses.find_by(primary: true) || person.addresses.first
         keys << "mailing_street" if address.street_address.present?
-        keys << "mailing_address_type" if address.address_type.present?
+        keys << "mailing_address_type" if address.known_type?
         keys << "mailing_city" if address.city.present?
         keys << "mailing_state" if address.state.present?
         keys << "mailing_zip" if address.zip_code.present?
