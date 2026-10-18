@@ -9,10 +9,12 @@ summary: >-
   pronunciation, sectors, age groups) and the submitted organization now save from a
   standalone form the same way as on an event registration, for new and existing
   people. The latest answer wins.
-description: >-
-  <ul><li>Any other form fills in the organization's details and adds the job
-  affiliation from the position they typed, exactly as an event registration
-  does.</li></ul>
 pro_tips:
-  - "The changes land on the person's \"What this submission changed\" audit, so you can see exactly what a submission updated — including a tag it removed or reassigned."
-  - "An agreement form (on-demand, new job, reinstatement, close program) whose organization name matches exactly is now processed the moment it arrives, exactly as if you had clicked \"Link organization\" yourself. If the name matches nothing, or matches two organizations, it stays in your queue to resolve."
+  - The changes land on the person's "What this submission changed" audit, so you can
+    see exactly what a submission updated — including a tag it removed or reassigned.
+  - An agreement form (on-demand, new job, reinstatement, close program) whose
+    organization name matches exactly is now processed the moment it arrives, exactly
+    as if you had clicked "Link organization" yourself. If the name matches nothing,
+    or matches two organizations, it stays in your queue to resolve.
+  - Any other form fills in the organization's details and adds the job affiliation
+    from the position they typed, exactly as an event registration does.

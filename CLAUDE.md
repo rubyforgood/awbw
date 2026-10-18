@@ -376,10 +376,9 @@ An admin clicks **Sync latest updates** on `/features` (`FeatureCatalog#import!`
 matched by `name`) to pull newly-shipped features from the seed, **re-align the
 catalog-owned classification** on existing records (`CATALOG_FIELDS` — area,
 `display_status`, `released_on`, `action_path`, `pr_number`, so a seed fix like a
-wrong audience propagates), **replace the tips and description** whenever the seed
-carries them (`SEED_REVISED_FIELDS` — `pro_tips`, `description`, so trimming a seed's
-tips reaches existing records), **and fill in blank content** (`CONTENT_FIELDS` —
-`summary`, `external_url`) without overwriting it. **A feature edited in-app since creation (`Feature#edited?`) is skipped
+wrong audience propagates), **and fill in blank content** (`CONTENT_FIELDS` —
+`summary`, `pro_tips`, `external_url`, `description`) without ever overwriting what
+an admin wrote. **A feature edited in-app since creation (`Feature#edited?`) is skipped
 entirely** — sync writes don't bump `updated_at`, so only admin saves count as edits.
 
 - **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind

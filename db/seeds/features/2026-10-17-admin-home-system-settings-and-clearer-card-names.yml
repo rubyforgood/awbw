@@ -8,10 +8,7 @@ summary: >-
   Admin home has a new System settings & details box for Banners, FAQs,
   Features & tips, and Smart resource settings, and a few cards now use the
   same names as the rest of the portal.
-description: >-
-  <ul><li>Data health and Author credit divergences show how many items are
-  waiting, and Sync features &amp; tips shows how many new entries are ready to
-  add. The counts load a moment after the page.</li></ul>
 pro_tips:
   - "Renamed cards: Portal activity is now Activity, Licenses is now Professional licenses, and Resource roles is now Smart resource settings."
   - "Admins can open Tagging counts from a button at the top of the Tags page."
+  - "Data health and Author credit divergences show how many items are waiting, and Sync features & tips shows how many new entries are ready to add. The counts load a moment after the page."

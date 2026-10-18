@@ -9,17 +9,15 @@ summary: >-
   matches details each person chooses to show on their profile, so a match
   can't reveal something they hid. Admins still search and filter on everything.
 description: >-
-  <p>The people list only shows non-admins people with a searchable profile who
-  are active facilitators. Within that list, the contact info search, the
-  sector, age range, and organization filters, and the Primary sector, Primary
-  age range, and Affiliation(s) columns all follow each person's profile
-  settings. The admin-only filters (role, facilitator status, membership status,
-  staff tags, and topic subscriptions) don't appear for non-admins and are
-  ignored if added to the link by hand.</p><ul><li>Sector, age range, and
-  organization filters skip people who hid their sectors, age ranges, or
-  affiliations, and those columns stay blank for them.</li><li>To check what a
-  non-admin sees, compare against an admin search: admins still match hidden
-  details.</li></ul>
+  The people list only shows non-admins people with a searchable profile who are
+  active facilitators. Within that list, the contact info search, the sector,
+  age range, and organization filters, and the Primary sector, Primary age range,
+  and Affiliation(s) columns all follow each person's profile settings. The
+  admin-only filters (role, facilitator status, membership status, staff tags,
+  and topic subscriptions) don't appear for non-admins and are ignored if added
+  to the link by hand.
 pro_tips:
   - "Contact info search matches a person's email or phone only when their profile shows it, and never their secondary email, legal name, address, or an inactive phone."
   - "Names follow the display preference: someone shown as \"First L.\" can't be found by their last name."
+  - "Sector, age range, and organization filters skip people who hid their sectors, age ranges, or affiliations, and those columns stay blank for them."
+  - "To check what a non-admin sees, compare against an admin search: admins still match hidden details."

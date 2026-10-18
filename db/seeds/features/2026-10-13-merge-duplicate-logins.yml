@@ -9,14 +9,13 @@ summary: >-
   more than one login, such as after a person merge, and suggests keeping one
   that can still sign in.
 description: >-
-  <p>Reach it from the Dedupe link on the Users page or the admin home. The
+  Reach it from the Dedupe link on the Users page or the admin home. The
   preview shows both logins side by side — email, admin access, confirmation,
   and sign-in history — plus everything that moves to the kept login: its
   bookmarks, activity history, and the records it created or last edited. The
-  other login is deleted, so its email no longer signs in. It can't be
-  undone.</p><ul><li>Logins of two different people can't be merged. Merge the
-  people first.</li><li>You can't merge away the login you're signed in
-  with.</li></ul>
+  other login is deleted, so its email no longer signs in. It can't be undone.
 pro_tips:
   - "Use Swap to keep the other email as the login."
   - "The search finds every login, including unconfirmed, locked, and inactive ones, and labels each with its status."
+  - "Logins of two different people can't be merged. Merge the people first."
+  - "You can't merge away the login you're signed in with."

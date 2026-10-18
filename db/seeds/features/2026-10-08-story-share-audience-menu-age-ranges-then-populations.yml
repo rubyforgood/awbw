@@ -7,9 +7,8 @@ summary: >-
   The Story Share audience menu now lists featured age ranges, then featured
   story populations, as one row. The Story Share admin page manages each group
   separately, and you can drag to reorder within a group.
-description: >-
-  <ul><li>The home page's audience sections follow the same order.</li></ul>
 pro_tips:
   - "Only age ranges and story populations can be added to the audience menu."
   - "An unpublished category stays on the admin list, marked as hidden from the menu."
+  - "The home page's audience sections follow the same order."
 action_path: "/story_share/admin"

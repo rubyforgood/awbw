@@ -7,9 +7,7 @@ summary: >-
   Approve, Mark as resolved, and Decline each email the person who asked for
   the change. The buttons now sit in one row with an "An email will be sent"
   hint, and each asks you to confirm first and says who gets the email.
-description: >-
-  <ul><li>The Pending / Resolved / Declined strip shows how many requests are in
-  each.</li></ul>
 pro_tips:
   - "Hover the hint to preview the email and who it goes to."
   - "Your note goes into the email, so write it for the requester."
+  - "The Pending / Resolved / Declined strip shows how many requests are in each."

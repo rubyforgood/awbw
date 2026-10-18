@@ -9,11 +9,8 @@ summary: >-
   organization. They now show the primary sector and primary age group of each
   active facilitator at the organization, on the profile, the organizations list,
   the edit page, and tag search.
-description: >-
-  <ul><li>"See all sectors and age groups" on an organization's profile lists
-  everything its active facilitators hold, primary and additional.</li><li>The
-  "Show sectors" and "Show age ranges" profile settings also control that
-  breakdown page — turn both off and the link disappears.</li></ul>
 pro_tips:
   - "Searching organizations by sector or age group finds any organization with an active facilitator who lists it, as a primary or additional tag."
   - "In tag search, the number with an asterisk on an organization is how many of its active facilitators list that tag."
+  - "\"See all sectors and age groups\" on an organization's profile lists everything its active facilitators hold, primary and additional."
+  - "The \"Show sectors\" and \"Show age ranges\" profile settings also control that breakdown page — turn both off and the link disappears."
