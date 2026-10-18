@@ -57,11 +57,9 @@
           <% form.form_fields.order(:position).each do |field| %>
             <% if field.group_header? %>
               <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
-            <% elsif field.per_resource? %>
-              <%= render "events/callouts/clarity_field", field: field, submission: submission %>
             <% else %>
               <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form",
-                    value: submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
+                    value: field.per_resource? ? submission&.per_resource_values(field) : submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
             <% end %>
           <% end %>
         </div>

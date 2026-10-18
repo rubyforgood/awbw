@@ -208,9 +208,12 @@
                 <i class="fa-solid fa-circle-info text-2xs text-gray-400"></i>
                 <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-72 rounded-lg bg-blue-100 p-3 text-xs font-normal whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/fanout:block">
                   <p class="font-semibold">Fan out per resource</p>
-                  <p class="mt-1">Link resources here and the form asks this one question once per resource, with the resource title appended to the prompt &mdash; so &ldquo;Was it clear for&rdquo; becomes a separate question for each training topic.</p>
-                  <p class="mt-1">Each resource gets its own answer, recorded against the full sentence rather than the field, so renaming or unlinking a resource later leaves past answers readable.</p>
-                  <p class="mt-1">Works on choice questions only &mdash; radio, dropdown, or checkboxes &mdash; because every copy reuses this field&rsquo;s answer options.</p>
+                  <p class="mt-1">Asks this question once for each resource you add.</p>
+                  <ul class="mt-1 list-disc space-y-1 pl-4">
+                    <li><span class="font-semibold">Write the question so the resource name fits at the end.</span> &ldquo;This workshop supported my growth:&rdquo; shows as &ldquo;This workshop supported my growth: <span class="font-semibold">The Touchstone Journey</span>&rdquo;.</li>
+                    <li><span class="font-semibold">Add every resource you want asked about.</span> Any you leave out, or that get deleted, are skipped without warning.</li>
+                    <li><span class="font-semibold">No resources?</span> It&rsquo;s asked once, as written.</li>
+                  </ul>
                 </div>
               </span>
             </summary>
