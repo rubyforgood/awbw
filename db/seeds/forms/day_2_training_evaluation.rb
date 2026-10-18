@@ -3,7 +3,7 @@
 #
 #   load Rails.root.join("db/seeds/forms/day_2_training_evaluation.rb")
 #
-# Builds one standalone form (role day_2_survey) and leaves the "Day 2 Survey"
+# Builds one standalone form (role general) and leaves the "Day 2 Survey"
 # template the Feedback surveys callout uses untouched. Re-running rebuilds the
 # questions while the form has no submissions, and stops once anyone has answered.
 # Set PHOTO_CONTACT (e.g. "Jo at jo@example.org") to name who receives extra photos.
@@ -80,8 +80,8 @@ if form&.form_submissions&.exists?
   puts "\"#{form_name}\" (form #{form.id}) already has #{form.form_submissions.count} submission(s); leaving it untouched."
 else
   ActiveRecord::Base.transaction do
-    form ||= Form.create!(name: form_name, role: "day_2_survey")
-    form.update!(header: header, role: "day_2_survey")
+    form ||= Form.create!(name: form_name, role: "general")
+    form.update!(header: header, role: "general")
     form.form_fields.destroy_all
 
     questions.each.with_index(1) do |question, position|

@@ -9,8 +9,8 @@
 # any that already exist).
 class SurveyFormSeeder
   TEMPLATES = [
-    { name: "Day 1 Survey", role: "day_1_survey", sections: %i[day_1_survey content_sharing_preferences] },
-    { name: "Day 2 Survey", role: "day_2_survey", sections: %i[day_2_survey content_sharing_preferences] },
+    { name: "Day 1 Survey", role: "general", sections: %i[day_1_survey content_sharing_preferences] },
+    { name: "Day 2 Survey", role: "general", sections: %i[day_2_survey content_sharing_preferences] },
     { name: "Post-Event Survey", role: "post_event_survey", sections: %i[post_event_feedback content_sharing_preferences] },
     { name: "Post-Training Recipients Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
   ].freeze

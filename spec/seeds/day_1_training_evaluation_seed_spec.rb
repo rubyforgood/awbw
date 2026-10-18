@@ -10,7 +10,7 @@ RSpec.describe "seed: Day 1 training evaluation" do
     run_seed
 
     fields = form.form_fields.reorder(:position)
-    expect(form.role).to eq("day_1_survey")
+    expect(form.role).to eq("general")
     expect(fields.count).to eq(26)
     expect(fields.map(&:answer_type).tally).to include("single_select_radio" => 14, "file_upload" => 1, "multi_select_checkbox" => 1)
     expect(fields.none?(&:required?)).to be(true)

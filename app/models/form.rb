@@ -16,6 +16,21 @@ class Form < ApplicationRecord
   # the person-page "send link" panel and the submissions index scenario filter.
   AGREEMENT_ROLES = %w[registration new_job reinstatement close_program].freeze
 
+  # The roles the form editor offers; FormDecorator#role_options keeps a form's
+  # current role selectable even when it isn't listed here.
+  ROLE_OPTIONS = [
+    [ "General", "general" ],
+    [ "Registration", "registration" ],
+    [ "New job", "new_job" ],
+    [ "Reinstatement", "reinstatement" ],
+    [ "Scholarship", "scholarship" ],
+    [ "Bulk Payment", "bulk_payment" ],
+    [ "Continuing Education", "continuing_education" ],
+    [ "Close program", "close_program" ],
+    [ "Post-event survey", "post_event_survey" ],
+    [ "Post-training recipients survey", "recipient_survey" ]
+  ].freeze
+
   # The questions that identify a public respondent (used to build their Person).
   IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
 

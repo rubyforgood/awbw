@@ -1,4 +1,12 @@
 class FormDecorator < ApplicationDecorator
+  # Form::ROLE_OPTIONS plus the form's current role when it isn't offered, so
+  # saving the editor never silently rewrites the role.
+  def role_options
+    return Form::ROLE_OPTIONS if role.blank? || Form::ROLE_OPTIONS.any? { |_, value| value == role }
+
+    Form::ROLE_OPTIONS + [ [ role.humanize, role ] ]
+  end
+
   # An owned (owner-attached) form's answers don't live in the form-submission
   # system: a FormBuilder-owned report/log template stores its answers as
   # report_form_field_answers, surfaced on the reporting indexes. Resolve the

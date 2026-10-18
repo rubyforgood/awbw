@@ -3,6 +3,16 @@ require "rails_helper"
 RSpec.describe FormDecorator do
   include Rails.application.routes.url_helpers
 
+  describe "#role_options" do
+    it "offers the standard roles" do
+      expect(build(:form, role: "registration").decorate.role_options).to eq(Form::ROLE_OPTIONS)
+    end
+
+    it "adds a form's unlisted current role so it stays selectable" do
+      expect(build(:form, role: "day_1_survey").decorate.role_options.last).to eq([ "Day 1 survey", "day_1_survey" ])
+    end
+  end
+
   describe "#answers_path / #answers_label" do
     it "links a workshop-log template to the logs index filtered by its windows type" do
       builder = create(:form_builder, name: "Adult Workshop Log")
