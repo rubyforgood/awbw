@@ -6,14 +6,14 @@ module PersonServices
   #                        settings, life experiences and age group translate to, and
   #                        the archive's own entry date), plus the row's addresses and
   #                        phones
-  #   * linked           — every person PersonMatcher finds for the row's name + email
-  #                        (which reaches their secondary and login addresses too), or
-  #                        every same-name person with no email when the row has none,
-  #                        adds the row's ID to their filemaker_code list and is filled
-  #                        from it: blank fields take the archive's value, missing
-  #                        addresses, phones and tags are added, and a field the archive
-  #                        disagrees on keeps the person's value — noted in #differences
-  #                        and as a comment on the person
+  #   * linked           — every person PersonMatcher finds for the row's name + one of
+  #                        its emails (reaching the person's secondary and login
+  #                        addresses too), or every same-name person with no email when
+  #                        the row holds none, adds the row's ID to their filemaker_code
+  #                        list and is filled from it: blank fields take the archive's
+  #                        value, missing addresses, phones and tags are added, and a
+  #                        field the archive disagrees on keeps the person's value —
+  #                        noted in #differences and as a comment on the person
   #   * already_imported — a person already carries the row's ID
   #   * skipped          — agency, soft-deleted, or nameless rows
   #   * failed           — the Person didn't validate
@@ -37,6 +37,9 @@ module PersonServices
                       "mobile" => "personal", "work" => "work", "business" => "work",
                       "professional" => "work", "mailing" => "mailing" }.freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
+    # Both archive fields hold an address (FmRolodex::PORTAL_FIELDS maps each to
+    # people.email), the primary one first, so it becomes the person's own email.
+    EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
     UNKNOWN_LOCALITY = "Unknown"
     STRING_LIMIT = 255
 
@@ -81,18 +84,28 @@ module PersonServices
       return record(:skipped, "#{label}: marked deleted") if flag?(data["Delete"])
       return record(:skipped, "#{label}: missing first or last name") if first_name.blank? || last_name.blank?
 
-      email, email_2 = data["EMail"].to_s.scan(EMAIL_PATTERN)
-
-      if email
-        match = PersonMatcher.new(email:, last_name:, first_names: [ first_name ]).matches.to_a
-        return link(match, rolodex, label) if match.any?
-      else
-        no_email = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
-                         .where(email: [ nil, "" ]).to_a
-        return link(no_email, rolodex, label) if no_email.any?
-      end
+      row_emails = emails(data)
+      email, email_2 = row_emails
+      match = match_people(row_emails, first_name, last_name)
+      return link(match, rolodex, label) if match.any?
 
       create(rolodex, label, first_name:, last_name:, email:, email_2:)
+    end
+
+    # Everyone the row's name and any of the addresses it holds reaches — the person sees
+    # each of them as their email, so a row whose second field carries the one the portal
+    # knows still finds them. A row with no address at all can only go by the name, and
+    # then only to someone the portal has no email for either.
+    def match_people(row_emails, first_name, last_name)
+      return same_name_without_email(first_name, last_name) if row_emails.empty?
+
+      row_emails.lazy.map { |email| PersonMatcher.new(email:, last_name:, first_names: [ first_name ]).matches.to_a }
+                .find(&:any?) || []
+    end
+
+    def same_name_without_email(first_name, last_name)
+      Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
+            .where(email: [ nil, "" ]).to_a
     end
 
     # Several matches are one person entered more than once, so each carries the code
@@ -179,7 +192,13 @@ module PersonServices
       return if person.email_2.present?
 
       held = [ person.email, person.user&.email ].compact_blank.map(&:downcase)
-      person.email_2 = data["EMail"].to_s.scan(EMAIL_PATTERN).find { |email| held.exclude?(email.downcase) }
+      person.email_2 = emails(data).find { |email| held.exclude?(email.downcase) }
+    end
+
+    # The archive words an email field freely ("Attn: someone", a note, two addresses at
+    # once), so each is read for the addresses in it; the same one twice counts once.
+    def emails(data)
+      EMAIL_FIELDS.flat_map { |field| data[field].to_s.scan(EMAIL_PATTERN) }.uniq(&:downcase)
     end
 
     def same?(portal, archive)
@@ -231,8 +250,8 @@ module PersonServices
     def tag_service_areas(person, data)
       primary = translate(data, PRIMARY_TAG_FIELDS)
       additional = translate(data, ADDITIONAL_TAG_FIELDS)
-      sector_primary_ids, sector_extra_ids = split_primary(primary.flat_map(&:sector_ids).uniq)
-      age_primary_ids, age_extra_ids = split_primary(primary.flat_map(&:age_group_ids).uniq)
+      sector_primary_ids, sector_extra_ids = split_primary(primary.map(&:sector_ids))
+      age_primary_ids, age_extra_ids = split_primary(primary.map(&:age_group_ids))
 
       [
         apply_tags(person, :tag_sectors, Sector, person.sectorable_items.where(is_primary: true).pluck(:sector_id),
@@ -257,10 +276,12 @@ module PersonServices
       fields.map { |field| @translation.resolve(data[field]) }
     end
 
-    # A primary answer naming several of a kind — "Families" is every age range — has no
-    # single one to pick, so they all land as additional.
-    def split_primary(ids)
-      ids.one? ? [ ids, [] ] : [ [], ids ]
+    # Each primary field answers for itself: a primary answer naming several of a kind —
+    # "Families" is every age range — has no single one to pick, so they all land as
+    # additional, while the other primary field's single answer still leads.
+    def split_primary(id_sets)
+      primary, additional = id_sets.partition(&:one?).map { |sets| sets.flatten.uniq }
+      [ primary, additional - primary ]
     end
 
     def names(model, ids)
@@ -313,9 +334,9 @@ module PersonServices
 
       {
         street_address: clip(street),
-        city:,
-        state:,
-        zip_code: fields["AddrsPostalCode"].to_s.strip,
+        city: clip(city),
+        state: clip(state),
+        zip_code: fields["AddrsPostalCode"].to_s.strip.truncate(STRING_LIMIT),
         country: clip(fields["AddrsCountry"]),
         county: county(fields),
         address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
@@ -359,7 +380,8 @@ module PersonServices
     end
 
     # Every string copied here lands in a varchar(255) the archive's free text isn't
-    # bounded by, and an over-long incidental field would otherwise cost the person.
+    # bounded by, and an over-long incidental field would otherwise cost the person —
+    # or, for a column with no length validation behind it, raise mid-import.
     def clip(value)
       value.presence && value.to_s.truncate(STRING_LIMIT)
     end

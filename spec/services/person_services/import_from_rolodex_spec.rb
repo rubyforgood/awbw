@@ -150,6 +150,20 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(import.differences).to be_empty
     end
 
+    it "takes each primary field's answer as primary in its own right" do
+      rolodex("00062", EMail: "ada@example.com", PrimaryServiceArea: "Children's Services", PrimaryAgeGroup: "Adults")
+      rolodex("00063", FirstName: "Grace", EMail: "grace@example.com",
+                       PrimaryServiceArea: "Children's Services", PrimaryAgeGroup: "Families")
+
+      described_class.new.call
+
+      expect(Person.find_by!(filemaker_code: "00062").primary_age_groups).to contain_exactly(children, adults)
+
+      grace = Person.find_by!(filemaker_code: "00063")
+      expect(grace.primary_age_groups).to eq([ children ])
+      expect(grace.additional_age_groups).to contain_exactly(teens, adults, elders)
+    end
+
     it "tags every age range for families without marking one primary" do
       rolodex("00057", EMail: "ada@example.com", PrimaryAgeGroup: "Families")
 
@@ -288,6 +302,17 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(person.addresses.sole.street_address.length).to eq(255)
   end
 
+  it "truncates an over-long city, state, and postal code instead of losing the address" do
+    FmAddress.create!(fm_id: "A10", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "c" * 300,
+                                            "AddrsState" => "s" * 300, "AddrsPostalCode" => "9" * 300 })
+    rolodex("00039", EMail: "ada@example.com", PrimaryAddrsID: "A10")
+
+    expect(results[:failed]).to be_empty
+
+    address = Person.find_by!(filemaker_code: "00039").addresses.sole
+    expect([ address.city.length, address.state.length, address.zip_code.length ]).to eq([ 255, 255, 255 ])
+  end
+
   it "types a phone the contact method can't take as unknown, keeping it on the address" do
     FmAddress.create!(fm_id: "A5", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Los Angeles",
                                            "AddrsState" => "CA", "AddrsType" => "Mailing" })
@@ -415,6 +440,35 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
     expect { results }.not_to change(Person, :count)
     expect(person.reload.filemaker_code).to eq("00040")
+  end
+
+  it "takes the primary email field as the person's email, the other field's as their second" do
+    rolodex("00041", EmailPrimary: "ada@example.com", EMail: "ada@work.example.com")
+    rolodex("00042", FirstName: "Grace", EmailPrimary: "grace@example.com", EMail: "grace@example.com")
+    rolodex("00043", FirstName: "Hedy", EMail: "hedy@example.com")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00041"))
+      .to have_attributes(email: "ada@example.com", email_2: "ada@work.example.com")
+    expect(Person.find_by!(filemaker_code: "00042")).to have_attributes(email: "grace@example.com", email_2: nil)
+    expect(Person.find_by!(filemaker_code: "00043")).to have_attributes(email: "hedy@example.com", email_2: nil)
+  end
+
+  it "links a person the archive knows only by its primary email field" do
+    person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+    rolodex("00044", EmailPrimary: "ada@example.com")
+
+    expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
+    expect(person.reload.filemaker_code).to eq("00044")
+  end
+
+  it "links a person only the row's other email field reaches" do
+    person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+    rolodex("00045", EmailPrimary: "ada@old.example.com", EMail: "ada@example.com")
+
+    expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
+    expect(person.reload).to have_attributes(filemaker_code: "00045", email_2: "ada@old.example.com")
   end
 
   it "leaves rows whose ID a person already carries alone" do
