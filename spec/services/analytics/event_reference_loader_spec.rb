@@ -33,6 +33,14 @@ RSpec.describe Analytics::EventReferenceLoader do
       expect(map[[ "Sector", sector.id ]]).to eq(sector)
     end
 
+    it "loads the change request an event was stamped with" do
+      request = create(:profile_change_request)
+
+      map = described_class.new([ event("profile_change_request_id" => request.id) ]).records
+
+      expect(map[[ "ProfileChangeRequest", request.id ]]).to eq(request)
+    end
+
     it "loads each event's own resource from its resource_type/resource_id columns" do
       workshop = create(:workshop)
       events = [ build(:ahoy_event, resource_type: "Workshop", resource_id: workshop.id, properties: {}) ]

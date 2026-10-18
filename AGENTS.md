@@ -62,7 +62,7 @@ This codebase (Rails 8.1)
 | `app/decorators/` | Draper decorators for view logic | ~50 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
 | `app/presenters/` | Presentation objects | 6 files |
-| `app/helpers/` | View helpers | ~49 files |
+| `app/helpers/` | View helpers | ~50 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
 
@@ -204,7 +204,7 @@ action, or `authorize! :workshop, to: :summary?`).
 
 ### Analytics
 
-- `Analytics::LifecycleBuffer` — Thread-safe event buffer for batch tracking
+- `Analytics::LifecycleBuffer` — Thread-safe event buffer for batch tracking; at flush it stamps `Current.form_submission_id` onto every event; `.tagging(props) { }` adds properties to just the events buffered inside the block (`ProfileChangeRequestsController#approve` tags the approval's writes with `profile_change_request_id`), and `Ahoy::EventDecorator#detail_rows` links a stamped change request to its card in the admin queue. That link carries `return_to=record|activities` + the row's event id, so the queue's eyebrow goes back to whichever change log it was read in, narrowed to the event's resource (`ProfileChangeRequestsHelper#change_requests_return_link`)
 - `Analytics::EventBuilder` — Constructs analytics event payloads
 - `Analytics::AhoyTracker` — Coordinates ahoy event tracking
 - `Analytics::PersonActivityEvents` — Aggregates Ahoy events for a person, their user, and associated data (powers the person edit History card + `person_id` filter on the Ahoy activities index)
