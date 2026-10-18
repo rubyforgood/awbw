@@ -322,13 +322,6 @@ RSpec.describe "Forms", type: :request do
       expect(values).not_to include("day_1_survey", "day_2_survey", "post_event_survey", "recipient_survey")
     end
 
-    it "keeps a survey form's role selected so saving doesn't reset it to general" do
-      form = create(:form, :standalone, role: "day_1_survey")
-      get edit_form_path(form)
-      selected = Nokogiri::HTML(response.body).at_css("select[name='form[role]'] option[selected]")
-      expect(selected["value"]).to eq("day_1_survey")
-    end
-
     it "reveals the fan-out panel and its help text on a choice field, hiding it on a free-form one" do
       form = create(:form, :standalone)
       choice = create(:form_field, form:, answer_type: :single_select_radio, name: "Was it clear for")

@@ -16,8 +16,6 @@ class Form < ApplicationRecord
   # the person-page "send link" panel and the submissions index scenario filter.
   AGREEMENT_ROLES = %w[registration new_job reinstatement close_program].freeze
 
-  # The roles the form editor offers; FormDecorator#role_options keeps a form's
-  # current role selectable even when it isn't listed here.
   ROLE_OPTIONS = [
     [ "General", "general" ],
     [ "Registration", "registration" ],
