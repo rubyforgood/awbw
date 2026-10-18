@@ -1,4 +1,5 @@
-<% activity = event.decorate(context: { record_cache: local_assigns[:record_cache] }) %>
+<%# return_to names this log so a link out of it can hand the destination's eyebrow a way back. %>
+<% activity = event.decorate(context: { record_cache: local_assigns[:record_cache], return_to: "activities" }) %>
 <% chip = activity.activity_chip %>
 <% resource = activity.resource_link %>
 <% path = activity.activity_path %>

@@ -303,7 +303,7 @@ RSpec.describe "Profile change requests", type: :request do
       expect(active.reload.organization_address).to eq(address)
     end
 
-    it "sends the new address and each role it sets to the Ahoy change log" do
+    it "logs the new address and each role it sets to Ahoy, stamped with the change request" do
       organization = create(:organization)
       facilitator = create(:affiliation, person: person, organization: organization, title: "Facilitator", start_date: 1.year.ago)
       job = create(:affiliation, person: person, organization: organization, title: "Program Manager", start_date: 2.years.ago)
@@ -311,19 +311,15 @@ RSpec.describe "Profile change requests", type: :request do
                        requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_WORK_ADDRESS,
                        proposed_street_address: "12 Elm St", proposed_city: "Reno", proposed_state: "NV")
       Analytics::LifecycleBuffer.store.clear
-      events = []
-      allow(Analytics::LifecycleBuffer).to receive(:flush) do
-        events.concat(Analytics::LifecycleBuffer.store)
-        Analytics::LifecycleBuffer.store.clear
-      end
+      tracked = []
+      allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, properties| tracked << [ name, properties ] }
 
       post approve_profile_change_request_path(request)
 
       address = facilitator.reload.organization_address
-      tracked = ->(name) { events.select { |event| event[:name] == name }.map { |event| event.dig(:properties, :resource_id) } }
-      expect(tracked.call("create.address")).to include(address.id)
-      expect(tracked.call("update.affiliation")).to include(facilitator.id, job.id)
-      expect(tracked.call("update.profile_change_request")).to include(request.id)
+      stamped = ->(name) { tracked.select { |event_name, properties| event_name == name && properties[:profile_change_request_id] == request.id }.map { |_, properties| properties[:resource_id] } }
+      expect(stamped.call("create.address")).to include(address.id)
+      expect(stamped.call("update.affiliation")).to include(facilitator.id, job.id)
     end
 
     it "approves an add-a-new-affiliation request by creating it" do
@@ -338,6 +334,22 @@ RSpec.describe "Profile change requests", type: :request do
 
       expect(request.reload).to be_resolved
       expect(person.affiliations.exists?(organization: org, title: "Facilitator")).to be(true)
+    end
+
+    it "stamps the records an approval writes onto Ahoy with the change request" do
+      org = create(:organization)
+      request = create(:profile_change_request, person: person, field: "affiliation",
+                       requested_value: "Add a new affiliation", organization: org,
+                       proposed_title: "Facilitator", proposed_start_date: "2026-01-01", details: nil)
+      Analytics::LifecycleBuffer.store.clear
+      tracked = []
+      allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, properties| tracked << [ name, properties ] }
+
+      post approve_profile_change_request_path(request)
+
+      affiliation = person.affiliations.find_by!(organization: org)
+      created = tracked.find { |name, properties| name == "create.affiliation" && properties[:resource_id] == affiliation.id }
+      expect(created&.last).to include(profile_change_request_id: request.id)
     end
 
     it "responds to a turbo_stream request by replacing the row and flash" do
@@ -375,6 +387,29 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response).to be_successful
       expect(response.body).to include("Changes requested")
       expect(response.body).to include("profile_change_requests_results")
+    end
+
+    it "renders the card up front for a highlight link, so the anchor can scroll to it" do
+      request = create(:profile_change_request, person: person, details: "please fix my dates")
+
+      get profile_change_requests_path(person_id: person.id, highlight: request.id, anchor: "profile_change_request_#{request.id}")
+
+      expect(response.body).to include("please fix my dates")
+      expect(response.body).to match(/id="profile_change_request_#{request.id}"/)
+      expect(response.body).to include("ring-yellow-500")
+    end
+
+    it "points the eyebrow at the change log a highlight link came from" do
+      request = create(:profile_change_request, person: person)
+      activity = create(:ahoy_event, resource_type: "Person", resource_id: person.id)
+
+      get profile_change_requests_path(person_id: person.id, highlight: request.id,
+                                       return_to: "activities", return_activity: activity.id)
+
+      expect(response.body).to include(CGI.escapeHTML(
+        admin_activities_events_path(resource_type: "Person", resource_id: person.id)
+      ))
+      expect(response.body).to include("Activity log")
     end
 
     it "lists requests in the results frame" do

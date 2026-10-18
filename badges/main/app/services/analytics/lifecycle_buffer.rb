@@ -1,6 +1,8 @@
 # app/services/analytics/lifecycle_buffer.rb
 module Analytics
   class LifecycleBuffer
+    PROFILE_CHANGE_REQUEST_KEY = "profile_change_request_id".freeze
+
     def self.push(event)
       store << event
     end
@@ -26,6 +28,17 @@ module Analytics
 
       payload[:properties] ||= {}
       payload[:properties][:form_submission_id] ||= Current.form_submission_id
+    end
+
+    # Adds properties to just the events buffered while the block runs, e.g. so every
+    # record an approved change request writes traces back to the request.
+    def self.tagging(properties)
+      start = store.size
+      yield
+    ensure
+      store.drop(start).each do |payload|
+        payload[:properties] = properties.merge(payload[:properties] || {})
+      end
     end
 
     def self.store

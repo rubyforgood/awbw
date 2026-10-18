@@ -179,13 +179,41 @@ module Ahoy
     # record references (association changes, associated records) become links to
     # the record's show page so admins can jump straight to it.
     def detail_rows
-      rows = extra_properties.except("changes")
-      return [] if rows.empty?
-
-      flatten_rows(rows)
+      rows = extra_properties.except("changes", Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY)
+      [ change_request_row, *(flatten_rows(rows) if rows.present?) ].compact
     end
 
     private
+
+    # The approved change request that made this change, linked to its card in the admin queue.
+    def change_request_row
+      id = properties_hash[Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY]
+      return if id.blank?
+
+      request = find_referenced_record("ProfileChangeRequest", id)
+      { label: "From change request", depth: 0,
+        link: { text: request&.decorate&.requester_summary || "Change request ##{id}", path: change_request_path(request) } }
+    end
+
+    # The queue filtered to that person and status, scrolled to the card and
+    # highlighting it (the queue renders the card up front for a highlight link).
+    def change_request_path(request)
+      return nil unless request
+
+      h.profile_change_requests_path(status: request.status, person_id: request.person_id,
+                                     highlight: request.id, anchor: h.dom_id(request),
+                                     **return_to_params)
+    end
+
+    # Hands the queue's eyebrow its way back to the change log this row was read in:
+    # which log (context[:return_to], set by the views that render one) and this row,
+    # whose resource the destination reads for where exactly to return to.
+    def return_to_params
+      origin = context[:return_to]
+      return {} if origin.blank?
+
+      { return_to: origin, return_activity: object.id }
+    end
 
     def compute_resource_link
       commentable = comment&.commentable || deleted_commentable
