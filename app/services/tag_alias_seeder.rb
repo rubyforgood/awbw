@@ -35,6 +35,7 @@ class TagAliasSeeder
     "Oppression Against LGBTQIA+" => "LGBTQIA+",
     "People Who Do Harm/Batterers" => "Batterers Intervention",
     "Racism and Marginalization" => "Racial/Social Justice",
+    "Racism & Marginalization" => "Racial/Social Justice",
     "Religious Trauma" => "Religious/Faith-Based",
     "Secondary/Vicarious Trauma" => "Staff/Organizational Development",
     "Student-Related Stress" => "Education",
@@ -109,7 +110,8 @@ class TagAliasSeeder
     "Substance Abuse Recovery" => "Substance Use/Recovery"
   }.freeze
 
-  # Names the portal itself used before the 2026 consolidation renamed and merged them.
+  # Names the portal itself used before the 2026 consolidation renamed and merged them,
+  # plus the consolidation sheet's "Sytems" spelling of the tag it proposed.
   PORTAL_SECTORS = {
     "Child abuse" => "Child Abuse/Neglect",
     "Children of Domestic Violence Survivors" => "Domestic Violence",
@@ -129,6 +131,7 @@ class TagAliasSeeder
     "Staff & organizational development" => "Staff/Organizational Development",
     "Student" => "Education",
     "Substance use" => "Substance Use/Recovery",
+    "Sytems/Policy Change" => "Systems/Policy Change",
     "Veterans & military" => "Military/Veterans"
   }.freeze
 

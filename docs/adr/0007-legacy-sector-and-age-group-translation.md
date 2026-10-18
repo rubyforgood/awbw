@@ -40,7 +40,7 @@ Translation is by lookup table, not by string similarity. A value that isn't in 
   tails ("Grief/loss (including COVID-related)") need no separate entry.
 - Many source values mapping to one tag is normal. Only `C & T` maps to two tags.
 - The portal spelling wins where the spreadsheet differs: **`Systems/Policy Change`** (the
-  sheet's "Sytems" is a typo).
+  sheet's "Sytems" is a typo, recorded as an alias so it still resolves).
 - `Other` is a form-only catch-all. It is never a translation target.
 
 ### FileMaker `PrimaryServiceArea` → sector
@@ -102,7 +102,7 @@ who they serve — they aren't sectors and have no portal home.
 | Oppression Against LGBTQIA+ | LGBTQIA+ |
 | Pandemic-Related Stress | Health/Medical |
 | People Who Do Harm/Batterers | Batterers Intervention |
-| Racism and Marginalization | Racial/Social Justice |
+| Racism and Marginalization (the sheet writes it "Racism & Marginalization"; both resolve) | Racial/Social Justice |
 | Religious Trauma | Religious/Faith-Based |
 | Restorative/Transformative Justice | Restorative/Transformative Justice |
 | Secondary/Vicarious Trauma | Staff/Organizational Development |

@@ -20,6 +20,14 @@ RSpec.describe TagAliasSeeder do
     expect(TagAlias.find_by(name: "Homeless services").aliasable).to eq(Sector.find_by(name: "Homelessness"))
   end
 
+  it "resolves the translation sheet's own wording of a term" do
+    described_class.call(quiet: true)
+    translation = TagTranslation.new
+
+    expect(translation.resolve("Racism & Marginalization").sector_ids).to eq([ Sector.find_by(name: "Racial/Social Justice").id ])
+    expect(translation.resolve("Sytems/Policy Change").sector_ids).to eq([ Sector.find_by(name: "Systems/Policy Change").id ])
+  end
+
   it "records a term that names two age groups once for each" do
     described_class.call(quiet: true)
 
