@@ -753,6 +753,60 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("too long")
     end
 
+    context "when one question is over a length limit" do
+      let(:form) { create(:form, :standalone) }
+      let!(:untouched) { create(:form_field, form:, name: "How was the training?", position: 1) }
+      let!(:choice) { create(:form_field, form:, name: "Rate the facilitator", answer_type: :single_select_radio, position: 2) }
+      let(:long_option) { "Strongly agree, and here is why. " * 10 }
+
+      def submit_edits(choice_attrs)
+        patch form_path(form), params: {
+          form: { form_fields_attributes: {
+            "0" => { id: untouched.id, name: "How was Training Day 1?" },
+            "1" => { id: choice.id }.merge(choice_attrs),
+            "2" => { name: "What will you use first?", answer_type: "free_form_input_paragraph" }
+          } }
+        }
+      end
+
+      it "rejects an over-long answer option with an error instead of crashing" do
+        expect {
+          submit_edits(form_field_answer_options_attributes: { "0" => { option_name: long_option } })
+        }.not_to change(AnswerOption, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("Answer option is too long")
+        expect(choice.reload.form_field_answer_options).to be_empty
+      end
+
+      it "names the question that is over the limit" do
+        submit_edits(form_field_answer_options_attributes: { "0" => { option_name: long_option } })
+
+        summary = Nokogiri::HTML(response.body).at_css("[data-form-errors]").text
+        expect(summary).to include("Question 2")
+        expect(summary).to include("Rate the facilitator")
+        expect(summary).not_to include("How was Training Day 1?")
+      end
+
+      it "keeps every unsaved edit on the page so one fix saves them all" do
+        submit_edits(name: "x" * 1001)
+
+        doc = Nokogiri::HTML(response.body)
+        names = doc.css("textarea[name$='[name]']").map(&:text).map(&:strip)
+        expect(names).to include("How was Training Day 1?", "x" * 1001, "What will you use first?")
+        expect(untouched.reload.name).to eq("How was the training?")
+      end
+
+      it "opens the over-long question's settings so the error is visible" do
+        submit_edits(form_field_answer_options_attributes: { "0" => { option_name: long_option } })
+
+        row = Nokogiri::HTML(response.body).at_css("#form_field_#{choice.id}")
+        expect(row["class"]).to include("border-red")
+        expect(row.at_css("[data-field-options-expanded-value='true']")).to be_present
+        expect(row.at_css("input[value='#{long_option.strip}']")).to be_present
+      end
+    end
+
     it "renames a multiple-choice field's answer option without renaming the shared option" do
       form = FormBuilderService.new(name: "Test", sections: %i[marketing]).call
       field = form.form_fields.find_by(field_identifier: "interested_in_more")
