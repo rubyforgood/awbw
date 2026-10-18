@@ -3,12 +3,12 @@
 #
 #   load Rails.root.join("db/seeds/forms/day_1_training_evaluation.rb")
 #
-# Builds the "Day 1 Survey" form the Feedback surveys callout delivers, rebuilding
+# Builds the day_1_survey form the Feedback surveys callout delivers, rebuilding
 # the seeded template in place. Re-running rebuilds the questions while the form
 # has no submissions, and stops once anyone has answered.
 # Set PHOTO_CONTACT (e.g. "Jo at jo@example.org") to name who receives extra photos.
 
-form_name = SurveyFormSeeder::DAY_1_FORM_NAME
+role = "day_1_survey"
 photo_contact = ENV["PHOTO_CONTACT"].presence
 
 header = <<~HTML
@@ -78,14 +78,14 @@ questions = [
     options: [ "My agency name", "My first name", "My first and last name", "State I'm located in", "City I'm located in" ] }
 ]
 
-form = Form.standalone.find_by(name: form_name)
+form = Form.survey(role)
 
 if form&.form_submissions&.exists?
-  puts "\"#{form_name}\" (form #{form.id}) already has #{form.form_submissions.count} submission(s); leaving it untouched."
+  puts "\"#{form.name}\" (form #{form.id}) already has #{form.form_submissions.count} submission(s); leaving it untouched."
 else
   ActiveRecord::Base.transaction do
-    form ||= Form.create!(name: form_name, role: "general")
-    form.update!(header: header, role: "general")
+    form ||= Form.create!(name: "Day 1 Survey", role:)
+    form.update!(header:)
     form.form_fields.destroy_all
 
     questions.each.with_index(1) do |question, position|
@@ -100,6 +100,6 @@ else
     end
   end
 
-  puts "Built \"#{form_name}\" (form #{form.id}) with #{form.form_fields.count} questions."
+  puts "Built \"#{form.name}\" (form #{form.id}) with #{form.form_fields.count} questions."
   puts "Set PHOTO_CONTACT and re-run to name who receives extra photos." unless photo_contact
 end

@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "seed: Day 1 training evaluation" do
   let(:seed) { Rails.root.join("db/seeds/forms/day_1_training_evaluation.rb") }
-  let(:form) { Form.standalone.find_by!(name: SurveyFormSeeder::DAY_1_FORM_NAME) }
+  let(:form) { Form.standalone.find_by!(role: "day_1_survey") }
 
   def run_seed = expect { load seed }.to output.to_stdout
 
@@ -10,7 +10,7 @@ RSpec.describe "seed: Day 1 training evaluation" do
     run_seed
 
     fields = form.form_fields.reorder(:position)
-    expect(form.role).to eq("general")
+    expect(form.role).to eq("day_1_survey")
     expect(fields.count).to eq(26)
     expect(fields.map(&:answer_type).tally).to include("single_select_radio" => 14, "file_upload" => 1, "multi_select_checkbox" => 1)
     expect(fields.none?(&:required?)).to be(true)
@@ -32,9 +32,10 @@ RSpec.describe "seed: Day 1 training evaluation" do
     expect(form.name).to eq("Day 1 Survey")
   end
 
-  it "rebuilds the seeded template in place" do
+  it "rebuilds the seeded template in place, even after staff renamed it" do
     SurveyFormSeeder.call
-    template = Form.find_by!(name: "Day 1 Survey")
+    template = Form.find_by!(role: "day_1_survey")
+    template.update!(name: "Renamed by staff")
 
     expect { run_seed }.not_to change(Form, :count)
     expect(template.form_fields.count).to eq(26)

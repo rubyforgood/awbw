@@ -315,11 +315,11 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("First Name")
     end
 
-    it "doesn't offer the survey roles for a general form" do
+    it "offers the survey roles" do
       form = create(:form, :standalone, role: "general")
       get edit_form_path(form)
       values = Nokogiri::HTML(response.body).css("select[name='form[role]'] option").map { |option| option["value"] }
-      expect(values).not_to include("day_1_survey", "day_2_survey", "post_event_survey", "recipient_survey")
+      expect(values).to include("day_1_survey", "day_2_survey", "post_event_survey", "recipient_survey")
     end
 
     it "reveals the fan-out panel and its help text on a choice field, hiding it on a free-form one" do

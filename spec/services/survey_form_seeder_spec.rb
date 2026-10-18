@@ -1,10 +1,13 @@
 require "rails_helper"
 
 RSpec.describe SurveyFormSeeder do
-  it "creates the survey template forms as general forms" do
+  it "creates the survey template forms with their survey roles" do
     expect { described_class.call }.to change(Form, :count).by(4)
 
-    expect(Form.where(name: described_class::TEMPLATES.pluck(:name)).pluck(:role).uniq).to eq([ "general" ])
+    expect(Form.pluck(:name, :role)).to contain_exactly(
+      [ "Day 1 Survey", "day_1_survey" ], [ "Day 2 Survey", "day_2_survey" ],
+      [ "Post-Event Survey", "post_event_survey" ], [ "Post-Training Recipients Survey", "recipient_survey" ]
+    )
   end
 
   it "populates each form with fields from its presets" do
@@ -13,7 +16,14 @@ RSpec.describe SurveyFormSeeder do
     expect(Form.find_by(name: "Day 1 Survey").form_fields).to be_present
   end
 
-  it "is idempotent on form name and reports only what it created" do
+  it "doesn't recreate a survey form staff renamed" do
+    described_class.call
+    Form.find_by!(role: "day_1_survey").update!(name: "Day 1 evaluation")
+
+    expect { described_class.call }.not_to change(Form, :count)
+  end
+
+  it "is idempotent on role and reports only what it created" do
     described_class.call
 
     result = nil
