@@ -34,6 +34,6 @@ class FormFieldAnswerOption < ApplicationRecord
   def option_name_fits
     return if option_name.to_s.length <= AnswerOption::NAME_MAX_LENGTH
 
-    errors.add(:option_name, "is too long (#{option_name.length} characters; the limit is #{AnswerOption::NAME_MAX_LENGTH})")
+    errors.add(:option_name, "is too long (#{option_name.length.to_fs(:delimited)} characters; the limit is #{AnswerOption::NAME_MAX_LENGTH.to_fs(:delimited)})")
   end
 end

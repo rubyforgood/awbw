@@ -757,7 +757,7 @@ RSpec.describe "Forms", type: :request do
       let(:form) { create(:form, :standalone) }
       let!(:untouched) { create(:form_field, form:, name: "How was the training?", position: 1) }
       let!(:choice) { create(:form_field, form:, name: "Rate the facilitator", answer_type: :single_select_radio, position: 2) }
-      let(:long_option) { "Strongly agree, and here is why. " * 10 }
+      let(:long_option) { "Strongly agree, and here is why. " * 40 }
 
       def submit_edits(choice_attrs)
         patch form_path(form), params: {
@@ -775,7 +775,7 @@ RSpec.describe "Forms", type: :request do
         }.not_to change(AnswerOption, :count)
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(response.body).to include("is too long (#{long_option.strip.length} characters; the limit is 255)")
+        expect(response.body).to include("is too long (#{long_option.strip.length.to_fs(:delimited)} characters; the limit is 1,000)")
         expect(choice.reload.form_field_answer_options).to be_empty
       end
 
@@ -800,7 +800,7 @@ RSpec.describe "Forms", type: :request do
       it "shows each length limit as placeholder text" do
         get edit_form_path(form)
 
-        expect(response.body).to include("Form name (255 char max)", "Question text (1,000 char max)", "Option text (255 char max)")
+        expect(response.body).to include("Form name (255 char max)", "Question text (1,000 char max)", "Option text (1,000 char max)")
       end
 
       it "opens the over-long question's settings so the error is visible" do

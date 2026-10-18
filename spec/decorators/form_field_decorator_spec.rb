@@ -27,12 +27,12 @@ RSpec.describe FormFieldDecorator do
   describe "#error_messages" do
     it "lists the question's own errors and quotes each over-long answer option" do
       field = build(:form_field, form:, name: "x" * 1001, answer_type: :single_select_radio)
-      field.form_field_answer_options.build.option_name = "y" * 300
+      field.form_field_answer_options.build.option_name = "y" * 1100
       field.valid?
 
       expect(field.decorate.error_messages).to contain_exactly(
-        "Question text is too long (1001 characters; the limit is 1000)",
-        a_string_matching(/\AAnswer option “y{37}\.\.\.” is too long \(300 characters; the limit is 255\)\z/)
+        "Question text is too long (1,001 characters; the limit is 1,000)",
+        a_string_matching(/\AAnswer option “y{37}\.\.\.” is too long \(1,100 characters; the limit is 1,000\)\z/)
       )
       expect(field.decorate.answer_option_errors?).to be(true)
     end

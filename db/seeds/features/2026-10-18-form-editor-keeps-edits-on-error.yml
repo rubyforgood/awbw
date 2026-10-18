@@ -8,4 +8,4 @@ summary: >-
   one correction and Save keeps everything.
 pro_tips:
   - "Click the question name in the red box at the top to jump straight to it."
-  - "Answer options hold up to 255 characters and question text up to 1,000; put longer instructions in the question's subtitle or hint."
+  - "Question text and answer options each hold up to 1,000 characters; put longer instructions in the question's subtitle or hint."
