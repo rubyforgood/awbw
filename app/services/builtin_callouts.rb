@@ -224,7 +224,7 @@ class BuiltinCallouts
         # the recipient has signed their agreement and their tasks are complete (and
         # any drip date has passed). Seeded with no date; admins can add one.
         forms: ->(_event) {
-          [ { form: Form.standalone.find_by(name: "Post-Training Recipients Survey"), display_from: nil } ]
+          [ { form: Form.standalone.find_by(name: SurveyFormSeeder::RECIPIENTS_FORM_NAME), display_from: nil } ]
         }
       },
       {
@@ -315,9 +315,9 @@ class BuiltinCallouts
         # lives on the scholarship callout instead.
         forms: ->(event) {
           [
-            { form: Form.standalone.find_by(name: "Day 1 Survey"), display_from: survey_drip(event, 1) },
-            ({ form: Form.standalone.find_by(name: "Day 2 Survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2),
-            { form: Form.standalone.find_by(name: "Post-Event Survey"), display_from: (event.end_date - 30.minutes if event.end_date) }
+            { form: Form.standalone.find_by(name: SurveyFormSeeder::DAY_1_FORM_NAME), display_from: survey_drip(event, 1) },
+            ({ form: Form.standalone.find_by(name: SurveyFormSeeder::DAY_2_FORM_NAME), display_from: survey_drip(event, 2) } if event.day_count >= 2),
+            { form: Form.standalone.find_by(name: SurveyFormSeeder::POST_EVENT_FORM_NAME), display_from: (event.end_date - 30.minutes if event.end_date) }
           ].compact
         }
       }

@@ -8,11 +8,17 @@
 # `data:seed_survey_forms` task for prod. Returns the names it created (skipping
 # any that already exist).
 class SurveyFormSeeder
+  # BuiltinCallouts finds these forms by name.
+  DAY_1_FORM_NAME = "Day 1 Survey".freeze
+  DAY_2_FORM_NAME = "Day 2 Survey".freeze
+  POST_EVENT_FORM_NAME = "Post-Event Survey".freeze
+  RECIPIENTS_FORM_NAME = "Post-Training Recipients Survey".freeze
+
   TEMPLATES = [
-    { name: "Day 1 Survey", sections: %i[day_1_survey content_sharing_preferences] },
-    { name: "Day 2 Survey", sections: %i[day_2_survey content_sharing_preferences] },
-    { name: "Post-Event Survey", sections: %i[post_event_feedback content_sharing_preferences] },
-    { name: "Post-Training Recipients Survey", sections: %i[recipient_survey content_sharing_preferences] }
+    { name: DAY_1_FORM_NAME, sections: %i[day_1_survey content_sharing_preferences] },
+    { name: DAY_2_FORM_NAME, sections: %i[day_2_survey content_sharing_preferences] },
+    { name: POST_EVENT_FORM_NAME, sections: %i[post_event_feedback content_sharing_preferences] },
+    { name: RECIPIENTS_FORM_NAME, sections: %i[recipient_survey content_sharing_preferences] }
   ].freeze
 
   DAY_1_WORKSHOPS = [ "The Touchstone Journey", "Creating A Safer/Braver Place", "The Take A Break, Self-Regulate" ].freeze
@@ -24,14 +30,14 @@ class SurveyFormSeeder
   # The growth questions cover the whole day's workshops; clarity uses a default
   # split. Admins adjust any of it per form in the editor's "Fan out per resource".
   FANOUT_RESOURCES = [
-    { form: "Day 1 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part One", resources: [ "The Touchstone Journey", "Creating A Safer/Braver Place" ] },
-    { form: "Day 1 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part Two", resources: [ "The Take A Break, Self-Regulate" ] },
-    { form: "Day 1 Survey", name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_1_WORKSHOPS },
-    { form: "Day 1 Survey", name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_1_WORKSHOPS },
-    { form: "Day 2 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 1", resources: [ "The Monster In Me" ] },
-    { form: "Day 2 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 2", resources: [ "Claiming Who I Am" ] },
-    { form: "Day 2 Survey", name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_2_WORKSHOPS },
-    { form: "Day 2 Survey", name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_2_WORKSHOPS }
+    { form: DAY_1_FORM_NAME, name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part One", resources: [ "The Touchstone Journey", "Creating A Safer/Braver Place" ] },
+    { form: DAY_1_FORM_NAME, name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part Two", resources: [ "The Take A Break, Self-Regulate" ] },
+    { form: DAY_1_FORM_NAME, name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_1_WORKSHOPS },
+    { form: DAY_1_FORM_NAME, name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_1_WORKSHOPS },
+    { form: DAY_2_FORM_NAME, name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 1", resources: [ "The Monster In Me" ] },
+    { form: DAY_2_FORM_NAME, name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 2", resources: [ "Claiming Who I Am" ] },
+    { form: DAY_2_FORM_NAME, name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_2_WORKSHOPS },
+    { form: DAY_2_FORM_NAME, name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_2_WORKSHOPS }
   ].freeze
 
   def self.call

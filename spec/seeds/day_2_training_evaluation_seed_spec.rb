@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "seed: Day 2 training evaluation" do
   let(:seed) { Rails.root.join("db/seeds/forms/day_2_training_evaluation.rb") }
-  let(:form) { Form.standalone.find_by!(name: "Day 2 AWBW Facilitator Training Evaluation") }
+  let(:form) { Form.standalone.find_by!(name: SurveyFormSeeder::DAY_2_FORM_NAME) }
 
   def run_seed = expect { load seed }.to output.to_stdout
 
@@ -31,6 +31,20 @@ RSpec.describe "seed: Day 2 training evaluation" do
 
     warm_up = form.form_fields.find { |field| field.name.start_with?("To best prepare") }
     expect(warm_up.answer_options.map(&:name)).to eq([ "Yes", "No", "Other" ])
+  end
+
+  it "builds the form the Feedback surveys callout delivers" do
+    run_seed
+
+    expect(form.name).to eq("Day 2 Survey")
+  end
+
+  it "rebuilds the seeded template in place" do
+    SurveyFormSeeder.call
+    template = Form.find_by!(name: "Day 2 Survey")
+
+    expect { run_seed }.not_to change(Form, :count)
+    expect(template.form_fields.count).to eq(25)
   end
 
   it "is idempotent while the form has no submissions" do
