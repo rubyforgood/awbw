@@ -51,7 +51,9 @@ module PersonServices
     end
 
     def call
-      @scope.find_each { |rolodex| import(rolodex) }
+      @address_index = FmRolodex.contact_index(FmAddress)
+      @phone_index = FmRolodex.contact_index(FmPhoneNumber)
+      @scope.find_each { |rolodex| import(rolodex.preload_contacts(addresses: @address_index, phone_numbers: @phone_index)) }
       self
     end
 
@@ -239,14 +241,21 @@ module PersonServices
     end
 
     # Every address the row answers to, not just the one it names as primary —
-    # FmRolodex#addresses lists them with the primary and worksite ones first, so the
-    # first that can be built is the person's primary and the rest ride along. One the
-    # person already has is left out, and a primary they already hold stays primary.
+    # FmRolodex#addresses lists the primary first, so the first that can be built is the
+    # person's primary and the rest ride along. A work address, one the person already
+    # has, and a primary they already hold are all left as they are.
     def build_addresses(person, rolodex)
       held = person.addresses.map { |address| address_key(address.street_address, address.city) }
-      attributes = rolodex.addresses.filter_map { |address| address_attributes(address.data) }
+      attributes = rolodex.addresses.reject { |address| work_address?(rolodex, address) }
+                          .filter_map { |address| address_attributes(address.data) }
                           .reject { |attrs| held.include?(address_key(attrs[:street_address], attrs[:city])) }
       build_primary_first(person.addresses, attributes)
+    end
+
+    # A work address belongs to the person's organization, so the affiliations import brings it in.
+    def work_address?(rolodex, address)
+      address.fm_id == rolodex.data["WorksiteAddrsID"] ||
+        contact_type(address.data["AddrsType"], allowed: Address::CONTACT_TYPES) == "work"
     end
 
     def build_phones(person, rolodex)
@@ -281,9 +290,21 @@ module PersonServices
         state:,
         zip_code: fields["AddrsPostalCode"].to_s.strip,
         country: clip(fields["AddrsCountry"]),
+        county: county(fields),
         address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
         locality: UNKNOWN_LOCALITY
       }
+    end
+
+    def county(fields)
+      zip = fields["PostalCodeLookup"].presence || fields["AddrsPostalCode"]
+      zip_counties[zip.to_s.strip[/\A\d{5}/]]
+    end
+
+    # One query for the archive's ~80,000 zip codes beats one per address across a full import.
+    def zip_counties
+      @zip_counties ||= FmPostalCode.pluck(:fm_id, Arel.sql("JSON_UNQUOTE(JSON_EXTRACT(data, '$.County'))"))
+                                    .to_h { |zip, county| [ zip, clip(county) ] }
     end
 
     def phone_attributes(fields)

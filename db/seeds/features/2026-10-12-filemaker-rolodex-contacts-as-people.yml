@@ -6,7 +6,8 @@ pr_number: 2630
 summary: >-
   Contacts from the old FileMaker Rolodex can now be brought into the portal as
   people, carrying their FileMaker code, profile details, service areas and age
-  group, and every address and phone number the old record held.
+  group, and their home and mailing addresses and phone numbers. Work addresses
+  come in later, with their organizations.
 description: >-
   <ul><li>A contact with no email is linked to a portal person of the same name
   who also has no email.</li><li>A person can carry several FileMaker codes, so
@@ -18,8 +19,8 @@ description: >-
   with the person deduper if they turn out to be the same.</li><li>A person's
   FileMaker code on their page links straight to their row in the
   archive.</li><li>An imported person carries their service areas, settings,
-  life experiences, age group, facilitator start date, and every address and
-  phone the old record held — and their profile dates from when FileMaker first
+  life experiences, age group, facilitator start date, and every home and
+  mailing address and phone the old record held — and their profile dates from when FileMaker first
   knew them, not from the day they were imported.</li></ul>
 pro_tips:
   - "A contact who already has a portal record is linked to it rather than duplicated — matching takes the same name and the same email."

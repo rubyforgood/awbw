@@ -180,6 +180,25 @@ RSpec.describe PersonServices::ImportFromRolodex do
     end
   end
 
+  it "reads an address's county from the archive's zip code table" do
+    FmPostalCode.create!(fm_id: "90013", data: { "City" => "Los Angeles", "State" => "CA", "County" => "Los Angeles" })
+    FmPostalCode.create!(fm_id: "02139", data: { "City" => "Cambridge", "State" => "MA", "County" => "Middlesex" })
+    FmAddress.create!(fm_id: "A7", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "Los Angeles", "AddrsState" => "CA",
+                                           "PostalCodeLookup" => "90013", "AddrsPostalCode" => "90013" })
+    FmAddress.create!(fm_id: "A8", data: { "AddrsLine1" => "2 Mass Ave", "AddrsCity" => "Cambridge", "AddrsState" => "MA",
+                                           "AddrsPostalCode" => "02139-4307" })
+    FmAddress.create!(fm_id: "A9", data: { "AddrsLine1" => "3 Elm St", "AddrsCity" => "Nowhere", "AddrsState" => "CA",
+                                           "AddrsPostalCode" => "99999" })
+    rolodex("00036", EMail: "ada@example.com", PrimaryAddrsID: "A7")
+    rolodex("00037", FirstName: "Grace", EMail: "grace@example.com", PrimaryAddrsID: "A8")
+    rolodex("00038", FirstName: "Hedy", EMail: "hedy@example.com", PrimaryAddrsID: "A9")
+
+    results
+
+    expect(%w[00036 00037 00038].map { |code| Person.find_by!(filemaker_code: code).addresses.sole.county })
+      .to eq([ "Los Angeles", "Middlesex", nil ])
+  end
+
   it "prefixes the street number when the first line doesn't already carry it" do
     FmAddress.create!(fm_id: "A2", data: { "StreetNo" => "1234", "AddrsLine1" => "Main St",
                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
@@ -210,6 +229,35 @@ RSpec.describe PersonServices::ImportFromRolodex do
       .to eq([ [ "1 Main St", true ], [ "2 Second St", false ] ])
     expect(person.contact_methods.order(:id).pluck(:value, :primary))
       .to eq([ [ "555-0100", true ], [ "555-0200", false ] ])
+  end
+
+  it "reads the address and phone tables once, not once per row" do
+    3.times do |i|
+      FmAddress.create!(fm_id: "A8#{i}", data: { "RolodexID" => "0008#{i}", "AddrsLine1" => "#{i} Main St",
+                                                "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+      FmPhoneNumber.create!(fm_id: "P8#{i}", data: { "RolodexID" => "0008#{i}", "PhoneNumber" => "555-010#{i}" })
+      rolodex("0008#{i}", FirstName: "Ada#{i}", EMail: "ada#{i}@example.com")
+    end
+    queries = []
+    counter = ->(*, payload) { queries << payload[:sql] if payload[:sql].match?(/FROM `fm_(addresses|phone_numbers)`/) }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { results }
+
+    expect(queries.size).to eq(2)
+    expect(Person.find_by!(filemaker_code: "00082").addresses.sole.street_address).to eq("2 Main St")
+  end
+
+  it "leaves a work address off the person, for the affiliations import to bring in" do
+    FmAddress.create!(fm_id: "A90", data: { "RolodexID" => "00095", "AddrsLine1" => "1 Home St",
+                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A91", data: { "AddrsLine1" => "2 Worksite St", "AddrsCity" => "Oakland", "AddrsState" => "CA" })
+    FmAddress.create!(fm_id: "A92", data: { "RolodexID" => "00095", "AddrsLine1" => "3 Office St", "AddrsCity" => "Oakland",
+                                            "AddrsState" => "CA", "AddrsType" => "Work" })
+    rolodex("00095", EMail: "ada@example.com", WorksiteAddrsID: "A91")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00095").addresses.pluck(:street_address, :primary)).to eq([ [ "1 Home St", true ] ])
   end
 
   it "truncates over-long free text instead of losing the person to it" do
