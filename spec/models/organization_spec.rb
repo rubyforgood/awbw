@@ -13,6 +13,8 @@ RSpec.describe Organization do
     it { should have_many(:users).through(:people) }
     it { should have_many(:reports) }
     it { should have_many(:workshop_logs) }
+    it { should have_many(:workshop_ideas) }
+    it { should have_many(:workshops) }
   end
 
   describe 'validations' do

@@ -7,6 +7,7 @@ class WorkshopIdea < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
   belongs_to :windows_type
+  belongs_to :organization, optional: true
 
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
   has_many :notifications, as: :noticeable, dependent: :nullify

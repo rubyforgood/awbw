@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2426,8 +2426,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.text "warm_up"
     t.text "warm_up_spanish"
     t.integer "windows_type_id", null: false
+    t.integer "organization_id"
     t.index ["author_id"], name: "index_workshop_ideas_on_author_id"
     t.index ["created_by_id"], name: "index_workshop_ideas_on_created_by_id"
+    t.index ["organization_id"], name: "index_workshop_ideas_on_organization_id"
     t.index ["updated_by_id"], name: "index_workshop_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_workshop_ideas_on_windows_type_id"
   end
@@ -2631,11 +2633,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.integer "windows_type_id"
     t.bigint "workshop_idea_id"
     t.integer "year"
+    t.integer "organization_id"
     t.index ["author_id"], name: "index_workshops_on_author_id"
     t.index ["created_at"], name: "index_workshops_on_created_at"
     t.index ["created_by_id"], name: "index_workshops_on_created_by_id"
     t.index ["inactive", "led_count", "title"], name: "index_workshops_on_inactive_and_led_count_and_title"
     t.index ["led_count"], name: "index_workshops_on_led_count"
+    t.index ["organization_id"], name: "index_workshops_on_organization_id"
     t.index ["published"], name: "index_workshops_on_published"
     t.index ["title", "full_name", "objective", "materials", "introduction", "demonstration", "opening_circle", "warm_up", "creation", "closing", "notes", "tips", "misc1", "misc2"], name: "workshop_fullsearch", type: :fulltext
     t.index ["title"], name: "index_workshops_on_title", type: :fulltext
@@ -2901,6 +2905,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
   add_foreign_key "windows_types", "users", column: "updated_by_id"
   add_foreign_key "workshop_age_ranges", "age_ranges"
   add_foreign_key "workshop_age_ranges", "workshops"
+  add_foreign_key "workshop_ideas", "organizations"
   add_foreign_key "workshop_ideas", "people", column: "author_id"
   add_foreign_key "workshop_ideas", "users", column: "created_by_id"
   add_foreign_key "workshop_ideas", "users", column: "updated_by_id"
@@ -2932,6 +2937,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
   add_foreign_key "workshop_variations", "windows_types"
   add_foreign_key "workshop_variations", "workshop_variation_ideas"
   add_foreign_key "workshop_variations", "workshops"
+  add_foreign_key "workshops", "organizations"
   add_foreign_key "workshops", "people", column: "author_id"
   add_foreign_key "workshops", "users", column: "created_by_id"
   add_foreign_key "workshops", "users", column: "updated_by_id"

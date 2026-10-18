@@ -31,6 +31,8 @@ class Organization < ApplicationRecord
   end
   has_many :reports
   has_many :workshop_logs
+  has_many :workshop_ideas
+  has_many :workshops
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -38,7 +40,6 @@ class Organization < ApplicationRecord
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
-  has_many :workshops, through: :users
 
   # Asset associations
   has_one_attached :logo, dependent: :purge do |attachable|
