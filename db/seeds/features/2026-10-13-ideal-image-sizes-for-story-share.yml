@@ -10,7 +10,6 @@ summary: >-
 pro_tips:
   - "Upload 3:2 landscape photos, ideally 2400 × 1600 pixels and at least 1800 × 1200. Anything bigger is fine."
   - "Keep the main subject near the center. Banners trim the top and bottom, and the tall tiles trim the sides."
-  - "Tall photos and artwork show in full on a blurred background in every spot except the home page header."
 description: |
   <p>Every spot uses a story's primary image, except the story page carousel,
   which shows the primary image followed by the gallery images. A story with no
@@ -52,3 +51,4 @@ description: |
       </tr>
     </tbody>
   </table>
+  <ul><li>Tall photos and artwork show in full on a blurred background in every spot except the home page header.</li></ul>

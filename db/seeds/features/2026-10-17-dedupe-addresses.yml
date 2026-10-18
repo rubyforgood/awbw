@@ -7,9 +7,13 @@ action_path: "/addresses/dedupe_index"
 summary: >-
   A new Dedupe addresses page lists every person and organization with the
   same address saved more than once, and merges the copies into one.
+description: >-
+  <ul><li>The copy that's kept is the active one, then the primary, then the
+  oldest. Contact methods, invoices, and affiliations move onto it, and a phone
+  number only one copy had is kept.</li><li>Only addresses on the same person or
+  organization are compared, so two organizations at the same street are never
+  merged.</li><li>Spelling variants and copies missing a ZIP or street are
+  caught too — see "Addresses match across common spellings".</li></ul>
 pro_tips:
   - "Reach it from the Dedupers section on admin home."
   - "Merge one person or organization at a time with its Merge button."
-  - "The copy that's kept is the active one, then the primary, then the oldest. Contact methods, invoices, and affiliations move onto it, and a phone number only one copy had is kept."
-  - "Only addresses on the same person or organization are compared, so two organizations at the same street are never merged."
-  - "Spelling variants and copies missing a ZIP or street are caught too — see \"Addresses match across common spellings\"."
