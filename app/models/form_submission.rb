@@ -80,12 +80,16 @@ class FormSubmission < ApplicationRecord
     scope
   }
 
-  # Submissions that answered one particular question — the results-card
-  # drill-down into the people behind a single chart. A blank answer row (an
-  # optional question left empty) doesn't count, matching FormAnswer.answered and
-  # the response counts on a form's results.
-  scope :answered_question, ->(form_field_id) {
-    where(id: FormAnswer.answered.where(form_field_id: form_field_id).select(:form_submission_id))
+  # Submissions that answered one particular question (named by its wording when
+  # it's a fanned-out copy) — the results-card drill-down into the people behind a
+  # single chart. A blank answer row (an optional question left empty) doesn't
+  # count, matching FormAnswer.answered and the response counts on a form's results.
+  scope :answered_question, ->(form_field_id, question = nil) {
+    field = FormField.find_by(id: form_field_id) if question.present?
+    answers = field ? FormAnswer.for_question(field, question) : FormAnswer.where(form_field_id: form_field_id)
+    next none unless answers
+
+    where(id: answers.answered.select(:form_submission_id))
   }
 
   # Submissions this organization is directly linked to, by either link
@@ -229,7 +233,7 @@ class FormSubmission < ApplicationRecord
     form_ids = Array(params[:form_id]).reject(&:blank?)
     results = results.where(form_id: form_ids) if form_ids.any?
     results = results.where(event_id: params[:event_id]) if params[:event_id].present?
-    results = results.answered_question(params[:form_field_id]) if params[:form_field_id].present?
+    results = results.answered_question(params[:form_field_id], params[:question]) if params[:form_field_id].present?
     results = results.where(role: params[:role]) if params[:role].present?
     results = results.for_organization(params[:organization_id]) if params[:organization_id].present?
     results = results.search(params[:search]) if params[:search].present?

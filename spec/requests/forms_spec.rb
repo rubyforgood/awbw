@@ -1017,6 +1017,26 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("120")
       end
 
+      it "gives each per-resource copy of a fanned-out question its own card and drill-downs" do
+        form = create(:form, :standalone, name: "Survey")
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        collage = create(:resource, title: "Collage")
+        masks = create(:resource, title: "Masks")
+        create(:form_field_resource, form_field: clarity, resource: collage)
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_answer, form_submission: create(:form_submission, form: form), form_field: nil,
+               question_name_when_answered: "How clear was Masks", submitted_answer: "Very clear")
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        masks_card = doc.at_css("#form-question-#{clarity.id}-how-clear-was-masks")
+        expect(doc.at_css("#form-question-#{clarity.id}-how-clear-was-collage").text).to include("How clear was Collage")
+        expect(masks_card.text).to include("Very clear")
+        hrefs = masks_card.css("a").map { |a| a["href"] }
+        expect(hrefs).to include(a_string_including("question=How+clear+was+Masks"))
+      end
+
       it "shows an empty state when the form has no submissions" do
         form = create(:form, :standalone, name: "Untouched")
         get results_form_path(form)
@@ -1256,7 +1276,7 @@ RSpec.describe "Forms", type: :request do
 
         hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
         expect(hrefs).to include(form_submission_path(submission, return_to: "form_results", form_id: form.id,
-                                                      form_field_id: thoughts.id, organization_id: org.id))
+                                                      form_field_id: thoughts.id, question: "Any thoughts", organization_id: org.id))
       end
 
       # The footer counts who answered this question, not who submitted the form.
@@ -1272,7 +1292,7 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("View 1 submission")
         hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
         expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: thoughts.id,
-                                                       return_to: "form_results"))
+                                                       question: "Any thoughts", return_to: "form_results"))
       end
 
       # No list can be narrowed to "only the write-ins", so the sub-card borrows its
@@ -1293,7 +1313,7 @@ RSpec.describe "Forms", type: :request do
         expect(hrefs).to include(form_answers_path(form_id: form.id, question: heard.name,
                                                    form_field_id: heard.id, return_to: "form_results"))
         expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: heard.id,
-                                                       return_to: "form_results"))
+                                                       question: heard.name, return_to: "form_results"))
       end
 
       it "links a file question's upload count to those answers" do
@@ -1369,7 +1389,7 @@ RSpec.describe "Forms", type: :request do
 
         byline = Nokogiri::HTML(response.body).css("a").find do |a|
           a["href"] == form_submission_path(submission, return_to: "form_results",
-                                            form_id: form.id, form_field_id: thoughts.id)
+                                            form_id: form.id, form_field_id: thoughts.id, question: "Any thoughts")
         end
         expect(byline).to be_present
         expect(byline.text).to include("Priya Patel")

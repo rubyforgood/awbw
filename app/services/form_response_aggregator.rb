@@ -4,7 +4,7 @@
 # split out), number questions become an average/total/range summary, free-text
 # questions become lists of the actual answers, and file questions a simple
 # answered count. Questions are reported in form order, so the page mirrors the
-# form itself.
+# form itself; a fanned-out field reports each resource's copy as its own question.
 class FormResponseAggregator
   # One question's rollup. `kind` picks which fields are populated:
   #   :select — rows, chart, multi, specify_rows
@@ -12,11 +12,15 @@ class FormResponseAggregator
   #   :text   — responses
   #   :file   — answered_count only
   FieldReport = Struct.new(
-    :field, :label, :kind, :answered_count,
+    :field, :label, :per_resource, :kind, :answered_count,
     :rows, :chart, :multi, :specify_rows, :responses,
     :average, :total, :minimum, :maximum, :integer_valued, :percent,
     keyword_init: true
   )
+
+  # One card's question: a field, or one fanned-out copy of it (answers saved with
+  # no field, under the copy's sentence).
+  Question = Struct.new(:field, :label, :per_resource, keyword_init: true)
 
   # One free-text answer, carrying enough context to list it and link back to
   # the full submission.
@@ -61,7 +65,7 @@ class FormResponseAggregator
   end
 
   def question_count
-    input_fields.size
+    questions.size
   end
 
   def any_submissions?
@@ -69,7 +73,7 @@ class FormResponseAggregator
   end
 
   def field_reports
-    @field_reports ||= reportable_fields.map { |field| build_report(field) }
+    @field_reports ||= reportable_questions.map { |question| build_report(question) }
   end
 
   private
@@ -92,30 +96,68 @@ class FormResponseAggregator
   end
 
   def input_fields
-    @input_fields ||= @form.form_fields.select(&:collects_input?).sort_by { |field| field.position.to_i }
+    @input_fields ||= @form.form_fields.includes(:form_field_resources)
+      .select(&:collects_input?).sort_by { |field| field.position.to_i }
   end
 
-  # The questions to render as cards — every input field, or just those whose
-  # name matches the search. The Questions stat still counts the full set.
-  def reportable_fields
-    return input_fields unless @question_query
+  def questions
+    @questions ||= input_fields.flat_map do |field|
+      current = field.per_resource? ? field.per_resource_questions : []
+      plain = current.empty? ? [ Question.new(field: field, label: field.name, per_resource: false) ] : []
+      labels = current + earlier_wordings_by_field_id.fetch(field.id, []).sort
+      plain + labels.map { |label| Question.new(field: field, label: label, per_resource: true) }
+    end
+  end
 
-    input_fields.select { |field| field.name.to_s.downcase.include?(@question_query) }
+  # Per-resource answers worded as no current copy is — a resource since renamed or
+  # unlinked — each filed under the field whose copies open with the most matching
+  # words. A copy whose question was itself reworded matches no field and is left out.
+  def earlier_wordings_by_field_id
+    @earlier_wordings_by_field_id ||= begin
+      current = input_fields.select(&:per_resource?).flat_map(&:per_resource_questions).to_set
+      fanned_answers_by_label.keys.reject { |label| current.include?(label) }.each_with_object({}) do |label, wordings|
+        field = input_fields.select { |candidate| candidate.per_resource_wording?(label) }.max_by { |candidate| candidate.per_resource_prefix.length }
+        (wordings[field.id] ||= []) << label if field
+      end
+    end
+  end
+
+  # The questions to render as cards — every one, or just those whose wording
+  # matches the search. The Questions stat still counts the full set.
+  def reportable_questions
+    return questions unless @question_query
+
+    questions.select { |question| question.label.to_s.downcase.include?(@question_query) }
   end
 
   def answers_by_field_id
     @answers_by_field_id ||= FormAnswer.where(form_submission_id: submissions.map(&:id)).group_by(&:form_field_id)
   end
 
-  def build_report(field)
-    answers = answers_by_field_id.fetch(field.id, [])
-    return build_map_report(field, answers, :map) if US_STATE_IDENTIFIERS.include?(field.field_identifier)
-    return build_map_report(field, answers, :world_map) if COUNTRY_IDENTIFIERS.include?(field.field_identifier)
-    return build_select_report(field, answers) if field.selectable?
-    return build_file_report(field, answers) if field.file_upload?
-    return build_numeric_report(field, answers) if numeric_field?(field)
+  def fanned_answers_by_label
+    @fanned_answers_by_label ||= answers_by_field_id.fetch(nil, []).group_by(&:question_name_when_answered)
+  end
 
-    build_text_report(field, answers)
+  def answers_for(question)
+    return fanned_answers_by_label.fetch(question.label, []) if question.per_resource
+
+    answers_by_field_id.fetch(question.field.id, [])
+  end
+
+  def build_report(question)
+    field = question.field
+    answers = answers_for(question)
+    return build_map_report(question, answers, :map) if US_STATE_IDENTIFIERS.include?(field.field_identifier)
+    return build_map_report(question, answers, :world_map) if COUNTRY_IDENTIFIERS.include?(field.field_identifier)
+    return build_select_report(question, answers) if field.selectable?
+    return build_file_report(question, answers) if field.file_upload?
+    return build_numeric_report(question, answers) if numeric_field?(field)
+
+    build_text_report(question, answers)
+  end
+
+  def report_for(question, **attributes)
+    FieldReport.new(field: question.field, label: question.label, per_resource: question.per_resource, **attributes)
   end
 
   # Sliders and number-typed free-form fields hold a figure worth averaging and
@@ -127,13 +169,14 @@ class FormResponseAggregator
   # An average / total / range summary of a numeric question. Sliders are
   # percentages (headlined with a %, 0-100); number fields are open-ended counts.
   # Non-numeric stray values are dropped rather than skewing the figures.
-  def build_numeric_report(field, answers)
+  def build_numeric_report(question, answers)
+    field = question.field
     values = answers.filter_map { |answer| numeric_value(field, answer.submitted_answer) }
     count = values.size
     total = values.sum
 
-    FieldReport.new(
-      field: field, label: field.name, kind: :number, answered_count: count,
+    report_for(
+      question, kind: :number, answered_count: count,
       total: total,
       average: count.zero? ? nil : total.to_f / count,
       minimum: values.min, maximum: values.max,
@@ -155,7 +198,7 @@ class FormResponseAggregator
   # A choropleth tally of a geographic field: counts per submitted place value,
   # left as-is (the map matches state/country names itself; the legend lists the
   # exact counts). Multi-value answers split like any other select.
-  def build_map_report(field, answers, chart)
+  def build_map_report(question, answers, chart)
     tally = Hash.new(0)
     answered = 0
 
@@ -167,13 +210,14 @@ class FormResponseAggregator
       values.each { |raw| tally[raw] += 1 }
     end
 
-    FieldReport.new(
-      field: field, label: field.name, kind: :map, answered_count: answered,
+    report_for(
+      question, kind: :map, answered_count: answered,
       rows: tally.sort_by { |label, count| [ -count, label ] }, chart: chart
     )
   end
 
-  def build_select_report(field, answers)
+  def build_select_report(question, answers)
+    field = question.field
     tally = Hash.new(0)
     specify = Hash.new(0)
     answered = 0
@@ -193,14 +237,14 @@ class FormResponseAggregator
     end
 
     rows = tally.sort_by { |label, count| [ -count, label ] }
-    FieldReport.new(
-      field: field, label: field.name, kind: :select, answered_count: answered,
+    report_for(
+      question, kind: :select, answered_count: answered,
       rows: rows, chart: chart_for(field, rows), multi: field.multi_select_checkbox?,
       specify_rows: specify.sort_by { |text, count| [ -count, text ] }
     )
   end
 
-  def build_text_report(field, answers)
+  def build_text_report(question, answers)
     responses = answers.filter_map do |answer|
       text = answer.submitted_answer.to_s.strip
       next if text.blank?
@@ -214,12 +258,12 @@ class FormResponseAggregator
       )
     end.sort_by { |response| response.submitted_at || Time.zone.at(0) }.reverse
 
-    FieldReport.new(field: field, label: field.name, kind: :text, answered_count: responses.size, responses: responses)
+    report_for(question, kind: :text, answered_count: responses.size, responses: responses)
   end
 
-  def build_file_report(field, answers)
-    FieldReport.new(
-      field: field, label: field.name, kind: :file,
+  def build_file_report(question, answers)
+    report_for(
+      question, kind: :file,
       answered_count: answers.count { |answer| answer.submitted_answer.present? }
     )
   end
