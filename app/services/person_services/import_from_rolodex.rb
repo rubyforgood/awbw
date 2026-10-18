@@ -91,17 +91,28 @@ module PersonServices
     # Several matches are one person entered more than once, so each carries the code
     # and the deduper unions them when they're merged.
     def link(people, rolodex, label)
-      people.each do |person|
-        person.filemaker_code = Person.join_filemaker_codes(person.filemaker_code, rolodex.fm_id)
-        kept = fill(person, rolodex)
-        return record(:failed, "#{label}: ##{person.id} #{person.errors.full_messages.to_sentence}") unless person.save
-
-        kept.concat(tag_service_areas(person, rolodex.data))
-        note_differences(person, rolodex, label, kept) if kept.any?
-      end
+      linked = people.select { |person| link_person(person, rolodex, label) }
+      return if linked.empty?
 
       @imported_codes << rolodex.fm_id
-      record(:linked, "#{label} → #{ids(people)}")
+      record(:linked, "#{label} → #{ids(linked)}")
+    end
+
+    # One match of the row, reported and left out when it doesn't validate so the row's
+    # other matches still take the code.
+    def link_person(person, rolodex, label)
+      person.filemaker_code = Person.join_filemaker_codes(person.filemaker_code, rolodex.fm_id)
+      kept = fill(person, rolodex)
+      return failed(person, label) unless person.save
+
+      kept.concat(tag_service_areas(person, rolodex.data))
+      note_differences(person, rolodex, label, kept) if kept.any?
+      true
+    end
+
+    def failed(person, label)
+      record(:failed, "#{label}: ##{person.id} #{person.errors.full_messages.to_sentence}")
+      false
     end
 
     def create(rolodex, label, **names)
@@ -139,7 +150,11 @@ module PersonServices
     def fill(person, rolodex)
       kept = profile_attributes(rolodex.data).filter_map do |attribute, value|
         next if value.blank?
-        next person[attribute] = value if person[attribute].blank?
+
+        if person[attribute].blank?
+          person[attribute] = value
+          next
+        end
         next if same?(person[attribute], value) || value == Person::UNKNOWN_CONTACT_TYPE
 
         [ Person.human_attribute_name(attribute), person[attribute], value ]
@@ -217,10 +232,12 @@ module PersonServices
       ].compact
     end
 
+    # A tag the person already holds as primary is left out of the additional set, since
+    # tagging it additional is what would demote it.
     def apply_tags(person, tag_with, model, held_ids, primary_ids:, additional_ids:)
       if held_ids.any?
         difference = [ PRIMARY_TAG_LABELS[tag_with], names(model, held_ids), names(model, primary_ids) ] unless (primary_ids - held_ids).empty?
-        primary_ids, additional_ids = [], primary_ids + additional_ids
+        primary_ids, additional_ids = [], (primary_ids + additional_ids) - held_ids
       end
       person.public_send(tag_with, primary_ids:, additional_ids:) if (primary_ids + additional_ids).any?
       difference

@@ -134,6 +134,22 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(import.differences.sole).to include("Primary sector", "Domestic Violence", "Education")
     end
 
+    it "leaves a primary the archive names too as the person's primary" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      person.tag_sectors(primary_ids: [ domestic_violence.id ], additional_ids: [])
+      person.tag_age_groups(primary_ids: [ adults.id ], additional_ids: [])
+      rolodex("00061", EMail: "ada@example.com", PrimaryServiceArea: "Domestic Violence",
+                       PrimaryAgeGroup: "Adults", LifeExperiences: "Domestic Violence")
+
+      import = described_class.new.call
+      person.reload
+
+      expect(person.primary_sector).to eq(domestic_violence)
+      expect(person.primary_age_groups).to eq([ adults ])
+      expect(person.additional_age_groups).to be_empty
+      expect(import.differences).to be_empty
+    end
+
     it "tags every age range for families without marking one primary" do
       rolodex("00057", EMail: "ada@example.com", PrimaryAgeGroup: "Families")
 
@@ -327,6 +343,16 @@ RSpec.describe PersonServices::ImportFromRolodex do
                                                notes: "Met at training", email_2: "ada@work.example.com")
     end
 
+    it "doesn't note a field it only filled in" do
+      rolodex("00075", EMail: "ada@example.com", BestTimeToCall: "Mornings")
+
+      import = described_class.new.call
+
+      expect(person.reload.best_time_to_call).to eq("Mornings")
+      expect(person.comments).to be_empty
+      expect(import.differences).to be_empty
+    end
+
     it "keeps the person's value where the archive differs and notes the difference" do
       rolodex("00071", EMail: "ada@example.com", Pronouns: "they/them")
 
@@ -433,6 +459,33 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
     expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
     expect([ first, second ].map { |person| person.reload.filemaker_code }).to eq(%w[00018 00018])
+  end
+
+  it "counts a match with two logins once" do
+    person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com", pronouns: "she/her")
+    # Attached without the login sync, which would make the second account's email the person's own.
+    create(:user).update_columns(person_id: person.id)
+    rolodex("00019", EMail: "ada@example.com", Pronouns: "they/them")
+
+    import = described_class.new.call
+
+    expect(import.results[:linked].sole).to eq("00019 Ada Lovelace → ##{person.id}")
+    expect(person.comments.count).to eq(1)
+  end
+
+  it "links the row's other matches when one of them doesn't validate" do
+    broken = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+    # A legacy value the email validation rejects, so every save of this person fails.
+    broken.update_columns(email_2: "not-an-email")
+    good = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada.l@example.com", email_2: "ada@example.com")
+    rolodex("00024", EMail: "ada@example.com", BestTimeToCall: "Mornings")
+
+    import = described_class.new.call
+
+    expect(import.results[:failed].sole).to include("##{broken.id}", "valid email address")
+    expect(import.results[:linked].sole).to eq("00024 Ada Lovelace → ##{good.id}")
+    expect(good.reload).to have_attributes(filemaker_code: "00024", best_time_to_call: "Mornings")
+    expect(broken.reload.filemaker_code).to be_nil
   end
 
   it "skips agencies, deleted rows, and nameless rows" do
