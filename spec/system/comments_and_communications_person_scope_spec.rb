@@ -15,6 +15,7 @@ RSpec.describe "Comments & communications person scope", type: :system do
   scenario "filtering a person's feed keeps it on that person" do
     fill_in "query", with: "Schedule"
 
+    expect(page).to have_css("turbo-frame#comments_and_communications_results[src*='query=Schedule'][complete]")
     within "turbo-frame#comments_and_communications_results" do
       expect(page).to have_content("Schedule note for Aisha")
       expect(page).to have_no_content("Schedule note for Bo")

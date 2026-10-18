@@ -16,6 +16,8 @@
 <%= form_with url: url, method: :get, id: CommentsHelper::FEED_FILTER_FORM_ID,
               data: { controller: "collection expandable-card", turbo_frame: frame, expandable_card_expanded_value: advanced_active },
               html: { autocomplete: "off" }, class: "space-y-3 rounded-lg border border-gray-200 bg-gray-100 p-4" do |f| %>
+  <%# A GET submit drops the url's query string, so the person scope rides as a field. %>
+  <%= hidden_field_tag :person_id, person.id, id: nil if person %>
   <div class="flex items-center gap-2 text-gray-600">
     <i class="fa-solid fa-filter text-xs"></i>
     <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
