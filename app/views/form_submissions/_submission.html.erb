@@ -17,15 +17,17 @@
         </h3>
       </div>
     <% else %>
-      <div class="py-2">
-        <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(display_question_label(field, response)) %></dt>
-        <dd class="mt-1 text-sm text-gray-900">
-          <%# Resolves the sector / age-group ids stored behind the professional
-              fields to their names; free-text ("Other: …") and plain answers pass
-              through unchanged. File-upload answers render a preview + link. %>
-          <%= render "shared/form_answer_value", field: field, response: response %>
-        </dd>
-      </div>
+      <% display_answer_rows(submission, field, response).each do |label, answer| %>
+        <div class="py-2">
+          <dt class="rich-label text-xs font-medium text-gray-500 uppercase tracking-wide"><%= form_label_html(label) %></dt>
+          <dd class="mt-1 text-sm text-gray-900">
+            <%# Resolves the sector / age-group ids stored behind the professional
+                fields to their names; free-text ("Other: …") and plain answers pass
+                through unchanged. File-upload answers render a preview + link. %>
+            <%= render "shared/form_answer_value", field: field, response: answer %>
+          </dd>
+        </div>
+      <% end %>
     <% end %>
   <% end %>
   <div class="py-2">

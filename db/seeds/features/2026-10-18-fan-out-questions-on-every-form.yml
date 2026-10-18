@@ -1,0 +1,14 @@
+name: "Questions asked once per workshop now work on every form"
+area: events
+display_status: admin_facing
+released_on: 2026-10-18
+action_path: "/forms"
+pr_number: 2743
+summary: >-
+  A question with resources added under "Fan out per resource" is now asked
+  once per resource on public forms and registration forms too, not just on
+  ticket pages. Checkbox and dropdown questions now fan out as checkboxes and
+  dropdowns.
+pro_tips:
+  - "Write the question so the resource name fits at the end, like \"This workshop supported my growth:\"."
+  - "Each answer shows on the submission next to its full question."

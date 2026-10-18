@@ -39,6 +39,21 @@ RSpec.describe Form do
     end
   end
 
+  describe "survey roles" do
+    it "allows only one form per survey role" do
+      create(:form, role: "day_1_survey")
+      duplicate = build(:form, role: "day_1_survey")
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:role]).to include("is already used by another form")
+    end
+
+    it "allows many general forms" do
+      create(:form, role: "general")
+      expect(build(:form, role: "general")).to be_valid
+    end
+  end
+
   describe ".owned / .standalone" do
     it "owned returns only owner-attached forms; standalone returns the rest" do
       builder = create(:form_builder)

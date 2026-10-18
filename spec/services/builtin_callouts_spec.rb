@@ -337,7 +337,7 @@ RSpec.describe BuiltinCallouts do
     def seed_survey_templates
       FormBuilderService.new(name: "Day 1 Survey", sections: [ :day_1_survey ], role: "day_1_survey").call
       FormBuilderService.new(name: "Day 2 Survey", sections: [ :day_2_survey ], role: "day_2_survey").call
-      FormBuilderService.new(name: "Post-Event Survey", sections: [ :post_event_feedback ], role: "feedback_surveys").call
+      FormBuilderService.new(name: "Post-Event Survey", sections: [ :post_event_feedback ], role: "post_event_survey").call
       FormBuilderService.new(name: "Post-Training Recipients Survey", sections: [ :recipient_survey ], role: "recipient_survey").call
     end
 
@@ -357,6 +357,17 @@ RSpec.describe BuiltinCallouts do
 
       callout = event.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys")
       expect(callout.forms.map(&:name)).to contain_exactly("Day 1 Survey", "Post-Event Survey")
+    end
+
+    it "finds each survey by its role, so a renamed form is still linked" do
+      seed_survey_templates
+      Form.find_by!(role: "day_1_survey").update!(name: "Day 1 evaluation")
+      event = create(:event, start_date: Time.zone.local(2026, 9, 10, 9), end_date: Time.zone.local(2026, 9, 10, 17))
+
+      described_class.seed(event)
+
+      callout = event.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys")
+      expect(callout.forms.map(&:name)).to contain_exactly("Day 1 evaluation", "Post-Event Survey")
     end
 
     it "links the Day 2 form on a multi-day event" do
