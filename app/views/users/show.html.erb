@@ -110,7 +110,7 @@
                 <dd class="-mt-1 text-xs text-gray-500">
                   <%= l(@last_admin_event.time, format: :long) %>
                   <% if @last_admin_event.user %>
-                    by <%= @last_admin_event.user.name %>
+                    by <%= person_name(@last_admin_event.user) %>
                   <% end %>
                 </dd>
               <% end %>
@@ -129,7 +129,7 @@
                   <dd class="-mt-1 text-xs text-gray-500">
                     <%= l(@last_lock_event.time, format: :long) %>
                     <% if @last_lock_event.user %>
-                      by <%= @last_lock_event.user.name %>
+                      by <%= person_name(@last_lock_event.user) %>
                     <% end %>
                   </dd>
                 <% end %>
@@ -172,13 +172,13 @@
               <dd class="text-gray-900"><%= @user.created_at.present? ? l(@user.created_at, format: :long) : "—" %></dd>
 
               <dt class="font-medium text-gray-500">Created by</dt>
-              <dd class="text-gray-900"><%= @user.created_by&.name.presence || "—" %></dd>
+              <dd class="text-gray-900"><%= person_name(@user.created_by).presence || "—" %></dd>
 
               <dt class="font-medium text-gray-500">Updated at</dt>
               <dd class="text-gray-900"><%= l(@user.updated_at, format: :long) %></dd>
 
               <dt class="font-medium text-gray-500">Updated by</dt>
-              <dd class="text-gray-900"><%= @user.updated_by&.name.presence || "—" %></dd>
+              <dd class="text-gray-900"><%= person_name(@user.updated_by).presence || "—" %></dd>
             </dl>
           </div>
 

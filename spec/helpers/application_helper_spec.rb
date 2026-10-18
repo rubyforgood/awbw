@@ -677,6 +677,8 @@ RSpec.describe ApplicationHelper, type: :helper do
   end
 
   describe "#noticeable_label" do
+    before { allow(helper).to receive(:allowed_to?).with(:full_name?, anything).and_return(false) }
+
     it "describes a registration by registrant and event, with the event's month and year" do
       person = create(:person, first_name: "Jane", last_name: "Doe")
       event = create(:event, title: "Summer Workshop", start_date: Time.zone.local(2026, 8, 14))

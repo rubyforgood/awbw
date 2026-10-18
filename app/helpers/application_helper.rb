@@ -481,9 +481,9 @@ module ApplicationHelper
   def noticeable_label(record)
     label = case record
     when EventRegistration
-      [ record.registrant&.name, event_title_with_month_year(record.event) ].compact_blank.join(" · ")
+      [ person_name(record.registrant), event_title_with_month_year(record.event) ].compact_blank.join(" · ")
     when FormSubmission
-      [ record.person&.name, record.form&.name ].compact_blank.join(" · ")
+      [ person_name(record.person), record.form&.name ].compact_blank.join(" · ")
     else
       record.try(:title) || record.try(:name) || record.try(:full_name)
     end

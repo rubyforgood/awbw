@@ -2,6 +2,8 @@ require "rails_helper"
 
 RSpec.describe FormSubmissionDecorator do
   describe "#payer_name / #payer_email" do
+    before { allow(Draper::ViewContext.current.send(:view_context)).to receive(:allowed_to?).with(:full_name?, anything).and_return(false) }
+
     it "uses the linked person's account, preferring the account email" do
       user = build(:user, email: "priya@example.com")
       person = build(:person, first_name: "Priya", last_name: "Patel", user: user, email: "typed@example.com")

@@ -93,7 +93,7 @@
 
               <div class="flex flex-wrap items-center gap-4">
                 <%= link_to edit_event_registration_path(reg, return_to: "bulk_payments", expand: submission.id),
-                            title: "View #{reg.registrant.name}'s registration for #{@event.title}",
+                            title: "View #{person_name(reg.registrant)}'s registration for #{@event.title}",
                             data: { turbo_frame: "_top" },
                             class: "inline-flex items-center w-24 gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 transition-colors" do %>
                   <i class="fa-solid fa-clipboard-list text-gray-400"></i>
@@ -180,7 +180,7 @@
 
           <div class="w-64">
             <%= select_tag :event_registration_id,
-                   options_from_collection_for_select(unlinked_regs, :id, ->(r) { "#{r.registrant.name} — #{r.registrant.preferred_email}" }),
+                   options_from_collection_for_select(unlinked_regs, :id, ->(r) { "#{person_name(r.registrant)} — #{r.registrant.preferred_email}" }),
                    prompt: "Select registrant...",
                    class: "w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring focus:ring-blue-200 focus:border-blue-500" %>
           </div>

@@ -40,7 +40,7 @@
   <% has_age_groups = primary_age_groups.any? || additional_age_groups.any? %>
   <div class="relative px-5 py-4 pr-12 <%= DomainTheme.bg_class_for(:scholarships, intensity: 100) %> border-b <%= DomainTheme.border_class_for(:scholarships) %>">
     <button type="button" data-action="expandable-card#toggle"
-            aria-label="Toggle <%= person.name %> application"
+            aria-label="Toggle <%= person_name(person) %> application"
             class="absolute top-3 right-3 p-1 text-gray-400 hover:<%= DomainTheme.text_class_for(:scholarships) %> print:hidden">
       <i class="fa-solid fa-chevron-down transition-transform rotate-180" data-expandable-card-target="icon"></i>
     </button>
@@ -50,7 +50,7 @@
         <%= image_tag dp.avatar.variant(:thumbnail),
                       class: "w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0" %>
       <% else %>
-        <span class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 font-bold border border-gray-200 shrink-0"><%= person.name.to_s.first&.upcase %></span>
+        <span class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 font-bold border border-gray-200 shrink-0"><%= person_name(person).to_s.first&.upcase %></span>
       <% end %>
 
       <div class="min-w-0 flex-1 flex flex-wrap items-start gap-x-8 gap-y-3">
@@ -65,13 +65,13 @@
                 registrant's own view). Falls back to the profile when this
                 applicant has no active registration to point at. %>
             <% registration = dashboard.registration_link_target(person) %>
-            <%= link_to person.name,
+            <%= link_to person_name(person),
                         registration ? edit_event_registration_path(registration, return_to: "recipient_card") : person_path(person),
                         data: { turbo_frame: "_top" },
                         class: "text-lg font-bold text-gray-900 hover:underline" %>
             <% if participant_slug %>
               <%= link_to registration_ticket_path(participant_slug), target: "_blank", rel: "noopener",
-                          title: "View #{person.name}'s registration",
+                          title: "View #{person_name(person)}'s registration",
                           class: "shrink-0 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600" do %>
                 <i class="fa-solid fa-ticket"></i>
                 <i class="fa-solid fa-arrow-up-right-from-square text-2xs"></i>
