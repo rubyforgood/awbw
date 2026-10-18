@@ -68,7 +68,7 @@ module Analytics
 
     # The submission a form-driven write was stamped with (Analytics::LifecycleBuffer).
     def self.form_submission_pair(properties)
-      id = properties["form_submission_id"].presence
+      id = properties[LifecycleBuffer::FORM_SUBMISSION_KEY].presence
       [ "FormSubmission", id.to_i ] if id
     end
 

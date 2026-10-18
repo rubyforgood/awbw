@@ -194,7 +194,7 @@ module Ahoy
     # record references (association changes, associated records) become links to
     # the record's show page so admins can jump straight to it.
     def detail_rows
-      rows = extra_properties.except("changes", "form_submission_id",
+      rows = extra_properties.except("changes", Analytics::LifecycleBuffer::FORM_SUBMISSION_KEY,
                                       Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY)
       [ change_request_row, form_submission_row, *(flatten_rows(rows) if rows.present?) ].compact
     end
@@ -545,7 +545,7 @@ module Ahoy
       return unless id
 
       submission = find_referenced_record(type, id)
-      { label: "Form submission", depth: 0,
+      { label: "From form submission", depth: 0,
         link: { text: submission&.title || "Form submission ##{id}", path: show_path_for(submission) } }
     end
 

@@ -10,6 +10,8 @@ module Quotes
   # One quote per submission: re-running (an edited re-submission calls this
   # again) rewrites the quote it already captured rather than adding a second one,
   # so the review queue never holds a superseded version beside the current text.
+  # An admin reworking or publishing that quote claims it, and the form leaves it
+  # alone from then on.
   #
   # Shared by the registration, scholarship, bulk-payment, ticket-callout, and
   # public-form submission paths.
@@ -41,11 +43,11 @@ module Quotes
 
     private
 
-    # `original_body` always catches up to what the person now says. The displayed
-    # `body` follows only while it still reads as captured, so an admin's rewording
-    # survives their source fixing a typo.
+    # Only while the quote still reads exactly as captured. Once an admin has
+    # reworded or published it, it's theirs and the form stops writing to it — the
+    # newer answer stays on the submission for them to read.
     def rewrite(quote, body)
-      return quote.update!(original_body: body) unless quote.body == quote.original_body
+      return if quote.published? || quote.body != quote.original_body
 
       quote.update!(body: body, original_body: body, speaker_name: speaker_name, age: age)
     end

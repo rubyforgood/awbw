@@ -428,7 +428,7 @@ RSpec.describe Ahoy::EventDecorator do
       event = decorate("form_submission_id" => submission.id)
 
       expect(event.detail_rows).to eq(
-        [ { label: "Form submission", depth: 0, link: { text: submission.title, path: "/form_submissions/#{submission.id}" } } ]
+        [ { label: "From form submission", depth: 0, link: { text: submission.title, path: "/form_submissions/#{submission.id}" } } ]
       )
     end
 
@@ -436,7 +436,7 @@ RSpec.describe Ahoy::EventDecorator do
       event = decorate("form_submission_id" => 999_999)
 
       expect(event.detail_rows).to eq(
-        [ { label: "Form submission", depth: 0, link: { text: "Form submission #999999", path: nil } } ]
+        [ { label: "From form submission", depth: 0, link: { text: "Form submission #999999", path: nil } } ]
       )
     end
 

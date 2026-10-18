@@ -150,7 +150,7 @@ module Admin
       @resource_path = safe_resource_path(@event.resource_type, @event.resource_id)
       # A stamped submission can be gone (its person was deleted), so the view
       # links the id only when the record is still there.
-      @form_submission = FormSubmission.find_by(id: @event.properties&.dig("form_submission_id"))
+      @form_submission = FormSubmission.find_by(id: @event.properties&.dig(Analytics::LifecycleBuffer::FORM_SUBMISSION_KEY))
     end
 
     def visits
