@@ -1132,6 +1132,7 @@ class EventsController < ApplicationController
     include_ce = @event.ce_eligible?
     headers = [ "First name", "Last name", "Email", "Phone", "Organization", "Scholarship recipient", "Scholarship tasks completed", "Payment status", "Expected payment method", "Intends to pay", "Someone else will pay", "Payment total" ]
     headers += [ "CE status", "CE paid", "CE due" ] if include_ce
+    headers += survey_csv_headers
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
       @event_registrations.each do |registration|
         csv_out << event_registration_csv_row(registration, cost_required, include_ce)
@@ -1167,7 +1168,17 @@ class EventsController < ApplicationController
       row << csv_dollars(registration.ce_amount_paid_cents)
       row << csv_dollars(registration.ce_amount_due_cents)
     end
-    row
+    row + survey_csv_dates(registration)
+  end
+
+  def survey_csv_headers
+    @survey_completions.roles.map { |role| Form.survey_header(role) }
+  end
+
+  def survey_csv_dates(registration)
+    @survey_completions.roles.map do |role|
+      @survey_completions.completion(registration.registrant_id, role)&.submitted_at&.to_date&.iso8601.to_s
+    end
   end
 
   def onboarding_csv_string
@@ -1184,7 +1195,7 @@ class EventsController < ApplicationController
     headers += [ "Portal user status", "Portal access" ]
     headers += (1..day_count).map { |day| "Day #{day}" }
     headers << "Attendance status"
-    headers += @survey_completions.roles.map { |role| Form.survey_header(role) }
+    headers += survey_csv_headers
     headers += [ "Comments", "Flagged comments" ]
 
     CSV.generate(headers: headers, write_headers: true) do |csv_out|
@@ -1236,9 +1247,7 @@ class EventsController < ApplicationController
       row << (registration.public_send("completed_day_#{day}") ? "Yes" : "No")
     end
     row << registration.attendance_status_report_label
-    @survey_completions.roles.each do |role|
-      row << @survey_completions.completion(registration.registrant_id, role)&.submitted_at&.to_date&.iso8601.to_s
-    end
+    row.concat(survey_csv_dates(registration))
     row << registration.comments.map { |comment| comment.body.to_s.strip }.reject(&:blank?).join(" ::: ")
     row << (registration.comments.any?(&:flagged?) ? "Yes" : "No")
     row

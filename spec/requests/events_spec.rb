@@ -1608,6 +1608,7 @@ RSpec.describe "Events", type: :request do
 
     context "Surveys columns" do
       it "shows a dated column per survey role, linking to the submission, without the ticket forms switch" do
+        event.update!(facilitator_training: true)
         day_1 = create(:form, name: "Training feedback", role: "day_1_survey")
         create(:registration_ticket_callout, :hidden, event:, form: day_1)
         submission = create(:form_submission, form: day_1, event:, person:, created_at: Time.zone.local(2026, 10, 30, 15))
@@ -1634,6 +1635,15 @@ RSpec.describe "Events", type: :request do
         get registrants_event_path(event)
 
         expect(response.body).not_to include(">Surveys<")
+      end
+
+      it "adds each survey's completion date to the CSV export" do
+        create(:form_submission, form: create(:form, role: "post_event_survey"), event:, person:, created_at: Time.zone.local(2026, 11, 2, 10))
+
+        get registrants_event_path(event, format: :csv)
+
+        rows = CSV.parse(response.body, headers: true)
+        expect(rows.first["Post-event survey"]).to eq("2026-11-02")
       end
     end
 
@@ -2655,6 +2665,7 @@ RSpec.describe "Events", type: :request do
     end
 
     it "fills a survey column from the registrant's submission, in the page and the CSV" do
+      event.update!(facilitator_training: true)
       day_1 = create(:form, role: "day_1_survey")
       create(:registration_ticket_callout, :hidden, event:, forms: [ day_1, create(:form, role: "post_event_survey") ])
       create(:form_submission, form: day_1, event:, person:, created_at: Time.zone.local(2026, 10, 30, 15))

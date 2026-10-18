@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe EventSurveyCompletions do
-  let(:event) { create(:event) }
+  let(:event) { create(:event, facilitator_training: true, cost_cents: 1099) }
   let(:person) { create(:person) }
   let(:day_1) { create(:form, role: "day_1_survey") }
   let(:day_2) { create(:form, role: "day_2_survey") }
@@ -15,6 +15,50 @@ RSpec.describe EventSurveyCompletions do
       create(:registration_ticket_callout, event:, form: create(:form, role: "general"))
 
       expect(completions.roles).to eq(%w[day_1_survey post_event_survey])
+    end
+
+    context "which surveys each kind of event offers" do
+      let(:recipient) { create(:form, role: "recipient_survey") }
+
+      before do
+        create(:registration_ticket_callout, :hidden, event:, forms: [ day_1, day_2, post_event ])
+        create(:registration_ticket_callout, :hidden, event:, form: recipient)
+      end
+
+      it "offers all four on a paid, multi-day live facilitator training" do
+        expect(completions.roles).to eq(%w[day_1_survey day_2_survey post_event_survey recipient_survey])
+      end
+
+      it "drops Day 2 on a one-day training" do
+        event.update!(end_date: event.start_date)
+
+        expect(completions.roles).to eq(%w[day_1_survey post_event_survey recipient_survey])
+      end
+
+      it "drops Day 1 and Day 2 on an on-demand training" do
+        event.update!(on_demand: true)
+
+        expect(completions.roles).to eq(%w[post_event_survey recipient_survey])
+      end
+
+      it "drops Day 1 and Day 2 on an event that isn't a facilitator training" do
+        event.update!(facilitator_training: false)
+
+        expect(completions.roles).to eq(%w[post_event_survey recipient_survey])
+      end
+
+      it "drops the scholarship survey on a free event" do
+        event.update!(cost_cents: 0)
+
+        expect(completions.roles).to eq(%w[day_1_survey day_2_survey post_event_survey])
+      end
+    end
+
+    it "includes a survey answered for the event even when the event doesn't offer it" do
+      event.update!(facilitator_training: false)
+      create(:form_submission, form: day_1, event:, person:)
+
+      expect(completions.roles).to eq(%w[day_1_survey])
     end
 
     it "includes a survey answered for the event even when no callout delivers it" do

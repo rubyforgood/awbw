@@ -1,5 +1,6 @@
-# The survey roles an event carries — delivered on any of its callouts or already
-# answered for it — and each registrant's first submission of each one.
+# The survey roles an event carries — offered to its kind of event and delivered
+# on any of its callouts, or already answered for it — and each registrant's first
+# submission of each one.
 class EventSurveyCompletions
   Completion = Data.define(:submission_id, :submitted_at)
 
@@ -9,7 +10,11 @@ class EventSurveyCompletions
   end
 
   def roles
-    @roles ||= Form::SURVEY_ROLES & (delivered_roles + answered_roles)
+    @roles ||= begin
+      delivered = delivered_roles
+      answered = answered_roles
+      Form::SURVEY_ROLES.select { |role| (offered?(role) && delivered.include?(role)) || answered.include?(role) }
+    end
   end
 
   def completion(person_id, role)
@@ -17,6 +22,19 @@ class EventSurveyCompletions
   end
 
   private
+
+  def offered?(role)
+    case role
+    when "day_1_survey" then live_training?
+    when "day_2_survey" then live_training? && @event.day_count >= 2
+    when "recipient_survey" then @event.cost_cents.to_i.positive?
+    else true
+    end
+  end
+
+  def live_training?
+    @event.facilitator_training? && !@event.on_demand?
+  end
 
   def delivered_roles
     RegistrationTicketCalloutForm.joins(:registration_ticket_callout, :form)
