@@ -120,7 +120,7 @@ module EventsHelper
   # is the table-sort column index, so the header row and every body row iterate
   # this same list — keeping header buttons and cell positions aligned no matter
   # which optional columns (payment, attendance days) are present.
-  def onboarding_columns(event)
+  def onboarding_columns(event, survey_roles = [])
     columns = [ { key: "edit", label: "Edit", kind: :edit, sortable: false, align: "center", sticky: true } ]
     columns += [
       { key: "first_name", label: "First", kind: :first_name, sortable: true, align: "left" },
@@ -130,6 +130,9 @@ module EventsHelper
       columns << { key: "completed_day_#{day}", label: "Day #{day}", kind: :checkbox, field: "completed_day_#{day}", sortable: true, align: "center", toggle: "days" }
     end
     columns << { key: "attendance", label: "Event attendance", kind: :attendance, sortable: true, align: "center", toggle: "attendance" }
+    survey_roles.each do |role|
+      columns << { key: role, label: Form.survey_header(role), kind: :survey, role: role, sortable: true, align: "center", toggle: role }
+    end
     columns += [
       { key: "program", label: "Organization", kind: :program, sortable: true, align: "left", toggle: "program" },
       { key: "program_type", label: program_status_column_label(event), kind: :program_type, sortable: true, align: "center", toggle: "program_type", note: program_status_column_note(event) }
@@ -161,14 +164,14 @@ module EventsHelper
 
   # Columns minus any the admin has hidden (by their toggle key). Non-toggleable
   # columns (edit, name, email, progress) are always kept.
-  def visible_onboarding_columns(event, hidden_columns = [])
-    onboarding_columns(event).reject { |column| column[:toggle].present? && hidden_columns.include?(column[:toggle]) }
+  def visible_onboarding_columns(event, hidden_columns = [], survey_roles = [])
+    onboarding_columns(event, survey_roles).reject { |column| column[:toggle].present? && hidden_columns.include?(column[:toggle]) }
   end
 
   # Distinct column show/hide menu entries (label keyed by toggle key),
   # collapsing the per-day columns into a single "Attendance days" toggle.
-  def onboarding_toggle_entries(event)
-    onboarding_columns(event).each_with_object({}) do |column, entries|
+  def onboarding_toggle_entries(event, survey_roles = [])
+    onboarding_columns(event, survey_roles).each_with_object({}) do |column, entries|
       attr = column[:toggle]
       next if attr.blank? || entries.key?(attr)
 

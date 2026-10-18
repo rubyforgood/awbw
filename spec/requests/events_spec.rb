@@ -1606,6 +1606,37 @@ RSpec.describe "Events", type: :request do
       end
     end
 
+    context "Surveys columns" do
+      it "shows a dated column per survey role, linking to the submission, without the ticket forms switch" do
+        day_1 = create(:form, name: "Training feedback", role: "day_1_survey")
+        create(:registration_ticket_callout, :hidden, event:, form: day_1)
+        submission = create(:form_submission, form: day_1, event:, person:, created_at: Time.zone.local(2026, 10, 30, 15))
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Surveys")
+        expect(response.body).to include("Day 1 survey")
+        expect(response.body).to include("Oct 30")
+        expect(response.body).to include(event_registrant_submissions_path(event, person_id: person.id, anchor: "form-submission-#{submission.id}"))
+        expect(response.body).not_to include("Ticket forms")
+        expect(response.body).not_to include("Training feedback")
+      end
+
+      it "shows a survey answered for the event even after its callout is gone" do
+        create(:form_submission, form: create(:form, role: "day_2_survey"), event:, person:)
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Day 2 survey")
+      end
+
+      it "omits the switch when the event carries no survey" do
+        get registrants_event_path(event)
+
+        expect(response.body).not_to include(">Surveys<")
+      end
+    end
+
     context "Send bulk emails link" do
       it "reads 'Send bulk emails' with no filters and links without filter params" do
         get registrants_event_path(event)
@@ -2621,6 +2652,24 @@ RSpec.describe "Events", type: :request do
       rows = CSV.parse(response.body)
       expect(rows.length).to be > 1
       rows[1..].each { |data_row| expect(data_row.length).to eq(rows.first.length) }
+    end
+
+    it "fills a survey column from the registrant's submission, in the page and the CSV" do
+      day_1 = create(:form, role: "day_1_survey")
+      create(:registration_ticket_callout, :hidden, event:, forms: [ day_1, create(:form, role: "post_event_survey") ])
+      create(:form_submission, form: day_1, event:, person:, created_at: Time.zone.local(2026, 10, 30, 15))
+
+      get onboarding_event_path(event)
+
+      expect(response.body).to include("Day 1 survey")
+      expect(response.body).to include("Post-event survey")
+      expect(response.body).to include("Oct 30")
+
+      get onboarding_event_path(event, format: :csv)
+
+      rows = CSV.parse(response.body, headers: true)
+      expect(rows.first["Day 1 survey"]).to eq("2026-10-30")
+      expect(rows.first["Post-event survey"]).to eq("")
     end
 
     it "shows registration comments joined by ::: linked to the comments section" do
