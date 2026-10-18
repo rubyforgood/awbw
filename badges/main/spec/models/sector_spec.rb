@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe Sector, type: :model do
+  it "drops stray whitespace from a name" do
+    expect(create(:sector, name: " Grief/Loss  ").name).to eq("Grief/Loss")
+  end
+
   describe ".taggings_presence" do
     let!(:tagged) { create(:sector) }
     let!(:untagged) { create(:sector) }
