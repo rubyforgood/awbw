@@ -193,4 +193,23 @@ RSpec.describe "Person age ranges", type: :request do
       expect(person.primary_age_groups).to contain_exactly(children)
     end
   end
+
+  # An admin can flag the AgeRange type profile_specific in /category_types; the
+  # chip picker's nested attributes stay the only path that edits age ranges.
+  describe "when an admin marks the AgeRange type profile_specific" do
+    before { age_type.update!(profile_specific: true) }
+
+    it "keeps the age ranges the chip picker saved" do
+      item = person.age_range_categorizable_items.create!(category: children, is_primary: false)
+
+      update_person(age_items: [
+        { id: item.id, category_id: children.id, is_primary: "0" },
+        { category_id: teens.id, is_primary: "1" }
+      ])
+
+      person.reload
+      expect(person.primary_age_groups).to contain_exactly(teens)
+      expect(person.additional_age_groups).to contain_exactly(children)
+    end
+  end
 end
