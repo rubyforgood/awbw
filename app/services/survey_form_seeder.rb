@@ -4,9 +4,9 @@
 # scholarship callout). Built once from the form-builder presets, then left for
 # staff to edit in the builder.
 #
-# Idempotent on form name, so it's safe to run repeatedly — in db/seeds and as the
+# Idempotent on survey role, so it's safe to run repeatedly — in db/seeds and as the
 # `data:seed_survey_forms` task for prod. Returns the names it created (skipping
-# any that already exist).
+# any role that already has a form).
 class SurveyFormSeeder
   TEMPLATES = [
     { name: "Day 1 Survey", role: "day_1_survey", sections: %i[day_1_survey content_sharing_preferences] },
@@ -24,18 +24,27 @@ class SurveyFormSeeder
   # The growth questions cover the whole day's workshops; clarity uses a default
   # split. Admins adjust any of it per form in the editor's "Fan out per resource".
   FANOUT_RESOURCES = [
-    { form: "Day 1 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part One", resources: [ "The Touchstone Journey", "Creating A Safer/Braver Place" ] },
-    { form: "Day 1 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part Two", resources: [ "The Take A Break, Self-Regulate" ] },
-    { form: "Day 1 Survey", name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_1_WORKSHOPS },
-    { form: "Day 1 Survey", name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_1_WORKSHOPS },
-    { form: "Day 2 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 1", resources: [ "The Monster In Me" ] },
-    { form: "Day 2 Survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 2", resources: [ "Claiming Who I Am" ] },
-    { form: "Day 2 Survey", name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_2_WORKSHOPS },
-    { form: "Day 2 Survey", name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_2_WORKSHOPS }
+    { role: "day_1_survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part One", resources: [ "The Touchstone Journey", "Creating A Safer/Braver Place" ] },
+    { role: "day_1_survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 1 — Part Two", resources: [ "The Take A Break, Self-Regulate" ] },
+    { role: "day_1_survey", name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_1_WORKSHOPS },
+    { role: "day_1_survey", name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_1_WORKSHOPS },
+    { role: "day_2_survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 1", resources: [ "The Monster In Me" ] },
+    { role: "day_2_survey", name: FormBuilderService::CLARITY_PROMPT, subtitle: "Day 2 — Part 2", resources: [ "Claiming Who I Am" ] },
+    { role: "day_2_survey", name: FormBuilderService::GROWTH_PERSONAL_PROMPT, resources: DAY_2_WORKSHOPS },
+    { role: "day_2_survey", name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, resources: DAY_2_WORKSHOPS }
   ].freeze
 
   def self.call
     new.call
+  end
+
+  # The training-topic resources a fan-out question asks about, in the given order.
+  # A missing one is created unpublished so the question still names every topic.
+  def self.topic_resources(titles)
+    titles.map do |title|
+      Resource.find_by(title:) ||
+        Resource.create!(title:, kind: "Resource", created_by: User.where(super_user: true).order(:id).first)
+    end
   end
 
   attr_reader :created
@@ -46,7 +55,7 @@ class SurveyFormSeeder
 
   def call
     TEMPLATES.each do |template|
-      next if Form.exists?(name: template[:name])
+      next if Form.survey(template[:role])
       FormBuilderService.new(name: template[:name], sections: template[:sections], role: template[:role]).call
       @created << template[:name]
     end
@@ -60,7 +69,7 @@ class SurveyFormSeeder
   # on its own after the forms and resources exist.
   def link_fanout_resources
     FANOUT_RESOURCES.each do |entry|
-      form = Form.find_by(name: entry[:form])
+      form = Form.survey(entry[:role])
       next unless form
       scope = form.form_fields.where(name: entry[:name])
       scope = scope.where(subtitle: entry[:subtitle]) if entry[:subtitle]

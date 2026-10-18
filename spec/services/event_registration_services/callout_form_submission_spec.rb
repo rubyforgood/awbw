@@ -43,6 +43,16 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     }.not_to change(FormSubmission, :count)
   end
 
+  it "edits the existing submission in place after the form's role changes" do
+    form.update!(role: "day_1_survey")
+    original = submit({ field.id.to_s => "Great" })
+    form.update!(role: "general")
+
+    expect {
+      expect(submit({ field.id.to_s => "Even better" })).to eq(original)
+    }.not_to change(FormSubmission, :count)
+  end
+
   it "reports edited? — false on a first submission, true on a re-submit" do
     first = described_class.call(registration:, callout:, form:, form_params: { field.id.to_s => "Great" })
     expect(first.edited?).to be(false)

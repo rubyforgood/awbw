@@ -29,8 +29,8 @@ module EventRegistrationServices
     def call
       person = @registration.registrant
       ActiveRecord::Base.transaction do
-        @submission = FormSubmission.find_or_create_by!(
-          person: person, form: @form, event: @registration.event, role: @form.role
+        @submission = FormSubmission.create_with(role: @form.role).find_or_create_by!(
+          person: person, form: @form, event: @registration.event
         )
         # Capture first-time vs. edit before the metadata update below flips the flag.
         @edited = !@submission.previously_new_record?
