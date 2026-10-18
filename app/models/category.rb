@@ -36,6 +36,7 @@ class Category < ApplicationRecord
   end
 
   # Validations
+  normalizes :name, with: ->(name) { name.squish }
   validates :name, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
   validates :position, numericality: {
     only_integer: true,
