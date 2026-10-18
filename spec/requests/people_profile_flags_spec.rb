@@ -265,7 +265,7 @@ RSpec.describe "Person profile flag visibility", type: :request do
     end
 
     it "is absent when nothing is hidden" do
-      person.update!(profile_show_bio: true)
+      person.update!(profile_show_bio: true, profile_show_pronouns: true, profile_show_phone: true, profile_show_social_media: true)
       sign_in owner_user
       get person_path(person)
       expect(hidden_card).to be_nil

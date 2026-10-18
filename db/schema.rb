@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_235715) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1647,7 +1647,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
-    t.string "display_name_preference"
+    t.string "display_name_preference", default: "first_name_last_initial"
     t.string "email"
     t.string "email_2"
     t.string "email_2_type"
@@ -1670,11 +1670,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false
     t.boolean "profile_show_monthly_reports", default: true, null: false
-    t.boolean "profile_show_phone", default: true, null: false
-    t.boolean "profile_show_pronouns", default: true, null: false
+    t.boolean "profile_show_phone", default: false, null: false
+    t.boolean "profile_show_pronouns", default: false, null: false
     t.boolean "profile_show_resources", default: true, null: false
     t.boolean "profile_show_sectors", default: true, null: false
-    t.boolean "profile_show_social_media", default: true, null: false
+    t.boolean "profile_show_social_media", default: false, null: false
     t.boolean "profile_show_stories", default: true, null: false
     t.boolean "profile_show_workshop_logs", default: true, null: false
     t.boolean "profile_show_workshop_variations", default: true, null: false
