@@ -120,6 +120,21 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("short-answer")
       end
 
+      it "includes a fanned-out question's per-resource answers under its question type" do
+        form = create(:form)
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        create(:form_field_resource, form_field: clarity, resource: create(:resource, title: "Masks"))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks",
+               submitted_answer: "fanned-answer", form_submission: create(:form_submission, form: form))
+        create(:form_answer, submitted_answer: "checkbox-answer",
+               form_field: create(:form_field, form: form, answer_type: :multi_select_checkbox))
+
+        get form_answers_path(answer_type: "single_select_radio"), headers: frame_headers
+
+        expect(response.body).to include("fanned-answer")
+        expect(response.body).not_to include("checkbox-answer")
+      end
+
       # By the submission's date, not the answer row's, so this list and a form's
       # results page answer the same date range the same way.
       it "filters by when the submission was made" do

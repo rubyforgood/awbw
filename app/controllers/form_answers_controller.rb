@@ -46,10 +46,17 @@ class FormAnswersController < ApplicationController
     if params[:form_submission_id].present?
       scope = scope.where(form_submission_id: params[:form_submission_id])
     end
-    if params[:answer_type].present? && FormField.answer_types.key?(params[:answer_type])
-      scope = scope.joins(:form_field).where(form_fields: { answer_type: FormField.answer_types[params[:answer_type]] })
-    end
+    scope = answer_type_scoped(scope) if params[:answer_type].present? && FormField.answer_types.key?(params[:answer_type])
     date_scoped(scope)
+  end
+
+  # A fanned-out field's per-resource answers carry no field, so they're matched
+  # through their field's wording to count under its type.
+  def answer_type_scoped(scope)
+    typed = FormField.where(answer_type: FormField.answer_types[params[:answer_type]])
+    copies = typed.joins(:form_field_resources).distinct.map { |field| FormAnswer.per_resource_copies(field) }.reduce(:or)
+    own = scope.where(form_field_id: typed.select(:id))
+    copies ? own.or(scope.where(id: copies.select(:id))) : own
   end
 
   # The Question box stays a free-text search: it matches any question whose name

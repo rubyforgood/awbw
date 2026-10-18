@@ -30,7 +30,13 @@ class FormAnswer < ApplicationRecord
     return where(form_field: field) if question == field.name
     return unless field.per_resource_questions.include?(question)
 
-    where(form_field_id: nil, question_name_when_answered: question,
+    per_resource_copies(field, question)
+  end
+
+  # A fanned-out field's per-resource answers (saved with no field) on its form —
+  # every copy, or just the ones worded as `questions`.
+  def self.per_resource_copies(field, questions = field.per_resource_questions)
+    where(form_field_id: nil, question_name_when_answered: questions,
       form_submission_id: FormSubmission.where(form_id: field.form_id).select(:id))
   end
 
