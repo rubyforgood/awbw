@@ -874,7 +874,7 @@ RSpec.describe "Forms", type: :request do
         patch form_path(form), params: {
           form: { form_fields_attributes: { "0" => {
             id: field.id, name: field.name, answer_type: field.answer_type,
-            form_field_resources_attributes: { "0" => { resource_id: resource.id } }
+            form_field_resources_attributes: { "0" => { topic_sgid: resource.to_sgid.to_s } }
           } } }
         }
       }.to change { field.reload.form_field_resources.count }.by(1)
@@ -891,7 +891,7 @@ RSpec.describe "Forms", type: :request do
       patch form_path(form), params: {
         form: { form_fields_attributes: { "0" => {
           id: field.id, name: field.name, answer_type: field.answer_type,
-          form_field_resources_attributes: { "0" => { workshop_id: workshop.id } }
+          form_field_resources_attributes: { "0" => { topic_sgid: workshop.to_sgid.to_s } }
         } } }
       }
 

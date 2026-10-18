@@ -1,14 +1,17 @@
 class SearchController < ApplicationController
   skip_before_action :preload_current_user_associations, raise: false
 
-  # Virtual "model" that searches people and organizations together for the
-  # compound payer / funder pickers, listing organizations first.
-  COMPOUND_MODEL = "person_or_organization".freeze
+  # Virtual "models" that search several models together, listed in this order: the
+  # payer / funder pickers (organizations first) and the form fan-out picker.
+  COMPOUND_MODELS = {
+    "person_or_organization" => [ Organization, Person ],
+    "workshop_or_resource" => [ Workshop, Resource ]
+  }.freeze
   # Every login, whatever its access, labelled with why it can't sign in — for the users deduper.
   USER_ANY_STATUS_MODEL = "user_any_status".freeze
 
   def index
-    return render json: compound_results if params[:model] == COMPOUND_MODEL
+    return render json: compound_results(COMPOUND_MODELS[params[:model]]) if COMPOUND_MODELS.key?(params[:model])
     return render json: user_any_status_results if params[:model] == USER_ANY_STATUS_MODEL
 
     model_class = allowed_model(params[:model])
@@ -42,19 +45,20 @@ class SearchController < ApplicationController
 
   private
 
-  # Search people and organizations, listing organizations first (the more
-  # common funder/payer).
-  def compound_results
-    authorize! Organization, to: :search?
-    authorize! Person, to: :search?
+  # Same-named records (e.g. two copies of a workshop) get their id appended so
+  # they can be told apart.
+  def compound_results(model_classes)
+    model_classes.each { |model_class| authorize! model_class, to: :search? }
 
     query = params[:q].to_s.strip
     return [] if query.blank?
 
-    records = authorized_scope(Organization.remote_search(query)).limit(25).to_a +
-      authorized_scope(Person.remote_search(query)).limit(25).to_a
-
-    records.map(&:compound_search_label)
+    records = model_classes.flat_map { |model_class| authorized_scope(model_class.remote_search(query)).limit(25).to_a }
+    labels = records.map(&:compound_search_label)
+    duplicates = labels.map { |row| row[:label] }.tally.select { |_label, count| count > 1 }.keys
+    labels.zip(records).map do |row, record|
+      duplicates.include?(row[:label]) ? row.merge(label: "#{row[:label]} ##{record.id}") : row
+    end
   end
 
   def user_any_status_results

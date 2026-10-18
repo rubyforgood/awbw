@@ -205,7 +205,7 @@ class FormField < ApplicationRecord
     reject_if: ->(attrs) { attrs[:option_name].blank? }
 
   accepts_nested_attributes_for :form_field_resources, allow_destroy: true,
-    reject_if: ->(attrs) { attrs[:resource_id].blank? && attrs[:workshop_id].blank? }
+    reject_if: ->(attrs) { attrs[:topic_sgid].blank? }
 
   scope :published, -> { where(status: "active") }
 

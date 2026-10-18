@@ -20,11 +20,24 @@ class FormFieldResource < ApplicationRecord
     workshop || resource
   end
 
+  # The editor picks either kind from one search (SearchController "workshop_or_resource").
+  def topic_sgid
+    topic&.to_signed_global_id&.to_s
+  end
+
+  def topic_sgid=(sgid)
+    return if sgid.blank?
+
+    record = GlobalID::Locator.locate_signed(sgid, only: [ Workshop, Resource ])
+    self.workshop = record.is_a?(Workshop) ? record : nil
+    self.resource = record.is_a?(Resource) ? record : nil
+  end
+
   private
 
   def links_one_topic
     return if [ resource, workshop ].compact.one?
 
-    errors.add(:base, "Link a workshop or a resource, not both")
+    errors.add(:base, "Pick one workshop or resource")
   end
 end

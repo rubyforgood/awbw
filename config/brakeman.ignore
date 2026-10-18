@@ -128,7 +128,7 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "258faa32ba5deabf094a7fa84be7b809fdbe3bded5dcf9403e7e63d9ca976ac3",
+      "fingerprint": "c51c11d4cfbba418871cbbcefdf71ba9a84ea51bc00140e4648ca02196d178b2",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "app/controllers/forms_controller.rb",
@@ -146,7 +146,7 @@
       "cwe_id": [
         915
       ],
-      "note": "Admin only \u2014 FormsController inherits manage? (super-admin), so role/slug/published and the nested form_field_resources link (resource_id / workshop_id) are only mass-assignable by admins editing a form."
+      "note": "Admin only \u2014 FormsController inherits manage? (super-admin), so role/slug/published and the nested form_field_resources link (topic_sgid, resolved only to a Workshop or Resource) are only mass-assignable by admins editing a form."
     },
     {
       "warning_type": "Mass Assignment",

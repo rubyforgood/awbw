@@ -40,4 +40,22 @@ RSpec.describe "Payer search (combined people + organizations)", type: :request 
       expect(response.parsed_body).to eq([])
     end
   end
+
+  describe "GET /search/workshop_or_resource" do
+    let!(:workshop) { create(:workshop, title: "Touchstone Journey", windows_type: nil) }
+    let!(:copy) { create(:workshop, title: "Touchstone Journey", windows_type: nil) }
+    let!(:resource) { create(:resource, title: "Touchstone Journey Handout") }
+
+    it "lists workshops then resources, telling same-named workshops apart by id" do
+      get "/search/workshop_or_resource", params: { q: "Touchstone" }
+
+      labels = response.parsed_body.map { |row| row["label"] }
+      expect(labels).to eq([
+        "Touchstone Journey · Workshop ##{workshop.id}",
+        "Touchstone Journey · Workshop ##{copy.id}",
+        "Touchstone Journey Handout · Resource"
+      ])
+      expect(response.parsed_body.map { |row| GlobalID::Locator.locate_signed(row["id"]) }).to eq([ workshop, copy, resource ])
+    end
+  end
 end

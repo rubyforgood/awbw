@@ -1,19 +1,18 @@
-<%# One fan-out row on a form field: a workshop or a resource. Linking any turns the
-    field into a "per-resource" question — the form repeats it once per link, with
-    the title added to the end of the prompt. Added a row at a time (cocoon). %>
-<% kind = local_assigns.fetch(:kind) { f.object.workshop_id ? :workshop : :resource } %>
-<% topic = f.object.topic %>
+<%# One fan-out row on a form field: a workshop or a resource, picked from one
+    search. Linking any turns the field into a "per-resource" question — the form
+    repeats it once per link, with the title added to the end of the prompt. Added
+    a row at a time (cocoon). %>
+<% selected = f.object.topic&.compound_search_label %>
 <div class="nested-fields flex items-center gap-2">
-  <span class="w-16 shrink-0 text-xs text-gray-500"><%= kind.to_s.humanize %></span>
   <select
-    name="<%= f.field_name(:"#{kind}_id") %>"
-    id="<%= f.field_id(:"#{kind}_id") %>"
+    name="<%= f.field_name(:topic_sgid) %>"
+    id="<%= f.field_id(:topic_sgid) %>"
     data-controller="remote-select"
-    data-remote-select-model-value="<%= kind %>"
+    data-remote-select-model-value="workshop_or_resource"
     class="min-w-0 flex-1 rounded border-gray-300 bg-white px-2 py-1 text-sm shadow-sm">
-    <option value="">Type to search <%= kind.to_s.pluralize %>…</option>
-    <% if topic %>
-      <option value="<%= topic.id %>" selected><%= topic.title %></option>
+    <option value="">Type to search workshops and resources…</option>
+    <% if selected %>
+      <option value="<%= selected[:id] %>" selected><%= selected[:label] %></option>
     <% end %>
   </select>
   <%= link_to_remove_association "✖", f,

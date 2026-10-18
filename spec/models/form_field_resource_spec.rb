@@ -23,6 +23,27 @@ RSpec.describe FormFieldResource, type: :model do
     expect(build(:form_field_resource, workshop: create(:workshop))).not_to be_valid
   end
 
+  describe "#topic_sgid=" do
+    it "links whichever kind the signed id resolves to" do
+      workshop = create(:workshop)
+      link = build(:form_field_resource, resource: create(:resource))
+
+      link.topic_sgid = workshop.to_sgid.to_s
+
+      expect(link).to have_attributes(workshop: workshop, resource: nil)
+      expect(link).to be_valid
+    end
+
+    it "links nothing for a signed id of any other model" do
+      link = build(:form_field_resource, resource: nil)
+
+      link.topic_sgid = create(:person).to_sgid.to_s
+
+      expect(link.topic).to be_nil
+      expect(link).not_to be_valid
+    end
+  end
+
   it "requires a unique workshop per form field" do
     existing = create(:form_field_resource, resource: nil, workshop: create(:workshop))
     dup = build(:form_field_resource, form_field: existing.form_field, resource: nil, workshop: existing.workshop)

@@ -221,14 +221,9 @@
               <%= f.fields_for :form_field_resources do |rf| %>
                 <%= render "forms/form_field_resource_fields", f: rf %>
               <% end %>
-              <div class="flex gap-4">
-                <% %i[workshop resource].each do |kind| %>
-                  <%= link_to_add_association "+ Add #{kind}", f, :form_field_resources,
-                        partial: "forms/form_field_resource_fields",
-                        render_options: { locals: { kind: kind } },
-                        class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} font-medium" %>
-                <% end %>
-              </div>
+              <%= link_to_add_association "+ Add workshop or resource", f, :form_field_resources,
+                    partial: "forms/form_field_resource_fields",
+                    class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} font-medium" %>
             </div>
           </details>
         <% end %>
