@@ -380,7 +380,7 @@ RSpec.describe "FormSubmissions", type: :request do
         field = create(:form_field, form: submission.form, name: "Was it clear for", answer_type: :single_select_radio)
         create(:form_field_resource, form_field: field, resource: create(:resource, title: "Triple Focus"))
         create(:form_field_resource, form_field: field, resource: create(:resource, title: "Listening Is Art"))
-        submission.persist_answer(field, { field.fanned_resources.first.id.to_s => "Yes" })
+        submission.persist_answer(field, { field.fanned_links.first.id.to_s => "Yes" })
 
         get form_submission_path(submission)
 

@@ -108,6 +108,7 @@ class Resource < ApplicationRecord
   belongs_to :organization, optional: true
   has_one :form, as: :owner
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
+  has_many :form_field_resources, dependent: :destroy
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :reports, as: :owner
   has_many :sectorable_items, dependent: :destroy, as: :sectorable

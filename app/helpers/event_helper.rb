@@ -143,12 +143,12 @@ module EventHelper
     response&.question_name_when_answered.presence || field&.name
   end
 
-  # [label, answer] rows to show for a field — one per linked resource when it fans out.
+  # [label, answer] rows to show for a field — one per link when it fans out.
   def display_answer_rows(submission, field, response)
     return [ [ display_question_label(field, response), response ] ] unless field.per_resource?
 
-    submission.per_resource_answers(field).map do |resource, answer|
-      [ answer&.question_name_when_answered.presence || field.per_resource_question(resource), answer ]
+    submission.per_resource_answers(field).map do |link, answer|
+      [ answer&.question_name_when_answered.presence || field.per_resource_question(link.topic), answer ]
     end
   end
 

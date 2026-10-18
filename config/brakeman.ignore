@@ -128,11 +128,11 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "457d39dbd6e24228eccecf62464a7408cd89fae4432daadfd2b8c8922bd9a4a3",
+      "fingerprint": "258faa32ba5deabf094a7fa84be7b809fdbe3bded5dcf9403e7e63d9ca976ac3",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "app/controllers/forms_controller.rb",
-      "line": 205,
+      "line": 221,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": null,
       "render_path": null,
@@ -146,7 +146,7 @@
       "cwe_id": [
         915
       ],
-      "note": "Admin only — FormsController inherits manage? (super-admin), so role/slug/published and the nested form_field_resources link (resource_id) are only mass-assignable by admins editing a form."
+      "note": "Admin only \u2014 FormsController inherits manage? (super-admin), so role/slug/published and the nested form_field_resources link (resource_id / workshop_id) are only mass-assignable by admins editing a form."
     },
     {
       "warning_type": "Mass Assignment",

@@ -401,13 +401,8 @@ RSpec.describe FormSubmission do
 
     describe "a fanned-out field" do
       let(:field) { create(:form_field, form: submission.form, name: "This workshop supported my growth:", answer_type: :multi_select_checkbox) }
-      let(:touchstone) { create(:resource, title: "Touchstone") }
-      let(:safer_place) { create(:resource, title: "Safer Place") }
-
-      before do
-        create(:form_field_resource, form_field: field, resource: touchstone)
-        create(:form_field_resource, form_field: field, resource: safer_place)
-      end
+      let!(:touchstone) { create(:form_field_resource, form_field: field, resource: nil, workshop: create(:workshop, title: "Touchstone")) }
+      let!(:safer_place) { create(:form_field_resource, form_field: field, resource: create(:resource, title: "Safer Place")) }
 
       it "stores one answer per resource under its full sentence, with no field" do
         submission.persist_answer(field, { touchstone.id.to_s => [ "A", "B" ], safer_place.id.to_s => [ "C" ] })

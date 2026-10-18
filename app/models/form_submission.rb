@@ -272,16 +272,16 @@ class FormSubmission < ApplicationRecord
     end
   end
 
-  # A fanned-out field's stored answers as [resource, answer] pairs in link order;
+  # A fanned-out field's stored answers as [link, answer] pairs in link order;
   # answer is nil for a copy left unanswered.
   def per_resource_answers(field)
     answers = form_answers.select { |answer| answer.form_field_id.nil? }.index_by(&:question_name_when_answered)
-    field.fanned_resources.map { |resource| [ resource, answers[field.per_resource_question(resource)] ] }
+    field.fanned_links.map { |link| [ link, answers[field.per_resource_question(link.topic)] ] }
   end
 
-  # The same answers keyed by resource id, the shape the form partial prefills from.
+  # The same answers keyed by link id, the shape the form partial prefills from.
   def per_resource_values(field)
-    per_resource_answers(field).to_h { |resource, answer| [ resource.id.to_s, answer&.submitted_answer ] }
+    per_resource_answers(field).to_h { |link, answer| [ link.id.to_s, answer&.submitted_answer ] }
   end
 
   def bulk_payment?
@@ -436,15 +436,15 @@ class FormSubmission < ApplicationRecord
 
   private
 
-  # One answer per linked resource, keyed by the sentence it was asked under
-  # (form_field stays nil) so renaming or unlinking the resource leaves it readable.
+  # One answer per link, keyed by the sentence it was asked under (form_field stays
+  # nil) so renaming or unlinking the workshop or resource leaves it readable.
   def persist_per_resource_answers(field, raw_values)
     values = raw_values.is_a?(Hash) ? raw_values.transform_keys(&:to_s) : {}
-    field.fanned_resources.each do |resource|
-      raw_value = values[resource.id.to_s]
+    field.fanned_links.each do |link|
+      raw_value = values[link.id.to_s]
       next if raw_value.nil?
 
-      form_answers.find_or_initialize_by(form_field: nil, question_name_when_answered: field.per_resource_question(resource))
+      form_answers.find_or_initialize_by(form_field: nil, question_name_when_answered: field.per_resource_question(link.topic))
         .update!(submitted_answer: answer_text(raw_value))
     end
   end

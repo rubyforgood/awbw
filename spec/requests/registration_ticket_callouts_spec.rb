@@ -132,7 +132,7 @@ RSpec.describe "Callout inline form", type: :request do
     end
     let(:survey_callout) { create(:registration_ticket_callout, event:, form: survey) }
 
-    before { create(:form_field_resource, form_field: clarity_field, resource:) }
+    let!(:clarity_link) { create(:form_field_resource, form_field: clarity_field, resource:) }
 
     it "records the fixed answers, fans clarity out per resource, and writes the profile through" do
       post registration_callout_form_submit_path(registration.slug, survey_callout, survey), params: {
@@ -140,7 +140,7 @@ RSpec.describe "Callout inline form", type: :request do
           form_fields: {
             impact.id.to_s => "Transformative",
             anon.id.to_s => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true],
-            clarity_field.id.to_s => { resource.id.to_s => "Yes" }
+            clarity_field.id.to_s => { clarity_link.id.to_s => "Yes" }
           }
         }
       }

@@ -41,6 +41,7 @@ class Workshop < ApplicationRecord
     author&.preferred_email
   end
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
+  has_many :form_field_resources, dependent: :destroy
   has_many :quotable_item_quotes, as: :quotable, dependent: :destroy
   has_many :associated_resources, class_name: "Resource", foreign_key: "workshop_id", dependent: :restrict_with_error
   has_many :sectorable_items, dependent: :destroy, inverse_of: :sectorable, as: :sectorable

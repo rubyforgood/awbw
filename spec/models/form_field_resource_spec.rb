@@ -11,6 +11,24 @@ RSpec.describe FormFieldResource, type: :model do
     expect(dup).not_to be_valid
   end
 
+  it "links a workshop instead of a resource" do
+    link = build(:form_field_resource, resource: nil, workshop: create(:workshop, title: "Touchstone Journey"))
+
+    expect(link).to be_valid
+    expect(link.topic.title).to eq("Touchstone Journey")
+  end
+
+  it "requires exactly one of a workshop or a resource" do
+    expect(build(:form_field_resource, resource: nil)).not_to be_valid
+    expect(build(:form_field_resource, workshop: create(:workshop))).not_to be_valid
+  end
+
+  it "requires a unique workshop per form field" do
+    existing = create(:form_field_resource, resource: nil, workshop: create(:workshop))
+    dup = build(:form_field_resource, form_field: existing.form_field, resource: nil, workshop: existing.workshop)
+    expect(dup).not_to be_valid
+  end
+
   it "orders by position" do
     field = create(:form_field)
     later = create(:form_field_resource, form_field: field, position: 2)

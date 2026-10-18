@@ -147,14 +147,10 @@ RSpec.describe FormAnswerValidator do
 
   describe "a fanned-out field" do
     let(:field) { create(:form_field, form: form, required: true, answer_type: :single_select_radio) }
-    let(:touchstone) { create(:resource) }
-    let(:safer_place) { create(:resource) }
+    let!(:touchstone) { create(:form_field_resource, form_field: field) }
+    let!(:safer_place) { create(:form_field_resource, form_field: field) }
 
-    before do
-      create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Agree"))
-      create(:form_field_resource, form_field: field, resource: touchstone)
-      create(:form_field_resource, form_field: field, resource: safer_place)
-    end
+    before { create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Agree")) }
 
     it "checks each copy and keys errors by resource" do
       result = validate(field, { touchstone.id.to_s => "Agree", safer_place.id.to_s => "Forged" })

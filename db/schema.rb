@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_115125) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1158,11 +1158,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
     t.datetime "created_at", null: false
     t.integer "form_field_id", null: false
     t.integer "position"
-    t.integer "resource_id", null: false
+    t.integer "resource_id"
     t.datetime "updated_at", null: false
+    t.integer "workshop_id"
     t.index ["form_field_id", "resource_id"], name: "index_form_field_resources_on_field_and_resource", unique: true
+    t.index ["form_field_id", "workshop_id"], name: "index_form_field_resources_on_field_and_workshop", unique: true
     t.index ["form_field_id"], name: "index_form_field_resources_on_form_field_id"
     t.index ["resource_id"], name: "index_form_field_resources_on_resource_id"
+    t.index ["workshop_id"], name: "index_form_field_resources_on_workshop_id"
   end
 
   create_table "form_fields", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2745,6 +2748,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
   add_foreign_key "form_field_answer_options", "users", column: "updated_by_id"
   add_foreign_key "form_field_resources", "form_fields"
   add_foreign_key "form_field_resources", "resources"
+  add_foreign_key "form_field_resources", "workshops"
   add_foreign_key "form_fields", "forms"
   add_foreign_key "form_fields", "users", column: "created_by_id"
   add_foreign_key "form_fields", "users", column: "updated_by_id"

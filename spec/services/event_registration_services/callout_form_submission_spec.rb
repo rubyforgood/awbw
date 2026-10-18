@@ -69,9 +69,10 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     end
     let(:person) { registration.registrant }
 
+    let!(:triple_focus_link) { create(:form_field_resource, form_field: clarity_field, resource: triple_focus) }
+    let!(:listening_link) { create(:form_field_resource, form_field: clarity_field, resource: listening) }
+
     before do
-      create(:form_field_resource, form_field: clarity_field, resource: triple_focus)
-      create(:form_field_resource, form_field: clarity_field, resource: listening)
       # Make the registrant a scholarship recipient so completion stamps.
       create(:allocation,
         source: create(:scholarship, recipient: person, tasks_completed: true, amount_cents: 100),
@@ -86,7 +87,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       }
     end
     let(:clarity) do
-      { clarity_field.id.to_s => { triple_focus.id.to_s => "Yes", listening.id.to_s => "No" } }
+      { clarity_field.id.to_s => { triple_focus_link.id.to_s => "Yes", listening_link.id.to_s => "No" } }
     end
 
     it "fans the clarity field out to one nil-field answer per resource, snapshotting the sentence" do
@@ -104,11 +105,11 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     it "keeps two same-named fan-out questions on separate answers" do
       part_two = create(:form_field, form:, answer_type: :single_select_radio,
         name: clarity_field.name, subtitle: "Part Two")
-      create(:form_field_resource, form_field: part_two, resource: triple_focus)
+      part_two_link = create(:form_field_resource, form_field: part_two, resource: triple_focus)
       clarity_field.update!(subtitle: "Part One")
 
       submission = submit(answers, clarity: clarity.merge(
-        part_two.id.to_s => { triple_focus.id.to_s => "No" }
+        part_two.id.to_s => { part_two_link.id.to_s => "No" }
       ))
 
       expect(submission.form_answers.where(form_field: nil).pluck(:question_name_when_answered, :submitted_answer))

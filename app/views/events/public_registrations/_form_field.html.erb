@@ -1,10 +1,10 @@
-<%# A field with linked resources (FormField#per_resource?) is asked once per
-    resource, each copy answering under [form_fields][field_id][resource_id];
-    `value` is then a { resource_id => answer } hash. %>
+<%# A field with linked workshops or resources (FormField#per_resource?) is asked
+    once per link, each copy answering under [form_fields][field_id][link_id];
+    `value` is then a { link_id => answer } hash. %>
 <% if field.per_resource? %>
   <% values = local_assigns[:value].try(:to_unsafe_h) || (local_assigns[:value].is_a?(Hash) ? local_assigns[:value] : {}) %>
-  <% field.fanned_resources.each do |resource| %>
-    <%= render "events/public_registrations/form_field_input", **local_assigns, resource: resource, value: values[resource.id.to_s] %>
+  <% field.fanned_links.each do |link| %>
+    <%= render "events/public_registrations/form_field_input", **local_assigns, link: link, value: values[link.id.to_s] %>
   <% end %>
 <% else %>
   <%= render "events/public_registrations/form_field_input", **local_assigns %>

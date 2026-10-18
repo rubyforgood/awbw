@@ -6,7 +6,7 @@
 # registration + scholarship) can be merged.
 #
 # A fanned-out field (FormField#per_resource?) checks each copy on its own and
-# reports { resource_id => error_message } under its field id.
+# reports { link_id => error_message } under its field id.
 #
 # Group headers are skipped here; any other field-specific exclusions (e.g.
 # bulk payment's nested attendees) are the caller's responsibility — pass only
@@ -38,9 +38,9 @@ class FormAnswerValidator
 
   def per_resource_errors(field, values)
     values = values.is_a?(Hash) ? values.transform_keys(&:to_s) : {}
-    field.fanned_resources.each_with_object({}) do |resource, errors|
-      error = error_for(field, values[resource.id.to_s])
-      errors[resource.id.to_s] = error if error
+    field.fanned_links.each_with_object({}) do |link, errors|
+      error = error_for(field, values[link.id.to_s])
+      errors[link.id.to_s] = error if error
     end
   end
 

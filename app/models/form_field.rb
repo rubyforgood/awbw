@@ -205,7 +205,7 @@ class FormField < ApplicationRecord
     reject_if: ->(attrs) { attrs[:option_name].blank? }
 
   accepts_nested_attributes_for :form_field_resources, allow_destroy: true,
-    reject_if: ->(attrs) { attrs[:resource_id].blank? }
+    reject_if: ->(attrs) { attrs[:resource_id].blank? && attrs[:workshop_id].blank? }
 
   scope :published, -> { where(status: "active") }
 
@@ -223,17 +223,18 @@ class FormField < ApplicationRecord
     selectable? && form_field_resources.any?
   end
 
-  # The linked resources in link order, one fanned-out copy each.
-  def fanned_resources
-    form_field_resources.includes(:resource).filter_map(&:resource)
+  # The links in order, one fanned-out copy each; a link whose workshop or resource
+  # was deleted drops out.
+  def fanned_links
+    form_field_resources.includes(:resource, :workshop).select(&:topic)
   end
 
   # The sentence one fanned-out copy is asked, stored, and shown under. The answer
   # keeps a nil form_field, so this string is also its key: the subtitle leads so two
   # fan-out questions sharing a name (the clarity pair, which differ only by their
   # "Part One" / "Part Two" subtitle) can't collide on one answer row.
-  def per_resource_question(resource)
-    [ subtitle.presence, "#{name} #{resource.title}" ].compact.join(": ")
+  def per_resource_question(topic)
+    [ subtitle.presence, "#{name} #{topic.title}" ].compact.join(": ")
   end
 
   # True for fields whose options are tied to backend logic (the payment-method

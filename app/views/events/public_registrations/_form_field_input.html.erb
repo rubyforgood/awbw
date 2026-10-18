@@ -1,13 +1,13 @@
-<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false, param_scope: "public_registration", required: nil, resource: nil) %>
-<%# One input for a field — or, given a resource, one fanned-out copy of it (see _form_field). %>
+<%# locals: (field:, value: nil, label: nil, show_option_source: false, show_dropdown_warning: false, param_scope: "public_registration", required: nil, link: nil) %>
+<%# One input for a field — or, given a fan-out link, one copy of it (see _form_field). %>
 <% param_scope = local_assigns.fetch(:param_scope, "public_registration") %>
 <% return if field.group_header? %>
 <%# Callers can force a field required (e.g. identity on a registration form); defaults to the field's own setting. %>
 <% required = local_assigns.fetch(:required, field.required) %>
 
-<% field_name = "#{param_scope}[form_fields][#{field.id}]#{"[#{resource.id}]" if resource}" %>
-<% field_id = "#{param_scope}_form_fields_#{field.id}#{"_#{resource.id}" if resource}" %>
-<% error = resource ? @field_errors&.dig(field.id, resource.id.to_s) : @field_errors&.dig(field.id) %>
+<% field_name = "#{param_scope}[form_fields][#{field.id}]#{"[#{link.id}]" if link}" %>
+<% field_id = "#{param_scope}_form_fields_#{field.id}#{"_#{link.id}" if link}" %>
+<% error = link ? @field_errors&.dig(field.id, link.id.to_s) : @field_errors&.dig(field.id) %>
 <% error_border = error ? "border-red-400 focus:border-red-500 focus:ring-red-500/30" : "border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500/30" %>
 <% input_classes = "w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition focus:outline-none focus:ring-2 #{error_border}" %>
 
@@ -15,8 +15,8 @@
   <div class="flex flex-wrap items-center gap-2 mb-1.5">
     <label class="rich-label text-sm font-semibold text-gray-700" for="<%= field_id %>">
       <%= form_label_inline_html(label || field.name) %>
-      <% if resource %>
-        <strong><%= resource.title %></strong>
+      <% if link %>
+        <strong><%= link.topic.title %></strong>
       <% end %>
       <% if required %>
         <span class="text-red-500">*</span>
@@ -261,7 +261,7 @@
 
   <% if error %>
     <p class="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
-      <i class="fa-solid fa-circle-exclamation"></i><%= strip_tags(label || field.name) %><%= " #{resource.title}" if resource %> <%= error %>
+      <i class="fa-solid fa-circle-exclamation"></i><%= strip_tags(label || field.name) %><%= " #{link.topic.title}" if link %> <%= error %>
     </p>
   <% end %>
 </div>

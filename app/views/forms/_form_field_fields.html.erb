@@ -192,9 +192,9 @@
           </div>
         <% end %>
 
-        <%# Linking resources fans this one question out into one input per resource
-            (the title appended to the prompt) — e.g. a clarity question asked once
-            per training topic. Each copy renders the field's own answer options, so
+        <%# Linking workshops or resources fans this one question out into one input
+            per link (the title appended to the prompt) — e.g. a clarity question asked
+            once per training topic. Each copy renders the field's own answer options, so
             the panel rides the same answer-options target as the option list —
             shown for choice fields, hidden live when the type changes. %>
         <% unless field.group_header? %>
@@ -203,16 +203,16 @@
                    <%= "open" if field.form_field_resources.any? %>>
             <summary class="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-gray-600 select-none [&::-webkit-details-marker]:hidden">
               <i class="fa-solid fa-chevron-right text-2xs text-gray-400 transition-transform group-open:rotate-90"></i>
-              Fan out per resource
+              Fan out per workshop or resource
               <span class="group/fanout relative inline-flex cursor-help items-center">
                 <i class="fa-solid fa-circle-info text-2xs text-gray-400"></i>
                 <div class="absolute bottom-full left-0 z-50 mb-1 hidden w-72 rounded-lg bg-blue-100 p-3 text-xs font-normal whitespace-normal text-gray-700 shadow-lg ring-1 ring-blue-200 group-hover/fanout:block">
-                  <p class="font-semibold">Fan out per resource</p>
-                  <p class="mt-1">Asks this question once for each resource you add.</p>
+                  <p class="font-semibold">Fan out per workshop or resource</p>
+                  <p class="mt-1">Asks this question once for each workshop or resource you add.</p>
                   <ul class="mt-1 list-disc space-y-1 pl-4">
-                    <li><span class="font-semibold">Write the question so the resource name fits at the end.</span> &ldquo;This workshop supported my growth:&rdquo; shows as &ldquo;This workshop supported my growth: <span class="font-semibold">The Touchstone Journey</span>&rdquo;.</li>
-                    <li><span class="font-semibold">Add every resource you want asked about.</span> Any you leave out, or that get deleted, are skipped without warning.</li>
-                    <li><span class="font-semibold">No resources?</span> It&rsquo;s asked once, as written.</li>
+                    <li><span class="font-semibold">Write the question so the name fits at the end.</span> &ldquo;This workshop supported my growth:&rdquo; shows as &ldquo;This workshop supported my growth: <span class="font-semibold">The Touchstone Journey</span>&rdquo;.</li>
+                    <li><span class="font-semibold">Add everything you want asked about.</span> Any you leave out, or that get deleted, are skipped without warning.</li>
+                    <li><span class="font-semibold">Nothing added?</span> It&rsquo;s asked once, as written.</li>
                   </ul>
                 </div>
               </span>
@@ -221,9 +221,14 @@
               <%= f.fields_for :form_field_resources do |rf| %>
                 <%= render "forms/form_field_resource_fields", f: rf %>
               <% end %>
-              <%= link_to_add_association "+ Add resource", f, :form_field_resources,
-                    partial: "forms/form_field_resource_fields",
-                    class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} font-medium" %>
+              <div class="flex gap-4">
+                <% %i[workshop resource].each do |kind| %>
+                  <%= link_to_add_association "+ Add #{kind}", f, :form_field_resources,
+                        partial: "forms/form_field_resource_fields",
+                        render_options: { locals: { kind: kind } },
+                        class: "text-sm #{DomainTheme.text_class_for(:forms, intensity: 600)} #{DomainTheme.text_class_for(:forms, intensity: 800, hover: true)} font-medium" %>
+                <% end %>
+              </div>
             </div>
           </details>
         <% end %>

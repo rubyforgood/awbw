@@ -324,11 +324,11 @@ RSpec.describe "Forms", type: :request do
       doc = Nokogiri::HTML(response.body)
 
       fanout_panel = ->(field) {
-        doc.at_css("#form_field_#{field.id}").css("details").find { |node| node.text.include?("Fan out per resource") }
+        doc.at_css("#form_field_#{field.id}").css("details").find { |node| node.text.include?("Fan out per workshop or resource") }
       }
 
       expect(fanout_panel[choice]["class"]).not_to include("hidden")
-      expect(fanout_panel[choice].text).to include("Write the question so the resource name fits at the end.")
+      expect(fanout_panel[choice].text).to include("Write the question so the name fits at the end.")
       expect(fanout_panel[free_form]["class"]).to include("hidden")
     end
 
@@ -881,6 +881,21 @@ RSpec.describe "Forms", type: :request do
 
       expect(field.per_resource?).to be(true)
       expect(field.resources).to include(resource)
+    end
+
+    it "links a workshop to a field" do
+      form = create(:form, :standalone)
+      field = create(:form_field, form:, answer_type: :single_select_radio, name: "This workshop supported my growth:")
+      workshop = create(:workshop, title: "Touchstone Journey")
+
+      patch form_path(form), params: {
+        form: { form_fields_attributes: { "0" => {
+          id: field.id, name: field.name, answer_type: field.answer_type,
+          form_field_resources_attributes: { "0" => { workshop_id: workshop.id } }
+        } } }
+      }
+
+      expect(field.reload.fanned_links.map(&:topic)).to eq([ workshop ])
     end
 
     it "saves the per-field width, minimum word count, and maximum character count" do

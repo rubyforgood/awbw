@@ -190,15 +190,15 @@ RSpec.describe "PublicForms", type: :request do
     let!(:growth_field) do
       create(:form_field, form: form, name: "This workshop supported my growth:", answer_type: :multi_select_checkbox, required: true)
     end
-    let(:touchstone) { create(:resource, title: "The Touchstone Journey") }
-    let(:safer_place) { create(:resource, title: "Creating A Safer Place") }
+    let!(:touchstone) do
+      create(:form_field_resource, form_field: growth_field, resource: nil, workshop: create(:workshop, title: "The Touchstone Journey"))
+    end
+    let!(:safer_place) { create(:form_field_resource, form_field: growth_field, resource: create(:resource, title: "Creating A Safer Place")) }
 
     before do
       %w[Personal Professional].each do |name|
         create(:form_field_answer_option, form_field: growth_field, answer_option: create(:answer_option, name: name))
       end
-      create(:form_field_resource, form_field: growth_field, resource: touchstone)
-      create(:form_field_resource, form_field: growth_field, resource: safer_place)
     end
 
     def growth_params(answers)
@@ -207,7 +207,7 @@ RSpec.describe "PublicForms", type: :request do
       params
     end
 
-    it "asks the question once per resource, as checkboxes" do
+    it "asks the question once per workshop or resource, as checkboxes" do
       get public_form_path(form.slug)
 
       expect(response.body).to include("The Touchstone Journey", "Creating A Safer Place")
