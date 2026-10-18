@@ -41,7 +41,7 @@ class RegistrantCeForm
   def complete?
     return false unless submission
 
-    answerable_fields.select(&:required).all? { |field| answers_by_field_id[field.id].present? }
+    answerable_fields.select(&:required).all? { |field| answered?(field) }
   end
 
   private
@@ -50,6 +50,12 @@ class RegistrantCeForm
     return [] unless form
 
     form.form_fields.reject(&:group_header?)
+  end
+
+  def answered?(field)
+    return submission.per_resource_answers(field).all? { |_resource, answer| answer&.submitted_answer.present? } if field.per_resource?
+
+    answers_by_field_id[field.id].present?
   end
 
   def answers_by_field_id
