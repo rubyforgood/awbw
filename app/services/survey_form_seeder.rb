@@ -9,10 +9,10 @@
 # any that already exist).
 class SurveyFormSeeder
   TEMPLATES = [
-    { name: "Day 1 Survey", role: "general", sections: %i[day_1_survey content_sharing_preferences] },
-    { name: "Day 2 Survey", role: "general", sections: %i[day_2_survey content_sharing_preferences] },
-    { name: "Post-Event Survey", role: "post_event_survey", sections: %i[post_event_feedback content_sharing_preferences] },
-    { name: "Post-Training Recipients Survey", role: "recipient_survey", sections: %i[recipient_survey content_sharing_preferences] }
+    { name: "Day 1 Survey", sections: %i[day_1_survey content_sharing_preferences] },
+    { name: "Day 2 Survey", sections: %i[day_2_survey content_sharing_preferences] },
+    { name: "Post-Event Survey", sections: %i[post_event_feedback content_sharing_preferences] },
+    { name: "Post-Training Recipients Survey", sections: %i[recipient_survey content_sharing_preferences] }
   ].freeze
 
   DAY_1_WORKSHOPS = [ "The Touchstone Journey", "Creating A Safer/Braver Place", "The Take A Break, Self-Regulate" ].freeze
@@ -47,7 +47,7 @@ class SurveyFormSeeder
   def call
     TEMPLATES.each do |template|
       next if Form.exists?(name: template[:name])
-      FormBuilderService.new(name: template[:name], sections: template[:sections], role: template[:role]).call
+      FormBuilderService.new(name: template[:name], sections: template[:sections], role: "general").call
       @created << template[:name]
     end
     link_fanout_resources

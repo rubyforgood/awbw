@@ -26,9 +26,7 @@ class Form < ApplicationRecord
     [ "Scholarship", "scholarship" ],
     [ "Bulk Payment", "bulk_payment" ],
     [ "Continuing Education", "continuing_education" ],
-    [ "Close program", "close_program" ],
-    [ "Post-event survey", "post_event_survey" ],
-    [ "Post-training recipients survey", "recipient_survey" ]
+    [ "Close program", "close_program" ]
   ].freeze
 
   # The questions that identify a public respondent (used to build their Person).

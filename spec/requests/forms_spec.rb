@@ -315,11 +315,11 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("First Name")
     end
 
-    it "doesn't offer the day 1 or day 2 survey roles for a general form" do
+    it "doesn't offer the survey roles for a general form" do
       form = create(:form, :standalone, role: "general")
       get edit_form_path(form)
       values = Nokogiri::HTML(response.body).css("select[name='form[role]'] option").map { |option| option["value"] }
-      expect(values).not_to include("day_1_survey", "day_2_survey")
+      expect(values).not_to include("day_1_survey", "day_2_survey", "post_event_survey", "recipient_survey")
     end
 
     it "keeps a survey form's role selected so saving doesn't reset it to general" do
