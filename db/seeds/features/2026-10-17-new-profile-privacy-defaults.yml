@@ -2,6 +2,7 @@ name: "New profiles start with more private defaults"
 area: people
 display_status: user_facing
 released_on: 2026-10-17
+pr_number: 2738
 summary: >-
   New profiles now show the person's first name and last initial, and keep
   pronouns, phone, and social media hidden until the person turns them on.
