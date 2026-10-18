@@ -354,8 +354,8 @@ RSpec.describe Ahoy::EventDecorator do
         event.decorate(context: { return_to: origin }).detail_rows.first.dig(:link, :path)
       end
 
-      expect(paths.first).to include("return_to=record", "return_type=Affiliation", "return_id=7")
-      expect(paths.last).to include("return_to=activities", "return_type=Affiliation", "return_id=7")
+      expect(paths.first).to include("return_to=record", "return_activity=#{event.id}")
+      expect(paths.last).to include("return_to=activities", "return_activity=#{event.id}")
     end
 
     it "labels both result_count and the legacy page_result_count as Results found" do

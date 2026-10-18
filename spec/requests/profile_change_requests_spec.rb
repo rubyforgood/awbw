@@ -401,9 +401,10 @@ RSpec.describe "Profile change requests", type: :request do
 
     it "points the eyebrow at the change log a highlight link came from" do
       request = create(:profile_change_request, person: person)
+      activity = create(:ahoy_event, resource_type: "Person", resource_id: person.id)
 
       get profile_change_requests_path(person_id: person.id, highlight: request.id,
-                                       return_to: "activities", return_type: "Person", return_id: person.id)
+                                       return_to: "activities", return_activity: activity.id)
 
       expect(response.body).to include(CGI.escapeHTML(
         admin_activities_events_path(resource_type: "Person", resource_id: person.id)

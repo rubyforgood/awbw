@@ -204,13 +204,13 @@ module Ahoy
     end
 
     # Hands the queue's eyebrow its way back to the change log this row was read in:
-    # which log (context[:return_to], set by the views that render one) and the record
-    # it was about — both the inline log's own record and the activities index's filter.
+    # which log (context[:return_to], set by the views that render one) and this row,
+    # whose resource the destination reads for where exactly to return to.
     def return_to_params
       origin = context[:return_to]
-      return {} if origin.blank? || object.resource_type.blank? || object.resource_id.blank?
+      return {} if origin.blank?
 
-      { return_to: origin, return_type: object.resource_type, return_id: object.resource_id }
+      { return_to: origin, return_activity: object.id }
     end
 
     def compute_resource_link

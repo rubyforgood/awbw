@@ -1,14 +1,15 @@
 module ProfileChangeRequestsHelper
   # [path, label] for the change-request queue's eyebrow. A "From change request"
   # link in a change log (Ahoy::EventDecorator#return_to_params) names the log it
-  # came from, so the eyebrow returns there rather than to a generic default:
-  # "record" is a record's inline log (back to that record), "activities" is the
-  # admin activities index (back to it, filtered to the same record).
+  # came from and the row it sat on, so the eyebrow returns there rather than to a
+  # generic default: "record" is a record's inline log (back to that record),
+  # "activities" is the admin activities index (back to it, filtered to the record).
   def change_requests_return_link(person)
-    return activities_return_link if params[:return_to] == "activities"
-
-    record_link = record_return_link if params[:return_to] == "record"
-    return record_link if record_link
+    link = case params[:return_to]
+    when "activities" then activities_return_link
+    when "record" then record_return_link
+    end
+    return link if link
     return [ edit_person_path(person), person.full_name ] if person
 
     [ root_path, "Home" ]
@@ -16,12 +17,19 @@ module ProfileChangeRequestsHelper
 
   private
 
-  def activities_return_link
-    [ admin_activities_events_path(resource_type: params[:return_type].presence,
-                                   resource_id: params[:return_id].presence), "Activity log" ]
+  # The change log row that linked in. Its resource is the record the row was
+  # about — the inline log's own record, and the index's resource filter.
+  def returning_activity
+    @returning_activity ||= Ahoy::Event.find_by(id: params[:return_activity])
   end
 
-  # nil when the pair names nothing we can look up or label, so the caller falls
+  def activities_return_link
+    event = returning_activity
+    [ admin_activities_events_path(resource_type: event&.resource_type.presence,
+                                   resource_id: event&.resource_id.presence), "Activity log" ]
+  end
+
+  # nil when the row names no record we can look up and label, so the caller falls
   # back to the person/home default.
   def record_return_link
     record = returning_record
@@ -32,10 +40,11 @@ module ProfileChangeRequestsHelper
   end
 
   def returning_record
-    klass = params[:return_type].to_s.safe_constantize
+    event = returning_activity
+    klass = event&.resource_type.to_s.safe_constantize
     return nil unless klass.respond_to?(:find_by) && klass < ApplicationRecord
 
-    klass.find_by(id: params[:return_id])
+    klass.find_by(id: event.resource_id)
   end
 
   # The page the record's own change log is on: its edit screen, falling back to
