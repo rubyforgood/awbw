@@ -228,6 +228,21 @@ class FormField < ApplicationRecord
     form_field_resources.includes(:resource).filter_map(&:resource)
   end
 
+  def per_resource_questions
+    fanned_resources.map { |resource| per_resource_question(resource) }
+  end
+
+  # The words every fanned-out copy's sentence opens with, before the resource title.
+  def per_resource_prefix
+    "#{[ subtitle.presence, name ].compact.join(": ")} "
+  end
+
+  # Whether a sentence reads as one of this field's fanned-out copies — current, or
+  # about a resource since renamed or unlinked.
+  def per_resource_wording?(question)
+    selectable? && question.to_s.start_with?(per_resource_prefix)
+  end
+
   # The sentence one fanned-out copy is asked, stored, and shown under. The answer
   # keeps a nil form_field, so this string is also its key: the subtitle leads so two
   # fan-out questions sharing a name (the clarity pair, which differ only by their

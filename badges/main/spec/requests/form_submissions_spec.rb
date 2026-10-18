@@ -138,6 +138,26 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).not_to include(form_submission_path(skipped))
       end
 
+      it "filters to the submissions that answered one per-resource copy of a fanned-out question" do
+        form = create(:form)
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        masks = create(:resource, title: "Masks")
+        collage = create(:resource, title: "Collage")
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_field_resource, form_field: clarity, resource: collage)
+        answered = create(:form_submission, form: form)
+        other_copy = create(:form_submission, form: form)
+        create(:form_answer, form_submission: answered, form_field: nil,
+               question_name_when_answered: "How clear was Masks", submitted_answer: "Very clear")
+        create(:form_answer, form_submission: other_copy, form_field: nil,
+               question_name_when_answered: "How clear was Collage", submitted_answer: "Very clear")
+
+        get form_submissions_path(form_id: form.id, form_field_id: clarity.id, question: "How clear was Masks"), headers: frame_headers
+
+        expect(response.body).to include(form_submission_path(answered))
+        expect(response.body).not_to include(form_submission_path(other_copy))
+      end
+
       it "carries the new filters back through each View link" do
         event = create(:event)
         submission = create(:form_submission, event: event, role: "registration")
