@@ -196,7 +196,7 @@
       <% recipient_shoutout_options = @dashboard.scholarship_applicants.filter_map { |person|
            reg_id = @dashboard.registration_id_by_registrant[person.id]
            next unless reg_id
-           label = person.email.present? ? "#{person.name} (#{person.email})" : person.name
+           label = person.email.present? ? "#{person_name(person)} (#{person.email})" : person_name(person)
            [ label, reg_id ]
          } %>
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -245,7 +245,7 @@
             <%# Recipient name on the right, bold and linked to their edit page, with
                 their primary sector and age group in parens, then their shout-out text. %>
             <div class="text-sm text-gray-700 sm:col-span-2">
-              <%= link_to shoutout.recipient.name, edit_person_path(shoutout.recipient),
+              <%= link_to person_name(shoutout.recipient), edit_person_path(shoutout.recipient),
                           class: "font-semibold text-gray-900 hover:underline" %>
               <% meta = [ shoutout.sector, shoutout.age_group ].compact_blank %>
               <% if meta.any? %><span class="text-gray-500">(<%= meta.join(", ") %>)</span><% end %>

@@ -192,6 +192,8 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "person-name resolution" do
+    before { allow(Draper::ViewContext.current.send(:view_context)).to receive(:allowed_to?).with(:full_name?, anything).and_return(false) }
+
     it "shows the person's name and hovers the email when the recipient is on file" do
       create(:person, first_name: "Tiombe", last_name: "Wallace", email: "tiombe@example.com")
       decorated = create(:notification, recipient_email: "tiombe@example.com").decorate
@@ -263,6 +265,8 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "#to_value / #from_value" do
+    before { allow(Draper::ViewContext.current.send(:view_context)).to receive(:allowed_to?).with(:full_name?, anything).and_return(false) }
+
     it "links the resolved contact to their edit page" do
       person = create(:person, email: "kim@example.com")
       decorated = create(:notification, recipient_email: "kim@example.com").decorate

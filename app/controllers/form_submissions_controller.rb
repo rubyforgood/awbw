@@ -211,7 +211,7 @@ class FormSubmissionsController < ApplicationController
     notice = "#{ERB::Util.html_escape(organization.name)} #{verb}."
     if ended.any?
       titles = ended.map { |a| ERB::Util.html_escape(a.title.presence || "no title") }
-      notice += " Ended #{@form_submission.person.name}'s #{"affiliation".pluralize(ended.size)} here: #{titles.to_sentence}."
+      notice += " Ended #{helpers.person_name(@form_submission.person)}'s #{"affiliation".pluralize(ended.size)} here: #{titles.to_sentence}."
     end
     notice
   end

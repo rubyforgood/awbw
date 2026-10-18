@@ -42,7 +42,7 @@
                 <td class="px-4 py-2 text-sm text-gray-500"><%= allocation.id %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= allocation.source.class.name.underscore.titleize.gsub(" Payment", "").gsub("External Processor", "Stripe") %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= if allocation.source.respond_to?(:payer)
-                    name = allocation.source.payer&.name || "Unknown"
+                    name = person_name(allocation.source.payer) || "Unknown"
                     remaining = allocation.source.amount_cents_remaining
                     if remaining.present? && remaining > 0
                       "#{name} (#{dollars_from_cents(remaining)} remaining)"

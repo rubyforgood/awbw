@@ -27,7 +27,7 @@
     <i class="fa-solid fa-circle-info mt-1"></i>
     <span>
       No author is set, so this is credited to
-      <%= record.creator_credit_person.name %>, who submitted it, and follows their profile.
+      <%= person_name(record.creator_credit_person) %>, who submitted it, and follows their profile.
       Pick a person to credit someone else.
     </span>
   </p>

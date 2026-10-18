@@ -1,6 +1,6 @@
 <% created_user = f.object.created_by %>
 <% updated_user = f.object.updated_by %>
-<% created_name = created_user&.person&.name || created_user&.name %>
+<% created_name = person_name(created_user) %>
 <% created_first_name = created_user&.person&.first_name || created_user&.name.to_s.split.first %>
 <% show_updated = updated_user.present? && updated_user != created_user %>
 <% created_color = chip_color(created_user&.id) %>
@@ -26,7 +26,7 @@
         <span class="mt-2 inline-flex w-20 shrink-0 items-center gap-x-1">
           <% if show_updated %>
             <span class="<%= created_color[0] %> <%= created_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="<%= created_name %>"><%= created_user&.decorate&.initials.presence || "--" %></span>
-            <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= updated_user.person&.name || updated_user.name %>"><%= updated_user.decorate.initials.presence || "--" %></span>
+            <span class="<%= updated_color[0] %> <%= updated_color[1] %> w-1/2 cursor-default truncate rounded px-1.5 py-0.5 text-center text-xs" title="Edited by <%= person_name(updated_user) %>"><%= updated_user.decorate.initials.presence || "--" %></span>
           <% else %>
             <span class="<%= created_color[0] %> <%= created_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= created_name %>"><%= truncate(created_first_name.presence || "--", length: 10, omission: "..") %></span>
           <% end %>
@@ -57,7 +57,7 @@
           <%= Time.current.strftime("%-m/%-d/%Y %-I:%M %p") %>
         </span>
         <span class="mt-2 inline-flex w-20 shrink-0 items-center">
-          <span class="<%= current_color[0] %> <%= current_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= current_user&.person&.name || current_user&.name %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
+          <span class="<%= current_color[0] %> <%= current_color[1] %> max-w-full cursor-default truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= person_name(current_user) %>"><%= truncate(current_first_name.to_s, length: 10, omission: "..") %></span>
         </span>
         <div class="flex grow items-start gap-x-2"
              data-controller="field-required"

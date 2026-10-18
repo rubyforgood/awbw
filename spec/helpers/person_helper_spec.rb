@@ -1,10 +1,44 @@
 require "rails_helper"
 
 RSpec.describe PersonHelper, type: :helper do
+  describe "#person_name" do
+    let(:person) { build(:person, first_name: "Jane", last_name: "Doe", display_name_preference: "first_name_last_initial") }
+
+    it "shows the full name to a viewer allowed to see it" do
+      allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(true)
+
+      expect(helper.person_name(person)).to eq("Jane Doe")
+    end
+
+    it "shows the preferred name to anyone else" do
+      allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(false)
+
+      expect(helper.person_name(person)).to eq("Jane D.")
+    end
+
+    it "resolves a user to their person" do
+      user = build(:user, person:)
+      allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(true)
+
+      expect(helper.person_name(user)).to eq("Jane Doe")
+    end
+
+    it "falls back to the name of a user without a person" do
+      user = build(:user, person: nil, email: "nobody@example.com")
+
+      expect(helper.person_name(user)).to eq("nobody@example.com")
+    end
+
+    it "is nil without a record" do
+      expect(helper.person_name(nil)).to be_nil
+    end
+  end
+
   describe "#person_profile_button" do
     let(:person) { create(:person, user: create(:user, unconfirmed_email: unconfirmed)) }
 
     before do
+      allow(helper).to receive(:allowed_to?).with(:full_name?, person).and_return(false)
       allow(helper).to receive(:allowed_to?).with(:show_email_change?, person).and_return(authorized)
     end
 

@@ -56,7 +56,7 @@ class NotificationDecorator < ApplicationDecorator
 
   # Name of the person when we know them, otherwise the raw email.
   def contact_name
-    contact_person&.name.presence || recipient_email
+    h.person_name(contact_person).presence || recipient_email
   end
 
   # Email to reveal on hover — only when we're showing a resolved name (nil when
