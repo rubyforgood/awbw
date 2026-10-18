@@ -398,5 +398,32 @@ RSpec.describe FormSubmission do
       expect { submission.persist_answer(field, "forged-signed-id") }
         .to raise_error(FormSubmission::UnreadableUpload)
     end
+
+    describe "a fanned-out field" do
+      let(:field) { create(:form_field, form: submission.form, name: "This workshop supported my growth:", answer_type: :multi_select_checkbox) }
+      let(:touchstone) { create(:resource, title: "Touchstone") }
+      let(:safer_place) { create(:resource, title: "Safer Place") }
+
+      before do
+        create(:form_field_resource, form_field: field, resource: touchstone)
+        create(:form_field_resource, form_field: field, resource: safer_place)
+      end
+
+      it "stores one answer per resource under its full sentence, with no field" do
+        submission.persist_answer(field, { touchstone.id.to_s => [ "A", "B" ], safer_place.id.to_s => [ "C" ] })
+
+        expect(submission.form_answers.where(form_field: nil).pluck(:question_name_when_answered, :submitted_answer)).to contain_exactly(
+          [ "This workshop supported my growth: Touchstone", "A, B" ],
+          [ "This workshop supported my growth: Safer Place", "C" ]
+        )
+      end
+
+      it "skips a copy left unanswered and updates in place on re-submit" do
+        submission.persist_answer(field, { touchstone.id.to_s => [ "A" ] })
+        submission.persist_answer(field, { touchstone.id.to_s => [ "B" ] })
+
+        expect(submission.reload.per_resource_values(field)).to eq(touchstone.id.to_s => "B", safer_place.id.to_s => nil)
+      end
+    end
   end
 end

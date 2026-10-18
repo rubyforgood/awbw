@@ -376,6 +376,18 @@ RSpec.describe "FormSubmissions", type: :request do
         expect(response.body).to include("AWBW")
       end
 
+      it "lists a fanned-out question's answer for each resource" do
+        field = create(:form_field, form: submission.form, name: "Was it clear for", answer_type: :single_select_radio)
+        create(:form_field_resource, form_field: field, resource: create(:resource, title: "Triple Focus"))
+        create(:form_field_resource, form_field: field, resource: create(:resource, title: "Listening Is Art"))
+        submission.persist_answer(field, { field.fanned_resources.first.id.to_s => "Yes" })
+
+        get form_submission_path(submission)
+
+        expect(response.body).to include("Was it clear for Triple Focus", "Was it clear for Listening Is Art")
+        expect(response.body).to include("Yes")
+      end
+
       it "shows a back link to the form submissions index, highlighting the row, when arriving from it" do
         get form_submission_path(submission, return_to: "form_submissions", person_id: submission.person_id)
 
