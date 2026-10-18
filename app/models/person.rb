@@ -601,9 +601,9 @@ class Person < ApplicationRecord
     }
   end
 
-  # Field identifiers whose "Other" free text maps onto the category-backed
-  # profile fields shown on the edit page.
-  OTHER_WORKSHOP_SETTING_IDENTIFIERS = FormField::AGE_GROUP_FIELD_IDENTIFIERS
+  # The registration question workshop settings were collected through; registration no
+  # longer asks it, but earlier answers still carry it.
+  OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[workshop_environments].freeze
 
   # Free-text "Other" sectors the person typed on registration forms, captured
   # as OtherResponse records (see EventRegistrationServices::PublicRegistration).
@@ -613,9 +613,12 @@ class Person < ApplicationRecord
     other_responses.sectors.visible.order(:text)
   end
 
-  # Free-text "Other" workshop settings (category-backed fields) from forms.
   def other_workshop_setting_responses
     other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
+  end
+
+  def other_age_group_responses
+    other_form_responses(FormField::AGE_GROUP_FIELD_IDENTIFIERS)
   end
 
   # The age-range nested items in category position order for the cocoon chip

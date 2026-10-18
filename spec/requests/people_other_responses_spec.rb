@@ -55,11 +55,22 @@ RSpec.describe "Person Other form responses", type: :request do
     it "shows the Other workshop setting near the category checkboxes" do
       category_type = create(:category_type, :published, profile_specific: true)
       create(:category, :published, category_type: category_type)
+      answer("workshop_environments", "Other: Horse barn")
+
+      get edit_person_path(person)
+
+      expect(response.body.index("Horse barn")).to be > response.body.index("Profile-specific Categories")
+    end
+
+    it "shows the Other age group in the age ranges card" do
+      age_type = create(:category_type, :published, name: "AgeRange")
+      create(:category, :published, category_type: age_type, name: "Adults")
       answer("primary_age_group", "Other: Toddlers")
 
       get edit_person_path(person)
 
-      expect(response.body).to include("Toddlers")
+      expect(response.body.index("Toddlers")).to be_between(response.body.index(">Age ranges</h3>"),
+                                                            response.body.index("Profile-specific Categories"))
     end
   end
 end

@@ -1014,17 +1014,26 @@ RSpec.describe Person, type: :model do
     end
 
     describe "#other_workshop_setting_responses" do
-      it "returns free-text Other values from the category-backed fields" do
-        answer("primary_age_group", "3, Other: Toddlers")
+      it "returns free-text Other values from the workshop settings question" do
+        answer("workshop_environments", "3, Other: Horse barn")
 
-        expect(person.other_workshop_setting_responses)
-          .to contain_exactly("Toddlers")
+        expect(person.other_workshop_setting_responses).to contain_exactly("Horse barn")
       end
 
-      it "does not pull from the sector fields" do
+      it "does not pull from the age group or sector fields" do
+        answer("primary_age_group", "Other: Toddlers")
         answer("additional_sectors", "Other: Equine therapy")
 
         expect(person.other_workshop_setting_responses).to be_empty
+      end
+    end
+
+    describe "#other_age_group_responses" do
+      it "returns free-text Other values from the age group fields" do
+        answer("primary_age_group", "3, Other: Toddlers")
+        answer("workshop_environments", "Other: Horse barn")
+
+        expect(person.other_age_group_responses).to contain_exactly("Toddlers")
       end
     end
   end

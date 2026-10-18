@@ -161,6 +161,7 @@
                                           .reject { |_, id| (@current_age_range_category_ids || []).include?(id) } } },
                                       data: { association_insertion_node: "this" },
                                       class: button_classes(:secondary_outline) %>
+          <%= render "people/other_responses", responses: @person.other_age_group_responses %>
         </div>
       </div>
     <% end %>
