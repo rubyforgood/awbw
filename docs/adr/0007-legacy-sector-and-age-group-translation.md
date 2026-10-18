@@ -144,6 +144,13 @@ answers, `OtherServiceArea`, `Settings` and `LifeExperiences` the additional one
 `Children's Services` makes Children the primary age range, and `Elder Abuse` adds Elders
 alongside whatever the primary already is.
 
+**A person holds one primary sector and one primary age range**, so where both primary
+fields name the same kind — `Children's Services` next to a `PrimaryAgeGroup` answer — the
+field that owns the kind gives the primary and the other's lands as additional. An answer
+naming several of a kind (`Families`) has no single one to pick, so the other field gets
+its turn instead. (Organizations carry several of each, mirrored up from their facilitators;
+that is the roll-up, not an answer.)
+
 ### Reads of the free text, pending staff validation
 
 The archive's hand-typed cells are mostly a venue, a programme name or a sentence about the

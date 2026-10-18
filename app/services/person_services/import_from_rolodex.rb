@@ -44,7 +44,11 @@ module PersonServices
     STRING_LIMIT = 255
 
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
-    PRIMARY_TAG_FIELDS = %w[PrimaryServiceArea PrimaryAgeGroup].freeze
+    # Both primary fields can name either kind of tag, so each kind reads the same two
+    # fields with the one that owns it first: the service area names the sector, the age
+    # group field the age range.
+    PRIMARY_SECTOR_FIELDS = %w[PrimaryServiceArea PrimaryAgeGroup].freeze
+    PRIMARY_AGE_FIELDS = PRIMARY_SECTOR_FIELDS.reverse.freeze
     ADDITIONAL_TAG_FIELDS = %w[OtherServiceArea Settings LifeExperiences].freeze
     PRIMARY_TAG_LABELS = { tag_sectors: "Primary sector", tag_age_groups: "Primary age group" }.freeze
 
@@ -248,10 +252,10 @@ module PersonServices
     # never the whole picture. A primary the person already holds stays; the archive's
     # then lands as additional and is returned as a difference to note.
     def tag_service_areas(person, data)
-      primary = translate(data, PRIMARY_TAG_FIELDS)
-      additional = translate(data, ADDITIONAL_TAG_FIELDS)
-      sector_primary_ids, sector_extra_ids = split_primary(primary.map(&:sector_ids))
-      age_primary_ids, age_extra_ids = split_primary(primary.map(&:age_group_ids))
+      primary_answers = translate(data, PRIMARY_SECTOR_FIELDS)
+      additional = translate(data, ADDITIONAL_TAG_FIELDS).values
+      sector_primary_ids, sector_extra_ids = split_primary(primary_answers.values_at(*PRIMARY_SECTOR_FIELDS).map(&:sector_ids))
+      age_primary_ids, age_extra_ids = split_primary(primary_answers.values_at(*PRIMARY_AGE_FIELDS).map(&:age_group_ids))
 
       [
         apply_tags(person, :tag_sectors, Sector, person.sectorable_items.where(is_primary: true).pluck(:sector_id),
@@ -273,15 +277,16 @@ module PersonServices
     end
 
     def translate(data, fields)
-      fields.map { |field| @translation.resolve(data[field]) }
+      fields.index_with { |field| @translation.resolve(data[field]) }
     end
 
-    # Each primary field answers for itself: a primary answer naming several of a kind —
-    # "Families" is every age range — has no single one to pick, so they all land as
-    # additional, while the other primary field's single answer still leads.
+    # A person holds one primary sector and one primary age range, so the first field to
+    # name a single tag of the kind gives it. An answer naming several — "Families" is
+    # every age range — has no single one to pick, so the next field gets its turn and
+    # the rest land as additional.
     def split_primary(id_sets)
-      primary, additional = id_sets.partition(&:one?).map { |sets| sets.flatten.uniq }
-      [ primary, additional - primary ]
+      primary = id_sets.find(&:one?) || []
+      [ primary, id_sets.flatten.uniq - primary ]
     end
 
     def names(model, ids)

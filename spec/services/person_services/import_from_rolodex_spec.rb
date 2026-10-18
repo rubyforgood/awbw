@@ -150,18 +150,24 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(import.differences).to be_empty
     end
 
-    it "takes each primary field's answer as primary in its own right" do
+    it "takes the one primary age group from the field that names it" do
       rolodex("00062", EMail: "ada@example.com", PrimaryServiceArea: "Children's Services", PrimaryAgeGroup: "Adults")
-      rolodex("00063", FirstName: "Grace", EMail: "grace@example.com",
-                       PrimaryServiceArea: "Children's Services", PrimaryAgeGroup: "Families")
 
       described_class.new.call
+      person = Person.find_by!(filemaker_code: "00062")
 
-      expect(Person.find_by!(filemaker_code: "00062").primary_age_groups).to contain_exactly(children, adults)
+      expect(person.primary_age_groups).to eq([ adults ])
+      expect(person.additional_age_groups).to eq([ children ])
+    end
 
-      grace = Person.find_by!(filemaker_code: "00063")
-      expect(grace.primary_age_groups).to eq([ children ])
-      expect(grace.additional_age_groups).to contain_exactly(teens, adults, elders)
+    it "takes the primary age group a sector field names when the age group field has none to give" do
+      rolodex("00063", EMail: "ada@example.com", PrimaryServiceArea: "Children's Services", PrimaryAgeGroup: "Families")
+
+      described_class.new.call
+      person = Person.find_by!(filemaker_code: "00063")
+
+      expect(person.primary_age_groups).to eq([ children ])
+      expect(person.additional_age_groups).to contain_exactly(teens, adults, elders)
     end
 
     it "tags every age range for families without marking one primary" do
