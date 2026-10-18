@@ -87,6 +87,27 @@ RSpec.describe FeatureCatalog do
       expect(existing.summary).to eq("Edited in-app") # admin content left alone
     end
 
+    it "replaces the tips and description on a feature nobody edited when the seed revises them" do
+      existing = create(:feature, name: "Seed feature one", pro_tips: "Old 1\nOld 2\nOld 3",
+                                  rhino_description: "<p>Old write-up.</p>")
+
+      result = catalog.import!
+
+      expect(result.updated).to eq(1)
+      expect(existing.reload.pro_tips_list).to eq([ "Tip A", "Tip B" ])
+      expect(existing.rhino_description.to_plain_text).to eq("Longer write-up.")
+    end
+
+    it "keeps tips and a description the seed leaves out" do
+      existing = create(:feature, name: "Seed feature two", pro_tips: "Kept tip",
+                                  rhino_description: "<p>Kept write-up.</p>")
+
+      catalog.import!
+
+      expect(existing.reload.pro_tips_list).to eq([ "Kept tip" ])
+      expect(existing.rhino_description.to_plain_text).to eq("Kept write-up.")
+    end
+
     it "re-syncs catalog classification (audience/area/links) that has drifted from the seed" do
       existing = create(:feature, name: "Seed feature one",
                                   display_status: "admin_facing", area: "reporting",
@@ -105,13 +126,13 @@ RSpec.describe FeatureCatalog do
 
     it "leaves a feature edited in-app untouched, even blank fields and drifted classification" do
       existing = create(:feature, name: "Seed feature one", area: "reporting", external_url: nil,
-                                  created_at: 2.days.ago, updated_at: 1.day.ago)
+                                  pro_tips: "Admin tip", created_at: 2.days.ago, updated_at: 1.day.ago)
 
       result = catalog.import!
 
       expect(result.updated).to eq(0)
       expect(result.skipped).to eq(1)
-      expect(existing.reload).to have_attributes(area: "reporting", external_url: nil)
+      expect(existing.reload).to have_attributes(area: "reporting", external_url: nil, pro_tips: "Admin tip")
     end
 
     it "does not count its own sync as an in-app edit" do

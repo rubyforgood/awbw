@@ -2,7 +2,8 @@ require "yaml"
 
 # Syncs the seed files in db/seeds/features/ (one per feature) into the DB behind
 # /features. `import!` creates missing features, re-syncs CATALOG_FIELDS from the
-# seed, and only fills BLANK CONTENT_FIELDS. A feature edited in-app
+# seed, replaces SEED_REVISED_FIELDS the seed carries, and only fills BLANK
+# CONTENT_FIELDS. A feature edited in-app
 # (Feature#edited?) is left entirely alone.
 class FeatureCatalog
   DATA_DIR = Rails.root.join("db/seeds/features")
@@ -10,8 +11,11 @@ class FeatureCatalog
   # Always re-synced from the seed (so corrections reach existing records).
   CATALOG_FIELDS = %i[ area display_status released_on action_path pr_number ].freeze
 
+  # Replaced when the seed revises them, so trimming a seed's tips reaches existing records.
+  SEED_REVISED_FIELDS = %i[ pro_tips rhino_description ].freeze
+
   # Only filled when blank; never overwritten.
-  CONTENT_FIELDS = %i[ summary pro_tips external_url rhino_description ].freeze
+  CONTENT_FIELDS = %i[ summary external_url ].freeze
 
   Result = Struct.new(:created, :updated, :skipped) do
     def total = created + updated
@@ -95,6 +99,13 @@ class FeatureCatalog
       changes[field] = seed_value
     end
 
+    SEED_REVISED_FIELDS.each do |field|
+      seed_value = attributes[field]
+      next if seed_value.blank? || same_content?(feature, field, seed_value)
+
+      changes[field] = seed_value
+    end
+
     CONTENT_FIELDS.each do |field|
       seed_value = attributes[field]
       next if seed_value.blank? || feature.public_send(field).present?
@@ -103,5 +114,12 @@ class FeatureCatalog
     end
 
     changes
+  end
+
+  # Rich text is compared as rendered HTML, so the stored copy of an unchanged seed matches it.
+  def same_content?(feature, field, seed_value)
+    return feature.public_send(field) == seed_value unless field == :rhino_description
+
+    feature.rhino_description&.body&.to_html == ActionText::Content.new(seed_value).to_html
   end
 end

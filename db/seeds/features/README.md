@@ -10,8 +10,9 @@ doc links). An admin clicks **Sync latest updates** on `/features`
 - Creates a record for any seed whose `name` isn't in the table yet.
 - Re-aligns classification fields (`area`, `display_status`, `released_on`,
   `action_path`, `pr_number`) on records not edited in-app.
-- Fills blank content (`summary`, `pro_tips`, `external_url`, `description`) and
-  never overwrites what an admin wrote.
+- Replaces `pro_tips` and `description` with the seed's, when the seed has them,
+  on records not edited in-app — so trimming a seed's tips reaches the page.
+- Fills blank `summary` and `external_url`, never overwriting them.
 
 The table is never regenerated from this folder. Deleting or renaming a file
 leaves its record in place; renaming a feature's `name` here creates a new record.
