@@ -38,6 +38,15 @@ class SurveyFormSeeder
     new.call
   end
 
+  # The training-topic resources a fan-out question asks about, in the given order.
+  # A missing one is created unpublished so the question still names every topic.
+  def self.topic_resources(titles)
+    titles.map do |title|
+      Resource.find_by(title:) ||
+        Resource.create!(title:, kind: "Resource", created_by: User.where(super_user: true).order(:id).first)
+    end
+  end
+
   attr_reader :created
 
   def initialize

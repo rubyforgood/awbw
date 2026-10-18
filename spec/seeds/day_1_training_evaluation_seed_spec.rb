@@ -6,13 +6,15 @@ RSpec.describe "seed: Day 1 training evaluation" do
 
   def run_seed = expect { load seed }.to output.to_stdout
 
+  before { create(:user, :admin) }
+
   it "builds the SurveyMonkey questions in order, all optional" do
     run_seed
 
     fields = form.form_fields.reorder(:position)
     expect(form.role).to eq("day_1_survey")
-    expect(fields.count).to eq(26)
-    expect(fields.map(&:answer_type).tally).to include("single_select_radio" => 14, "file_upload" => 1, "multi_select_checkbox" => 1)
+    expect(fields.count).to eq(22)
+    expect(fields.map(&:answer_type).tally).to include("single_select_radio" => 10, "file_upload" => 1, "multi_select_checkbox" => 1)
     expect(fields.none?(&:required?)).to be(true)
     expect(fields.second.name).to eq("Name")
     expect(fields.last.answer_options.map(&:name)).to include("My first and last name", "City I'm located in")
@@ -24,6 +26,22 @@ RSpec.describe "seed: Day 1 training evaluation" do
     part_one = form.form_fields.find_by!(position: 4)
     expect(part_one.subtitle).to include("<strong>Listening is Art</strong>")
     expect(part_one.specify_option_labels).to eq([ "Other" ])
+  end
+
+  it "fans each growth question out over the day's workshops, in order" do
+    run_seed
+
+    growth = form.form_fields.where(name: [ FormBuilderService::GROWTH_PERSONAL_PROMPT, FormBuilderService::GROWTH_PROFESSIONAL_PROMPT ])
+    expect(growth.count).to eq(2)
+    expect(growth.map { |field| field.fanned_resources.map(&:title) }).to all(eq(SurveyFormSeeder::DAY_1_WORKSHOPS))
+  end
+
+  it "reuses an existing workshop resource and creates the missing ones unpublished" do
+    existing = create(:resource, title: SurveyFormSeeder::DAY_1_WORKSHOPS.first)
+
+    expect { run_seed }.to change(Resource, :count).by(SurveyFormSeeder::DAY_1_WORKSHOPS.size - 1)
+    expect(form.form_fields.find_by!(name: FormBuilderService::GROWTH_PERSONAL_PROMPT).fanned_resources.first).to eq(existing)
+    expect(Resource.where(title: SurveyFormSeeder::DAY_1_WORKSHOPS).where.not(id: existing.id)).to all(have_attributes(published: false))
   end
 
   it "builds the form the Feedback surveys callout delivers" do
@@ -38,7 +56,7 @@ RSpec.describe "seed: Day 1 training evaluation" do
     template.update!(name: "Renamed by staff")
 
     expect { run_seed }.not_to change(Form, :count)
-    expect(template.form_fields.count).to eq(26)
+    expect(template.form_fields.count).to eq(22)
   end
 
   it "is idempotent while the form has no submissions" do
@@ -46,7 +64,7 @@ RSpec.describe "seed: Day 1 training evaluation" do
     run_seed
 
     expect(Form.where(name: form.name).count).to eq(1)
-    expect(form.form_fields.count).to eq(26)
+    expect(form.form_fields.count).to eq(22)
   end
 
   it "leaves a form with submissions untouched" do

@@ -5,7 +5,8 @@
 #
 # Builds the day_2_survey form the Feedback surveys callout delivers, rebuilding
 # the seeded template in place. Re-running rebuilds the questions while the form
-# has no submissions, and stops once anyone has answered.
+# has no submissions, and stops once anyone has answered. The growth questions fan
+# out over the day's workshops, creating any missing workshop resource unpublished.
 # Set PHOTO_CONTACT (e.g. "Jo at jo@example.org") to name who receives extra photos.
 
 role = "day_2_survey"
@@ -41,12 +42,6 @@ agreement = [ "Strongly agree", "Agree", "Neutral", "Disagree", "Strongly disagr
 photo_question = "We invite you to upload a photo of one of your creations if you feel comfortable doing so. " \
   "If you'd like to share additional photos, please email them to #{photo_contact || "the AWBW training team"}."
 
-workshop_growth = [ "The Monster In Me", "The Claiming Who I Am" ].flat_map do |workshop|
-  %w[personal professional].map do |kind|
-    { name: "#{workshop} workshop supported my #{kind} growth.", type: :single_select_radio, options: agreement }
-  end
-end
-
 questions = [
   { name: "Name and Agency (optional)", type: :no_user_input },
   { name: "Name", type: :free_form_input_one_line, width: :half },
@@ -55,7 +50,8 @@ questions = [
   { name: "Please elaborate.", type: :free_form_input_paragraph },
   { name: clarity, type: :single_select_radio, subtitle: part_two, options: yes_no_other },
   { name: "Please elaborate.", type: :free_form_input_paragraph },
-  *workshop_growth,
+  { name: FormBuilderService::GROWTH_PERSONAL_PROMPT, type: :single_select_radio, options: agreement, fan_out: SurveyFormSeeder::DAY_2_WORKSHOPS },
+  { name: FormBuilderService::GROWTH_PROFESSIONAL_PROMPT, type: :single_select_radio, options: agreement, fan_out: SurveyFormSeeder::DAY_2_WORKSHOPS },
   { name: "The breakout rooms supported me in sharing about my experience and connect with other trainees.", type: :single_select_radio, options: agreement },
   { name: "What I learned today better prepared me to facilitate art workshops that honor intersectionality.", type: :single_select_radio, options: agreement },
   { name: "Having time to dive into topics related to questions and challenges helped me feel more prepared to facilitate art workshops.", type: :single_select_radio, options: agreement },
@@ -92,6 +88,9 @@ else
       Array(question[:options]).each_with_index do |label, index|
         option = AnswerOption.find_or_create_by!(name: label) { |new_option| new_option.position = index }
         field.form_field_answer_options.create!(answer_option: option)
+      end
+      SurveyFormSeeder.topic_resources(Array(question[:fan_out])).each do |resource|
+        field.form_field_resources.create!(resource:)
       end
     end
   end
