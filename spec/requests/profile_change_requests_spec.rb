@@ -399,6 +399,18 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response.body).to include("ring-yellow-500")
     end
 
+    it "points the eyebrow at the change log a highlight link came from" do
+      request = create(:profile_change_request, person: person)
+
+      get profile_change_requests_path(person_id: person.id, highlight: request.id,
+                                       return_to: "activities", return_type: "Person", return_id: person.id)
+
+      expect(response.body).to include(CGI.escapeHTML(
+        admin_activities_events_path(resource_type: "Person", resource_id: person.id)
+      ))
+      expect(response.body).to include("Activity log")
+    end
+
     it "lists requests in the results frame" do
       create(:profile_change_request, person: person, details: "please fix my dates")
 

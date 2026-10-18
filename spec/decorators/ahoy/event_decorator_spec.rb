@@ -345,6 +345,19 @@ RSpec.describe Ahoy::EventDecorator do
       )
     end
 
+    it "sends the queue's eyebrow back to the change log the link was read in" do
+      request = create(:profile_change_request)
+      event = create(:ahoy_event, resource_type: "Affiliation", resource_id: 7,
+                     properties: { "profile_change_request_id" => request.id }).reload
+
+      paths = %w[record activities].map do |origin|
+        event.decorate(context: { return_to: origin }).detail_rows.first.dig(:link, :path)
+      end
+
+      expect(paths.first).to include("return_to=record", "return_type=Affiliation", "return_id=7")
+      expect(paths.last).to include("return_to=activities", "return_type=Affiliation", "return_id=7")
+    end
+
     it "labels both result_count and the legacy page_result_count as Results found" do
       current = decorate("result_count" => 8)
       legacy = decorate("page_result_count" => 21)

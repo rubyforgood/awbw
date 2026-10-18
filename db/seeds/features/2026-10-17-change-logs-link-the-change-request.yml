@@ -9,3 +9,4 @@ summary: >-
   "From change request" link back to that request.
 pro_tips:
   - "The link opens the change request queue filtered to that person, scrolled to the request's card and highlighting it."
+  - "The queue's back link returns you to the change log you clicked from, not a generic page."

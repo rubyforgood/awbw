@@ -199,7 +199,18 @@ module Ahoy
       return nil unless request
 
       h.profile_change_requests_path(status: request.status, person_id: request.person_id,
-                                     highlight: request.id, anchor: h.dom_id(request))
+                                     highlight: request.id, anchor: h.dom_id(request),
+                                     **return_to_params)
+    end
+
+    # Hands the queue's eyebrow its way back to the change log this row was read in:
+    # which log (context[:return_to], set by the views that render one) and the record
+    # it was about — both the inline log's own record and the activities index's filter.
+    def return_to_params
+      origin = context[:return_to]
+      return {} if origin.blank? || object.resource_type.blank? || object.resource_id.blank?
+
+      { return_to: origin, return_type: object.resource_type, return_id: object.resource_id }
     end
 
     def compute_resource_link
