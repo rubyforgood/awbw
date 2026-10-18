@@ -747,7 +747,7 @@ RSpec.describe "Forms", type: :request do
     it "renders a validation error instead of 500 when a name is too long" do
       form = create(:form, :standalone)
       patch form_path(form), params: {
-        form: { form_fields_attributes: { "0" => { name: "x" * 1001, answer_type: "free_form_input_one_line" } } }
+        form: { form_fields_attributes: { "0" => { name: "x" * 2001, answer_type: "free_form_input_one_line" } } }
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("too long")
@@ -757,7 +757,7 @@ RSpec.describe "Forms", type: :request do
       let(:form) { create(:form, :standalone) }
       let!(:untouched) { create(:form_field, form:, name: "How was the training?", position: 1) }
       let!(:choice) { create(:form_field, form:, name: "Rate the facilitator", answer_type: :single_select_radio, position: 2) }
-      let(:long_option) { "Strongly agree, and here is why. " * 40 }
+      let(:long_option) { "Strongly agree, and here is why. " * 70 }
 
       def submit_edits(choice_attrs)
         patch form_path(form), params: {
@@ -775,7 +775,7 @@ RSpec.describe "Forms", type: :request do
         }.not_to change(AnswerOption, :count)
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(response.body).to include("is too long (#{long_option.strip.length.to_fs(:delimited)} characters; the limit is 1,000)")
+        expect(response.body).to include("is too long (#{long_option.strip.length.to_fs(:delimited)} characters; the limit is 2,000)")
         expect(choice.reload.form_field_answer_options).to be_empty
       end
 
@@ -789,18 +789,19 @@ RSpec.describe "Forms", type: :request do
       end
 
       it "keeps every unsaved edit on the page so one fix saves them all" do
-        submit_edits(name: "x" * 1001)
+        submit_edits(name: "x" * 2001)
 
         doc = Nokogiri::HTML(response.body)
         names = doc.css("textarea[name$='[name]']").map(&:text).map(&:strip)
-        expect(names).to include("How was Training Day 1?", "x" * 1001, "What will you use first?")
+        expect(names).to include("How was Training Day 1?", "x" * 2001, "What will you use first?")
         expect(untouched.reload.name).to eq("How was the training?")
       end
 
       it "shows each length limit as placeholder text" do
+        create(:form_field, form:, name: "Day 1", answer_type: :group_header, position: 0)
         get edit_form_path(form)
 
-        expect(response.body).to include("Form name (255 char max)", "Question text (1,000 char max)", "Option text (1,000 char max)")
+        expect(response.body).to include("Form name (255 char max)", "Question text (2,000 char max)", "Option text (2,000 char max)", "Subtitle (10,000 char max)")
       end
 
       it "opens the over-long question's settings so the error is visible" do

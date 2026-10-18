@@ -62,7 +62,7 @@
       <div class="hidden mt-2 pb-2 flex flex-col gap-2" data-field-options-target="panel">
         <%= f.text_area :subtitle, rows: 2,
               class: "w-full text-sm text-gray-600 rounded border-gray-300 shadow-sm px-2 py-1",
-              placeholder: "Subtitle" %>
+              placeholder: max_length_placeholder("Subtitle", FormField::NOTE_MAX_LENGTH) %>
         <%= link_to_remove_association "Remove", f,
               class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0 ml-auto" %>
       </div>
@@ -144,10 +144,10 @@
               Subtitle/Hint sit next to the width control as one right-aligned cluster. %>
           <%= f.text_area :subtitle, rows: 1, placeholder: "Subtitle",
                 class: "ml-auto min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                title: "Optional subtitle shown under the field label" %>
+                title: "Optional subtitle shown under the field label (up to #{number_with_delimiter(FormField::NOTE_MAX_LENGTH)} characters)" %>
           <%= f.text_area :hint_text, rows: 1, placeholder: "Hint",
                 class: "min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                title: "Optional hint shown below the field input" %>
+                title: "Optional hint shown below the field input (up to #{number_with_delimiter(FormField::NOTE_MAX_LENGTH)} characters)" %>
           <%= f.select :width, width_options,
                 {},
                 class: "shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",

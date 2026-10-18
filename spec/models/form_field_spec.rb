@@ -21,7 +21,10 @@ RSpec.describe FormField do
       build(:form_field, form: create(:form))
     end
     it { should validate_presence_of(:name) }
-    it { should validate_length_of(:name).is_at_most(1000).with_long_message(/is too long \(1,001 characters; the limit is 1,000\)/) }
+    it { should validate_length_of(:name).is_at_most(2000).with_long_message(/is too long \(2,001 characters; the limit is 2,000\)/) }
+
+    it { should validate_length_of(:subtitle).is_at_most(10_000).with_long_message(/is too long \(10,001 characters; the limit is 10,000\)/) }
+    it { should validate_length_of(:hint_text).is_at_most(10_000).with_long_message(/is too long \(10,001 characters; the limit is 10,000\)/) }
 
     it "accepts a long, multi-sentence question name" do
       field = build(:form_field, form: create(:form), name: "A. " * 100)

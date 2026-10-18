@@ -213,7 +213,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_112434) do
   create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.integer "created_by_id"
-    t.string "name", limit: 1000
+    t.string "name", limit: 2000
     t.integer "position"
     t.datetime "updated_at", precision: nil, null: false
     t.integer "updated_by_id"
