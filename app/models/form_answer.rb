@@ -28,16 +28,18 @@ class FormAnswer < ApplicationRecord
   # other wording.
   def self.for_question(field, question)
     return where(form_field: field) if question == field.name
-    return unless field.per_resource_questions.include?(question)
+    return unless field.per_resource_wording?(question)
 
     per_resource_copies(field, question)
   end
 
-  # A fanned-out field's per-resource answers (saved with no field) on its form —
-  # every copy, or just the ones worded as `questions`.
-  def self.per_resource_copies(field, questions = field.per_resource_questions)
-    where(form_field_id: nil, question_name_when_answered: questions,
-      form_submission_id: FormSubmission.where(form_id: field.form_id).select(:id))
+  # A fanned-out field's per-resource answers (saved with no field) on its form:
+  # one copy's by its wording, or every copy's, including wordings since renamed.
+  def self.per_resource_copies(field, question = nil)
+    copies = where(form_field_id: nil, form_submission_id: FormSubmission.where(form_id: field.form_id).select(:id))
+    return copies.where(question_name_when_answered: question) if question
+
+    copies.where("form_answers.question_name_when_answered LIKE ?", "#{sanitize_sql_like(field.per_resource_prefix)}%")
   end
 
   def name

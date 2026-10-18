@@ -240,9 +240,30 @@ RSpec.describe "FormAnswers", type: :request do
         get form_answers_path(form_id: form.id, return_to: "form_results",
                               question: "Any thoughts", form_field_id: field.id)
 
-        expect(response.body).to include(CGI.escapeHTML(
-          results_form_path(form, anchor: "form-question-#{field.id}-any-thoughts")
-        ))
+        expect(response.body).to include(%(href="#{CGI.escapeHTML(results_form_path(form, anchor: "form-question-#{field.id}"))}"))
+      end
+
+      it "anchors back to a plain question's card even after the question box is edited" do
+        form = create(:form, name: "Volunteer interest")
+        field = create(:form_field, form: form, name: "Any thoughts")
+
+        get form_answers_path(form_id: form.id, return_to: "form_results",
+                              question: "thoughts", form_field_id: field.id)
+
+        expect(response.body).to include(%(href="#{CGI.escapeHTML(results_form_path(form, anchor: "form-question-#{field.id}"))}"))
+      end
+
+      it "pins a drill-down from a renamed resource's card to its earlier wording" do
+        form = create(:form)
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        create(:form_field_resource, form_field: clarity, resource: create(:resource, title: "Collage basics"))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Collage",
+               submitted_answer: "earlier-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "How clear was Collage", form_field_id: clarity.id),
+            headers: frame_headers
+
+        expect(response.body).to include("earlier-answer")
       end
 
       it "anchors the way back to a fanned-out copy's own card" do
@@ -254,9 +275,7 @@ RSpec.describe "FormAnswers", type: :request do
         get form_answers_path(form_id: form.id, return_to: "form_results", question: "How clear was Masks",
                               form_field_id: field.id)
 
-        expect(response.body).to include(CGI.escapeHTML(
-          results_form_path(form, anchor: "form-question-#{field.id}-how-clear-was-masks")
-        ))
+        expect(response.body).to include(%(href="#{CGI.escapeHTML(results_form_path(form, anchor: "form-question-#{field.id}-how-clear-was-masks"))}"))
       end
 
       it "restores the results page's own question search on the way back" do

@@ -67,8 +67,8 @@ module FormsHelper
   end
 
   # Stable anchor for a question's card on the results page, so a page reached
-  # from that card can scroll back to exactly the card it opened. Mirrors
-  # FormSubmissionsHelper#form_submission_row_id.
+  # from that card can scroll back to exactly the card it opened. A fanned-out
+  # copy's card adds its wording. Mirrors FormSubmissionsHelper#form_submission_row_id.
   def form_results_card_id(field_id, question = nil)
     "form-question-#{[ field_id, question.to_s.parameterize.presence ].compact.join("-")}"
   end
@@ -83,8 +83,17 @@ module FormsHelper
       start_date: params[:start_date].presence,
       end_date: params[:end_date].presence,
       question: params[:results_question].presence,
-      anchor: params[:form_field_id].presence && form_results_card_id(params[:form_field_id], params[:question])
+      anchor: form_results_return_anchor(params)
     }.compact
+  end
+
+  # The card a drill-down came from: a fanned-out copy's while the question box
+  # still holds one of its wordings, otherwise the field's own card.
+  def form_results_return_anchor(params)
+    return if params[:form_field_id].blank?
+
+    field = FormField.find_by(id: params[:form_field_id])
+    form_results_card_id(params[:form_field_id], (params[:question] if field&.per_resource_wording?(params[:question])))
   end
 
   # A results card's footer link to the Form submissions list: the submissions

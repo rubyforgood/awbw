@@ -108,8 +108,21 @@ RSpec.describe FormAnswer do
       expect(described_class.for_question(field, "How clear was Masks")).to contain_exactly(copy)
     end
 
+    it "is a renamed resource's earlier answers under its earlier wording" do
+      earlier = create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Collage",
+                       form_submission: create(:form_submission, form: form))
+
+      expect(described_class.for_question(field, "How clear was Collage")).to contain_exactly(earlier)
+    end
+
     it "is nil for wording the field doesn't ask" do
-      expect(described_class.for_question(field, "How clear was Collage")).to be_nil
+      expect(described_class.for_question(field, "Was it clear")).to be_nil
+    end
+
+    it "is nil for a non-choice field's sibling name" do
+      email = create(:form_field, form: form, name: "Email")
+
+      expect(described_class.for_question(email, "Email 2")).to be_nil
     end
   end
 end

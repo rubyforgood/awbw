@@ -12,7 +12,7 @@ class FormResponseAggregator
   #   :text   — responses
   #   :file   — answered_count only
   FieldReport = Struct.new(
-    :field, :label, :kind, :answered_count,
+    :field, :label, :per_resource, :kind, :answered_count,
     :rows, :chart, :multi, :specify_rows, :responses,
     :average, :total, :minimum, :maximum, :integer_valued, :percent,
     keyword_init: true
@@ -20,7 +20,7 @@ class FormResponseAggregator
 
   # One card's question: a field, or one fanned-out copy of it (answers saved with
   # no field, under the copy's sentence).
-  Question = Struct.new(:field, :label, :fanned, keyword_init: true)
+  Question = Struct.new(:field, :label, :per_resource, keyword_init: true)
 
   # One free-text answer, carrying enough context to list it and link back to
   # the full submission.
@@ -102,9 +102,23 @@ class FormResponseAggregator
 
   def questions
     @questions ||= input_fields.flat_map do |field|
-      next [ Question.new(field: field, label: field.name, fanned: false) ] unless field.per_resource?
+      current = field.per_resource? ? field.per_resource_questions : []
+      plain = current.empty? ? [ Question.new(field: field, label: field.name, per_resource: false) ] : []
+      labels = current + earlier_wordings_by_field_id.fetch(field.id, []).sort
+      plain + labels.map { |label| Question.new(field: field, label: label, per_resource: true) }
+    end
+  end
 
-      field.per_resource_questions.map { |label| Question.new(field: field, label: label, fanned: true) }
+  # Per-resource answers worded as no current copy is — a resource since renamed or
+  # unlinked — each filed under the field whose copies open with the most matching
+  # words. A copy whose question was itself reworded matches no field and is left out.
+  def earlier_wordings_by_field_id
+    @earlier_wordings_by_field_id ||= begin
+      current = input_fields.select(&:per_resource?).flat_map(&:per_resource_questions).to_set
+      fanned_answers_by_label.keys.reject { |label| current.include?(label) }.each_with_object({}) do |label, wordings|
+        field = input_fields.select { |candidate| candidate.per_resource_wording?(label) }.max_by { |candidate| candidate.per_resource_prefix.length }
+        (wordings[field.id] ||= []) << label if field
+      end
     end
   end
 
@@ -125,7 +139,7 @@ class FormResponseAggregator
   end
 
   def answers_for(question)
-    return fanned_answers_by_label.fetch(question.label, []) if question.fanned
+    return fanned_answers_by_label.fetch(question.label, []) if question.per_resource
 
     answers_by_field_id.fetch(question.field.id, [])
   end
@@ -143,7 +157,7 @@ class FormResponseAggregator
   end
 
   def report_for(question, **attributes)
-    FieldReport.new(field: question.field, label: question.label, **attributes)
+    FieldReport.new(field: question.field, label: question.label, per_resource: question.per_resource, **attributes)
   end
 
   # Sliders and number-typed free-form fields hold a figure worth averaging and

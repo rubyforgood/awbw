@@ -351,6 +351,38 @@ RSpec.describe FormResponseAggregator do
       expect(described_class.new(form).field_reports.first.answered_count).to eq(0)
     end
 
+    it "gives a renamed resource's earlier answers their own card after the field's current copies" do
+      fanned_answer(create(:form_submission, form: form), collage, "Very clear")
+      collage.update!(title: "Collage basics")
+      fanned_answer(create(:form_submission, form: form), collage.reload, "Unclear")
+
+      reports = described_class.new(form).field_reports
+
+      expect(reports.map(&:label)).to eq([
+        "Part One: How clear was Collage basics", "Part One: How clear was Masks", "Part One: How clear was Collage"
+      ])
+      expect(reports.map(&:rows)).to eq([ [ [ "Unclear", 1 ] ], [], [ [ "Very clear", 1 ] ] ])
+      expect(reports.map(&:per_resource)).to all(be(true))
+    end
+
+    it "files a leftover wording under the field whose copies open with the most matching words" do
+      longer = create(:form_field, form: form, name: "How clear was the", subtitle: "Part One",
+                      answer_type: :single_select_radio, position: field.position.to_i + 1)
+      create(:form_answer, form_submission: create(:form_submission, form: form), form_field: nil,
+        question_name_when_answered: "Part One: How clear was the closing circle", submitted_answer: "Very clear")
+
+      report = described_class.new(form).field_reports.find { |r| r.label == "Part One: How clear was the closing circle" }
+
+      expect(report.field).to eq(longer)
+    end
+
+    it "leaves out an answer whose question was reworded" do
+      create(:form_answer, form_submission: create(:form_submission, form: form), form_field: nil,
+        question_name_when_answered: "Part One: Was it clear Collage", submitted_answer: "Very clear")
+
+      expect(described_class.new(form).field_reports.map(&:label)).not_to include("Part One: Was it clear Collage")
+    end
+
     it "finds a copy by its resource title in the question search" do
       labels = described_class.new(form, question_query: "masks").field_reports.map(&:label)
 

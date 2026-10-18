@@ -1404,7 +1404,7 @@ RSpec.describe "Forms", type: :request do
 
         get results_form_path(form)
 
-        expect(Nokogiri::HTML(response.body).at_css("#form-question-#{color.id}-favorite-color")).to be_present
+        expect(Nokogiri::HTML(response.body).at_css("#form-question-#{color.id}")).to be_present
       end
 
       it "carries the question search out as results_question, so `question` stays the drilled-into card" do
