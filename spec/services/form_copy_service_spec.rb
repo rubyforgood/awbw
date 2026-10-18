@@ -45,6 +45,20 @@ RSpec.describe FormCopyService do
       expect(copied_option.answer_option).to eq(option)
     end
 
+    it "copies fan-out links to the same workshops and resources, in order" do
+      form = create(:form)
+      field = create(:form_field, form: form, answer_type: :single_select_radio)
+      workshop = create(:workshop, title: "Touchstone Journey")
+      resource = create(:resource, title: "Triple Focus")
+      create(:form_field_resource, form_field: field, resource: nil, workshop: workshop, position: 1)
+      create(:form_field_resource, form_field: field, resource: resource, position: 2)
+
+      copy = nil
+      expect { copy = described_class.new(form).call }.not_to change(Workshop, :count)
+
+      expect(copy.form_fields.first.fanned_links.map(&:topic)).to eq([ workshop, resource ])
+    end
+
     it "does not copy the slug or published state" do
       form = create(:form, slug: "volunteer", published: true, name: "Volunteer")
 

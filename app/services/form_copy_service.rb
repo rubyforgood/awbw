@@ -40,6 +40,10 @@ class FormCopyService
       field.form_field_answer_options.each do |ffao|
         new_field.form_field_answer_options.create!(answer_option_id: ffao.answer_option_id)
       end
+
+      field.form_field_resources.each do |link|
+        new_field.form_field_resources.create!(link.slice(:resource_id, :workshop_id, :position))
+      end
     end
 
     remap_field_parents(field_map)
