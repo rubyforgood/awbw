@@ -276,6 +276,24 @@ RSpec.describe Ahoy::EventDecorator do
       )
     end
 
+    it "names the records a changed foreign key points to instead of their ids" do
+      affiliation = create(:affiliation)
+      address = create(:address, addressable: affiliation.organization, street_address: "12 Elm St", city: "Reno", state: "NV", zip_code: "89501")
+      event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation", resource_id: affiliation.id,
+                                  properties: { "changes" => { "organization_address_id" => { "before" => nil, "after" => address.id } } }).decorate
+
+      change = event.changes_summary.first
+      expect(change).to include(field: "Organization address", before: "(empty)", after: "12 Elm St, Reno, NV 89501")
+    end
+
+    it "falls back to the type and id when the referenced record is gone" do
+      affiliation = create(:affiliation)
+      event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation", resource_id: affiliation.id,
+                                  properties: { "changes" => { "organization_address_id" => { "before" => 999_999, "after" => nil } } }).decorate
+
+      expect(event.changes_summary.first).to include(field: "Organization address", before: "Address #999999", after: "(empty)")
+    end
+
     it "links both parents of a moved comment, reading the unchanged type off the comment" do
       from = create(:person, first_name: "Ada", last_name: "Park")
       to = create(:person, first_name: "Bo", last_name: "Lee")
