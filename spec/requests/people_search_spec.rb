@@ -219,6 +219,7 @@ RSpec.describe "People search", type: :request do
       end
 
       it "matches a shared phone" do
+        marked.update!(profile_show_phone: true)
         create(:contact_method, contactable: marked, value: "555-0142")
         expect(search("555-0142")).to include("Markedone")
       end
