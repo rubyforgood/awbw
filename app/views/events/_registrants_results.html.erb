@@ -568,7 +568,7 @@
                   <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="ticket_forms">
                     <% if submitted_at %>
                       <%= link_to registration_callout_form_path(registration.slug, callout, anchor: "form-#{form.id}"), target: "_blank", rel: "noopener",
-                            class: "inline-flex items-center gap-1.5 text-green-700 hover:underline",
+                            class: "inline-flex items-center gap-1.5 whitespace-nowrap text-green-700 hover:underline",
                             title: "Submitted #{submitted_at.strftime("%b %-d, %Y")}" do %>
                         <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                         <span class="text-gray-600"><%= submitted_at.strftime("%b %-d") %></span>
