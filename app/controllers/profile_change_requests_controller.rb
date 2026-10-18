@@ -5,14 +5,10 @@ class ProfileChangeRequestsController < ApplicationController
     authorize! ProfileChangeRequest
     @status = ProfileChangeRequest::STATUSES.include?(params[:status]) ? params[:status] : "pending"
     @person = Person.find_by(id: params[:person_id]) if params[:person_id].present?
-    return unless turbo_frame_request?
-
-    scope = authorized_scope(ProfileChangeRequest.all).where(@person ? { person: @person } : {})
-    @status_counts = scope.group(:status).count
-    @requests = scope.where(status: @status)
-                  .includes(:person, :requested_by, :reviewed_by)
-                  .newest_first
-    render :profile_change_requests_results
+    # A link to one card (highlight + anchor) loads the queue up front so the card
+    # is in the first response for the browser to scroll to.
+    load_requests if turbo_frame_request? || params[:highlight].present?
+    render :profile_change_requests_results if turbo_frame_request?
   end
 
   def new
@@ -63,7 +59,9 @@ class ProfileChangeRequestsController < ApplicationController
 
   def approve
     authorize! @request
-    result = ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user)
+    result = Analytics::LifecycleBuffer.tagging(Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY.to_sym => @request.id) do
+      ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user)
+    end
 
     unless result.applied
       redirect_back_or_to profile_change_requests_path,
@@ -91,6 +89,14 @@ class ProfileChangeRequestsController < ApplicationController
   end
 
   private
+
+  def load_requests
+    scope = authorized_scope(ProfileChangeRequest.all).where(@person ? { person: @person } : {})
+    @status_counts = scope.group(:status).count
+    @requests = scope.where(status: @status)
+                  .includes(:person, :requested_by, :reviewed_by)
+                  .newest_first
+  end
 
   def set_request
     @request = ProfileChangeRequest.find(params[:id])

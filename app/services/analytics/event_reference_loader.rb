@@ -89,12 +89,15 @@ module Analytics
       self.class.polymorphic_changes(event.resource_type, changes, record).values.flatten(1)
     end
 
-    # The event's own resource (its resource_type/resource_id columns), so the
-    # timeline can link the resource title to the record without a per-row query.
+    # The records an event names outside its properties tree: its own resource
+    # (the resource_type/resource_id columns) and the change request an approval
+    # stamped it with, so the timeline links both without a per-row query.
     def primary_pairs(event)
-      return [] if event.resource_type.blank? || event.resource_id.blank?
+      change_request_id = (event.properties || {})[LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY]
+      pairs = change_request_id.present? ? [ [ "ProfileChangeRequest", change_request_id ] ] : []
+      return pairs if event.resource_type.blank? || event.resource_id.blank?
 
-      [ [ event.resource_type.to_s, event.resource_id ] ]
+      pairs + [ [ event.resource_type.to_s, event.resource_id ] ]
     end
 
     def references_in(value)

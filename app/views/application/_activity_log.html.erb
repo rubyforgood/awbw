@@ -40,8 +40,9 @@
               by <%= event.user&.full_name.presence || event.properties["source"] || "Unknown" %>
             </span>
           </div>
+          <%# return_to names this log so a link out of it can hand the destination's eyebrow a way back. %>
           <%= render "admin/ahoy_activities/event_details",
-                     activity: event.decorate(context: { record_cache: record_cache }) %>
+                     activity: event.decorate(context: { record_cache: record_cache, return_to: "record" }) %>
         </div>
       <% end %>
     </div>
