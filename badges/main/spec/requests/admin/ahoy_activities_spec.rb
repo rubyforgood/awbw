@@ -287,7 +287,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "stays person-scoped (no org autochange leak) when a toggle re-submits with person_id" do
-        person = create(:person)
+        person = create(:person, first_name: "Casey", last_name: "Scopedrow")
         org = create(:organization)
         create(:ahoy_event, name: "autochange.organization", user: nil,
                             visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
@@ -295,28 +295,30 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
                             properties: { "resource_title" => "org_autochange_marker" })
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 2.hours.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_change_marker" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
 
         get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff],
                                   hide_account: "1", hide_interactions: "1" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("person_change_marker")
+        table = Nokogiri::HTML(response.body).at_css("table.responsive-table")
+        expect(table.text).to include("Casey Scopedrow")
         expect(response.body).not_to include("org_autochange_marker")
       end
 
       it "hide_communications drops a person's communications from the timeline" do
-        person = create(:person)
+        person = create(:person, first_name: "Dana", last_name: "Keptrow")
         create(:notification, recipient_email: person.communications_email, email_subject: "Hidden comm marker")
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 1.day.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "kept_change_marker" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
 
         get index_path, params: { person_id: person.id, hide_communications: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include("Hidden comm marker")
-        expect(response.body).to include("kept_change_marker")
+        table = Nokogiri::HTML(response.body).at_css("table.responsive-table")
+        expect(table.text).to include("Dana Keptrow")
       end
 
       it "filters by from/to dates" do
@@ -431,30 +433,31 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "filters by person_id to the person, their user, and associated data" do
-        person = create(:person)
+        person = create(:person, first_name: "Robin", last_name: "Historyrow")
         payment = create(:payment, person: person)
-        unrelated_person = create(:person)
+        unrelated_person = create(:person, first_name: "Jordan", last_name: "Unrelatedrow")
 
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 1.day.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_history_row" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
         create(:ahoy_event, name: "update.user", visit: visit_for_admin,
                             resource_type: "User", resource_id: person.user.id, time: 1.day.ago,
-                            properties: { "resource_type" => "User", "resource_id" => person.user.id, "resource_title" => "user_history_row" })
+                            properties: { "resource_type" => "User", "resource_id" => person.user.id })
         create(:ahoy_event, name: "create.payment", visit: visit_for_admin,
                             resource_type: "Payment", resource_id: payment.id, time: 1.day.ago,
                             properties: { "resource_type" => "Payment", "resource_id" => payment.id, "resource_title" => "payment_history_row" })
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: unrelated_person.id, time: 1.day.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => unrelated_person.id, "resource_title" => "unrelated_history_row" })
+                            properties: { "resource_type" => "Person", "resource_id" => unrelated_person.id })
 
         get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("person_history_row")
-        expect(response.body).to include("user_history_row")
+        table = Nokogiri::HTML(response.body).at_css("table.responsive-table")
+        expect(table.text).to include("Robin Historyrow")
+        expect(table.text).to include("Robin Historyrow (user)")
         expect(response.body).to include("payment_history_row")
-        expect(response.body).not_to include("unrelated_history_row")
+        expect(response.body).not_to include("Jordan Unrelatedrow")
       end
 
       it "surfaces a user chip in the applied filters when user_id is set" do
@@ -499,25 +502,26 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "interleaves the person's communications and activity events in one timeline" do
-        person = create(:person)
+        person = create(:person, first_name: "Zelda", last_name: "Timelinerow")
         create(:notification, recipient_email: person.communications_email,
                               email_subject: "Comms row marker xyz", created_at: 1.day.ago)
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 2.days.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "activity_row_marker" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
 
         get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         # Both streams render in the same activities table (no separate panel).
-        expect(response.body).to include("Comms row marker xyz")
-        expect(response.body).to include("activity_row_marker")
+        table_text = Nokogiri::HTML(response.body).at_css("table.responsive-table").text
+        expect(table_text).to include("Comms row marker xyz")
+        expect(table_text).to include("Zelda Timelinerow")
         # The communication row reads as a human Sent/Received chip, not the raw name.
         expect(response.body).to include("Communication")
         expect(response.body).to include("Sent")
         expect(response.body).not_to include("communication.sent")
         # Newer communication sorts above the older activity event.
-        expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
+        expect(table_text.index("Comms row marker xyz")).to be < table_text.index("Zelda Timelinerow")
       end
 
       it "labels an incoming communication as Received" do
