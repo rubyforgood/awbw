@@ -54,10 +54,10 @@ class SurveyFormSeeder
     @created
   end
 
-  # Link each fan-out question to its topics (resources matched by title). Idempotent
-  # — skips existing links and skips a resource that isn't present (prod already has
-  # them; the dev sample seed creates them). Safe to call on its own after the forms
-  # and resources exist.
+  # Link each fan-out question to its topics (resources matched by exact title).
+  # Idempotent — skips existing links and any resource that isn't present (the dev
+  # sample seed creates them; anywhere else they must be added first). Safe to call
+  # on its own after the forms and resources exist.
   def link_fanout_resources
     FANOUT_RESOURCES.each do |entry|
       form = Form.find_by(name: entry[:form])

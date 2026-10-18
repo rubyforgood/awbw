@@ -9,7 +9,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
 
   # The service returns itself; the persisted submission hangs off #submission.
   def submit(params, clarity: {}, on: form)
-    described_class.call(registration:, callout:, form: on, form_params: params, clarity_params: clarity).submission
+    described_class.call(registration:, callout:, form: on, form_params: params.merge(clarity)).submission
   end
 
   it "records the answers under the form's own role (nil for a role-less form)" do
@@ -119,7 +119,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     end
 
     it "writes the two profile questions through to the Person and reports the changes" do
-      service = described_class.call(registration:, callout:, form:, form_params: answers, clarity_params: clarity)
+      service = described_class.call(registration:, callout:, form:, form_params: answers.merge(clarity))
 
       expect(person.reload.anonymous_contributions).to be(true)
       expect(person.display_name_preference).to eq("first_name_only")
@@ -131,7 +131,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
 
     it "stamps completion when a scholarship recipient submits a form on the scholarship callout" do
       scholarship_callout = create(:registration_ticket_callout, event:, builtin_key: "scholarship", form:)
-      described_class.call(registration:, callout: scholarship_callout, form:, form_params: answers, clarity_params: clarity)
+      described_class.call(registration:, callout: scholarship_callout, form:, form_params: answers.merge(clarity))
 
       expect(registration.reload.post_survey_completed?).to be(true)
     end
@@ -145,7 +145,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     it "is idempotent on re-submit — updates in place without duplicating answers" do
       submit(answers, clarity:)
       service = described_class.call(registration:, callout:, form:,
-        form_params: answers.merge(field.id.to_s => "Edited"), clarity_params: clarity)
+        form_params: answers.merge(clarity, field.id.to_s => "Edited"))
 
       expect(service.submission.form_answers.where(form_field: field).count).to eq(1)
       expect(service.submission.form_answers.find_by(form_field: field).submitted_answer).to eq("Edited")

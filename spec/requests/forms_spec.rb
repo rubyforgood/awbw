@@ -328,7 +328,7 @@ RSpec.describe "Forms", type: :request do
       }
 
       expect(fanout_panel[choice]["class"]).not_to include("hidden")
-      expect(fanout_panel[choice].text).to include("Works on choice questions only")
+      expect(fanout_panel[choice].text).to include("Write the question so the resource name fits at the end.")
       expect(fanout_panel[free_form]["class"]).to include("hidden")
     end
 

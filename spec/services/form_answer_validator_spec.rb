@@ -145,6 +145,32 @@ RSpec.describe FormAnswerValidator do
     end
   end
 
+  describe "a fanned-out field" do
+    let(:field) { create(:form_field, form: form, required: true, answer_type: :single_select_radio) }
+    let(:touchstone) { create(:resource) }
+    let(:safer_place) { create(:resource) }
+
+    before do
+      create(:form_field_answer_option, form_field: field, answer_option: create(:answer_option, name: "Agree"))
+      create(:form_field_resource, form_field: field, resource: touchstone)
+      create(:form_field_resource, form_field: field, resource: safer_place)
+    end
+
+    it "checks each copy and keys errors by resource" do
+      result = validate(field, { touchstone.id.to_s => "Agree", safer_place.id.to_s => "Forged" })
+
+      expect(result).to eq(field.id => { safer_place.id.to_s => "has an invalid selection" })
+    end
+
+    it "flags every unanswered copy of a required field" do
+      expect(validate(field, nil)).to eq(field.id => { touchstone.id.to_s => "can't be blank", safer_place.id.to_s => "can't be blank" })
+    end
+
+    it "passes when every copy is answered" do
+      expect(validate(field, { touchstone.id.to_s => "Agree", safer_place.id.to_s => "Agree" })).to eq({})
+    end
+  end
+
   describe "skipping" do
     it "ignores group header fields entirely" do
       header = create(:form_field, form: form, answer_type: :group_header)

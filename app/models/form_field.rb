@@ -223,6 +223,11 @@ class FormField < ApplicationRecord
     selectable? && form_field_resources.any?
   end
 
+  # The linked resources in link order, one fanned-out copy each.
+  def fanned_resources
+    form_field_resources.includes(:resource).filter_map(&:resource)
+  end
+
   # The sentence one fanned-out copy is asked, stored, and shown under. The answer
   # keeps a nil form_field, so this string is also its key: the subtitle leads so two
   # fan-out questions sharing a name (the clarity pair, which differ only by their

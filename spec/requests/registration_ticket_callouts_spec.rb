@@ -139,9 +139,9 @@ RSpec.describe "Callout inline form", type: :request do
         callout_form: {
           form_fields: {
             impact.id.to_s => "Transformative",
-            anon.id.to_s => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true]
-          },
-          clarity: { clarity_field.id.to_s => { resource.id.to_s => "Yes" } }
+            anon.id.to_s => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true],
+            clarity_field.id.to_s => { resource.id.to_s => "Yes" }
+          }
         }
       }
 

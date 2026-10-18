@@ -5,6 +5,9 @@
 # a hash of { field_id => error_message } so results from multiple forms (e.g.
 # registration + scholarship) can be merged.
 #
+# A fanned-out field (FormField#per_resource?) checks each copy on its own and
+# reports { resource_id => error_message } under its field id.
+#
 # Group headers are skipped here; any other field-specific exclusions (e.g.
 # bulk payment's nested attendees) are the caller's responsibility — pass only
 # the fields you want validated.
@@ -25,12 +28,21 @@ class FormAnswerValidator
     @fields.each_with_object({}) do |field, errors|
       next if field.group_header?
 
-      error = error_for(field, @form_params[field.id.to_s])
+      value = @form_params[field.id.to_s]
+      error = field.per_resource? ? per_resource_errors(field, value).presence : error_for(field, value)
       errors[field.id] = error if error
     end
   end
 
   private
+
+  def per_resource_errors(field, values)
+    values = values.is_a?(Hash) ? values.transform_keys(&:to_s) : {}
+    field.fanned_resources.each_with_object({}) do |resource, errors|
+      error = error_for(field, values[resource.id.to_s])
+      errors[resource.id.to_s] = error if error
+    end
+  end
 
   def error_for(field, value)
     return "can't be blank" if field.required && blank_answer?(value)
