@@ -11,3 +11,4 @@ pro_tips:
   - "Someone is credited only when they fill in first name, last name, and email; anything less stays anonymous."
   - "On a ticket callout, the registrants list still checks off who completed the form — just not which answers are theirs."
   - "Anonymous answers can't be reviewed or changed by the person after they submit."
+  - "With the setting off, a public link requires first name, last name, and email — no anonymous submissions."

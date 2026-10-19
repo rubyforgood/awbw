@@ -74,8 +74,8 @@ class PublicFormsController < ApplicationController
     fields = @form_fields.reject(&:group_header?)
     errors = FormAnswerValidator.call(fields, form_params)
 
-    # A registration-role form mints an event registration, so it must collect
-    # the full identity even when its name/email questions are flagged optional.
+    # A form not set to anonymous must collect the full identity even when its
+    # name/email questions are flagged optional.
     fields.each do |field|
       next if field.required? || !@form.requires_answer?(field)
       errors[field.id] ||= "can't be blank" if form_params[field.id.to_s].blank?

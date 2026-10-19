@@ -1,18 +1,14 @@
 # Records a submission to a standalone, published form filled out at its public
 # pretty URL (see PublicFormsController). Unlike event registration there is no
 # event, role, or account — the respondent is find-or-created as a Person from
-# the form's name/email answers. When those questions are optional and left
-# blank the submission stands anonymously (person: nil); a required-but-blank
-# identity question is already blocked upstream by the form's field validation.
+# the form's name/email answers. Only a form set to anonymous (Form#anonymous?)
+# accepts a submission without all three, recording it with person: nil.
 # Answers persist via FormSubmission#persist_answer.
 class PublicFormSubmission
   Result = Struct.new(:success?, :form_submission, :person, :errors, keyword_init: true)
 
   ROLE = "public".freeze
 
-  # An agreement form (registration / new job / reinstatement) can't do its job
-  # — process the submission against a Person — without one, so it's rejected
-  # rather than recorded anonymously.
   IDENTITY_REQUIRED_MESSAGE =
     "This form needs your name and email to complete your submission.".freeze
   ALREADY_SUBMITTED_MESSAGE = "This form was already submitted.".freeze

@@ -398,6 +398,15 @@ RSpec.describe PublicFormSubmission do
   end
 
   context "on a form not set to anonymous" do
+    it "rejects every submission when the form doesn't ask name and email" do
+      [ first_name_field, last_name_field, email_field ].each(&:destroy!)
+
+      result = described_class.call(form: form.reload, form_params: { question_field.id.to_s => "I care." })
+
+      expect(result.success?).to be(false)
+      expect(FormSubmission.count).to eq(0)
+    end
+
     {
       "a blank name and email" => { first: "", last: "", email: "" },
       "a missing email" => { email: "" },
