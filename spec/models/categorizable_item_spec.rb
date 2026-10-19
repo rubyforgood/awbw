@@ -12,8 +12,14 @@ RSpec.describe CategorizableItem do
     # Now that validations are enabled, test them
     subject { build(:categorizable_item) }
     it { should validate_presence_of(:category_id) }
-    it { should validate_presence_of(:categorizable_id) }
-    it { should validate_presence_of(:categorizable_type) }
+
+    it "is valid when built through a parent that isn't saved yet" do
+      person = build(:person)
+      item = person.categorizable_items.build(category: create(:category))
+
+      expect(item).to be_valid
+    end
+
     # Uniqueness requires create and proper scoping:
     it { should validate_uniqueness_of(:category_id).scoped_to([ :categorizable_type, :categorizable_id ]) }
   end
