@@ -80,8 +80,8 @@ RSpec.describe "PublicForms", type: :request do
     end
   end
 
-  describe "anonymous submissions" do
-    before { [ first_name_field, last_name_field, email_field ].each { |field| field.update!(required: false) } }
+  describe "a form set to anonymous" do
+    before { form.update!(anonymous: true) }
 
     it "tells respondents the form can be submitted anonymously" do
       get public_form_path(form.slug)
@@ -90,7 +90,7 @@ RSpec.describe "PublicForms", type: :request do
       expect(response.body).to include("submit this form anonymously")
     end
 
-    it "records a person-less submission when identity is left blank" do
+    it "accepts a blank name and email even when those questions are flagged required" do
       expect { post public_form_path(form.slug), params: submission_params(first: "", last: "", email: "") }
         .to change(FormSubmission, :count).by(1)
         .and change(Person, :count).by(0)
@@ -99,9 +99,70 @@ RSpec.describe "PublicForms", type: :request do
       expect(FormSubmission.last.person).to be_nil
     end
 
-    it "still builds a person when the respondent fills in name and email" do
+    it "records a partial name and email anonymously" do
+      post public_form_path(form.slug), params: submission_params(email: "")
+
+      expect(FormSubmission.last.person).to be_nil
+    end
+
+    it "credits the respondent who fills in all three" do
       expect { post public_form_path(form.slug), params: submission_params }
         .to change(Person, :count).by(1)
+
+      expect(FormSubmission.last.person.email).to eq("sam@example.com")
+    end
+
+    context "when the respondent is logged in" do
+      let(:user) { create(:user, :with_person) }
+
+      before { sign_in user }
+
+      it "does not credit them when the form asks no name and email questions" do
+        [ first_name_field, last_name_field, email_field ].each(&:destroy!)
+
+        post public_form_path(form.slug), params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {} } }
+
+        expect(response).to redirect_to(thank_you_public_form_path(form.slug))
+        expect(FormSubmission.last.person).to be_nil
+      end
+
+      it "does not credit them when they skip logged-out-only name and email questions" do
+        [ first_name_field, last_name_field, email_field ].each { |field| field.update!(visibility: :logged_out_only) }
+
+        post public_form_path(form.slug), params: submission_params(first: "", last: "", email: "")
+
+        expect(FormSubmission.last.person).to be_nil
+      end
+
+      it "does not credit them on a partial name and email" do
+        post public_form_path(form.slug), params: submission_params(first: user.person.first_name, last: "", email: "")
+
+        expect(FormSubmission.last.person).to be_nil
+      end
+
+      it "credits whoever all three answers name" do
+        post public_form_path(form.slug),
+          params: submission_params(first: user.person.first_name, last: user.person.last_name, email: user.person.email)
+
+        expect(FormSubmission.last.person).to eq(user.person)
+      end
+    end
+  end
+
+  describe "a form not set to anonymous, with optional name and email questions" do
+    before { [ first_name_field, last_name_field, email_field ].each { |field| field.update!(required: false) } }
+
+    it "does not advertise anonymous submission" do
+      get public_form_path(form.slug)
+
+      expect(response.body).not_to include("submit this form anonymously")
+    end
+
+    it "still records a person-less submission when identity is left blank" do
+      expect { post public_form_path(form.slug), params: submission_params(first: "", last: "", email: "") }
+        .to change(FormSubmission, :count).by(1)
+
+      expect(FormSubmission.last.person).to be_nil
     end
   end
 

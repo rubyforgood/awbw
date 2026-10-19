@@ -55,6 +55,128 @@ RSpec.describe "Callout inline form", type: :request do
     end
   end
 
+  describe "an anonymous form" do
+    let(:form) { create(:form, name: "Feedback", anonymous: true) }
+
+    def post_answers(answers = { field.id.to_s => "Loved it" })
+      post registration_callout_form_submit_path(registration.slug, callout, form),
+           params: { callout_form: { form_fields: answers } }
+    end
+
+    it "records the answers with no person, and marks the registrant as having completed it" do
+      expect { post_answers }.to change(FormSubmission, :count).by(1)
+        .and change(FormCompletion, :count).by(1)
+
+      expect(FormSubmission.last.person).to be_nil
+      expect(FormCompletion.last).to have_attributes(person: registration.registrant, form:, event:)
+    end
+
+    it "shows the form as completed without showing the answers back or offering an edit" do
+      post_answers
+      follow_redirect!
+
+      expect(response.body).to include("Completed")
+      expect(response.body).to include("submitted anonymously")
+      expect(response.body).not_to include("Loved it")
+      expect(response.body).not_to include("Edit responses")
+      expect(response.body).not_to include("callout_form[form_fields][#{field.id}]")
+    end
+
+    it "refuses a second submission" do
+      post_answers
+
+      expect { post_answers({ field.id.to_s => "Again" }) }.not_to change(FormSubmission, :count)
+      expect(response).to redirect_to(registration_callout_form_path(registration.slug, callout, anchor: "form-#{form.id}"))
+    end
+
+    it "ignores ?edit once the form is completed" do
+      post_answers
+
+      get registration_callout_form_path(registration.slug, callout, edit: form.id)
+
+      expect(response.body).not_to include("callout_form[form_fields][#{field.id}]")
+    end
+
+    it "re-shows the form with an alert when a required question is blank" do
+      field.update!(required: true)
+
+      expect { post_answers({ field.id.to_s => "" }) }.not_to change(FormSubmission, :count)
+      follow_redirect!
+
+      expect(flash[:alert]).to be_present
+      expect(response.body).to include("callout_form[form_fields][#{field.id}]")
+    end
+
+    it "tells the registrant their answers aren't tied to their name" do
+      get registration_callout_form_path(registration.slug, callout)
+
+      expect(response.body).to include("linked to your name")
+    end
+
+    it "stays anonymous when the registrant is logged in" do
+      sign_in registration.registrant.user
+
+      post_answers
+
+      expect(FormSubmission.last.person).to be_nil
+    end
+
+    it "sends staff an FYI that names no one" do
+      registration.registrant.update!(first_name: "Ada", last_name: "Lovelace")
+
+      expect { post_answers }.to have_enqueued_mail(NotificationMailer, :callout_form_submitted_fyi)
+    end
+
+    context "with name and email questions" do
+      let!(:first_name) { create(:form_field, form:, name: "First name", field_identifier: "first_name", required: true) }
+      let!(:last_name) { create(:form_field, form:, name: "Last name", field_identifier: "last_name", required: true) }
+      let!(:email) { create(:form_field, form:, name: "Email", field_identifier: "primary_email", required: true) }
+
+      def identity(first: "Sam", last: "Rivera", address: "sam@example.com")
+        { first_name.id.to_s => first, last_name.id.to_s => last, email.id.to_s => address, field.id.to_s => "Loved it" }
+      end
+
+      it "renders them as optional" do
+        get registration_callout_form_path(registration.slug, callout)
+
+        expect(response.body).not_to match(/name="callout_form\[form_fields\]\[#{email.id}\]"[^>]*required/)
+      end
+
+      it "credits the registrant who fills in all three, and shows their answers back" do
+        post_answers(identity)
+
+        expect(FormSubmission.last.person).to eq(registration.registrant)
+        follow_redirect!
+        expect(response.body).to include("Loved it")
+      end
+
+      it "stays anonymous on a partial answer" do
+        post_answers(identity(address: ""))
+
+        expect(FormSubmission.last.person).to be_nil
+      end
+
+      context "set to logged out only, with the registrant logged in" do
+        before do
+          [ first_name, last_name, email ].each { |f| f.update!(visibility: :logged_out_only) }
+          sign_in registration.registrant.user
+        end
+
+        it "stays anonymous when they're skipped" do
+          post_answers({ field.id.to_s => "Loved it" })
+
+          expect(FormSubmission.last.person).to be_nil
+        end
+
+        it "credits the registrant when all three are answered" do
+          post_answers(identity)
+
+          expect(FormSubmission.last.person).to eq(registration.registrant)
+        end
+      end
+    end
+  end
+
   # The callout row's own display date withholds its page content (the card still
   # shows on the ticket), so it has to gate the forms it delivers too — not just
   # each row's own date.

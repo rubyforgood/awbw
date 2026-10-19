@@ -59,4 +59,32 @@ RSpec.describe "Events::Callouts CE form", type: :request do
       expect(response.body).not_to include("Complete the form")
     end
   end
+
+  describe "an anonymous CE form" do
+    before do
+      form.update!(anonymous: true)
+      travel_to Time.zone.local(2026, 7, 24, 10, 0)
+    end
+
+    def submit_form
+      post registration_callout_form_submit_path(registration.slug, callout, form),
+        params: { callout_form: { form_fields: { field.id.to_s => "Great" } } }
+    end
+
+    it "records the answers with no person and still meets the certificate's form requirement" do
+      submit_form
+
+      expect(FormSubmission.last.person).to be_nil
+      expect(registration.reload.ce_form_requirement_met?).to be(true)
+    end
+
+    it "marks the CE page step submitted without offering to review the answers" do
+      submit_form
+
+      get registration_ce_path(registration.slug)
+
+      expect(response.body).to include("Submitted")
+      expect(response.body).not_to include("Review your responses")
+    end
+  end
 end
