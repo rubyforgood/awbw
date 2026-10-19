@@ -662,6 +662,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_110524) do
     t.string "videoconference_label", default: "Virtual event"
     t.string "videoconference_passcode"
     t.string "videoconference_url"
+    t.boolean "ce_timesheets_enabled", default: true, null: false
+    t.integer "ce_timesheet_opens_offset_minutes"
+    t.datetime "ce_timesheet_closes_at"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
     t.index ["facilitator_training"], name: "index_events_on_facilitator_training"
     t.index ["location_id"], name: "index_events_on_location_id"

@@ -27,6 +27,21 @@ class Event < ApplicationRecord
   }.freeze
   TEMPLATE_KEYS = TEMPLATES.keys.freeze
 
+  # When registrants can start editing their CE timesheet, in minutes from the
+  # event's start (negative = before). Blank means as soon as their CE is paid.
+  CE_TIMESHEET_OPENS_OFFSETS = {
+    -10_080 => "1 week before the start",
+    -4_320 => "3 days before the start",
+    -1_440 => "1 day before the start",
+    -120 => "2 hours before the start",
+    -60 => "1 hour before the start",
+    -30 => "30 minutes before the start",
+    0 => "At the start",
+    30 => "30 minutes after the start",
+    60 => "1 hour after the start",
+    1_440 => "1 day after the start"
+  }.freeze
+
   has_rich_text :rhino_header
   has_rich_text :rhino_description
 
@@ -90,7 +105,9 @@ class Event < ApplicationRecord
   validates :hint_times, length: { maximum: 255 }
   validates :hint_registration_cost, length: { maximum: 255 }
   validates :discount_code, format: { with: /\A[A-Za-z0-9_-]+\z/, message: "can only contain letters, numbers, hyphens, and underscores" }, allow_blank: true
+  validates :ce_timesheet_opens_offset_minutes, inclusion: { in: CE_TIMESHEET_OPENS_OFFSETS.keys }, allow_nil: true
   validate :end_date_not_before_start_date
+  validate :ce_timesheet_closes_after_opening
   validate :registration_form_required_when_publicly_registerable, on: :update
   validate :staff_members_are_unique, on: :update
 
@@ -380,16 +397,42 @@ class Event < ApplicationRecord
     date = event_dates.find { |d| d == at.in_time_zone(Time.zone).to_date }
     return false unless date
 
-    closes_at = daily_end_at(date) || daily_start_at(date).end_of_day
-    at.between?(daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD, closes_at)
+    attendance_sign_in_window(date)&.cover?(at) || false
   end
 
-  # When sign-in next becomes available — the earliest upcoming day's window opening
-  # (day start − lead). Nil once the last day's window has already opened (or passed).
+  # When sign-in next becomes available — the earliest upcoming day's window opening.
+  # Nil once the last day's window has already opened (or passed).
   def next_attendance_sign_in_opens_at(at = Time.current)
     event_dates
-      .map { |date| daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD }
+      .filter_map { |date| attendance_sign_in_window(date)&.begin }
       .find { |opens_at| opens_at > at }
+  end
+
+  # A training day's sign-in window (day start − lead through the day's end),
+  # narrowed to the event's CE timesheet window. Nil when nothing of the day is left.
+  def attendance_sign_in_window(date)
+    opens_at = [ daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD, ce_timesheet_opens_at ].compact.max
+    closes_at = [ daily_end_at(date) || daily_start_at(date).end_of_day, ce_timesheet_closes_at ].compact.min
+    opens_at..closes_at if ce_timesheets_enabled? && opens_at < closes_at
+  end
+
+  def ce_timesheet_opens_at
+    return if ce_timesheet_opens_offset_minutes.nil? || start_date.blank?
+
+    start_date + ce_timesheet_opens_offset_minutes.minutes
+  end
+
+  # Whether registrants can sign in/out and edit their own CE timesheet at all.
+  # Staff edits on the attendance report aren't gated by this.
+  def ce_timesheet_open?(at = Time.current)
+    return false unless ce_timesheets_enabled?
+    return false if ce_timesheet_opens_at && at < ce_timesheet_opens_at
+
+    !ce_timesheet_closed?(at)
+  end
+
+  def ce_timesheet_closed?(at = Time.current)
+    ce_timesheet_closes_at.present? && at >= ce_timesheet_closes_at
   end
 
   def time_title
@@ -425,6 +468,7 @@ class Event < ApplicationRecord
               :end_date_date, :end_date_time,
               :registration_close_date_date, :registration_close_date_time,
               :ce_payment_due_deadline_date, :ce_payment_due_deadline_time,
+              :ce_timesheet_closes_at_date, :ce_timesheet_closes_at_time,
               :payment_due_deadline_date, :payment_due_deadline_time
 
   def start_date_date
@@ -457,6 +501,14 @@ class Event < ApplicationRecord
 
   def ce_payment_due_deadline_time
     @ce_payment_due_deadline_time || ce_payment_due_deadline&.strftime("%H:%M")
+  end
+
+  def ce_timesheet_closes_at_date
+    @ce_timesheet_closes_at_date || ce_timesheet_closes_at&.strftime("%Y-%m-%d")
+  end
+
+  def ce_timesheet_closes_at_time
+    @ce_timesheet_closes_at_time || ce_timesheet_closes_at&.strftime("%H:%M")
   end
 
   def payment_due_deadline_date
@@ -549,6 +601,7 @@ class Event < ApplicationRecord
     merge_date_time(:end_date)
     merge_date_time(:registration_close_date)
     merge_date_time(:ce_payment_due_deadline)
+    merge_date_time(:ce_timesheet_closes_at)
     merge_date_time(:payment_due_deadline)
   end
 
@@ -579,6 +632,14 @@ class Event < ApplicationRecord
     return if end_date.to_date >= start_date.to_date
 
     errors.add(:end_date, "can't be before the start date")
+  end
+
+  def ce_timesheet_closes_after_opening
+    opens_at = ce_timesheet_opens_at || start_date
+    return if ce_timesheet_closes_at.blank? || opens_at.blank?
+    return if ce_timesheet_closes_at > opens_at
+
+    errors.add(:ce_timesheet_closes_at, "must be after the timesheet opens")
   end
 
   def registration_form_required_when_publicly_registerable

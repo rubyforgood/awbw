@@ -1171,6 +1171,9 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('name="event[ce_payment_due_deadline_date]"')
       expect(response.body).to include('name="event[ce_payment_due_deadline_time]"')
       expect(response.body).to include("Request CE credit by")
+      expect(response.body).to include('name="event[ce_timesheets_enabled]"')
+      expect(response.body).to include('name="event[ce_timesheet_opens_offset_minutes]"')
+      expect(response.body).to include('name="event[ce_timesheet_closes_at_date]"')
     end
 
     it "links to the sample ticket preview from the callouts section" do
@@ -1379,6 +1382,19 @@ RSpec.describe "Events", type: :request do
         expect(event.reload.ce_hours_request_deadline).to eq(Date.new(2026, 7, 1))
         pacific = event.ce_payment_due_deadline.in_time_zone("Pacific Time (US & Canada)")
         expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
+      end
+
+      it "persists the CE timesheet settings" do
+        patch event_path(event), params: { event: {
+          ce_timesheets_enabled: "0",
+          ce_timesheet_opens_offset_minutes: "-60",
+          ce_timesheet_closes_at_date: (event.start_date + 7.days).strftime("%Y-%m-%d"),
+          ce_timesheet_closes_at_time: "17:00"
+        } }
+        event.reload
+        expect(event.ce_timesheets_enabled).to be(false)
+        expect(event.ce_timesheet_opens_offset_minutes).to eq(-60)
+        expect(event.ce_timesheet_closes_at.in_time_zone("Pacific Time (US & Canada)").strftime("%H:%M")).to eq("17:00")
       end
 
       it "links a form to a callout via nested attributes" do
