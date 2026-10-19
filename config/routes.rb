@@ -285,6 +285,7 @@ Rails.application.routes.draw do
     resource :public_registration, only: [ :new, :create, :show ], module: :events
     resource :bulk_payment, only: [ :new, :create, :show ], controller: "events/bulk_payment_form_submissions"
     resource :invoice, only: [ :show ], module: :events
+    resource :copy, only: %i[ new create ], module: :events
     get "form_submissions/:person_id", to: "events/form_submissions#show", as: :registrant_submissions
   end
   resources :author_credit_divergences, only: :index do
