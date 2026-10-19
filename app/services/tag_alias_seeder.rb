@@ -161,7 +161,7 @@ class TagAliasSeeder
   # (war) that AWBW chose to leave untagged. Recorded so they don't sit in the queue of
   # terms still needing a decision.
   IGNORED_TERMS = [
-    "Community-Based", "Events and Conferences", "Events & Conferences", "Home Visits",
+    "Community-Based", "Community based", "Events and Conferences", "Events & Conferences", "Home Visits",
     "Outreach Program", "Residential Program", "Virtually", "Other", "Did not specify",
     "Residential", "In person", "In visits", "virtually & in-person", "At office", "Office space.",
     "On-Call/Crisis", "Support groups", "n/a", "none", "something", "unsure", "Everyone", "Technology",

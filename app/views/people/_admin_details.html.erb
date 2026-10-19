@@ -20,30 +20,6 @@
     </div>
   </div>
   <div class="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
-    <% program_categories = person.categorizable_items.filter_map(&:category).select { |c| c.category_type&.profile_specific? && c.category_type.name != "AgeRange" }.group_by(&:category_type) %>
-    <% other_settings = person.other_workshop_setting_responses %>
-    <% if program_categories.any? || other_settings.any? %>
-      <div>
-        <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Program settings</h3>
-        <% program_categories.sort_by { |type, _| type.name.to_s.downcase }.each do |type, cats| %>
-          <div class="mb-2">
-            <h4 class="text-sm font-medium text-gray-600"><%= type.display_label %></h4>
-            <div class="mt-1 flex flex-wrap gap-1.5">
-              <% cats.sort_by { |c| c.name.to_s.downcase }.each do |category| %>
-                <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900"><%= category.name %></span>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        <% if other_settings.any? %>
-          <div class="mt-2 flex flex-wrap gap-1.5">
-            <% other_settings.each do |response| %>
-              <span class="inline-flex rounded-full border border-blue-300 bg-white px-2.5 py-0.5 text-sm text-blue-900 italic"><%= response %></span>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
     <% if licenses.any? %>
       <div>
         <h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Professional licenses</h3>

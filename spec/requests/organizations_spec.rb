@@ -472,24 +472,6 @@ RSpec.describe "/organizations", type: :request do
 
       expect(organization.reload.sectors).to be_empty
     end
-
-    it "preserves the org's existing age-range taggings when saving workshop settings" do
-      age_type = create(:category_type, name: "AgeRange", published: true)
-      teen = create(:category, :published, category_type: age_type, name: "13-17")
-      settings_type = create(:category_type, name: "WorkshopEnvironment", published: true, profile_specific: true)
-      clinical = create(:category, :published, category_type: settings_type, name: "Clinical setting")
-      organization.categorizable_items.create!(category: teen)
-
-      patch organization_url(organization), params: {
-        organization: {
-          name: organization.name,
-          category_ids: [ "", clinical.id.to_s ],
-          managed_category_type_ids: [ "", settings_type.id.to_s ]
-        }
-      }
-
-      expect(organization.reload.categories).to contain_exactly(teen, clinical)
-    end
   end
 
   describe "DELETE /destroy" do

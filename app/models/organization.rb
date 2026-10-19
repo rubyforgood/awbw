@@ -171,9 +171,6 @@ class Organization < ApplicationRecord
 
   # Org search: like TagFilterable (matches ALL names), but sectors and age ranges
   # match through any tag, primary or additional, an active facilitator holds.
-  # Other category types (workshop settings) are still entered on the org itself,
-  # and like the tag counts below they only surface while the org has an active
-  # facilitator, so search and the tag matrix report the same organizations.
   scope :sector_names_all, ->(names) {
     parsed = TagFilterable.parse_names(names)
     next all if parsed.empty?

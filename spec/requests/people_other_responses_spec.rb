@@ -3,13 +3,6 @@ require "rails_helper"
 RSpec.describe "Person Other form responses", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person) }
-  let(:form) { create(:form) }
-  let(:submission) { create(:form_submission, person: person, form: form) }
-
-  def answer(identifier, value)
-    field = create(:form_field, form: form, field_identifier: identifier)
-    create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
-  end
 
   before { sign_in admin }
 
@@ -50,27 +43,6 @@ RSpec.describe "Person Other form responses", type: :request do
       expect(response.body).to include("#{other_responses_path}?")
       expect(response.body).to include("return_to=person_edit")
       expect(response.body).to include(response_record.review_anchor)
-    end
-
-    it "shows the Other workshop setting near the category checkboxes" do
-      category_type = create(:category_type, :published, profile_specific: true)
-      create(:category, :published, category_type: category_type)
-      answer("workshop_environments", "Other: Horse barn")
-
-      get edit_person_path(person)
-
-      expect(response.body.index("Horse barn")).to be > response.body.index("Profile-specific Categories")
-    end
-
-    it "shows the Other age group in the age ranges card" do
-      age_type = create(:category_type, :published, name: "AgeRange")
-      create(:category, :published, category_type: age_type, name: "Adults")
-      answer("primary_age_group", "Other: Toddlers")
-
-      get edit_person_path(person)
-
-      expect(response.body.index("Toddlers")).to be_between(response.body.index(">Age ranges</h3>"),
-                                                            response.body.index("Profile-specific Categories"))
     end
   end
 end

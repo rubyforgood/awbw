@@ -601,24 +601,12 @@ class Person < ApplicationRecord
     }
   end
 
-  # The registration question workshop settings were collected through; registration no
-  # longer asks it, but earlier answers still carry it.
-  OTHER_WORKSHOP_SETTING_IDENTIFIERS = %w[workshop_environments].freeze
-
   # Free-text "Other" sectors the person typed on registration forms, captured
   # as OtherResponse records (see EventRegistrationServices::PublicRegistration).
   # They can't be Sector records, so they're surfaced beside the sector tags —
   # only while pending or explicitly kept (dismissed/promoted ones drop off).
   def other_sector_responses
     other_responses.sectors.visible.order(:text)
-  end
-
-  def other_workshop_setting_responses
-    other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
-  end
-
-  def other_age_group_responses
-    other_form_responses(FormField::AGE_GROUP_FIELD_IDENTIFIERS)
   end
 
   # The age-range nested items in category position order for the cocoon chip
@@ -654,15 +642,6 @@ class Person < ApplicationRecord
         dup.persisted? ? dup.mark_for_destruction : age_range_categorizable_items.delete(dup)
       end
     end
-  end
-
-  def other_form_responses(identifiers)
-    form_submissions
-      .joins(form_answers: :form_field)
-      .where(form_fields: { field_identifier: identifiers })
-      .pluck("form_answers.submitted_answer")
-      .flat_map { |answer| OtherOption.texts(answer) }
-      .uniq
   end
 
   def normalize_names_and_emails
