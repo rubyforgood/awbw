@@ -138,6 +138,17 @@ RSpec.describe "Callout inline form", type: :request do
       expect(FormSubmission.last.person).to be_nil
     end
 
+    it "stamps no creator or editor on what a logged-in registrant submits" do
+      sign_in registration.registrant.user
+
+      post_answers
+
+      submission = FormSubmission.last
+      expect(submission).to have_attributes(created_by: nil, updated_by: nil)
+      expect(submission.form_answers.map(&:created_by)).to all(be_nil)
+      expect(submission.form_answers.map(&:updated_by)).to all(be_nil)
+    end
+
     it "sends staff an FYI that names no one" do
       registration.registrant.update!(first_name: "Ada", last_name: "Lovelace")
 
