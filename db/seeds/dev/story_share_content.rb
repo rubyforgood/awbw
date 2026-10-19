@@ -117,8 +117,9 @@ end
 puts "Creating Stories…"
 # Deterministic so the Story Share portal demos well: every story is published +
 # publicly visible, the first five are publicly featured, sectors/audiences are
-# tagged (with ≥3 public stories in each featured sector), a few are facilitator
-# spotlights, and most get a primary image (last two exercise the fallback).
+# tagged (with ≥3 public stories in each featured sector), a few spotlight a
+# facilitator (for person profiles), and most get a primary image (last two
+# exercise the fallback).
 story_seeds = [
   { title: "Healing Through Art: A Survivor's Journey", sectors: [ "Domestic Violence" ], audiences: [ "Adults" ] },
   { title: "Finding Strength in Creativity", sectors: [ "Domestic Violence", "Self-Care/Personal Growth" ], audiences: [ "Adults", "Families" ] },
