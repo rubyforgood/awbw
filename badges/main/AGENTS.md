@@ -187,10 +187,12 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-`authorize!` infers the rule from the controller action (`create` → `create?`, `update` →
-`update?`), so `authorize! @record` in the `update` action already checks `update?`. Pass `to:`
-only to check a *different* rule (e.g. `authorize! @scholarship, to: :update?` from a non-`update`
-action, or `authorize! :workshop, to: :summary?`).
+`authorize!` defaults the rule to `"#{action_name}?"` for every action — `index`, `show`, `new`,
+`create`, `edit`, `update`, `destroy`, and custom actions — whether the target is a record, class,
+or symbol. So write `authorize! @setting` in `show` (not `authorize! @setting, to: :show?`) and
+`authorize! :home` in `index` (not `to: :index?`). Pass `to:` only to check a *different* rule
+(e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or
+`authorize! :workshop, to: :summary?`).
 
 ### Controller Concerns
 
