@@ -11,7 +11,6 @@ module StorySharesHelper
     { heading: "text-indigo-700",  link: "text-indigo-700 hover:underline",  overlay: "bg-indigo-700/80",  chip: "bg-indigo-700" },
     { heading: "text-fuchsia-700", link: "text-fuchsia-700 hover:underline", overlay: "bg-fuchsia-800/80", chip: "bg-fuchsia-700" }
   ].freeze
-  SPOTLIGHT_THEME = { heading: "text-purple-700", link: "text-purple-700 hover:underline", overlay: "bg-purple-700/80", chip: "bg-purple-700" }.freeze
 
   STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
   STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
@@ -139,7 +138,6 @@ module StorySharesHelper
     return "Additional Focus Areas" if params[:additional_focus_areas].present?
     return params[:sector_names_all].to_s.split("--").to_sentence if params[:sector_names_all].present?
     return params[:category_names_all].to_s.split("--").map { |name| name.chomp("_") }.to_sentence if params[:category_names_all].present?
-    return "Facilitator Spotlights" if params[:facilitator_spotlights].present?
     return "Search results for “#{params[:query]}”" if params[:query].present?
     "All stories"
   end
