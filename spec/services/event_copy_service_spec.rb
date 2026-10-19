@@ -63,7 +63,7 @@ RSpec.describe EventCopyService do
       expect(callouts.map(&:builtin_key).compact.tally.values).to all(eq(1))
     end
 
-    it "links the same forms, staff, and tags" do
+    it "links the same forms, staff, and tags without building new forms" do
       form = create(:form, name: "Registration", role: "registration")
       event.event_forms.create!(form: form, role: "registration")
       staff = create(:event_staff, event: event, title: "Lead facilitator", bio: "Hi")
@@ -102,11 +102,7 @@ RSpec.describe EventCopyService do
   describe "cross-environment copy" do
     def other_environment_blueprint(event)
       payload = described_class.console_script(event)[/import\("([^"]+)"\)/, 1]
-      # Ids from another database mean nothing here, so nothing may match on them.
-      JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload))).tap do |blueprint|
-        blueprint["event_forms"].each { |link| link["form"]["id"] = -1 }
-        blueprint["staff"].each { |staff| staff["person"]["id"] = -1 }
-      end
+      JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload)))
     end
 
     it "prints a one-line console script that rebuilds the event" do
@@ -132,6 +128,47 @@ RSpec.describe EventCopyService do
       expect(copy.staff_members).to contain_exactly(matched.person)
       expect(service.warnings).to include("Staff Gone Away not found — skipped")
       expect(copy.start_date).to eq(zone.parse("2027-01-11 09:00"))
+    end
+
+    it "builds a form the target doesn't have, with its questions, options, and resources, once" do
+      form = create(:form, name: "Registration", role: "registration", header: "<p>Welcome</p>")
+      parent = create(:form_field, form: form, name: "Are you a facilitator?", position: 1, field_identifier: "facilitator")
+      child = create(:form_field, form: form, name: "Since when?", position: 2, parent_id: parent.id)
+      parent.form_field_answer_options.create!(option_name: "Yes")
+      parent.form_field_answer_options.create!(option_name: "No")
+      worksheet = create(:resource, title: "Worksheet")
+      child.form_field_resources.create!(resource: worksheet)
+      event.event_forms.create!(form: form, role: "registration")
+      create(:registration_ticket_callout, event: event, form: form)
+      blueprint = other_environment_blueprint(event)
+      form.update!(name: "Renamed in this environment")
+
+      service = described_class.new(blueprint, match_by: :natural)
+      copy = service.call(start_on: new_start_on)
+
+      built = copy.registration_form
+      expect(built).not_to eq(form)
+      expect(service.created_forms).to eq([ built ])
+      expect(built).to have_attributes(name: "Registration", role: "registration", header: "<p>Welcome</p>", published: false)
+      fields = built.form_fields.order(:position)
+      expect(fields.map(&:name)).to eq([ "Are you a facilitator?", "Since when?" ])
+      expect(fields.first.answer_options.map(&:name)).to eq(%w[Yes No])
+      expect(fields.second.parent_id).to eq(fields.first.id)
+      expect(fields.second.resources).to contain_exactly(worksheet)
+      expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ built ])
+    end
+
+    it "uses the target's form for a survey role rather than building a second one" do
+      survey = create(:form, name: "Day 1 evaluation", role: "day_1_survey")
+      create(:registration_ticket_callout, event: event, form: survey)
+      blueprint = other_environment_blueprint(event)
+      survey.update!(name: "Day 1 evaluation (staging)")
+
+      service = described_class.new(blueprint, match_by: :natural)
+      copy = service.call(start_on: new_start_on)
+
+      expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ survey ])
+      expect(service.created_forms).to be_empty
     end
   end
 end

@@ -9,7 +9,9 @@ require "zlib"
 #
 # The copy goes through a plain-JSON blueprint, so it can also cross environments:
 # `puts EventCopyService.console_script(event)` in one console prints a line to
-# paste into another, where linked records are matched by name/email, not id.
+# paste into another, where linked records are matched by name/email, not id. That
+# payload also carries each linked form's questions, so a form the target lacks is
+# rebuilt there.
 class EventCopyService
   BLUEPRINT_VERSION = 1
   COPY_TITLE_PREFIX = "Copy of ".freeze
@@ -26,14 +28,16 @@ class EventCopyService
   CALLOUT_COLUMNS = %w[builtin_key callout_type title subtitle description icon_class color_class hidden
                        payment_access_gated ce_payment_access_gated attended_gated].freeze
   RICH_TEXT_FIELDS = %w[rhino_header rhino_description].freeze
+  FORM_COLUMNS = %w[name role header sections].freeze
+  UNCOPIED_FIELD_COLUMNS = %w[id form_id created_at updated_at created_by_id updated_by_id].freeze
 
-  attr_reader :warnings
+  attr_reader :warnings, :created_forms
 
   def self.copy(event, start_on:, title: nil)
     new(blueprint(event)).call(start_on: start_on, title: title)
   end
 
-  def self.blueprint(event)
+  def self.blueprint(event, form_definitions: false)
     start_on = event.starts_on
     {
       "version" => BLUEPRINT_VERSION,
@@ -65,13 +69,14 @@ class EventCopyService
       end,
       "assets" => event.assets.where(type: ASSET_TYPES).order(:id).select { |asset| asset.file.attached? }.map do |asset|
         { "type" => asset.type, "title" => asset.title, "blob_id" => asset.file.blob.id, "url" => asset_url(asset) }
-      end
+      end,
+      "form_definitions" => (form_definitions ? linked_forms(event).index_by(&:id).transform_values { |form| form_definition(form) } : {})
     }.as_json
   end
 
   # One pasteable line for another environment's Rails console.
   def self.console_script(event)
-    payload = Base64.strict_encode64(Zlib.gzip(JSON.generate(blueprint(event))))
+    payload = Base64.strict_encode64(Zlib.gzip(JSON.generate(blueprint(event, form_definitions: true))))
     "EventCopyService.import(\"#{payload}\") # copy of event ##{event.id} \"#{event.title}\" (#{event.starts_on})"
   end
 
@@ -81,6 +86,7 @@ class EventCopyService
     service = new(JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload))), match_by: :natural)
     event = service.call(start_on: start_on, title: title)
     puts "Created event ##{event.id} \"#{event.title}\" starting #{event.starts_on} (unpublished)."
+    service.created_forms.each { |form| puts "  + created form ##{form.id} \"#{form.name}\"" }
     service.warnings.each { |warning| puts "  ! #{warning}" }
     event
   end
@@ -97,13 +103,34 @@ class EventCopyService
     form.slice("id", "name", "role")
   end
 
+  def self.linked_forms(event)
+    form_ids = event.event_forms.pluck(:form_id) +
+      RegistrationTicketCalloutForm.joins(:registration_ticket_callout)
+        .where(registration_ticket_callouts: { event_id: event.id }).pluck(:form_id)
+    Form.where(id: form_ids.uniq).includes(form_fields: [ { form_field_answer_options: :answer_option }, { form_field_resources: :resource } ])
+  end
+
+  def self.form_definition(form)
+    {
+      "attributes" => form.slice(*FORM_COLUMNS),
+      "fields" => form.form_fields.sort_by { |field| [ field.position.to_i, field.id ] }.map do |field|
+        {
+          "id" => field.id,
+          "attributes" => field.attributes.except(*UNCOPIED_FIELD_COLUMNS),
+          "answer_options" => field.form_field_answer_options.sort_by(&:id).map(&:name),
+          "resources" => field.form_field_resources.map { |link| link.slice("position").merge("resource" => link.resource.slice("id", "title")) }
+        }
+      end
+    }
+  end
+
   def self.asset_url(asset)
     asset.file.url(expires_in: ASSET_URL_TTL)
   rescue ArgumentError
     nil
   end
 
-  private_class_method :offset, :form_ref, :asset_url
+  private_class_method :offset, :form_ref, :linked_forms, :form_definition, :asset_url
 
   def initialize(blueprint, match_by: :id)
     raise ArgumentError, "match_by must be one of #{MATCH_MODES}" unless MATCH_MODES.include?(match_by)
@@ -112,6 +139,8 @@ class EventCopyService
     @blueprint = blueprint
     @match_by = match_by
     @warnings = []
+    @created_forms = []
+    @forms = {}
   end
 
   def call(start_on: nil, title: nil)
@@ -183,8 +212,7 @@ class EventCopyService
         callout.registration_ticket_callout_forms.create!(form: form, display_from: shift(link["display_from"])) if form
       end
       data["resources"].each do |link|
-        ref = link["resource"]
-        resource = resolve(Resource, ref["id"], "Resource \"#{ref["title"]}\"") { Resource.find_by(title: ref["title"]) }
+        resource = find_resource(link["resource"])
         callout.registration_ticket_callout_resources.create!(link.slice("subtitle", "page_content").merge("resource" => resource)) if resource
       end
     end
@@ -226,10 +254,50 @@ class EventCopyService
     end
   end
 
+  # Memoized by source id so a form linked in several places is matched (or
+  # built) once.
   def find_form(ref)
-    resolve(Form, ref["id"], "Form \"#{ref["name"]}\"") do
-      Form.order(:id).find_by(name: ref["name"], role: ref["role"]) || Form.order(:id).find_by(name: ref["name"])
+    @forms.fetch(ref["id"]) do
+      @forms[ref["id"]] = resolve(Form, ref["id"], "Form \"#{ref["name"]}\"") { matching_form(ref) || build_form(ref) }
     end
+  end
+
+  # Each survey role belongs to one form, so the target's form for that role stands in.
+  def matching_form(ref)
+    named = Form.order(:id).find_by(name: ref["name"], role: ref["role"]) || Form.order(:id).find_by(name: ref["name"])
+    return named if named
+
+    Form.survey(ref["role"]) if Form::SURVEY_ROLES.include?(ref["role"])
+  end
+
+  def build_form(ref)
+    definition = @blueprint.dig("form_definitions", ref["id"].to_s)
+    return unless definition
+
+    form = Form.create!(definition["attributes"])
+    fields = definition["fields"].to_h do |data|
+      field = form.form_fields.create!(data["attributes"].except("parent_id"))
+      copy_field_options(field, data)
+      [ data["id"], field ]
+    end
+    definition["fields"].each do |data|
+      parent = fields[data["attributes"]["parent_id"]]
+      fields[data["id"]].update!(parent_id: parent.id) if parent
+    end
+    @created_forms << form
+    form
+  end
+
+  def copy_field_options(field, data)
+    data["answer_options"].each { |name| field.form_field_answer_options.create!(option_name: name) }
+    data["resources"].each do |link|
+      resource = find_resource(link["resource"])
+      field.form_field_resources.create!(resource: resource, position: link["position"]) if resource
+    end
+  end
+
+  def find_resource(ref)
+    resolve(Resource, ref["id"], "Resource \"#{ref["title"]}\"") { Resource.find_by(title: ref["title"]) }
   end
 
   def find_category(data)
