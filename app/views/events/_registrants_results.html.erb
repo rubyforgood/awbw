@@ -4,7 +4,9 @@
   <%# The event's visible callouts that deliver a form inline — one toggleable
       completion column each, under the single "Ticket forms" switch. %>
   <% form_columns = @event.registration_ticket_callouts.visible.includes(registration_ticket_callout_forms: :form).ordered
-       .flat_map { |callout| callout.registration_ticket_callout_forms.map { |link| [ callout, link.form ] } } %>
+       .flat_map { |callout| callout.registration_ticket_callout_forms.map { |link| [ callout, link.form ] } }
+       .reject { |_, form| form.survey_role? } %>
+  <% survey_roles = @survey_completions.roles %>
   <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm blur-on-submit" data-column-toggle-root data-column-toggle-scope="event-<%= @event.id %>">
     <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
       <% current_filter = params[:attendance_status].present? ? nil : (params[:status_filter].presence || "active") %>
@@ -173,6 +175,25 @@
           </span>
         </label>
 
+        <% if survey_roles.any? %>
+          <label class="inline-flex cursor-pointer items-center gap-2 select-none"
+                 data-controller="column-toggle" data-column-toggle-group-value="surveys">
+            <span class="text-sm text-gray-500">Surveys</span>
+
+            <input
+              type="checkbox"
+              data-column-toggle-target="toggle"
+              data-action="column-toggle#toggle"
+              class="sr-only"
+            >
+
+            <span class="relative inline-block h-5 w-9">
+              <span data-column-toggle-target="track" class="absolute inset-0 rounded-full bg-gray-300 transition-colors"></span>
+              <span data-column-toggle-target="knob" class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></span>
+            </span>
+          </label>
+        <% end %>
+
         <%# One switch reveals a completion column per form-bearing callout. %>
         <% if form_columns.any? %>
           <label class="inline-flex cursor-pointer items-center gap-2 select-none"
@@ -260,6 +281,11 @@
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none">
                 <%= render "shared/sortable_header", label: "Progress", index: status_index %>
               </th>
+              <% survey_roles.each_with_index do |role, offset| %>
+                <th class="hidden px-4 py-2 text-center text-sm font-semibold text-gray-700" aria-sort="none" data-column-toggle-col="surveys">
+                  <%= render "shared/sortable_header", label: Form.survey_header(role), index: status_index + 1 + offset %>
+                </th>
+              <% end %>
               <%# Off by default; kept out of the sortable index range (last data column). %>
               <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700 hidden" data-column-toggle-col="certificate">Certificate</th>
               <%# One completion column per form callout, revealed together by the Ticket forms switch. %>
@@ -560,6 +586,22 @@
                         issues: readiness.status_issues,
                         subtext: readiness.status_reason %>
                 </td>
+                <% survey_roles.each do |role| %>
+                  <% completion = @survey_completions.completion(registration.registrant_id, role) %>
+                  <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="surveys" data-sort-value="<%= completion&.submitted_at.to_i %>">
+                    <% if completion %>
+                      <%= link_to event_registrant_submissions_path(@event, person_id: registration.registrant_id, anchor: "form-submission-#{completion.submission_id}"),
+                            class: "inline-flex items-center gap-1.5 whitespace-nowrap text-green-700 hover:underline",
+                            title: "Submitted #{completion.submitted_at.strftime("%b %-d, %Y")}",
+                            data: { turbo_frame: "_top" } do %>
+                        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        <span class="text-gray-600"><%= completion.submitted_at.strftime("%b %-d") %></span>
+                      <% end %>
+                    <% else %>
+                      <span class="text-gray-300" title="Not submitted">—</span>
+                    <% end %>
+                  </td>
+                <% end %>
                 <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="certificate">
                   <%= render "event_registrations/certificate_issued_toggle", registration: registration %>
                 </td>

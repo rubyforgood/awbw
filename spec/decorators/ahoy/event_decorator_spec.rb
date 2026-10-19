@@ -85,24 +85,34 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.resource_link[:path]).to be_nil
     end
 
-    it "points a comment at the record it was left on, and surfaces its topic/body" do
-      person = create(:person)
+    it "points a comment at the person it was left on by name, and surfaces its topic/body" do
+      person = create(:person, first_name: "Dana", last_name: "Rivera")
       comment = create(:comment, commentable: person, topic: "Follow-up", body: "Called to confirm.")
       event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
                                   resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
 
-      expect(event.resource_link[:text]).to eq("Profile")
+      expect(event.resource_link[:text]).to eq("Dana Rivera")
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
       expect(event.comment_note).to eq(topic: "Follow-up", body: "Called to confirm.")
     end
 
+    it "names the account holder for a comment left on a user" do
+      user = create(:user, first_name: "Sam", last_name: "Cole")
+      comment = create(:comment, commentable: user)
+      event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
+                                  resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Sam Cole (user)")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_user_path(user))
+    end
+
     it "points a deleted comment at the record it was left on, read from its snapshot" do
-      person = create(:person)
+      person = create(:person, first_name: "Meryl", last_name: "Hermann")
       event = create(:ahoy_event, name: "destroy.comment", resource_type: "Comment", resource_id: 0,
                                   properties: { "resource_title" => "4",
                                                 "attributes" => { "commentable_id" => person.id, "commentable_type" => "Person" } }).decorate
 
-      expect(event.resource_link[:text]).to eq("Profile")
+      expect(event.resource_link[:text]).to eq("Meryl Hermann")
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
     end
 

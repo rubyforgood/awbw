@@ -86,4 +86,43 @@ RSpec.describe FormAnswer do
       expect(answer.name).to eq("Deleted Question: Alice")
     end
   end
+
+  describe ".for_question" do
+    let(:form) { create(:form, :standalone) }
+    let(:field) { create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio) }
+
+    before { create(:form_field_resource, form_field: field, resource: create(:resource, title: "Masks")) }
+
+    it "is the field's own answers under its name" do
+      own = create(:form_answer, form_field: field, form_submission: create(:form_submission, form: form))
+
+      expect(described_class.for_question(field, "How clear was")).to contain_exactly(own)
+    end
+
+    it "is a fanned-out copy's answers under its sentence, on the field's form only" do
+      copy = create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks",
+                    form_submission: create(:form_submission, form: form))
+      create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks",
+             form_submission: create(:form_submission, form: create(:form, :standalone)))
+
+      expect(described_class.for_question(field, "How clear was Masks")).to contain_exactly(copy)
+    end
+
+    it "is a renamed resource's earlier answers under its earlier wording" do
+      earlier = create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Collage",
+                       form_submission: create(:form_submission, form: form))
+
+      expect(described_class.for_question(field, "How clear was Collage")).to contain_exactly(earlier)
+    end
+
+    it "is nil for wording the field doesn't ask" do
+      expect(described_class.for_question(field, "Was it clear")).to be_nil
+    end
+
+    it "is nil for a non-choice field's sibling name" do
+      email = create(:form_field, form: form, name: "Email")
+
+      expect(described_class.for_question(email, "Email 2")).to be_nil
+    end
+  end
 end

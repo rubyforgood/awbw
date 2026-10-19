@@ -121,6 +121,27 @@ RSpec.describe "PublicForms", type: :request do
     end
   end
 
+  describe "long questions and answer options" do
+    let(:long_question) { "Thinking about the whole training day, how prepared do you feel to facilitate? " * 10 }
+    let(:long_option) { "Very prepared — I could lead a workshop next week with the resources we covered today. " * 8 }
+    let!(:long_field) do
+      create(:form_field, form:, name: long_question.strip, answer_type: :single_select_radio, required: false).tap do |field|
+        field.form_field_answer_options.create!(option_name: long_option)
+      end
+    end
+
+    it "records the answer with the full question text and chosen option" do
+      params = submission_params
+      params[:public_registration][:form_fields][long_field.id.to_s] = long_option.strip
+
+      expect { post public_form_path(form.slug), params: }.to change(FormSubmission, :count).by(1)
+
+      answer = FormAnswer.find_by(form_field: long_field)
+      expect(answer.question_name_when_answered).to eq(long_question.strip)
+      expect(answer.submitted_answer).to eq(long_option.strip)
+    end
+  end
+
   describe "slider fields" do
     let!(:slider_field) do
       create(:form_field, form: form, name: "What percentage are one-on-one?", answer_type: :slider, required: false)

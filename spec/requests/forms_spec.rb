@@ -747,10 +747,71 @@ RSpec.describe "Forms", type: :request do
     it "renders a validation error instead of 500 when a name is too long" do
       form = create(:form, :standalone)
       patch form_path(form), params: {
-        form: { form_fields_attributes: { "0" => { name: "x" * 1001, answer_type: "free_form_input_one_line" } } }
+        form: { form_fields_attributes: { "0" => { name: "x" * 2001, answer_type: "free_form_input_one_line" } } }
       }
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("too long")
+    end
+
+    context "when one question is over a length limit" do
+      let(:form) { create(:form, :standalone) }
+      let!(:untouched) { create(:form_field, form:, name: "How was the training?", position: 1) }
+      let!(:choice) { create(:form_field, form:, name: "Rate the facilitator", answer_type: :single_select_radio, position: 2) }
+      let(:long_option) { "Strongly agree, and here is why. " * 70 }
+
+      def submit_edits(choice_attrs)
+        patch form_path(form), params: {
+          form: { form_fields_attributes: {
+            "0" => { id: untouched.id, name: "How was Training Day 1?" },
+            "1" => { id: choice.id }.merge(choice_attrs),
+            "2" => { name: "What will you use first?", answer_type: "free_form_input_paragraph" }
+          } }
+        }
+      end
+
+      it "rejects an over-long answer option with an error instead of crashing" do
+        expect {
+          submit_edits(form_field_answer_options_attributes: { "0" => { option_name: long_option } })
+        }.not_to change(AnswerOption, :count)
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("is too long (#{long_option.strip.length.to_fs(:delimited)} characters; the limit is 2,000)")
+        expect(choice.reload.form_field_answer_options).to be_empty
+      end
+
+      it "names the question that is over the limit" do
+        submit_edits(form_field_answer_options_attributes: { "0" => { option_name: long_option } })
+
+        summary = Nokogiri::HTML(response.body).at_css("[data-form-errors]").text
+        expect(summary).to include("Question 2")
+        expect(summary).to include("Rate the facilitator")
+        expect(summary).not_to include("How was Training Day 1?")
+      end
+
+      it "keeps every unsaved edit on the page so one fix saves them all" do
+        submit_edits(name: "x" * 2001)
+
+        doc = Nokogiri::HTML(response.body)
+        names = doc.css("textarea[name$='[name]']").map(&:text).map(&:strip)
+        expect(names).to include("How was Training Day 1?", "x" * 2001, "What will you use first?")
+        expect(untouched.reload.name).to eq("How was the training?")
+      end
+
+      it "shows each length limit as placeholder text" do
+        create(:form_field, form:, name: "Day 1", answer_type: :group_header, position: 0)
+        get edit_form_path(form)
+
+        expect(response.body).to include("Form name (255 char max)", "Question text (2,000 char max)", "Option text (2,000 char max)", "Subtitle (10,000 char max)")
+      end
+
+      it "opens the over-long question's settings so the error is visible" do
+        submit_edits(form_field_answer_options_attributes: { "0" => { option_name: long_option } })
+
+        row = Nokogiri::HTML(response.body).at_css("#form_field_#{choice.id}")
+        expect(row["data-field-errors"]).not_to be_nil
+        expect(row.at_css("[data-field-options-expanded-value='true']")).to be_present
+        expect(row.at_css("input[value='#{long_option.strip}']")).to be_present
+      end
     end
 
     it "renames a multiple-choice field's answer option without renaming the shared option" do
@@ -1017,6 +1078,26 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("120")
       end
 
+      it "gives each per-resource copy of a fanned-out question its own card and drill-downs" do
+        form = create(:form, :standalone, name: "Survey")
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        collage = create(:resource, title: "Collage")
+        masks = create(:resource, title: "Masks")
+        create(:form_field_resource, form_field: clarity, resource: collage)
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_answer, form_submission: create(:form_submission, form: form), form_field: nil,
+               question_name_when_answered: "How clear was Masks", submitted_answer: "Very clear")
+
+        get results_form_path(form)
+
+        doc = Nokogiri::HTML(response.body)
+        masks_card = doc.at_css("#form-question-#{clarity.id}-how-clear-was-masks")
+        expect(doc.at_css("#form-question-#{clarity.id}-how-clear-was-collage").text).to include("How clear was Collage")
+        expect(masks_card.text).to include("Very clear")
+        hrefs = masks_card.css("a").map { |a| a["href"] }
+        expect(hrefs).to include(a_string_including("question=How+clear+was+Masks"))
+      end
+
       it "shows an empty state when the form has no submissions" do
         form = create(:form, :standalone, name: "Untouched")
         get results_form_path(form)
@@ -1256,7 +1337,7 @@ RSpec.describe "Forms", type: :request do
 
         hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
         expect(hrefs).to include(form_submission_path(submission, return_to: "form_results", form_id: form.id,
-                                                      form_field_id: thoughts.id, organization_id: org.id))
+                                                      form_field_id: thoughts.id, question: "Any thoughts", organization_id: org.id))
       end
 
       # The footer counts who answered this question, not who submitted the form.
@@ -1272,7 +1353,7 @@ RSpec.describe "Forms", type: :request do
         expect(response.body).to include("View 1 submission")
         hrefs = Nokogiri::HTML(response.body).css("a").map { |a| a["href"] }.compact
         expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: thoughts.id,
-                                                       return_to: "form_results"))
+                                                       question: "Any thoughts", return_to: "form_results"))
       end
 
       # No list can be narrowed to "only the write-ins", so the sub-card borrows its
@@ -1293,7 +1374,7 @@ RSpec.describe "Forms", type: :request do
         expect(hrefs).to include(form_answers_path(form_id: form.id, question: heard.name,
                                                    form_field_id: heard.id, return_to: "form_results"))
         expect(hrefs).to include(form_submissions_path(form_id: form.id, form_field_id: heard.id,
-                                                       return_to: "form_results"))
+                                                       question: heard.name, return_to: "form_results"))
       end
 
       it "links a file question's upload count to those answers" do
@@ -1369,7 +1450,7 @@ RSpec.describe "Forms", type: :request do
 
         byline = Nokogiri::HTML(response.body).css("a").find do |a|
           a["href"] == form_submission_path(submission, return_to: "form_results",
-                                            form_id: form.id, form_field_id: thoughts.id)
+                                            form_id: form.id, form_field_id: thoughts.id, question: "Any thoughts")
         end
         expect(byline).to be_present
         expect(byline.text).to include("Priya Patel")
