@@ -62,6 +62,7 @@ class Event < ApplicationRecord
   # unaffected. Destroying instead would orphan the payments that hang off a
   # submission (payments have an FK to form_submissions and no dependent rule).
   has_many :form_submissions, dependent: :restrict_with_error
+  has_many :form_completions, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
   has_many :sectorable_items, as: :sectorable, dependent: :destroy

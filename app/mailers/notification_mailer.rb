@@ -42,8 +42,9 @@ class NotificationMailer < ApplicationMailer
     @form = form_submission.form
     @answers = form_submission.form_answers.order(:id)
     @verb = updated ? "Updated" : "New"
+    @submitter = @person&.full_name || "Anonymous"
 
-    mail(subject: "#{FYI_PREFIX} #{@verb} #{@form.name} submission from #{@person.full_name}")
+    mail(subject: "#{FYI_PREFIX} #{@verb} #{@form.name} submission from #{@person&.full_name || "an anonymous respondent"}")
   end
 
   def event_registration_cancelled_fyi(notification)

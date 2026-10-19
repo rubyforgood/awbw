@@ -225,6 +225,12 @@
          FormSubmission.where(event_id: @event.id, form_id: form_columns.map { |_, form| form.id }.uniq, person_id: @event_registrations.map(&:registrant_id))
            .pluck(:person_id, :form_id, :created_at)
            .each_with_object({}) { |(pid, fid, ts), map| map[[ pid, fid ]] = ts } : {} %>
+    <%# Anonymous forms: a FormCompletion (a date, no submission) checks the registrant off. %>
+    <% if form_columns.any? %>
+      <% FormCompletion.where(event_id: @event.id, form_id: form_columns.map { |_, form| form.id }.uniq, person_id: @event_registrations.map(&:registrant_id))
+           .pluck(:person_id, :form_id, :completed_on)
+           .each { |pid, fid, completed_on| callout_form_completion[[ pid, fid ]] ||= completed_on.in_time_zone } %>
+    <% end %>
     <% if @event_registrations.any? %>
       <div class="overflow-x-auto">
         <% payment_col = @event.cost_cents.to_i > 0 %>
@@ -589,7 +595,7 @@
                 <% survey_roles.each do |role| %>
                   <% completion = @survey_completions.completion(registration.registrant_id, role) %>
                   <td class="hidden px-4 py-2 text-center text-sm" data-column-toggle-col="surveys" data-sort-value="<%= completion&.submitted_at.to_i %>">
-                    <% if completion %>
+                    <% if completion&.submission_id %>
                       <%= link_to event_registrant_submissions_path(@event, person_id: registration.registrant_id, anchor: "form-submission-#{completion.submission_id}"),
                             class: "inline-flex items-center gap-1.5 whitespace-nowrap text-green-700 hover:underline",
                             title: "Submitted #{completion.submitted_at.strftime("%b %-d, %Y")}",
@@ -597,6 +603,11 @@
                         <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                         <span class="text-gray-600"><%= completion.submitted_at.strftime("%b %-d") %></span>
                       <% end %>
+                    <% elsif completion %>
+                      <span class="inline-flex items-center gap-1.5 whitespace-nowrap text-green-700" title="Submitted anonymously <%= completion.submitted_at.strftime("%b %-d, %Y") %>">
+                        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        <span class="text-gray-600"><%= completion.submitted_at.strftime("%b %-d") %></span>
+                      </span>
                     <% else %>
                       <span class="text-gray-300" title="Not submitted">—</span>
                     <% end %>
