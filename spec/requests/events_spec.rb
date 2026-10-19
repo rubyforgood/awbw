@@ -1591,6 +1591,19 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(registration_callout_form_path(registration.slug, callout))
       end
 
+      it "checks off an anonymous form the registrant completed" do
+        form = create(:form, name: "Feedback", anonymous: true)
+        field = create(:form_field, form:, name: "How was it?")
+        callout = create(:registration_ticket_callout, event:, form:, title: "Post-event survey")
+        EventRegistrationServices::CalloutFormSubmission.call(
+          registration:, callout:, form:, form_params: { field.id.to_s => "Great" }
+        )
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include(registration_callout_form_path(registration.slug, callout, anchor: "form-#{form.id}"))
+      end
+
       it "still shows a submission made before the form's role changed" do
         form = create(:form, name: "Day 1 survey", role: "day_1_survey")
         field = create(:form_field, form:, name: "How was it?")
@@ -1621,6 +1634,23 @@ RSpec.describe "Events", type: :request do
         expect(response.body).to include(event_registrant_submissions_path(event, person_id: person.id, anchor: "form-submission-#{submission.id}"))
         expect(response.body).not_to include("Ticket forms")
         expect(response.body).not_to include("Training feedback")
+      end
+
+      it "checks off an anonymous survey from the registrant's completion, with no submission to link to" do
+        event.update!(facilitator_training: true)
+        day_1 = create(:form, role: "day_1_survey", anonymous: true)
+        create(:registration_ticket_callout, :hidden, event:, form: day_1)
+        create(:form_completion, form: day_1, event:, person:, completed_on: Date.new(2026, 10, 30))
+
+        get registrants_event_path(event)
+
+        expect(response.body).to include("Day 1 survey")
+        expect(response.body).to include("Oct 30")
+        expect(response.body).not_to include("form-submission-")
+
+        get registrants_event_path(event, format: :csv)
+
+        expect(CSV.parse(response.body, headers: true).first["Day 1 survey"]).to eq("2026-10-30")
       end
 
       it "shows a survey answered for the event even after its callout is gone" do
@@ -2681,6 +2711,17 @@ RSpec.describe "Events", type: :request do
       rows = CSV.parse(response.body, headers: true)
       expect(rows.first["Day 1 survey"]).to eq("2026-10-30")
       expect(rows.first["Post-event survey"]).to eq("")
+    end
+
+    it "fills an anonymous survey column from the registrant's completion" do
+      event.update!(facilitator_training: true)
+      day_1 = create(:form, role: "day_1_survey", anonymous: true)
+      create(:registration_ticket_callout, :hidden, event:, form: day_1)
+      create(:form_completion, form: day_1, event:, person:, completed_on: Date.new(2026, 10, 30))
+
+      get onboarding_event_path(event)
+
+      expect(response.body).to include("Oct 30")
     end
 
     it "shows registration comments joined by ::: linked to the comments section" do

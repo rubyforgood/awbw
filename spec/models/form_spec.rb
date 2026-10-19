@@ -94,39 +94,62 @@ RSpec.describe Form do
     end
   end
 
-  describe "#accepts_anonymous_submissions?" do
-    let(:form) { create(:form) }
-
-    it "is true when the name/email questions are all optional" do
-      create(:form_field, form: form, field_identifier: "first_name", required: false)
-      create(:form_field, form: form, field_identifier: "last_name", required: false)
-      create(:form_field, form: form, field_identifier: "primary_email", required: false)
-
-      expect(form.reload.accepts_anonymous_submissions?).to be(true)
+  describe "anonymous" do
+    it "defaults to off" do
+      expect(create(:form).anonymous?).to be(false)
     end
 
-    it "is false when any identity question is required" do
-      create(:form_field, form: form, field_identifier: "first_name", required: false)
-      create(:form_field, form: form, field_identifier: "primary_email", required: true)
-
-      expect(form.reload.accepts_anonymous_submissions?).to be(false)
+    it "can be turned on for a survey or general form" do
+      expect(build(:form, role: "post_event_survey", anonymous: true)).to be_valid
+      expect(build(:form, role: "general", anonymous: true)).to be_valid
     end
 
-    it "is false when the form asks for no identity questions at all" do
-      create(:form_field, form: form, field_identifier: "why_volunteer", required: false)
+    Form::IDENTIFIED_ROLES.each do |role|
+      it "can't be turned on for a #{role} form, which is processed against a person" do
+        form = build(:form, role:, anonymous: true)
 
-      expect(form.reload.accepts_anonymous_submissions?).to be(false)
-    end
-
-    Form::AGREEMENT_ROLES.each do |role|
-      it "is false for a #{role} agreement form even when its identity questions are optional" do
-        agreement = create(:form, role: role)
-        create(:form_field, form: agreement, field_identifier: "first_name", required: false)
-        create(:form_field, form: agreement, field_identifier: "last_name", required: false)
-        create(:form_field, form: agreement, field_identifier: "primary_email", required: false)
-
-        expect(agreement.reload.accepts_anonymous_submissions?).to be(false)
+        expect(form).not_to be_valid
+        expect(form.errors[:anonymous]).to be_present
       end
+    end
+  end
+
+  describe "#identified_by?" do
+    let(:form) { create(:form, anonymous: true) }
+    let!(:first_name) { create(:form_field, form:, field_identifier: "first_name") }
+    let!(:last_name) { create(:form_field, form:, field_identifier: "last_name") }
+    let!(:email) { create(:form_field, form:, field_identifier: "primary_email") }
+
+    def params(first: "Sam", last: "Rivera", address: "sam@example.com")
+      { first_name.id.to_s => first, last_name.id.to_s => last, email.id.to_s => address }
+    end
+
+    it "is true when first name, last name, and email are all answered" do
+      expect(form.identified_by?(params)).to be(true)
+    end
+
+    it "is false when any one of the three is blank" do
+      expect(form.identified_by?(params(first: ""))).to be(false)
+      expect(form.identified_by?(params(last: ""))).to be(false)
+      expect(form.identified_by?(params(address: ""))).to be(false)
+    end
+
+    it "is false for whitespace-only answers" do
+      expect(form.identified_by?(params(first: " ", last: " ", address: " "))).to be(false)
+    end
+
+    it "is false when the params leave a question out" do
+      expect(form.identified_by?(params.except(email.id.to_s))).to be(false)
+    end
+
+    it "is false when the form has no name and email questions" do
+      bare = create(:form, anonymous: true)
+
+      expect(bare.identified_by?(params)).to be(false)
+    end
+
+    it "reads string or symbol keys" do
+      expect(form.identified_by?(params.transform_keys(&:to_sym))).to be(true)
     end
   end
 
@@ -140,6 +163,15 @@ RSpec.describe Form do
         expect(agreement.requires_answer?(email)).to be(true)
         expect(agreement.requires_answer?(other)).to be(false)
       end
+    end
+
+    it "never requires a name or email question on an anonymous form, even one flagged required" do
+      anonymous = create(:form, anonymous: true)
+      email = create(:form_field, form: anonymous, field_identifier: "primary_email", required: true)
+      other = create(:form_field, form: anonymous, field_identifier: "why_volunteer", required: true)
+
+      expect(anonymous.requires_answer?(email)).to be(false)
+      expect(anonymous.requires_answer?(other)).to be(true)
     end
 
     it "defers to the field's own required flag on a non-agreement form" do
