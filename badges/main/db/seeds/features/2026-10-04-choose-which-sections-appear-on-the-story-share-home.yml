@@ -4,8 +4,7 @@ display_status: public_facing
 released_on: 2026-10-04
 summary: >-
   The Story Share home now has audience columns (Children, Adults, …) next to the
-  focus-area sectors and Facilitator Spotlights, so visitors can jump to stories by age
-  group. Admins pick which sectors and audiences appear with the new "Add to Story Share home" button.
+  focus-area sectors, so visitors can jump to stories by age group. Admins pick which sectors and audiences appear with the new "Add to Story Share home" button.
 action_path: "/story_share"
 description: >-
   Admins control the Story Share home grid from the Story Share admin page. Each featured sector
