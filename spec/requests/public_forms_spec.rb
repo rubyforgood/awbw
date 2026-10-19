@@ -158,11 +158,31 @@ RSpec.describe "PublicForms", type: :request do
       expect(response.body).not_to include("submit this form anonymously")
     end
 
-    it "still records a person-less submission when identity is left blank" do
-      expect { post public_form_path(form.slug), params: submission_params(first: "", last: "", email: "") }
-        .to change(FormSubmission, :count).by(1)
+    it "requires name and email anyway, marking them required on the page" do
+      get public_form_path(form.slug)
 
-      expect(FormSubmission.last.person).to be_nil
+      expect(response.body).to match(/name="public_registration\[form_fields\]\[#{email_field.id}\]"[^>]*required/)
+    end
+
+    it "blocks a blank-identity submission" do
+      expect { post public_form_path(form.slug), params: submission_params(first: "", last: "", email: "") }
+        .not_to change(FormSubmission, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "blocks a partial identity" do
+      expect { post public_form_path(form.slug), params: submission_params(email: "") }
+        .not_to change(FormSubmission, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "blocks a logged-in respondent who leaves them blank, rather than crediting their account" do
+      sign_in create(:user, :with_person)
+
+      expect { post public_form_path(form.slug), params: submission_params(first: "", last: "", email: "") }
+        .not_to change(FormSubmission, :count)
     end
   end
 

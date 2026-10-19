@@ -114,6 +114,48 @@ RSpec.describe Form do
     end
   end
 
+  describe "#requires_identity?" do
+    it "is true unless the form is set to anonymous" do
+      expect(build(:form).requires_identity?).to be(true)
+      expect(build(:form, anonymous: true).requires_identity?).to be(false)
+    end
+  end
+
+  describe "publishing a form not set to anonymous" do
+    let(:form) { create(:form, slug: "volunteer") }
+
+    def add_identity_questions(except: nil)
+      (Form::IDENTITY_IDENTIFIERS - [ except ]).each do |identifier|
+        create(:form_field, form:, field_identifier: identifier)
+      end
+    end
+
+    it "needs first name, last name, and email questions" do
+      add_identity_questions(except: "primary_email")
+
+      form.reload.published = true
+      expect(form).not_to be_valid
+      expect(form.errors[:published].join).to include("Anonymous responses")
+    end
+
+    it "is fine once all three are asked" do
+      add_identity_questions
+
+      form.reload.published = true
+      expect(form).to be_valid
+    end
+
+    it "is fine without them when the form is anonymous" do
+      form.assign_attributes(published: true, anonymous: true)
+
+      expect(form).to be_valid
+    end
+
+    it "doesn't apply to an unpublished form" do
+      expect(form).to be_valid
+    end
+  end
+
   describe "#identified_by?" do
     let(:form) { create(:form, anonymous: true) }
     let!(:first_name) { create(:form_field, form:, field_identifier: "first_name") }
@@ -174,11 +216,13 @@ RSpec.describe Form do
       expect(anonymous.requires_answer?(other)).to be(true)
     end
 
-    it "defers to the field's own required flag on a non-agreement form" do
+    it "forces the name and email questions on any form not set to anonymous" do
       general = create(:form)
       email = create(:form_field, form: general, field_identifier: "primary_email", required: false)
+      other = create(:form_field, form: general, field_identifier: "why_volunteer", required: false)
 
-      expect(general.requires_answer?(email)).to be(false)
+      expect(general.requires_answer?(email)).to be(true)
+      expect(general.requires_answer?(other)).to be(false)
     end
   end
 

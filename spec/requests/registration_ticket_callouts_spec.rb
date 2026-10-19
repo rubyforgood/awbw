@@ -55,6 +55,23 @@ RSpec.describe "Callout inline form", type: :request do
     end
   end
 
+  describe "a form not set to anonymous, with optional name and email questions" do
+    let!(:email) { create(:form_field, form:, name: "Email", field_identifier: "primary_email", required: false) }
+
+    it "keeps them optional, since the ticket already names the registrant" do
+      get registration_callout_form_path(registration.slug, callout)
+
+      expect(response.body).not_to match(/name="callout_form\[form_fields\]\[#{email.id}\]"[^>]*required/)
+    end
+
+    it "credits the registrant without them" do
+      post registration_callout_form_submit_path(registration.slug, callout, form),
+           params: { callout_form: { form_fields: { field.id.to_s => "Loved it" } } }
+
+      expect(FormSubmission.last.person).to eq(registration.registrant)
+    end
+  end
+
   describe "an anonymous form" do
     let(:form) { create(:form, name: "Feedback", anonymous: true) }
 
