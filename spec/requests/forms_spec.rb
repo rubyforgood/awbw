@@ -444,6 +444,24 @@ RSpec.describe "Forms", type: :request do
       expect(response.body).to include("Expand all")
     end
 
+    it "warns that a published form not set to anonymous needs name and email questions" do
+      form = create(:form, :standalone, slug: "volunteer", published: true)
+      get edit_form_path(form)
+      expect(response.body).to include("needs first name, last name, and email questions")
+    end
+
+    it "skips the warning for a form only delivered through callouts, which know the registrant" do
+      form = create(:form, :standalone)
+      get edit_form_path(form)
+      expect(response.body).not_to include("needs first name, last name, and email questions")
+    end
+
+    it "drops the warning once the form is anonymous" do
+      form = create(:form, :standalone, slug: "volunteer", published: true, anonymous: true)
+      get edit_form_path(form)
+      expect(response.body).not_to include("needs first name, last name, and email questions")
+    end
+
     it "offers the anonymous setting in form settings" do
       form = create(:form, :standalone)
       get edit_form_path(form)

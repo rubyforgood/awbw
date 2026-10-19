@@ -108,16 +108,19 @@ class Form < ApplicationRecord
     standalone? && !event_connected? && published? && slug.present?
   end
 
-  # An agreement form (registration / new job / reinstatement) processes its
-  # submission against a Person — minting a registration, reconciling
-  # affiliations — so it always requires the full name/email identity and never
-  # accepts anonymous responses, however its identity questions are flagged.
+  # A form not set to anonymous always requires the full name/email identity,
+  # however its identity questions are flagged.
   def requires_identity?
-    role.in?(AGREEMENT_ROLES)
+    !anonymous?
   end
 
   def asks_identity?
     form_fields.any? { |field| field.field_identifier.in?(IDENTITY_IDENTIFIERS) }
+  end
+
+  # A form that requires identity but can't collect it rejects every public submission.
+  def missing_identity_questions?
+    requires_identity? && (IDENTITY_IDENTIFIERS - form_fields.map(&:field_identifier)).any?
   end
 
   # Whether submitted answers name the respondent: on an anonymous form only all

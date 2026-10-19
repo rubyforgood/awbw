@@ -65,6 +65,13 @@
       </div>
     <% end %>
 
+    <% if @form.publicly_fillable? && @form.missing_identity_questions? %>
+      <div role="alert" class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <i class="fa-solid fa-triangle-exclamation mt-0.5 text-amber-500" aria-hidden="true"></i>
+        <span>This form needs first name, last name, and email questions to accept public submissions — add them, or turn on Anonymous responses in Form settings.</span>
+      </div>
+    <% end %>
+
     <details class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <summary class="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden">
         <div class="flex items-center gap-2.5 border-b border-transparent <%= DomainTheme.bg_class_for(:forms, intensity: 100) %> px-6 py-3 <%= DomainTheme.bg_class_for(:forms, intensity: 100, hover: true) %> [[open]_&]:<%= DomainTheme.border_class_for(:forms) %>">
@@ -97,7 +104,7 @@
             <%= f.check_box :anonymous, class: "rounded border-gray-300 #{DomainTheme.text_class_for(:forms, intensity: 600)}" %>
             <span class="text-sm text-gray-800">Anonymous responses</span>
           </label>
-          <p class="mt-1 text-xs text-gray-500">Responses aren't linked to whoever submits them, even when they're logged in. Name and email questions become optional — only someone who fills in first name, last name, and email is credited. On a ticket callout, staff still see who completed the form, just not which responses are theirs.</p>
+          <p class="mt-1 text-xs text-gray-500">Responses aren't linked to whoever submits them, even when they're logged in. Name and email questions become optional — only someone who fills in first name, last name, and email is credited. On a ticket callout, staff still see who completed the form, just not which responses are theirs. When off, a public link requires first name, last name, and email.</p>
         </div>
       </div>
     </details>
@@ -138,7 +145,7 @@
               <%= f.text_field :slug, placeholder: "volunteer-interest",
                     class: "flex-1 border-0 px-3 py-2 text-sm focus:ring-0" %>
             </div>
-            <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens. Required to publish. Include name and email questions to identify who submitted — unless anonymous submissions are allowed.</p>
+            <p class="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and hyphens. Required to publish. A form must ask first name, last name, and email to publish — unless Anonymous responses is on.</p>
           </div>
 
           <% if @form.publicly_fillable? %>

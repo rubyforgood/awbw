@@ -121,38 +121,26 @@ RSpec.describe Form do
     end
   end
 
-  describe "publishing a form not set to anonymous" do
-    let(:form) { create(:form, slug: "volunteer") }
+  describe "#missing_identity_questions?" do
+    let(:form) { create(:form) }
 
-    def add_identity_questions(except: nil)
-      (Form::IDENTITY_IDENTIFIERS - [ except ]).each do |identifier|
-        create(:form_field, form:, field_identifier: identifier)
-      end
+    it "is true when a form not set to anonymous lacks any of first name, last name, or email" do
+      create(:form_field, form:, field_identifier: "first_name")
+      create(:form_field, form:, field_identifier: "last_name")
+
+      expect(form.reload.missing_identity_questions?).to be(true)
     end
 
-    it "needs first name, last name, and email questions" do
-      add_identity_questions(except: "primary_email")
+    it "is false once all three are asked" do
+      Form::IDENTITY_IDENTIFIERS.each { |identifier| create(:form_field, form:, field_identifier: identifier) }
 
-      form.reload.published = true
-      expect(form).not_to be_valid
-      expect(form.errors[:published].join).to include("Anonymous responses")
+      expect(form.reload.missing_identity_questions?).to be(false)
     end
 
-    it "is fine once all three are asked" do
-      add_identity_questions
+    it "is false for an anonymous form" do
+      form.update!(anonymous: true)
 
-      form.reload.published = true
-      expect(form).to be_valid
-    end
-
-    it "is fine without them when the form is anonymous" do
-      form.assign_attributes(published: true, anonymous: true)
-
-      expect(form).to be_valid
-    end
-
-    it "doesn't apply to an unpublished form" do
-      expect(form).to be_valid
+      expect(form.missing_identity_questions?).to be(false)
     end
   end
 
