@@ -294,7 +294,26 @@ RSpec.describe PublicFormSubmission do
     expect(confirmation.recipient_role).to eq("person")
   end
 
-  context "when identity is left blank (optional name/email questions)" do
+  context "on a form not set to anonymous" do
+    {
+      "a blank name and email" => { first: "", last: "", email: "" },
+      "a missing email" => { email: "" },
+      "a missing first name" => { first: "" }
+    }.each do |label, blanks|
+      it "rejects #{label} rather than recording it anonymously" do
+        result = nil
+        expect { result = described_class.call(form: form, form_params: params_for(**blanks)) }
+          .not_to change(FormSubmission, :count)
+
+        expect(result.success?).to be(false)
+        expect(result.errors).to include(described_class::IDENTITY_REQUIRED_MESSAGE)
+      end
+    end
+  end
+
+  context "when identity is left blank on an anonymous form" do
+    before { form.update!(anonymous: true) }
+
     it "records a person-less submission when identity is blank" do
       result = nil
       expect { result = described_class.call(form: form, form_params: params_for(first: "", last: "", email: "")) }
