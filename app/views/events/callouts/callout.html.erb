@@ -31,6 +31,7 @@
     <% @callout_forms.each do |callout_form| %>
       <%= render "events/callouts/callout_form", callout: @callout, callout_form: callout_form,
             submission: @submissions[callout_form.form_id],
+            anonymously_completed: @anonymously_completed_form_ids.include?(callout_form.form_id),
             editing: @editing_form_id == callout_form.form_id %>
     <% end %>
   </div>

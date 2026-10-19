@@ -91,6 +91,14 @@
             <p class="mt-1 text-xs text-gray-500">A standalone public registration form is the on-demand agreement; new job, reinstatement, and close program carry their own affiliation processing (each submission gets a processing panel).</p>
           </div>
         </div>
+
+        <div>
+          <label class="flex cursor-pointer items-center gap-2">
+            <%= f.check_box :anonymous, class: "rounded border-gray-300 #{DomainTheme.text_class_for(:forms, intensity: 600)}" %>
+            <span class="text-sm text-gray-800">Anonymous responses</span>
+          </label>
+          <p class="mt-1 text-xs text-gray-500">Responses aren't linked to whoever submits them, even when they're logged in. Name and email questions become optional — only someone who fills in first name, last name, and email is credited. On a ticket callout, staff still see who completed the form, just not which responses are theirs.</p>
+        </div>
       </div>
     </details>
 
@@ -121,7 +129,7 @@
             <span class="text-sm text-gray-800">Publish this form at a public link (anyone can fill it out, no account needed)</span>
           </label>
           <p class="text-xs text-gray-500">Publishes the form at the public link below. A form connected to an event can't be published — event forms are filled out through their event.</p>
-          <p class="text-xs text-gray-500">To accept anonymous submissions, make the name and email questions optional (uncheck "Required" on those fields). A respondent who fills them is still identified; one who skips them submits anonymously. Agreement forms (registration, new job, reinstatement) always require name and email, since each submission is processed against a person.</p>
+          <p class="text-xs text-gray-500">To accept anonymous submissions, turn on "Anonymous responses" in Form settings above.</p>
 
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Public link address</label>

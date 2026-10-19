@@ -305,7 +305,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       end
 
       it "stays anonymous on a partial answer" do
-        expect(submit(identity_params(fields, email: "")).person).to be_nil
+        expect(submit(identity_params(fields, email: "").merge(field.id.to_s => "Great")).person).to be_nil
       end
     end
 

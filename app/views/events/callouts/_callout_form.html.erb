@@ -1,7 +1,9 @@
 <%# One linked form on a callout page. Gated (future date) → a header chip naming
-    when it opens. Completed → a collapsed toggle with a "Completed" chip that
-    expands to the answers + Edit. Otherwise → the form, ready to fill. %>
+    when it opens. Completed anonymously → a "Completed" header with no answers.
+    Completed → a collapsed toggle with a "Completed" chip that expands to the
+    answers + Edit. Otherwise → the form, ready to fill. %>
 <% form = callout_form.form %>
+<% anonymously_completed = local_assigns.fetch(:anonymously_completed, false) %>
 <% completed = submission.present? %>
 <%# Where "Edit responses" returns to — defaults to this callout's page; the
     scholarship page overrides it so its survey edits stay on the scholarship page. %>
@@ -18,6 +20,21 @@
         Available <%= DripDate.label(callout_form.available_from) %>
       </span>
     </div>
+
+  <% elsif anonymously_completed %>
+    <div class="flex items-center justify-between gap-2 <%= DomainTheme.bg_class_for(:forms, intensity: 50) %> px-4 py-2.5">
+      <div class="flex items-center gap-2 <%= DomainTheme.text_class_for(:forms, intensity: 800) %>">
+        <i class="fa-solid fa-clipboard-list text-sm" aria-hidden="true"></i>
+        <h2 class="text-sm font-semibold"><%= form.name %></h2>
+      </div>
+      <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+        <i class="fa-solid fa-check text-2xs" aria-hidden="true"></i> Completed
+      </span>
+    </div>
+    <p class="flex items-start gap-2 border-t border-gray-100 px-4 py-3 text-sm text-gray-600 sm:px-6">
+      <i class="fa-solid fa-user-secret mt-0.5 text-gray-400" aria-hidden="true"></i>
+      <span>Thanks — your responses were submitted anonymously, so they can't be shown or changed here.</span>
+    </p>
 
   <% elsif completed && !editing %>
     <details class="group">
@@ -52,13 +69,22 @@
       <h2 class="text-sm font-semibold"><%= form.name %></h2>
     </div>
     <div class="px-4 py-5 sm:px-6">
+      <% if form.anonymous? %>
+        <p class="mb-4 flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <i class="fa-solid fa-user-secret mt-0.5 text-gray-400" aria-hidden="true"></i>
+          <span>
+            This form is anonymous — your answers aren't linked to your name<%= " unless you fill in your first name, last name, and email" if form.asks_identity? %>.
+            Once submitted, anonymous answers can't be changed.
+          </span>
+        </p>
+      <% end %>
       <%= form_with url: registration_callout_form_submit_path(@event_registration.slug, callout, form), method: :post do %>
         <div class="space-y-2">
           <% form.form_fields.order(:position).each do |field| %>
             <% if field.group_header? %>
               <h2 class="border-b border-gray-100 pt-2 pb-1 text-sm font-semibold tracking-wide text-gray-400 uppercase"><%= field.name %></h2>
             <% else %>
-              <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form",
+              <%= render "events/public_registrations/form_field", field: field, param_scope: "callout_form", required: form.requires_answer?(field),
                     value: field.per_resource? ? submission&.per_resource_values(field) : submission&.form_answers&.find_by(form_field: field)&.submitted_answer %>
             <% end %>
           <% end %>

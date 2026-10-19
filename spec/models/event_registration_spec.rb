@@ -665,6 +665,12 @@ RSpec.describe EventRegistration, type: :model do
       expect(results).not_to include(single_reg, multi_reg)
     end
 
+    it "still finds registrants with no submission when the event has an anonymous one" do
+      create(:form_submission, event: submission_event, person: nil)
+
+      expect(EventRegistration.submission_status("none", submission_event)).to include(none_reg)
+    end
+
     it "finds registrants with at least one submission" do
       results = EventRegistration.submission_status("has", submission_event)
       expect(results).to include(single_reg, multi_reg)

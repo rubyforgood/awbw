@@ -511,7 +511,7 @@ class EventRegistration < ApplicationRecord
   # Filter by how many form submissions the registrant made for this event:
   # none, at least one, or more than one.
   scope :submission_status, ->(value, event) {
-    submissions = FormSubmission.where(event_id: event.id)
+    submissions = FormSubmission.where(event_id: event.id).where.not(person_id: nil)
     case value
     when "none" then where.not(registrant_id: submissions.select(:person_id))
     when "has" then where(registrant_id: submissions.select(:person_id))

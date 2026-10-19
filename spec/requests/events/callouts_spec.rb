@@ -632,7 +632,7 @@ RSpec.describe "Events::Callouts", type: :request do
     describe "an anonymous recipients survey on the scholarship page" do
       let(:survey) { create(:form, name: "Recipients survey", role: "recipient_survey", anonymous: true) }
       let!(:survey_field) { create(:form_field, form: survey, name: "What did you take away?") }
-      let(:scholarship_callout) { event.registration_ticket_callouts.find_by(builtin_key: "scholarship") }
+      let(:scholarship_callout) { create(:registration_ticket_callout, event:, builtin_key: "scholarship") }
 
       before do
         scholarship.update!(agreement_signed: true, tasks_completed: true)
