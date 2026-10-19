@@ -264,6 +264,16 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
         expect(FormCompletion.where(person:, form:, event:)).to exist
       end
 
+      it "clears the registrant's creator and editor stamps when a credited submission is detached" do
+        user = person.user
+        Current.set(user:) { submit(identity_params(fields).merge(field.id.to_s => "Great")) }
+
+        detached = Current.set(user:) { submit(identity_params(fields, email: "").merge(field.id.to_s => "Changed")) }.reload
+
+        expect(detached).to have_attributes(created_by_id: nil, updated_by_id: nil)
+        expect(detached.form_answers.pluck(:created_by_id, :updated_by_id).flatten).to all(be_nil)
+      end
+
       it "writes the content-sharing answers through when the submission is credited" do
         anon_field = create(:form_field, form:, answer_type: :single_select_radio, name: "Anonymity?",
           field_identifier: "anonymous_contributions")

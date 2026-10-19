@@ -68,15 +68,19 @@ module EventRegistrationServices
       return @already_completed = true if FormCompletion.exists?(person:, form: @form, event:)
       return @incomplete = true if missing_required_answer?
 
-      ActiveRecord::Base.transaction do
-        @submission = FormSubmission.find_by(person:, form: @form, event:)
-        @edited = @submission.present?
-        @submission ||= FormSubmission.new(form: @form, event:, role: @form.role)
-        @submission.update!(person: nil)
-        @submission.record_callout_collection!(@callout)
-        save_answers
-        FormCompletion.record!(person:, form: @form, event:)
-        stamp_scholarship_form_completion
+      # No Current.user, so UserStampable leaves a logged-in registrant off every record.
+      Current.set(user: nil) do
+        ActiveRecord::Base.transaction do
+          @submission = FormSubmission.find_by(person:, form: @form, event:)
+          @edited = @submission.present?
+          @submission ||= FormSubmission.new(form: @form, event:, role: @form.role)
+          @submission.update!(person: nil, created_by_id: nil, updated_by_id: nil)
+          @submission.form_answers.update_all(created_by_id: nil, updated_by_id: nil) if @edited
+          @submission.record_callout_collection!(@callout)
+          save_answers
+          FormCompletion.record!(person:, form: @form, event:)
+          stamp_scholarship_form_completion
+        end
       end
       @submission
     end
