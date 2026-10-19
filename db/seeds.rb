@@ -456,12 +456,6 @@ set_category_positions.(age_range_type, age_ranges.map { |name, _, position| [ n
   end
 end
 
-# Where a facilitator runs workshops — the person edit form's picker and the event
-# dashboards' charts. Shared with the data:seed_workshop_settings task, since deploys
-# never run db:seed. Idempotent; a retired option is unpublished, never deleted.
-puts "Creating WorkshopEnvironment CategoryType…"
-WorkshopSettingsSeeder.call
-
 # Post-event survey templates — the standalone forms the Day 1 / Day 2 / Scholarship
 # recipients survey callouts deliver inline. Shared with the data:seed_survey_forms
 # task so prod can create them without the full seed. Idempotent on form name.
