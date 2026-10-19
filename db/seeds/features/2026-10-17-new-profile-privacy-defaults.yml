@@ -9,5 +9,6 @@ summary: >-
   Everything else on the profile is still shown by default.
 pro_tips:
   - "Existing profiles keep their current settings."
-  - "Change these under Profile display preferences on the profile's edit page."
   - "Admins always see a person's full name, whatever their display preference."
+description: >-
+  Change these under Profile display preferences on the profile's edit page.
