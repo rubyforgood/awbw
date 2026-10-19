@@ -1,0 +1,11 @@
+name: "Quotes from ticket surveys"
+area: content
+display_status: admin_facing
+released_on: 2026-10-19
+action_path: "/quotes"
+summary: >-
+  Quote questions on a form delivered on a registration ticket, like a training-day eval,
+  now turn into unpublished quotes too, just like public and registration forms.
+pro_tips:
+  - "On an anonymous form the quote is still captured, with nothing linking it to the registrant."
+  - "Each quote links back to the submission it came from, so you can see the rest of the answers."

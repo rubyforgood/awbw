@@ -11,6 +11,9 @@ module EventRegistrationServices
   # to the Person (PersonServices::SyncSharingPreferences, the same write-through the
   # registration form runs; #profile_changes reports real changes for Ahoy), and
   # stamps post_survey_completed_at for a recipient's post-event survey.
+  #
+  # Quote fields become unpublished Quotes (Quotes::CaptureFromSubmission) on both
+  # paths; an anonymous submission's quote has no creator.
   class CalloutFormSubmission
     attr_reader :submission, :profile_changes
 
@@ -54,6 +57,7 @@ module EventRegistrationServices
         # Runs for any callout form; only fires when the form asks the identified
         # anonymity / name questions.
         sync_profile(person)
+        Quotes::CaptureFromSubmission.call(@submission)
         stamp_scholarship_form_completion
       end
       @submission
@@ -78,11 +82,13 @@ module EventRegistrationServices
           @submission.update!(person: nil, created_by_id: nil, updated_by_id: nil)
           if @edited
             @submission.form_answers.update_all(created_by_id: nil, updated_by_id: nil)
+            @submission.quotes.update_all(created_by_id: nil, updated_by_id: nil)
             Analytics::AnonymizeSubmissionEvents.call(@submission)
           end
           @submission.record_callout_collection!(@callout)
           save_answers
           FormCompletion.record!(person:, form: @form, event:)
+          Quotes::CaptureFromSubmission.call(@submission)
           stamp_scholarship_form_completion
         end
       end

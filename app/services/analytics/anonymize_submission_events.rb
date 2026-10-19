@@ -1,6 +1,6 @@
 module Analytics
-  # Strips who did it from the activity events a form submission, its answers, and
-  # their uploads left behind, for a submission that has gone anonymous: the user,
+  # Strips who did it from the activity events a form submission, its answers,
+  # their uploads, and the quotes captured from it left behind, for a submission that has gone anonymous: the user,
   # the visit (which carries the user), and any person/creator ids in the recorded
   # attributes or changes. The events stay, so the record's own history still reads.
   class AnonymizeSubmissionEvents
@@ -28,6 +28,8 @@ module Analytics
       Ahoy::Event.where(resource_type: "FormSubmission", resource_id: @submission.id)
         .or(Ahoy::Event.where(resource_type: "FormAnswer", resource_id: answer_ids))
         .or(Ahoy::Event.where(resource_type: "Asset", resource_id: Asset.where(owner_type: "FormAnswer", owner_id: answer_ids).select(:id)))
+        .or(Ahoy::Event.where(resource_type: "Quote", resource_id: @submission.quotes.select(:id)))
+        .or(Ahoy::Event.where(resource_type: "QuotableItemQuote", resource_id: @submission.quotable_item_quotes.select(:id)))
     end
 
     def scrubbed(properties)

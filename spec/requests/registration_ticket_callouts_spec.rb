@@ -149,6 +149,15 @@ RSpec.describe "Callout inline form", type: :request do
       expect(submission.form_answers.map(&:updated_by)).to all(be_nil)
     end
 
+    it "captures a logged-in registrant's quote with no creator" do
+      quote_field = create(:form_field, form:, name: "Share a quote", field_identifier: "quote", required: false)
+      sign_in registration.registrant.user
+
+      post_answers({ field.id.to_s => "Loved it", quote_field.id.to_s => "I found my voice" })
+
+      expect(FormSubmission.last.quotes.sole).to have_attributes(body: "I found my voice", created_by: nil)
+    end
+
     it "sends staff an FYI that names no one" do
       registration.registrant.update!(first_name: "Ada", last_name: "Lovelace")
 
@@ -215,6 +224,25 @@ RSpec.describe "Callout inline form", type: :request do
           events.reload.each do |event|
             tracked = event.properties.slice("attributes", "changes").values.flat_map(&:keys)
             expect(tracked).not_to include("person_id", "created_by_id", "updated_by_id")
+          end
+        end
+
+        it "strips the registrant from a captured quote's activity log when the submission goes anonymous" do
+          quote_field = create(:form_field, form:, name: "Share a quote", field_identifier: "quote", required: false)
+          user = registration.registrant.user
+          sign_in user
+          post_answers(identity.merge(quote_field.id.to_s => "I found my voice"))
+          quote = FormSubmission.last.quotes.sole
+          events = Ahoy::Event.where(resource_type: "Quote", resource_id: quote.id)
+            .or(Ahoy::Event.where(resource_type: "QuotableItemQuote", resource_id: quote.quotable_item_quotes.select(:id)))
+          expect(events.where(user_id: user.id)).to exist
+
+          post_answers(identity(address: "").merge(quote_field.id.to_s => "I found my voice"))
+
+          expect(events.reload.pluck(:user_id, :visit_id).flatten).to all(be_nil)
+          events.reload.each do |event|
+            tracked = event.properties.slice("attributes", "changes").values.flat_map(&:keys)
+            expect(tracked).not_to include("created_by_id", "updated_by_id")
           end
         end
       end

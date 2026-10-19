@@ -164,6 +164,37 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     end
   end
 
+  describe "quote fields" do
+    let!(:quote_field) { create(:form_field, form:, name: "Share a quote", field_identifier: "quote") }
+
+    it "saves the answer as an unpublished quote sourced from the submission, created by the registrant" do
+      submission = submit({ quote_field.id.to_s => "This training changed how I teach" })
+
+      quote = submission.quotes.sole
+      expect(quote).to have_attributes(body: "This training changed how I teach", author: nil,
+        created_by: registration.registrant.user)
+      expect(quote).not_to be_published
+    end
+
+    it "doesn't duplicate the quote when the registrant re-submits the same answer" do
+      submit({ quote_field.id.to_s => "This training changed how I teach" })
+
+      expect { submit({ quote_field.id.to_s => "This training changed how I teach" }) }.not_to change(Quote, :count)
+    end
+
+    context "on an anonymous form" do
+      let(:form) { create(:form, anonymous: true) }
+
+      it "still captures the quote, with no creator tying it back to the registrant" do
+        submission = submit({ field.id.to_s => "Great", quote_field.id.to_s => "This training changed how I teach" })
+
+        expect(submission.person).to be_nil
+        expect(submission.quotes.sole).to have_attributes(body: "This training changed how I teach",
+          created_by: nil, author: nil)
+      end
+    end
+  end
+
   describe "an anonymous form" do
     let(:form) { create(:form, anonymous: true) }
     let(:person) { registration.registrant }
@@ -272,6 +303,17 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
 
         expect(detached).to have_attributes(created_by_id: nil, updated_by_id: nil)
         expect(detached.form_answers.pluck(:created_by_id, :updated_by_id).flatten).to all(be_nil)
+      end
+
+      it "clears the registrant as creator of a quote captured before the submission was detached" do
+        quote_field = create(:form_field, form:, name: "Share a quote", field_identifier: "quote", required: false)
+        user = person.user
+        answers = { field.id.to_s => "Great", quote_field.id.to_s => "I found my voice" }
+        Current.set(user:) { submit(identity_params(fields).merge(answers)) }
+
+        detached = Current.set(user:) { submit(identity_params(fields, email: "").merge(answers)) }
+
+        expect(detached.quotes.sole).to have_attributes(created_by_id: nil, updated_by_id: nil)
       end
 
       it "writes the content-sharing answers through when the submission is credited" do
