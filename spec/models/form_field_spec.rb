@@ -100,6 +100,25 @@ RSpec.describe FormField do
         expect(build(:form_field, form: form, field_identifier: "")).to be_valid
       end
     end
+
+    describe "field_identifier aliases" do
+      it "stores email as primary_email" do
+        expect(create(:form_field, field_identifier: "email").field_identifier).to eq("primary_email")
+      end
+
+      it "switches an existing email field to primary_email when it is saved again" do
+        field = create(:form_field)
+        field.update_column(:field_identifier, "email")
+
+        field.reload.update!(field_identifier: "email")
+
+        expect(field.reload.field_identifier).to eq("primary_email")
+      end
+
+      it "leaves other identifiers as entered" do
+        expect(create(:form_field, field_identifier: "first_name").field_identifier).to eq("first_name")
+      end
+    end
   end
 
   describe "#collects_input?" do

@@ -21,6 +21,9 @@ class FormField < ApplicationRecord
   # "required" flag is meaningless for them (nothing to fill in).
   NON_INPUT_ANSWER_TYPES = %w[no_user_input group_header].freeze
 
+  # Alternate field IDs an admin may type, stored as the canonical one every reader looks up.
+  FIELD_IDENTIFIER_ALIASES = { "email" => "primary_email" }.freeze
+
   # Multi-select "additional sectors" field identifier.
   ADDITIONAL_SECTOR_FIELD_IDENTIFIERS = %w[additional_sectors].freeze
 
@@ -126,6 +129,7 @@ class FormField < ApplicationRecord
   # ValueTooLong exception (the columns are text; these are the UX caps).
   validates :name, length: { maximum: NAME_MAX_LENGTH, message: TOO_LONG_MESSAGE }
   validates :subtitle, :hint_text, length: { maximum: NOTE_MAX_LENGTH, message: TOO_LONG_MESSAGE }
+  normalizes :field_identifier, with: ->(identifier) { FIELD_IDENTIFIER_ALIASES.fetch(identifier, identifier) }
   # A field_identifier wires a field to backend logic (Stripe, sectors,
   # email checks, etc.), so the same identifier must not appear twice on one form
   # or that logic would target an ambiguous field. Ordinary fields carry no
