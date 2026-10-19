@@ -148,7 +148,7 @@ RSpec.describe EventCopyService do
 
       built = copy.registration_form
       expect(built).not_to eq(form)
-      expect(service.created_forms).to eq([ built ])
+      expect(service.form_changes).to eq(built => { created: true, questions: 2, options: 2 })
       expect(built).to have_attributes(name: "Registration", role: "registration", header: "<p>Welcome</p>", published: false)
       fields = built.form_fields.order(:position)
       expect(fields.map(&:name)).to eq([ "Are you a facilitator?", "Since when?" ])
@@ -156,6 +156,35 @@ RSpec.describe EventCopyService do
       expect(fields.second.parent_id).to eq(fields.first.id)
       expect(fields.second.resources).to contain_exactly(worksheet)
       expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ built ])
+    end
+
+    it "adds only the missing questions and options to a same-name form, keeping its id and answers" do
+      form = create(:form, name: "Registration", role: "registration")
+      facilitator = create(:form_field, form: form, name: "Are you a facilitator?", position: 1, field_identifier: "facilitator")
+      facilitator.form_field_answer_options.create!(option_name: "Yes")
+      facilitator.form_field_answer_options.create!(option_name: "No")
+      create(:form_field, form: form, name: "Since when?", position: 2, parent_id: facilitator.id)
+      create(:form_field, form: form, name: "Dietary needs", position: 3)
+      event.event_forms.create!(form: form, role: "registration")
+      blueprint = other_environment_blueprint(event)
+      # This environment's copy of the form is older: an earlier wording, one option
+      # and one follow-up question short, plus a question the source has since dropped.
+      facilitator.update!(name: "Facilitator?")
+      facilitator.form_field_answer_options.joins(:answer_option).where(answer_options: { name: "No" }).destroy_all
+      form.form_fields.find_by(name: "Since when?").destroy!
+      form.form_fields.find_by(name: "Dietary needs").update!(name: "Allergies")
+      answer = create(:form_answer, form_field: facilitator)
+
+      service = described_class.new(blueprint, match_by: :natural)
+      copy = service.call(start_on: new_start_on)
+
+      expect(copy.registration_form).to eq(form)
+      expect(service.form_changes).to eq(form => { created: false, questions: 2, options: 1 })
+      fields = form.form_fields.order(:position, :id)
+      expect(fields.map(&:name)).to eq([ "Facilitator?", "Since when?", "Allergies", "Dietary needs" ])
+      expect(fields.first.answer_options.map(&:name)).to contain_exactly("Yes", "No")
+      expect(fields.find_by(name: "Since when?").parent_id).to eq(facilitator.id)
+      expect(answer.reload.form_field).to eq(facilitator)
     end
 
     it "uses the target's form for a survey role rather than building a second one" do
@@ -168,7 +197,7 @@ RSpec.describe EventCopyService do
       copy = service.call(start_on: new_start_on)
 
       expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ survey ])
-      expect(service.created_forms).to be_empty
+      expect(service.form_changes).to eq(survey => { created: false, questions: 0, options: 0 })
     end
   end
 end

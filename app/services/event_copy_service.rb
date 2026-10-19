@@ -10,8 +10,9 @@ require "zlib"
 # The copy goes through a plain-JSON blueprint, so it can also cross environments:
 # `puts EventCopyService.console_script(event)` in one console prints a line to
 # paste into another, where linked records are matched by name/email, not id. That
-# payload also carries each linked form's questions, so a form the target lacks is
-# rebuilt there.
+# payload also carries each linked form's questions: a form the target lacks is
+# built there, and a form it has gains only the questions and options it's missing,
+# so its id — and every submission already on it — stays put.
 class EventCopyService
   BLUEPRINT_VERSION = 1
   COPY_TITLE_PREFIX = "Copy of ".freeze
@@ -31,7 +32,7 @@ class EventCopyService
   FORM_COLUMNS = %w[name role header sections].freeze
   UNCOPIED_FIELD_COLUMNS = %w[id form_id created_at updated_at created_by_id updated_by_id].freeze
 
-  attr_reader :warnings, :created_forms
+  attr_reader :warnings, :form_changes
 
   def self.copy(event, start_on:, title: nil)
     new(blueprint(event)).call(start_on: start_on, title: title)
@@ -86,7 +87,13 @@ class EventCopyService
     service = new(JSON.parse(Zlib.gunzip(Base64.strict_decode64(payload))), match_by: :natural)
     event = service.call(start_on: start_on, title: title)
     puts "Created event ##{event.id} \"#{event.title}\" starting #{event.starts_on} (unpublished)."
-    service.created_forms.each { |form| puts "  + created form ##{form.id} \"#{form.name}\"" }
+    service.form_changes.each do |form, change|
+      next unless change[:created] || change[:questions].positive? || change[:options].positive?
+
+      verb = change[:created] ? "created" : "added to"
+      counts = "#{change[:questions]} #{"question".pluralize(change[:questions])}, #{change[:options]} answer #{"option".pluralize(change[:options])}"
+      puts "  + #{verb} form ##{form.id} \"#{form.name}\": #{counts}"
+    end
     service.warnings.each { |warning| puts "  ! #{warning}" }
     event
   end
@@ -139,7 +146,7 @@ class EventCopyService
     @blueprint = blueprint
     @match_by = match_by
     @warnings = []
-    @created_forms = []
+    @form_changes = {}
     @forms = {}
   end
 
@@ -258,8 +265,20 @@ class EventCopyService
   # built) once.
   def find_form(ref)
     @forms.fetch(ref["id"]) do
-      @forms[ref["id"]] = resolve(Form, ref["id"], "Form \"#{ref["name"]}\"") { matching_form(ref) || build_form(ref) }
+      @forms[ref["id"]] = resolve(Form, ref["id"], "Form \"#{ref["name"]}\"") { portable_form(ref) }
     end
+  end
+
+  def portable_form(ref)
+    form = matching_form(ref)
+    definition = @blueprint.dig("form_definitions", ref["id"].to_s)
+    return form unless definition
+
+    created = form.nil?
+    form ||= Form.create!(definition["attributes"])
+    @form_changes[form] = { created: created, questions: 0, options: 0 }
+    add_missing_questions(form, definition["fields"])
+    form
   end
 
   # Each survey role belongs to one form, so the target's form for that role stands in.
@@ -270,29 +289,44 @@ class EventCopyService
     Form.survey(ref["role"]) if Form::SURVEY_ROLES.include?(ref["role"])
   end
 
-  def build_form(ref)
-    definition = @blueprint.dig("form_definitions", ref["id"].to_s)
-    return unless definition
-
-    form = Form.create!(definition["attributes"])
-    fields = definition["fields"].to_h do |data|
-      field = form.form_fields.create!(data["attributes"].except("parent_id"))
-      copy_field_options(field, data)
+  # Additive only: questions already on the form keep their id, wording, and
+  # answers; a question is the same when its field identifier or, failing that,
+  # its wording matches.
+  def add_missing_questions(form, definitions)
+    unmatched = form.form_fields.order(:position, :id).to_a
+    added = []
+    fields = definitions.to_h do |data|
+      field = take_matching_field(unmatched, data["attributes"])
+      unless field
+        field = form.form_fields.create!(data["attributes"].except("parent_id"))
+        added << data
+      end
+      add_missing_options(form, field, data)
       [ data["id"], field ]
     end
-    definition["fields"].each do |data|
+    added.each do |data|
       parent = fields[data["attributes"]["parent_id"]]
       fields[data["id"]].update!(parent_id: parent.id) if parent
     end
-    @created_forms << form
-    form
+    @form_changes[form][:questions] += added.size
   end
 
-  def copy_field_options(field, data)
-    data["answer_options"].each { |name| field.form_field_answer_options.create!(option_name: name) }
+  def take_matching_field(candidates, attributes)
+    identifier = attributes["field_identifier"].presence
+    match = (identifier && candidates.find { |field| field.field_identifier == identifier }) ||
+      candidates.find { |field| field.name == attributes["name"] }
+    candidates.delete(match)
+  end
+
+  def add_missing_options(form, field, data)
+    missing = data["answer_options"] - field.form_field_answer_options.map(&:name)
+    missing.each { |name| field.form_field_answer_options.create!(option_name: name) }
+    @form_changes[form][:options] += missing.size
     data["resources"].each do |link|
       resource = find_resource(link["resource"])
-      field.form_field_resources.create!(resource: resource, position: link["position"]) if resource
+      next if resource.nil? || field.form_field_resources.exists?(resource: resource)
+
+      field.form_field_resources.create!(resource: resource, position: link["position"])
     end
   end
 
