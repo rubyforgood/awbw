@@ -7,6 +7,8 @@ class Form < ApplicationRecord
   # payment" (the form role). Single source of truth so both ends stay in sync.
   BULK_PAYMENT_PUBLIC_NAME = "Pay for Other(s)".freeze
 
+  NAME_MAX_LENGTH = 255
+
   # Form roles whose standalone public submissions are agreement intake
   # scenarios with affiliation processing (ADR-0002): a standalone
   # registration-role form is the on-demand agreement (the registration flow,
@@ -61,6 +63,7 @@ class Form < ApplicationRecord
 
   before_validation :normalize_slug
 
+  validates :name, length: { maximum: NAME_MAX_LENGTH }
   validates :role, uniqueness: { message: "is already used by another form" }, if: :survey_role?
   validates :slug, uniqueness: true, allow_nil: true
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,

@@ -66,6 +66,8 @@ en:
     attributes:
       community_news:
         rhino_body: "Body / Description"
+      form_field:
+        name: "Question text"
       grant:
         funder_sgid: "Funder"
       workshop_variation:

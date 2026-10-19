@@ -13,8 +13,10 @@
     answers_on_file: "bg-white text-amber-600 border-amber-300"
   }
 %>
-<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> scroll-mt-24 border-b border-gray-100 py-3 hover:bg-gray-50"
-     <% if field.persisted? %>id="form_field_<%= field.id %>"<% end %>
+<% error_messages = field.errors.any? ? field.decorate.error_messages : [] %>
+<div class="nested-fields flex items-center gap-3 <%= field.group_header? ? 'pl-3 pr-6' : 'px-6' %> <%= "border-l-4 border-l-red-500" if error_messages.any? %> <%= "hidden" if field.marked_for_destruction? %> scroll-mt-24 border-b border-gray-100 py-3 hover:bg-gray-50"
+     <% if field.persisted? || error_messages.any? %>id="<%= field.decorate.anchor_id(f.index) %>"<% end %>
+     <% if error_messages.any? %>data-field-errors<% end %>
      data-sortable-id="<%= field.id %>"
      <% if field.section.present? %>data-section="<%= field.section %>"<% end %>
      <% if field.group_header? %>data-group-header<% end %>>
@@ -36,12 +38,13 @@
   <% if field.group_header? %>
     <%# Section headers never collect an answer, so they're never required. %>
     <%= f.hidden_field :required, value: false %>
-    <div class="flex-1 min-w-0" data-controller="field-options">
+    <div class="flex-1 min-w-0" data-controller="field-options"
+         <% if error_messages.any? %>data-field-options-expanded-value="true"<% end %>>
       <div class="flex items-start gap-3">
         <div class="flex-1 min-w-0">
           <%= f.text_area :name, required: true, rows: 1,
                 class: "w-full text-lg font-semibold text-gray-800 rounded border-gray-300 shadow-sm px-2 py-1",
-                placeholder: "Header text" %>
+                placeholder: max_length_placeholder("Header text", FormField::NAME_MAX_LENGTH) %>
         </div>
         <%= f.select :visibility, visibility_options,
               {},
@@ -54,19 +57,23 @@
           <i class="fa-solid fa-chevron-down transition-transform" data-field-options-target="icon"></i>
         </button>
       </div>
+      <%= render "forms/field_errors", messages: error_messages %>
 
       <div class="hidden mt-2 pb-2 flex flex-col gap-2" data-field-options-target="panel">
         <%= f.text_area :subtitle, rows: 2,
               class: "w-full text-sm text-gray-600 rounded border-gray-300 shadow-sm px-2 py-1",
-              placeholder: "Subtitle" %>
+              placeholder: max_length_placeholder("Subtitle", FormField::NOTE_MAX_LENGTH) %>
         <%= link_to_remove_association "Remove", f,
               class: "text-sm text-gray-400 hover:text-red-600 underline shrink-0 ml-auto" %>
       </div>
     </div>
   <% else %>
-    <div class="flex-1 min-w-0" data-controller="field-options answer-options">
+    <div class="flex-1 min-w-0" data-controller="field-options answer-options"
+         <% if error_messages.any? %>data-field-options-expanded-value="true"<% end %>
+         <% if field.errors.any? && field.decorate.answer_option_errors? %>data-answer-options-expanded-value="true"<% end %>>
       <div class="flex flex-wrap items-center gap-2">
-        <%= f.text_area :name, required: true, rows: 1, class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
+        <%= f.text_area :name, required: true, rows: 1, placeholder: max_length_placeholder("Question text", FormField::NAME_MAX_LENGTH),
+              class: "min-w-0 flex-[3_1_10rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm" %>
         <%
           type_order = %w[free_form_input_one_line free_form_input_paragraph single_select_radio single_select_dropdown multi_select_checkbox slider file_upload no_user_input group_header]
           type_options = type_order.map { |t| [ FormField::ANSWER_TYPE_LABELS[t] || t.titleize, t ] }
@@ -95,6 +102,7 @@
           <i class="fa-solid fa-chevron-down transition-transform" data-field-options-target="icon"></i>
         </button>
       </div>
+      <%= render "forms/field_errors", messages: error_messages %>
 
       <%= render "forms/dropdown_other_warning", field: field %>
 
@@ -136,10 +144,10 @@
               Subtitle/Hint sit next to the width control as one right-aligned cluster. %>
           <%= f.text_area :subtitle, rows: 1, placeholder: "Subtitle",
                 class: "ml-auto min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                title: "Optional subtitle shown under the field label" %>
+                title: "Optional subtitle shown under the field label (up to #{number_with_delimiter(FormField::NOTE_MAX_LENGTH)} characters)" %>
           <%= f.text_area :hint_text, rows: 1, placeholder: "Hint",
                 class: "min-w-0 flex-[0_1_7rem] rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
-                title: "Optional hint shown below the field input" %>
+                title: "Optional hint shown below the field input (up to #{number_with_delimiter(FormField::NOTE_MAX_LENGTH)} characters)" %>
           <%= f.select :width, width_options,
                 {},
                 class: "shrink-0 rounded border-gray-300 shadow-sm px-2 py-1 text-sm",
