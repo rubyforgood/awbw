@@ -1,8 +1,9 @@
 # Records a submission to a standalone, published form filled out at its public
 # pretty URL (see PublicFormsController). Unlike event registration there is no
-# event, role, or account — the respondent is find-or-created as a Person from
-# the form's name/email answers. Only a form set to anonymous (Form#anonymous?)
-# accepts a submission without all three, recording it with person: nil.
+# event or role. A logged-in respondent's submission belongs to their account;
+# otherwise the respondent is find-or-created as a Person from the form's
+# name/email answers. Only a form set to anonymous (Form#anonymous?) accepts a
+# submission without all three, recording it with person: nil — logged in or not.
 # Answers persist via FormSubmission#persist_answer.
 class PublicFormSubmission
   Result = Struct.new(:success?, :form_submission, :person, :errors, keyword_init: true)
@@ -13,23 +14,28 @@ class PublicFormSubmission
     "This form needs your name and email to complete your submission.".freeze
   ALREADY_SUBMITTED_MESSAGE = "This form was already submitted.".freeze
 
-  def self.call(form:, form_params:)
-    new(form:, form_params:).call
+  def self.call(form:, form_params:, person: nil)
+    new(form:, form_params:, person:).call
   end
 
-  def initialize(form:, form_params:)
+  def initialize(form:, form_params:, person: nil)
     @form = form
     @form_params = form_params || {}
+    @person = person
   end
 
   def call
-    return submit if @form.identified_by?(@form_params)
+    return submit if identified?
 
     # No user or source, so an unidentified submission leaves no creator or activity trail.
     Current.set(user: nil, source: nil) { submit }
   end
 
   private
+
+  def identified?
+    @form.identified_by?(@form_params) || (@person.present? && !@form.anonymous?)
+  end
 
   def submit
     ActiveRecord::Base.transaction do
@@ -174,9 +180,14 @@ class PublicFormSubmission
     @form_params[field.id.to_s]
   end
 
-  # Reuses an existing Person on an email + last-name match so a returning
-  # respondent isn't duplicated; nil when the form didn't collect name + email.
+  # A logged-in respondent is their own Person unless they left their identity
+  # incomplete on an anonymous form. Otherwise reuses an existing Person on an
+  # email + last-name match so a returning respondent isn't duplicated; nil when the
+  # form didn't collect name + email.
   def find_or_create_person
+    return nil unless identified?
+    return @person if @person
+
     first_name = field_value("first_name")&.strip.presence || field_value("legal_first_name")&.strip
     last_name = field_value("last_name")&.strip
     email = field_value("primary_email")&.strip&.downcase

@@ -37,7 +37,7 @@ class SmartFormFields
         [ "last_name", "Last name", "Sets the person's last name. Part of the duplicate-match key — matching is skipped entirely when this is blank." ],
         [ "pronouns", "Pronouns", "Sets the person's pronouns." ],
         [ "pronunciation", "Name pronunciation", "Sets the admin-only note on the person's profile for how to say their name." ],
-        [ "primary_email", "Email", "Sets the person's email, lowercased. Part of the duplicate-match key." ],
+        [ "primary_email", "Email", "Sets the person's email, lowercased. Part of the duplicate-match key. A field ID of \"email\" saves as this one." ],
         [ "primary_email_type", "Primary email type", "Sets whether the primary email is a work or personal address." ],
         [ "secondary_email", "Secondary email", "Sets the person's second email address." ],
         [ "secondary_email_type", "Secondary email type", "Sets whether the secondary email is a work or personal address." ],

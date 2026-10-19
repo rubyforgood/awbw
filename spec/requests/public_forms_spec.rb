@@ -197,6 +197,80 @@ RSpec.describe "PublicForms", type: :request do
     end
   end
 
+  describe "logged-in respondents" do
+    let(:user) { create(:user, :with_person) }
+    let(:person) { user.person }
+
+    def field_input_name(field)
+      "public_registration[form_fields][#{field.id}]"
+    end
+
+    before { sign_in user }
+
+    it "hides the Logged out only identity questions and ties the submission to their account" do
+      [ first_name_field, last_name_field, email_field ].each { |field| field.update!(visibility: :logged_out_only) }
+
+      get public_form_path(form.slug)
+      expect(response.body).not_to include(field_input_name(email_field))
+
+      expect { post public_form_path(form.slug), params: { public_registration: { Honeypot::FIELD_NAME => "", form_fields: {} } } }
+        .to change(FormSubmission, :count).by(1)
+        .and change(Person, :count).by(0)
+
+      expect(FormSubmission.last.person).to eq(person)
+    end
+
+    it "prefills the identity questions it still shows from their account" do
+      get public_form_path(form.slug)
+
+      expect(response.body).to include(%(value="#{person.first_name}"))
+      expect(response.body).to include(%(value="#{user.email}"))
+    end
+
+    it "ties the submission to their account even when they type different details" do
+      expect { post public_form_path(form.slug), params: submission_params(email: "someone-else@example.com") }
+        .not_to change(Person, :count)
+
+      expect(FormSubmission.last.person).to eq(person)
+    end
+
+    context "on a form that accepts anonymous responses" do
+      before do
+        [ first_name_field, last_name_field, email_field ].each { |field| field.update!(required: false, visibility: :logged_out_only) }
+      end
+
+      it "shows the identity questions prefilled and explains clearing them keeps it anonymous" do
+        get public_form_path(form.slug)
+
+        expect(response.body).to include(field_input_name(email_field))
+        expect(response.body).to include(%(value="#{user.email}"))
+        expect(response.body).to include("clear your name and email")
+      end
+
+      it "ties the submission to their account when they keep their details" do
+        post public_form_path(form.slug), params: submission_params(first: person.first_name, last: person.last_name, email: user.email)
+
+        expect(FormSubmission.last.person).to eq(person)
+      end
+
+      it "records an anonymous submission when they clear their details" do
+        expect { post public_form_path(form.slug), params: submission_params(first: "", last: "", email: "") }
+          .to change(FormSubmission, :count).by(1)
+
+        expect(FormSubmission.last.person).to be_nil
+      end
+
+      it "accepts the cleared submission when the prefilled confirm-email answer is left behind" do
+        confirm_field = create(:form_field, form: form, name: "Confirm email", field_identifier: "confirm_email")
+        params = submission_params(first: "", last: "", email: "")
+        params[:public_registration][:form_fields][confirm_field.id.to_s] = user.email
+
+        expect { post public_form_path(form.slug), params: params }.to change(FormSubmission, :count).by(1)
+        expect(FormSubmission.last.person).to be_nil
+      end
+    end
+  end
+
   describe "agreement-role forms always require identity" do
     let(:form) { create(:form, name: "On-demand agreement", slug: "collab", published: true, role: "registration") }
 
