@@ -1,6 +1,6 @@
 <%# Locals: f. %>
 <div class="mb-4">
-  <% if current_user&.super_user? %>
+  <% if allowed_to?(:manage?, f.object) %>
     <%= render "shared/author_credit_field", f: f,
                hint: "Deprecated: the author's profile sets how they're credited. Only Anonymous still applies to this item." %>
     <%= render "shared/author_credit_warning", record: f.object unless f.object.new_record? %>
