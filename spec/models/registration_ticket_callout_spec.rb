@@ -151,6 +151,26 @@ RSpec.describe RegistrationTicketCallout, type: :model do
     end
   end
 
+  describe "#display_from=" do
+    let(:set_in_pacific) { Time.find_zone("Pacific Time (US & Canada)").local(2026, 9, 10, 9) }
+
+    it "keeps the stored instant when the editor re-submits the same date from another zone" do
+      callout.display_from = set_in_pacific
+
+      Time.use_zone("Eastern Time (US & Canada)") { callout.display_from = "2026-09-10" }
+
+      expect(callout.display_from).to eq(set_in_pacific)
+    end
+
+    it "reads a changed date as midnight in the editing admin's zone" do
+      callout.display_from = set_in_pacific
+
+      Time.use_zone("Eastern Time (US & Canada)") { callout.display_from = "2026-09-12" }
+
+      expect(callout.display_from).to eq(Time.find_zone("Eastern Time (US & Canada)").local(2026, 9, 12))
+    end
+  end
+
   describe "linked resources" do
     it "links many resources in order and removes them with the callout" do
       callout = create(:registration_ticket_callout)

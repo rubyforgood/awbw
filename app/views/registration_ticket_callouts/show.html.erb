@@ -15,7 +15,7 @@
 
   <% if @callout.dripping? %>
     <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600">
-      This content will be available on <%= @callout.display_from.to_date.strftime("%B %-d, %Y") %>. Check back then.
+      This content will be available on <%= DripDate.label(@callout.display_from) %>. Check back then.
     </div>
   <% else %>
     <% if @callout.description.present? %>

@@ -186,9 +186,13 @@ class BuiltinCallouts
     program_time(event.end_date).change(year: target.year, month: target.month, day: target.day) - 30.minutes
   end
 
-  # Day math runs in the program zone so every viewer's zone derives the same default, across DST too.
+  # Defaults are computed in the program zone so they don't depend on which admin's zone seeds them (DST included).
   def program_time(time)
     time.in_time_zone(Event::PROGRAM_ZONE)
+  end
+
+  def multi_day?(event)
+    event.starts_on.present? && event.ends_on.present? && event.ends_on > event.starts_on
   end
 
   # Ordered built-in callout definitions. `hidden` / `display_from` are procs so
@@ -321,7 +325,7 @@ class BuiltinCallouts
         forms: ->(event) {
           [
             { form: Form.survey("day_1_survey"), display_from: survey_drip(event, 1) },
-            ({ form: Form.survey("day_2_survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2),
+            ({ form: Form.survey("day_2_survey"), display_from: survey_drip(event, 2) } if multi_day?(event)),
             { form: Form.survey("post_event_survey"), display_from: (event.end_date - 30.minutes if event.end_date) }
           ].compact
         }

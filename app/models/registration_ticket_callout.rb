@@ -192,6 +192,10 @@ class RegistrationTicketCallout < ApplicationRecord
     display_from.present? && display_from > now
   end
 
+  def display_from=(value)
+    super(DripDate.cast(display_from, value))
+  end
+
   # Font Awesome class for the leading icon, falling back to a sensible default
   # per callout type so a callout never renders without an icon.
   def display_icon_class
