@@ -367,7 +367,7 @@ RSpec.describe EventDecorator do
         create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
                                               display_from: 23.days.from_now)
         event.reload
-        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+        reveal = DripDate.label(event.videoconference_details_available_from)
 
         apple = Nokogiri::HTML.fragment(event.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
 
@@ -429,7 +429,7 @@ RSpec.describe EventDecorator do
         create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
                                               display_from: 23.days.from_now)
         event.reload
-        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+        reveal = DripDate.label(event.videoconference_details_available_from)
 
         apple = Nokogiri::HTML.fragment(
           event.decorate.calendar_links(show_videoconference_details: false, payment_pending: true)
@@ -469,7 +469,7 @@ RSpec.describe EventDecorator do
         create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
                                               display_from: 23.days.from_now)
         event.reload
-        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+        reveal = DripDate.label(event.videoconference_details_available_from)
 
         doc = Nokogiri::HTML.fragment(event.decorate.videoconference_calendar_pending_note_html("/registration/abc/ticket"))
         link = doc.at_css("a")
