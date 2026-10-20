@@ -184,6 +184,41 @@ RSpec.describe "Callout inline form", type: :request do
         expect(FormSubmission.last.person).to be_nil
       end
 
+      context "with activity tracking on, as in production" do
+        # The test client reads as a bot, which Ahoy otherwise skips.
+        around do |example|
+          Ahoy.track_bots = true
+          example.run
+        ensure
+          Ahoy.track_bots = false
+        end
+
+        it "records no activity events for a logged-in registrant's anonymous submission" do
+          sign_in registration.registrant.user
+
+          expect { post_answers(identity(address: "")) }
+            .not_to change { Ahoy::Event.where(resource_type: %w[FormSubmission FormAnswer]).count }
+        end
+
+        it "strips the registrant from the activity log when a credited submission goes anonymous" do
+          user = registration.registrant.user
+          sign_in user
+          post_answers(identity)
+          submission = FormSubmission.last
+          events = Ahoy::Event.where(resource_type: "FormSubmission", resource_id: submission.id)
+            .or(Ahoy::Event.where(resource_type: "FormAnswer", resource_id: submission.form_answers.select(:id)))
+          expect(events.where(user_id: user.id)).to exist
+
+          post_answers(identity(address: ""))
+
+          expect(events.reload.pluck(:user_id, :visit_id).flatten).to all(be_nil)
+          events.reload.each do |event|
+            tracked = event.properties.slice("attributes", "changes").values.flat_map(&:keys)
+            expect(tracked).not_to include("person_id", "created_by_id", "updated_by_id")
+          end
+        end
+      end
+
       context "set to logged out only, with the registrant logged in" do
         before do
           [ first_name, last_name, email ].each { |f| f.update!(visibility: :logged_out_only) }

@@ -62,7 +62,8 @@ module EventRegistrationServices
     private
 
     # A credited submission edited down to a partial identity is detached from the
-    # registrant rather than duplicated, so their earlier answers go anonymous too.
+    # registrant rather than duplicated, so their earlier answers — and the activity
+    # log of them — go anonymous too.
     def record_anonymously(person)
       event = @registration.event
       return @already_completed = true if FormCompletion.exists?(person:, form: @form, event:)
@@ -75,7 +76,10 @@ module EventRegistrationServices
           @edited = @submission.present?
           @submission ||= FormSubmission.new(form: @form, event:, role: @form.role)
           @submission.update!(person: nil, created_by_id: nil, updated_by_id: nil)
-          @submission.form_answers.update_all(created_by_id: nil, updated_by_id: nil) if @edited
+          if @edited
+            @submission.form_answers.update_all(created_by_id: nil, updated_by_id: nil)
+            Analytics::AnonymizeSubmissionEvents.call(@submission)
+          end
           @submission.record_callout_collection!(@callout)
           save_answers
           FormCompletion.record!(person:, form: @form, event:)
