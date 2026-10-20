@@ -17,7 +17,7 @@ class IssueMembershipInvoicesJob < ApplicationJob
   def expiring_invoices
     MembershipInvoice
       .joins(:membership)
-      .preload(:membership)
+      .preload(:membership, :allocations)
       .where(memberships: { autorenewal_cancelled_at: nil })
       .expiring_between(Date.current, Date.current + Membership::RENEWAL_WINDOW_DAYS)
   end
