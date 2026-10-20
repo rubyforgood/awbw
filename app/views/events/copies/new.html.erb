@@ -3,7 +3,7 @@
   <div class="mb-4">
     <%= link_to "← Edit event", edit_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
   </div>
-  <h1 class="text-primary font-display mb-2 text-3xl font-semibold tracking-tight">Copy event</h1>
+  <h1 class="text-primary mb-2 font-display text-3xl font-semibold tracking-tight">Copy event</h1>
   <p class="mb-6 text-sm text-gray-600">
     Makes an unpublished copy of <strong><%= @event.title %></strong> with its settings, ticket callouts, forms,
     staff, tags, and images. Registrations and payments are not copied. Every deadline and drip date moves with
