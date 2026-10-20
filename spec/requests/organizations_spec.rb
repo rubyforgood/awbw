@@ -209,7 +209,7 @@ RSpec.describe "/organizations", type: :request do
       expect(page).not_to have_content("Direct Sector 1")
       expect(page).to have_content("Not editable here")
       expect(page).not_to have_css("[name*='sectorable_items_attributes']")
-      expect(page).not_to have_css("[name='organization[primary_age_category_ids][]']")
+      expect(page).not_to have_css("[name='organization[category_ids][]']")
     end
 
     describe "profile display preferences" do
