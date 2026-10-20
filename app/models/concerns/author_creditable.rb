@@ -2,9 +2,9 @@ module AuthorCreditable
   extend ActiveSupport::Concern
 
   # The credited person's profile decides how a credit renders. A record's stored
-  # preference is the submitter's request, recorded at submission and surfaced on the
-  # author credit divergences page for an admin to apply to the profile — it does not
-  # drive display on its own. "anonymous" (either side) is always honored.
+  # preference is a snapshot taken at submission, surfaced on the author credit
+  # divergences page when the profile later drifts — it does not drive display on its
+  # own. "anonymous" (either side) is always honored.
   AUTHOR_CREDIT_PREFERENCES = %w[full_name first_name_last_initial first_name_only last_name_only anonymous].freeze
 
   ANONYMOUS = "anonymous"
@@ -27,8 +27,8 @@ module AuthorCreditable
   FACILITATOR_AUTHOR_LABEL = "AWBW Facilitator".freeze
   ORG_AUTHOR_LABEL = "AWBW Staff".freeze
 
-  # Submitter-facing wording. Blank is the default and means "follow my profile" —
-  # anything else is a request an admin applies to the profile on the divergences page.
+  # Submitter-facing wording. A non-admin's pick is saved to their profile
+  # (PersonServices::ApplyAuthorCreditPreference).
   SUBMITTER_FORM_OPTIONS = {
     "My full name" => "full_name",
     "My first name and last initial" => "first_name_last_initial",

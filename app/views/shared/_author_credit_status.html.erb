@@ -1,15 +1,21 @@
-<%# Interim: facilitators can't edit their own profile yet, so they record a credit
-    preference per submission here. The profile still decides what actually renders —
-    a choice that differs shows up on the author credit divergences page for an admin
-    to apply to the profile. Locals: f. %>
+<%# Locals: f. %>
+<% person = current_user&.person %>
 <div class="mb-4">
-  <%= f.input :author_credit_preference,
-              as: :select,
-              collection: AuthorCreditable::SUBMITTER_FORM_OPTIONS.to_a,
-              include_blank: "Use my profile setting",
-              label: "How should we credit you?",
-              hint: "We'll apply this to your profile so it covers everything you share." %>
-
-  <%= render "shared/author_credit_preview" %>
-  <%= render "shared/author_credit_warning", record: f.object unless f.object.new_record? %>
+  <% if current_user&.super_user? %>
+    <%= render "shared/author_credit_field", f: f %>
+    <%= render "shared/author_credit_warning", record: f.object unless f.object.new_record? %>
+  <% elsif person %>
+    <%= f.input :author_credit_preference,
+                as: :select,
+                collection: AuthorCreditable::SUBMITTER_FORM_OPTIONS.to_a,
+                include_blank: false,
+                selected: person.effective_author_credit_preference,
+                label: "How should we credit you?",
+                hint: "Saved to your profile, so it applies to everything you share across the site." %>
+  <% else %>
+    <p class="text-sm text-gray-500">
+      You'll be credited as <strong><%= AuthorCreditable::FACILITATOR_AUTHOR_LABEL %></strong> until
+      an admin links this account to a person.
+    </p>
+  <% end %>
 </div>

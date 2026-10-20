@@ -43,6 +43,7 @@ class WorkshopVariationIdeasController < ApplicationController
     authorize! @workshop_variation_idea
 
     if @workshop_variation_idea.save
+      PersonServices::ApplyAuthorCreditPreference.call(person: current_user.person, preference: workshop_variation_idea_params[:author_credit_preference]) unless current_user.super_user?
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation_idea,
         person: @workshop_variation_idea.created_by&.person,
