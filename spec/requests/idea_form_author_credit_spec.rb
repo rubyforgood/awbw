@@ -1,100 +1,56 @@
 require "rails_helper"
 
-# A non-admin's credit choice on an idea form is their profile setting, so it governs
-# every credit they carry. Admins get the per-item field instead.
+# The profile decides how a submitter is credited, so the idea forms only tell a
+# non-admin what that is. The deprecated per-item field is admin-only.
 RSpec.describe "Idea form author credit", type: :request do
-  let(:workshop) { create(:workshop) }
-  let(:organization) { create(:organization) }
-  let(:windows_type) { create(:windows_type) }
-
   FORMS = {
-    "story idea" => {
-      new_path: :new_story_idea_path, create_path: :story_ideas_path, param_key: :story_idea, model: StoryIdea,
-      attributes: ->(spec) {
-        { title: "A story", rhino_body: "<p>Body</p>", permission_given: true,
-          windows_type_id: spec.windows_type.id, workshop_id: spec.workshop.id, organization_id: spec.organization.id }
-      }
-    },
-    "workshop variation idea" => {
-      new_path: :new_workshop_variation_idea_path, create_path: :workshop_variation_ideas_path,
-      param_key: :workshop_variation_idea, model: WorkshopVariationIdea,
-      attributes: ->(spec) {
-        { name: "A variation", rhino_body: "<p>Body</p>", permission_given: true,
-          windows_type_id: spec.windows_type.id, workshop_id: spec.workshop.id, organization_id: spec.organization.id }
-      }
-    }
+    "story idea" => { path: :new_story_idea_path, param_key: :story_idea },
+    "workshop variation idea" => { path: :new_workshop_variation_idea_path, param_key: :workshop_variation_idea }
   }.freeze
 
   FORMS.each do |label, config|
-    describe "the #{label} form" do
-      let(:submitter) { create(:user, :with_person) }
-      let(:person) { submitter.person }
-
-      def submit(config, preference)
-        attributes = config[:attributes].call(self).merge(author_credit_preference: preference)
-        post public_send(config[:create_path]), params: { config[:param_key] => attributes }
-      end
+    describe "the new #{label} form" do
+      let(:field_name) { "#{config[:param_key]}[author_credit_preference]" }
 
       context "as a non-admin" do
+        let(:submitter) { create(:user, :with_person) }
+        let(:person) { submitter.person }
+
         before { sign_in submitter }
 
-        it "offers the profile setting, preselected and with no per-item default" do
-          person.update!(display_name_preference: "first_name_only")
+        it "hides the per-item credit field" do
+          get public_send(config[:path])
 
-          get public_send(config[:new_path])
-
-          page = Capybara.string(response.body)
-          select = page.find("select[name='#{config[:param_key]}[author_credit_preference]']")
-          expect(select.find("option[selected]").value).to eq("first_name_only")
-          expect(response.body).not_to include("Use my profile setting")
-          expect(response.body).not_to include("None (follow profile)")
-          expect(response.body).to include("Saved to your profile")
+          expect(Capybara.string(response.body)).not_to have_select(field_name)
         end
 
-        it "preselects \"Don't credit me by name\" when the profile contributes anonymously" do
+        it "states how the submitter will be credited, formatted by their profile" do
+          person.update!(display_name_preference: "first_name_last_initial")
+
+          get public_send(config[:path])
+
+          credit = ERB::Util.h("#{person.first_name} #{person.last_name.first}.")
+          expect(response.body.squish).to include("credited as <strong>#{credit}</strong>, from your profile")
+        end
+
+        it "names the generic credit when the profile suppresses credits" do
           person.update!(anonymous_contributions: true)
 
-          get public_send(config[:new_path])
+          get public_send(config[:path])
 
-          page = Capybara.string(response.body)
-          select = page.find("select[name='#{config[:param_key]}[author_credit_preference]']")
-          expect(select.find("option[selected]").value).to eq("anonymous")
-        end
-
-        it "turns on anonymous contributions for the whole profile" do
-          submit(config, "anonymous")
-
-          expect(person.reload.anonymous_contributions).to be(true)
-          expect(config[:model].last.author_credit_preference).to eq("anonymous")
-        end
-
-        it "sets the profile's name format and clears anonymous contributions" do
-          person.update!(anonymous_contributions: true)
-
-          submit(config, "first_name_last_initial")
-
-          person.reload
-          expect(person.display_name_preference).to eq("first_name_last_initial")
-          expect(person.anonymous_contributions).to be(false)
+          expect(response.body.squish)
+            .to include("credited as <strong>#{AuthorCreditable::FACILITATOR_AUTHOR_LABEL}</strong>, from your profile")
         end
       end
 
       context "as an admin" do
-        let(:admin) { create(:user, :admin, :with_person) }
+        before { sign_in create(:user, :admin, :with_person) }
 
-        before { sign_in admin }
+        it "shows the per-item credit field, marked deprecated" do
+          get public_send(config[:path])
 
-        it "shows the per-item credit field" do
-          get public_send(config[:new_path])
-
-          expect(response.body).to include("None (follow profile)")
-          expect(response.body).not_to include("Saved to your profile")
-        end
-
-        it "leaves the admin's own profile alone" do
-          expect { submit(config, "anonymous") }
-            .not_to(change { admin.person.reload.anonymous_contributions })
-          expect(config[:model].last.author_credit_preference).to eq("anonymous")
+          expect(Capybara.string(response.body)).to have_select(field_name)
+          expect(response.body).to include("Deprecated")
         end
       end
     end
@@ -105,7 +61,7 @@ RSpec.describe "Idea form author credit", type: :request do
 
     get new_story_idea_path
 
-    expect(response.body).to include(AuthorCreditable::FACILITATOR_AUTHOR_LABEL)
-    expect(response.body).not_to include("How should we credit you?")
+    expect(response.body.squish)
+      .to include("credited as <strong>#{AuthorCreditable::FACILITATOR_AUTHOR_LABEL}</strong> until an admin links this account")
   end
 end

@@ -1,0 +1,11 @@
+<% person = current_user&.person %>
+<p class="mt-1 text-sm text-gray-500">
+  <% if person %>
+    You'll be credited as
+    <strong><%= person.anonymous_contributions? ? AuthorCreditable::FACILITATOR_AUTHOR_LABEL : person.name %></strong>,
+    from your profile.
+  <% else %>
+    You'll be credited as <strong><%= AuthorCreditable::FACILITATOR_AUTHOR_LABEL %></strong> until
+    an admin links this account to a person.
+  <% end %>
+</p>

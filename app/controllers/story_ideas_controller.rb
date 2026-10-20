@@ -45,7 +45,6 @@ class StoryIdeasController < ApplicationController
     StoryIdea.transaction do
       if @story_idea.save
         assign_associations(@story_idea)
-        PersonServices::ApplyAuthorCreditPreference.call(person: current_user.person, preference: story_idea_params[:author_credit_preference]) unless current_user.super_user?
         NotificationServices::CreateNotification.call(
           noticeable: @story_idea,
           person: @story_idea.created_by&.person,
