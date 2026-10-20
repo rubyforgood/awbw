@@ -114,13 +114,12 @@ class WorkshopVariationIdeasController < ApplicationController
   end
 
   def workshop_variation_idea_params
-    permitted = params.require(:workshop_variation_idea).permit(
+    params.require(:workshop_variation_idea).permit(
       :name, :rhino_body, :youtube_url,
       :permission_given, :author_credit_preference,
       :organization_id, :windows_type_id, :workshop_id, :created_by_id, :updated_by_id,
       primary_asset_attributes: [ :id, :file, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ]
     )
-    allowed_to?(:manage?, WorkshopVariationIdea) ? permitted : permitted.except(*AuthorCreditable::PER_ITEM_PREFERENCE_ATTRIBUTES)
   end
 end

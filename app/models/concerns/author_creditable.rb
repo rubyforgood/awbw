@@ -27,9 +27,6 @@ module AuthorCreditable
   FACILITATOR_AUTHOR_LABEL = "AWBW Facilitator".freeze
   ORG_AUTHOR_LABEL = "AWBW Staff".freeze
 
-  # Per-item credit columns only an admin may set; everyone else gets a profile snapshot.
-  PER_ITEM_PREFERENCE_ATTRIBUTES = %i[author_credit_preference co_author_credit_preference].freeze
-
   ADMIN_FORM_OPTIONS = {
     "Full name" => "full_name",
     "First name, last initial" => "first_name_last_initial",

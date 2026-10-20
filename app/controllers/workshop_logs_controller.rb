@@ -198,7 +198,7 @@ class WorkshopLogsController < ApplicationController
   # end
 
   def workshop_log_params
-    permitted = params.require(:workshop_log).permit(
+    params.require(:workshop_log).permit(
       :children_ongoing, :children_first_time, :teens_ongoing, :teens_first_time,
       :adults_ongoing, :adults_first_time, :organization_id, :workshop_held_on,
       :workshop_id, :windows_type_id, :external_workshop_title,
@@ -212,6 +212,5 @@ class WorkshopLogsController < ApplicationController
       report_form_field_answers_attributes: [ :id, :form_field_id, :answer_option_id,
                                              :answer, :workshop_log_id, :_destroy ],
       gallery_assets_attributes: [ :id, :file, :_destroy ])
-    allowed_to?(:manage?, WorkshopLog) ? permitted : permitted.except(*AuthorCreditable::PER_ITEM_PREFERENCE_ATTRIBUTES)
   end
 end
