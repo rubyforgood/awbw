@@ -51,16 +51,7 @@ class PeopleController < ApplicationController
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
 
-    @membership = membership_for(@person)
-    membership_sub = @person.payment_processor&.subscription
-
-    @membership_autopay = @membership && membership_sub.present? &&
-                          @person.payment_processor&.subscribed?
-
-    @membership_autopay_cancelling = @membership_autopay &&
-                                     membership_sub.canceled? &&
-                                     !membership_sub.ended?
-
+    load_membership
     set_checkout_flash
 
     # Handle paginated sections for Turbo Frame requests
@@ -711,14 +702,21 @@ class PeopleController < ApplicationController
     authorized(params.require(:person))
   end
 
-  def membership_for(person)
-    return unless Membership.enabled? && allowed_to?(:show?, person)
+  def load_membership
+    return unless Membership.enabled? && allowed_to?(:own_record?, @person)
 
-    person.current_membership&.decorate
+    @membership = @person.current_membership&.decorate
+    return unless @membership && allowed_to?(:manage_subscription?, @membership)
+
+    processor = @person.payment_processor
+    membership_sub = processor&.subscription
+
+    @membership_autopay = membership_sub.present? && processor&.subscribed?
+    @membership_autopay_cancelling = @membership_autopay &&
+                                     membership_sub.canceled? &&
+                                     !membership_sub.ended?
   end
 
-  # Stripe redirects back here with an outcome param; each checkout names its own
-  # so a one-off invoice payment doesn't land on the subscription's copy.
   def set_checkout_flash
     if params[:checkout] == "success"
       flash[:notice] = "Thank you for your donation!"

@@ -35,6 +35,17 @@ RSpec.describe "Person profile membership card", type: :request do
     expect(response.body).to include(memberships_subscription_checkouts_path)
   end
 
+  it "offers the manage-autopay action to the owner when subscribed" do
+    membership = create(:membership, person: person)
+    subscribe_to(membership)
+
+    sign_in user
+    get person_path(person)
+
+    expect(response.body).to include("Manage autopay")
+    expect(response.body).to include(memberships_billing_portals_path)
+  end
+
   it "hides the action buttons from an admin viewing someone else's profile" do
     create(:membership, person: person)
     sign_in create(:user, :admin)
