@@ -36,11 +36,17 @@ module PersonServices
     CONTACT_TYPES = { "home" => "personal", "personal" => "personal", "cell" => "personal",
                       "mobile" => "personal", "work" => "work", "business" => "work",
                       "professional" => "work", "mailing" => "mailing" }.freeze
+    # Answers to "which kind of email is this?" that aren't a kind at all.
+    PRECEDENCE_TYPES = %w[preferred primary main].freeze
     EMAIL_PATTERN = /[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/
     # Both archive fields hold an address (FmRolodex::PORTAL_FIELDS maps each to
     # people.email), the primary one first, so it becomes the person's own email.
     EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
     STRING_LIMIT = 255
+    # A note lands in a comment's TEXT body rather than a varchar, so it gets its own, far
+    # larger ceiling — long enough that no real note reaches it.
+    TEXT_LIMIT = 10_000
+    NOTES_OMISSION = "\u2026 (the rest of this note is in the FileMaker record)"
 
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
     # Both primary fields can name either kind of tag, so each kind reads the same two
@@ -132,6 +138,7 @@ module PersonServices
       return failed(person, label) unless person.save
 
       kept.concat(tag_service_areas(person, rolodex.data))
+      note_comment(person, rolodex)
       note_differences(person, rolodex, label, kept) if kept.any?
       true
     end
@@ -150,6 +157,7 @@ module PersonServices
       return record(:failed, "#{label}: #{person.errors.full_messages.to_sentence}") unless person.save
 
       tag_service_areas(person, data)
+      note_comment(person, rolodex)
       # Tagging touches the person, so the archive's dates are written once more here —
       # update_columns, so the touch doesn't win.
       timestamps = archive_timestamps(data)
@@ -165,8 +173,7 @@ module PersonServices
         racial_ethnic_identity: clip(data["Ethnicity"]),
         date_of_birth: parse_date(data["DateOfBirth"]),
         email_type: email_type(data["EmailType"]),
-        member_since: member_since(data),
-        notes: data["Comments"].presence
+        member_since: member_since(data)
       }
     end
 
@@ -222,13 +229,30 @@ module PersonServices
       { created_at: entered, updated_at: parse_date(data["DateTimeModified"]) || entered }.compact
     end
 
-    # A typed value the portal has no word for ("Preferred", a name) still says the
-    # archive typed it, so it reads as unknown; only a blank stays untyped.
+    # Which kind of email the archive says this is. A word that says precedence rather than
+    # kind leaves the type unrecorded: "Preferred" says this is the address to use — which
+    # the email's own slot already says — and nothing about work or personal. A kind we have
+    # no word for ("Attn: …", a name) does say someone recorded one, so it reads as unknown;
+    # a blank stays untyped.
     def email_type(value)
       key = value.to_s.strip.downcase
-      return if key.blank?
+      return if key.blank? || PRECEDENCE_TYPES.include?(key)
 
       CONTACT_TYPES[key].presence_in(Person::CONTACT_TYPES) || Person::UNKNOWN_CONTACT_TYPE
+    end
+
+    # The archive's note about a contact is a note someone wrote on a date, not a profile
+    # field, so it lands as a comment on the person — the same counterpart the archive's own
+    # Notes table has (FmRolodex::PORTAL_COUNTERPARTS). That also keeps it clear of
+    # people.notes, which staff write in themselves, so neither has to win. The body is a
+    # TEXT column counted in bytes and the archive's Comments has no ceiling of its own, so
+    # one that runs past the cap says where the whole of it still is.
+    def note_comment(person, rolodex)
+      body = rolodex.data["Comments"].to_s.strip
+      return if body.blank?
+
+      Comment.create!(commentable: person, topic: "FileMaker Rolodex #{rolodex.fm_id}",
+                      body: body.truncate(TEXT_LIMIT, omission: NOTES_OMISSION))
     end
 
     # FileMaker keeps the facilitator's start as a separate month and year; the portal

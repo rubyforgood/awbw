@@ -117,7 +117,7 @@ class FmRolodex < ApplicationRecord
     "BestTimeToCall" => "people.best_time_to_call",
     "DateOfBirth" => "people.date_of_birth",
     "Ethnicity" => "people.racial_ethnic_identity",
-    "Comments" => "people.notes",
+    "Comments" => "a comment on the person",
     "Title" => "affiliations.title",
     "FacilitatorSinceMonth" => "people.member_since (with FacilitatorSinceYear)",
     "FacilitatorSinceYear" => "people.member_since (with FacilitatorSinceMonth)",
