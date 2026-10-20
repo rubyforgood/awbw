@@ -101,6 +101,20 @@ RSpec.describe EventCopyService do
       expect(service.warnings).to include(/PrimaryAsset image not copied/)
     end
 
+    it "reports a missing record once however many places link to it" do
+      resource = create(:resource, title: "Worksheet")
+      [ "Bring supplies", "Read first" ].each do |title|
+        callout = create(:registration_ticket_callout, event: event, title: title)
+        callout.registration_ticket_callout_resources.create!(resource: resource)
+      end
+      service = described_class.for_event(event)
+      resource.destroy!
+
+      service.call(start_on: new_start_on)
+
+      expect(service.warnings).to eq([ "Resource \"Worksheet\" not found — skipped" ])
+    end
+
     it "leaves registrations and the source event alone" do
       create(:event_registration, event: event)
 
@@ -197,6 +211,21 @@ RSpec.describe EventCopyService do
       expect(fields.first.answer_options.map(&:name)).to contain_exactly("Yes", "No")
       expect(fields.find_by(name: "Since when?").parent_id).to eq(facilitator.id)
       expect(answer.reload.form_field).to eq(facilitator)
+    end
+
+    it "warns when linking a published form to the copy takes its public link offline" do
+      source_form = create(:form, name: "Registration", role: "registration")
+      event.event_forms.create!(form: source_form, role: "registration")
+      blueprint = other_environment_blueprint(event)
+      source_form.destroy!
+      live = create(:form, name: "Registration", role: "registration", slug: "registration", published: true)
+
+      service = described_class.new(blueprint, match_by: :natural)
+      copy = service.call(start_on: new_start_on)
+
+      expect(copy.registration_form).to eq(live)
+      expect(live.reload).not_to be_published
+      expect(service.warnings).to include(/Form "Registration" was published/)
     end
 
     it "uses the target's form for a survey role rather than building a second one" do

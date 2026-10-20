@@ -192,8 +192,20 @@ class EventCopyService
   def copy_event_forms(event)
     @blueprint["event_forms"].each do |link|
       form = find_form(link["form"])
-      event.event_forms.create!(form: form, role: link["role"]) if form
+      next unless form
+
+      warn_public_link_retired(form)
+      event.event_forms.create!(form: form, role: link["role"])
     end
+  end
+
+  # EventForm unpublishes a published form the moment it's linked, taking its
+  # public /f/:slug link offline — surface that so whoever ran the import knows
+  # a live form went dark.
+  def warn_public_link_retired(form)
+    return unless form.published?
+
+    add_warning("Form \"#{form.name}\" was published — linking it to the copy took its public link offline")
   end
 
   def copy_tags(event)
@@ -240,7 +252,7 @@ class EventCopyService
 
   def duplicate_blob(event, data)
     blob = ActiveStorage::Blob.find_by(id: data["blob_id"])
-    return @warnings << "#{data["type"]} image (blob #{data["blob_id"]}) not found" unless blob
+    return add_warning("#{data["type"]} image (blob #{data["blob_id"]}) not found") unless blob
 
     blob.open do |file|
       asset = event.assets.build(type: data["type"], title: data["title"])
@@ -248,15 +260,15 @@ class EventCopyService
       asset.save!
     end
   rescue ActiveStorage::Error, ActiveRecord::RecordInvalid => e
-    @warnings << "#{data["type"]} image not copied: #{e.message}"
+    add_warning("#{data["type"]} image not copied: #{e.message}")
   end
 
   def download_asset(event, data)
-    return @warnings << "#{data["type"]} image has no download URL" if data["url"].blank?
+    return add_warning("#{data["type"]} image has no download URL") if data["url"].blank?
 
     AssetUrlImporter.new(url: data["url"], owner: event, type: data["type"], title: data["title"]).call
   rescue AssetUrlImporter::Error, ActiveRecord::RecordInvalid => e
-    @warnings << "#{data["type"]} image not copied: #{e.message}"
+    add_warning("#{data["type"]} image not copied: #{e.message}")
   end
 
   def find_location
@@ -360,7 +372,13 @@ class EventCopyService
   # reported rather than failing the whole copy.
   def resolve(model, id, label)
     record = @match_by == :id ? model.find_by(id: id) : yield
-    @warnings << "#{label} not found — skipped" unless record
+    add_warning("#{label} not found — skipped") unless record
     record
+  end
+
+  # One line per problem: the same missing record is routinely referenced from
+  # several callouts, questions, or forms.
+  def add_warning(message)
+    @warnings |= [ message ]
   end
 end
