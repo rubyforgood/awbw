@@ -673,23 +673,6 @@ RSpec.describe Person, type: :model do
       end
     end
 
-    context "membership_status" do
-      it "paid: includes people with a covered current invoice" do
-        member = create(:person, first_name: "Paid", last_name: "Member")
-        create(:membership_invoice, :comped, membership: create(:membership, person: member))
-        results = Person.search_by_params(membership_status: "paid")
-        expect(results).to include(member)
-      end
-
-      it "overdue: includes people owing on a current invoice whose term has started" do
-        member = create(:person, first_name: "Overdue", last_name: "Member")
-        create(:membership_invoice, membership: create(:membership, person: member),
-                                    start_date: 60.days.ago, end_date: 305.days.from_now)
-        results = Person.search_by_params(membership_status: "overdue")
-        expect(results).to include(member)
-      end
-    end
-
     context "facilitator_status" do
       # person_alice and person_bob each already have one active facilitator affiliation.
 

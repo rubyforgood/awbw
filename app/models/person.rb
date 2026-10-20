@@ -334,22 +334,6 @@ class Person < ApplicationRecord
     when "sector_leader" then sector_leaders
     else all
     end }
-  # People whose membership/current invoice is in the given state.
-  scope :membership_active, -> { where(id: Membership.where("end_date IS NULL OR end_date >= ?", Date.current).select(:person_id)) }
-  scope :membership_inactive, -> {
-    where(id: Membership.where("end_date IS NOT NULL AND end_date < ?", Date.current).select(:person_id)) }
-  scope :membership_paid, -> {
-    where(id: MembershipInvoice.active_on.paid_in_full.joins(:membership).select("memberships.person_id")) }
-  scope :membership_overdue, -> {
-    where(id: MembershipInvoice.active_on.overdue.joins(:membership).select("memberships.person_id")) }
-  scope :by_membership_status, ->(status) {
-    case status
-    when "active" then membership_active
-    when "inactive" then membership_inactive
-    when "paid" then membership_paid
-    when "overdue" then membership_overdue
-    else all
-    end }
 
   ROLE_FILTER_OPTIONS = [
     [ "Blog contributors", "blog_contributor" ],
@@ -358,13 +342,6 @@ class Person < ApplicationRecord
     [ "Workshop authors", "workshop_author" ],
     [ "Workshop log authors", "workshop_log_author" ],
     [ "Workshop variation authors", "workshop_variation_author" ]
-  ].freeze
-
-  MEMBERSHIP_STATUS_FILTER_OPTIONS = [
-    [ "Active", "active" ],
-    [ "Inactive", "inactive" ],
-    [ "Paid", "paid" ],
-    [ "Overdue", "overdue" ]
   ].freeze
 
   FACILITATOR_STATUS_FILTER_OPTIONS = [
@@ -381,7 +358,6 @@ class Person < ApplicationRecord
     results = results.shared_contact_search(params[:shared_contact_info]) if params[:shared_contact_info].present?
     results = results.by_role(params[:role]) if params[:role].present?
     results = results.by_facilitator_status(params[:facilitator_status]) if params[:facilitator_status].present?
-    results = results.by_membership_status(params[:membership_status]) if params[:membership_status].present?
     results = results.subscribed_to_topic(params[:topic_subscription_type_id]) if params[:topic_subscription_type_id].present?
     results = results.with_sector_ids(params[:sector_ids]) if params[:sector_ids].present?
     results = results.shared_sector_ids(params[:shared_sector_ids]) if params[:shared_sector_ids].present?

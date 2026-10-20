@@ -330,7 +330,7 @@ RSpec.describe PersonPolicy, type: :policy do
       ActionController::Parameters.new(
         contact_info: "ada", role: "story_authors", staff_tag_ids: [ "1" ],
         topic_subscription_type_id: [ "2" ], facilitator_status: "active",
-        membership_status: "paid", sector_ids: [ "4" ], age_range_ids: [ "5" ],
+        sector_ids: [ "4" ], age_range_ids: [ "5" ],
         organization_name: "Acme", organization_id: "3"
       )
     end

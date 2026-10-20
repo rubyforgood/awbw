@@ -19,7 +19,7 @@ class PersonPolicy < ApplicationPolicy
   # carry an admin-only staff tag or subscription. The filter bar renders them
   # behind the same admin gate the :index params_filter enforces.
   ADMIN_ONLY_FILTERS = %i[
-    role facilitator_status membership_status
+    role facilitator_status
     staff_tag_ids topic_subscription_type_id
   ].freeze
 
