@@ -5,8 +5,8 @@ released_on: 2026-10-19
 pr_number: 2741
 summary: >-
   Workshop settings are no longer their own tag on people, organizations, or event
-  dashboards. When we bring in the FileMaker archive, each setting comes in as the
-  matching additional sector instead.
+  dashboards. A person's workshop settings, and those in the FileMaker archive, come
+  in as the matching additional sectors instead.
 pro_tips:
   - "For example, \"Hospitals\" becomes Health/Medical and \"With Staff\" becomes Staff/Organizational Development."
   - "Settings that say where or how someone works, like \"Virtually\" or \"Home visits\", aren't brought in."
