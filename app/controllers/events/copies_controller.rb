@@ -16,7 +16,9 @@ module Events
       @start_on = params[:start_on].presence&.to_date
       return render_new("Choose a start date for the copy.") unless @start_on
 
-      copy = EventCopyService.copy(@event, start_on: @start_on, title: @title)
+      service = EventCopyService.for_event(@event)
+      copy = service.call(start_on: @start_on, title: @title)
+      flash[:warning] = service.warnings.to_sentence if service.warnings.any?
       redirect_to edit_event_path(copy), status: :see_other,
         notice: "Event copied. Now editing the unpublished copy — review it before publishing."
     rescue Date::Error

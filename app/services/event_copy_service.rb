@@ -35,7 +35,12 @@ class EventCopyService
   attr_reader :warnings, :form_changes
 
   def self.copy(event, start_on:, title: nil)
-    new(blueprint(event)).call(start_on: start_on, title: title)
+    for_event(event).call(start_on: start_on, title: title)
+  end
+
+  # Exposed so a caller can read #warnings after the copy.
+  def self.for_event(event)
+    new(blueprint(event))
   end
 
   def self.blueprint(event, form_definitions: false)
@@ -242,6 +247,8 @@ class EventCopyService
       asset.file.attach(io: file, filename: blob.filename.to_s, content_type: blob.content_type)
       asset.save!
     end
+  rescue ActiveStorage::Error, ActiveRecord::RecordInvalid => e
+    @warnings << "#{data["type"]} image not copied: #{e.message}"
   end
 
   def download_asset(event, data)

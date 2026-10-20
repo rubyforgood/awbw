@@ -89,6 +89,18 @@ RSpec.describe EventCopyService do
       expect(copy.primary_asset.file.blob).not_to eq(event.primary_asset.file.blob)
     end
 
+    it "still copies the event, with a warning, when the source image's file is gone" do
+      asset = create(:primary_asset, :with_file, owner: event)
+      asset.file.blob.service.delete(asset.file.blob.key)
+
+      service = described_class.for_event(event)
+      copy = service.call(start_on: new_start_on)
+
+      expect(copy).to be_persisted
+      expect(copy.primary_asset).to be_nil
+      expect(service.warnings).to include(/PrimaryAsset image not copied/)
+    end
+
     it "leaves registrations and the source event alone" do
       create(:event_registration, event: event)
 

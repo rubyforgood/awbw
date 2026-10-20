@@ -44,6 +44,16 @@ RSpec.describe "Events::Copies", type: :request do
       expect(copy).to have_attributes(title: "Fall training", starts_on: Date.new(2027, 9, 14), published: false)
     end
 
+    it "flashes a warning for anything the copy had to skip" do
+      asset = create(:primary_asset, :with_file, owner: event)
+      asset.file.blob.service.delete(asset.file.blob.key)
+
+      post event_copy_path(event), params: { title: "Fall training", start_on: "2027-09-14" }
+
+      expect(response).to redirect_to(edit_event_path(Event.order(:id).last))
+      expect(flash[:warning]).to match(/PrimaryAsset image not copied/)
+    end
+
     it "re-renders the form when the start date is missing" do
       expect {
         post event_copy_path(event), params: { title: "Fall training", start_on: "" }
