@@ -12,7 +12,7 @@ class StorySharesController < ApplicationController
   BROWSE_CAROUSEL_LIMIT = 5
   # Any of these params means the visitor is browsing a filtered result set
   # rather than the curated landing page.
-  BROWSE_PARAMS = %i[ sector_names_all category_names_all query facilitator_spotlights additional_focus_areas year page ].freeze
+  BROWSE_PARAMS = %i[ sector_names_all category_names_all query additional_focus_areas year page ].freeze
 
   helper_method :browsing?, :single_hero?
 
@@ -71,7 +71,6 @@ class StorySharesController < ApplicationController
     @stories_by_audience = Category.story_share_audience_nav.select(&:story_share_home_section).index_with do |category|
       section_stories(portal_scope.category_names_all(category.name))
     end
-    @spotlight_stories = section_stories(portal_scope.facilitator_spotlights(true))
     @featured_stories = carousel_stories
     @recent_stories = popular_stories
   end

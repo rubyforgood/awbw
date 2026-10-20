@@ -52,4 +52,37 @@ RSpec.describe Analytics::LifecycleBuffer do
 
     expect(tracked.first.last[:form_submission_id]).to eq(7)
   end
+
+  describe ".tagging" do
+    it "adds the properties to only the events buffered inside the block, and returns its value" do
+      described_class.push(name: "update.person", properties: { resource_type: "Person" })
+
+      result = described_class.tagging(profile_change_request_id: 9) do
+        described_class.push(name: "update.affiliation", properties: { resource_type: "Affiliation" })
+        described_class.push(name: "create.address", properties: nil)
+        :applied
+      end
+
+      tracked = []
+      described_class.flush(build_controller(tracked))
+
+      expect(result).to eq(:applied)
+      expect(tracked).to contain_exactly(
+        [ "update.person", { resource_type: "Person" } ],
+        [ "update.affiliation", hash_including(profile_change_request_id: 9) ],
+        [ "create.address", { profile_change_request_id: 9 } ]
+      )
+    end
+
+    it "keeps a value an event already carries" do
+      described_class.tagging(profile_change_request_id: 9) do
+        described_class.push(name: "update.affiliation", properties: { profile_change_request_id: 3 })
+      end
+
+      tracked = []
+      described_class.flush(build_controller(tracked))
+
+      expect(tracked.first.last[:profile_change_request_id]).to eq(3)
+    end
+  end
 end

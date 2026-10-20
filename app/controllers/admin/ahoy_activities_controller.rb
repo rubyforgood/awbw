@@ -67,10 +67,6 @@ module Admin
       # Filter by user (if viewing specific user activity)
       scope = scope.where(user: @users) if @users.present?
 
-      if params[:user_search].present?
-        scope = scope.where(user_id: User.activity_search(params[:user_search]).select(:id))
-      end
-
       # Time filter
       scope = scope.where(time: time_range) if time_range.present?
 
@@ -678,68 +674,7 @@ module Admin
     end
 
     def creation_velocity_data
-      all_models = %w[workshop_idea story_idea workshop_variation_idea workshop_variation workshop_log quote bookmark resource community_news event video_recording]
-
-      base_scope = scoped_events
-                     .where("name LIKE 'create.%'")
-                     .where(resource_type: all_models.map(&:classify))
-
-      counts = base_scope.group(:name).count
-
-      promoted_counts = {
-        "workshop_idea" => WorkshopIdea.joins(:workshops).distinct.count,
-        "story_idea" => StoryIdea.joins(:stories).distinct.count,
-        "workshop_variation_idea" => WorkshopVariationIdea.joins(:workshop_variations).distinct.count
-      }
-
-      # User-generated
-      user_models = %w[bookmark quote story_idea workshop_idea workshop_variation_idea workshop_log]
-      user_labels = {
-        "workshop_variation_idea" => "Variation Ideas"
-      }
-      @user_generated_content = user_models.map do |model|
-        label = user_labels[model] || model.humanize.titleize.pluralize
-        [ label, counts["create.#{model}"] || 0, promoted_counts[model] ]
-      end
-
-      # Admin-generated
-      admin_models = %w[bookmark quote story workshop workshop_variation]
-      admin_labels = {
-        "workshop_variation" => "Variations"
-      }
-      @admin_generated_content = admin_models.map do |model|
-        count = counts["create.#{model}"] || 0
-        promoted = promoted_counts["#{model}_idea"]
-        label = admin_labels[model] || model.humanize.titleize.pluralize
-        [ label, count, promoted ]
-      end
-      @admin_generated_content << [ :spacer ]
-      %w[resource community_news event video_recording].each do |model|
-        @admin_generated_content << [ model.humanize.titleize.pluralize, counts["create.#{model}"] || 0, nil ]
-      end
-
-      # Total: combined paired types
-      @total_generated_content = []
-      %w[bookmark quote].each do |model|
-        count = counts["create.#{model}"] || 0
-        @total_generated_content << [ model.humanize.titleize.pluralize, count, nil, nil ]
-      end
-      pairs = [
-        [ "Stories", "story", "story_idea" ],
-        [ "Workshops", "workshop", "workshop_idea" ],
-        [ "Variations", "workshop_variation", "workshop_variation_idea" ]
-      ]
-      pairs.each do |label, admin_key, idea_key|
-        admin_count = counts["create.#{admin_key}"] || 0
-        idea_count = counts["create.#{idea_key}"] || 0
-        promoted = [ promoted_counts[idea_key] || 0, admin_count, idea_count ].min
-        total = admin_count + idea_count - promoted
-        @total_generated_content << [ label, total, idea_count, admin_count, promoted ]
-      end
-      @total_generated_content << [ "Workshop Logs", counts["create.workshop_log"] || 0, nil, nil ]
-      %w[resource community_news event video_recording].each do |model|
-        @total_generated_content << [ model.humanize.titleize.pluralize, counts["create.#{model}"] || 0, nil, nil ]
-      end
+      @content_creation_groups = Analytics::ContentCreationBreakdown.new(time_range: time_range).groups
     end
 
     def selected_audiences

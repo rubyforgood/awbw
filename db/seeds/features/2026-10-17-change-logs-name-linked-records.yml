@@ -1,0 +1,11 @@
+name: "Change logs name the linked record, not its id"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2729
+summary: >-
+  When a change switches which address, organization, or person a record points
+  to, the change log shows that record's name instead of a number.
+pro_tips:
+  - "Click the name to open the record."
+  - "A record that's since been deleted shows as its type and number."

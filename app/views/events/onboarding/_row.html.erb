@@ -1,6 +1,6 @@
 <%# One registrant row on the Onboarding matrix. Iterates the shared column list
     so cell positions line up with the sortable header.
-    Locals: registration, event, columns, day_count. %>
+    Locals: registration, event, columns, day_count, survey_completions. %>
 <% person = registration.registrant %>
 <%# Carried to non-event-scoped destinations (person/org/user) so their eyebrow can
     link back to this exact row. Event-scoped pages derive it from the record. %>
@@ -248,6 +248,19 @@
     <% when :attendance %>
       <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= registration.status %>">
         <%= render "event_registrations/attendance_status_badge", registration: registration, return_to: "onboarding" %>
+      </td>
+
+    <% when :survey %>
+      <% completion = survey_completions.completion(registration.registrant_id, column[:role]) %>
+      <td class="<%= td_classes.join(" ") %>" data-sort-value="<%= completion&.submitted_at.to_i %>">
+        <% if completion %>
+          <span class="inline-flex items-center gap-1.5 whitespace-nowrap text-green-700" title="Submitted <%= completion.submitted_at.strftime("%b %-d, %Y") %>">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span class="text-gray-600"><%= completion.submitted_at.strftime("%b %-d") %></span>
+          </span>
+        <% else %>
+          <span class="text-gray-300" title="Not submitted">—</span>
+        <% end %>
       </td>
 
     <% when :flagged_comments %>

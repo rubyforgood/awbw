@@ -36,9 +36,11 @@ RSpec.describe "people/edit", type: :view do
     expect(rendered).to have_link('Home', href: root_path)
   end
 
-  it "shows an Activity card linking to the person's full Ahoy activity" do
+  it "labels both links to the person's full Ahoy activity Activity" do
     expect(rendered).to have_link(
       "Activity",
+      exact: true,
+      count: 2,
       href: admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1")
     )
   end

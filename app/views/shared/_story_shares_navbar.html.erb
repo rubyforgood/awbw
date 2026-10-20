@@ -366,7 +366,6 @@
           <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
                       class: "font-display #{story_share_slot_theme(index)[:heading]} hover:bg-brand-navy-50 rounded-full px-3 py-1 text-sm font-semibold transition-all" %>
         <% end %>
-        <%= link_to "Facilitator Spotlights", story_shares_path(facilitator_spotlights: true), class: "font-display text-brand-magenta-700 hover:bg-brand-navy-50 rounded-full px-3 py-1 text-sm font-semibold transition-all" %>
         <%= link_to "Additional Focus Areas", story_shares_path(additional_focus_areas: true), class: "font-display text-brand-orange-600 hover:bg-brand-navy-50 rounded-full px-3 py-1 text-sm font-semibold transition-all" %>
       </div>
     </div>
@@ -405,7 +404,6 @@
           <%= link_to sector.name, story_shares_path(sector_names_all: sector.name),
                       class: "block px-3 py-2 #{story_share_slot_theme(index)[:heading]} hover:bg-brand-navy-50 rounded-md text-base font-medium" %>
         <% end %>
-        <%= link_to "Facilitator Spotlights", story_shares_path(facilitator_spotlights: true), class: "text-brand-magenta-700 hover:bg-brand-navy-50 block rounded-md px-3 py-2 text-base font-medium" %>
         <%= link_to "Additional Focus Areas", story_shares_path(additional_focus_areas: true), class: "text-brand-orange-600 hover:bg-brand-navy-50 block rounded-md px-3 py-2 text-base font-medium" %>
 
         <div class="border-brand-navy-900/10 my-2 border-t"></div>

@@ -370,7 +370,7 @@ module Events
 
       service = EventRegistrationServices::CalloutFormSubmission.call(
         registration: @event_registration, callout: @callout, form: form,
-        form_params: callout_form_params, clarity_params: callout_clarity_params
+        form_params: callout_form_params
       )
       # A profile write-through (anonymity / name questions) is Ahoy-tracked, and
       # staff get a heads-up on the submission. The CE callout runs its own flow, so
@@ -435,11 +435,6 @@ module Events
 
     def callout_form_params
       params.dig(:callout_form, :form_fields)&.to_unsafe_h || {}
-    end
-
-    # Per-resource "clarity" answers: { field_id => { resource_id => answer } }.
-    def callout_clarity_params
-      params.dig(:callout_form, :clarity)&.to_unsafe_h || {}
     end
 
     # Attendance sign-in/out follows the CE payment — it's the CE sign-in sheet. Any-of

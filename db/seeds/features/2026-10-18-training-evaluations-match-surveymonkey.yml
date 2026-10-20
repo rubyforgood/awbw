@@ -1,0 +1,11 @@
+name: "Training Day 1 and Day 2 evaluations match the SurveyMonkey surveys"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-18
+summary: >-
+  The Day 1 and Day 2 evaluations the Feedback surveys card sends trainees now
+  ask the same questions as the November 2025 SurveyMonkey surveys, so results
+  compare with past trainings.
+pro_tips:
+  - "Edit the questions anytime from the form editor; the card keeps sending the same Day 1 and Day 2 forms."
+  - "Each survey role belongs to one form, so the card always knows which form to send."

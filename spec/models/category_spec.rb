@@ -34,6 +34,10 @@ RSpec.describe Category do
     it { should have_many(:workshops).through(:categorizable_items) }
   end
 
+  it "drops stray whitespace from a name" do
+    expect(create(:category, name: "Self  care ").name).to eq("Self care")
+  end
+
   describe 'validations' do
     let!(:category_type) { create(:category_type) }
     let!(:existing_category) { create(:category, category_type: category_type) }

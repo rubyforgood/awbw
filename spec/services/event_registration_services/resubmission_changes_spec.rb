@@ -97,6 +97,19 @@ RSpec.describe EventRegistrationServices::ResubmissionChanges do
 
         expect(described_class.between(unchanged, unchanged, submission: latest).notes).to be_empty
       end
+
+      it "notes a change to one per-resource copy of a fanned-out question" do
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        masks = create(:resource, title: "Masks")
+        collage = create(:resource, title: "Collage")
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_field_resource, form_field: clarity, resource: collage)
+        submit(clarity => { masks.id.to_s => "Yes", collage.id.to_s => "Yes" })
+        latest = submit(clarity => { masks.id.to_s => "No", collage.id.to_s => "Yes" })
+
+        expect(described_class.between(unchanged, unchanged, submission: latest).notes)
+          .to eq([ "How clear was Masks: changed from Yes to No" ])
+      end
     end
   end
 

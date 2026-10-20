@@ -7,7 +7,9 @@ summary: >-
   A person's profile and edit pages now warn admins when the person has more
   than one user account, link to each one, and offer to merge the extras into
   the suggested keeper.
+description: >-
+  <ul><li>The account marked "shown on profile" is the one used most
+  recently.</li></ul>
 pro_tips:
   - "The extra account is usually left over from a merge."
   - "Preview merge opens the logins deduper with the suggested keeper picked. Its back link and the finished merge return you to the person."
-  - "The account marked \"shown on profile\" is the one used most recently."

@@ -7,6 +7,8 @@ class Form < ApplicationRecord
   # payment" (the form role). Single source of truth so both ends stay in sync.
   BULK_PAYMENT_PUBLIC_NAME = "Pay for Other(s)".freeze
 
+  NAME_MAX_LENGTH = 255
+
   # Form roles whose standalone public submissions are agreement intake
   # scenarios with affiliation processing (ADR-0002): a standalone
   # registration-role form is the on-demand agreement (the registration flow,
@@ -15,6 +17,25 @@ class Form < ApplicationRecord
   # at the named organization (deactivation, the mirror of the others). Drives
   # the person-page "send link" panel and the submissions index scenario filter.
   AGREEMENT_ROLES = %w[registration new_job reinstatement close_program].freeze
+
+  ROLE_OPTIONS = [
+    [ "General", "general" ],
+    [ "Registration", "registration" ],
+    [ "New job", "new_job" ],
+    [ "Reinstatement", "reinstatement" ],
+    [ "Scholarship", "scholarship" ],
+    [ "Bulk Payment", "bulk_payment" ],
+    [ "Continuing Education", "continuing_education" ],
+    [ "Close program", "close_program" ],
+    [ "Day 1 survey", "day_1_survey" ],
+    [ "Day 2 survey", "day_2_survey" ],
+    [ "Post-event survey", "post_event_survey" ],
+    [ "Post-training recipients survey", "recipient_survey" ]
+  ].freeze
+
+  # Each survey role marks the one form the built-in callouts deliver for it.
+  SURVEY_ROLES = ROLE_OPTIONS.map(&:last).select { |role| role.include?("survey") }.freeze
+  SURVEY_HEADERS = { "recipient_survey" => "Scholarship survey" }.freeze
 
   # The questions that identify a public respondent (used to build their Person).
   IDENTITY_IDENTIFIERS = %w[first_name last_name primary_email].freeze
@@ -42,11 +63,25 @@ class Form < ApplicationRecord
 
   before_validation :normalize_slug
 
+  validates :name, length: { maximum: NAME_MAX_LENGTH }
+  validates :role, uniqueness: { message: "is already used by another form" }, if: :survey_role?
   validates :slug, uniqueness: true, allow_nil: true
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
     message: "may only contain lowercase letters, numbers, and hyphens" }, allow_blank: true
   validate :published_form_has_slug
   validate :event_form_not_published
+
+  def self.survey(role)
+    standalone.find_by(role:)
+  end
+
+  def self.survey_header(role)
+    SURVEY_HEADERS.fetch(role) { ROLE_OPTIONS.rassoc(role)&.first || role.to_s.humanize }
+  end
+
+  def survey_role?
+    role.in?(SURVEY_ROLES)
+  end
 
   def display_name
     name.presence || (owner ? "#{owner.try(:name)} Form" : "New Form")

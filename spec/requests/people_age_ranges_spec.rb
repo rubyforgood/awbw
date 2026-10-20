@@ -94,6 +94,27 @@ RSpec.describe "Person age ranges", type: :request do
     end
   end
 
+  describe "creating a person with age ranges" do
+    it "saves the selected age range on the new person" do
+      post people_path, params: {
+        skip_duplicate_check: "1",
+        person: {
+          first_name: "Age",
+          last_name: "Tester",
+          category_ids: [ "" ],
+          managed_category_type_ids: [],
+          age_range_categorizable_items_attributes: [
+            { category_id: adults.id, is_primary: "1" }
+          ]
+        }
+      }
+
+      expect(response).to have_http_status(:found)
+      created = Person.find_by(first_name: "Age", last_name: "Tester")
+      expect(created.primary_age_groups).to contain_exactly(adults)
+    end
+  end
+
   describe "re-rendering after a validation error" do
     it "retains a newly chosen age range and its primary flag, with options available" do
       patch person_path(person), params: {

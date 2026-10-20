@@ -44,6 +44,10 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
   # The visits page lazy-loads its rows the same way, in the visit_results frame.
   let(:visits_frame_headers) { { "Turbo-Frame" => "visit_results" } }
 
+  def filters_applied_stream(body)
+    Nokogiri::HTML(body).at_css("turbo-stream[target='active_filters'] template")&.inner_html.to_s
+  end
+
   # ============================================================
   # AS A GUEST
   # ============================================================
@@ -145,6 +149,14 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to include('data-turbo-action="advance"')
       end
 
+      it "refreshes the filters-applied chips from the results frame, so clearing drops them" do
+        get index_path, params: { event_name: "bookmark" }, headers: frame_headers
+        expect(filters_applied_stream(response.body)).to include("Activity: bookmark")
+
+        get index_path, headers: frame_headers
+        expect(filters_applied_stream(response.body)).not_to include("Activity:")
+      end
+
       it "breaks the row's user link out of the results frame" do
         get index_path, params: { visit_id: visit_for_user.id }, headers: frame_headers
 
@@ -242,12 +254,25 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body).to match(/<input[^>]*type="hidden"[^>]*name="person_id"[^>]*value="#{person.id}"/)
       end
 
-      it "titles the unscoped feed Everyone under a small Activity label" do
+      it "titles the unscoped feed Everyone's activity under a small Analytics label" do
         get index_path
 
         doc = Nokogiri::HTML(response.body)
-        expect(doc.at_css("h1").text.strip).to eq("Everyone")
+        expect(doc.at_css("h1").text.strip).to eq("Everyone's activity")
+        expect(doc.css("span").map { |span| span.text.strip }).to include("Analytics")
         expect(doc.css("a").map(&:text).map(&:strip)).not_to include("View everyone")
+      end
+
+      it "titles a person-scoped feed with the person's name, showing their email on hover" do
+        person = create(:person, first_name: "Aisha", last_name: "Sharma", email: "aisha@example.com")
+
+        get index_path, params: { person_id: person.id }
+
+        h1 = Nokogiri::HTML(response.body).at_css("h1")
+        expect(h1.text.strip).to eq("Aisha Sharma's activity")
+        name = h1.at_css("[title='#{person.preferred_email}']")
+        expect(name.text).to eq("Aisha Sharma")
+        expect(name.name).to eq("span")
       end
 
       it "clears a person-scoped page back to the unscoped feed with a full-page load" do
@@ -262,7 +287,7 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "stays person-scoped (no org autochange leak) when a toggle re-submits with person_id" do
-        person = create(:person)
+        person = create(:person, first_name: "Casey", last_name: "Scopedrow")
         org = create(:organization)
         create(:ahoy_event, name: "autochange.organization", user: nil,
                             visit: create(:ahoy_visit, user: nil, started_at: 1.day.ago),
@@ -270,28 +295,30 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
                             properties: { "resource_title" => "org_autochange_marker" })
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 2.hours.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_change_marker" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
 
         get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff],
                                   hide_account: "1", hide_interactions: "1" }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("person_change_marker")
+        table = Nokogiri::HTML(response.body).at_css("table.responsive-table")
+        expect(table.text).to include("Casey Scopedrow")
         expect(response.body).not_to include("org_autochange_marker")
       end
 
       it "hide_communications drops a person's communications from the timeline" do
-        person = create(:person)
+        person = create(:person, first_name: "Dana", last_name: "Keptrow")
         create(:notification, recipient_email: person.communications_email, email_subject: "Hidden comm marker")
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 1.day.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "kept_change_marker" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
 
         get index_path, params: { person_id: person.id, hide_communications: "1", time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         expect(response.body).not_to include("Hidden comm marker")
-        expect(response.body).to include("kept_change_marker")
+        table = Nokogiri::HTML(response.body).at_css("table.responsive-table")
+        expect(table.text).to include("Dana Keptrow")
       end
 
       it "filters by from/to dates" do
@@ -375,55 +402,62 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
         expect(response.body.index("auth.login")).to be < response.body.index("create.bookmark")
       end
 
-      it "filters events by free-text user search across person and user fields" do
-        rudy = create(:user, :with_person, email: "rudy-login@example.com")
-        rudy.person.update!(
-          first_name: "Rudy", last_name: "Hernandez",
-          legal_first_name: "Rudolfo",
-          email: "rudy@example.com", email_2: "rudy.alt@example.com"
-        )
-        rudy_visit = create(:ahoy_visit, user: rudy, started_at: 1.day.ago)
-        create(:ahoy_event, name: "view.workshop", user: rudy, visit: rudy_visit,
-               time: 1.day.ago, properties: { "resource_title" => "rudy_activity_marker" })
+      it "filters by person with a lookup that jumps to that person's activity" do
+        get index_path
 
-        other = create(:user, :with_person)
-        other_visit = create(:ahoy_visit, user: other, started_at: 1.day.ago)
-        create(:ahoy_event, name: "view.workshop", user: other, visit: other_visit,
-               time: 1.day.ago, properties: { "resource_title" => "other_activity_marker" })
+        picker = Nokogiri::HTML(response.body).at_css("select#jump_person_id")
+        expect(picker["data-controller"]).to eq("remote-select navigate-select")
+        expect(picker["data-remote-select-model-value"]).to eq("person")
+        expect(CGI.unescape(picker["data-navigate-select-url-template-value"])).to include("person_id=__ID__")
+        expect(response.body).not_to include('name="user_search"')
+      end
 
-        %w[Hernandez Rudolfo rudy.alt@example.com rudy-login@example.com].each do |term|
-          get index_path, params: { user_search: term, time_period: "all_time", audience: %w[visitors users staff], hide_interactions: "0" }, headers: frame_headers
+      it "keeps password managers out of the filter text boxes" do
+        get index_path
 
-          expect(response.body).to include("rudy_activity_marker"), "expected #{term.inspect} to match Rudy"
-          expect(response.body).not_to include("other_activity_marker")
+        doc = Nokogiri::HTML(response.body)
+        %w[event_name props visit_id].each do |name|
+          field = doc.at_css("input[name='#{name}']")
+          expect(field["data-lpignore"]).to eq("true"), "expected #{name} to opt out of LastPass"
+          expect(field["data-1p-ignore"]).to eq("true")
         end
       end
 
-      it "filters by person_id to the person, their user, and associated data" do
+      it "preselects the scoped person in the lookup" do
         person = create(:person)
+
+        get index_path, params: { person_id: person.id }
+
+        selected = Nokogiri::HTML(response.body).at_css("select#jump_person_id option[selected]")
+        expect(selected.text).to eq(person.full_name)
+      end
+
+      it "filters by person_id to the person, their user, and associated data" do
+        person = create(:person, first_name: "Robin", last_name: "Historyrow")
         payment = create(:payment, person: person)
-        unrelated_person = create(:person)
+        unrelated_person = create(:person, first_name: "Jordan", last_name: "Unrelatedrow")
 
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 1.day.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "person_history_row" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
         create(:ahoy_event, name: "update.user", visit: visit_for_admin,
                             resource_type: "User", resource_id: person.user.id, time: 1.day.ago,
-                            properties: { "resource_type" => "User", "resource_id" => person.user.id, "resource_title" => "user_history_row" })
+                            properties: { "resource_type" => "User", "resource_id" => person.user.id })
         create(:ahoy_event, name: "create.payment", visit: visit_for_admin,
                             resource_type: "Payment", resource_id: payment.id, time: 1.day.ago,
                             properties: { "resource_type" => "Payment", "resource_id" => payment.id, "resource_title" => "payment_history_row" })
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: unrelated_person.id, time: 1.day.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => unrelated_person.id, "resource_title" => "unrelated_history_row" })
+                            properties: { "resource_type" => "Person", "resource_id" => unrelated_person.id })
 
         get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("person_history_row")
-        expect(response.body).to include("user_history_row")
+        table = Nokogiri::HTML(response.body).at_css("table.responsive-table")
+        expect(table.text).to include("Robin Historyrow")
+        expect(table.text).to include("Robin Historyrow (user)")
         expect(response.body).to include("payment_history_row")
-        expect(response.body).not_to include("unrelated_history_row")
+        expect(response.body).not_to include("Jordan Unrelatedrow")
       end
 
       it "surfaces a user chip in the applied filters when user_id is set" do
@@ -468,25 +502,26 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       end
 
       it "interleaves the person's communications and activity events in one timeline" do
-        person = create(:person)
+        person = create(:person, first_name: "Zelda", last_name: "Timelinerow")
         create(:notification, recipient_email: person.communications_email,
                               email_subject: "Comms row marker xyz", created_at: 1.day.ago)
         create(:ahoy_event, name: "update.person", visit: visit_for_admin,
                             resource_type: "Person", resource_id: person.id, time: 2.days.ago,
-                            properties: { "resource_type" => "Person", "resource_id" => person.id, "resource_title" => "activity_row_marker" })
+                            properties: { "resource_type" => "Person", "resource_id" => person.id })
 
         get index_path, params: { person_id: person.id, time_period: "all_time", audience: %w[visitors users staff] }, headers: frame_headers
 
         expect(response).to have_http_status(:ok)
         # Both streams render in the same activities table (no separate panel).
-        expect(response.body).to include("Comms row marker xyz")
-        expect(response.body).to include("activity_row_marker")
+        table_text = Nokogiri::HTML(response.body).at_css("table.responsive-table").text
+        expect(table_text).to include("Comms row marker xyz")
+        expect(table_text).to include("Zelda Timelinerow")
         # The communication row reads as a human Sent/Received chip, not the raw name.
         expect(response.body).to include("Communication")
         expect(response.body).to include("Sent")
         expect(response.body).not_to include("communication.sent")
         # Newer communication sorts above the older activity event.
-        expect(response.body.index("Comms row marker xyz")).to be < response.body.index("activity_row_marker")
+        expect(table_text.index("Comms row marker xyz")).to be < table_text.index("Zelda Timelinerow")
       end
 
       it "labels an incoming communication as Received" do
@@ -596,6 +631,14 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
       it "renders the shell ok on a full-page load" do
         get visits_path
         expect(response).to have_http_status(:ok)
+      end
+
+      it "refreshes the filters-applied chips from the results frame, so clearing drops them" do
+        get visits_path, params: { ip: "10.0.0.1" }, headers: visits_frame_headers
+        expect(filters_applied_stream(response.body)).to include("IP: 10.0.0.1")
+
+        get visits_path, headers: visits_frame_headers
+        expect(filters_applied_stream(response.body)).not_to include("IP:")
       end
 
       it "filters visits by user_id" do
@@ -715,6 +758,64 @@ RSpec.describe "Admin::AhoyActivities", type: :request do
           "Search-to-view conversion"
         ].each do |title|
           expect(body).to include(title), "Expected chart title '#{title}' to be present"
+        end
+      end
+
+      describe "content creation cards" do
+        def content_row(card, label)
+          card_node = Nokogiri::HTML(response.body).css("h3").find { |h| h.text.strip == card }.parent
+          card_node.css("li").find { |li| li.text.include?(label) }
+        end
+
+        def content_count(card, label)
+          content_row(card, label).at_css("span").text.strip
+        end
+
+        it "credits content to the user or admin card so the two add up to the total" do
+          create(:bookmark, user: user)
+          create(:bookmark, user: admin)
+          create(:bookmark, user: admin)
+
+          get charts_path
+
+          expect(content_count("User-generated content", "Bookmarks")).to eq("1")
+          expect(content_count("Admin-generated content", "Bookmarks")).to eq("2")
+          expect(content_count("Total content created", "Bookmarks")).to eq("3")
+        end
+
+        it "shows admin-made content even though the default audience excludes staff" do
+          create(:event, created_by: admin)
+
+          get charts_path
+
+          expect(content_count("Admin-generated content", "Events")).to eq("1")
+          expect(content_count("Total content created", "Events")).to eq("1")
+        end
+
+        it "notes promoted and unpromoted ideas on the user card" do
+          facilitator = create(:user, :with_person)
+          workshop = create(:workshop, created_by: admin)
+          idea = create(:story_idea, created_by: facilitator, workshop: workshop)
+          create(:story, created_by: admin, author: facilitator.person, story_idea: idea, workshop: workshop)
+          create(:story_idea, created_by: facilitator, workshop: workshop)
+
+          get charts_path
+
+          stories = content_row("User-generated content", "Stories")
+          expect(stories.at_css("span").text.strip).to eq("2")
+          expect(stories.text.squish).to include("(incl 1 promoted and 1 unpromoted ideas)")
+          expect(content_count("Admin-generated content", "Stories")).to eq("0")
+        end
+
+        it "only counts content inside the selected time period" do
+          create(:bookmark, user: user, created_at: 2.months.ago)
+          create(:bookmark, user: user)
+
+          get charts_path, params: { time_period: "past_month" }
+          expect(content_count("Total content created", "Bookmarks")).to eq("1")
+
+          get charts_path, params: { time_period: "all_time" }
+          expect(content_count("Total content created", "Bookmarks")).to eq("2")
         end
       end
     end

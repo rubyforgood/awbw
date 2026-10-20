@@ -46,10 +46,17 @@ class FormAnswersController < ApplicationController
     if params[:form_submission_id].present?
       scope = scope.where(form_submission_id: params[:form_submission_id])
     end
-    if params[:answer_type].present? && FormField.answer_types.key?(params[:answer_type])
-      scope = scope.joins(:form_field).where(form_fields: { answer_type: FormField.answer_types[params[:answer_type]] })
-    end
+    scope = answer_type_scoped(scope) if params[:answer_type].present? && FormField.answer_types.key?(params[:answer_type])
     date_scoped(scope)
+  end
+
+  # A fanned-out field's per-resource answers carry no field, so they're matched
+  # through their field's wording to count under its type.
+  def answer_type_scoped(scope)
+    typed = FormField.where(answer_type: FormField.answer_types[params[:answer_type]])
+    copies = typed.joins(:form_field_resources).distinct.map { |field| FormAnswer.per_resource_copies(field) }.reduce(:or)
+    own = scope.where(form_field_id: typed.select(:id))
+    copies ? own.or(scope.where(id: copies.select(:id))) : own
   end
 
   # The Question box stays a free-text search: it matches any question whose name
@@ -58,8 +65,8 @@ class FormAnswersController < ApplicationController
   # would otherwise also sweep in a sibling question whose name contains this
   # one's ("Email" pulling in "Email 2") and disagree with the card's count.
   def question_scoped(scope)
-    field_id = pinned_field_id
-    return scope.where(form_field_id: field_id) if field_id
+    pinned = pinned_answers
+    return scope.merge(pinned) if pinned
     return scope if params[:question].blank?
 
     term = "%#{FormField.sanitize_sql_like(params[:question])}%"
@@ -68,13 +75,13 @@ class FormAnswersController < ApplicationController
     )
   end
 
-  # The pinned question, while the box still holds its name — editing or clearing
-  # the box releases the pin and the term searches normally again.
-  def pinned_field_id
-    id = params[:form_field_id].presence
-    return if id.blank? || params[:question].blank?
+  # The pinned question, while the box still holds its wording — editing or
+  # clearing the box releases the pin and the term searches normally again.
+  def pinned_answers
+    return if params[:form_field_id].blank? || params[:question].blank?
 
-    id if FormField.where(id: id).pick(:name) == params[:question]
+    field = FormField.find_by(id: params[:form_field_id])
+    field && FormAnswer.for_question(field, params[:question])
   end
 
   # By when the submission was made, not when the answer row was written, so this

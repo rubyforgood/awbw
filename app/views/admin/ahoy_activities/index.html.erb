@@ -22,13 +22,13 @@
 
       <% scoped = Admin::AhoyActivitiesController::SCOPING_PARAMS.any? { |key| params[key].present? } %>
       <div class="mb-6">
-        <span class="text-2xs font-semibold tracking-widest uppercase <%= DomainTheme.text_class_for(:people, intensity: 700) %>">Activity</span>
+        <span class="text-2xs font-semibold tracking-widest uppercase <%= DomainTheme.text_class_for(:people, intensity: 700) %>">Analytics</span>
         <div class="flex flex-wrap items-center gap-3">
           <h1 class="text-primary font-display text-3xl">
             <% if @person %>
-              <%= link_to @person.full_name, person_path(@person), class: "hover:underline" %>
+              <%= tag.span(@person.full_name, title: @person.preferred_email) %>'s activity
             <% else %>
-              <%= scoped ? "Filtered" : "Everyone" %>
+              <%= scoped ? "Filtered activity" : "Everyone's activity" %>
             <% end %>
           </h1>
           <% if @person %>
@@ -50,13 +50,13 @@
         <div class="mt-2 text-sm text-gray-500"><%= render "count" %></div>
       </div>
 
-      <div class="mb-6 text-sm min-h-10">
+      <div class="mb-6 min-h-10 text-sm">
         <%= render "admin/shared/active_filters_subheader",
               default_audiences: Admin::AhoyActivitiesController::EVENTS_DEFAULT_AUDIENCES,
               hide_interactions: hide_interactions? %>
       </div>
 
-      <div class="bg-white border border-primary/10 rounded-2xl shadow-sm p-6 mb-6">
+      <div class="border-primary/10 mb-6 rounded-2xl border bg-white p-6 shadow-sm">
         <%# Selects submit on change and the text boxes debounce-submit as you type,
             all into the activity_results frame — the filter form stays put (and
             focused) while just the rows swap. turbo_action: "advance" mirrors the
@@ -77,14 +77,33 @@
 
           <div class="flex flex-wrap gap-4 lg:flex-nowrap">
 
+            <%# Picking a person reloads the page scoped to them, since the header names the person. %>
             <div class="min-w-0 flex-[2]">
+              <label for="jump_person_id" class="<%= search_label_class %>">
+                Person
+              </label>
+              <%= select_tag :jump_person_id,
+                             (@person ? options_for_select([ [ @person.full_name, @person.id ] ], @person.id) : options_for_select([])),
+                             include_blank: true, prompt: "e.g. Jane Doe",
+                             "aria-label": "Filter to one person's activity",
+                             class: search_field_class(extra: "[&_.ts-control_input]:text-sm!"),
+                             data: { controller: "remote-select navigate-select",
+                                     remote_select_model_value: "person",
+                                     remote_select_search_icon_value: false,
+                                     remote_select_exclude_value: @person&.id,
+                                     navigate_select_url_template_value: person_activity_path("__ID__"),
+                                     action: "change->navigate-select#navigate" } %>
+            </div>
+
+            <div class="min-w-0 flex-[1.5]">
               <label class="<%= search_label_class %>">
-                Activity
+                Activity title
               </label>
               <%= text_field_tag :event_name,
                                  params[:event_name],
-                                 placeholder: "e.g. new workshop, a resource name",
-                                 class: search_field_class %>
+                                 placeholder: "e.g. new workshop",
+                                 class: search_field_class,
+                                 data: password_manager_ignore_data %>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -93,18 +112,9 @@
               </label>
               <%= text_field_tag :props,
                                  params[:props],
-                                 placeholder: "Search details...",
-                                 class: search_field_class %>
-            </div>
-
-            <div class="min-w-0 flex-1">
-              <label class="<%= search_label_class %>">
-                User
-              </label>
-              <%= text_field_tag :user_search,
-                                 params[:user_search],
-                                 placeholder: "Name or email",
-                                 class: search_field_class %>
+                                 placeholder: "e.g. email",
+                                 class: search_field_class,
+                                 data: password_manager_ignore_data %>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -149,7 +159,8 @@
               <%= number_field_tag :visit_id,
                                    params[:visit_id],
                                    placeholder: "e.g. 42",
-                                   class: search_field_class %>
+                                   class: search_field_class,
+                                   data: password_manager_ignore_data %>
             </div>
 
           </div>
@@ -160,7 +171,7 @@
 
           <div class="mt-6 flex items-center gap-3 text-sm">
             <span class="text-gray-500">Quick:</span>
-            <% safe_params = params.slice(:event_name, :visit_id, :props, :person_id, :user_search, :from, :to, :hide_account, :hide_interactions, :hide_communications).to_unsafe_h %>
+            <% safe_params = params.slice(:event_name, :visit_id, :props, :person_id, :from, :to, :hide_account, :hide_interactions, :hide_communications).to_unsafe_h %>
             <%= link_to "24h",
                         url_for(safe_params.merge(from: 1.day.ago.to_date)),
                         class: "text-indigo-600 hover:underline" %>

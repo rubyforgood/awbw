@@ -53,19 +53,24 @@ module EventRegistrationServices
         .where.not(id: submission.id).order(:created_at, :id).last
       return [] unless previous
 
-      previous_answers = previous.form_answers.index_by(&:form_field_id)
+      previous_answers = previous.form_answers.index_by { |answer| answer_key(answer) }
       submission.form_answers.includes(:form_field).order(:id).filter_map do |answer|
-        next if answer.form_field.nil? || answer.form_field.field_identifier.in?(SETTINGS_FIELD_IDENTIFIERS)
+        next if answer.form_field&.field_identifier.in?(SETTINGS_FIELD_IDENTIFIERS)
 
         now = answer.submitted_answer.to_s.squish
-        was = previous_answers[answer.form_field_id]&.submitted_answer.to_s.squish
-        next if now.blank? || now == was
+        was = previous_answers[answer_key(answer)]&.submitted_answer.to_s.squish
+        question = (answer.question_name_when_answered.presence || answer.form_field&.name).to_s.squish.truncate(60)
+        next if now.blank? || now == was || question.blank?
 
-        question = (answer.question_name_when_answered.presence || answer.form_field.name).squish.truncate(60)
         next "#{question}: added #{now.truncate(80)}" if was.blank?
 
         "#{question}: changed from #{was.truncate(80)} to #{now.truncate(80)}"
       end
+    end
+
+    # A fanned-out copy's answer has no field, so its sentence tells it apart.
+    def self.answer_key(answer)
+      answer.form_field_id || answer.question_name_when_answered
     end
 
     def self.from_message(message)

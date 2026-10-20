@@ -68,7 +68,7 @@ When changing a model or controller, check whether these related files need upda
 - **In service objects and POROs, read constructor arguments from instance variables (`@foo`) — don't add `private attr_reader`** for them. Reserve `attr_reader` for values the object deliberately exposes to callers (e.g. `BulkInviteService#results`).
 - **Prefer decorators (Draper, app/decorators/) over view helpers for model-specific presentation** — when display logic is "about a record" (labels, badges, formatted attributes, status pills), put it on that model's decorator and call `record.decorate.thing`. Reserve `app/helpers/` for generic, cross-model view utilities that aren't tied to one model. Decorators keep presentation testable and out of ERB.
 - Use `after_commit` instead of `after_save` for side effects
-- **Don't pass `to:` to `authorize!` when the rule matches the controller action** — ActionPolicy infers the rule from the action name (`create` → `create?`, `update` → `update?`), so `authorize! @record` in the `update` action already checks `update?`. Only pass `to:` when checking a *different* rule than the current action (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or `authorize! :workshop, to: :summary?`).
+- **Never pass `to:` to `authorize!` when it names the action you're in** — ActionPolicy defaults the rule to `"#{action_name}?"` for *every* action (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`, and custom actions alike), for records, classes, and symbol policies. Write `authorize! @setting` in `show`, not `authorize! @setting, to: :show?`; `authorize! :home` in `index`, not `authorize! :home, to: :index?`; keep other options (`authorize! @submission, context: { … }`). Only pass `to:` when checking a *different* rule than the current action (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or `authorize! :workshop, to: :summary?`).
 - **Default to no comment.** Most code should carry none — clear names and small methods explain themselves. Only add a comment for a genuinely non-obvious *why* or a gotcha that would trip up the next reader, and only when you can't make the code say it instead (a better name, a named constant, an extracted method). Never restate what the code already says, and don't comment a constant, scope, or step whose intent is clear from its name. When a comment truly earns its place, keep it to **one line**; let it run longer only when the logic is genuinely complex and the reasoning can't be inferred from the code plus domain knowledge.
 - **Comment on what the code does now, never on what it used to do or an alternative it isn't.** A comment describes current behavior — not the old version, not a bug that was fixed, not the approach that was rejected, not what another component *doesn't* do. Cut phrases like "used to", "no longer", "instead of", "rather than", "would otherwise", "we don't X here". If a *why* needs a contrast, state the reason positively (e.g. "update_columns so the over-allocation persists past the cost validation", not "update_columns because a plain update would be rejected"). Git history, not comments, carries the past.
 
@@ -360,7 +360,7 @@ what changed.
   entry is a smaller update through its `summary`/`name` wording (e.g. "Filter
   registrants by registration date"), not a schema field. (If we ever want the UI
   to visually separate launches from tweaks, that's a `kind:` column on `Feature` +
-  `CATALOG_FIELDS` + a decorator badge — a deliberate change, not something to
+  `SYNCED_FIELDS` + a decorator badge — a deliberate change, not something to
   fake with `area`/`display_status`.)
 - Fields: `name`, `area` (a `Feature::AREA_KEYS` value), `display_status`
   (`public_facing` / `user_facing` / `admin_facing`), `summary` (1–2 plain
@@ -373,12 +373,11 @@ what changed.
   this in its relation scope, not just in the UI).
 
 An admin clicks **Sync latest updates** on `/features` (`FeatureCatalog#import!`,
-matched by `name`) to pull newly-shipped features from the seed, **re-align the
-catalog-owned classification** on existing records (`CATALOG_FIELDS` — area,
-`display_status`, `released_on`, `action_path`, `pr_number`, so a seed fix like a
-wrong audience propagates), **and fill in blank content** (`CONTENT_FIELDS` —
-`summary`, `pro_tips`, `external_url`, `description`) without ever overwriting what
-an admin wrote. **A feature edited in-app since creation (`Feature#edited?`) is skipped
+matched by `name`) to pull newly-shipped features from the seed **and overwrite
+existing same-name records with the seed** (`SYNCED_FIELDS` — area, `display_status`,
+`released_on`, `action_path`, `pr_number`, `summary`, `pro_tips`, `external_url`,
+`description`; a field the seed leaves blank keeps its value), so seed fixes and
+trims propagate. **A feature edited in-app since creation (`Feature#edited?`) is skipped
 entirely** — sync writes don't bump `updated_at`, so only admin saves count as edits.
 
 - **New area?** Add it to `Feature::AREAS` (label + Font Awesome icon + a Tailwind

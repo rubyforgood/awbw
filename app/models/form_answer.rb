@@ -23,6 +23,25 @@ class FormAnswer < ApplicationRecord
   # left blank still has an answer row. Only these count as responses.
   scope :answered, -> { where.not(submitted_answer: [ nil, "" ]) }
 
+  # Answers to one question as worded on its form: the field's own under its name,
+  # or a fanned-out copy's (saved with no field) under its sentence. nil for any
+  # other wording.
+  def self.for_question(field, question)
+    return where(form_field: field) if question == field.name
+    return unless field.per_resource_wording?(question)
+
+    per_resource_copies(field, question)
+  end
+
+  # A fanned-out field's per-resource answers (saved with no field) on its form:
+  # one copy's by its wording, or every copy's, including wordings since renamed.
+  def self.per_resource_copies(field, question = nil)
+    copies = where(form_field_id: nil, form_submission_id: FormSubmission.where(form_id: field.form_id).select(:id))
+    return copies.where(question_name_when_answered: question) if question
+
+    copies.where("form_answers.question_name_when_answered LIKE ?", "#{sanitize_sql_like(field.per_resource_prefix)}%")
+  end
+
   def name
     "#{question_name_when_answered.presence || form_field&.name}: #{submitted_answer}"
   end

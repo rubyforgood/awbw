@@ -143,6 +143,15 @@ module EventHelper
     response&.question_name_when_answered.presence || field&.name
   end
 
+  # [label, answer] rows to show for a field — one per linked resource when it fans out.
+  def display_answer_rows(submission, field, response)
+    return [ [ display_question_label(field, response), response ] ] unless field.per_resource?
+
+    submission.per_resource_answers(field).map do |resource, answer|
+      [ answer&.question_name_when_answered.presence || field.per_resource_question(resource), answer ]
+    end
+  end
+
   def display_response_text(field, response)
     text = resolve_answer_text(field, response&.submitted_answer)
     return tag.span("—", class: "text-gray-400") if text.blank?

@@ -120,6 +120,21 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("short-answer")
       end
 
+      it "includes a fanned-out question's per-resource answers under its question type" do
+        form = create(:form)
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        create(:form_field_resource, form_field: clarity, resource: create(:resource, title: "Masks"))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks",
+               submitted_answer: "fanned-answer", form_submission: create(:form_submission, form: form))
+        create(:form_answer, submitted_answer: "checkbox-answer",
+               form_field: create(:form_field, form: form, answer_type: :multi_select_checkbox))
+
+        get form_answers_path(answer_type: "single_select_radio"), headers: frame_headers
+
+        expect(response.body).to include("fanned-answer")
+        expect(response.body).not_to include("checkbox-answer")
+      end
+
       # By the submission's date, not the answer row's, so this list and a form's
       # results page answer the same date range the same way.
       it "filters by when the submission was made" do
@@ -175,6 +190,24 @@ RSpec.describe "FormAnswers", type: :request do
         expect(response.body).not_to include("sibling-answer")
       end
 
+      it "pins a results drill-down to one per-resource copy of a fanned-out question" do
+        form = create(:form)
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        masks = create(:resource, title: "Masks")
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_field_resource, form_field: clarity, resource: create(:resource, title: "Masks advanced"))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks",
+               submitted_answer: "pinned-answer", form_submission: create(:form_submission, form: form))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Masks advanced",
+               submitted_answer: "sibling-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "How clear was Masks",
+                              form_field_id: clarity.id), headers: frame_headers
+
+        expect(response.body).to include("pinned-answer")
+        expect(response.body).not_to include("sibling-answer")
+      end
+
       it "searches by name again once the question box no longer names the pinned question" do
         form = create(:form)
         email = create(:form_field, form: form, name: "Email")
@@ -207,9 +240,42 @@ RSpec.describe "FormAnswers", type: :request do
         get form_answers_path(form_id: form.id, return_to: "form_results",
                               question: "Any thoughts", form_field_id: field.id)
 
-        expect(response.body).to include(CGI.escapeHTML(
-          results_form_path(form, anchor: "form-question-#{field.id}")
-        ))
+        expect(response.body).to include(%(href="#{CGI.escapeHTML(results_form_path(form, anchor: "form-question-#{field.id}"))}"))
+      end
+
+      it "anchors back to a plain question's card even after the question box is edited" do
+        form = create(:form, name: "Volunteer interest")
+        field = create(:form_field, form: form, name: "Any thoughts")
+
+        get form_answers_path(form_id: form.id, return_to: "form_results",
+                              question: "thoughts", form_field_id: field.id)
+
+        expect(response.body).to include(%(href="#{CGI.escapeHTML(results_form_path(form, anchor: "form-question-#{field.id}"))}"))
+      end
+
+      it "pins a drill-down from a renamed resource's card to its earlier wording" do
+        form = create(:form)
+        clarity = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        create(:form_field_resource, form_field: clarity, resource: create(:resource, title: "Collage basics"))
+        create(:form_answer, form_field: nil, question_name_when_answered: "How clear was Collage",
+               submitted_answer: "earlier-answer", form_submission: create(:form_submission, form: form))
+
+        get form_answers_path(form_id: form.id, question: "How clear was Collage", form_field_id: clarity.id),
+            headers: frame_headers
+
+        expect(response.body).to include("earlier-answer")
+      end
+
+      it "anchors the way back to a fanned-out copy's own card" do
+        form = create(:form, name: "Volunteer interest")
+        field = create(:form_field, form: form, name: "How clear was", answer_type: :single_select_radio)
+        masks = create(:resource, title: "Masks")
+        create(:form_field_resource, form_field: field, resource: masks)
+
+        get form_answers_path(form_id: form.id, return_to: "form_results", question: "How clear was Masks",
+                              form_field_id: field.id)
+
+        expect(response.body).to include(%(href="#{CGI.escapeHTML(results_form_path(form, anchor: "form-question-#{field.id}-how-clear-was-masks"))}"))
       end
 
       it "restores the results page's own question search on the way back" do

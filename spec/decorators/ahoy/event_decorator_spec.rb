@@ -85,24 +85,34 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.resource_link[:path]).to be_nil
     end
 
-    it "points a comment at the record it was left on, and surfaces its topic/body" do
-      person = create(:person)
+    it "points a comment at the person it was left on by name, and surfaces its topic/body" do
+      person = create(:person, first_name: "Dana", last_name: "Rivera")
       comment = create(:comment, commentable: person, topic: "Follow-up", body: "Called to confirm.")
       event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
                                   resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
 
-      expect(event.resource_link[:text]).to eq("Profile")
+      expect(event.resource_link[:text]).to eq("Dana Rivera")
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
       expect(event.comment_note).to eq(topic: "Follow-up", body: "Called to confirm.")
     end
 
+    it "names the account holder for a comment left on a user" do
+      user = create(:user, first_name: "Sam", last_name: "Cole")
+      comment = create(:comment, commentable: user)
+      event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
+                                  resource_id: comment.id, properties: { "resource_title" => "Comment" }).decorate
+
+      expect(event.resource_link[:text]).to eq("Sam Cole (user)")
+      expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_user_path(user))
+    end
+
     it "points a deleted comment at the record it was left on, read from its snapshot" do
-      person = create(:person)
+      person = create(:person, first_name: "Meryl", last_name: "Hermann")
       event = create(:ahoy_event, name: "destroy.comment", resource_type: "Comment", resource_id: 0,
                                   properties: { "resource_title" => "4",
                                                 "attributes" => { "commentable_id" => person.id, "commentable_type" => "Person" } }).decorate
 
-      expect(event.resource_link[:text]).to eq("Profile")
+      expect(event.resource_link[:text]).to eq("Meryl Hermann")
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
     end
 
@@ -276,6 +286,24 @@ RSpec.describe Ahoy::EventDecorator do
       )
     end
 
+    it "names the records a changed foreign key points to instead of their ids" do
+      affiliation = create(:affiliation)
+      address = create(:address, addressable: affiliation.organization, street_address: "12 Elm St", city: "Reno", state: "NV", zip_code: "89501")
+      event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation", resource_id: affiliation.id,
+                                  properties: { "changes" => { "organization_address_id" => { "before" => nil, "after" => address.id } } }).decorate
+
+      change = event.changes_summary.first
+      expect(change).to include(field: "Organization address", before: "(empty)", after: "12 Elm St, Reno, NV 89501")
+    end
+
+    it "falls back to the type and id when the referenced record is gone" do
+      affiliation = create(:affiliation)
+      event = create(:ahoy_event, name: "update.affiliation", resource_type: "Affiliation", resource_id: affiliation.id,
+                                  properties: { "changes" => { "organization_address_id" => { "before" => 999_999, "after" => nil } } }).decorate
+
+      expect(event.changes_summary.first).to include(field: "Organization address", before: "Address #999999", after: "(empty)")
+    end
+
     it "links both parents of a moved comment, reading the unchanged type off the comment" do
       from = create(:person, first_name: "Ada", last_name: "Park")
       to = create(:person, first_name: "Bo", last_name: "Lee")
@@ -327,6 +355,35 @@ RSpec.describe Ahoy::EventDecorator do
           { label: "Results found", value: "3", depth: 0 }
         ]
       )
+    end
+
+    it "links the change request that made the change to its card in the admin queue" do
+      request = create(:profile_change_request, status: "resolved")
+      event = decorate("profile_change_request_id" => request.id, "source" => "import")
+      path = Rails.application.routes.url_helpers.profile_change_requests_path(
+        status: "resolved", person_id: request.person_id, highlight: request.id,
+        anchor: "profile_change_request_#{request.id}"
+      )
+
+      expect(event.detail_rows).to eq(
+        [
+          { label: "From change request", depth: 0, link: { text: request.decorate.requester_summary, path: path } },
+          { label: "Source", value: "import", depth: 0 }
+        ]
+      )
+    end
+
+    it "sends the queue's eyebrow back to the change log the link was read in" do
+      request = create(:profile_change_request)
+      event = create(:ahoy_event, resource_type: "Affiliation", resource_id: 7,
+                     properties: { "profile_change_request_id" => request.id }).reload
+
+      paths = %w[record activities].map do |origin|
+        event.decorate(context: { return_to: origin }).detail_rows.first.dig(:link, :path)
+      end
+
+      expect(paths.first).to include("return_to=record", "return_activity=#{event.id}")
+      expect(paths.last).to include("return_to=activities", "return_activity=#{event.id}")
     end
 
     it "labels both result_count and the legacy page_result_count as Results found" do

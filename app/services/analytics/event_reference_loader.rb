@@ -52,6 +52,20 @@ module Analytics
       end
     end
 
+    # Plain belongs_to foreign keys an update changed, so the diff can name the
+    # records instead of showing ids: { "organization_address" => ["Address", before_id, after_id] }.
+    def self.belongs_to_changes(resource_type, changes)
+      klass = resource_type.to_s.safe_constantize
+      return {} unless changes.is_a?(Hash) && klass.respond_to?(:reflect_on_all_associations)
+
+      klass.reflect_on_all_associations(:belongs_to).reject(&:polymorphic?).each_with_object({}) do |reflection, refs|
+        diff = changes[reflection.foreign_key.to_s]
+        next unless diff.is_a?(Hash)
+
+        refs[reflection.name.to_s] = [ reflection.class_name, diff["before"], diff["after"] ]
+      end
+    end
+
     def initialize(events)
       @events = events
     end
@@ -67,7 +81,7 @@ module Analytics
     # A second pass picks up moved parents, whose type can come from the event's
     # own (first-pass) record.
     def load_records
-      map = fetch(@events.flat_map { |event| primary_pairs(event) + references_in(event.properties || {}) })
+      map = fetch(@events.flat_map { |event| primary_pairs(event) + references_in(event.properties || {}) + belongs_to_pairs(event) })
       map.merge(fetch(@events.flat_map { |event| moved_parent_pairs(event, map) } - map.keys))
     rescue StandardError
       {}
@@ -83,18 +97,27 @@ module Analytics
       end
     end
 
+    def belongs_to_pairs(event)
+      self.class.belongs_to_changes(event.resource_type, event.properties&.dig("changes")).values.flat_map do |type, before, after|
+        [ [ type, before ], [ type, after ] ]
+      end
+    end
+
     def moved_parent_pairs(event, map)
       record = map[[ event.resource_type.to_s, event.resource_id ]]
       changes = event.properties&.dig("changes")
       self.class.polymorphic_changes(event.resource_type, changes, record).values.flatten(1)
     end
 
-    # The event's own resource (its resource_type/resource_id columns), so the
-    # timeline can link the resource title to the record without a per-row query.
+    # The records an event names outside its properties tree: its own resource
+    # (the resource_type/resource_id columns) and the change request an approval
+    # stamped it with, so the timeline links both without a per-row query.
     def primary_pairs(event)
-      return [] if event.resource_type.blank? || event.resource_id.blank?
+      change_request_id = (event.properties || {})[LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY]
+      pairs = change_request_id.present? ? [ [ "ProfileChangeRequest", change_request_id ] ] : []
+      return pairs if event.resource_type.blank? || event.resource_id.blank?
 
-      [ [ event.resource_type.to_s, event.resource_id ] ]
+      pairs + [ [ event.resource_type.to_s, event.resource_id ] ]
     end
 
     def references_in(value)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_112434) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.string "mentionable_type", null: false
@@ -211,7 +211,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
   end
 
   create_table "answer_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "name"
+    t.datetime "created_at", precision: nil, null: false
+    t.integer "created_by_id"
+    t.string "name", limit: 2000
     t.integer "position"
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
@@ -1115,6 +1117,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_183912) do
   create_table "form_answers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "form_field_id"
     t.bigint "form_submission_id", null: false
+    t.text "question_name_when_answered"
     t.text "submitted_answer"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

@@ -39,6 +39,39 @@ RSpec.describe Form do
     end
   end
 
+  describe "survey roles" do
+    it "allows only one form per survey role" do
+      create(:form, role: "day_1_survey")
+      duplicate = build(:form, role: "day_1_survey")
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:role]).to include("is already used by another form")
+    end
+
+    it "allows many general forms" do
+      create(:form, role: "general")
+      expect(build(:form, role: "general")).to be_valid
+    end
+
+    it "treats every role option naming a survey as a survey role, in dropdown order" do
+      expect(Form::SURVEY_ROLES).to eq(%w[day_1_survey day_2_survey post_event_survey recipient_survey])
+    end
+  end
+
+  describe ".survey_header" do
+    it "uses the role's dropdown label" do
+      expect(Form.survey_header("post_event_survey")).to eq("Post-event survey")
+    end
+
+    it "calls the recipients survey the scholarship survey" do
+      expect(Form.survey_header("recipient_survey")).to eq("Scholarship survey")
+    end
+
+    it "humanizes a role outside the dropdown" do
+      expect(Form.survey_header("legacy_survey")).to eq("Legacy survey")
+    end
+  end
+
   describe ".owned / .standalone" do
     it "owned returns only owner-attached forms; standalone returns the rest" do
       builder = create(:form_builder)

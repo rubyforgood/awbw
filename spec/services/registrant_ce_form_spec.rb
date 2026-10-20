@@ -71,5 +71,38 @@ RSpec.describe RegistrantCeForm do
         form_params: { required_field.id.to_s => "Great" })
       expect(described_class.new(registration)).to be_complete
     end
+
+    it "still finds the submission after the form's role changes" do
+      EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form:,
+        form_params: { required_field.id.to_s => "Great" })
+      form.update!(role: "general")
+      expect(described_class.new(registration)).to be_complete
+    end
+
+    context "with a required fanned-out field" do
+      let(:clarity) { create(:form_field, form:, name: "How clear was", answer_type: :single_select_radio, required: true) }
+      let(:masks) { create(:resource, title: "Masks") }
+      let(:collage) { create(:resource, title: "Collage") }
+
+      before do
+        create(:form_field_resource, form_field: clarity, resource: masks)
+        create(:form_field_resource, form_field: clarity, resource: collage)
+      end
+
+      def submit(per_resource)
+        EventRegistrationServices::CalloutFormSubmission.call(registration:, callout:, form: form.reload,
+          form_params: { required_field.id.to_s => "Great", clarity.id.to_s => per_resource })
+      end
+
+      it "is true once every resource's copy is answered" do
+        submit(masks.id.to_s => "Yes", collage.id.to_s => "No")
+        expect(described_class.new(registration)).to be_complete
+      end
+
+      it "is false while one resource's copy is unanswered" do
+        submit(masks.id.to_s => "Yes")
+        expect(described_class.new(registration)).not_to be_complete
+      end
+    end
   end
 end

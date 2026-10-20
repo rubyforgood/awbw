@@ -33,7 +33,7 @@
     picker that scopes the feed lives in the filter row below. %>
 <% title = capture do %>
   <span class="flex flex-wrap items-center gap-3">
-    <%= @person ? link_to(@person.full_name, person_path(@person), class: "hover:underline") : "Everyone" %>
+    <%= @person ? tag.span(@person.full_name, title: @person.preferred_email) : "Everyone" %>
     <% if @person %>
       <span class="flex flex-wrap items-center gap-3 font-sans">
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
