@@ -4,9 +4,17 @@ RSpec.describe DripDate do
   let(:late_pacific_evening) { Time.utc(2026, 9, 11, 5) }
 
   describe ".label" do
-    it "shows the date in the current viewer's zone" do
-      Time.use_zone("Pacific Time (US & Canada)") { expect(described_class.label(late_pacific_evening)).to eq("September 10, 2026") }
-      Time.use_zone("Eastern Time (US & Canada)") { expect(described_class.label(late_pacific_evening)).to eq("September 11, 2026") }
+    it "shows the date in the current viewer's zone, adding the time when it isn't their midnight" do
+      Time.use_zone("Pacific Time (US & Canada)") { expect(described_class.label(late_pacific_evening)).to eq("September 10, 2026 at 10 PM PDT") }
+      Time.use_zone("Eastern Time (US & Canada)") { expect(described_class.label(late_pacific_evening)).to eq("September 11, 2026 at 1 AM EDT") }
+    end
+
+    it "shows just the date at the viewer's midnight" do
+      Time.use_zone("Eastern Time (US & Canada)") { expect(described_class.label(Time.zone.local(2026, 9, 10))).to eq("September 10, 2026") }
+    end
+
+    it "keeps the minutes only when there are some" do
+      Time.use_zone("Pacific Time (US & Canada)") { expect(described_class.label(Time.zone.local(2026, 9, 10, 16, 30))).to eq("September 10, 2026 at 4:30 PM PDT") }
     end
 
     it "is nil without a date" do

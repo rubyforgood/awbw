@@ -191,10 +191,6 @@ class BuiltinCallouts
     time.in_time_zone(Event::PROGRAM_ZONE)
   end
 
-  def multi_day?(event)
-    event.starts_on.present? && event.ends_on.present? && event.ends_on > event.starts_on
-  end
-
   # Ordered built-in callout definitions. `hidden` / `display_from` are procs so
   # each event derives its own defaults; `resources` resolves the linked records
   # and `forms` the delivered ones. Content cards (Handouts, FAQ) render
@@ -325,7 +321,7 @@ class BuiltinCallouts
         forms: ->(event) {
           [
             { form: Form.survey("day_1_survey"), display_from: survey_drip(event, 1) },
-            ({ form: Form.survey("day_2_survey"), display_from: survey_drip(event, 2) } if multi_day?(event)),
+            ({ form: Form.survey("day_2_survey"), display_from: survey_drip(event, 2) } if event.multi_day?),
             { form: Form.survey("post_event_survey"), display_from: (event.end_date - 30.minutes if event.end_date) }
           ].compact
         }
