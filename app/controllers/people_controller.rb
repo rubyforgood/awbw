@@ -51,7 +51,7 @@ class PeopleController < ApplicationController
                               categorizable_items: { category: :category_type }).find(params[:id]).decorate
     track_view(@person)
 
-    load_membership
+    set_membership
     set_checkout_flash
 
     # Handle paginated sections for Turbo Frame requests
@@ -702,7 +702,7 @@ class PeopleController < ApplicationController
     authorized(params.require(:person))
   end
 
-  def load_membership
+  def set_membership
     return unless Membership.enabled? && allowed_to?(:own_record?, @person)
 
     @membership = @person.current_membership&.decorate
