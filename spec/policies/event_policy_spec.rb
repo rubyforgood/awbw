@@ -160,6 +160,15 @@ RSpec.describe EventPolicy, type: :policy do
     end
   end
 
+  describe "#copy?" do
+    it "allows admins only, not the event's owner" do
+      owned_event = build_stubbed :event, created_by: regular_user
+
+      expect(policy_for(record: owned_event, user: admin_user)).to be_allowed_to(:copy?)
+      expect(policy_for(record: owned_event, user: regular_user)).not_to be_allowed_to(:copy?)
+    end
+  end
+
   describe "#dashboard?" do
     let(:owned_event) { build_stubbed :event, created_by: regular_user }
 
