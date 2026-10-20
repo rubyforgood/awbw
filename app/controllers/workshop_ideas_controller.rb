@@ -113,7 +113,7 @@ class WorkshopIdeasController < ApplicationController
 
   # Strong parameters
   def workshop_idea_params
-    params.require(:workshop_idea).permit(
+    permitted = params.require(:workshop_idea).permit(
       :title, :staff_notes, :author_credit_preference,
       :created_by_id, :updated_by_id, :windows_type_id,
       :time_closing, :time_creation, :time_demonstration,
@@ -178,5 +178,6 @@ class WorkshopIdeasController < ApplicationController
                                             :series_description, :series_description_spanish,
                                             :position, :_destroy ],
     )
+    allowed_to?(:manage?, WorkshopIdea) ? permitted : permitted.except(*AuthorCreditable::PER_ITEM_PREFERENCE_ATTRIBUTES)
   end
 end

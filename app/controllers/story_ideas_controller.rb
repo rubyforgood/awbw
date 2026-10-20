@@ -128,7 +128,7 @@ class StoryIdeasController < ApplicationController
   end
 
   def story_idea_params
-    params.require(:story_idea).permit(
+    permitted = params.require(:story_idea).permit(
       :title, :rhino_body, :youtube_url,
       :permission_given, :funder_only, :author_credit_preference,
       :co_author_id, :co_author_credit_preference, :spotlighted_facilitator_id,
@@ -142,5 +142,6 @@ class StoryIdeasController < ApplicationController
       comments_attributes: [ :id, :topic, :body, :flagged, :_destroy ],
       notifications_attributes: Notification::PERMITTED_LOG_ATTRIBUTES
     )
+    allowed_to?(:manage?, StoryIdea) ? permitted : permitted.except(*AuthorCreditable::PER_ITEM_PREFERENCE_ATTRIBUTES)
   end
 end

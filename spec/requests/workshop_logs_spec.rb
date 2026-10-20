@@ -485,6 +485,14 @@ RSpec.describe "/workshop_logs", type: :request do
 
         expect(response.body).not_to include("workshop_log[author_id]")
       end
+
+      it "ignores a per-item credit preference" do
+        patch workshop_log_path(workshop_log), params: {
+          workshop_log: valid_attributes.merge(author_credit_preference: "anonymous")
+        }
+
+        expect(workshop_log.reload.author_credit_preference).not_to eq("anonymous")
+      end
     end
   end
 
