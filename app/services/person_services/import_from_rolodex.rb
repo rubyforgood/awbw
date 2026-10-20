@@ -40,7 +40,6 @@ module PersonServices
     # Both archive fields hold an address (FmRolodex::PORTAL_FIELDS maps each to
     # people.email), the primary one first, so it becomes the person's own email.
     EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
-    UNKNOWN_LOCALITY = "Unknown"
     STRING_LIMIT = 255
 
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
@@ -333,25 +332,39 @@ module PersonServices
 
     def address_attributes(fields)
       street = [ street_line(fields), fields["AddrsLine2"] ].filter_map { |line| line.to_s.strip.presence }.join(", ")
-      city = fields["AddrsCity"].to_s.strip
-      state = fields["AddrsState"].to_s.strip
+      city = clip(fields["AddrsCity"].to_s.strip)
+      state = clip(fields["AddrsState"].to_s.strip)
       return if street.blank? || city.blank? || state.blank?
 
+      country = clip(fields["AddrsCountry"])
+      county = county(fields)
       {
         street_address: clip(street),
-        city: clip(city),
-        state: clip(state),
-        zip_code: fields["AddrsPostalCode"].to_s.strip.truncate(STRING_LIMIT),
-        country: clip(fields["AddrsCountry"]),
-        county: county(fields),
+        city:,
+        state:,
+        zip_code: zip_code(fields),
+        country:,
+        county:,
         address_type: contact_type(fields["AddrsType"], allowed: Address::CONTACT_TYPES),
-        locality: UNKNOWN_LOCALITY
+        # FileMaker records a locality only on a project, so a person's own address has
+        # none to carry over and the parts have to say.
+        locality: AddressLocality.for(city:, state:, country:, county:)
       }
     end
 
+    # The address's own postal code, or the one it points at in the archive's ZIP table
+    # when it carries none itself — the field it mirrors, and where the county is read.
+    def zip_code(fields)
+      [ fields["AddrsPostalCode"], fields["PostalCodeLookup"] ]
+        .filter_map { |value| value.to_s.strip.presence }.first.to_s.truncate(STRING_LIMIT)
+    end
+
     def county(fields)
-      zip = fields["PostalCodeLookup"].presence || fields["AddrsPostalCode"]
-      zip_counties[zip.to_s.strip[/\A\d{5}/]]
+      zip_counties[zip_lookup(fields)[/\A\d{5}/]]
+    end
+
+    def zip_lookup(fields)
+      (fields["PostalCodeLookup"].presence || fields["AddrsPostalCode"]).to_s.strip
     end
 
     # One query for the archive's ~80,000 zip codes beats one per address across a full import.

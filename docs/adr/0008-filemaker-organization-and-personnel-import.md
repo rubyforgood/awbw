@@ -51,6 +51,14 @@ Constraints already decided elsewhere:
 - **Work addresses:** the Rolodex `WorksiteAddrsID` address and any address typed Work
   become an `Address` on the organization, and the person's affiliation there points at it
   (`affiliations.organization_address_id`).
+- **Locality and districts come from the project, not derived.** `fm_projects` is the one
+  place FileMaker records a `Locality`, and its vocabulary is where `Address::LOCALITIES`
+  came from — so a project's `Locality`, `District`, `SPA` and `LASupervisorialDistrict`
+  copy straight onto the organization's address (`locality`, `district`,
+  `la_service_planning_area`, `la_supervisorial_district`). Only a person's own address has
+  no locality to carry, which is why the Rolodex pass works it out with `AddressLocality`.
+  Those project rows also carry real County → Locality pairs, so they are where to read
+  AWBW's Northern/Central/Southern line from instead of inventing it.
 - **Conflicts:** same rule as people — fill blanks, keep the portal value where the archive
   disagrees, and report each difference as a comment plus in the task output.
 - **Out of scope:** event registrations (`fm_participants`, 68,497 rows), payments, funding,

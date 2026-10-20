@@ -24,7 +24,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(person).to have_attributes(first_name: "Ada", last_name: "Lovelace", email: "ada@example.com",
                                       pronouns: "she/her", date_of_birth: Date.new(1815, 12, 10), notes: "Met at training")
     expect(person.addresses.sole).to have_attributes(street_address: "1 Main St, Apt 2", city: "Los Angeles", state: "CA",
-                                                     zip_code: "90001", address_type: "personal", locality: "Unknown", primary: true)
+                                                     zip_code: "90001", address_type: "personal", locality: "LA City", primary: true)
     expect(person.contact_methods.sole).to have_attributes(kind: "phone", value: "555-0100", contact_type: "work", primary: true)
   end
 
@@ -233,6 +233,35 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
     expect(%w[00036 00037 00038].map { |code| Person.find_by!(filemaker_code: code).addresses.sole.county })
       .to eq([ "Los Angeles", "Middlesex", nil ])
+  end
+
+  it "takes the ZIP an address only points at in the archive's ZIP table" do
+    FmPostalCode.create!(fm_id: "94110", data: { "City" => "San Francisco", "State" => "CA", "County" => "San Francisco" })
+    FmAddress.create!(fm_id: "A11", data: { "AddrsLine1" => "1 Main St", "AddrsCity" => "San Francisco",
+                                            "AddrsState" => "CA", "PostalCodeLookup" => "94110" })
+    rolodex("00046", EMail: "ada@example.com", PrimaryAddrsID: "A11")
+
+    results
+
+    expect(Person.find_by!(filemaker_code: "00046").addresses.sole)
+      .to have_attributes(zip_code: "94110", county: "San Francisco")
+  end
+
+  it "reads an address's locality from its own parts, since the archive records none for a person" do
+    FmPostalCode.create!(fm_id: "91101", data: { "County" => "Los Angeles" })
+    FmAddress.create!(fm_id: "A12", data: { "AddrsLine1" => "1 Colorado Blvd", "AddrsCity" => "Pasadena",
+                                            "AddrsState" => "CA", "AddrsPostalCode" => "91101" })
+    FmAddress.create!(fm_id: "A13", data: { "AddrsLine1" => "2 Mass Ave", "AddrsCity" => "Cambridge", "AddrsState" => "MA" })
+    FmAddress.create!(fm_id: "A14", data: { "AddrsLine1" => "3 Queen St", "AddrsCity" => "Toronto",
+                                            "AddrsState" => "ON", "AddrsCountry" => "Canada" })
+    rolodex("00047", EMail: "ada@example.com", PrimaryAddrsID: "A12")
+    rolodex("00048", FirstName: "Grace", EMail: "grace@example.com", PrimaryAddrsID: "A13")
+    rolodex("00049", FirstName: "Hedy", EMail: "hedy@example.com", PrimaryAddrsID: "A14")
+
+    results
+
+    expect(%w[00047 00048 00049].map { |code| Person.find_by!(filemaker_code: code).addresses.sole.locality })
+      .to eq([ "LA County", "Outside CA", "Outside USA" ])
   end
 
   it "prefixes the street number when the first line doesn't already carry it" do

@@ -133,7 +133,7 @@ module OrganizationServices
         state: @state,
         zip_code: @zip_code.to_s,
         country: @country,
-        locality: "Unknown",
+        locality: AddressLocality.for(city: @city, state: @state, country: @country),
         address_type: "work",
         primary: make_primary
       )

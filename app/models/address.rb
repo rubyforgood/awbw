@@ -2,8 +2,17 @@ class Address < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
-  LOCALITIES = [ "LA City", "LA County", "Southern CA", "Northern CA",
-                "Central CA", "Orange County", "Outside CA", "Outside USA", "Unknown" ]
+  # AWBW's own geography, inherited from FileMaker's project Locality field. The five
+  # named here are the ones AddressLocality can work out from an address; the
+  # Northern/Central/Southern line through California is a person's call.
+  LA_CITY = "LA City"
+  LA_COUNTY = "LA County"
+  ORANGE_COUNTY = "Orange County"
+  OUTSIDE_CA = "Outside CA"
+  OUTSIDE_USA = "Outside USA"
+  UNKNOWN_LOCALITY = "Unknown"
+  LOCALITIES = [ LA_CITY, LA_COUNTY, "Southern CA", "Northern CA",
+                "Central CA", ORANGE_COUNTY, OUTSIDE_CA, OUTSIDE_USA, UNKNOWN_LOCALITY ]
   UNKNOWN_CONTACT_TYPE = "unknown"
   CONTACT_TYPES = [ nil, "work", "personal", "mailing", UNKNOWN_CONTACT_TYPE ].freeze
   # USPS abbreviations for the 50 states, DC, and the US territories the atlas
