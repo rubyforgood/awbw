@@ -1013,8 +1013,10 @@ RSpec.describe "EventRegistrations", type: :request do
         end
 
         it "compresses carried days and flags the mismatch when the source had more days than the destination" do
-          three_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 14.days.from_now)
-          one_day = create(:event, published: true, start_date: 12.days.from_now, end_date: 12.days.from_now)
+          # Mid-month so the month_year asserted below reads the same in UTC and the request's Pacific zone.
+          starts = 1.month.from_now.change(day: 15, hour: 12)
+          three_day = create(:event, published: true, start_date: starts, end_date: starts + 2.days)
+          one_day = create(:event, published: true, start_date: starts, end_date: starts)
           big_source = create(:event_registration, event: three_day, status: "transferred_out",
             completed_day_1: true, completed_day_2: true, completed_day_3: true)
 
