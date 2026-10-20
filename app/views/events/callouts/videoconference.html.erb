@@ -28,7 +28,7 @@
             <li class="flex items-center gap-2">
               <i class="fa-solid <%= date_met ? "fa-circle-check text-green-600" : "fa-circle-xmark text-gray-300" %>"></i>
               <% if reveal.present? %>
-                Available from <%= reveal.to_date.strftime("%B %-d, %Y") %>
+                Available from <%= DripDate.label(reveal) %>
               <% else %>
                 Available closer to the event
               <% end %>

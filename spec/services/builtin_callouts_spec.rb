@@ -69,12 +69,13 @@ RSpec.describe BuiltinCallouts do
     end
 
     it "seeds the Videoconference card with a drip date a week before start" do
-      event = create(:event, start_date: Date.new(2026, 9, 10), end_date: Date.new(2026, 9, 12))
+      pacific = Time.find_zone(Event::PROGRAM_ZONE)
+      event = create(:event, start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 12, 17))
       described_class.seed(event)
 
       vc = event.registration_ticket_callouts.find_by(builtin_key: "videoconference")
       expect(vc).to be_present
-      expect(vc.display_from.to_date).to eq(Date.new(2026, 9, 3))
+      expect(vc.display_from).to eq(pacific.local(2026, 9, 3, 9))
       expect(vc.hidden).to be(true) # non-training: hidden by default
     end
 
@@ -401,6 +402,17 @@ RSpec.describe BuiltinCallouts do
 
       callout = event.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys")
       expect(callout.forms.map(&:name)).to contain_exactly("Day 1 Survey", "Day 2 Survey", "Post-Event Survey")
+    end
+
+    it "counts event days in the program zone, so a one-day evening event gets no Day 2 survey in UTC" do
+      seed_survey_templates
+      pacific = Time.find_zone(Event::PROGRAM_ZONE)
+      event = create(:event, start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 10, 17, 30))
+
+      Time.use_zone("UTC") { described_class.seed(event) }
+
+      callout = event.registration_ticket_callouts.find_by(builtin_key: "feedback_surveys")
+      expect(callout.forms.map(&:name)).to contain_exactly("Day 1 Survey", "Post-Event Survey")
     end
 
     it "drips each linked evaluation on its own date" do
