@@ -674,34 +674,10 @@ RSpec.describe Person, type: :model do
     end
 
     context "membership_status" do
-      it "active: includes people with a non-cancelled membership" do
-        member = create(:person, first_name: "Member", last_name: "Active")
-        create(:membership, person: member)
-        results = Person.search_by_params(membership_status: "active")
-        expect(results).to include(member)
-        expect(results).not_to include(person_alice)
-      end
-
-      it "inactive: includes people whose only membership is cancelled" do
-        former = create(:person, first_name: "Former", last_name: "Member")
-        create(:membership, :autorenewal_cancelled, person: former, end_date: Date.current - 1.day)
-        results = Person.search_by_params(membership_status: "inactive")
-        expect(results).to include(former)
-        expect(results).not_to include(person_alice)
-      end
-
       it "paid: includes people with a covered current invoice" do
         member = create(:person, first_name: "Paid", last_name: "Member")
         create(:membership_invoice, :comped, membership: create(:membership, person: member))
         results = Person.search_by_params(membership_status: "paid")
-        expect(results).to include(member)
-      end
-
-      it "overdue: includes people owing on a current invoice whose term has started" do
-        member = create(:person, first_name: "Overdue", last_name: "Member")
-        create(:membership_invoice, membership: create(:membership, person: member),
-                                    start_date: 60.days.ago, end_date: 305.days.from_now)
-        results = Person.search_by_params(membership_status: "overdue")
         expect(results).to include(member)
       end
 

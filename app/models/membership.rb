@@ -123,8 +123,6 @@ class Membership < ApplicationRecord
     nil
   end
 
-  # Set by a parent (Person) cascade-destroying this membership, so the
-  # admin-facing delete guard doesn't block the parent's own delete.
   attr_accessor :skip_deletion_guard
 
   # Update membership start_date/end_date from a newly created paid or free invoice.
@@ -155,9 +153,6 @@ class Membership < ApplicationRecord
     saved_change_to_autorenewal_cancelled_at? && autorenewal_cancelled_at.present?
   end
 
-  # Runs before the association's dependent destroy: aborts unless the membership
-  # is deletable (or the destroy is a parent cascade), then tells each invoice to
-  # skip its own standalone guard (the membership's guard is the gate for it).
   def prepare_destroy
     unless skip_deletion_guard
       unless deletable?

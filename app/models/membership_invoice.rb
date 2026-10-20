@@ -33,7 +33,6 @@ class MembershipInvoice < ApplicationRecord
   before_validation :derive_end_date, on: :create
   before_destroy :prevent_destroy_unless_deletable
   after_save :sync_membership_dates, if: :paid_in_full?
-  after_commit :sync_membership_dates, on: :update, if: :paid_in_full?
 
   validates :start_date, :end_date, presence: true
   validates :cost_cents, numericality: { greater_than_or_equal_to: 0 }
