@@ -43,6 +43,7 @@ module PersonServices
     # people.email), the primary one first, so it becomes the person's own email.
     EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
     STRING_LIMIT = 255
+    BATCH_SIZE = 1_000
     # A note lands in a comment's TEXT body rather than a varchar, so it gets its own, far
     # larger ceiling — long enough that no real note reaches it.
     TEXT_LIMIT = 10_000
@@ -59,9 +60,10 @@ module PersonServices
 
     attr_reader :results, :differences
 
-    def initialize(scope: FmRolodex.all, relink: false)
+    def initialize(scope: FmRolodex.all, relink: false, progress: nil)
       @scope = scope
       @relink = relink
+      @progress = progress
       @results = OUTCOMES.index_with { [] }
       @differences = []
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
@@ -73,7 +75,11 @@ module PersonServices
     def call
       @address_index = FmRolodex.contact_index(FmAddress)
       @phone_index = FmRolodex.contact_index(FmPhoneNumber)
-      @scope.find_each { |rolodex| import(rolodex.preload_contacts(addresses: @address_index, phone_numbers: @phone_index)) }
+      read = 0
+      @scope.find_in_batches(batch_size: BATCH_SIZE) do |batch|
+        import_batch(batch)
+        @progress&.call(read += batch.size)
+      end
       self
     end
 
@@ -86,6 +92,14 @@ module PersonServices
     end
 
     private
+
+    # Each batch commits on its own (a savepoint inside a dry run's rollback), so a run that
+    # stops partway keeps what it finished; the rerun skips those rows as already imported.
+    def import_batch(batch)
+      ActiveRecord::Base.transaction(requires_new: true) do
+        batch.each { |rolodex| import(rolodex.preload_contacts(addresses: @address_index, phone_numbers: @phone_index)) }
+      end
+    end
 
     def import(rolodex)
       data = rolodex.data
@@ -160,14 +174,14 @@ module PersonServices
       build_addresses(person, rolodex)
       build_phones(person, rolodex)
 
-      return record(:failed, "#{label}: #{person.errors.full_messages.to_sentence}") unless person.save
+      # Its tags and note would touch the person when the batch commits, overwriting the
+      # archive's dates it was created with.
+      Person.no_touching do
+        return record(:failed, "#{label}: #{person.errors.full_messages.to_sentence}") unless person.save
 
-      tag_service_areas(person, data)
-      note_comment(person, rolodex)
-      # Tagging touches the person, so the archive's dates are written once more here —
-      # update_columns, so the touch doesn't win.
-      timestamps = archive_timestamps(data)
-      person.update_columns(timestamps) if timestamps.any?
+        tag_service_areas(person, data)
+        note_comment(person, rolodex)
+      end
       @imported_codes << rolodex.fm_id
       record(:created, "#{label} → ##{person.id}")
     end

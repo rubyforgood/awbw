@@ -339,6 +339,36 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00065").comments).to be_empty
   end
 
+  describe "batches" do
+    before { stub_const("#{described_class}::BATCH_SIZE", 1) }
+
+    it "keeps the batches it finished and rolls back the one that fails" do
+      stub_const("#{described_class}::BATCH_SIZE", 2)
+      rolodex("00101", EMail: "ada@example.com")
+      rolodex("00102", FirstName: "Grace", EMail: "grace@example.com")
+      rolodex("00105", FirstName: "Hedy", EMail: "hedy@example.com")
+      rolodex("00106", FirstName: "Mary", EMail: "mary@example.com")
+      allow_any_instance_of(described_class).to receive(:import).and_wrap_original do |original, rolodex|
+        raise "stopped" if rolodex.fm_id == "00106"
+
+        original.call(rolodex)
+      end
+
+      expect { described_class.new.call }.to raise_error("stopped")
+      expect(Person.where(filemaker_code: %w[00101 00102 00105]).pluck(:filemaker_code)).to contain_exactly("00101", "00102")
+    end
+
+    it "reports how many rows it has read after each batch" do
+      rolodex("00103", EMail: "ada@example.com")
+      rolodex("00104", FirstName: "Grace", EMail: "grace@example.com")
+      read = []
+
+      described_class.new(progress: ->(count) { read << count }).call
+
+      expect(read).to eq([ 1, 2 ])
+    end
+  end
+
   it "truncates over-long free text instead of losing the person to it" do
     FmAddress.create!(fm_id: "A4", data: { "AddrsLine1" => "x" * 200, "AddrsLine2" => "y" * 200,
                                            "AddrsCity" => "Los Angeles", "AddrsState" => "CA" })
