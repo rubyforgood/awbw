@@ -7,9 +7,15 @@
                 local: false,
                 class: "space-y-4" do |f| %>
     <div class="flex flex-wrap items-end gap-4">
-      <%= render "shared/filter_text", param: :search, label: "Title or body contains",
-            placeholder: "e.g. Profile, Workshop search…",
-            field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[200px] flex-1" %>
+      <div class="min-w-[200px] flex-1">
+        <%= f.label :search, "Title or body contains",
+                    class: search_label_class %>
+
+        <%= f.text_field :search,
+                         value: params[:search],
+                         placeholder: "e.g. Profile, Workshop search…",
+                         class: search_field_class(extra: "bg-white") %>
+      </div>
 
       <% if @video_type != "instructional" %>
         <div class="min-w-[180px] flex-0">

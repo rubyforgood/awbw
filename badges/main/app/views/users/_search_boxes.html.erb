@@ -4,8 +4,15 @@
   class: "w-full") do %>
   <div class="mb-6 grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <!-- Search -->
-    <%= render "shared/filter_text", param: :search, label: "Search", placeholder: "Name, email, or phone", submit: true,
-          wrapper_class: nil %>
+    <div>
+      <%= label_tag :search, "Search", class: search_label_class %>
+      <div class="relative">
+        <%= text_field_tag :search, params[:search],
+                           class: search_field_class(extra: "pr-10"),
+                           placeholder: "Name, email, or phone" %>
+        <%= render "shared/search_submit" %>
+      </div>
+    </div>
 
     <!-- Access -->
     <div>

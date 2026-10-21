@@ -6,8 +6,16 @@
                 class: "grid grid-cols-1 md:grid-cols-5 gap-4 items-end" do |f| %>
 
     <!-- Name Search -->
-    <%= render "shared/filter_text", param: :category_name, label: "Name contains", placeholder: "e.g. Art, Music…",
-          wrapper_class: nil, input_options: { oninput: "this.form.requestSubmit()" } %>
+    <div>
+      <%= f.label :category_name, "Name contains",
+                  class: search_label_class %>
+
+      <%= f.text_field :category_name,
+                       value: params[:category_name],
+                       placeholder: "e.g. Art, Music…",
+                       class: search_field_class,
+                       oninput: "this.form.requestSubmit()" %>
+    </div>
 
     <!-- Category Type -->
     <div>

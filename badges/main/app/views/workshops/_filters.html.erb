@@ -8,8 +8,13 @@
 
 <div class="mb-0 grid grid-cols-1 gap-4 px-4 py-0 md:grid-cols-3">
   <% [[:title, "Title contains"], [:author_name, "Author name contains"], [:query, "Full-text contains"]].each do |field, placeholder| %>
-    <%= render "shared/filter_text", param: field, placeholder: placeholder, submit: true,
-          field_class: search_field_class(extra: "bg-white"), wrapper_class: nil %>
+    <div class="relative">
+      <%= text_field_tag field,
+                         params[field],
+                         placeholder: placeholder,
+                         class: search_field_class(extra: "bg-white pr-10") %>
+      <%= render "shared/search_submit" %>
+    </div>
   <% end %>
 </div>
 

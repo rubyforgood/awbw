@@ -46,7 +46,10 @@
         <span class="text-xs font-semibold uppercase tracking-wide">Filters</span>
       </div>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        <%= render "shared/filter_text", param: :search, label: "Search", placeholder: "Name or email", wrapper_class: nil %>
+        <div>
+          <%= label_tag :search, "Search", class: search_label_class %>
+          <%= text_field_tag :search, params[:search], placeholder: "Name or email", class: search_field_class %>
+        </div>
 
         <div>
           <%= label_tag :form_id, "Form", class: search_label_class %>

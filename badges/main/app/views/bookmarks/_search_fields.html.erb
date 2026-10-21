@@ -1,7 +1,16 @@
 <% show_created_by = allowed_to?(:index?, Bookmark) && params[:user_id].present? %>
 <div class="grid grid-cols-1 md:grid-cols-<%= show_created_by ? 4 : 3 %> mb-6 items-end gap-4">
   <!-- Keyword -->
-  <%= render "shared/filter_text", param: :keyword, label: "Keyword", submit: true, wrapper_class: nil %>
+  <div>
+    <%= label_tag :keyword, "Keyword", class: search_label_class %>
+    <div class="relative">
+      <%= text_field_tag :keyword, params[:keyword],
+                         class: search_field_class %>
+      <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+        <i class="fa fa-search text-gray-500"></i>
+      </div>
+    </div>
+  </div>
 
   <!-- Created by (admins who can view bookmark index, or when user_id param is present) -->
   <% if show_created_by %>

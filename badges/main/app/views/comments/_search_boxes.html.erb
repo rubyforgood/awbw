@@ -13,9 +13,16 @@
     <span class="text-xs font-semibold tracking-wide uppercase">Filter</span>
   </div>
   <div class="flex flex-wrap items-end gap-3">
-    <%= render "shared/filter_text", param: :query, label: "Keyword", placeholder: "Body or topic…", submit: true,
-          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[150px] grow",
-          input_options: { oninput: "this.form.requestSubmit()" } %>
+    <div class="min-w-[150px] grow">
+      <label for="query" class="<%= search_label_class %>">Keyword</label>
+      <div class="relative">
+        <%= f.text_field :query, value: params[:query],
+                         placeholder: "Body or topic…",
+                         class: search_field_class(extra: "bg-white pr-10"),
+                         oninput: "this.form.requestSubmit()" %>
+        <%= render "shared/search_submit" %>
+      </div>
+    </div>
 
     <div class="min-w-[150px] grow">
       <label for="author_id" class="<%= search_label_class %>">Author</label>

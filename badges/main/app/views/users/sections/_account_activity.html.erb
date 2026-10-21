@@ -16,8 +16,12 @@
       class: "mb-4") do %>
       <%= hidden_field_tag :section, "account_activity" %>
       <div class="flex items-center gap-3">
-        <%= render "shared/filter_text", param: :search, placeholder: "Search events...", submit: true,
-              wrapper_class: "flex-1 max-w-sm" %>
+        <div class="relative flex-1 max-w-sm">
+          <%= text_field_tag :search, params[:search],
+                             class: search_field_class(extra: "pr-10"),
+                             placeholder: "Search events..." %>
+          <%= render "shared/search_submit" %>
+        </div>
         <%= select_tag :by_user_id,
                        options_for_select(by_user_options, params[:by_user_id]),
                        include_blank: "By: All users",

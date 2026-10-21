@@ -5,9 +5,16 @@
                 data: {controller: "collection"},
                       autocomplete: "off",
                 class: "flex flex-wrap gap-4" do |f| %>
-    <%= render "shared/filter_text", param: :query, label: "Keywords", placeholder: "Search quotes…",
-          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[200px] flex-grow",
-          input_options: { oninput: "this.form.requestSubmit()" } %>
+    <div class="min-w-[200px] flex-grow">
+      <%= f.label :query, "Keywords",
+                  class: search_label_class %>
+
+      <%= f.text_field :query,
+                       value: params[:query],
+                       placeholder: "Search quotes…",
+                       class: search_field_class(extra: "bg-white"),
+                       oninput: "this.form.requestSubmit()" %>
+    </div>
 
     <!-- SOURCE -->
     <div class="min-w-[180px]">

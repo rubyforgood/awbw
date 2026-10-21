@@ -3,8 +3,11 @@
     data: { controller: "collection", turbo_frame: "organizations_results" },
     autocomplete: "off",
     class: "flex flex-wrap items-end gap-3" do %>
-    <%= render "shared/filter_text", param: :query, label: "Name",
-          field_class: search_field_class(extra: "w-64"), wrapper_class: nil %>
+    <div>
+      <%= label_tag :query, "Name", class: search_label_class %>
+      <%= text_field_tag :query, params[:query],
+                         class: search_field_class(extra: "w-64") %>
+    </div>
     <div>
       <%= label_tag :sector_name, "Sector", class: "text-sm font-medium text-gray-700 mb-1 block" %>
       <%= select_tag :sector_name,
@@ -21,8 +24,11 @@
                      class: "w-40 rounded-md border border-gray-300 px-3 py-2 text-gray-800 shadow-sm
                                      focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none" %>
     </div>
-    <%= render "shared/filter_text", param: :address, label: "Address",
-          field_class: search_field_class(extra: "w-64"), wrapper_class: nil %>
+    <div>
+      <%= label_tag :address, "Address", class: search_label_class %>
+      <%= text_field_tag :address, params[:address],
+                         class: search_field_class(extra: "w-64") %>
+    </div>
 
     <% if allowed_to?(:manage?, Organization) %>
       <div class="admin-only bg-blue-100">

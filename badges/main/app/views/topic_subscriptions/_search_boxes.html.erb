@@ -23,9 +23,15 @@
               onchange: "this.form.requestSubmit()",
               data: { controller: "remote-select", remote_select_model_value: "person" } %>
       </div>
-      <%= render "shared/filter_text", param: :organization_name, label: "Organization",
-            placeholder: "Search by organization name", submit: true,
-            field_class: field_class, label_class: label_class, wrapper_class: "flex-1 min-w-[200px]" %>
+      <div class="flex-1 min-w-[200px]">
+        <%= f.label :organization_name, "Organization", class: label_class %>
+        <div class="relative">
+          <%= text_field_tag :organization_name, params[:organization_name],
+                class: search_field_class(extra: "bg-white pr-10"),
+                placeholder: "Search by organization name" %>
+          <%= render "shared/search_submit" %>
+        </div>
+      </div>
       <%= render "shared/filter_multiselect", param: :topic_subscription_type_id, label: "Topic",
             options: TopicSubscriptionType.active.ordered.map { |t| [ t.name, t.id ] },
             selected: Array(params[:topic_subscription_type_id]).map(&:to_i), placeholder: "All topics",
