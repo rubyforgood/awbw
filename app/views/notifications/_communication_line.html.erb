@@ -39,9 +39,20 @@
              path: local_assigns[:date_path], new_tab: local_assigns[:date_new_tab] %>
 <% end %>
 <% main = capture do %>
-  <span class="inline-flex w-20 shrink-0 items-center">
-    <span class="<%= chip[0] %> <%= chip[1] %> max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= decorated.from_title.presence || from_name %>"><%= truncate(from_first.to_s, length: 10, omission: "..") %></span>
-  </span>
+  <% from_chip_class = "#{chip[0]} #{chip[1]} max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" %>
+  <% from_label = truncate(from_first.to_s, length: 10, omission: "..") %>
+  <% if !truncate_body && decorated.from_person %>
+    <%# Only the untruncated row can link the person: a card-wide link can't nest one. %>
+    <span class="group/person relative inline-flex w-20 shrink-0 items-center">
+      <%= link_to from_label, person_path(decorated.from_person), target: "_blank", rel: "noopener",
+                  class: "#{from_chip_class} hover:underline" %>
+      <%= facilitator_hover_card(decorated.from_person, header: true) %>
+    </span>
+  <% else %>
+    <span class="inline-flex w-20 shrink-0 items-center">
+      <span class="<%= from_chip_class %>" title="<%= decorated.from_title.presence || from_name %>"><%= from_label %></span>
+    </span>
+  <% end %>
   <%# Subject and body share one column so the body starts flush with the subject. %>
   <% if truncate_body %>
     <div class="flex min-w-0 flex-1 items-start gap-1 text-sm">
