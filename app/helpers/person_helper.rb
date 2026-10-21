@@ -156,6 +156,13 @@ module PersonHelper
   # A piece the person hid (a `profile_show_*` flag turned off) stays visible to
   # them and to admins under the blue admin-or-owner wash. `flag` is a
   # `profile_show_*` attribute name (symbol).
+  # Memoized per person so a feed naming the same person on every row renders
+  # (and queries) their card once.
+  def facilitator_hover_card(person, header: false)
+    @facilitator_hover_cards ||= {}
+    @facilitator_hover_cards[[ person.id, header ]] ||= render("people/facilitator_hover_card", person: person, header: header)
+  end
+
   def profile_piece_shown?(person, flag)
     person.public_send(:"#{flag}?") || profile_piece_hidden_for_viewer?(person, flag)
   end

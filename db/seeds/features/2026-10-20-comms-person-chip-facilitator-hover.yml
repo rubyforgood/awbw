@@ -4,8 +4,9 @@ display_status: admin_facing
 released_on: 2026-10-20
 pr_number: 2766
 summary: >-
-  A person's comments & communications page now shows their profile chip.
-  Hover it to see when they first affiliated and each current facilitator
-  affiliation, with the organization's status and when the term started or ends.
+  A person's comments & communications page now leads with their profile chip,
+  and their name on each message from them links to their profile. Hover either
+  to see when they first affiliated and each current facilitator affiliation,
+  with the organization's status and when the term started or ends.
 pro_tips:
   - "Dates close to today read in plain words, like \"ending next month\", so a lapsing term stands out."

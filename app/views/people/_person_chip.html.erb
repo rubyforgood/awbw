@@ -1,29 +1,6 @@
-<%# The person's profile chip with an admin hover card: when they first affiliated,
-    and each current facilitator affiliation's org, org status, and dates.
-    Locals: person (decorated). %>
-<% affiliated_since = person.affiliated_since_date %>
-<% facilitations = person.current_facilitator_affiliations %>
+<%# The person's profile chip with their facilitator hover card. Locals: person. %>
 <span class="group/person relative inline-flex font-sans text-sm">
   <%= person_profile_button(person, subtitle: person.preferred_email, width_class: "w-auto max-w-xs",
                                     show_title: false) %>
-  <span class="absolute top-full left-0 z-20 mt-1 hidden w-80 rounded-md border border-gray-200 bg-white p-3 font-sans text-sm font-normal text-gray-700 shadow-lg group-focus-within/person:block group-hover/person:block">
-    <span class="block text-gray-500">
-      <%= affiliated_since ? "Affiliated since #{affiliated_since.strftime('%B %Y')}" : "No affiliation dates recorded" %>
-    </span>
-    <span class="mt-2 block text-xs font-semibold tracking-wide text-gray-500 uppercase"><%= "Current facilitator affiliation".pluralize([ facilitations.size, 1 ].max) %></span>
-    <% if facilitations.any? %>
-      <% facilitations.each do |affiliation| %>
-        <% affiliation = affiliation.decorate %>
-        <span class="mt-1.5 block">
-          <span class="flex flex-wrap items-center gap-1.5">
-            <span class="font-medium text-gray-900"><%= affiliation.organization.name %></span>
-            <%= affiliation.organization.decorate.organization_status_chip(admin: true) %>
-          </span>
-          <span class="block text-xs text-gray-500"><%= affiliation.period_note %></span>
-        </span>
-      <% end %>
-    <% else %>
-      <span class="mt-1 block text-gray-500">None</span>
-    <% end %>
-  </span>
+  <%= facilitator_hover_card(person) %>
 </span>
