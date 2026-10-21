@@ -8,7 +8,8 @@
     neutral source chip, pointing at that record's edit page, with the channel icon
     inside it). Optional expandable adds a chevron that unclamps a truncated row
     (outside the card link so it doesn't navigate) or hides a full row's body;
-    date_path (+ date_new_tab) links the timestamp to the feed narrowed to this entry. %>
+    date_path (+ date_new_tab) links the timestamp to the feed narrowed to this entry;
+    feed_person is the person whose feed the row sits on, for the sender chip's back link. %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
@@ -44,7 +45,7 @@
   <% if !truncate_body && decorated.from_person %>
     <%# Only the untruncated row can link the person: a card-wide link can't nest one. %>
     <span class="group/person relative inline-flex w-20 shrink-0 items-center">
-      <%= link_to from_label, person_path(decorated.from_person), target: "_blank", rel: "noopener",
+      <%= link_to from_label, feed_person_edit_path(decorated.from_person, feed_person: local_assigns[:feed_person]), target: "_blank", rel: "noopener",
                   class: "#{from_chip_class} hover:underline" %>
       <%= facilitator_hover_card(decorated.from_person, header: true) %>
     </span>
