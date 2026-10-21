@@ -634,7 +634,7 @@ class PeopleController < ApplicationController
 
     labeled_emails = []
     # Skip person.email when person has a user (it's a stale copy of user.email)
-    labeled_emails << { label: "Email", value: person.email_on_file } if person.email_on_file.present? && person.user.blank?
+    labeled_emails << { label: "Email", value: person.email } if person.email.present? && person.user.blank?
     labeled_emails << { label: "Secondary email", value: person.email_2 } if person.email_2.present?
     labeled_emails << { label: "User email", value: person.user.email } if person.user&.email.present?
     emails = labeled_emails.map { |e| e[:value] }.uniq

@@ -118,18 +118,17 @@ test_people = [
 ]
 
 test_people.each do |data|
-  email = data[:email] || "#{data[:first_name].downcase.gsub(' ', '')}.#{data[:last_name].downcase.gsub(' ', '')}@example.com"
   next if Person.where(
     "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(COALESCE(email, '')) = ?",
     data[:first_name].downcase,
     data[:last_name].downcase,
-    data[:email].to_s.downcase
+    (data[:email] || "").downcase
   ).exists?
 
   person_attrs = {
     first_name: data[:first_name],
     last_name: data[:last_name],
-    email: email,
+    email: data[:email],
     email_2: data[:email_2],
     profile_is_searchable: data[:searchable],
     # Spread the credit preferences across seeded people so the author credit
@@ -141,8 +140,9 @@ test_people.each do |data|
   }
 
   if data[:with_user]
-    user = User.where(email: email).first_or_create!(
-      email: email,
+    user_email = data[:email] || "#{data[:first_name].downcase.gsub(' ', '')}.#{data[:last_name].downcase.gsub(' ', '')}@example.com"
+    user = User.where(email: user_email).first_or_create!(
+      email: user_email,
       first_name: data[:first_name],
       last_name: data[:last_name],
       password: "password",
@@ -155,10 +155,7 @@ test_people.each do |data|
       user.update!(person: person)
     end
   else
-    person = Person.create!(person_attrs)
-    # These entries stand in for people added before an email was required, so dev keeps
-    # coverage of the secondary-email fallback and of editing a person with no email.
-    person.update_column(:email, nil) if data[:email].nil?
+    Person.create!(person_attrs)
   end
 end
 
@@ -200,7 +197,6 @@ unless Person.exists?(first_name: "Grace", last_name: "Legacy")
   demo = Person.create!(
     first_name: "Grace",
     last_name: "Legacy",
-    email: "grace.legacy@example.com",
     profile_is_searchable: true,
     member_since: Date.new(2016, 1, 1),
     created_by: admin_user,

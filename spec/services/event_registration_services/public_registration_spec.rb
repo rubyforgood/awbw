@@ -637,7 +637,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
 
     it "matches a person whose email is only on their login" do
-      existing = create(:person, :legacy_without_email, user: nil, first_name: "Jamie", last_name: "Rivera-Cole")
+      existing = create(:person, user: nil, first_name: "Jamie", last_name: "Rivera-Cole", email: nil)
       create(:user, person: existing, email: "jamie@example.com")
 
       params = base_form_params(first_name: "Jamie", last_name: "Rivera-Cole", email: "jamie@example.com")

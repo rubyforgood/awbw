@@ -61,7 +61,7 @@ RSpec.describe "People index share toggles", type: :request do
   end
 
   describe "email" do
-    let(:person) { create(:person, :legacy_without_email, first_name: "Shared", user: nil, email_2: "secondary@example.com") }
+    let(:person) { create(:person, first_name: "Shared", user: nil, email: nil, email_2: "secondary@example.com") }
 
     it "never shows the admin-only secondary email to a signed-in user" do
       sign_in viewer

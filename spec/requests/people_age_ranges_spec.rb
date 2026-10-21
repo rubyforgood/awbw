@@ -101,7 +101,6 @@ RSpec.describe "Person age ranges", type: :request do
         person: {
           first_name: "Age",
           last_name: "Tester",
-          email: "age.tester@example.com",
           category_ids: [ "" ],
           managed_category_type_ids: [],
           age_range_categorizable_items_attributes: [

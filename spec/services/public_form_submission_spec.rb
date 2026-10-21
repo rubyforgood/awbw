@@ -103,7 +103,7 @@ RSpec.describe PublicFormSubmission do
   end
 
   it "reuses an existing person whose email is only on their login" do
-    existing = create(:person, :legacy_without_email, user: nil, first_name: "Sam", last_name: "Rivera")
+    existing = create(:person, user: nil, first_name: "Sam", last_name: "Rivera", email: nil)
     create(:user, person: existing, email: "sam@example.com")
 
     expect { described_class.call(form: form, form_params: params_for) }.not_to change(Person, :count)

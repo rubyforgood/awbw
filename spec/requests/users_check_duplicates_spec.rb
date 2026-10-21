@@ -64,7 +64,7 @@ RSpec.describe "/users/check_duplicates", type: :request do
       before do
         Person.create!(
           first_name: "Alt", last_name: "Email",
-          email: Person::PLACEHOLDER_EMAIL, email_2: "alt@testmail.org",
+          email: nil, email_2: "alt@testmail.org",
           created_by: admin, updated_by: admin
         )
       end

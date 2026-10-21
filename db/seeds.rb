@@ -174,7 +174,7 @@ puts "Creating legacy scholarship Grants…"
   "Cathy Salser Legacy Scholarship" => [ "Cathy", "Salser" ],
   "Babs Mayer Legacy Scholarship" => [ "Babs", "Mayer" ]
 }.each do |grant_name, (first, last)|
-  funder = Person.create_with(email: "#{first}.#{last}@example.com".downcase).find_or_create_by!(first_name: first, last_name: last)
+  funder = Person.find_or_create_by!(first_name: first, last_name: last)
   grant = Grant.find_or_create_by!(name: grant_name) do |g|
     g.funder = funder
     g.amount_cents = 0

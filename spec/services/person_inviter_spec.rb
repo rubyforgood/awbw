@@ -52,7 +52,7 @@ RSpec.describe PersonInviter do
     end
 
     it "skips a person with no email address" do
-      person = create(:person, :legacy_without_email, user: nil, email_2: nil)
+      person = create(:person, user: nil, email: nil, email_2: nil)
 
       expect {
         result = described_class.call(person: person, sender: sender)

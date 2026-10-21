@@ -243,7 +243,7 @@ RSpec.describe "TopicSubscriptions", type: :request do
 
     it "falls back to the person's preferred email when the email column is blank" do
       on_user = create(:person, email: nil, user: create(:user, email: "dana@example.com"))
-      on_email_2 = create(:person, :legacy_without_email, email_2: "rio@example.com", user: nil)
+      on_email_2 = create(:person, email: nil, email_2: "rio@example.com", user: nil)
       create(:topic_subscription, person: on_user, topic_subscription_type: trainings)
       create(:topic_subscription, person: on_email_2, topic_subscription_type: trainings)
 

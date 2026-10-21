@@ -39,7 +39,7 @@
               </p>
             </div>
           <% else %>
-            <%= f.input :email, label: "Primary email", required: true, hint: "No email? Enter the placeholder #{Person::PLACEHOLDER_EMAIL}" %>
+            <%= f.input :email, label: "Primary email" %>
           <% end %>
 
           <%= f.input :email_type,

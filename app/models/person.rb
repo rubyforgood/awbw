@@ -87,7 +87,6 @@ class Person < ApplicationRecord
   validates :first_name, presence: true, length: { maximum: 255 }
   validates :last_name, presence: true, length: { maximum: 255 }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
-  validate :email_present, if: -> { new_record? || will_save_change_to_email? }
   validates :email_2, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
   validates :legal_first_name, length: { maximum: 255 }
   validates :pronouns, length: { maximum: 255 }
@@ -104,8 +103,10 @@ class Person < ApplicationRecord
   # Autocorrect and pasted text swap in look-alike dashes; storing a plain hyphen keeps "Smith-Jones" one person.
   DASH_VARIANTS = /[\u2010-\u2015\u2212]/
   NAME_AND_EMAIL_INDEX = "index_people_on_name_and_email".freeze
+  # Stands in for "no address on file" when two people share a name and neither has an
+  # email, which is the only time one is required. Numbered so each of them gets their own.
   PLACEHOLDER_EMAIL = "1@example.com".freeze
-  EMAIL_REQUIRED_MESSAGE = "is required. If this person doesn't have one, enter the placeholder #{PLACEHOLDER_EMAIL}".freeze
+  PLACEHOLDER_EMAIL_PATTERN = /\A(\d+)@example\.com\z/
 
   def self.normalize_name(name)
     name&.strip&.gsub(DASH_VARIANTS, "-")
@@ -252,7 +253,7 @@ class Person < ApplicationRecord
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
-  scope :placeholder_email, -> { where(email: PLACEHOLDER_EMAIL) }
+  scope :placeholder_email, -> { where("email REGEXP ?", "^[0-9]+@example\\.com$") }
   scope :workshop_authors, -> { credited_on(Workshop) }
   scope :workshop_variation_authors, -> { credited_on(WorkshopVariation) }
   scope :workshop_log_authors, -> { credited_on(WorkshopLog) }
@@ -562,7 +563,7 @@ class Person < ApplicationRecord
   end
 
   def placeholder_email?
-    email.to_s.casecmp?(PLACEHOLDER_EMAIL)
+    email.to_s.match?(PLACEHOLDER_EMAIL_PATTERN)
   end
 
   # The placeholder records "no address on file", so it never stands in for a real one.
@@ -683,14 +684,6 @@ class Person < ApplicationRecord
     self.email_2 = email_2&.strip
   end
 
-  # Legacy rows with no email stay valid while the attribute is left alone; a posted blank
-  # counts as a change, so the admin form asks for an address.
-  def email_present
-    return if email.present? || user&.email.present?
-
-    errors.add(:email, EMAIL_REQUIRED_MESSAGE)
-  end
-
   def unique_name_and_email_combination
     return unless first_name.present? && last_name.present?
 
@@ -708,9 +701,27 @@ class Person < ApplicationRecord
 
     scope = scope.where.not(id: id) if persisted?
 
-    if scope.exists?
-      errors.add(:base, "A person named #{first_name} #{last_name} with this email already exists")
-    end
+    errors.add(:base, duplicate_name_message) if scope.exists?
+  end
+
+  # "This email" means nothing when the clash is over a blank or a placeholder, and whoever
+  # is saving needs pointing at a placeholder this name doesn't already hold.
+  def duplicate_name_message
+    name = "#{first_name} #{last_name}"
+    return "A person named #{name} with this email already exists" if email.present? && !placeholder_email?
+
+    "A person named #{name} with #{email.presence || "no email"} already exists. Give this person " \
+      "their own email address so the two can be told apart, or #{next_free_placeholder_email} if " \
+      "they truly have none."
+  end
+
+  # The lowest numbered placeholder nobody with this name is using yet.
+  def next_free_placeholder_email
+    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
+    scope = scope.where.not(id: id) if persisted?
+    taken = scope.pluck(:email).filter_map { |address| address.to_s[PLACEHOLDER_EMAIL_PATTERN, 1]&.to_i }
+
+    "#{(1..).find { |number| taken.exclude?(number) }}@example.com"
   end
   ## Consider adding additional person info to be saved on stripes customer records
   # def stripe_attributes(pay_customer)

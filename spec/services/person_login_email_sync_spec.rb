@@ -42,7 +42,7 @@ RSpec.describe PersonLoginEmailSync do
   end
 
   it "fills a blank primary email without touching the secondary one" do
-    person.update_columns(email: nil, email_2: "other@example.com")
+    person.update!(email: nil, email_2: "other@example.com")
     link
 
     described_class.call(user)

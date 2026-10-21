@@ -58,7 +58,7 @@ RSpec.describe PersonDecorator do
     end
 
     it "never returns the admin-only secondary email" do
-      person = create(:person, :legacy_without_email, user: nil, email_2: "secondary@example.com")
+      person = create(:person, user: nil, email: nil, email_2: "secondary@example.com")
 
       expect(person.decorate.profile_email).to be_nil
     end

@@ -18,7 +18,7 @@ else
 
   sampler = Organization.create!(name: sampler_name)
   neighbor = Organization.create!(name: "Address Dedupe Neighbor (seed)")
-  person = Person.create!(first_name: "Dedupe", last_name: "Addresses Sample", email: "dedupe.addresses@example.com")
+  person = Person.create!(first_name: "Dedupe", last_name: "Addresses Sample")
 
   # ── Merge: spelling translations ──
   # Street suffix + directional

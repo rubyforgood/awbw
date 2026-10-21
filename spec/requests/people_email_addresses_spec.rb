@@ -21,7 +21,7 @@ RSpec.describe "People email addresses", type: :request do
 
     it "falls back to the person's preferred email when the email column is blank" do
       create(:person, email: nil, user: create(:user, email: "dana@example.com"))
-      create(:person, :legacy_without_email, email_2: "rio@example.com", user: nil)
+      create(:person, email: nil, email_2: "rio@example.com", user: nil)
 
       get email_addresses_people_path
 
