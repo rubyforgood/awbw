@@ -36,9 +36,9 @@
     <% trainings.each do |registration| %>
       <% registration = registration.decorate %>
       <span class="<%= pill_cell %> mt-2"><%= render "shared/badge", **registration.attendance_status_badge %></span>
-      <span class="mt-1.5 min-w-0">
-        <span class="block font-medium text-gray-900"><%= registration.event.decorate.short_date_range %></span>
-        <span class="block text-xs text-gray-500"><%= registration.event.decorate.title_without_date %></span>
+      <%# An on-demand training spans a year, so its title (which carries the year) stands in for a date. %>
+      <span class="mt-1.5 min-w-0 font-medium text-gray-900">
+        <%= registration.event.on_demand? ? registration.event.title : registration.event.decorate.short_date_range %>
       </span>
     <% end %>
   <% else %>
