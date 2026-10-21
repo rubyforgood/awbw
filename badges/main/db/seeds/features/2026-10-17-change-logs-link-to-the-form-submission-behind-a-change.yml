@@ -1,0 +1,11 @@
+name: "Change logs link to the form submission behind a change"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-17
+pr_number: 2719
+summary: >-
+  When a form submission changed a record, its change log and the activity
+  page now link straight to that submission, so you can see why the data
+  changed.
+pro_tips:
+  - "Each linked submission also has a \"What this submission changed\" page listing everything it changed."
