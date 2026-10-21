@@ -47,7 +47,8 @@
         [ "One payment, several people", "Rows that share a BulkPayment reference — or a CheckNumber — become one " \
                                          "payment split across those registrations, not a full payment each. Put the same " \
                                          "amount on every row of the group, or each person's share; either way the split " \
-                                         "follows what each registration costs." ],
+                                         "follows what each registration costs. The payment shows up on the event's bulk " \
+                                         "payments page like a payer-submitted one." ],
         [ "Follow-up", "SomeoneElseWillPay, InvoiceRequested, W9Requested (Yes/No); PostSurveyCompleted and " \
                        "CertificateSent (a date, or Yes for the event's last day)." ]
       ].each do |group, columns| %>

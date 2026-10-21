@@ -56,6 +56,10 @@ class EventRegistrationImporter
   # metadata key naming the batch a payment covers, so a re-run finds the same one.
   BULK_REF_KEY = "bulk_payment_ref".freeze
 
+  # Name for the bulk payment form the import falls back to creating when the
+  # install has none to attach.
+  BULK_PAYMENT_FORM_NAME = "Bulk payment".freeze
+
   PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
   PLACEHOLDER_EMAIL = /\A(\d+)@example\.com\z/
 
@@ -578,7 +582,10 @@ class EventRegistrationImporter
 
     @result.payments_recorded += 1
     @result.payments_amount_cents += total
-    payment = resolve_payment(members, total) unless @dry_run
+    unless @dry_run
+      submission = bulk_payment_submission(members) if members.size > 1
+      payment = resolve_payment(members, total, submission)
+    end
 
     remaining = total
     members.each do |member|
@@ -596,6 +603,65 @@ class EventRegistrationImporter
 
     members.each do |member|
       payables_for(member[:registration], member[:values]).each { |payable| cover_remainder_with_discount(payable) }
+      submission&.link_registration!(member[:registration].id)
+    end
+  end
+
+  # The event's bulk payments page lists role "bulk_payment" submissions, so a group
+  # payment needs one to appear there beside the payer-submitted ones.
+  def bulk_payment_submission(members)
+    form = bulk_payment_form
+    payer = batch_payer(members)
+    ref = members.first[:preview].bulk_ref
+    submission = @event.form_submissions
+      .where(form: form, role: "bulk_payment")
+      .detect { |candidate| candidate.metadata&.[](BULK_REF_KEY) == ref }
+    submission ||= FormSubmission.create!(
+      person: payer.is_a?(Person) ? payer : nil, form: form, event: @event, role: "bulk_payment",
+      metadata: { IMPORT_SOURCE_KEY => @source, BULK_REF_KEY => ref }.compact
+    )
+    persist_bulk_answers(submission, form, members, payer)
+    submission
+  end
+
+  # Attaches the bulk payment form an admin would have picked for this event
+  # (Form.standalone, the same scope the event form picker offers), creating one
+  # only when the install has none.
+  def bulk_payment_form
+    return @bulk_payment_form if defined?(@bulk_payment_form)
+
+    @bulk_payment_form = @event.bulk_payment_form || attach_bulk_payment_form
+  end
+
+  def attach_bulk_payment_form
+    form = Form.standalone.where(role: "bulk_payment").order(:id).first ||
+      Form.create!(name: BULK_PAYMENT_FORM_NAME, role: "bulk_payment",
+                   created_by: @import_user, updated_by: @import_user)
+    @event.event_forms.create!(form: form, role: "bulk_payment")
+    form
+  end
+
+  # Who paid and who they paid for, in the shape the bulk payment card reads
+  # (FormSubmissionDecorator#matched_attendees). Only the questions this form asks
+  # are recorded.
+  def persist_bulk_answers(submission, form, members, payer)
+    answers = {
+      "bulk_payment_attendees" => bulk_attendees(members).to_json,
+      "number_of_attendees" => members.size.to_s,
+      "organization_name" => payer.is_a?(Organization) ? payer.name : nil,
+      "first_name" => payer.try(:first_name), "last_name" => payer.try(:last_name),
+      "primary_email" => payer.try(:email)
+    }.compact
+    answers.each do |identifier, value|
+      field = form.form_fields.find_by(field_identifier: identifier)
+      submission.persist_answer(field, value) if field
+    end
+  end
+
+  def bulk_attendees(members)
+    members.map do |member|
+      values = member[:values]
+      { "first_name" => values[:first_name], "last_name" => values[:last_name], "email" => values[:email] }.compact
     end
   end
 
@@ -755,7 +821,7 @@ class EventRegistrationImporter
   # import metadata), so re-running never mints duplicates and imports into other
   # events never steal each other's money; otherwise creates one. A batch of
   # several is paid by the organization they share, else by its first registrant.
-  def resolve_payment(members, cents)
+  def resolve_payment(members, cents, submission = nil)
     payment_class = members.first[:payment_class]
     ref = members.first[:preview].bulk_ref
     payer = batch_payer(members)
@@ -773,6 +839,7 @@ class EventRegistrationImporter
       }.compact
     )
     payer.is_a?(Organization) ? payment.organization = payer : payment.person = payer
+    payment.form_submission = submission
     payment.check_number = members.first[:check_number] if payment_class == CheckPayment
     payment.skip_pay_charge_validation = true if payment.respond_to?(:skip_pay_charge_validation=)
     payment.created_by = @import_user if payment.respond_to?(:created_by=)

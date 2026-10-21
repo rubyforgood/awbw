@@ -612,6 +612,51 @@ RSpec.describe EventRegistrationImporter do
         expect(result.rows.map(&:payment_total_cents)).to eq([ 100_000, 100_000 ])
       end
 
+      it "shows up on the event's bulk payments page, reusing an existing bulk payment form" do
+        form = create(:form, name: "Bulk payment", role: "bulk_payment")
+
+        expect {
+          import_rows(header,
+                      [ "Pat", "Example", "pat@example.org", "1000.00", "Check", "12345" ],
+                      [ "Sam", "Sample", "sam@example.org", "1000.00", "Check", "12345" ])
+        }.not_to change(Form, :count)
+
+        submission = event.form_submissions.find_by(role: "bulk_payment")
+        expect(event.reload.bulk_payment_form).to eq(form)
+        expect(submission.payment).to eq(Payment.sole)
+        expect(submission.linked_registration_ids).to match_array(registrations_for("pat@example.org", "sam@example.org").map(&:id))
+      end
+
+      it "creates a bulk payment form only when the install has none" do
+        expect {
+          import_rows(header,
+                      [ "Pat", "Example", "pat@example.org", "1000.00", "Check", "12345" ],
+                      [ "Sam", "Sample", "sam@example.org", "1000.00", "Check", "12345" ])
+        }.to change(Form, :count).by(1)
+
+        expect(event.reload.bulk_payment_form.role).to eq("bulk_payment")
+      end
+
+      it "records the attendees so the card can match them to registrants" do
+        form = create(:form, role: "bulk_payment")
+        create(:form_field, form: form, field_identifier: "bulk_payment_attendees")
+
+        import_rows(header,
+                    [ "Pat", "Example", "pat@example.org", "1000.00", "Check", "12345" ],
+                    [ "Sam", "Sample", "sam@example.org", "1000.00", "Check", "12345" ])
+
+        attendees = event.form_submissions.find_by(role: "bulk_payment").bulk_payment_attendees
+        expect(attendees.map { |a| a["last_name"] }).to eq(%w[Example Sample])
+      end
+
+      it "leaves a single-row payment off the bulk payments page" do
+        create(:form, role: "bulk_payment")
+
+        import_rows(header, [ "Pat", "Example", "pat@example.org", "500.00", "Check", "999" ])
+
+        expect(event.form_submissions.where(role: "bulk_payment")).to be_empty
+      end
+
       it "keeps an unrelated cash row on its own payment" do
         import_rows(%w[FirstName LastName EMail AmountPaid PaymentType],
                     [ "Pat", "Example", "pat@example.org", "500.00", "Cash" ],
