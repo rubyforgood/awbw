@@ -1,5 +1,6 @@
 module CommentsHelper
   FEED_FILTER_FORM_ID = "comments-and-communications-filters"
+  FEED_RETURN_TO = "comments_and_communications".freeze
 
   # The full feed narrowed to one comment or communication, carrying the person
   # it's about and the record to return to for the eyebrow.
@@ -11,6 +12,16 @@ module CommentsHelper
       return_to_type: return_to&.model_name&.name,
       return_to_id: return_to&.id
     }.compact)
+  end
+
+  # A person chip's edit link, remembering which feed (a person's, or everyone's)
+  # to return to.
+  def feed_person_edit_path(person, feed_person: nil)
+    edit_person_path(person, { return_to: FEED_RETURN_TO, feed_person_id: feed_person&.id }.compact)
+  end
+
+  def feed_return_path
+    comments_and_communications_path({ person_id: params[:feed_person_id].presence }.compact)
   end
 
   # Names who a row on the everyone feed is about. A communication's contact
