@@ -6,6 +6,7 @@
 @source "../../javascript/**/*.js";
 @source "../../helpers/**/*.rb";
 @source "../../decorators/**/*.rb";
+@source "../../../config/initializers/simple_form*.rb";
 
 @theme {
   --color-primary: #24479e;
@@ -307,6 +308,18 @@
      placeholder font would render shorter than the paired text input. Pin the box to
      the text-input height: 1.5rem line + py-2 (1rem) + 2px border. */
   min-height: 2.625rem;
+}
+
+/* Browsers pin a native <select> arrow to the border, ignoring padding, so draw an inset chevron. */
+@utility select-chevron {
+  &:is(select):not([multiple]) {
+    appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5l3.5 3.5 3.5-3.5'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-size: 12px;
+    background-repeat: no-repeat;
+  }
 }
 
 /* Optional fields get a subtle gray background */
