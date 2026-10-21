@@ -1,6 +1,7 @@
 <%# Admin hover card for a person chip: when they first affiliated, each active
     facilitator affiliation's org, org status, and dates, and their latest
-    facilitator trainings with attendance. Shown by a `group/person` ancestor.
+    facilitator trainings with attendance, then their membership status. Shown
+    by a `group/person` ancestor.
     Locals: person. Optional: header (name + email on top, for chips too small
     to show them). %>
 <% person = person.decorate %>
@@ -33,15 +34,31 @@
   <% if trainings.any? %>
     <% trainings.each do |registration| %>
       <% registration = registration.decorate %>
-      <span class="mt-1.5 flex items-start justify-between gap-2">
-        <span class="min-w-0">
-          <span class="block font-medium text-gray-900"><%= registration.event.title %></span>
-          <span class="block text-xs text-gray-500"><%= registration.event.decorate.short_date_range %></span>
+      <span class="mt-1.5 block">
+        <span class="flex flex-wrap items-center gap-1.5">
+          <span class="font-medium text-gray-900"><%= registration.event.decorate.short_date_range %></span>
+          <%= render "shared/badge", **registration.attendance_status_badge %>
         </span>
-        <%= render "shared/badge", **registration.attendance_status_badge, extra: "shrink-0" %>
+        <span class="block text-xs text-gray-500"><%= registration.event.title %></span>
       </span>
     <% end %>
   <% else %>
     <span class="mt-1 block text-gray-500">None</span>
+  <% end %>
+  <% if Membership.enabled? %>
+    <% membership = person.latest_membership %>
+    <% invoice = membership&.current_invoice&.decorate %>
+    <span class="mt-3 block text-xs font-semibold tracking-wide text-gray-500 uppercase">Membership</span>
+    <% if membership %>
+      <span class="mt-1.5 block">
+        <span class="flex flex-wrap items-center gap-1.5">
+          <span class="font-medium text-gray-900"><%= membership.status_label %></span>
+          <% if invoice %><%= render "shared/badge", **invoice.status_badge.to_h %><% end %>
+        </span>
+        <% if invoice %><span class="block text-xs text-gray-500"><%= invoice.period_range %></span><% end %>
+      </span>
+    <% else %>
+      <span class="mt-1 block text-gray-500">None</span>
+    <% end %>
   <% end %>
 </span>
