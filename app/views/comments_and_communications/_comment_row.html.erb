@@ -14,6 +14,8 @@
      path = record_edit_path(record)
      path ? link_to(inner, path, target: "_blank", rel: "noopener", class: "#{chip_class} hover:underline") : content_tag(:span, inner, class: chip_class)
    end %>
+<%# Only the everyone feed names who each row is about. %>
+<% leading = local_assigns[:person] ? source_chip : safe_join([ feed_person_chip(entry), source_chip || entry.decorate.type_chip ].compact, " ") %>
 <% edit_button = content_tag(:button, safe_join([ content_tag(:i, "", class: "fa-solid fa-pen text-2xs"), " Edit" ]),
                               type: "button",
                               class: "ml-auto shrink-0 text-xs #{eyebrow_link_class}",
@@ -23,7 +25,7 @@
               data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false, key: dom_id(entry)) } do %>
     <div class="flex flex-wrap items-start gap-x-1 gap-y-1">
       <span class="mt-0.5 inline-flex w-4 shrink-0 justify-center leading-none"><%= render "comments/flag_toggle", comment: entry %></span>
-      <%= render "comments/comment_line", comment: entry, truncate: false, leading: source_chip, trailing: edit_button, expandable: true,
+      <%= render "comments/comment_line", comment: entry, truncate: false, leading: leading, trailing: edit_button, expandable: true,
                  date_path: feed_entry_path(entry, person: person) %>
     </div>
   <% end %>

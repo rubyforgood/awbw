@@ -74,6 +74,32 @@ RSpec.describe CommentDecorator do
     end
   end
 
+  describe "#about_person" do
+    it "is the person a profile comment is on" do
+      person = create(:person)
+      expect(create(:comment, commentable: person).decorate.about_person).to eq(person)
+    end
+
+    it "is the registrant behind a registration or CE registration comment" do
+      ce = create(:continuing_education_registration)
+      registrant = ce.event_registration.registrant
+
+      expect(create(:comment, commentable: ce.event_registration).decorate.about_person).to eq(registrant)
+      expect(create(:comment, commentable: ce).decorate.about_person).to eq(registrant)
+    end
+
+    it "is the credited author of an authored record" do
+      author = create(:person)
+      story = create(:story, author: author)
+
+      expect(create(:comment, commentable: story).decorate.about_person).to eq(author)
+    end
+
+    it "is nil for a record that belongs to no one person" do
+      expect(create(:comment, commentable: create(:organization)).decorate.about_person).to be_nil
+    end
+  end
+
   describe "#event / #event_registration" do
     it "resolves the event and registration for a registration comment" do
       registration = create(:event_registration)

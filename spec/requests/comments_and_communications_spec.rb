@@ -341,6 +341,34 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Hello other")
     end
 
+    it "names who each row is about, linking to that person's own feed" do
+      registration = create(:event_registration, registrant: person)
+      comment = create(:comment, commentable: registration, body: "Registration note", created_by: admin)
+      known = create(:notification, recipient_email: "primary@example.com", email_subject: "Known contact",
+                                    kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+      unknown = create(:notification, recipient_email: "stranger@example.com", email_subject: "Unknown contact",
+                                      kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      feed_link = "a[href='#{comments_and_communications_path(person_id: person.id)}']"
+      [ comment, known ].each do |entry|
+        chip = doc.at_css("##{ActionView::RecordIdentifier.dom_id(entry)} #{feed_link}")
+        expect(chip.text).to include(person.full_name)
+      end
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(unknown)}").text).to include("stranger@example.com")
+    end
+
+    it "leaves the who-it's-about chip off a person's own feed" do
+      create(:comment, commentable: person, body: "Profile note", created_by: admin)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      feed_link = "a[href='#{comments_and_communications_path(person_id: person.id)}']"
+      expect(Nokogiri::HTML(response.body).at_css(feed_link)).to be_nil
+    end
+
     it "loads a picked person's composers into the frame with their filing targets" do
       registration = create(:event_registration, registrant: person)
 
