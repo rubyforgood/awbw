@@ -60,9 +60,6 @@ class EventRegistrationImporter
   # install has none to attach.
   BULK_PAYMENT_FORM_NAME = "Bulk payment".freeze
 
-  PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
-  PLACEHOLDER_EMAIL = /\A(\d+)@example\.com\z/
-
   # Row field → registration-form field_identifier for the answers that pass through
   # unchanged; sectors, age groups, and the org/contact types are resolved first.
   PLAIN_ANSWERS = {
@@ -196,6 +193,7 @@ class EventRegistrationImporter
     @form_field_cache = {}
     @seen_row_keys = {}
     @payment_batches = {}
+    @placeholder_emails_issued = {}
   end
 
   def call
@@ -308,11 +306,11 @@ class EventRegistrationImporter
     @result.people_created += 1
     preview.person_status = :new
     preview.person_label = "#{values[:first_name]} #{values[:last_name]}"
-    email = values[:email] || placeholder_email(preview)
     person = Person.new(
-      first_name: values[:first_name], last_name: values[:last_name], email: email,
+      first_name: values[:first_name], last_name: values[:last_name], email: values[:email],
       created_by: @import_user, updated_by: @import_user
     )
+    person.email = placeholder_email(person, preview) if person.email.blank?
     person.save! unless @dry_run
     person
   end
@@ -327,22 +325,24 @@ class EventRegistrationImporter
     [ match.person, match.basis ]
   end
 
-  # The lowest N@example.com no person or login holds yet (nor an earlier row of
-  # this file), so an email-less registrant still has a unique address on file.
-  def placeholder_email(preview)
-    @placeholder_numbers ||= taken_placeholder_numbers
-    number = 1
-    number += 1 while @placeholder_numbers.include?(number)
-    @placeholder_numbers << number
+  # Person's own "no email on file" placeholder, numbered per name so two people
+  # sharing one can be told apart. Rows already previewed in this file count as
+  # taken, since a dry run saves nobody for the next lookup to find.
+  def placeholder_email(person, preview)
+    taken = @placeholder_emails_issued[name_key(person)] ||= []
+    address = person.next_free_placeholder_email
+    address = bump_placeholder(address) while taken.include?(address)
+    taken << address
     @result.placeholder_emails += 1
-    preview.placeholder_email = "#{number}@#{PLACEHOLDER_EMAIL_DOMAIN}"
+    preview.placeholder_email = address
   end
 
-  def taken_placeholder_numbers
-    pattern = "%@#{PLACEHOLDER_EMAIL_DOMAIN}"
-    emails = Person.where("email LIKE :p OR email_2 LIKE :p", p: pattern).pluck(:email, :email_2).flatten +
-      User.where("email LIKE ?", pattern).pluck(:email)
-    emails.filter_map { |email| email.to_s.downcase[PLACEHOLDER_EMAIL, 1]&.to_i }.to_set
+  def bump_placeholder(address)
+    "#{address[Person::PLACEHOLDER_EMAIL_PATTERN, 1].to_i + 1}@example.com"
+  end
+
+  def name_key(person)
+    "#{person.first_name} #{person.last_name}".downcase
   end
 
   # ── Registrations ───────────────────────────────────────────────────────
@@ -429,11 +429,12 @@ class EventRegistrationImporter
     registration.update!(attributes) if attributes.any?
   end
 
-  # A date cell is the moment itself; a bare "yes" stands for the event's last day.
+  # A date cell is the moment itself; a bare "yes" stands for the event's last day,
+  # read off the program-zone dates so it doesn't shift with the viewer.
   def completion_time(raw)
     answer = Columns.yes_no(raw)
     return if answer == false
-    return (@event.end_date.presence || @event.start_date)&.to_date&.in_time_zone if answer
+    return (@event.ends_on || @event.starts_on)&.in_time_zone if answer
 
     Columns.date(raw)&.in_time_zone
   end

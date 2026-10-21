@@ -407,13 +407,21 @@ RSpec.describe EventRegistrationImporter do
         expect(registration_of(person)).to be_present
       end
 
-      it "creates a new person with the next free placeholder email" do
+      it "creates a new person with the next placeholder free for that name" do
+        create(:person, first_name: "Sam", last_name: "Sample", email: "1@example.com")
+        create(:person, first_name: "Sam", last_name: "Sample", email: "sam.sample@example.org")
+
+        expect { import_rows(%w[FirstName LastName], %w[Sam Sample]) }.to change(Person, :count).by(1)
+
+        expect(Person.where(first_name: "Sam", last_name: "Sample").pluck(:email)).to include("2@example.com")
+      end
+
+      it "leaves the first placeholder free for a different name to use" do
         create(:person, first_name: "Other", last_name: "Person", email: "1@example.com")
 
-        import_rows(%w[FirstName LastName], %w[Sam Sample], %w[Lee Sample])
+        import_rows(%w[FirstName LastName], %w[Sam Sample])
 
-        expect(Person.find_by(first_name: "Sam", last_name: "Sample").email).to eq("2@example.com")
-        expect(Person.find_by(first_name: "Lee", last_name: "Sample").email).to eq("3@example.com")
+        expect(Person.find_by(first_name: "Sam", last_name: "Sample").email).to eq("1@example.com")
       end
 
       it "creates a new person when the name is ambiguous" do
@@ -466,7 +474,7 @@ RSpec.describe EventRegistrationImporter do
         expect(person.addresses.find_by(primary: true).city).to eq("Springfield")
         expect(person.contact_methods.find_by(kind: :phone).value).to eq("555-0100")
         expect(person.primary_sector).to eq(sector)
-        expect(person.primary_age_category_ids).to eq([ age_group.id ])
+        expect(person.primary_age_groups.map(&:id)).to eq([ age_group.id ])
         expect(person.pronouns).to eq("they/them")
       end
 

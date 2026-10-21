@@ -165,7 +165,7 @@ module PersonServices
                     keep_primary: !@overwrite && @person.primary_sector.present?)
       apply_tag_set(FormField::PRIMARY_AGE_GROUP_FIELD_IDENTIFIERS,
                     FormField::ADDITIONAL_AGE_GROUP_FIELD_IDENTIFIERS, :tag_age_groups,
-                    keep_primary: !@overwrite && @person.primary_age_category_ids.any?)
+                    keep_primary: !@overwrite && @person.primary_age_groups.any?)
     end
 
     # Only a primary answer → reassign the primary but keep the rest (additive).
