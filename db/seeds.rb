@@ -176,7 +176,10 @@ setting = Setting.first_or_create!
 setting.update!(organization: setting.organization || awbw_org,
                 return_address: setting.return_address || return_address,
                 remittance_address: setting.remittance_address || remittance_address,
-                ce_provider_number: setting.ce_provider_number.presence || "1000151")
+                ce_provider_number: setting.ce_provider_number.presence || "1000151",
+                ce_accreditation_body: setting.ce_accreditation_body.presence ||
+                  "the California Association of Marriage and Family Therapists (CAMFT)",
+                ce_accreditation_url: setting.ce_accreditation_url.presence || "https://www.camft.org/")
 
 [ admin, amy, aisha ].each do |user|
   next unless user.person.present? && user.person.affiliations.empty?

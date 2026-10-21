@@ -914,7 +914,7 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include(registration_ce_certificate_path(registration.slug, ce, return_to: "certificate"))
       # The chooser isn't the certificate document itself, and no clause lives here.
       expect(response.body).not_to include("This certifies that")
-      expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+      expect(response.body).not_to include("Continuing Education Provider #")
     end
 
     it "unlocks the completion certificate when the CE credit was issued even without tracked attendance" do
@@ -957,7 +957,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
       expect(response.body).to include("This certifies that")
       expect(response.body).not_to include("CE confirmation of attendance")
-      expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+      expect(response.body).not_to include("Continuing Education Provider #")
     end
 
     context "for a facilitator training event" do
@@ -1021,7 +1021,7 @@ RSpec.describe "Events::Callouts", type: :request do
 
         expect(response.body).to include("Certificate of training")
         expect(response.body).to include("CE confirmation of attendance")
-        expect(response.body).not_to include(ContinuingEducationRegistration::ACCREDITATION_URL)
+        expect(response.body).not_to include("Continuing Education Provider #")
         # The branded document itself is one click away, not inline on the chooser.
         expect(response.body).not_to include("certificate-training-border")
       end
@@ -1108,7 +1108,7 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("This certifies that the above-named participant")
       expect(response.body).to include(registration.registrant.full_name)
       expect(response.body).to include("LCSW 86747")
-      expect(response.body).to include(ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE)
+      expect(response.body).to include(Setting.ce_administrator_title)
       expect(response.body).to include("6 hours")
     end
 
@@ -1137,13 +1137,26 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("Continuing Education Provider #")
     end
 
+    it "credits the accrediting body the app settings name, linked" do
+      Setting.create!(ce_provider_number: "9000123",
+                      ce_accreditation_body: "the Board of Behavioral Sciences",
+                      ce_accreditation_url: "https://example.org/ce")
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).to include("Continuing Education Provider # 9000123")
+      expect(response.body).to include("approved by")
+      expect(response.body).to include('href="https://example.org/ce"')
+      expect(response.body).to include("the Board of Behavioral Sciences")
+    end
+
     it "signs it with the person the app settings name" do
       administrator = create(:person, first_name: "Robin", last_name: "Signer")
       Setting.create!(ce_administrator: administrator)
 
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
-      expect(response.body).to include("Robin Signer, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}")
+      expect(response.body).to include("Robin Signer, CE Administrator")
     end
 
     it "lists only the event staff titled as facilitators" do
@@ -1180,7 +1193,7 @@ RSpec.describe "Events::Callouts", type: :request do
       # photo) still displays.
       expect(response.body).to include("/rails/active_storage/representations/")
       expect(response.body).not_to include("/rails/active_storage/blobs/")
-      expect(response.body).to include("Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}")
+      expect(response.body).to include("Signed by CE Administrator")
     end
 
     it "leaves the signature line blank when the training certificate's strip exists but the CE resource doesn't" do

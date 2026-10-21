@@ -9,6 +9,7 @@ class Setting < ApplicationRecord
   DEFAULT_ORGANIZATION_NAME = "A Window Between Worlds".freeze
   DEFAULT_INVOICE_PREFIX = "INV".freeze
   DEFAULT_PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
+  DEFAULT_CE_ADMINISTRATOR_TITLE = "CE Administrator".freeze
   DEFAULT_ANNUAL_MEMBERSHIP_CENTS = 2500
   DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS = 30
   DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS = 30
@@ -26,6 +27,9 @@ class Setting < ApplicationRecord
             allow_blank: true
   validates :invoice_prefix, length: { maximum: 20 }
   validates :ce_provider_number, length: { maximum: 50 }
+  validates :ce_administrator_title, :ce_accreditation_body, length: { maximum: 255 }
+  validates :ce_accreditation_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]),
+                                             message: "must be a full http(s) address" }, allow_blank: true
   validates :annual_membership_cents, :membership_renewal_window_days, :membership_grace_period_days,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
@@ -128,10 +132,25 @@ class Setting < ApplicationRecord
     ce_administrator&.full_name.presence
   end
 
+  # The signatory's title, printed beside their name on the certificate.
+  def self.ce_administrator_title
+    stored(:ce_administrator_title) || DEFAULT_CE_ADMINISTRATOR_TITLE
+  end
+
   # The portal's approved-provider number with the CE accrediting body, printed on
   # the certificate. Blank until an admin enters it, since it is per-deployment.
   def self.ce_provider_number
     stored(:ce_provider_number)
+  end
+
+  # Who accredits this portal's CE hours, and where to read about them. Printed with
+  # the provider number, the body linked when both are set.
+  def self.ce_accreditation_body
+    stored(:ce_accreditation_body)
+  end
+
+  def self.ce_accreditation_url
+    stored(:ce_accreditation_url)
   end
 
   # The public contact mailbox, shown on the contact page, the story-share footer,

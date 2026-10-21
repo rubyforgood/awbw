@@ -6,8 +6,12 @@
     An admin-uploaded "CE certificate frame" renders full-bleed, with the content in a
     centered safe area, matching the other framed certificates. %>
 <% issuing_address = app_organization_address_line %>
-<% signatory = [ Setting.ce_administrator_name, ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE ].compact_blank.join(", ") %>
+<% signatory = [ Setting.ce_administrator_name, Setting.ce_administrator_title ].compact_blank.join(", ") %>
 <% provider_number = Setting.ce_provider_number %>
+<% accreditation_body = Setting.ce_accreditation_body %>
+<% accreditation_url = Setting.ce_accreditation_url %>
+<% accreditor = accreditation_url.present? ? link_to(accreditation_body, accreditation_url, target: "_blank", rel: "noopener", class: "underline") : accreditation_body %>
+<% provider_line = "Continuing Education Provider # #{provider_number}" %>
 <% if frame_file %>
   <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
     <%= image_tag frame_file, alt: "",
@@ -32,7 +36,7 @@
           <p class="text-[1.5cqw] text-purple-800"><%= issuing_address %></p>
         <% end %>
         <% if provider_number.present? %>
-          <p class="text-[1.5cqw] text-purple-800">CAMFT-approved Continuing Education Provider # <%= provider_number %></p>
+          <p class="text-[1.5cqw] text-purple-800"><%= provider_line %><% if accreditor.present? %>, approved by <%= accreditor %><% end %></p>
         <% end %>
       </div>
       <div class="flex items-end justify-between gap-[6cqw]">
@@ -98,7 +102,7 @@
         <p class="text-sm text-purple-800"><%= issuing_address %></p>
       <% end %>
       <% if provider_number.present? %>
-        <p class="text-sm text-purple-800">CAMFT-approved Continuing Education Provider # <%= provider_number %></p>
+        <p class="text-sm text-purple-800"><%= provider_line %><% if accreditor.present? %>, approved by <%= accreditor %><% end %></p>
       <% end %>
     </div>
 

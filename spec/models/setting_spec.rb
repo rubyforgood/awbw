@@ -132,6 +132,40 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".ce_administrator_title" do
+    it "falls back to the generic title" do
+      expect(described_class.ce_administrator_title).to eq("CE Administrator")
+    end
+
+    it "returns the stored title" do
+      described_class.create!(ce_administrator_title: "Continuing Education Lead")
+
+      expect(described_class.ce_administrator_title).to eq("Continuing Education Lead")
+    end
+  end
+
+  describe ".ce_accreditation_body" do
+    it "is blank until an admin names the accreditor" do
+      expect(described_class.ce_accreditation_body).to be_nil
+      expect(described_class.ce_accreditation_url).to be_nil
+    end
+
+    it "returns the stored body and link" do
+      described_class.create!(ce_accreditation_body: "the Board of Behavioral Sciences",
+                              ce_accreditation_url: "https://example.org/ce")
+
+      expect(described_class.ce_accreditation_body).to eq("the Board of Behavioral Sciences")
+      expect(described_class.ce_accreditation_url).to eq("https://example.org/ce")
+    end
+
+    it "rejects a link that isn't a full address" do
+      setting = Setting.new(ce_accreditation_url: "camft.org")
+
+      expect(setting).not_to be_valid
+      expect(setting.errors[:ce_accreditation_url]).to include("must be a full http(s) address")
+    end
+  end
+
   describe ".ce_provider_number" do
     it "is blank until an admin enters it" do
       expect(described_class.ce_provider_number).to be_nil
