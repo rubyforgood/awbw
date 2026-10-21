@@ -95,27 +95,11 @@
                                      action: "change->navigate-select#navigate" } %>
             </div>
 
-            <div class="min-w-0 flex-[1.5]">
-              <label class="<%= search_label_class %>">
-                Activity title
-              </label>
-              <%= text_field_tag :event_name,
-                                 params[:event_name],
-                                 placeholder: "e.g. new workshop",
-                                 class: search_field_class,
-                                 data: password_manager_ignore_data %>
-            </div>
+            <%= render "shared/filter_text", param: :event_name, label: "Activity title", placeholder: "e.g. new workshop",
+                  wrapper_class: "min-w-0 flex-[1.5]", input_options: { data: password_manager_ignore_data } %>
 
-            <div class="min-w-0 flex-1">
-              <label class="<%= search_label_class %>">
-                Details
-              </label>
-              <%= text_field_tag :props,
-                                 params[:props],
-                                 placeholder: "e.g. email",
-                                 class: search_field_class,
-                                 data: password_manager_ignore_data %>
-            </div>
+            <%= render "shared/filter_text", param: :props, label: "Details", placeholder: "e.g. email",
+                  wrapper_class: "min-w-0 flex-1", input_options: { data: password_manager_ignore_data } %>
 
             <div class="min-w-0 flex-1">
               <%= render "admin/shared/audience_dropdown", auto_submit: false, stacked: true,

@@ -4,30 +4,34 @@ SimpleForm.setup do |config|
   # Default button class
   config.button_class = "btn btn-primary"
 
-  # Default wrapper for Tailwind
-  config.wrappers :tailwind_form, class: "mb-4" do |b|
-    b.use :html5
-    b.use :placeholder
-    b.optional :maxlength
-    b.optional :minlength
-    b.optional :pattern
-    b.optional :min_max
-    b.optional :readonly
+  input_class = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none placeholder:text-sm placeholder:text-gray-400"
 
-    # Label
-    b.use :label, class: "block font-medium mb-1 text-gray-700"
+  # Browsers size a native <select> from its font, ignoring line-height, so pin it to the text-input height.
+  { tailwind_form: input_class, tailwind_select: "#{input_class} min-h-10.5 select-chevron" }.each do |wrapper_name, wrapper_input_class|
+    config.wrappers wrapper_name, class: "mb-4" do |b|
+      b.use :html5
+      b.use :placeholder
+      b.optional :maxlength
+      b.optional :minlength
+      b.optional :pattern
+      b.optional :min_max
+      b.optional :readonly
 
-    # Input
-    b.use :input,
-          class: "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none placeholder:text-sm placeholder:text-gray-400",
-          error_class: "border-red-500",
-          valid_class: "border-green-500"
+      # Label
+      b.use :label, class: "block font-medium mb-1 text-gray-700"
 
-    # Full error message
-    b.use :full_error, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" }
+      # Input
+      b.use :input,
+            class: wrapper_input_class,
+            error_class: "border-red-500",
+            valid_class: "border-green-500"
 
-    # Hint text
-    b.use :hint, wrap_with: { tag: :p, class: "text-gray-500 text-sm mt-1" }
+      # Full error message
+      b.use :full_error, wrap_with: { tag: :p, class: "text-red-500 text-sm mt-1" }
+
+      # Hint text
+      b.use :hint, wrap_with: { tag: :p, class: "text-gray-500 text-sm mt-1" }
+    end
   end
 
   # Boolean fields
@@ -88,7 +92,10 @@ SimpleForm.setup do |config|
     check_boxes: :tailwind_boolean,
     radio_buttons: :tailwind_boolean,
     file: :tailwind_file,
-    select: :tailwind_form,
+    select: :tailwind_select,
+    country: :tailwind_select,
+    time_zone: :tailwind_select,
+    date: :tailwind_select,
     range: :tailwind_form
   }
 end

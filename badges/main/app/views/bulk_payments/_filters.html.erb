@@ -12,10 +12,8 @@
     <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>
   </div>
   <div class="flex flex-wrap items-end gap-3">
-    <div class="min-w-44 flex-1">
-      <%= label_tag :search, "Search", class: search_label_class %>
-      <%= text_field_tag :search, params[:search], placeholder: "Name, email, organization, or details", class: search_field_class %>
-    </div>
+    <%= render "shared/filter_text", param: :search, label: "Search", placeholder: "Name, email, organization, or details",
+          wrapper_class: "min-w-44 flex-1" %>
 
     <%= render "shared/filter_select", param: :payment_method, label: "Payment method",
           options: FormSubmission::PAYMENT_METHOD_FILTER_OPTIONS, selected: params[:payment_method],

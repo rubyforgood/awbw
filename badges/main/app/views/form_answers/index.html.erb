@@ -33,14 +33,10 @@
         <span class="text-xs font-semibold tracking-wide uppercase">Filters</span>
       </div>
       <div class="flex flex-wrap items-end gap-3">
-        <div class="min-w-48 flex-1">
-          <%= label_tag :q, "Answer text", class: search_label_class %>
-          <%= text_field_tag :q, params[:q], class: search_field_class, placeholder: "Search answer text" %>
-        </div>
-        <div class="min-w-48 flex-1">
-          <%= label_tag :question, "Question text", class: search_label_class %>
-          <%= text_field_tag :question, params[:question], class: search_field_class, placeholder: "Search question" %>
-        </div>
+        <%= render "shared/filter_text", param: :q, label: "Answer text", placeholder: "Search answer text",
+              wrapper_class: "min-w-48 flex-1" %>
+        <%= render "shared/filter_text", param: :question, label: "Question text", placeholder: "Search question",
+              wrapper_class: "min-w-48 flex-1" %>
         <div class="w-44">
           <%= label_tag :answer_type, "Question type", class: search_label_class %>
           <%# Section headers and informational-only fields never capture answers, so they're omitted. %>

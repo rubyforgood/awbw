@@ -11,13 +11,9 @@
       turbo_frame: "professional_licenses_results"
     }, autocomplete: "off" do %>
     <div class="flex flex-wrap items-end gap-4 md:flex-nowrap">
-      <div class="min-w-[200px] flex-1">
-        <label for="person_query" class="<%= label_class %>">Registrant</label>
-        <%= text_field_tag "person_query", params[:person_query],
-          class: field_class,
-          placeholder: "Search by name or email",
-          autocomplete: "off" %>
-      </div>
+      <%= render "shared/filter_text", param: :person_query, label: "Registrant", placeholder: "Search by name or email",
+            field_class: field_class, label_class: label_class, wrapper_class: "min-w-[200px] flex-1",
+            input_options: { autocomplete: "off" } %>
 
       <div class="min-w-[150px]">
         <label for="kind" class="<%= label_class %>">Type</label>
