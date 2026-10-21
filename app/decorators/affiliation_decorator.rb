@@ -30,10 +30,31 @@ class AffiliationDecorator < ApplicationDecorator
     "Dates not recorded"
   end
 
+  # E.g. "Started March 2023, ending next month" — relative wording for months
+  # close to now, so an imminent lapse reads at a glance.
+  def period_note
+    parts = []
+    parts << "#{start_date > Date.current ? 'starting' : 'started'} #{relative_month(start_date)}" if start_date
+    parts << "#{end_date < Date.current ? 'ended' : 'ending'} #{relative_month(end_date)}" if end_date
+    parts.join(", ").upcase_first.presence || "Dates not recorded"
+  end
+
   # Where a back link should land on the person/organization editor. An inactive
   # row sits on the Inactive tab, so jumping to the row itself would scroll to
   # something the page isn't showing — land on the section instead.
   def return_anchor
     active? ? h.dom_id(object) : "affiliations"
+  end
+
+  private
+
+  def relative_month(date)
+    today = Date.current
+    case (date.year * 12 + date.month) - (today.year * 12 + today.month)
+    when -1 then "last month"
+    when 0 then "this month"
+    when 1 then "next month"
+    else date.strftime("%B %Y")
+    end
   end
 end

@@ -1,0 +1,13 @@
+name: "See who each comment or communication is about, and their facilitator standing"
+area: communications
+display_status: admin_facing
+released_on: 2026-10-20
+pr_number: 2766
+summary: >-
+  On the everyone view of comments & communications, each row now names the
+  person it's about. Hover a name to see when they first affiliated, their
+  active facilitator affiliations, latest trainings with attendance, and
+  membership status.
+pro_tips:
+  - "Click a name to edit that person; the edit page links you back to the comments & communications you came from."
+  - "Dates close to today read in plain words, like \"ending next month\", so a lapsing term stands out."

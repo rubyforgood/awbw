@@ -1,0 +1,7 @@
+<%# The person's edit chip with their facilitator hover card, for the title of
+    their comments & communications feed. Locals: person. %>
+<span class="group/person relative inline-flex font-sans text-sm">
+  <%= person_edit_button(person, subtitle: person.preferred_email, width_class: "w-auto max-w-xs",
+                                 show_title: false, path_params: { return_to: CommentsHelper::FEED_RETURN_TO, feed_person_id: person.id }) %>
+  <%= facilitator_hover_card(person) %>
+</span>

@@ -19,6 +19,23 @@ class CommentDecorator < ApplicationDecorator
     h.record_theme(commentable)
   end
 
+  # The person this comment is about: the profile it's on, or the person behind
+  # the record it's on (registrant, recipient, author, …). nil for records that
+  # belong to no one person, like an event or organization.
+  def about_person
+    case commentable
+    when Person then commentable
+    when User then commentable.person
+    when EventRegistration then commentable.registrant
+    when Scholarship then commentable.recipient
+    when ContinuingEducationRegistration then commentable.event_registration&.registrant
+    when Affiliation, TopicSubscription, FormSubmission then commentable.person
+    when StaffTagging then commentable.staff_taggable if commentable.staff_taggable.is_a?(Person)
+    when Grant then commentable.funder if commentable.funder.is_a?(Person)
+    else commentable.author_person if commentable.respond_to?(:author_person)
+    end
+  end
+
   def author_name
     (updated_by || created_by)&.full_name || "System"
   end

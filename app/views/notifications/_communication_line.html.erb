@@ -8,7 +8,8 @@
     neutral source chip, pointing at that record's edit page, with the channel icon
     inside it). Optional expandable adds a chevron that unclamps a truncated row
     (outside the card link so it doesn't navigate) or hides a full row's body;
-    date_path (+ date_new_tab) links the timestamp to the feed narrowed to this entry. %>
+    date_path (+ date_new_tab) links the timestamp to the feed narrowed to this entry;
+    feed_person is the person whose feed the row sits on, for the sender chip's back link. %>
 <% admin = local_assigns.fetch(:admin, true) %>
 <% mark_admin_only = local_assigns.fetch(:mark_admin_only, false) %>
 <% truncate_body = local_assigns.fetch(:truncate, true) %>
@@ -39,9 +40,20 @@
              path: local_assigns[:date_path], new_tab: local_assigns[:date_new_tab] %>
 <% end %>
 <% main = capture do %>
-  <span class="inline-flex w-20 shrink-0 items-center">
-    <span class="<%= chip[0] %> <%= chip[1] %> max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" title="<%= decorated.from_title.presence || from_name %>"><%= truncate(from_first.to_s, length: 10, omission: "..") %></span>
-  </span>
+  <% from_chip_class = "#{chip[0]} #{chip[1]} max-w-full truncate rounded px-1.5 py-0.5 text-left text-xs" %>
+  <% from_label = truncate(from_first.to_s, length: 10, omission: "..") %>
+  <% if !truncate_body && decorated.from_person %>
+    <%# Only the untruncated row can link the person: a card-wide link can't nest one. %>
+    <span class="group/person relative inline-flex w-20 shrink-0 items-center">
+      <%= link_to from_label, feed_person_edit_path(decorated.from_person, feed_person: local_assigns[:feed_person]), target: "_blank", rel: "noopener",
+                  class: "#{from_chip_class} hover:underline" %>
+      <%= facilitator_hover_card(decorated.from_person, header: true) %>
+    </span>
+  <% else %>
+    <span class="inline-flex w-20 shrink-0 items-center">
+      <span class="<%= from_chip_class %>" title="<%= decorated.from_title.presence || from_name %>"><%= from_label %></span>
+    </span>
+  <% end %>
   <%# Subject and body share one column so the body starts flush with the subject. %>
   <% if truncate_body %>
     <div class="flex min-w-0 flex-1 items-start gap-1 text-sm">

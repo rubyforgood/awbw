@@ -27,13 +27,13 @@
 <% subtitle = capture do %>
   <%= pluralize(@total_count, "entry", plural: "entries") %><% if @flagged_count.positive? %> · <span class="font-medium text-orange-600"><%= @flagged_count %> flagged</span><% end %>
 <% end %>
-<%# Title: the person's name (or "Everyone"). On a person's feed their activity,
-    profile, and the composer triggers sit beside it; the composer panels open in
+<%# Title: the person's profile chip (or "Everyone"). On a person's feed their
+    activity and the composer triggers sit beside it; the composer panels open in
     the body, sharing the card-level panel-toggle scope (content_data). The person
     picker that scopes the feed lives in the filter row below. %>
 <% title = capture do %>
   <span class="flex flex-wrap items-center gap-3">
-    <%= @person ? tag.span(@person.full_name, title: @person.preferred_email) : "Everyone" %>
+    <%= @person ? render("people/person_chip", person: @person) : "Everyone" %>
     <% if @person %>
       <span class="flex flex-wrap items-center gap-3 font-sans">
         <% if allowed_to?(:index?, with: Admin::AhoyActivityPolicy) %>
@@ -41,10 +41,6 @@
             <i class="fa-solid fa-clock-rotate-left"></i>
             <%= @person.first_name %>'s activity
           <% end %>
-        <% end %>
-        <%= link_to person_path(@person), class: button_classes(:primary_outline) do %>
-          <i class="fa-solid fa-user"></i>
-          <%= @person.first_name %>'s profile
         <% end %>
         <%= render "comments_and_communications/add_buttons" %>
       </span>

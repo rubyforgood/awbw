@@ -14,6 +14,8 @@
      path = record_edit_path(record)
      path ? link_to(inner, path, target: "_blank", rel: "noopener", class: "#{chip_class} hover:underline") : content_tag(:span, inner, class: chip_class)
    end %>
+<%# Only the everyone feed names who each row is about. %>
+<% leading = local_assigns[:person] ? source_chip : safe_join([ feed_person_chip(entry), source_chip || entry.decorate.channel_chip ].compact, " ") %>
 <% edit_button = content_tag(:button, safe_join([ content_tag(:i, "", class: "fa-solid fa-pen text-2xs"), " Edit" ]),
                               type: "button",
                               class: "shrink-0 text-xs #{eyebrow_link_class}",
@@ -23,8 +25,8 @@
 <div id="<%= dom_id(entry) %>" data-controller="edit-toggle">
   <%= tag.div data: { edit_toggle_target: "view", **expandable_feed_row_data(clamp: false, key: dom_id(entry)) } do %>
     <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, expandable: true,
-               date_path: feed_entry_path(entry, person: person),
-               leading: source_chip, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
+               date_path: feed_entry_path(entry, person: person), feed_person: person,
+               leading: leading, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
   <% end %>
 
   <div data-edit-toggle-target="edit" class="hidden rounded-md border <%= communication_card_class %> px-3 py-2">

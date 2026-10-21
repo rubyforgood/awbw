@@ -19,12 +19,74 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
-    it "shows the person's email on hover over their name in the title" do
+    it "titles the page with the person's edit chip, showing their name and email" do
       get comments_and_communications_path(person_id: person.id)
 
-      name = Nokogiri::HTML(response.body).at_css("h1 [title='primary@example.com']")
-      expect(name.text).to eq(person.full_name)
-      expect(name.name).to eq("span")
+      edit_path = edit_person_path(person, return_to: "comments_and_communications", feed_person_id: person.id)
+      chip = Nokogiri::HTML(response.body).at_css("h1 a[href='#{edit_path}']")
+      expect(chip.text).to include(person.full_name)
+      expect(chip.text).to include("primary@example.com")
+    end
+
+    it "shows affiliated-since and current facilitator terms on hover over the person chip" do
+      organization = create(:organization, name: "Riverside Shelter")
+      create(:affiliation, person: person, title: "Board member", start_date: Date.new(2021, 5, 1))
+      create(:affiliation, person: person, organization: organization, start_date: Date.new(2023, 3, 1), end_date: 2.years.from_now)
+
+      get comments_and_communications_path(person_id: person.id)
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text).to include("Affiliated since May 2021")
+      expect(card.text).to include("Riverside Shelter")
+      expect(card.text).to include("Active")
+      expect(card.text).to include("Started March 2023")
+    end
+
+    it "lists the person's latest facilitator trainings with attendance in the hover card" do
+      training = create(:event, title: "Art Facilitator Training: March 2026", facilitator_training: true,
+                                start_date: Time.zone.local(2026, 3, 5, 9), end_date: Time.zone.local(2026, 3, 6, 17))
+      create(:event_registration, registrant: person, event: training, status: "attended")
+
+      get comments_and_communications_path(person_id: person.id)
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text).to include("Facilitator trainings")
+      expect(card.text).to include("Mar 5-6, 2026")
+      expect(card.text).not_to include("Art Facilitator Training")
+      expect(card.text).to include("Attended")
+    end
+
+    it "labels an on-demand training by its year" do
+      training = create(:event, title: "On-Demand Facilitator Training 2026", facilitator_training: true, on_demand: true,
+                                start_date: Time.zone.local(2026, 1, 1, 9), end_date: Time.zone.local(2026, 12, 31, 17))
+      create(:event_registration, registrant: person, event: training, status: "registered")
+
+      get comments_and_communications_path(person_id: person.id)
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text).to include("On-demand 2026")
+      expect(card.text).not_to include("On-Demand Facilitator Training")
+      expect(card.text).not_to include("Jan 1")
+    end
+
+    it "shows the person's membership status and current invoice in the hover card" do
+      membership = create(:membership, person: person)
+      create(:membership_invoice, membership: membership, start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31), cost_cents: 0)
+
+      travel_to(Date.new(2026, 10, 21)) { get comments_and_communications_path(person_id: person.id) }
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text).to include("Membership")
+      expect(card.text).to include("Active")
+      expect(card.text).to include("Jan 1, 2026 – Dec 31, 2026")
+      expect(card.text).to include("Paid")
+    end
+
+    it "says a person without a membership has none in the hover card" do
+      get comments_and_communications_path(person_id: person.id)
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text.squish).to include("Membership None")
     end
 
     it "links to the person's activity history from the header" do
@@ -35,8 +97,6 @@ RSpec.describe "Comments and communications", type: :request do
       link = doc.css("a").find { |a| a.text.strip == "Aisha's activity" }
       expect(link).to be_present
       expect(link["href"]).to eq(admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"))
-      profile = doc.css("a").find { |a| a.text.strip == "Aisha's profile" }
-      expect(profile["href"]).to eq(person_path(person))
       everyone = doc.css("a").find { |a| a.text.strip == "View everyone" }
       expect(everyone["href"]).to eq(comments_and_communications_path)
     end
@@ -329,6 +389,34 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Hello other")
     end
 
+    it "names who each row is about, linking to edit that person" do
+      registration = create(:event_registration, registrant: person)
+      comment = create(:comment, commentable: registration, body: "Registration note", created_by: admin)
+      known = create(:notification, recipient_email: "primary@example.com", email_subject: "Known contact",
+                                    kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+      unknown = create(:notification, recipient_email: "stranger@example.com", email_subject: "Unknown contact",
+                                      kind: "manual_log", channel: "email", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      doc = Nokogiri::HTML(response.body)
+      feed_link = "a[href='#{edit_person_path(person, return_to: 'comments_and_communications')}']"
+      [ comment, known ].each do |entry|
+        chip = doc.at_css("##{ActionView::RecordIdentifier.dom_id(entry)} #{feed_link}")
+        expect(chip.text).to include(person.full_name)
+      end
+      expect(doc.at_css("##{ActionView::RecordIdentifier.dom_id(unknown)}").text).to include("stranger@example.com")
+    end
+
+    it "leaves the who-it's-about chip off a person's own feed" do
+      create(:comment, commentable: person, body: "Profile note", created_by: admin)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      feed_link = "a[href='#{edit_person_path(person, return_to: 'comments_and_communications')}']"
+      expect(Nokogiri::HTML(response.body).at_css(feed_link)).to be_nil
+    end
+
     it "loads a picked person's composers into the frame with their filing targets" do
       registration = create(:event_registration, registrant: person)
 
@@ -454,6 +542,22 @@ RSpec.describe "Comments and communications", type: :request do
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(autoemail)}")
       expect(row.text).to include("Welcome!")
       expect(row.at_css("button[data-action='edit-toggle#toggle']")).to be_nil
+    end
+
+    it "links an incoming row's sender chip to edit them, with the facilitator hover card" do
+      organization = create(:organization, name: "Riverside Shelter")
+      create(:affiliation, person: person, organization: organization, start_date: Date.new(2023, 3, 1))
+      notification = create(:notification, :incoming, noticeable: person, recipient_email: "primary@example.com",
+                                                       email_subject: "Called in", kind: "manual_log",
+                                                       channel: "phone", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      row = Nokogiri::HTML(response.body).at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
+      edit_path = edit_person_path(person, return_to: "comments_and_communications", feed_person_id: person.id)
+      expect(row.at_css("a[href='#{edit_path}']")).to be_present
+      expect(row.text).to include("Riverside Shelter")
+      expect(row.text).to include("Started March 2023")
     end
 
     it "shows a Responded checkbox for an incoming manual communication" do
