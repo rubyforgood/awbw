@@ -175,7 +175,8 @@ end
 setting = Setting.first_or_create!
 setting.update!(organization: setting.organization || awbw_org,
                 return_address: setting.return_address || return_address,
-                remittance_address: setting.remittance_address || remittance_address)
+                remittance_address: setting.remittance_address || remittance_address,
+                ce_provider_number: setting.ce_provider_number.presence || "1000151")
 
 [ admin, amy, aisha ].each do |user|
   next unless user.person.present? && user.person.affiliations.empty?

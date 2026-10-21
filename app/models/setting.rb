@@ -24,6 +24,7 @@ class Setting < ApplicationRecord
             format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
             allow_blank: true
   validates :invoice_prefix, length: { maximum: 20 }
+  validates :ce_provider_number, length: { maximum: 50 }
   validates :annual_membership_cents, :membership_renewal_window_days, :membership_grace_period_days,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
@@ -124,6 +125,12 @@ class Setting < ApplicationRecord
 
   def self.ce_administrator_name
     ce_administrator&.full_name.presence
+  end
+
+  # The portal's approved-provider number with the CE accrediting body, printed on
+  # the certificate. Blank until an admin enters it, since it is per-deployment.
+  def self.ce_provider_number
+    stored(:ce_provider_number)
   end
 
   # The public contact mailbox, shown on the contact page, the story-share footer,

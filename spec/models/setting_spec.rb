@@ -132,6 +132,18 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".ce_provider_number" do
+    it "is blank until an admin enters it" do
+      expect(described_class.ce_provider_number).to be_nil
+    end
+
+    it "returns the stored number" do
+      described_class.create!(ce_provider_number: "9000123")
+
+      expect(described_class.ce_provider_number).to eq("9000123")
+    end
+  end
+
   describe ".ce_administrator_name" do
     it "names the person the row points at" do
       Setting.create!(ce_administrator: create(:person, first_name: "Robin", last_name: "Signer"))

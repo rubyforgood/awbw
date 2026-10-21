@@ -92,6 +92,10 @@
                   label: "CE administrator",
                   hint: "Printed beside #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE} under the signature line",
                   input_html: { data: { controller: "remote-select", remote_select_model_value: "person" } } %>
+      <%= f.input :ce_provider_number,
+                  label: "CE provider number",
+                  placeholder: Setting.ce_provider_number,
+                  hint: "This portal's approved-provider number with #{ContinuingEducationRegistration::ACCREDITATION_BODY}" %>
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-6">

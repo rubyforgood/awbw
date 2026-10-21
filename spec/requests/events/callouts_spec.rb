@@ -1108,7 +1108,6 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("This certifies that the above-named participant")
       expect(response.body).to include(registration.registrant.full_name)
       expect(response.body).to include("LCSW 86747")
-      expect(response.body).to include("Provider # #{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}")
       expect(response.body).to include(ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE)
       expect(response.body).to include("6 hours")
     end
@@ -1122,6 +1121,20 @@ RSpec.describe "Events::Callouts", type: :request do
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
       expect(response.body).to include("5 Issuer Way, Springfield, IL 62704")
+    end
+
+    it "prints the provider number the app settings hold" do
+      Setting.create!(ce_provider_number: "9000123")
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).to include("Provider # 9000123")
+    end
+
+    it "leaves the provider line off until an admin enters the number" do
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).not_to include("Continuing Education Provider #")
     end
 
     it "signs it with the person the app settings name" do

@@ -7,6 +7,7 @@
     centered safe area, matching the other framed certificates. %>
 <% issuing_address = app_organization_address_line %>
 <% signatory = [ Setting.ce_administrator_name, ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE ].compact_blank.join(", ") %>
+<% provider_number = Setting.ce_provider_number %>
 <% if frame_file %>
   <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
     <%= image_tag frame_file, alt: "",
@@ -30,7 +31,9 @@
         <% if issuing_address.present? %>
           <p class="text-[1.5cqw] text-purple-800"><%= issuing_address %></p>
         <% end %>
-        <p class="text-[1.5cqw] text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
+        <% if provider_number.present? %>
+          <p class="text-[1.5cqw] text-purple-800">CAMFT-approved Continuing Education Provider # <%= provider_number %></p>
+        <% end %>
       </div>
       <div class="flex items-end justify-between gap-[6cqw]">
         <div class="flex-1">
@@ -94,7 +97,9 @@
       <% if issuing_address.present? %>
         <p class="text-sm text-purple-800"><%= issuing_address %></p>
       <% end %>
-      <p class="text-sm text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
+      <% if provider_number.present? %>
+        <p class="text-sm text-purple-800">CAMFT-approved Continuing Education Provider # <%= provider_number %></p>
+      <% end %>
     </div>
 
     <div class="mt-4 flex items-end justify-between gap-10">
