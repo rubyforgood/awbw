@@ -669,11 +669,14 @@ class PeopleController < ApplicationController
   end
 
   # Where to send the admin after a successful update. Defaults to the person's
-  # profile, but returns to Data health or the registration org-linking page when
-  # the edit was opened from there (preserving that page's own return_to).
+  # profile, but returns to Data health, the registration org-linking page, or the
+  # comments & communications feed when the edit was opened from there
+  # (preserving that page's own return_to).
   def person_update_return_path
     if params[:return_to] == "data_health"
       helpers.data_health_return_path(params[:check])
+    elsif params[:return_to] == CommentsHelper::FEED_RETURN_TO
+      helpers.feed_return_path
     elsif params[:return_to] == "registration_link" && params[:event_registration_id].present?
       link_organization_event_registration_path(params[:event_registration_id], return_to: params[:link_org_return_to].presence)
     else

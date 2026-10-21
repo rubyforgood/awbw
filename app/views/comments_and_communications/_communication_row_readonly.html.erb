@@ -17,6 +17,6 @@
 <% trailing = content_tag(:span, render("notifications/responded_checkbox", notification: entry), class: "ml-auto shrink-0") %>
 <%= tag.div id: dom_id(entry), data: expandable_feed_row_data(clamp: false, key: dom_id(entry)) do %>
   <%= render "notifications/communication_line", notification: entry, admin: true, truncate: false, expandable: true,
-             date_path: feed_entry_path(entry, person: local_assigns[:person]),
+             date_path: feed_entry_path(entry, person: local_assigns[:person]), feed_person: local_assigns[:person],
              leading: leading, trailing: trailing, flag: render("notifications/flag_toggle", notification: entry) %>
 <% end %>

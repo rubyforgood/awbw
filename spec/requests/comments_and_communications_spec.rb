@@ -19,10 +19,11 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
-    it "titles the page with the person's profile chip, showing their name and email" do
+    it "titles the page with the person's edit chip, showing their name and email" do
       get comments_and_communications_path(person_id: person.id)
 
-      chip = Nokogiri::HTML(response.body).at_css("h1 a[href='#{person_path(person)}']")
+      edit_path = edit_person_path(person, return_to: "comments_and_communications", feed_person_id: person.id)
+      chip = Nokogiri::HTML(response.body).at_css("h1 a[href='#{edit_path}']")
       expect(chip.text).to include(person.full_name)
       expect(chip.text).to include("primary@example.com")
     end
@@ -341,7 +342,7 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Hello other")
     end
 
-    it "names who each row is about, linking to that person's own feed" do
+    it "names who each row is about, linking to edit that person" do
       registration = create(:event_registration, registrant: person)
       comment = create(:comment, commentable: registration, body: "Registration note", created_by: admin)
       known = create(:notification, recipient_email: "primary@example.com", email_subject: "Known contact",
@@ -352,7 +353,7 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path, headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
       doc = Nokogiri::HTML(response.body)
-      feed_link = "a[href='#{comments_and_communications_path(person_id: person.id)}']"
+      feed_link = "a[href='#{edit_person_path(person, return_to: 'comments_and_communications')}']"
       [ comment, known ].each do |entry|
         chip = doc.at_css("##{ActionView::RecordIdentifier.dom_id(entry)} #{feed_link}")
         expect(chip.text).to include(person.full_name)
@@ -365,7 +366,7 @@ RSpec.describe "Comments and communications", type: :request do
 
       get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
-      feed_link = "a[href='#{comments_and_communications_path(person_id: person.id)}']"
+      feed_link = "a[href='#{edit_person_path(person, return_to: 'comments_and_communications')}']"
       expect(Nokogiri::HTML(response.body).at_css(feed_link)).to be_nil
     end
 
@@ -496,7 +497,7 @@ RSpec.describe "Comments and communications", type: :request do
       expect(row.at_css("button[data-action='edit-toggle#toggle']")).to be_nil
     end
 
-    it "links an incoming row's sender chip to their profile with the facilitator hover card" do
+    it "links an incoming row's sender chip to edit them, with the facilitator hover card" do
       organization = create(:organization, name: "Riverside Shelter")
       create(:affiliation, person: person, organization: organization, start_date: Date.new(2023, 3, 1))
       notification = create(:notification, :incoming, noticeable: person, recipient_email: "primary@example.com",
@@ -506,7 +507,8 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
 
       row = Nokogiri::HTML(response.body).at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
-      expect(row.at_css("a[href='#{person_path(person)}']")).to be_present
+      edit_path = edit_person_path(person, return_to: "comments_and_communications", feed_person_id: person.id)
+      expect(row.at_css("a[href='#{edit_path}']")).to be_present
       expect(row.text).to include("Riverside Shelter")
       expect(row.text).to include("Started March 2023")
     end

@@ -14,6 +14,9 @@
   <% if params[:return_to] == "data_health" %>
     <%= hidden_field_tag :return_to, "data_health" %>
     <%= hidden_field_tag :check, params[:check] if params[:check].present? %>
+  <% elsif params[:return_to] == CommentsHelper::FEED_RETURN_TO %>
+    <%= hidden_field_tag :return_to, CommentsHelper::FEED_RETURN_TO %>
+    <%= hidden_field_tag :feed_person_id, params[:feed_person_id] if params[:feed_person_id].present? %>
   <% elsif params[:return_to] == "registration_link" && params[:event_registration_id].present? %>
     <%= hidden_field_tag :return_to, "registration_link" %>
     <%= hidden_field_tag :event_registration_id, params[:event_registration_id] %>
