@@ -182,8 +182,13 @@ class BuiltinCallouts
   # event end_date's time-of-day (the daily end time). Nil when dates are unset.
   def survey_drip(event, day)
     return unless event.start_date && event.end_date
-    target = event.start_date.to_date + (day - 1)
-    event.end_date.change(year: target.year, month: target.month, day: target.day) - 30.minutes
+    target = event.starts_on + (day - 1)
+    program_time(event.end_date).change(year: target.year, month: target.month, day: target.day) - 30.minutes
+  end
+
+  # Defaults are computed in the program zone so they don't depend on which admin's zone seeds them (DST included).
+  def program_time(time)
+    time.in_time_zone(Event::PROGRAM_ZONE)
   end
 
   # Ordered built-in callout definitions. `hidden` / `display_from` are procs so
@@ -248,7 +253,7 @@ class BuiltinCallouts
         color_class: "blue",
         hidden: ->(_event) { true },
         # Default drip date; admins can edit it per event afterward.
-        display_from: ->(event) { event.start_date - 7.days if event.start_date }
+        display_from: ->(event) { program_time(event.start_date) - 7.days if event.start_date }
       },
       {
         builtin_key: "staff",
@@ -316,7 +321,7 @@ class BuiltinCallouts
         forms: ->(event) {
           [
             { form: Form.survey("day_1_survey"), display_from: survey_drip(event, 1) },
-            ({ form: Form.survey("day_2_survey"), display_from: survey_drip(event, 2) } if event.day_count >= 2),
+            ({ form: Form.survey("day_2_survey"), display_from: survey_drip(event, 2) } if event.multi_day?),
             { form: Form.survey("post_event_survey"), display_from: (event.end_date - 30.minutes if event.end_date) }
           ].compact
         }

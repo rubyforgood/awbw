@@ -35,6 +35,15 @@ RSpec.describe EventSurveyCompletions do
         expect(completions.roles).to eq(%w[day_1_survey post_event_survey recipient_survey])
       end
 
+      it "drops Day 2 on a one-day evening training even for a viewer whose zone puts the end on the next day" do
+        pacific = Time.find_zone(Event::PROGRAM_ZONE)
+        event.update!(start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 10, 22))
+
+        roles = Time.use_zone("Eastern Time (US & Canada)") { described_class.new(Event.find(event.id), [ person.id ]).roles }
+
+        expect(roles).to eq(%w[day_1_survey post_event_survey recipient_survey])
+      end
+
       it "drops Day 1 and Day 2 on an on-demand training" do
         event.update!(on_demand: true)
 

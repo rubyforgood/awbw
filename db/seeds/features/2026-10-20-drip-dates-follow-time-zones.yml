@@ -1,0 +1,11 @@
+name: "Callout display dates stay put across time zones"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-20
+summary: >-
+  A callout's display date now opens at the moment the admin set it, and
+  everyone sees that date in their own time zone. Saving an event no longer
+  shifts a date someone else set or marks an untouched callout as customized.
+pro_tips:
+  - "The display date you pick is midnight in your own time zone, shown under the date field."
+  - "Registrants in other time zones see the date translated into theirs, with the time added (like \"at 3 AM EDT\") so it never looks a day off."

@@ -313,6 +313,10 @@ class Event < ApplicationRecord
     end_date&.in_time_zone(PROGRAM_ZONE)&.to_date
   end
 
+  def multi_day?
+    starts_on.present? && ends_on.present? && ends_on > starts_on
+  end
+
   # How many calendar days the event spans (inclusive), clamped to 1..5 — drives
   # how many per-day attendance columns the Onboarding tab shows.
   def day_count
