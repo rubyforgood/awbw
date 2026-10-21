@@ -2,6 +2,7 @@ class EventDecorator < ApplicationDecorator
   decorates_association :bookmarkable
 
   LEGACY_CTA_FONT = "font-family: 'Telefon Bold', sans-serif;".freeze
+  TRAILING_DATE = /[\s:,\-–—]*\(?(?:(?:#{(Date::MONTHNAMES + Date::ABBR_MONTHNAMES).compact.join("|")})\.?\s+(?:\d{1,2},?\s+)?)?(?:19|20)\d{2}\)?\s*\z/i
 
   def videoconference_domain
     URI.parse(videoconference_url).host&.split(".")&.[](-2)&.capitalize rescue "video call"
@@ -58,6 +59,12 @@ class EventDecorator < ApplicationDecorator
     return title if start_date.blank? || on_demand?
 
     "#{title} (#{month_year})"
+  end
+
+  # The title without a trailing date ("AWBW Facilitator Training: November 2026"
+  # → "AWBW Facilitator Training"), for lists that show the date beside it.
+  def title_without_date
+    title.to_s.sub(TRAILING_DATE, "").presence || title
   end
 
   # Subject pre-filled on the bulk reminder page and used as the send-time

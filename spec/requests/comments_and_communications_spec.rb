@@ -43,7 +43,7 @@ RSpec.describe "Comments and communications", type: :request do
     end
 
     it "lists the person's latest facilitator trainings with attendance in the hover card" do
-      training = create(:event, title: "Art Facilitator Training", facilitator_training: true,
+      training = create(:event, title: "Art Facilitator Training: March 2026", facilitator_training: true,
                                 start_date: Time.zone.local(2026, 3, 5, 9), end_date: Time.zone.local(2026, 3, 6, 17))
       create(:event_registration, registrant: person, event: training, status: "attended")
 
@@ -53,6 +53,7 @@ RSpec.describe "Comments and communications", type: :request do
       expect(card.text).to include("Facilitator trainings")
       expect(card.text).to include("Art Facilitator Training")
       expect(card.text).to include("Mar 5-6, 2026")
+      expect(card.text).not_to include("Art Facilitator Training: March")
       expect(card.text).to include("Attended")
     end
 
