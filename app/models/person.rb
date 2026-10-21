@@ -103,10 +103,6 @@ class Person < ApplicationRecord
   # Autocorrect and pasted text swap in look-alike dashes; storing a plain hyphen keeps "Smith-Jones" one person.
   DASH_VARIANTS = /[\u2010-\u2015\u2212]/
   NAME_AND_EMAIL_INDEX = "index_people_on_name_and_email".freeze
-  # Stands in for "no address on file" when two people share a name and neither has an
-  # email, which is the only time one is required. Numbered so each of them gets their own.
-  PLACEHOLDER_EMAIL = "1@example.com".freeze
-  PLACEHOLDER_EMAIL_PATTERN = /\A(\d+)@example\.com\z/
 
   def self.normalize_name(name)
     name&.strip&.gsub(DASH_VARIANTS, "-")
@@ -253,7 +249,7 @@ class Person < ApplicationRecord
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
-  scope :placeholder_email, -> { where("email REGEXP ?", "^[0-9]+@example\\.com$") }
+  scope :placeholder_email, -> { where("email REGEXP ?", PlaceholderEmail.sql_pattern) }
   scope :workshop_authors, -> { credited_on(Workshop) }
   scope :workshop_variation_authors, -> { credited_on(WorkshopVariation) }
   scope :workshop_log_authors, -> { credited_on(WorkshopLog) }
@@ -563,7 +559,7 @@ class Person < ApplicationRecord
   end
 
   def placeholder_email?
-    email.to_s.match?(PLACEHOLDER_EMAIL_PATTERN)
+    PlaceholderEmail.match?(email)
   end
 
   # The placeholder records "no address on file", so it never stands in for a real one.
@@ -701,9 +697,9 @@ class Person < ApplicationRecord
   def next_free_placeholder_email
     scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
     scope = scope.where.not(id: id) if persisted?
-    taken = scope.pluck(:email).filter_map { |address| address.to_s[PLACEHOLDER_EMAIL_PATTERN, 1]&.to_i }
+    taken = scope.pluck(:email).filter_map { |address| PlaceholderEmail.number_in(address) }
 
-    "#{(1..).find { |number| taken.exclude?(number) }}@example.com"
+    PlaceholderEmail.at((1..).find { |number| taken.exclude?(number) })
   end
   ## Consider adding additional person info to be saved on stripes customer records
   # def stripe_attributes(pay_customer)

@@ -63,7 +63,7 @@ class UsersController < ApplicationController
     # Check for duplicate email before saving
     unless params[:skip_duplicate_check].present?
       @email = @user.email
-      if @email.present? && !@email.downcase.end_with?("@example.com")
+      if @email.present? && !PlaceholderEmail.domain_address?(@email)
         @person_id = params[:person_id].presence || params.dig(:user, :person_id).presence || @user.person_id
         @duplicates = find_duplicate_users(@email, exclude_person_id: @person_id)
         if @duplicates.any?
