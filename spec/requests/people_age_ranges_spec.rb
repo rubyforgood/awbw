@@ -82,8 +82,6 @@ RSpec.describe "Person age ranges", type: :request do
         person: {
           first_name: "Age",
           last_name: "Tester",
-          category_ids: [ "" ],
-          managed_category_type_ids: [],
           age_range_categorizable_items_attributes: [
             { category_id: adults.id, is_primary: "1" }
           ]
