@@ -708,6 +708,17 @@ RSpec.describe "FormSubmissions", type: :request do
             .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
         end
 
+        it "warns on the editor that linking also changes the registration and affiliations" do
+          add_answer("organization_position", "Counselor")
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Linking an organization here also:")
+          expect(response.body).to include("Links it to their #{training.title} registration")
+          expect(response.body).to include("Adds a “Counselor” job affiliation there")
+          expect(response.body).to include("Adds a Facilitator affiliation there")
+        end
+
         it "links a second org without tying it to the submission another org already holds" do
           add_answer("organization_name", "Acme Inc")
           add_answer("organization_website", "https://typed.example")
