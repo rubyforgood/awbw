@@ -27,6 +27,20 @@ RSpec.describe "Comments and communications", type: :request do
       expect(name.name).to eq("span")
     end
 
+    it "shows affiliated-since and current facilitator terms on hover over the person chip" do
+      organization = create(:organization, name: "Riverside Shelter")
+      create(:affiliation, person: person, title: "Board member", start_date: Date.new(2021, 5, 1))
+      create(:affiliation, person: person, organization: organization, start_date: Date.new(2023, 3, 1), end_date: 2.years.from_now)
+
+      get comments_and_communications_path(person_id: person.id)
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text).to include("Affiliated since May 2021")
+      expect(card.text).to include("Riverside Shelter")
+      expect(card.text).to include("Active")
+      expect(card.text).to include("Started March 2023")
+    end
+
     it "links to the person's activity history from the header" do
       person.update!(first_name: "Aisha")
       get comments_and_communications_path(person_id: person.id)
@@ -35,8 +49,8 @@ RSpec.describe "Comments and communications", type: :request do
       link = doc.css("a").find { |a| a.text.strip == "Aisha's activity" }
       expect(link).to be_present
       expect(link["href"]).to eq(admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"))
-      profile = doc.css("a").find { |a| a.text.strip == "Aisha's profile" }
-      expect(profile["href"]).to eq(person_path(person))
+      profile = doc.at_css("h1 a[href='#{person_path(person)}']")
+      expect(profile.text).to include(person.full_name)
       everyone = doc.css("a").find { |a| a.text.strip == "View everyone" }
       expect(everyone["href"]).to eq(comments_and_communications_path)
     end

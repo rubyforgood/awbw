@@ -48,6 +48,34 @@ RSpec.describe AffiliationDecorator do
 
   # An inactive row sits on the Inactive tab, so a back link must land on the
   # section rather than a row the page isn't showing.
+  describe "#period_note" do
+    around { |example| travel_to(Date.new(2026, 10, 20)) { example.run } }
+
+    it "reads an imminent end in relative terms" do
+      affiliation = build(:affiliation, start_date: Date.new(2023, 3, 1), end_date: Date.new(2026, 11, 5)).decorate
+      expect(affiliation.period_note).to eq("Started March 2023, ending next month")
+    end
+
+    it "names the month of a farther end" do
+      affiliation = build(:affiliation, start_date: Date.new(2023, 3, 1), end_date: Date.new(2027, 3, 1)).decorate
+      expect(affiliation.period_note).to eq("Started March 2023, ending March 2027")
+    end
+
+    it "reads an open-ended term by its start alone" do
+      affiliation = build(:affiliation, start_date: Date.new(2026, 10, 1), end_date: nil).decorate
+      expect(affiliation.period_note).to eq("Started this month")
+    end
+
+    it "reads a scheduled term as starting" do
+      affiliation = build(:affiliation, start_date: Date.new(2026, 11, 5), end_date: nil).decorate
+      expect(affiliation.period_note).to eq("Starting next month")
+    end
+
+    it "notes when no dates are recorded" do
+      expect(build(:affiliation, start_date: nil, end_date: nil).decorate.period_note).to eq("Dates not recorded")
+    end
+  end
+
   describe "#return_anchor" do
     it "points at the row itself when the affiliation is active" do
       affiliation = create(:affiliation, start_date: 1.year.ago.to_date, end_date: nil)

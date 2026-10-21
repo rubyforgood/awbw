@@ -175,6 +175,13 @@ class PersonDecorator < ApplicationDecorator
     "Inactive"
   end
 
+  # Facilitator rows that are running now or scheduled, earliest first. Skips a
+  # no-show's zero-length stub, which records no facilitation.
+  def current_facilitator_affiliations
+    affiliations.select { |affiliation| affiliation.facilitator? && !affiliation.zero_length? && !affiliation.inactive_on? }
+                .sort_by { |affiliation| affiliation.start_date || Date.current }
+  end
+
   def facilitator_since_range
     date_range_display(facilitator_since_date, facilitation_end_date, ended_title: "No active facilitator affiliations")
   end

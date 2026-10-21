@@ -185,6 +185,25 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#current_facilitator_affiliations" do
+    let(:person) { create(:person) }
+
+    it "lists running and scheduled facilitator terms, earliest first" do
+      upcoming = create(:affiliation, person: person, start_date: 1.month.from_now, end_date: nil)
+      active = create(:affiliation, person: person, start_date: 2.years.ago, end_date: 1.month.from_now)
+
+      expect(person.decorate.current_facilitator_affiliations).to eq([ active, upcoming ])
+    end
+
+    it "skips ended terms, no-show stubs, and non-facilitator titles" do
+      create(:affiliation, person: person, start_date: 3.years.ago, end_date: 1.year.ago)
+      create(:affiliation, person: person, start_date: 1.week.from_now, end_date: 1.week.from_now)
+      create(:affiliation, person: person, title: "Board member", start_date: 1.year.ago)
+
+      expect(person.decorate.current_facilitator_affiliations).to be_empty
+    end
+  end
+
   describe "#affiliated_since_note" do
     let(:person) { create(:person) }
 
