@@ -59,7 +59,9 @@
         <h3 class="text-brand-yellow-400 mb-4 text-xs font-bold tracking-widest uppercase">Get in touch</h3>
         <ul class="space-y-2 text-sm text-white/80">
           <li><%= mail_to Setting.info_email, Setting.info_email, class: "hover:text-white" %></li>
-          <li><%= link_to "(310) 396-0317", "tel:+13103960317", class: "hover:text-white" %></li>
+          <% if (phone = app_organization_phone) %>
+            <li><%= link_to phone, tel_href(phone), class: "hover:text-white" %></li>
+          <% end %>
           <% if (address_lines = Setting.organization_address_lines).any? %>
             <li class="pt-1 text-white/70"><%= safe_join(address_lines, tag.br) %></li>
           <% end %>

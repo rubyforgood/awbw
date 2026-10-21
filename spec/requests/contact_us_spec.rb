@@ -110,9 +110,15 @@ RSpec.describe "ContactUs", type: :request do
       end
 
       it "shows other ways to reach us beside the form" do
+        organization = create(:organization)
+        Setting.create!(organization: organization,
+                        return_address: create(:address, addressable: organization, phone: "(310) 555-0100"))
+
         get contact_us_path
+
         expect(response.body).to include("Other ways to reach us")
-        expect(response.body).to include("tel:310-396-0317")
+        expect(response.body).to include("tel:+13105550100")
+        expect(response.body).to include("(310) 555-0100")
       end
 
       it "does not show visible form fields for name, email, and organization" do

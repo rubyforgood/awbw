@@ -13,7 +13,7 @@ class EventMailer < ApplicationMailer
 
     @time_zone = @person.user&.time_zone || Time.zone.name
     @organization_name = Setting.app_organization_name
-    @organization_website  = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
+    @organization_website = Setting.organization_website.presence || root_url
 
     mail(
       to: @person.preferred_email,
@@ -73,7 +73,7 @@ class EventMailer < ApplicationMailer
 
     @time_zone = @person.user&.time_zone || Time.zone.name
     @organization_name = Setting.app_organization_name
-    @organization_website = ENV.fetch("ORGANIZATION_WEBSITE", root_url)
+    @organization_website = Setting.organization_website.presence || root_url
 
     # Admins can override the subject from the bulk-reminder page; fall back to
     # the standard portal subject when they left it blank. Shared with the compose

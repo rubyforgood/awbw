@@ -83,6 +83,23 @@ class Setting < ApplicationRecord
     ENV.fetch("ORGANIZATION_NAME", DEFAULT_ORGANIZATION_NAME)
   end
 
+  # The organization's own site, linked from the navbar, footers, mega-menu and
+  # mail. Read off the organization record, which already normalizes a bare domain.
+  def self.organization_website
+    app_organization&.website_link_url.presence || ENV["ORGANIZATION_WEBSITE"].presence
+  end
+
+  # The phone printed beside the address: whatever the return address carries, else
+  # the first of the organization's addresses that holds one.
+  def self.organization_phone
+    stored_association(:return_address)&.phone.presence || app_organization_phone
+  end
+
+  def self.app_organization_phone
+    app_organization&.addresses&.active&.where&.not(phone: [ nil, "" ])&.pick(:phone)
+  end
+  private_class_method :app_organization_phone
+
   # The return address printed in the invoice and receipt header: the address the
   # row points at, else the app organization's flagged invoice address.
   def self.organization_address_lines

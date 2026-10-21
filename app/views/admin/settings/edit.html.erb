@@ -31,6 +31,8 @@
           <ul class="list-inside list-disc space-y-1">
             <li>Invoice and receipt header name</li>
             <li>Tax ID <%= org.tax_id.presence ? "(#{org.tax_id})" : "— not set on the organization yet" %></li>
+            <li>Public website <%= org.website_link_url.presence || "— not set on the organization yet" %></li>
+            <li>Phone, from the return address below</li>
             <li>Treating the grants it funds as subsidy rather than external funding</li>
           </ul>
           <p class="mt-3 text-gray-600">

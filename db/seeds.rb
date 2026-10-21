@@ -149,6 +149,7 @@ awbw_org = Organization.find_or_create_by!(name: Setting.organization_name) do |
   org.organization_status = OrganizationStatus.find_by!(name: "Active")
 end
 awbw_org.update!(tax_id: "95-448606") if awbw_org.tax_id.blank?
+awbw_org.update!(website_url: "https://www.awbw.org") if awbw_org.website_url.blank?
 
 puts "Pointing settings at the organization and its addresses…"
 # The invoice header prints the return address and the pay-by-check instructions print
@@ -162,7 +163,9 @@ return_address = awbw_org.addresses.find_or_create_by!(street_address: "1029 1/2
   address.locality = "LA City"
   address.address_type = "work"
   address.invoice_address = true
+  address.phone = "(310) 396-0317"
 end
+return_address.update!(phone: "(310) 396-0317") if return_address.phone.blank?
 
 remittance_address = awbw_org.addresses.find_or_create_by!(street_address: "1210 Fernside Dr.") do |address|
   address.city = "La Cañada"

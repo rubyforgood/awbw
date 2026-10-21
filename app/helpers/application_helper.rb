@@ -715,6 +715,22 @@ module ApplicationHelper
     Setting.app_organization_name
   end
 
+  def app_organization_website
+    Setting.organization_website
+  end
+
+  def app_organization_phone
+    Setting.organization_phone
+  end
+
+  # A dialable href: digits only, with the US country code when that's all there is.
+  def tel_href(phone)
+    digits = phone.to_s.gsub(/\D/, "")
+    digits = "1#{digits}" if digits.length == 10
+
+    "tel:+#{digits}"
+  end
+
   # The organization's address on one line, for a certificate's issuing block.
   def app_organization_address_line
     Setting.organization_address_lines.join(", ")

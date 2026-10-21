@@ -132,6 +132,41 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".organization_website" do
+    it "reads the organization's own normalized address" do
+      organization = create(:organization, website_url: "awbw.example")
+      Setting.create!(organization: organization)
+
+      expect(described_class.organization_website).to eq("https://awbw.example")
+    end
+
+    it "is blank when neither the organization nor the deployment names one" do
+      Setting.create!(organization: create(:organization, website_url: nil))
+
+      expect(described_class.organization_website).to be_nil
+    end
+  end
+
+  describe ".organization_phone" do
+    let(:organization) { create(:organization) }
+
+    it "prefers the phone on the chosen return address" do
+      chosen = create(:address, addressable: organization, phone: "(310) 555-0100")
+      create(:address, addressable: organization, phone: "(310) 555-0199")
+      Setting.create!(organization: organization, return_address: chosen)
+
+      expect(described_class.organization_phone).to eq("(310) 555-0100")
+    end
+
+    it "falls back to whichever of its addresses carries one" do
+      create(:address, addressable: organization, phone: nil)
+      create(:address, addressable: organization, phone: "(310) 555-0199")
+      Setting.create!(organization: organization)
+
+      expect(described_class.organization_phone).to eq("(310) 555-0199")
+    end
+  end
+
   describe ".ce_administrator_title" do
     it "falls back to the generic title" do
       expect(described_class.ce_administrator_title).to eq("CE Administrator")
