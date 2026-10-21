@@ -5,11 +5,17 @@ module Memberships
       membership = person&.current_membership
       authorize! membership, to: :set_up_subscription?, with: MembershipPolicy # needs `with:` policy if membership is nil
 
+
       if membership.owes?
         return redirect_to(person_path(person), alert: "Please pay the current balance first.", status: :see_other)
       end
 
       person.set_payment_processor :stripe
+
+      if person.pay_subscriptions.active.exists?
+        return redirect_to(person_path(person), alert: "Automatic renewal is already set up for this membership.", status: :see_other)
+      end
+
       invoice = Membership::EnsureInvoice.call(membership: membership)
       session = subscription_checkout_session(person, membership, invoice)
       redirect_to session.url, allow_other_host: true, status: :see_other

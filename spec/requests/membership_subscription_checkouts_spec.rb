@@ -21,6 +21,13 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     allow_any_instance_of(Person).to receive(:payment_processor).and_return(fake_processor)
   end
 
+  def create_active_subscription
+    customer = Pay::Customer.create!(owner: person, processor: "stripe",
+      processor_id: "cus_test", default: true)
+    Pay::Subscription.create!(customer: customer, name: "default",
+      processor_id: "sub_test", processor_plan: "membership", status: "active", quantity: 1)
+  end
+
   it "requires a signed-in user" do
     post memberships_subscription_checkouts_path
 
@@ -48,6 +55,17 @@ RSpec.describe "Membership subscription checkouts", type: :request do
     sign_in user
 
     expect { post memberships_subscription_checkouts_path }.not_to change { Membership.count }
+  end
+
+  it "refuses a second subscription when one is already active" do
+    create(:membership, person: person)
+    create_active_subscription
+    sign_in user
+
+    post memberships_subscription_checkouts_path
+
+    expect(response).to redirect_to(person_path(person))
+    expect(checkout_args).to be_empty
   end
 
   it "charges the member's own locked rate, not the standard one" do
