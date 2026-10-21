@@ -116,6 +116,17 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
     end
 
+    it "describes a deleted comment from its snapshot, naming a deleted parent by type" do
+      author = create(:user)
+      event = create(:ahoy_event, name: "destroy.comment", resource_type: "Comment", resource_id: 0,
+                                  properties: { "attributes" => { "topic" => "Follow-up", "body" => "Called.",
+                                                                  "created_by_id" => author.id,
+                                                                  "commentable_type" => "Affiliation", "commentable_id" => 0 } }).decorate
+
+      expect(event.deleted_comment).to include(topic: "Follow-up", body: "Called.", author_name: author.full_name,
+                                               parent_link: { text: "Affiliation (deleted)", path: nil })
+    end
+
     it "flags a flagged comment" do
       comment = create(:comment, commentable: create(:person), flagged: true)
       event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
