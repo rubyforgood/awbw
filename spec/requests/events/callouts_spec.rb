@@ -1113,6 +1113,17 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include("6 hours")
     end
 
+    it "prints the issuing address the app settings point at" do
+      org = create(:organization)
+      Setting.create!(organization: org,
+                      return_address: create(:address, addressable: org, street_address: "5 Issuer Way",
+                                                       city: "Springfield", state: "IL", zip_code: "62704"))
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).to include("5 Issuer Way, Springfield, IL 62704")
+    end
+
     it "lists only the event staff titled as facilitators" do
       facilitator = create(:person, first_name: "Rudy", last_name: "Hernandez")
       greeter = create(:person, first_name: "Sam", last_name: "Greeter")

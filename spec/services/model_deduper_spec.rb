@@ -377,26 +377,14 @@ RSpec.describe ModelDeduper do
                        state: "IL", zip_code: "62704", invoice_address: true)
     end
 
-    it "keeps the survivor's flag and unflags the merged copy" do
+    it "moves the merged copy across with its flag intact" do
       kept = flagged_address(keep, "1 Keep St")
       moved = flagged_address(delete, "9 Delete Rd")
 
       service.merge(keep, delete)
 
-      expect(kept.reload.invoice_address).to be(true)
-      expect(moved.reload.invoice_address).to be_nil
       expect(moved.reload.addressable).to eq(keep)
-    end
-
-    it "lets the merged copy keep the flag when the survivor has none" do
-      create(:address, addressable: keep, street_address: "1 Keep St", city: "Springfield",
-                       state: "IL", zip_code: "62704")
-      moved = flagged_address(delete, "9 Delete Rd")
-
-      service.merge(keep, delete)
-
-      expect(moved.reload.invoice_address).to be(true)
-      expect(keep.addresses.reload.where(invoice_address: true).count).to eq(1)
+      expect(keep.addresses.reload.for_invoices).to contain_exactly(kept, moved)
     end
   end
 end

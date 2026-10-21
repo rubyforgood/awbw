@@ -47,7 +47,7 @@
       <h2 class="mb-1 text-lg font-semibold text-gray-800">Addresses</h2>
       <p class="mb-4 text-sm text-gray-600">
         Chosen from the organization's addresses. The header carries the return address;
-        cheques go to the remittance address.
+        checks go to the remittance address.
       </p>
       <%= f.input :contact_attention,
                   label: "Attention line",
@@ -62,14 +62,14 @@
                     label: "Return address",
                     required: true,
                     include_blank: false,
-                    hint: "Printed in the invoice and receipt header",
+                    hint: "Printed in the invoice and receipt header, and as the issuing address on CE certificates",
                     input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
         <%= f.input :remittance_address_id,
                     collection: address_options,
                     label: "Remittance address",
                     required: true,
                     include_blank: false,
-                    hint: "Where cheques are mailed — shown under \"make checks payable to\" and on the pay-by-check instructions",
+                    hint: "Where checks are mailed — shown under \"make checks payable to\" and on the pay-by-check instructions",
                     input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
       <% elsif org %>
         <p class="text-sm text-gray-600">

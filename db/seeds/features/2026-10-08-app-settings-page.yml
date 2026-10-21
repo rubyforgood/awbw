@@ -7,7 +7,7 @@ pr_number: 2570
 summary: >-
   A new App settings page under Admin holds the settings the whole portal shares:
   which organization the portal invoices as, the return and remittance addresses on
-  invoices, the contact mailboxes, the invoice number prefix, and the standard
+  invoices and CE certificates, the contact mailboxes, the invoice number prefix, and the standard
   membership price and renewal windows.
 pro_tips:
   - "Leave a field blank to keep using the value this deployment is configured with — the grey placeholder shows what that currently is."

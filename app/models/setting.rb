@@ -81,7 +81,7 @@ class Setting < ApplicationRecord
     stored_address_lines(:return_address) || app_organization_invoice_address_lines
   end
 
-  # Where cheques are mailed: the chosen remittance address, else the return address
+  # Where checks are mailed: the chosen remittance address, else the return address
   # (checks go to the return address when a separate one isn't set).
   def self.remittance_address_lines
     stored_address_lines(:remittance_address) || organization_address_lines

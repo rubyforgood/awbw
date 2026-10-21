@@ -715,6 +715,11 @@ module ApplicationHelper
     Setting.app_organization_name
   end
 
+  # The organization's address on one line, for a certificate's issuing block.
+  def app_organization_address_line
+    Setting.organization_address_lines.join(", ")
+  end
+
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 

@@ -27,6 +27,17 @@ RSpec.describe "Addresses", type: :request do
       expect(labels.last).not_to include("invoice address")
     end
 
+    it "sorts an address whose flag stores false in with the unmarked ones" do
+      older.update!(invoice_address: true)
+      newer.update!(invoice_address: false)
+
+      get "/addresses/options", params: { addressable_sgid: person.to_sgid.to_s }
+
+      labels = response.parsed_body["addresses"].map { |a| a["label"] }
+      expect(labels.first).to include("1 Old St").and include("invoice address")
+      expect(labels.last).not_to include("invoice address")
+    end
+
     it "leaves out inactive addresses" do
       older.update!(inactive: true)
 

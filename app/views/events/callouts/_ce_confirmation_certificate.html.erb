@@ -5,6 +5,7 @@
     in this public repo; the name, license, dates, hours, and facilitators render live.
     An admin-uploaded "CE certificate frame" renders full-bleed, with the content in a
     centered safe area, matching the other framed certificates. %>
+<% issuing_address = app_organization_address_line %>
 <% if frame_file %>
   <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
     <%= image_tag frame_file, alt: "",
@@ -25,7 +26,9 @@
       </div>
       <div class="text-center leading-snug">
         <p class="text-[2cqw] font-bold tracking-wide text-purple-900 uppercase"><%= app_organization_name %></p>
-        <p class="text-[1.5cqw] text-purple-800"><%= ContinuingEducationRegistration::ACCREDITATION_ADDRESS %></p>
+        <% if issuing_address.present? %>
+          <p class="text-[1.5cqw] text-purple-800"><%= issuing_address %></p>
+        <% end %>
         <p class="text-[1.5cqw] text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
       </div>
       <div class="flex items-end justify-between gap-[6cqw]">
@@ -87,7 +90,9 @@
 
     <div class="text-center">
       <p class="text-xl font-bold tracking-wide text-purple-900 uppercase"><%= app_organization_name %></p>
-      <p class="text-sm text-purple-800"><%= ContinuingEducationRegistration::ACCREDITATION_ADDRESS %></p>
+      <% if issuing_address.present? %>
+        <p class="text-sm text-purple-800"><%= issuing_address %></p>
+      <% end %>
       <p class="text-sm text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
     </div>
 

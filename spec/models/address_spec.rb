@@ -102,6 +102,15 @@ RSpec.describe Address, type: :model do
       expect(Address.display_lines_for(organization)).to eq([ "2 Billing Rd", "Shelbyville, IL 62565" ])
     end
 
+    it "prints the oldest flagged address when an owner has marked several" do
+      first = create(:address, addressable: organization, street_address: "1 First Billing Rd", city: "Springfield",
+                               state: "IL", zip_code: "62704", invoice_address: true)
+      create(:address, addressable: organization, street_address: "2 Later Billing Rd", city: "Shelbyville",
+                       state: "IL", zip_code: "62565", invoice_address: true)
+
+      expect(Address.display_lines_for(organization)).to eq(first.display_lines)
+    end
+
     it "falls back to the first active address when none is flagged" do
       create(:address, addressable: organization, street_address: "1 First Ave", city: "Springfield", state: "IL", zip_code: "62704")
 
@@ -116,31 +125,21 @@ RSpec.describe Address, type: :model do
     end
   end
 
-  describe "role flags" do
+  describe "the invoice flag" do
     let(:organization) { create(:organization) }
 
-    it "stores nil rather than false, so unflagged addresses don't collide on the unique index" do
-      first = create(:address, addressable: organization, invoice_address: false)
-      second = create(:address, addressable: organization, invoice_address: false)
+    it "lets an owner mark as many of its addresses as it likes" do
+      first = create(:address, addressable: organization, invoice_address: true)
+      second = create(:address, addressable: organization, invoice_address: true)
 
-      expect(first.reload.invoice_address).to be_nil
-      expect(second.reload.invoice_address).to be_nil
+      expect(organization.addresses.for_invoices).to contain_exactly(first, second)
     end
 
-    it "demotes the owner's previous invoice address when another is flagged" do
-      previous = create(:address, addressable: organization, invoice_address: true)
-      current = create(:address, addressable: organization, invoice_address: true)
+    it "leaves an unmarked address out, however it stores the flag" do
+      create(:address, addressable: organization, invoice_address: false)
+      create(:address, addressable: organization)
 
-      expect(current.reload.invoice_address).to be(true)
-      expect(previous.reload.invoice_address).to be_nil
-    end
-
-    it "does not demote another owner's flagged address" do
-      other_org = create(:organization)
-      theirs = create(:address, addressable: other_org, invoice_address: true)
-      create(:address, addressable: organization, invoice_address: true)
-
-      expect(theirs.reload.invoice_address).to be(true)
+      expect(organization.addresses.for_invoices).to be_empty
     end
   end
 end
