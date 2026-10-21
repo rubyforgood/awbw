@@ -23,7 +23,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
     person = Person.find_by!(filemaker_code: "00006")
     expect(person).to have_attributes(first_name: "Ada", last_name: "Lovelace", email: "ada@example.com",
                                       pronouns: "she/her", date_of_birth: Date.new(1815, 12, 10), notes: nil)
-    expect(person.comments.sole).to have_attributes(topic: "FileMaker Rolodex 00006", body: "Met at training")
+    expect(person.comments).to be_empty
     expect(person.addresses.sole).to have_attributes(street_address: "1 Main St, Apt 2", city: "Los Angeles", state: "CA",
                                                      zip_code: "90001", address_type: "personal", locality: "LA City", primary: true)
     expect(person.contact_methods.sole).to have_attributes(kind: "phone", value: "555-0100", contact_type: "work", primary: true)
@@ -327,18 +327,6 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00095").addresses.pluck(:street_address, :primary)).to eq([ [ "1 Home St", true ] ])
   end
 
-  it "keeps the archive's note as a comment on the person, capped and saying where the rest is" do
-    rolodex("00064", EMail: "ada@example.com", Comments: "z" * 20_000)
-    rolodex("00065", FirstName: "Grace", EMail: "grace@example.com", Comments: "   ")
-
-    results
-
-    comment = Person.find_by!(filemaker_code: "00064").comments.sole
-    expect(comment.body.length).to eq(10_000)
-    expect(comment.body).to end_with("(the rest of this note is in the FileMaker record)")
-    expect(Person.find_by!(filemaker_code: "00065").comments).to be_empty
-  end
-
   describe "the activity it logs" do
     around do |example|
       Current.source = "fm_import_people"
@@ -511,7 +499,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
 
       expect(person.reload).to have_attributes(date_of_birth: Date.new(1815, 12, 10), best_time_to_call: "Mornings",
                                                notes: nil, email_2: "ada@work.example.com")
-      expect(person.comments.sole).to have_attributes(topic: "FileMaker Rolodex 00070", body: "Met at training")
+      expect(person.comments).to be_empty
     end
 
     it "doesn't note a field it only filled in" do

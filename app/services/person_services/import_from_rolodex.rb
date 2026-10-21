@@ -44,10 +44,6 @@ module PersonServices
     EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
-    # A note lands in a comment's TEXT body rather than a varchar, so it gets its own, far
-    # larger ceiling — long enough that no real note reaches it.
-    TEXT_LIMIT = 10_000
-    NOTES_OMISSION = "\u2026 (the rest of this note is in the FileMaker record)"
 
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
     # Both primary fields can name either kind of tag, so each kind reads the same two
@@ -163,7 +159,6 @@ module PersonServices
       return failed(person, label) unless person.save
 
       kept.concat(tag_service_areas(person, rolodex.data))
-      note_comment(person, rolodex)
       note_differences(person, rolodex, label, kept) if kept.any?
       true
     end
@@ -180,13 +175,12 @@ module PersonServices
       build_addresses(person, rolodex)
       build_phones(person, rolodex)
 
-      # Its tags and note would touch the person when the batch commits, overwriting the
-      # archive's dates it was created with.
+      # Its tags would touch the person when the batch commits, overwriting the archive's
+      # dates it was created with.
       Person.no_touching do
         return record(:failed, "#{label}: #{person.errors.full_messages.to_sentence}") unless person.save
 
         tag_service_areas(person, data)
-        note_comment(person, rolodex)
       end
       @imported_codes << rolodex.fm_id
       record(:created, "#{label} → ##{person.id}")
@@ -273,20 +267,6 @@ module PersonServices
       return if key.blank? || PRECEDENCE_TYPES.include?(key)
 
       CONTACT_TYPES[key].presence_in(Person::CONTACT_TYPES) || Person::UNKNOWN_CONTACT_TYPE
-    end
-
-    # The archive's note about a contact is a note someone wrote on a date, not a profile
-    # field, so it lands as a comment on the person — the same counterpart the archive's own
-    # Notes table has (FmRolodex::PORTAL_COUNTERPARTS). That also keeps it clear of
-    # people.notes, which staff write in themselves, so neither has to win. The body is a
-    # TEXT column counted in bytes and the archive's Comments has no ceiling of its own, so
-    # one that runs past the cap says where the whole of it still is.
-    def note_comment(person, rolodex)
-      body = rolodex.data["Comments"].to_s.strip
-      return if body.blank?
-
-      Comment.create!(commentable: person, topic: "FileMaker Rolodex #{rolodex.fm_id}",
-                      body: body.truncate(TEXT_LIMIT, omission: NOTES_OMISSION))
     end
 
     # FileMaker keeps the facilitator's start as a separate month and year; the portal
