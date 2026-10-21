@@ -120,6 +120,44 @@ RSpec.describe Person, type: :model do
     it { should allow_value("").for(:email_2) }
     it { should_not allow_value("not-an-email").for(:email_2).with_message("must be a valid email address") }
 
+    describe "an email only on a name collision" do
+      it "saves the first person of a name with no email at all" do
+        expect(build(:person, user: nil, email: nil)).to be_valid
+      end
+
+      it "asks the second person of that name for their own address, naming a free placeholder" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+        second = Person.new(first_name: "Jane", last_name: "Doe")
+
+        expect(second).not_to be_valid
+        expect(second.errors[:base]).to include(
+          "A person named Jane Doe with no email already exists. Give this person their own email " \
+          "address so the two can be told apart, or 1@example.com if they truly have none."
+        )
+      end
+
+      it "accepts the placeholder it named" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+
+        expect(build(:person, first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)).to be_valid
+      end
+
+      it "names the next placeholder up once the first is taken" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)
+        third = Person.new(first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)
+
+        expect(third).not_to be_valid
+        expect(third.errors[:base].sole).to include("or 2@example.com if they truly have none.")
+      end
+
+      it "leaves a different name alone" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+
+        expect(build(:person, user: nil, first_name: "Jane", last_name: "Roe", email: nil)).to be_valid
+      end
+    end
+
     describe "unique_name_and_email_combination" do
       let(:admin) { create(:user, :admin) }
 
@@ -170,6 +208,7 @@ RSpec.describe Person, type: :model do
         duplicate = build(:person, first_name: "Jane", last_name: "Doe", email: "",
                           created_by: admin, updated_by: admin)
         expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:base].sole).to start_with("A person named Jane Doe with no email already exists")
       end
 
       it "treats an en dash in the name as the same person" do
@@ -477,6 +516,41 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#preferred_email" do
+    it "prefers the login email, then the record email, then the secondary" do
+      on_login = create(:person, user: create(:user, email: "login@example.com"), email: "record@example.com")
+      on_record = create(:person, user: nil, email: "record@example.com", email_2: "second@example.com")
+      on_second = create(:person, user: nil, email: nil, email_2: "second@example.com")
+
+      expect(on_login.preferred_email).to eq("login@example.com")
+      expect(on_record.preferred_email).to eq("record@example.com")
+      expect(on_second.preferred_email).to eq("second@example.com")
+    end
+
+    it "falls through the no-email placeholder to the secondary email" do
+      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: "second@example.com")
+
+      expect(person.preferred_email).to eq("second@example.com")
+    end
+
+    it "is nil when the placeholder is the only address" do
+      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: nil)
+
+      expect(person.preferred_email).to be_nil
+      expect(person.email).to eq(Person::PLACEHOLDER_EMAIL)
+    end
+  end
+
+  describe ".placeholder_email" do
+    it "finds only the people marked as having no address" do
+      marked = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL)
+      create(:person, user: nil, email: "real@example.com")
+      create(:person, user: nil, email: nil)
+
+      expect(Person.placeholder_email).to contain_exactly(marked)
+    end
+  end
+
   describe "#primary_organization" do
     let(:person) { create(:person) }
 
@@ -506,7 +580,7 @@ RSpec.describe Person, type: :model do
 
     it "can exist without a user" do
       admin = create(:user, :admin)
-      person = Person.create!(first_name: "Solo", last_name: "Person",
+      person = Person.create!(first_name: "Solo", last_name: "Person", email: "solo@example.com",
                               created_by: admin, updated_by: admin)
       expect(person.user).to be_nil
     end
@@ -1070,7 +1144,8 @@ RSpec.describe Person, "scholarship index helpers" do
     end
 
     it "returns none when the person has no addresses on file" do
-      person = create(:person, user: nil, email: nil, email_2: nil)
+      person = create(:person, user: nil, email: "legacy@example.com", email_2: nil)
+      person.update_column(:email, nil)
       create(:notification, recipient_email: "someone@example.com")
 
       expect(person.communications_scope).to be_empty

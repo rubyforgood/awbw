@@ -62,6 +62,12 @@ RSpec.describe PersonDecorator do
 
       expect(person.decorate.profile_email).to be_nil
     end
+
+    it "ignores the no-email placeholder" do
+      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL)
+
+      expect(person.decorate.profile_email).to be_nil
+    end
   end
 
   describe "#hidden_profile_pieces" do
