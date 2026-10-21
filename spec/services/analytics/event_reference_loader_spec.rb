@@ -41,6 +41,14 @@ RSpec.describe Analytics::EventReferenceLoader do
       expect(map[[ "ProfileChangeRequest", request.id ]]).to eq(request)
     end
 
+    it "loads the form submission an event was stamped with" do
+      submission = create(:form_submission)
+
+      map = described_class.new([ event("form_submission_id" => submission.id) ]).records
+
+      expect(map[[ "FormSubmission", submission.id ]]).to eq(submission)
+    end
+
     it "loads each event's own resource from its resource_type/resource_id columns" do
       workshop = create(:workshop)
       events = [ build(:ahoy_event, resource_type: "Workshop", resource_id: workshop.id, properties: {}) ]

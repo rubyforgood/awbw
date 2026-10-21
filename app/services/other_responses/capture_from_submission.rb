@@ -11,8 +11,8 @@ module OtherResponses
   # on the "Other:" prefix, so named specify options ("Word of Mouth: …") and the
   # CE "Yes: 3" box are ignored. De-dupes per person + question.
   #
-  # Shared by the registration, scholarship, bulk-payment, and public-form
-  # submission paths.
+  # Shared by the registration, scholarship, bulk-payment, ticket-callout, and
+  # public-form submission paths.
   class CaptureFromSubmission
     def self.call(submission)
       new(submission).call

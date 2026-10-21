@@ -1,6 +1,7 @@
 # app/services/analytics/lifecycle_buffer.rb
 module Analytics
   class LifecycleBuffer
+    FORM_SUBMISSION_KEY = "form_submission_id".freeze
     PROFILE_CHANGE_REQUEST_KEY = "profile_change_request_id".freeze
 
     def self.push(event)
@@ -27,7 +28,7 @@ module Analytics
       return unless Current.form_submission_id
 
       payload[:properties] ||= {}
-      payload[:properties][:form_submission_id] ||= Current.form_submission_id
+      payload[:properties][FORM_SUBMISSION_KEY.to_sym] ||= Current.form_submission_id
     end
 
     # Adds properties to just the events buffered while the block runs, e.g. so every
