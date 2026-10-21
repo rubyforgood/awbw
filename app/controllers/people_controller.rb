@@ -153,6 +153,7 @@ class PeopleController < ApplicationController
       @total_count = base.count
       @flagged_count = base.flagged.count
       @new_comment = Comment.new
+      @deleted_comments = Analytics::PersonActivityEvents.new(@person.object).deleted_comment_events.map(&:decorate)
       track_view("person_all_comments", { person_id: @person.id })
     end
   end
