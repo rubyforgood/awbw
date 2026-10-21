@@ -4,11 +4,7 @@
 <div class="container mx-auto max-w-3xl px-4 py-6">
   <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
 
-  <h1 class="mt-2 mb-1 text-2xl font-bold text-gray-800">App settings</h1>
-  <p class="mb-6 text-sm text-gray-600">
-    One row, shared by the whole portal. Leave a field blank to use the value this
-    deployment is configured with — the grey text shows what that currently is.
-  </p>
+  <h1 class="mt-2 mb-6 text-2xl font-bold text-gray-800">App settings</h1>
 
   <%= simple_form_for @setting, url: admin_settings_path, method: :patch,
                       html: { class: "space-y-8" } do |f| %>
@@ -64,14 +60,15 @@
         <%= f.input :return_address_id,
                     collection: address_options,
                     label: "Return address",
-                    include_blank: "Use #{org.name}'s invoice address",
-                    selected: @setting.return_address_id || addresses.find(&:invoice_address?)&.id,
+                    required: true,
+                    include_blank: false,
                     hint: "Printed in the invoice and receipt header",
                     input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
         <%= f.input :remittance_address_id,
                     collection: address_options,
                     label: "Remittance address",
-                    include_blank: "Same as the return address",
+                    required: true,
+                    include_blank: false,
                     hint: "Where cheques are mailed — shown under \"make checks payable to\" and on the pay-by-check instructions",
                     input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
       <% elsif org %>
@@ -133,6 +130,6 @@
                   input_html: { class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200" } %>
     </section>
 
-    <%= f.button :submit, "Save settings", class: "btn btn-primary" %>
+    <%= f.button :submit, "Save settings", class: button_classes(:primary) %>
   <% end %>
 </div>

@@ -2,19 +2,19 @@ module Admin
   # The single row of app-wide settings. See Setting for how each value falls back
   # to ENV, which is why the form shows the effective value as a placeholder.
   class SettingsController < ApplicationController
-    def show
+    def edit
       @setting = Setting.current
-      authorize! @setting, to: :show?
+      authorize! @setting
     end
 
     def update
       @setting = Setting.current
-      authorize! @setting, to: :update?
+      authorize! @setting
 
       if @setting.update(setting_params)
         redirect_to admin_settings_path, status: :see_other, notice: "Settings saved."
       else
-        render :show, status: :unprocessable_entity
+        render :edit, status: :unprocessable_entity
       end
     end
 

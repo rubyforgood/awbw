@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Admin::Settings", type: :request do
   let(:admin) { create(:user, :admin) }
 
-  describe "GET show" do
+  describe "GET edit" do
     it "renders for an admin before any row exists" do
       sign_in admin
 

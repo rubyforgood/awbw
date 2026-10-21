@@ -354,6 +354,47 @@ RSpec.describe DataHealth::PendingOtherResponses do
   end
 end
 
+RSpec.describe DataHealth::UnconfiguredAppSettings do
+  let(:organization) { create(:organization, tax_id: "00-0000000") }
+
+  def address_for(owner) = create(:address, addressable: owner)
+
+  it "flags a deployment with no settings row at all" do
+    check = described_class.new
+
+    expect(check.count).to eq(1)
+    expect(check.explanation).to include("Not chosen: the organization this portal runs as")
+    expect(check.review_path).to eq("/admin/settings")
+  end
+
+  it "names only what is still unset" do
+    Setting.create!(organization: organization, return_address: address_for(organization))
+
+    expect(described_class.new.explanation)
+      .to end_with("Not chosen: a remittance address for checks.")
+  end
+
+  it "counts a missing tax ID, which the invoice header prints" do
+    untaxed = create(:organization, tax_id: nil)
+    Setting.create!(organization: untaxed,
+                    return_address: address_for(untaxed),
+                    remittance_address: address_for(untaxed))
+
+    expect(described_class.new.explanation).to end_with("Not chosen: a tax ID on #{untaxed.name}.")
+  end
+
+  it "stays quiet once an admin has chosen them" do
+    Setting.create!(organization: organization,
+                    return_address: address_for(organization),
+                    remittance_address: address_for(organization))
+
+    check = described_class.new
+
+    expect(check).not_to be_any
+    expect(check.explanation).not_to include("Not chosen")
+  end
+end
+
 RSpec.describe DataHealth::Worklists do
   it "counts possible duplicates per type, with a link to each dedupe page" do
     create_list(:workshop, 2, title: "Anger Volcano")

@@ -60,6 +60,11 @@ module DataHealth
       record.to_s
     end
 
+    # Whether the card lists the rows behind its count. A check on a singleton
+    # (see UnconfiguredAppSettings) has a count but no rows to show, and names
+    # what is wrong in its #explanation instead.
+    def lists_rows? = true
+
     # A partial to render each row (several links, chips); with `columns` too the
     # rows line up in a grid under those headings. Without either, the page shows
     # the one-line #describe.

@@ -12,3 +12,4 @@ summary: >-
 pro_tips:
   - "Leave a field blank to keep using the value this deployment is configured with — the grey placeholder shows what that currently is."
   - "After picking the organization, the page lists what it supplies and links to where its tax ID is edited."
+  - "Data health flags \"App settings not configured\" until the organization, its tax ID and both invoice addresses are chosen."
