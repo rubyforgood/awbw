@@ -506,7 +506,7 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 | `spec/routing/` | ~18 | Route definition tests |
 | `spec/policies/` | ~19 | Authorization policy tests |
 | `spec/decorators/` | ~29 | Decorator tests |
-| `spec/services/` | ~96 | Service object tests |
+| `spec/services/` | ~101 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~5 | Helper tests |
 | `spec/factories/` | ~67 | FactoryBot factory definitions |
