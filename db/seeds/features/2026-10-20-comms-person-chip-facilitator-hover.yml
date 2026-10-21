@@ -5,9 +5,9 @@ released_on: 2026-10-20
 pr_number: 2766
 summary: >-
   On the everyone view of comments & communications, each row now names the
-  person it's about. A person's own page leads with their profile chip. Hover a
-  name to see when they first affiliated and each current facilitator
-  affiliation, with the organization's status and when the term started or ends.
+  person it's about. Hover a name to see when they first affiliated, their
+  active facilitator affiliations with each org's status and dates, and their
+  latest facilitator trainings with attendance.
 pro_tips:
   - "Click a name to edit that person; the edit page links you back to the comments & communications you came from."
   - "Dates close to today read in plain words, like \"ending next month\", so a lapsing term stands out."
