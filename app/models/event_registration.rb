@@ -601,9 +601,12 @@ class EventRegistration < ApplicationRecord
   end
 
   # Link an org a form submission named: the link row, pinned to that submission,
-  # noting what the submission wrote onto the org.
+  # noting what the submission wrote onto the org. An org linked after another one
+  # already holds the pin is an extra org, so it links unpinned with no note.
   def link_submitted_organization!(organization, submission:, autofill: [])
     link = event_registration_organizations.find_or_create_by!(organization: organization)
+    return link if event_registration_organizations.where(form_submission: submission).where.not(id: link.id).exists?
+
     link.record_form_submission(submission)
     link.record_autofill(autofill)
     link

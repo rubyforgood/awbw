@@ -204,6 +204,14 @@ RSpec.describe EventRegistration, type: :model do
       expect(link.organization).to eq(organization)
       expect(link.form_submission).to eq(submission)
     end
+
+    it "links an extra org unpinned when another org already holds the submission" do
+      registration.link_submitted_organization!(organization, submission: submission)
+      extra = registration.link_submitted_organization!(create(:organization), submission: submission)
+
+      expect(extra.form_submission).to be_nil
+      expect(registration.event_registration_organizations.find_by(organization: organization).form_submission).to eq(submission)
+    end
   end
 
   describe ".registrant_name" do

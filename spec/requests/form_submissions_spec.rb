@@ -708,6 +708,21 @@ RSpec.describe "FormSubmissions", type: :request do
             .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
         end
 
+        it "links a second org without tying it to the submission another org already holds" do
+          add_answer("organization_name", "Acme Inc")
+          add_answer("organization_website", "https://typed.example")
+          first = create(:organization, name: "Acme Inc")
+          registration.link_submitted_organization!(first, submission: submission)
+          second = create(:organization, name: "Zebra Center", website_url: nil)
+
+          post select_organization_form_submission_path(submission, organization_id: second.id)
+
+          links = registration.event_registration_organizations.index_by(&:organization)
+          expect(links[first].form_submission).to eq(submission)
+          expect(links[second].form_submission).to be_nil
+          expect(links[second].form_autofill_changes).to be_empty
+        end
+
         it "links a newly created org to the registration" do
           create(:organization_status, name: "Active")
           add_answer("organization_name", "Lakeside Community College")
