@@ -66,6 +66,23 @@ RSpec.describe FormCopyService do
       expect(copy.published).to be(false)
     end
 
+    it "clears a survey role so the copy doesn't collide with the original" do
+      form = create(:form, role: "day_1_survey")
+
+      copy = described_class.new(form).call
+
+      expect(copy.role).to be_nil
+      expect(form.reload.role).to eq("day_1_survey")
+    end
+
+    it "keeps a non-survey role" do
+      form = create(:form, role: "registration")
+
+      copy = described_class.new(form).call
+
+      expect(copy.role).to eq("registration")
+    end
+
     it "does not copy submissions or event links" do
       form = create(:form)
       EventForm.create!(form: form, event: create(:event), role: "registration")

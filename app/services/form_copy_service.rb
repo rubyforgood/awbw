@@ -18,11 +18,13 @@ class FormCopyService
 
   # A published form requires a slug, and slug is globally unique — so a copy
   # starts unpublished with no slug for the admin to set before publishing.
+  # A survey role marks the one form its callouts deliver, so the copy drops it.
   def build_form_copy
     @form.dup.tap do |copy|
       copy.name = "#{COPY_NAME_PREFIX}#{@form.display_name}"
       copy.slug = nil
       copy.published = false
+      copy.role = nil if copy.survey_role?
     end
   end
 
