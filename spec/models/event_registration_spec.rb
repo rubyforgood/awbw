@@ -192,6 +192,20 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#link_submitted_organization!" do
+    let(:registration) { create(:event_registration) }
+    let(:organization) { create(:organization) }
+    let(:submission) { create(:form_submission, person: registration.registrant) }
+
+    it "links the org once, pinned to the submission" do
+      2.times { registration.link_submitted_organization!(organization, submission: submission) }
+
+      link = registration.event_registration_organizations.sole
+      expect(link.organization).to eq(organization)
+      expect(link.form_submission).to eq(submission)
+    end
+  end
+
   describe ".registrant_name" do
     it "matches a registrant by their legal first name and last name" do
       match = create(:event_registration,

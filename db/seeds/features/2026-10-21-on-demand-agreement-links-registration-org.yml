@@ -4,8 +4,8 @@ display_status: admin_facing
 released_on: 2026-10-21
 pr_number: 2771
 summary: >-
-  When someone submits the on-demand collaboration agreement with an organization
-  name that matches one on file, their on-demand registration now shows that
-  organization as linked, and their job and facilitator affiliations point back to it.
+  An on-demand agreement's organization now shows as linked on the registrants
+  roster — automatically when the typed name matches an organization on file, or
+  as soon as you link it from either the roster or the form submission page.
 pro_tips:
-  - "A typed name that doesn't exactly match an organization still shows as Pending — link it from the registrants roster."
+  - "Link a mismatched name from whichever page you're on — the roster, the submission, and the person's job and facilitator affiliations all update together."

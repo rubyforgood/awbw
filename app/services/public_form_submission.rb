@@ -155,18 +155,8 @@ class PublicFormSubmission
 
     submission.link_organization!(organization.id)
     submission.record_scenario_ended!(result.ended_affiliations.map(&:id))
-    link_registration_organization(registration, organization, submission, result.saved)
+    registration&.link_submitted_organization!(organization, submission: submission, autofill: result.saved)
     organization
-  end
-
-  # The same link row, pin, and autofill note the event registration flow
-  # records, so the on-demand roster shows the org as linked.
-  def link_registration_organization(registration, organization, submission, autofill)
-    return unless registration
-
-    link = registration.event_registration_organizations.find_or_create_by!(organization: organization)
-    link.record_form_submission(submission)
-    link.record_autofill(autofill)
   end
 
   def organization_named(name)

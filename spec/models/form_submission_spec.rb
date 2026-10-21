@@ -223,6 +223,31 @@ RSpec.describe FormSubmission do
     end
   end
 
+  describe "#on_demand_registration" do
+    let(:person) { create(:person, user: nil) }
+    let(:training) { create(:event, facilitator_training: true, on_demand: true) }
+    let(:agreement_form) { create(:form, role: "registration") }
+    let!(:registration) { create(:event_registration, event: training, registrant: person) }
+
+    it "finds the person's registration for the event a public on-demand agreement was stamped with" do
+      submission = create(:form_submission, form: agreement_form, person: person, role: "public", event: training)
+
+      expect(submission.on_demand_registration).to eq(registration)
+    end
+
+    it "is nil for a submission made through the event's registration flow" do
+      submission = create(:form_submission, form: agreement_form, person: person, role: "registration", event: training)
+
+      expect(submission.on_demand_registration).to be_nil
+    end
+
+    it "is nil when no event was stamped" do
+      submission = create(:form_submission, form: agreement_form, person: person, role: "public")
+
+      expect(submission.on_demand_registration).to be_nil
+    end
+  end
+
   describe "#bulk_payment_attendees" do
     let(:form) { create(:form) }
     let(:field) { create(:form_field, form: form, field_identifier: "bulk_payment_attendees", name: "Attendees") }

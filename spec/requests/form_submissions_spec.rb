@@ -680,6 +680,44 @@ RSpec.describe "FormSubmissions", type: :request do
         end
       end
 
+      context "for an on-demand agreement registered to the on-demand training" do
+        let(:form) { create(:form, role: "registration", name: "Collaboration agreement (on-demand)") }
+        let(:training) { create(:event, :published, facilitator_training: true, on_demand: true) }
+        let(:submission) { create(:form_submission, form: form, person: person, role: "public", event: training) }
+        let!(:registration) { create(:event_registration, event: training, registrant: person, status: "attended") }
+
+        it "links the org to the registration, pinned to the submission, when the name doesn't match" do
+          add_answer("organization_name", "Acme Inc")
+          organization = create(:organization, name: "Acme Corporation")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          link = registration.event_registration_organizations.sole
+          expect(link.organization).to eq(organization)
+          expect(link.form_submission).to eq(submission)
+        end
+
+        it "ties the job and facilitator affiliations to the registration" do
+          add_answer("organization_name", "Acme Inc")
+          add_answer("organization_position", "Counselor")
+          organization = create(:organization, name: "Acme Corporation")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title, :event_registration_id))
+            .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
+        end
+
+        it "links a newly created org to the registration" do
+          create(:organization_status, name: "Active")
+          add_answer("organization_name", "Lakeside Community College")
+
+          post create_organization_form_submission_path(submission)
+
+          expect(registration.organizations.pluck(:name)).to eq([ "Lakeside Community College" ])
+        end
+      end
+
       describe "POST /form_submissions/:id/create_organization" do
         it "creates the organization from the submitted name and links it" do
           create(:organization_status, name: "Active")

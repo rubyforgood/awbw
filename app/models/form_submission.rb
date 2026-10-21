@@ -351,6 +351,14 @@ class FormSubmission < ApplicationRecord
     end
   end
 
+  # The on-demand training registration this agreement minted (PublicFormSubmission
+  # stamps the event), so linking the org here also links it on the roster.
+  def on_demand_registration
+    return unless linking_scenario == "on_demand" && event_id && person_id
+
+    EventRegistration.find_by(event_id: event_id, registrant_id: person_id)
+  end
+
   def agreement_scenario?
     linking_scenario.present?
   end

@@ -600,6 +600,15 @@ class EventRegistration < ApplicationRecord
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
+  # Link an org a form submission named: the link row, pinned to that submission,
+  # noting what the submission wrote onto the org.
+  def link_submitted_organization!(organization, submission:, autofill: [])
+    link = event_registration_organizations.find_or_create_by!(organization: organization)
+    link.record_form_submission(submission)
+    link.record_autofill(autofill)
+    link
+  end
+
   def communications_email
     registrant&.preferred_email
   end
