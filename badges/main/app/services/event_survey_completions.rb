@@ -26,7 +26,7 @@ class EventSurveyCompletions
   def offered?(role)
     case role
     when "day_1_survey" then live_training?
-    when "day_2_survey" then live_training? && @event.day_count >= 2
+    when "day_2_survey" then live_training? && @event.multi_day?
     when "recipient_survey" then @event.cost_cents.to_i.positive?
     else true
     end

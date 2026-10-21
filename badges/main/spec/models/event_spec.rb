@@ -126,6 +126,25 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#multi_day?" do
+    let(:pacific) { Time.find_zone(Event::PROGRAM_ZONE) }
+
+    it "counts Pacific days, so an evening event stays one day in any reader's zone" do
+      event = create(:event, start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 10, 22))
+
+      expect(Time.use_zone("Eastern Time (US & Canada)") { Event.find(event.id).multi_day? }).to be(false)
+    end
+
+    it "is true when the event ends on a later Pacific day" do
+      expect(build(:event, start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 11, 17)).multi_day?).to be(true)
+    end
+
+    it "is false without both dates" do
+      expect(build(:event, start_date: nil).multi_day?).to be(false)
+      expect(build(:event, end_date: nil).multi_day?).to be(false)
+    end
+  end
+
   describe "#date_title" do
     it "labels the event by date and title, without the time or parens" do
       event = build(:event, title: "Youth Creativity Day", start_date: Time.zone.local(2026, 9, 14, 14, 9))
