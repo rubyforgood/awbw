@@ -286,6 +286,7 @@ or symbol. So write `authorize! @setting` in `show` (not `authorize! @setting, t
 - `TagAliasSeeder` — Records what the FileMaker archive, the older registration/scholarship forms, Story Share and the portal's earlier sector list each called a tag the portal now names its own way (**ADR-0007**) as `TagAlias` rows, so the translation is data an admin can extend and a record of what a tag used to be called. Terms AWBW decided are recorded as-is; semantic reads of the archive's hand-typed free text are marked **`proposed`** for a pass with staff (they still resolve, so no import waits on it), and text naming an organization or a facilitator's own circumstances is left alone. Idempotent on (term, tag) and never touches a term added by hand; a term whose tag isn't published is reported, not created. Shared with `data:seed_tag_aliases`
 - `StaffTranslation` — Turns a FileMaker `EnteredBy`/`ModifiedBy` value into a user id through the recorded `StaffAlias` rows (`#user_id_for`), case- and spacing-insensitive. Built once and reused (reads every alias up front); a name nothing answers to lands in `#unmatched` unless it's recorded as ignored
 - `StaffAliasLoader` — Records `StaffAlias` rows from a CSV/TSV staff list (`staff`, `user_ids_by_email`, `portal_user_email`, optional `ignored` columns), resolving the user by id then email. Idempotent: a name already recorded is left alone; a name with no user yet is reported in `#unresolved`, not recorded. Shared with `data:load_staff_aliases`
+- `ProfileCategoriesToSectors` — Gives people an additional sector for each profile-specific category tag (the retired workshop settings), reading each category name through `TagTranslation` so the tag aliases decide what it means. Idempotent, keeps the category tags and any existing sector's primary flag; organization tags are only counted (their sectors roll up from facilitators). Drives `data:convert_profile_categories_to_sectors` (DRY_RUN)
 - `SurveyFormSeeder` — Creates the four standalone survey template forms from the form-builder presets (the Day 1 / Day 2 evaluations, the overall post-event survey, and the scholarship recipients survey), idempotent on form name and returning the names created. `#link_fanout_resources` then links each fan-out question to its training-topic `Resource`s by title (skipping any that aren't present). Shared by `db/seeds.rb` and the `data:seed_survey_forms` task so prod can create them without the full seed
 - `CloseProgramFormSeeder` — Creates the standalone "Close Program" agreement form (role `close_program`, sections `person_identifier` + `close_program`) from the form-builder presets, idempotent on form name, returning the name created (or nil). Built as an unpublished template for staff to slug + publish. Shared by `db/seeds.rb` and the `data:seed_close_program_form` task
 - `EventRegistrationServices::PublicRegistration` — Public registration handling. An affirmative `communication_consent` answer captures a News (mailing-list) `TopicSubscription` via `NewsSubscriptionCapture`, sourced to the event. A resubmission matched to an active registration sends the registrant and admins DUPLICATE emails (`event_registration_duplicate` / `event_registration_duplicate_fyi`)
@@ -573,12 +574,13 @@ RuboCop linting on PRs and pushes to main.
 
 ## Rake Tasks
 
-Located in `lib/tasks/` (17 files):
+Located in `lib/tasks/` (18 files):
 - `dev.rake` — Development database seeding from XML/CSV
 - `rhino_migrator.rake` — Rich text editor migration
 - `attachment_report.rake` — Attachment reporting
 - `migrate_internal_id_to_filemaker_code.rake` — FileMaker code migration
 - `convert_age_ranges.rake` — Age range data conversion
+- `convert_profile_categories_to_sectors.rake` — Add people's profile-specific category tags (retired workshop settings) as additional sectors via tag aliases (`data:convert_profile_categories_to_sectors`, via `ProfileCategoriesToSectors`, idempotent, DRY_RUN; run `data:seed_tag_aliases` first)
 - `legacy_user_permissions_to_comments.rake` — Migrate legacy user permissions into comments
 - `migrate_sectors.rake` — Sector data migration
 - `import_stories.rake` — Imports stories from the curated stories spreadsheet CSV (`StoryImporter`)

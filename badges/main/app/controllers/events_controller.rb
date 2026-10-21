@@ -855,7 +855,6 @@ class EventsController < ApplicationController
     # Breakdown drill-in filters (set when a chart row is clicked).
     scope = scope.where(id: person_category_ids(params[:age_group])) if params[:age_group].present?
     scope = scope.where(id: person_category_ids(params[:life_experience])) if params[:life_experience].present?
-    scope = scope.where(id: person_category_ids(params[:setting])) if params[:setting].present?
     scope = scope.where(id: person_country_ids(params[:country])) if params[:country].present?
     scope = scope.where(id: person_school_district_ids(params[:school_district])) if params[:school_district].present?
     scope = scope.where(id: person_program_status_ids(params[:program_status])) if params[:program_status].present?

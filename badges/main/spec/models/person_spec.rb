@@ -988,13 +988,6 @@ RSpec.describe Person, type: :model do
 
   describe "Other form responses" do
     let(:person) { create(:person) }
-    let(:form) { create(:form) }
-    let(:submission) { create(:form_submission, person: person, form: form) }
-
-    def answer(identifier, value)
-      field = create(:form_field, form: form, field_identifier: identifier)
-      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
-    end
 
     describe "#other_sector_responses" do
       it "returns the person's visible sector OtherResponses" do
@@ -1010,21 +1003,6 @@ RSpec.describe Person, type: :model do
         create(:other_response, :promoted, owner: person, kind: "sector", text: "Promoted")
 
         expect(person.other_sector_responses).to be_empty
-      end
-    end
-
-    describe "#other_workshop_setting_responses" do
-      it "returns free-text Other values from the category-backed fields" do
-        answer("primary_age_group", "3, Other: Toddlers")
-
-        expect(person.other_workshop_setting_responses)
-          .to contain_exactly("Toddlers")
-      end
-
-      it "does not pull from the sector fields" do
-        answer("additional_sectors", "Other: Equine therapy")
-
-        expect(person.other_workshop_setting_responses).to be_empty
       end
     end
   end

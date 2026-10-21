@@ -23,11 +23,9 @@ RSpec.describe AttendeesActiveFilters do
   it "labels the category-backed drill-ins by their category name" do
     age = create(:category, name: "Teens (13-17)")
     experience = create(:category, name: "Domestic violence")
-    setting = create(:category, name: "Shelter")
 
     expect(chips_for(age_group: age.id).first[:label]).to eq("Age group: Teens (13-17)")
     expect(chips_for(life_experience: experience.id).first[:label]).to eq("Life experience: Domestic violence")
-    expect(chips_for(setting: setting.id).first[:label]).to eq("Setting: Shelter")
   end
 
   it "labels the literal-value drill-ins" do

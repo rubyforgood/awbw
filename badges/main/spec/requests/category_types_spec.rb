@@ -18,6 +18,7 @@ RSpec.describe "/category_types", type: :request do
       expect(response.body).to include("Hides all child categories")
       expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:category_type_published][:description])
       expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:story_specific][:hint])
+      expect(response.body).to include(VisibilityFlagsHelper::FLAG_DEFINITIONS[:profile_specific][:hint])
     end
   end
 end
