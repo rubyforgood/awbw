@@ -13,6 +13,21 @@ module CommentsHelper
     }.compact)
   end
 
+  # Names who a row on the everyone feed is about. A communication's contact
+  # falls back to their raw email when no person is on file.
+  def feed_person_chip(entry)
+    if entry.is_a?(Comment)
+      person = entry.decorate.about_person
+      email = nil
+    else
+      person = entry.decorate.contact_person
+      email = entry.recipient_email
+    end
+    return if person.nil? && email.blank?
+
+    render "comments_and_communications/about_person_chip", person: person, email: email
+  end
+
   # Stimulus wiring for a feed row the chevron and "Expand/Collapse all" toggle.
   # clamp: a one-line row unclamped to show the full entry; otherwise a full row
   # whose body hides on collapse. key lets expandable-cards remember a row toggled
