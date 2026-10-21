@@ -123,7 +123,7 @@ test_people.each do |data|
     "LOWER(first_name) = ? AND LOWER(last_name) = ? AND LOWER(COALESCE(email, '')) = ?",
     data[:first_name].downcase,
     data[:last_name].downcase,
-    email.downcase
+    data[:email].to_s.downcase
   ).exists?
 
   person_attrs = {
@@ -155,7 +155,10 @@ test_people.each do |data|
       user.update!(person: person)
     end
   else
-    Person.create!(person_attrs)
+    person = Person.create!(person_attrs)
+    # These entries stand in for people added before an email was required, so dev keeps
+    # coverage of the secondary-email fallback and of editing a person with no email.
+    person.update_column(:email, nil) if data[:email].nil?
   end
 end
 
