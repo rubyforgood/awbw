@@ -20,6 +20,7 @@ RSpec.describe "Admin::Settings", type: :request do
 
       get admin_settings_path
 
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("Portal Runner")
       expect(response.body).to include("12-3456789")
     end
@@ -33,8 +34,27 @@ RSpec.describe "Admin::Settings", type: :request do
 
       get admin_settings_path
 
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("Return address")
       expect(response.body).to include("100 Main St")
+    end
+
+    it "prompts for an address it has none for, and preselects the one it has" do
+      organization = create(:organization)
+      chosen = create(:address, addressable: organization, street_address: "100 Main St")
+      create(:address, addressable: organization, street_address: "200 Other Rd")
+      Setting.create!(organization: organization, return_address: chosen)
+      sign_in admin
+
+      get admin_settings_path
+
+      doc = Nokogiri::HTML(response.body)
+      return_options = doc.at_css("select[name='setting[return_address_id]']").css("option")
+      remittance_options = doc.at_css("select[name='setting[remittance_address_id]']").css("option")
+      expect(return_options.map(&:text).grep(/Choose an address/)).to be_empty
+      expect(return_options.find { |option| option["selected"] }.text).to include("100 Main St")
+      expect(remittance_options.first.text).to eq("Choose an address")
+      expect(remittance_options.none? { |option| option["selected"] }).to be(true)
     end
 
     it "is denied to a non-admin" do
