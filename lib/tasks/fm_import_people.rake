@@ -44,6 +44,11 @@ namespace :fm do
       import.unmatched_tags.sort_by { |name, count| [ -count, name ] }.each { |name, count| puts "  #{count.to_s.rjust(5)}  #{name}" }
     end
 
+    if import.unmatched_staff.any?
+      puts "\nStaff names no portal user answers to (record them with data:load_staff_aliases):"
+      import.unmatched_staff.sort_by { |name, count| [ -count, name ] }.each { |name, count| puts "  #{count.to_s.rjust(5)}  #{name}" }
+    end
+
     puts
     import.results.each { |outcome, messages| puts "#{outcome.to_s.humanize.ljust(17)} #{messages.size}" }
     puts(dry_run ? "\nDRY RUN — rolled back, nothing written. Set DRY_RUN=false to execute." : "\nDone.")

@@ -28,6 +28,7 @@ namespace :db do
       public_forms
       form_results_showcase
       annual_evaluation
+      staff_aliases
       fm_archive
       address_duplicates
     ]
@@ -153,6 +154,11 @@ namespace :db do
     desc "Seed the Annual Evaluation form with sample submissions (dev only)"
     task annual_evaluation: :environment do
       load Rails.root.join("db/seeds/dev/annual_evaluation.rb")
+    end
+
+    desc "Seed invented FileMaker staff names and the portal users they mean (dev only)"
+    task staff_aliases: :environment do
+      load Rails.root.join("db/seeds/dev/staff_aliases.rb")
     end
 
     desc "Seed three fake FileMaker archive rows per table and link the first people/orgs to them (dev only)"

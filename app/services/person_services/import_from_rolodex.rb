@@ -67,6 +67,7 @@ module PersonServices
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
+      @staff = StaffTranslation.new
     end
 
     def call
@@ -78,6 +79,10 @@ module PersonServices
 
     def unmatched_tags
       @translation.unmatched
+    end
+
+    def unmatched_staff
+      @staff.unmatched
     end
 
     private
@@ -150,7 +155,8 @@ module PersonServices
 
     def create(rolodex, label, **names)
       data = rolodex.data
-      person = Person.new(**names, filemaker_code: rolodex.fm_id, **profile_attributes(data), **archive_timestamps(data))
+      person = Person.new(**names, filemaker_code: rolodex.fm_id, **profile_attributes(data),
+                          **archive_timestamps(data), **archive_stamps(data))
       build_addresses(person, rolodex)
       build_phones(person, rolodex)
 
@@ -220,6 +226,14 @@ module PersonServices
       Comment.create!(commentable: person,
                       body: "FileMaker Rolodex #{rolodex.fm_id} differs from this profile:\n#{lines.join("\n")}")
       @differences << "#{label} → ##{person.id}: #{lines.join('; ')}"
+    end
+
+    # The staff FileMaker recorded as entering and last changing the row, as the created
+    # person's own stamps (StaffAlias). A linked person keeps theirs: the archive's names
+    # say who touched the FileMaker record, not their portal profile.
+    def archive_stamps(data)
+      { created_by_id: @staff.user_id_for(data["EnteredBy"]),
+        updated_by_id: @staff.user_id_for(data["ModifiedBy"]) }.compact
     end
 
     # The archive's own entry and modification dates, so an imported person dates from

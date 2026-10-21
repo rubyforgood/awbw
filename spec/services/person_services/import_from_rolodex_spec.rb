@@ -390,6 +390,47 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(person.contact_methods.sole.contact_type).to eq("unknown")
   end
 
+  describe "the staff the archive stamped on a row" do
+    let!(:entered_by) { create(:user) }
+    let!(:modified_by) { create(:user) }
+
+    before do
+      create(:staff_alias, name: "Dana Whitfield", user: entered_by)
+      create(:staff_alias, name: "noor!", user: modified_by)
+      create(:staff_alias, :ignored, name: "Staff")
+    end
+
+    it "stamps a created person with the portal users the archive's names mean" do
+      rolodex("00100", EMail: "ada@example.com", EnteredBy: "Dana Whitfield", ModifiedBy: "noor!")
+
+      import = described_class.new.call
+
+      expect(Person.find_by!(filemaker_code: "00100"))
+        .to have_attributes(created_by_id: entered_by.id, updated_by_id: modified_by.id)
+      expect(import.unmatched_staff).to be_empty
+    end
+
+    it "reports a name no portal user answers to, and leaves the stamp empty" do
+      rolodex("00101", EMail: "ada@example.com", EnteredBy: "Marisol Trevino", ModifiedBy: "Staff")
+
+      import = described_class.new.call
+
+      expect(Person.find_by!(filemaker_code: "00101")).to have_attributes(created_by_id: nil, updated_by_id: nil)
+      # The shared login names no one on purpose, so only the undecided name is reported.
+      expect(import.unmatched_staff).to eq({ "Marisol Trevino" => 1 })
+    end
+
+    it "leaves a linked person's own stamps alone" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      person.update_columns(created_by_id: nil, updated_by_id: nil)
+      rolodex("00102", EMail: "ada@example.com", EnteredBy: "Dana Whitfield", ModifiedBy: "noor!")
+
+      described_class.new.call
+
+      expect(person.reload).to have_attributes(filemaker_code: "00102", created_by_id: nil, updated_by_id: nil)
+    end
+  end
+
   it "reads the archive's date formats, giving a two-digit year its century" do
     rolodex("00020", FirstName: "Grace", EMail: "grace@example.com", DateOfBirth: "10/5/83")
     rolodex("00021", FirstName: "Katherine", EMail: "katherine@example.com", DateOfBirth: "3/4/05")
