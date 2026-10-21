@@ -35,6 +35,7 @@ class User < ApplicationRecord
   belongs_to :welcome_instructions_sent_by, class_name: "User", optional: true
   belongs_to :favorite_event, class_name: "Event", optional: true
   has_many :bookmarks, dependent: :destroy
+  has_many :staff_aliases, dependent: :destroy
   has_many :comments, -> { newest_first }, as: :commentable, dependent: :destroy
 
   # A user account's communications are addressed to its login email.
