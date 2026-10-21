@@ -13,11 +13,10 @@
     <h2 class="font-display text-2xl text-gray-900">Admin details</h2>
     <div class="ml-auto flex items-center gap-2">
       <% if Membership.enabled? %>
-        <% membership = person.memberships.order(end_date: :desc).first&.decorate %>
         <%= link_to person_memberships_path(person), class: admin_button_classes do %>
           Membership
-          <% if membership %>
-            <%= render "memberships/status_badge", membership: membership %>
+          <% if @membership %>
+            <%= render "memberships/status_badge", membership: @membership %>
           <% end %>
         <% end %>
       <% end %>
