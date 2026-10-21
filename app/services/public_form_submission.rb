@@ -17,13 +17,14 @@ class PublicFormSubmission
     "This form needs your name and email to complete your submission.".freeze
   ALREADY_SUBMITTED_MESSAGE = "This form was already submitted.".freeze
 
-  def self.call(form:, form_params:)
-    new(form:, form_params:).call
+  def self.call(form:, form_params:, event: nil)
+    new(form:, form_params:, event:).call
   end
 
-  def initialize(form:, form_params:)
+  def initialize(form:, form_params:, event: nil)
     @form = form
     @form_params = form_params || {}
+    @event = event
   end
 
   def call
@@ -31,7 +32,7 @@ class PublicFormSubmission
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
 
-      submission = FormSubmission.create!(person: person, form: @form, role: ROLE)
+      submission = FormSubmission.create!(person: person, form: @form, role: ROLE, event: @event)
       # Answers first: the agreement linking core reads the submitted org off
       # them, and a rejected answer (too long, unreadable upload) then aborts
       # before any of the person's own records have been written.
@@ -46,6 +47,7 @@ class PublicFormSubmission
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
       register_for_on_demand_training(submission)
+      stamp_scholarship_form_completion(submission)
       process_close_program(submission)
       send_notifications(submission)
 
@@ -84,6 +86,16 @@ class PublicFormSubmission
     # Created "registered" (the column default), then flipped: an on-demand
     # agreement only arrives after the external LMS training is complete.
     registration.update!(status: "attended") unless registration.status == "attended"
+  end
+
+  def stamp_scholarship_form_completion(submission)
+    return unless @form.role == "recipient_survey" && @event && submission.person
+
+    registration = EventRegistration.find_by(event: @event, registrant: submission.person)
+    return unless registration&.scholarship?
+    return if registration.post_survey_completed?
+
+    registration.mark_post_survey_completed!
   end
 
   # A close-program submission end-dates the person's affiliations at the named

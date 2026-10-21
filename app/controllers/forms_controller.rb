@@ -217,7 +217,12 @@ class FormsController < ApplicationController
   # so the link only ever points at a genuinely connected event. Fall back to
   # the sole connected event when there's exactly one.
   def set_dashboard_event
-    @dashboard_event = @form.events.find_by(id: params[:event_id]) if params[:event_id].present?
+    @dashboard_event = if @form.survey_role? && params[:event_id].present?
+      event = Event.find_by(id: params[:event_id])
+      event if EventSurveyCompletions.survey_allowed_for_event?(event, @form)
+    elsif params[:event_id].present?
+      @form.events.find_by(id: params[:event_id])
+    end
     @dashboard_event ||= @form.events.one? ? @form.events.first : nil
   end
 

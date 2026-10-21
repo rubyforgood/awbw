@@ -92,6 +92,41 @@ RSpec.describe PublicFormSubmission do
     expect(answer.submitted_answer).to eq("I care.")
   end
 
+  it "persists an associated event when provided" do
+    event = create(:event)
+
+    result = described_class.call(form: form, form_params: params_for, event: event)
+
+    expect(result.success?).to be(true)
+    expect(result.form_submission.event).to eq(event)
+  end
+
+  describe "scholarship recipient survey completion" do
+    let(:event) { create(:event, cost_cents: 2000) }
+    let(:survey_form) { create(:form, role: "recipient_survey", slug: "scholarship-survey", published: true) }
+    let(:first_field) { create(:form_field, form: survey_form, field_identifier: "first_name") }
+    let(:last_field)  { create(:form_field, form: survey_form, field_identifier: "last_name") }
+    let(:email_field) { create(:form_field, form: survey_form, field_identifier: "primary_email") }
+
+    it "stamps post_survey_completed_at on the matching scholarship registration" do
+      person = create(:person, first_name: "Taylor", last_name: "Swift", email: "taylor@example.com")
+      registration = create(:event_registration, event: event, registrant: person)
+      scholarship = create(:scholarship, recipient: person, amount_cents: 2000)
+      create(:allocation, source: scholarship, allocatable: registration, amount: 2000)
+
+      survey_params = {
+        first_field.id.to_s => "Taylor",
+        last_field.id.to_s => "Swift",
+        email_field.id.to_s => "taylor@example.com"
+      }
+
+      result = described_class.call(form: survey_form, form_params: survey_params, event: event)
+
+      expect(result.success?).to be(true)
+      expect(registration.reload.post_survey_completed?).to be(true)
+    end
+  end
+
   it "reuses an existing person matched on email + last name" do
     existing = create(:person, first_name: "Sam", last_name: "Rivera", email: "sam@example.com")
 

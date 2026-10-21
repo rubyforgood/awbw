@@ -265,5 +265,112 @@ RSpec.describe "PublicForms", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Thank you")
     end
+
+    it "preserves the event parameter in the return link" do
+      event = create(:event, facilitator_training: true)
+      survey = create(:form, role: "day_1_survey", slug: "day-1-survey", published: true)
+
+      get thank_you_public_form_path(survey.slug, event: event.id)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(public_form_path(survey.slug, event: event.id))
+    end
+  end
+
+  describe "event parameter handling for survey forms" do
+    let(:training) { create(:event, facilitator_training: true) }
+    let(:survey) { create(:form, role: "day_1_survey", slug: "eval-day-1", published: true) }
+    let!(:name_field) { create(:form_field, form: survey, name: "Name", field_identifier: "first_name", required: true) }
+    let!(:last_field) { create(:form_field, form: survey, name: "Last", field_identifier: "last_name", required: true) }
+    let!(:email_field) { create(:form_field, form: survey, name: "Email", field_identifier: "primary_email", required: true) }
+
+    def survey_params
+      {
+        public_registration: {
+          Honeypot::FIELD_NAME => "",
+          form_fields: {
+            name_field.id.to_s => "Morgan",
+            last_field.id.to_s => "Lee",
+            email_field.id.to_s => "morgan@example.com"
+          }
+        }
+      }
+    end
+
+    describe "GET /f/:slug with event param" do
+      it "includes the event parameter in the form action and hidden field" do
+        get public_form_path(survey.slug, event: training.id)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(%(action="#{public_form_path(survey.slug, event: training.id)}"))
+        expect(response.body).to include(%(<input type="hidden" name="event" id="event" value="#{training.id}"))
+      end
+    end
+
+    describe "POST /f/:slug with event param" do
+      it "associates the event on a valid matching survey form submission" do
+        expect {
+          post public_form_path(survey.slug, event: training.id), params: survey_params
+        }.to change(FormSubmission, :count).by(1)
+
+        submission = FormSubmission.last
+        expect(submission.event).to eq(training)
+        expect(response).to redirect_to(thank_you_public_form_path(survey.slug, event: training.id))
+      end
+
+      it "saves with event_id nil when no event param is given" do
+        expect {
+          post public_form_path(survey.slug), params: survey_params
+        }.to change(FormSubmission, :count).by(1)
+
+        expect(FormSubmission.last.event).to be_nil
+        expect(response).to redirect_to(thank_you_public_form_path(survey.slug))
+      end
+
+      it "ignores an invalid event ID and saves with event_id nil" do
+        expect {
+          post public_form_path(survey.slug, event: 999_999), params: survey_params
+        }.to change(FormSubmission, :count).by(1)
+
+        expect(FormSubmission.last.event).to be_nil
+        expect(response).to redirect_to(thank_you_public_form_path(survey.slug))
+      end
+
+      it "ignores a mismatched event that does not offer the survey" do
+        on_demand = create(:event, facilitator_training: true, on_demand: true)
+
+        expect {
+          post public_form_path(survey.slug, event: on_demand.id), params: survey_params
+        }.to change(FormSubmission, :count).by(1)
+
+        expect(FormSubmission.last.event).to be_nil
+        expect(response).to redirect_to(thank_you_public_form_path(survey.slug))
+      end
+
+      it "ignores an event param passed to a non-survey form" do
+        non_survey = create(:form, role: "general", slug: "general-feedback", published: true)
+        f_name = create(:form_field, form: non_survey, field_identifier: "first_name", required: true)
+        l_name = create(:form_field, form: non_survey, field_identifier: "last_name", required: true)
+        e_mail = create(:form_field, form: non_survey, field_identifier: "primary_email", required: true)
+
+        params = {
+          public_registration: {
+            Honeypot::FIELD_NAME => "",
+            form_fields: {
+              f_name.id.to_s => "Morgan",
+              l_name.id.to_s => "Lee",
+              e_mail.id.to_s => "morgan@example.com"
+            }
+          }
+        }
+
+        expect {
+          post public_form_path(non_survey.slug, event: training.id), params: params
+        }.to change(FormSubmission, :count).by(1)
+
+        expect(FormSubmission.last.event).to be_nil
+        expect(response).to redirect_to(thank_you_public_form_path(non_survey.slug))
+      end
+    end
   end
 end
