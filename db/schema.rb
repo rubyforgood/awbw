@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_140106) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_140704) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2057,6 +2057,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_140106) do
     t.string "ce_administrator_title"
     t.string "ce_accreditation_body"
     t.string "ce_accreditation_url"
+    t.string "ce_accreditation_abbreviation"
     t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["organization_id"], name: "index_settings_on_organization_id"

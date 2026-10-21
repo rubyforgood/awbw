@@ -96,18 +96,22 @@
                   label: "CE administrator title",
                   placeholder: Setting.ce_administrator_title,
                   hint: "Printed beside their name on the signature line" %>
-      <%= f.input :ce_accreditation_body,
-                  label: "Accrediting body",
-                  placeholder: Setting.ce_accreditation_body,
-                  hint: "Who approves this portal's CE hours, as it should read on the certificate" %>
-      <%= f.input :ce_accreditation_url,
-                  label: "Accrediting body link",
-                  placeholder: Setting.ce_accreditation_url,
-                  hint: "Links the body's name on the certificate" %>
+      <%= f.input :ce_accreditation_abbreviation,
+                  label: "Accreditor short name",
+                  placeholder: Setting.ce_accreditation_abbreviation,
+                  hint: "Printed as \"CAMFT-approved Continuing Education Provider # 1000151\" — the accreditor dictates this wording" %>
       <%= f.input :ce_provider_number,
                   label: "CE provider number",
                   placeholder: Setting.ce_provider_number,
-                  hint: "This portal's approved-provider number with that body" %>
+                  hint: "This portal's approved-provider number with that accreditor" %>
+      <%= f.input :ce_accreditation_body,
+                  label: "Accreditor full name",
+                  placeholder: Setting.ce_accreditation_body,
+                  hint: "Used in CE callout copy, not on the certificate" %>
+      <%= f.input :ce_accreditation_url,
+                  label: "Accreditor link",
+                  placeholder: Setting.ce_accreditation_url,
+                  hint: "Where the accreditor's CE rules are published" %>
     </section>
 
     <section class="rounded-xl border border-gray-200 bg-white p-6">

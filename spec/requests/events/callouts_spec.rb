@@ -1137,17 +1137,12 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).not_to include("Continuing Education Provider #")
     end
 
-    it "credits the accrediting body the app settings name, linked" do
-      Setting.create!(ce_provider_number: "9000123",
-                      ce_accreditation_body: "the Board of Behavioral Sciences",
-                      ce_accreditation_url: "https://example.org/ce")
+    it "prints the accreditor's required wording from the app settings" do
+      Setting.create!(ce_provider_number: "9000123", ce_accreditation_abbreviation: "CAMFT")
 
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
-      expect(response.body).to include("Continuing Education Provider # 9000123")
-      expect(response.body).to include("approved by")
-      expect(response.body).to include('href="https://example.org/ce"')
-      expect(response.body).to include("the Board of Behavioral Sciences")
+      expect(response.body).to include("CAMFT-approved Continuing Education Provider # 9000123")
     end
 
     it "signs it with the person the app settings name" do

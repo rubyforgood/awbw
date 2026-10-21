@@ -150,10 +150,12 @@ RSpec.describe Setting do
       expect(described_class.ce_accreditation_url).to be_nil
     end
 
-    it "returns the stored body and link" do
-      described_class.create!(ce_accreditation_body: "the Board of Behavioral Sciences",
+    it "returns the stored short name, body and link" do
+      described_class.create!(ce_accreditation_abbreviation: "BBS",
+                              ce_accreditation_body: "the Board of Behavioral Sciences",
                               ce_accreditation_url: "https://example.org/ce")
 
+      expect(described_class.ce_accreditation_abbreviation).to eq("BBS")
       expect(described_class.ce_accreditation_body).to eq("the Board of Behavioral Sciences")
       expect(described_class.ce_accreditation_url).to eq("https://example.org/ce")
     end
