@@ -48,6 +48,32 @@ RSpec.describe PublicFormSubmission do
       expect(existing.reload.status).to eq("attended")
     end
 
+    context "when the submitted organization matches" do
+      let!(:org) { create(:organization, name: "Helping Hands") }
+      let!(:org_name_field) { create(:form_field, form: form, field_identifier: "organization_name") }
+      let!(:org_position_field) { create(:form_field, form: form, field_identifier: "organization_position") }
+
+      def org_params
+        params_for.merge(org_name_field.id.to_s => "Helping Hands", org_position_field.id.to_s => "Counselor")
+      end
+
+      it "links the organization to the on-demand registration, pinned to the submission" do
+        result = described_class.call(form: form, form_params: org_params)
+
+        link = EventRegistration.find_by!(event: training, registrant: result.person).event_registration_organizations.sole
+        expect(link.organization).to eq(org)
+        expect(link.form_submission).to eq(result.form_submission)
+      end
+
+      it "ties the job and facilitator affiliations to the on-demand registration" do
+        result = described_class.call(form: form, form_params: org_params)
+
+        registration = EventRegistration.find_by!(event: training, registrant: result.person)
+        expect(result.person.affiliations.where(organization: org).pluck(:title, :event_registration_id))
+          .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
+      end
+    end
+
     it "quietly skips when no current on-demand training exists" do
       training.update!(published: false)
 

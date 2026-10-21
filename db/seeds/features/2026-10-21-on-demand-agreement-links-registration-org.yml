@@ -1,0 +1,11 @@
+name: "On-demand agreements link the organization on the registrants roster"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-21
+pr_number: 2771
+summary: >-
+  When someone submits the on-demand collaboration agreement with an organization
+  name that matches one on file, their on-demand registration now shows that
+  organization as linked, and their job and facilitator affiliations point back to it.
+pro_tips:
+  - "A typed name that doesn't exactly match an organization still shows as Pending — link it from the registrants roster."
