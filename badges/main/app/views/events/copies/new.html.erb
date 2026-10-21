@@ -1,0 +1,31 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<div class="<%= DomainTheme.bg_class_for(:events) %> border-primary/10 mx-auto max-w-2xl rounded-2xl border p-6 shadow-sm">
+  <div class="mb-4">
+    <%= link_to "← Edit event", edit_event_path(@event), class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+  </div>
+  <h1 class="text-primary mb-2 font-display text-3xl font-semibold tracking-tight">Copy event</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Makes an unpublished copy of <strong><%= @event.title %></strong> with its settings, ticket callouts, forms,
+    staff, tags, and images. Registrations and payments are not copied. Every deadline and drip date moves with
+    the new start date, keeping the same number of days before or after it.
+  </p>
+  <%= form_with url: event_copy_path(@event), method: :post, class: "space-y-4 rounded bg-white p-6" do |f| %>
+    <div>
+      <%= f.label :title, "Title", class: "mb-1 block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :title, value: @title, required: true, maxlength: 255,
+                               class: "w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    </div>
+    <div>
+      <%= f.label :start_on, "New start date", class: "mb-1 block text-sm font-medium text-gray-700" %>
+      <%= f.date_field :start_on, value: @start_on, required: true,
+                                  class: "rounded border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      <p class="mt-1 text-xs text-gray-500">
+        Currently starts <%= @event.starts_on&.to_fs(:long) %>. Start and end times stay the same.
+      </p>
+    </div>
+    <div class="flex justify-end gap-3">
+      <%= link_to "Cancel", edit_event_path(@event), class: button_classes(:secondary_outline) %>
+      <%= f.submit "Copy event", class: button_classes(:primary) %>
+    </div>
+  <% end %>
+</div>

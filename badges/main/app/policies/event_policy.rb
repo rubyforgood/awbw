@@ -94,6 +94,11 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  # Copying makes a brand-new event, and creating events is admin-only.
+  def copy?
+    admin?
+  end
+
   # Who can view/manage an event's registrants. Mirrors manage? for now, but kept
   # as its own rule so registrant access can be tightened later without affecting
   # other manage? actions.
