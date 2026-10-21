@@ -98,7 +98,7 @@
                   <% elsif subscription.interested_event %>
                     <%# The label may be a terse abbreviation, so carry the full title as a tooltip. %>
                     <div class="mt-0.5 text-xs text-gray-500">
-                      <span title="<%= subscription.interested_event.title %>"><%= subscription.event_label %></span>
+                      <span title="<%= subscription.interested_event.decorate.hover_title %>"><%= subscription.event_label %></span>
                     </div>
                   <% end %>
                 </td>
@@ -112,9 +112,8 @@
                       <% registrations.each do |registration| %>
                         <% deco = registration.decorate %>
                         <% event = registration.event %>
-                        <% event_date = event.start_date&.strftime("%b %-d, %Y") %>
                         <%= link_to edit_event_registration_path(registration),
-                                    title: [ event.title, event_date ].compact.join(" · "),
+                                    title: "Registration for #{event.decorate.hover_title}",
                                     class: "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition hover:opacity-80 hover:shadow-sm #{deco.attendance_status_classes}",
                                     data: { turbo_frame: "_top" } do %>
                           <i class="fas <%= deco.attendance_status_icon %> text-2xs"></i>

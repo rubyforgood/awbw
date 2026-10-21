@@ -85,13 +85,14 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
 
     it "links to the registration's edit page when asked" do
-      registration = build_stubbed(:event_registration, event: build_stubbed(:event, abbreviation: "TOS205"))
+      event = build_stubbed(:event, abbreviation: "TOS205", title: "Trauma of Separation", start_date: Time.zone.local(2026, 10, 8))
+      registration = build_stubbed(:event_registration, event: event)
       notification = build_stubbed(:notification, noticeable: registration)
 
-      chip = notification.decorate.event_chip(linked: true)
+      chip = Capybara.string(notification.decorate.event_chip(linked: true)).find("a")
 
-      expect(chip).to include("<a")
-      expect(chip).to include(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+      expect(chip[:href]).to eq(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+      expect(chip[:title]).to eq("Registration for Trauma of Separation · October 2026")
     end
 
     it "stays a plain span even when linked if there is no registration to link to" do
