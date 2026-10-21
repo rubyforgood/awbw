@@ -1,0 +1,12 @@
+name: "Share event-specific survey links"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-21
+pr_number: 2768
+action_path: "/events"
+summary: >-
+  Staff can share standalone survey links with an event ID attached so respondent submissions
+  automatically associate with that event and count toward its survey completion columns.
+pro_tips:
+  - "Find direct survey links with the event prefilled under the Forms button on the event dashboard and registrants roster."
+  - "Survey links keep the event ID across multiple responses from the thank-you page."
