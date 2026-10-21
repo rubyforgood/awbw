@@ -42,14 +42,20 @@ module FormsHelper
     end
   end
 
-  # The live public registration page for this form, shown on the editor pages.
-  # Only available when we know the event the admin came from — the preview
-  # (the subnav's "View") can't fill header tokens or run conditional logic
+  # The live public page for this form (standalone public form or event registration),
+  # shown on the editor pages. Only available when we know the event the admin came from —
+  # the preview (the subnav's "View") can't fill header tokens or run conditional logic
   # without an event.
   def form_live_view_link(event)
     return unless event
 
-    link_to "Live form", new_event_public_registration_path(event),
+    path = if @form&.publicly_fillable?
+      public_form_path(@form.slug, event: event.id)
+    else
+      new_event_public_registration_path(event)
+    end
+
+    link_to "Live form", path,
       class: "text-sm #{eyebrow_link_class} px-2 py-1"
   end
 

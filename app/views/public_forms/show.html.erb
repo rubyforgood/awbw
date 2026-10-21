@@ -35,7 +35,9 @@
         </div>
       <% end %>
 
-      <%= form_with url: public_form_path(@form.slug), method: :post, local: true, class: "space-y-2", data: { turbo: false } do %>
+      <%= form_with url: public_form_path(@form.slug, event: params[:event].presence || params[:event_id].presence), method: :post, local: true, class: "space-y-2", data: { turbo: false } do %>
+        <%= hidden_field_tag :event, params[:event] if params[:event].present? %>
+        <%= hidden_field_tag :event_id, params[:event_id] if params[:event_id].present? && params[:event].blank? %>
         <%= render "shared/honeypot", scope: "public_registration" %>
 
         <div class="grid grid-cols-1 gap-x-4 md:grid-cols-12">
