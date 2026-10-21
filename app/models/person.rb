@@ -252,6 +252,7 @@ class Person < ApplicationRecord
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
+  scope :placeholder_email, -> { where(email: PLACEHOLDER_EMAIL) }
   scope :workshop_authors, -> { credited_on(Workshop) }
   scope :workshop_variation_authors, -> { credited_on(WorkshopVariation) }
   scope :workshop_log_authors, -> { credited_on(WorkshopLog) }

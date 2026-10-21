@@ -545,6 +545,16 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe ".placeholder_email" do
+    it "finds only the people marked as having no address" do
+      marked = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL)
+      create(:person, user: nil, email: "real@example.com")
+      create(:person, :legacy_without_email, user: nil)
+
+      expect(Person.placeholder_email).to contain_exactly(marked)
+    end
+  end
+
   describe "#primary_organization" do
     let(:person) { create(:person) }
 
