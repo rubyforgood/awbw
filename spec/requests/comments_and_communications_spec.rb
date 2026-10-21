@@ -56,6 +56,26 @@ RSpec.describe "Comments and communications", type: :request do
       expect(card.text).to include("Attended")
     end
 
+    it "shows the person's membership status and current invoice in the hover card" do
+      membership = create(:membership, person: person)
+      create(:membership_invoice, membership: membership, start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 12, 31), cost_cents: 0)
+
+      travel_to(Date.new(2026, 10, 21)) { get comments_and_communications_path(person_id: person.id) }
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text).to include("Membership")
+      expect(card.text).to include("Active")
+      expect(card.text).to include("Jan 1, 2026 – Dec 31, 2026")
+      expect(card.text).to include("Paid")
+    end
+
+    it "says a person without a membership has none in the hover card" do
+      get comments_and_communications_path(person_id: person.id)
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text.squish).to include("Membership None")
+    end
+
     it "links to the person's activity history from the header" do
       person.update!(first_name: "Aisha")
       get comments_and_communications_path(person_id: person.id)

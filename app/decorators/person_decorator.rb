@@ -29,6 +29,10 @@ class PersonDecorator < ApplicationDecorator
     uncancelled_membership_count > 1
   end
 
+  def latest_membership
+    memberships.includes(:membership_invoices).order(created_at: :desc).first&.decorate
+  end
+
   def uncancelled_membership_count
     if memberships.loaded?
       memberships.count { |membership| membership.cancelled_at.nil? }

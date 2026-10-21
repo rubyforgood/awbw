@@ -185,6 +185,21 @@ RSpec.describe PersonDecorator do
     end
   end
 
+  describe "#latest_membership" do
+    it "is the person's newest membership, decorated" do
+      person = create(:person)
+      create(:membership, :cancelled, person: person, created_at: 2.years.ago)
+      newest = create(:membership, person: person)
+
+      expect(person.decorate.latest_membership).to eq(newest)
+      expect(person.decorate.latest_membership).to be_decorated
+    end
+
+    it "is nil without a membership" do
+      expect(create(:person).decorate.latest_membership).to be_nil
+    end
+  end
+
   describe "#active_facilitator_affiliations" do
     let(:person) { create(:person) }
 
