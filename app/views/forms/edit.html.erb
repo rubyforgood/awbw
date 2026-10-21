@@ -136,7 +136,8 @@
           <% if @form.publicly_fillable? %>
             <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm">
               <span class="font-medium text-green-800">Live at</span>
-              <%= link_to public_form_url(@form.slug), public_form_url(@form.slug), target: "_blank", rel: "noopener",
+              <% live_url = @dashboard_event ? public_form_url(@form.slug, event: @dashboard_event.id) : public_form_url(@form.slug) %>
+              <%= link_to live_url, live_url, target: "_blank", rel: "noopener",
                     class: "text-green-700 underline break-all hover:text-green-900" %>
               <i class="fa-solid fa-arrow-up-right-from-square text-xs text-green-600" aria-hidden="true"></i>
             </div>
