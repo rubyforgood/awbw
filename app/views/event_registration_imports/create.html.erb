@@ -49,7 +49,7 @@
     <li>People already in the portal keep their current address, phone, and sectors; the sheet only fills blanks and adds new addresses beside them.</li>
     <li>
       An attended, cancelled, no-show, transferred-out, or incomplete registration keeps the status it already has.
-      The row's status is saved as a comment on that registration instead.
+      The row's status is saved as a comment on that registration instead, and its Day columns are left out.
     </li>
     <% if @event.ce_eligible? && @event.ce_hours_cost_cents.to_i.positive? %>
       <li>

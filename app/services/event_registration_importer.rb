@@ -391,12 +391,16 @@ class EventRegistrationImporter
   end
 
   # Days, the yes/no flags, and dates: the sheet fills these in without clearing
-  # anything already recorded.
-  def apply_registration_details(registration, values)
+  # anything already recorded. Days are left out when the sheet's status lost to
+  # the portal's — they describe the outcome we just declined to overwrite, so
+  # writing them would contradict the status that stands.
+  def apply_registration_details(registration, values, apply_days:)
     attributes = {}
-    days = day_values(values)
-    days = (1..@event.day_count).index_with { true } if days.empty? && registration.attended?
-    attributes.merge!(day_attributes(days))
+    if apply_days
+      days = day_values(values)
+      days = (1..@event.day_count).index_with { true } if days.empty? && registration.attended?
+      attributes.merge!(day_attributes(days))
+    end
 
     %i[someone_else_will_pay invoice_requested w9_requested].each do |flag|
       answer = Columns.yes_no(values[flag])
@@ -548,6 +552,9 @@ class EventRegistrationImporter
     preview.details << "Sectors" if answers["primary_sector"] || answers["additional_sectors"]
     preview.details << "Age groups" if answers["primary_age_group"] || answers["additional_age_groups"]
     preview.details << "Registered #{Columns.date(values[:registered_on]).strftime("%-m/%-d/%Y")}" if Columns.date(values[:registered_on])
+    if preview.registration_status == :kept && day_values(values).any?
+      preview.warnings << "Day columns not applied — the registration keeps its own status"
+    end
 
     return unless ce_requested?(values)
 
@@ -573,8 +580,9 @@ class EventRegistrationImporter
 
   def persist_registration(person, registration, values, organization, answers, preview)
     newly_created = person.previously_new_record?
-    note_status_conflict(registration, preview) if preview.registration_status == :kept
-    apply_registration_details(registration, values)
+    status_kept = preview.registration_status == :kept
+    note_status_conflict(registration, preview) if status_kept
+    apply_registration_details(registration, values, apply_days: !status_kept)
     submission = import_submission(person, answers)
     capture_organization(person, registration, submission, organization, answers)
     PersonServices::CaptureFromSubmission.call(person: person, answers: answers, overwrite: newly_created)

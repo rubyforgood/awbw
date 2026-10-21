@@ -337,6 +337,17 @@ RSpec.describe EventRegistrationImporter do
         expect(attended.comments.sole.body).to include("said “No show”", "kept this registration's “Attended”")
       end
 
+      it "leaves the day columns off a registration that kept its own status" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
+        no_show = create(:event_registration, event: event, registrant: person, status: "no_show")
+
+        result = import_rows(%w[FirstName LastName EMail Status Day1 InvoiceRequested],
+                             [ "Pat", "Example", "pat@example.org", "Attended", "Yes", "Yes" ])
+
+        expect(no_show.reload).to have_attributes(status: "no_show", completed_day_1: false, invoice_requested: true)
+        expect(result.rows.first.warnings).to include("Day columns not applied — the registration keeps its own status")
+      end
+
       it "adds no second comment when the same sheet is imported again" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
         no_show = create(:event_registration, event: event, registrant: person, status: "no_show")
