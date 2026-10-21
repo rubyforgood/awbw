@@ -113,7 +113,9 @@ class FormBuilderService
   # User-facing field labels each section's builder creates (questions only,
   # excluding group headers), in build order. Mirrors the build_* methods so the
   # new-form page can list a section's fields before the form exists. A spec
-  # asserts this stays in sync with what the builders actually create.
+  # asserts this stays in sync with what the builders actually create. Read it
+  # through `.section_field_names`, which adds the consent label — that one
+  # carries the organization name, which an admin can change while the app runs.
   SECTION_FIELD_NAMES = {
     person_identifier: [ "First Name", "Last Name", "Email", "Confirm Email" ],
     person_contact_info: [
@@ -145,7 +147,6 @@ class FormBuilderService
       "Anything else you'd like to share with us?"
     ],
     payment: [ "Payment method", "Will someone else be paying for your registration?" ],
-    consent: [ "I agree to receive email communications from #{Setting.app_organization_name}." ],
     post_event_feedback: [ "How would you rate this event?", "What did you find most valuable?", "Any suggestions for improvement?" ],
     day_1_survey: [
       CLARITY_PROMPT, "Please elaborate.", CLARITY_PROMPT, "Please elaborate.",
@@ -203,7 +204,15 @@ class FormBuilderService
   # Field labels a section's builder creates, for previewing a section's
   # contents before the form exists (used on the new-form page).
   def self.section_field_names(key)
-    SECTION_FIELD_NAMES.fetch(key.to_sym, [])
+    key = key.to_sym
+    return [ consent_label ] if key == :consent
+
+    SECTION_FIELD_NAMES.fetch(key, [])
+  end
+
+  # Resolved per call so it follows the organization an admin picks in settings.
+  def self.consent_label
+    "I agree to receive email communications from #{Setting.app_organization_name}."
   end
 
   # Maps each section to the `section` column value(s) its builder assigns to
@@ -680,7 +689,7 @@ class FormBuilderService
   def build_consent_fields(form, position)
     position = add_header(form, position, "Consent", group: "consent")
     position = add_field(form, position,
-                         "I agree to receive email communications from #{Setting.app_organization_name}.",
+                         self.class.consent_label,
                          :multi_select_checkbox,
                          key: "communication_consent", group: "consent", required: true,
                          subtitle: "By submitting this form, I consent to receive updates from #{Setting.app_organization_name}, " \
