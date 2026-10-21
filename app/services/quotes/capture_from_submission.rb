@@ -46,10 +46,12 @@ module Quotes
     # Only while the quote still reads exactly as captured. Once an admin has
     # reworded or published it, it's theirs and the form stops writing to it — the
     # newer answer stays on the submission for them to read.
+    # A speaker or age the form doesn't collect was filled in by hand, so keep it.
     def rewrite(quote, body)
       return if quote.published? || quote.body != quote.original_body
 
-      quote.update!(body: body, original_body: body, speaker_name: speaker_name, age: age)
+      quote.update!(body: body, original_body: body,
+                    speaker_name: speaker_name || quote.speaker_name, age: age || quote.age)
     end
 
     def answers

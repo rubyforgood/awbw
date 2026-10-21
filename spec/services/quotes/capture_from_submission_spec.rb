@@ -116,6 +116,18 @@ RSpec.describe Quotes::CaptureFromSubmission do
     expect(submission.quotes.reload.sole).to have_attributes(body: "Second try", speaker_name: "Jordan")
   end
 
+  it "keeps a speaker and age the admin filled in on a form that never asked" do
+    answer("quote", "First try")
+    described_class.call(submission)
+    submission.quotes.sole.update!(speaker_name: "Maria", age: "13-17")
+    submission.form_answers.sole.update!(submitted_answer: "Second try")
+
+    described_class.call(submission)
+
+    expect(submission.quotes.reload.sole)
+      .to have_attributes(body: "Second try", speaker_name: "Maria", age: "13-17")
+  end
+
   it "stops writing to a quote an admin has reworded" do
     answer("quote", "First try")
     described_class.call(submission)
