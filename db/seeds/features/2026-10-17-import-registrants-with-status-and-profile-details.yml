@@ -9,5 +9,7 @@ summary: >-
   CE licenses, and scholarships. It matches existing people, organizations, and
   addresses instead of duplicating them, even when a row has no email.
 pro_tips:
+  - "One check or payment covering several people: put the same BulkPayment reference (or the same CheckNumber) on each of their rows. The import records one payment and splits it across those registrations instead of charging each person the full amount."
+  - "Download the CSV template from the import page — it has every column we read, spelled the way we expect."
   - "Start from Admin home → Import registrants, or an event's Registrants page → Bulk actions. Expand “Columns we read” for the full list."
   - "A registration already marked attended, incomplete, cancelled, no-show, or transferred out keeps that status. The sheet's status is saved as a comment on the registration so you can see what the spreadsheet claimed."

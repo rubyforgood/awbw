@@ -53,6 +53,9 @@ class EventRegistrationImporter
   # own submission on a re-run (idempotency) without ever matching a real one.
   IMPORT_SOURCE_KEY = "imported_from".freeze
 
+  # metadata key naming the batch a payment covers, so a re-run finds the same one.
+  BULK_REF_KEY = "bulk_payment_ref".freeze
+
   PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
   PLACEHOLDER_EMAIL = /\A(\d+)@example\.com\z/
 
@@ -156,7 +159,8 @@ class EventRegistrationImporter
     :person_status, :person_label, :placeholder_email,
     :status, :status_from_sheet, :registration_status, :previous_status,
     :organization_status, :organization_label,
-    :payment_status, :payment_label, :payment_amount_cents, :discount_cents,
+    :payment_status, :payment_label, :payment_amount_cents, :payment_total_cents, :discount_cents,
+    :owed_cents, :bulk_ref, :bulk_size,
     :scholarship_cents, :ce_status, :details, :warnings,
     :skipped_reason,
     keyword_init: true
@@ -187,11 +191,15 @@ class EventRegistrationImporter
     @organization_cache = {}
     @form_field_cache = {}
     @seen_row_keys = {}
+    @payment_batches = {}
   end
 
   def call
     ActiveRecord::Base.transaction do
       each_row { |row, number| process_row(row, number) }
+      # Money last: rows sharing a BulkPayment reference are one payment, so the
+      # split can't be known until every row has been read.
+      @payment_batches.each_value { |members| apply_payment_batch(members) }
       raise ActiveRecord::Rollback if @dry_run
     end
     @result
@@ -245,6 +253,7 @@ class EventRegistrationImporter
     set_detail_preview(values, answers, preview)
 
     persist_registration(person, registration, values, organization, answers, preview) unless @dry_run
+    record_payment_intent(person, registration, values, preview) if preview.payment_status == :will_record
 
     @result.rows << preview
   end
@@ -532,16 +541,82 @@ class EventRegistrationImporter
 
     preview.payment_status = :will_record
     preview.payment_label = PAYMENT_TYPE_LABELS[payment_class.name]
-    applied = [ cents, owed ].min
-    @result.payments_recorded += 1
-    @result.payments_amount_cents += applied
+    preview.owed_cents = owed
+    preview.bulk_ref = bulk_ref(values, payment_class)
+  end
 
-    discount = owed - applied
+  # Rows that name the same BulkPayment reference were paid together; so were check
+  # rows carrying one check number. Anything else is its own payment.
+  def bulk_ref(values, payment_class)
+    return "ref:#{values[:bulk_payment].downcase}" if values[:bulk_payment]
+    return "check:#{values[:check_number]}" if payment_class == CheckPayment && values[:check_number]
+
+    nil
+  end
+
+  # One row's money intent, held until every row is read. Keyed by the payment it
+  # belongs to, so a batch is one payment and a plain row is a batch of one.
+  def record_payment_intent(person, registration, values, preview)
+    key = preview.bulk_ref || "row:#{preview.number}"
+    @payment_batches[key] ||= []
+    @payment_batches[key] << {
+      person: person, registration: registration, values: values, preview: preview,
+      cents: parse_cents(values[:amount_paid]).to_i,
+      payment_class: payment_class_for(values[:payment_type]), check_number: values[:check_number]
+    }
+  end
+
+  # The batch's payment, then its split. Rows of a group may each carry the whole
+  # amount or each carry a share; what separates them is the cost they answer to,
+  # so an amount that covers the group's whole bill is read as the one payment and
+  # anything less as a share of it. Either way nobody is allocated more than their
+  # own registration costs, and whatever the payment leaves unpaid is comped.
+  def apply_payment_batch(members)
+    owed = members.sum { |member| member[:preview].owed_cents.to_i }
+    amounts = members.map { |member| member[:cents] }
+    total = amounts.uniq.one? && amounts.first >= owed ? amounts.first : amounts.sum
+
+    @result.payments_recorded += 1
+    @result.payments_amount_cents += total
+    payment = resolve_payment(members, total) unless @dry_run
+
+    remaining = total
+    members.each do |member|
+      preview = member[:preview]
+      share = [ remaining, preview.owed_cents.to_i ].min
+      remaining -= share
+      preview.payment_amount_cents = share
+      preview.payment_total_cents = total
+      preview.bulk_size = members.size if members.size > 1
+      allocate_share(member, payment, share) unless @dry_run
+      record_discount(preview, preview.owed_cents.to_i - share)
+    end
+
+    return if @dry_run
+
+    members.each do |member|
+      payables_for(member[:registration], member[:values]).each { |payable| cover_remainder_with_discount(payable) }
+    end
+  end
+
+  def record_discount(preview, discount)
     return unless discount.positive?
 
     preview.discount_cents = discount
     @result.discounts_recorded += 1
     @result.discounts_amount_cents += discount
+  end
+
+  # Spreads one member's share over their registration and then its CE, each capped
+  # at what it still owes, so a re-run adds nothing.
+  def allocate_share(member, payment, share)
+    payables_for(member[:registration], member[:values]).each do |payable|
+      to_allocate = [ share, payable.remaining_cost ].min
+      next unless to_allocate.positive?
+
+      payable.allocations.find_or_create_by!(source: payment) { |allocation| allocation.amount = to_allocate }
+      share -= to_allocate
+    end
   end
 
   def set_detail_preview(values, answers, preview)
@@ -588,7 +663,6 @@ class EventRegistrationImporter
     PersonServices::CaptureFromSubmission.call(person: person, answers: answers, overwrite: newly_created)
     enroll_ce(registration, values) if preview.ce_status == :will_enroll
     apply_scholarship(person, registration, values)
-    apply_payment(person, registration, values)
   end
 
   def capture_organization(person, registration, submission, organization, answers)
@@ -635,35 +709,28 @@ class EventRegistrationImporter
     registration.allocations.reset
   end
 
-  # Applies the row's AmountPaid by finding-or-creating a payment and allocating it
-  # to the registration, then its CE, each capped at what it still owes — so a
-  # re-run adds nothing and a fully-covered amount reads as "Paid".
-  def apply_payment(person, registration, values)
-    cents = parse_cents(values[:amount_paid])
-    return if cents.nil? || cents <= 0
-
-    payment_class = payment_class_for(values[:payment_type])
-    return if payment_class.nil?
-    return if payment_class == CheckPayment && values[:check_number].blank?
-
-    payment = nil
-    remaining = cents
-    payables = payables_for(registration, values)
-    payables.each do |payable|
-      to_allocate = [ remaining, payable.remaining_cost ].min
-      next unless to_allocate.positive?
-
-      payment ||= resolve_payment(person, cents, payment_class, values[:check_number])
-      payable.allocations.find_or_create_by!(source: payment) { |allocation| allocation.amount = to_allocate }
-      remaining -= to_allocate
-    end
-
-    payables.each { |payable| cover_remainder_with_discount(payable) }
-  end
-
   # What this row is about. A CE registration the sheet never mentions is a live
   # balance someone else is still expected to pay, so the import leaves it alone
   # rather than spending the row's money on it or comping it away.
+  def import_payment?(candidate, ref)
+    metadata = candidate.metadata
+    return false unless metadata&.[](IMPORT_SOURCE_KEY).present?
+    return false unless metadata["event_id"] == @event.id
+
+    metadata[BULK_REF_KEY] == ref
+  end
+
+  # Who the payment is recorded against. One organization behind every row of a
+  # batch is the payer we can name; otherwise the batch's first registrant stands
+  # for it, since a payment needs a person or an organization.
+  def batch_payer(members)
+    organizations = members.map { |member| @organization_cache[member[:values][:organization]&.downcase]&.organization }
+    shared = organizations.uniq
+    return shared.first if members.size > 1 && shared.one? && shared.first
+
+    members.first[:person]
+  end
+
   def payables_for(registration, values)
     return [ registration ] unless ce_requested?(values)
 
@@ -684,20 +751,29 @@ class EventRegistrationImporter
     payable.allocations.create!(source: discount, amount: remaining)
   end
 
-  # Reuses our own prior import payment for this person + amount + type on this
-  # event (keyed by the import metadata), so re-running never mints duplicates and
-  # imports into other events never steal each other's money; otherwise creates one.
-  def resolve_payment(person, cents, payment_class, check_number)
+  # Reuses our own prior import payment for this batch on this event (keyed by the
+  # import metadata), so re-running never mints duplicates and imports into other
+  # events never steal each other's money; otherwise creates one. A batch of
+  # several is paid by the organization they share, else by its first registrant.
+  def resolve_payment(members, cents)
+    payment_class = members.first[:payment_class]
+    ref = members.first[:preview].bulk_ref
+    payer = batch_payer(members)
     existing = payment_class
-      .where(person_id: person.id, amount_cents: cents)
-      .detect { |candidate| candidate.metadata&.[](IMPORT_SOURCE_KEY).present? && candidate.metadata["event_id"] == @event.id }
+      .where(amount_cents: cents)
+      .where(ref ? {} : { person_id: payer.is_a?(Person) ? payer.id : nil })
+      .detect { |candidate| import_payment?(candidate, ref) }
     return existing if existing
 
     payment = payment_class.new(
-      person: person, amount_cents: cents, currency: "usd",
-      metadata: { IMPORT_SOURCE_KEY => @source, "event_id" => @event.id, "name" => person.full_name, "email" => person.email }
+      amount_cents: cents, currency: "usd",
+      metadata: {
+        IMPORT_SOURCE_KEY => @source, "event_id" => @event.id, BULK_REF_KEY => ref,
+        "name" => payer.try(:full_name) || payer.name, "email" => payer.try(:email)
+      }.compact
     )
-    payment.check_number = check_number if payment_class == CheckPayment
+    payer.is_a?(Organization) ? payment.organization = payer : payment.person = payer
+    payment.check_number = members.first[:check_number] if payment_class == CheckPayment
     payment.skip_pay_charge_validation = true if payment.respond_to?(:skip_pay_charge_validation=)
     payment.created_by = @import_user if payment.respond_to?(:created_by=)
     payment.updated_by = @import_user if payment.respond_to?(:updated_by=)

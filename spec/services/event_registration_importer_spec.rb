@@ -549,6 +549,78 @@ RSpec.describe EventRegistrationImporter do
       end
     end
 
+    describe "one payment covering several people" do
+      let(:event) { create(:event, facilitator_training: true, cost_cents: 50_000) }
+      let(:header) { %w[FirstName LastName EMail AmountPaid PaymentType CheckNumber] }
+
+      def registrations_for(*emails)
+        emails.map { |email| registration_of(Person.find_by(email: email)) }
+      end
+
+      it "splits one check repeated on every row across those registrations" do
+        import_rows(header,
+                    [ "Pat", "Example", "pat@example.org", "1000.00", "Check", "12345" ],
+                    [ "Sam", "Sample", "sam@example.org", "1000.00", "Check", "12345" ])
+
+        payments = Payment.where(amount_cents: 100_000)
+        expect(payments.count).to eq(1)
+        expect(registrations_for("pat@example.org", "sam@example.org")).to all(be_paid_in_full)
+        expect(payments.sole.allocations.pluck(:amount)).to eq([ 50_000, 50_000 ])
+        expect(Discount.count).to eq(0)
+      end
+
+      it "sums the rows when each carries that person's share" do
+        import_rows(%w[FirstName LastName EMail AmountPaid PaymentType BulkPayment],
+                    [ "Pat", "Example", "pat@example.org", "500.00", "Cash", "Team A" ],
+                    [ "Sam", "Sample", "sam@example.org", "500.00", "Cash", "Team A" ])
+
+        payment = Payment.sole
+        expect(payment.amount_cents).to eq(100_000)
+        expect(payment.allocations.pluck(:amount)).to eq([ 50_000, 50_000 ])
+      end
+
+      it "records the shared organization as the payer" do
+        organization = create(:organization, name: "Sunrise Center")
+        import_rows(%w[FirstName LastName EMail Organization AmountPaid PaymentType BulkPayment],
+                    [ "Pat", "Example", "pat@example.org", "Sunrise Center", "1000.00", "Cash", "Team A" ],
+                    [ "Sam", "Sample", "sam@example.org", "Sunrise Center", "1000.00", "Cash", "Team A" ])
+
+        expect(Payment.sole).to have_attributes(organization: organization, person: nil)
+      end
+
+      it "adds no second payment when the same sheet is imported again" do
+        rows = [ header,
+                 [ "Pat", "Example", "pat@example.org", "1000.00", "Check", "12345" ],
+                 [ "Sam", "Sample", "sam@example.org", "1000.00", "Check", "12345" ] ]
+
+        2.times { import_rows(*rows) }
+
+        expect(Payment.count).to eq(1)
+        expect(Allocation.where(source_type: "Payment").count).to eq(2)
+      end
+
+      it "previews each person's share of the group rather than the whole payment" do
+        result = import_rows(header,
+                             [ "Pat", "Example", "pat@example.org", "1000.00", "Check", "12345" ],
+                             [ "Sam", "Sample", "sam@example.org", "1000.00", "Check", "12345" ],
+                             dry_run: true)
+
+        expect(result.payments_recorded).to eq(1)
+        expect(result.payments_amount_cents).to eq(100_000)
+        expect(result.rows.map(&:payment_amount_cents)).to eq([ 50_000, 50_000 ])
+        expect(result.rows.map(&:bulk_size)).to eq([ 2, 2 ])
+        expect(result.rows.map(&:payment_total_cents)).to eq([ 100_000, 100_000 ])
+      end
+
+      it "keeps an unrelated cash row on its own payment" do
+        import_rows(%w[FirstName LastName EMail AmountPaid PaymentType],
+                    [ "Pat", "Example", "pat@example.org", "500.00", "Cash" ],
+                    [ "Sam", "Sample", "sam@example.org", "500.00", "Cash" ])
+
+        expect(Payment.pluck(:amount_cents)).to eq([ 50_000, 50_000 ])
+      end
+    end
+
     it "lists the headers it doesn't recognize" do
       result = import_rows(%w[FirstName LastName EMail FavoriteColor], %w[Pat Example pat@example.org Blue], dry_run: true)
 

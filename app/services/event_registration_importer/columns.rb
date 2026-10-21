@@ -46,7 +46,8 @@ class EventRegistrationImporter
       certificate_sent: %w[certificatesent certificatesenton],
       amount_paid: %w[amount amountpaid paid paymentamount paidamount],
       payment_type: %w[type method paymenttype paymentmethod],
-      check_number: %w[checknumber check checkno]
+      check_number: %w[checknumber check checkno],
+      bulk_payment: %w[bulkpayment bulkpaymentref bulkpaymentgroup paymentgroup]
     }.merge(EventRegistration::DAY_FIELDS.each_with_index.to_h { |_, index| [ :"day_#{index + 1}", [ "day#{index + 1}", "completedday#{index + 1}" ] ] }).freeze
 
     HEADER_FIELDS = HEADER_ALIASES.flat_map { |field, labels| labels.map { |label| [ label, field ] } }.to_h.freeze
@@ -63,7 +64,7 @@ class EventRegistrationImporter
       Street City State Zip Country AddressType Phone PhoneType
       PrimarySector AdditionalSectors PrimaryAgeGroup AdditionalAgeGroups
       CE LicenseType LicenseNumber LicenseState LicenseExpires
-      Scholarship AmountPaid PaymentType CheckNumber
+      Scholarship AmountPaid PaymentType CheckNumber BulkPayment
       SomeoneElseWillPay InvoiceRequested W9Requested PostSurveyCompleted CertificateSent
     ].freeze
 
