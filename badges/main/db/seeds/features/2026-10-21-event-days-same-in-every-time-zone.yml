@@ -1,0 +1,8 @@
+name: "Attendance days match for every time zone"
+area: events
+display_status: admin_facing
+released_on: 2026-10-21
+summary: >-
+  An event's number of days is now counted in Pacific time, so an evening
+  training shows the same attendance columns, sign-in days, and CSV columns
+  to admins everywhere, matching the survey columns.

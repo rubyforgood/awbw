@@ -317,13 +317,12 @@ class Event < ApplicationRecord
     starts_on.present? && ends_on.present? && ends_on > starts_on
   end
 
-  # How many calendar days the event spans (inclusive), clamped to 1..5 — drives
-  # how many per-day attendance columns the Onboarding tab shows.
+  # How many Pacific calendar days the event spans (inclusive), clamped to 1..5 — drives
+  # how many per-day attendance columns the Onboarding tab shows, the same for every viewer.
   def day_count
     return 1 if start_date.blank?
 
-    last_day = (end_date.presence || start_date).to_date
-    span = (last_day - start_date.to_date).to_i + 1
+    span = ((ends_on || starts_on) - starts_on).to_i + 1
     span.clamp(1, 5)
   end
 
@@ -348,11 +347,9 @@ class Event < ApplicationRecord
   # sheet row past day 5. Both the attendance report (for staff) and the registrant's
   # own sign-in sheet say so rather than silently stopping.
   def event_dates_truncated?
-    last_day = end_date&.in_time_zone(Time.zone)&.to_date
-    dates = event_dates
-    return false unless last_day && dates.any?
+    return false unless starts_on && ends_on
 
-    last_day > dates.last
+    ends_on > starts_on + (day_count - 1)
   end
 
   # A day's start datetime: that date at start_date's time-of-day, in the app zone.

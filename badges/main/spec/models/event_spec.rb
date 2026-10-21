@@ -145,6 +145,27 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe "#day_count" do
+    let(:pacific) { Time.find_zone(Event::PROGRAM_ZONE) }
+    let(:evening_event) { create(:event, start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 10, 22)) }
+
+    it "counts Pacific days, so an evening event is one day for a viewer whose zone ends it tomorrow" do
+      expect(Time.use_zone("Eastern Time (US & Canada)") { Event.find(evening_event.id).day_count }).to eq(1)
+    end
+
+    it "doesn't call that evening event truncated for the same viewer" do
+      expect(Time.use_zone("Eastern Time (US & Canada)") { Event.find(evening_event.id).event_dates_truncated? }).to be(false)
+    end
+
+    it "spans consecutive Pacific days, clamped to 5" do
+      two_day = create(:event, start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 11, 17))
+      week = create(:event, start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 17, 17))
+
+      expect(Time.use_zone("Hawaii") { Event.find(two_day.id).day_count }).to eq(2)
+      expect(week.day_count).to eq(5)
+    end
+  end
+
   describe "#date_title" do
     it "labels the event by date and title, without the time or parens" do
       event = build(:event, title: "Youth Creativity Day", start_date: Time.zone.local(2026, 9, 14, 14, 9))
