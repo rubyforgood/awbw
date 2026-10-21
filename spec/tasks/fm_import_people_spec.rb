@@ -21,6 +21,9 @@ RSpec.describe "fm:import_people" do
     Rake::Task[task].reenable
     Rake::Task[task].invoke
     output.string
+  rescue SystemExit => e
+    # An escaped exit would end the whole suite as if it had passed, so fail the example instead.
+    raise "#{task} aborted: #{e.message}"
   ensure
     $stdout = original_stdout
     ENV.delete("DRY_RUN")
@@ -29,7 +32,7 @@ RSpec.describe "fm:import_people" do
 
   context "with no tag aliases recorded" do
     it "stops before reading a row" do
-      expect { run_task(dry_run: false) }.to raise_error(SystemExit)
+      expect { run_task(dry_run: false) }.to raise_error(/aborted: No tag aliases recorded/)
       expect(Person.where(filemaker_code: "00200")).to be_empty
     end
   end
