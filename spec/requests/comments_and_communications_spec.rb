@@ -56,7 +56,7 @@ RSpec.describe "Comments and communications", type: :request do
       expect(card.text).to include("Attended")
     end
 
-    it "names an on-demand training by its title, which carries the year" do
+    it "labels an on-demand training by its year" do
       training = create(:event, title: "On-Demand Facilitator Training 2026", facilitator_training: true, on_demand: true,
                                 start_date: Time.zone.local(2026, 1, 1, 9), end_date: Time.zone.local(2026, 12, 31, 17))
       create(:event_registration, registrant: person, event: training, status: "registered")
@@ -64,7 +64,8 @@ RSpec.describe "Comments and communications", type: :request do
       get comments_and_communications_path(person_id: person.id)
 
       card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
-      expect(card.text).to include("On-Demand Facilitator Training 2026")
+      expect(card.text).to include("On-demand 2026")
+      expect(card.text).not_to include("On-Demand Facilitator Training")
       expect(card.text).not_to include("Jan 1")
     end
 
