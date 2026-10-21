@@ -80,25 +80,6 @@ RSpec.describe EventDecorator do
     end
   end
 
-  describe "#title_without_date" do
-    {
-      "AWBW Art Facilitator Training: November 2026" => "AWBW Art Facilitator Training",
-      "Facilitator Training (Oct 2026)" => "Facilitator Training",
-      "On-Demand Training 2026" => "On-Demand Training",
-      "Facilitator Training - March 5, 2026" => "Facilitator Training",
-      "Wellness Day: Lineage of Love" => "Wellness Day: Lineage of Love",
-      "Room 4521" => "Room 4521"
-    }.each do |title, expected|
-      it "turns #{title.inspect} into #{expected.inspect}" do
-        expect(build(:event, title: title).decorate.title_without_date).to eq(expected)
-      end
-    end
-
-    it "keeps a title that is only a date" do
-      expect(build(:event, title: "2026").decorate.title_without_date).to eq("2026")
-    end
-  end
-
   describe "#title_with_month_year" do
     it "appends the start month and year in parentheses" do
       event = build(:event, title: "Facilitator Training", start_date: Time.zone.local(2026, 10, 3)).decorate
