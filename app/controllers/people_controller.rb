@@ -338,7 +338,7 @@ class PeopleController < ApplicationController
 
     email = @person.preferred_email
     if email.blank?
-      redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), alert: "#{@person.name} has no email address on file."
+      redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), alert: "#{helpers.person_name(@person)} has no email address on file."
       return
     end
 

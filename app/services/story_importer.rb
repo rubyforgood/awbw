@@ -598,9 +598,9 @@ class StoryImporter
   end
 
   # Reflect the story's credit on the author's profile. An anonymous credit flags
-  # anonymous_contributions and leaves the display preference at its full_name
-  # default; otherwise the display preference is synced, but only when it is still
-  # the default (full_name) — a deliberate choice is honored.
+  # anonymous_contributions and leaves the display preference untouched; otherwise
+  # the display preference is synced, but only while it is still a default (blank,
+  # full_name, or the column default) — a deliberate choice is honored.
   def sync_author_profile(author, row, cols)
     return if @dry_run
     return unless author&.persisted?
@@ -612,9 +612,13 @@ class StoryImporter
     end
 
     pref = DISPLAY_PREF_BY_CREDIT[credit]
-    return if pref.nil? || (author.display_name_preference.present? && author.display_name_preference != "full_name")
+    return if pref.nil? || !default_display_preference?(author)
 
     author.update!(display_name_preference: pref)
+  end
+
+  def default_display_preference?(author)
+    author.display_name_preference.presence.in?([ nil, "full_name", Person.column_defaults["display_name_preference"] ])
   end
 
   def person_display(row, cols)

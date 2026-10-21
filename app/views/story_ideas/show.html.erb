@@ -35,7 +35,7 @@
           <% if @story_idea.created_by %>
             <%= user_button(@story_idea.created_by, data: { turbo_frame: "_top" }) %>
           <% else %>
-            <%= @story_idea.created_by&.name || "—" %>
+            <%= person_name(@story_idea.created_by) || "—" %>
           <% end %>
         </div>
         <div>
@@ -99,13 +99,13 @@
         <div class="hidden md:block"></div>
         <div>
           <span class="font-semibold text-gray-700">Created by:</span>
-          <%= @story_idea.created_by&.name %>
+          <%= person_name(@story_idea.created_by) %>
           <br><span class="text-gray-400"><%= @story_idea.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
         </div>
         <% if @story_idea.updated_at != @story_idea.created_at %>
           <div>
             <span class="font-semibold text-gray-700">Updated by:</span>
-            <%= @story_idea.updated_by&.name || "—" %>
+            <%= person_name(@story_idea.updated_by) || "—" %>
             <br><span class="text-gray-400"><%= @story_idea.updated_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>
           </div>
         <% end %>

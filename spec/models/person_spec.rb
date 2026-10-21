@@ -244,6 +244,34 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "profile defaults" do
+    let(:person) { Person.new }
+
+    it "shows the first name and last initial" do
+      expect(person.display_name_preference).to eq("first_name_last_initial")
+    end
+
+    it "hides pronouns, email, phone, and social media" do
+      expect(person).to have_attributes(profile_show_pronouns: false, profile_show_email: false, profile_show_phone: false, profile_show_social_media: false)
+    end
+
+    it "shows the rest of the profile" do
+      expect(person).to have_attributes(
+        profile_show_member_since: true,
+        profile_show_events_registered: true,
+        profile_show_workshop_variations: true,
+        profile_show_affiliations: true,
+        profile_show_resources: true,
+        profile_show_workshops: true,
+        profile_show_sectors: true,
+        profile_show_stories: true,
+        profile_show_bio: true,
+        profile_show_age_ranges: true,
+        profile_show_credentials: true
+      )
+    end
+  end
+
   describe "#name" do
     let(:person) { build(:person, first_name: "Jane", last_name: "Doe") }
 
@@ -542,18 +570,21 @@ RSpec.describe Person, type: :model do
 
     it 'filters by shared_contact_info matching a shared email but not a hidden one' do
       person_alice.update!(email: 'alice@example.com', profile_show_email: false)
+      person_bob.update!(profile_show_email: true)
 
       expect(Person.search_by_params(shared_contact_info: 'bob@example')).to include(person_bob)
       expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
     end
 
     it 'filters by shared_contact_info matching a shared login phone' do
+      person_bob.update!(profile_show_phone: true)
       person_bob.user.update!(phone: '555-0199')
 
       expect(Person.search_by_params(shared_contact_info: '555-0199')).to include(person_bob)
     end
 
     it 'filters by shared_contact_info matching terms across a name and a shared phone' do
+      person_alice.update!(profile_show_phone: true)
       person_alice.user.update!(phone: '555-0199')
 
       results = Person.search_by_params(shared_contact_info: 'Alice 555-0199')

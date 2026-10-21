@@ -4,7 +4,7 @@
   <% end %>
 
   <h1 class="text-primary mt-3 font-display text-lg font-semibold">
-    <%= @person.name %> &mdash; <%= @event.title %>
+    <%= person_name(@person) %> &mdash; <%= @event.title %>
   </h1>
 
   <%# Jump to the registrant's own (public) view of this registration — what they

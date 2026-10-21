@@ -55,6 +55,11 @@ class PersonPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  # Admins see the full name; everyone else sees the person's display-name preference.
+  def full_name?
+    admin?
+  end
+
   def checkout?
     admin?
   end

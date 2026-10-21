@@ -5,6 +5,7 @@ FactoryBot.define do
     association :updated_by, factory: :user
     first_name { Faker::Name.first_name.gsub("'", " ") }
     last_name { Faker::Name.last_name.gsub("'", " ") }
+    display_name_preference { "full_name" }
 
     trait :anonymous_contributions do
       anonymous_contributions { true }
