@@ -19,12 +19,12 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
-    it "shows the person's email on hover over their name in the title" do
+    it "titles the page with the person's profile chip, showing their name and email" do
       get comments_and_communications_path(person_id: person.id)
 
-      name = Nokogiri::HTML(response.body).at_css("h1 [title='primary@example.com']")
-      expect(name.text).to eq(person.full_name)
-      expect(name.name).to eq("span")
+      chip = Nokogiri::HTML(response.body).at_css("h1 a[href='#{person_path(person)}']")
+      expect(chip.text).to include(person.full_name)
+      expect(chip.text).to include("primary@example.com")
     end
 
     it "shows affiliated-since and current facilitator terms on hover over the person chip" do
@@ -49,8 +49,6 @@ RSpec.describe "Comments and communications", type: :request do
       link = doc.css("a").find { |a| a.text.strip == "Aisha's activity" }
       expect(link).to be_present
       expect(link["href"]).to eq(admin_activities_events_path(person_id: person.id, time_period: "all_time", audience: %w[visitors users staff], hide_account: "1", hide_interactions: "1"))
-      profile = doc.at_css("h1 a[href='#{person_path(person)}']")
-      expect(profile.text).to include(person.full_name)
       everyone = doc.css("a").find { |a| a.text.strip == "View everyone" }
       expect(everyone["href"]).to eq(comments_and_communications_path)
     end
@@ -468,6 +466,21 @@ RSpec.describe "Comments and communications", type: :request do
       row = doc.at_css("##{ActionView::RecordIdentifier.dom_id(autoemail)}")
       expect(row.text).to include("Welcome!")
       expect(row.at_css("button[data-action='edit-toggle#toggle']")).to be_nil
+    end
+
+    it "links an incoming row's sender chip to their profile with the facilitator hover card" do
+      organization = create(:organization, name: "Riverside Shelter")
+      create(:affiliation, person: person, organization: organization, start_date: Date.new(2023, 3, 1))
+      notification = create(:notification, :incoming, noticeable: person, recipient_email: "primary@example.com",
+                                                       email_subject: "Called in", kind: "manual_log",
+                                                       channel: "phone", recipient_role: "person", notification_type: 0)
+
+      get comments_and_communications_path(person_id: person.id), headers: { "Turbo-Frame" => "comments_and_communications_results" }
+
+      row = Nokogiri::HTML(response.body).at_css("##{ActionView::RecordIdentifier.dom_id(notification)}")
+      expect(row.at_css("a[href='#{person_path(person)}']")).to be_present
+      expect(row.text).to include("Riverside Shelter")
+      expect(row.text).to include("Started March 2023")
     end
 
     it "shows a Responded checkbox for an incoming manual communication" do
