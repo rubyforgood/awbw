@@ -10,14 +10,10 @@
       autocomplete: "off",
       class: "space-y-4" do %>
   <div class="mb-6 flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
-    <div class="w-full md:flex-1">
-      <%= label_tag :name, "Grant name", class: label_class %>
-      <%= text_field_tag :name, params[:name], class: field_class, placeholder: "Grant name" %>
-    </div>
-    <div class="w-full md:flex-1">
-      <%= label_tag :funder_name, "Funder name", class: label_class %>
-      <%= text_field_tag :funder_name, params[:funder_name], class: field_class, placeholder: "Organization or person" %>
-    </div>
+    <%= render "shared/filter_text", param: :name, label: "Grant name", placeholder: "Grant name",
+          field_class: field_class, label_class: label_class, wrapper_class: "w-full md:flex-1" %>
+    <%= render "shared/filter_text", param: :funder_name, label: "Funder name", placeholder: "Organization or person",
+          field_class: field_class, label_class: label_class, wrapper_class: "w-full md:flex-1" %>
     <div class="w-full md:w-32">
       <%= label_tag :funds, "Funds remaining", class: label_class %>
       <%= select_tag :funds,
