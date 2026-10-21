@@ -21,9 +21,10 @@ description: >-
   archive.</li><li>An imported person carries their service areas, settings,
   life experiences, age group, facilitator start date, and every home and
   mailing address and phone the old record held — and their profile dates from when FileMaker first
-  knew them, not from the day they were imported.</li></ul>
+  knew them, not from the day they were imported.</li><li>A contact's FileMaker
+  notes arrive as a comment on the person, not in the notes box staff write in
+  themselves.</li></ul>
 pro_tips:
   - "A contact who already has a portal record is linked to it rather than duplicated — matching takes the same name and the same email."
   - "A linked person's blank fields are filled in from FileMaker. Where FileMaker says something different, the portal's value is kept and a comment on the person lists what FileMaker had."
-  - "A contact's FileMaker notes arrive as a comment on the person, not in the notes box staff write in themselves."
 action_path: "/people"
