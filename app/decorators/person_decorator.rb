@@ -175,11 +175,17 @@ class PersonDecorator < ApplicationDecorator
     "Inactive"
   end
 
-  # Facilitator rows that are running now or scheduled, earliest first. Skips a
-  # no-show's zero-length stub, which records no facilitation.
-  def current_facilitator_affiliations
-    affiliations.select { |affiliation| affiliation.facilitator? && !affiliation.zero_length? && !affiliation.inactive_on? }
+  # Facilitator rows running now, earliest first.
+  def active_facilitator_affiliations
+    affiliations.select { |affiliation| affiliation.facilitator? && affiliation.active? }
                 .sort_by { |affiliation| affiliation.start_date || Date.current }
+  end
+
+  # Their latest facilitator-training registrations, newest event first, whatever
+  # the attendance outcome.
+  def recent_facilitator_training_registrations(limit: 3)
+    event_registrations.joins(:event).merge(Event.facilitator_trainings)
+                       .includes(:event).order(events: { start_date: :desc }).limit(limit)
   end
 
   def facilitator_since_range

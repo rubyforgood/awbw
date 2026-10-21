@@ -42,6 +42,20 @@ RSpec.describe "Comments and communications", type: :request do
       expect(card.text).to include("Started March 2023")
     end
 
+    it "lists the person's latest facilitator trainings with attendance in the hover card" do
+      training = create(:event, title: "Art Facilitator Training", facilitator_training: true,
+                                start_date: Time.zone.local(2026, 3, 5, 9), end_date: Time.zone.local(2026, 3, 6, 17))
+      create(:event_registration, registrant: person, event: training, status: "attended")
+
+      get comments_and_communications_path(person_id: person.id)
+
+      card = Nokogiri::HTML(response.body).at_css("h1 .group\\/person")
+      expect(card.text).to include("Facilitator trainings")
+      expect(card.text).to include("Art Facilitator Training")
+      expect(card.text).to include("Mar 5-6, 2026")
+      expect(card.text).to include("Attended")
+    end
+
     it "links to the person's activity history from the header" do
       person.update!(first_name: "Aisha")
       get comments_and_communications_path(person_id: person.id)

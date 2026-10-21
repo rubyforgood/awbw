@@ -185,22 +185,46 @@ RSpec.describe PersonDecorator do
     end
   end
 
-  describe "#current_facilitator_affiliations" do
+  describe "#active_facilitator_affiliations" do
     let(:person) { create(:person) }
 
-    it "lists running and scheduled facilitator terms, earliest first" do
-      upcoming = create(:affiliation, person: person, start_date: 1.month.from_now, end_date: nil)
-      active = create(:affiliation, person: person, start_date: 2.years.ago, end_date: 1.month.from_now)
+    it "lists running facilitator terms, earliest first" do
+      later = create(:affiliation, person: person, start_date: 1.year.ago, end_date: nil)
+      earlier = create(:affiliation, person: person, start_date: 2.years.ago, end_date: 1.month.from_now)
 
-      expect(person.decorate.current_facilitator_affiliations).to eq([ active, upcoming ])
+      expect(person.decorate.active_facilitator_affiliations).to eq([ earlier, later ])
     end
 
-    it "skips ended terms, no-show stubs, and non-facilitator titles" do
+    it "skips upcoming and ended terms and non-facilitator titles" do
+      create(:affiliation, person: person, start_date: 1.month.from_now, end_date: nil)
       create(:affiliation, person: person, start_date: 3.years.ago, end_date: 1.year.ago)
-      create(:affiliation, person: person, start_date: 1.week.from_now, end_date: 1.week.from_now)
       create(:affiliation, person: person, title: "Board member", start_date: 1.year.ago)
 
-      expect(person.decorate.current_facilitator_affiliations).to be_empty
+      expect(person.decorate.active_facilitator_affiliations).to be_empty
+    end
+  end
+
+  describe "#recent_facilitator_training_registrations" do
+    let(:person) { create(:person) }
+
+    it "returns their latest facilitator trainings, newest first, ignoring other events" do
+      old_training = create(:event, facilitator_training: true, start_date: 3.years.ago, end_date: 3.years.ago + 1.day)
+      recent_training = create(:event, facilitator_training: true, start_date: 1.month.ago, end_date: 1.month.ago + 1.day)
+      other_event = create(:event, facilitator_training: false, start_date: 1.week.ago, end_date: 1.week.ago + 1.day)
+      old_registration = create(:event_registration, registrant: person, event: old_training, status: "attended")
+      recent_registration = create(:event_registration, registrant: person, event: recent_training, status: "no_show")
+      create(:event_registration, registrant: person, event: other_event)
+
+      expect(person.decorate.recent_facilitator_training_registrations).to eq([ recent_registration, old_registration ])
+    end
+
+    it "caps the list" do
+      4.times do |i|
+        event = create(:event, facilitator_training: true, start_date: (i + 1).months.ago, end_date: (i + 1).months.ago + 1.day)
+        create(:event_registration, registrant: person, event: event)
+      end
+
+      expect(person.decorate.recent_facilitator_training_registrations.size).to eq(3)
     end
   end
 
