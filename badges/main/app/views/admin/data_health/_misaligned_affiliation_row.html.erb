@@ -3,7 +3,7 @@
 <% back = { return_to: "data_health", check: "misaligned_affiliation_provenance" } %>
 <% link_class = "font-medium text-gray-800 hover:text-blue-700 hover:underline" %>
 <% if record.person %>
-  <%= link_to record.person.name, edit_person_path(record.person, **back), target: "_blank", rel: "noopener", class: link_class %>
+  <%= link_to person_name(record.person), edit_person_path(record.person, **back), target: "_blank", rel: "noopener", class: link_class %>
 <% end %>
 —
 <%= link_to record.organization&.name, link_organization_event_registration_path(record.event_registration, **back),

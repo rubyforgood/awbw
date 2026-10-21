@@ -66,17 +66,17 @@ RSpec.describe PersonDecorator do
 
   describe "#hidden_profile_pieces" do
     it "is empty when every piece is shared" do
-      expect(create(:person).decorate.hidden_profile_pieces).to be_empty
+      expect(create(:person, profile_show_email: true).decorate.hidden_profile_pieces).to be_empty
     end
 
     it "lists hidden pieces that have something to show" do
-      person = create(:person, pronouns: "they/them", profile_show_pronouns: false, profile_show_workshops: false)
+      person = create(:person, pronouns: "they/them", profile_show_email: true, profile_show_pronouns: false, profile_show_workshops: false)
 
       expect(person.decorate.hidden_profile_pieces).to eq(%i[profile_show_pronouns profile_show_workshops])
     end
 
     it "skips hidden pieces with nothing to show" do
-      person = create(:person, pronouns: nil, bio: nil, profile_show_pronouns: false, profile_show_bio: false)
+      person = create(:person, pronouns: nil, bio: nil, profile_show_email: true, profile_show_pronouns: false, profile_show_bio: false)
 
       expect(person.decorate.hidden_profile_pieces).to be_empty
     end
