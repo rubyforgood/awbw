@@ -393,6 +393,29 @@ RSpec.describe DataHealth::UnconfiguredAppSettings do
     expect(check).not_to be_any
     expect(check.explanation).not_to include("Not chosen")
   end
+
+  context "when the portal issues CE credit" do
+    let!(:ce_registration) { create(:continuing_education_registration) }
+
+    def configured_setting(**attributes)
+      Setting.create!(organization: organization,
+                      return_address: address_for(organization),
+                      remittance_address: address_for(organization),
+                      **attributes)
+    end
+
+    it "counts a missing CE signatory, which certificates print" do
+      configured_setting
+
+      expect(described_class.new.explanation).to end_with("Not chosen: who signs CE certificates.")
+    end
+
+    it "stays quiet once someone is named" do
+      configured_setting(ce_administrator: create(:person))
+
+      expect(described_class.new).not_to be_any
+    end
+  end
 end
 
 RSpec.describe DataHealth::Worklists do

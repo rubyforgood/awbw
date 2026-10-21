@@ -57,6 +57,17 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(remittance_options.none? { |option| option["selected"] }).to be(true)
     end
 
+    it "offers the named CE administrator as the picker's current choice" do
+      administrator = create(:person, first_name: "Robin", last_name: "Signer")
+      Setting.create!(ce_administrator: administrator)
+      sign_in admin
+
+      get admin_settings_path
+
+      options = Nokogiri::HTML(response.body).at_css("select[name='setting[ce_administrator_id]']").css("option")
+      expect(options.find { |option| option["selected"] }.text).to include("Robin Signer")
+    end
+
     it "is denied to a non-admin" do
       sign_in create(:user)
 
@@ -93,6 +104,15 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(response).to have_http_status(:see_other)
       expect(Setting.current.return_address).to eq(return_address)
       expect(Setting.current.remittance_address).to eq(remittance_address)
+    end
+
+    it "names who signs CE certificates" do
+      administrator = create(:person)
+
+      patch admin_settings_path, params: { setting: { ce_administrator_id: administrator.id } }
+
+      expect(response).to have_http_status(:see_other)
+      expect(Setting.ce_administrator).to eq(administrator)
     end
 
     it "saves the attention line shown on the contact page" do

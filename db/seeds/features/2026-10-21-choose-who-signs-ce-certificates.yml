@@ -1,0 +1,13 @@
+name: "Choose who signs CE certificates"
+area: events
+display_status: admin_facing
+released_on: 2026-10-21
+action_path: /admin/settings
+pr_number: 2570
+summary: >-
+  App settings now holds the CE administrator — pick the person whose name prints
+  under the signature line on continuing education confirmations of attendance.
+  Before, the name was fixed in the code and only a developer could change it.
+pro_tips:
+  - "Change it the day someone new takes over CE — certificates issued after that print the new name."
+  - "The signature image itself is a separate upload: the \"CE certificate signatures\" resource."

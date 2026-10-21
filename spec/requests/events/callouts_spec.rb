@@ -1109,7 +1109,7 @@ RSpec.describe "Events::Callouts", type: :request do
       expect(response.body).to include(registration.registrant.full_name)
       expect(response.body).to include("LCSW 86747")
       expect(response.body).to include("Provider # #{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}")
-      expect(response.body).to include(ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME)
+      expect(response.body).to include(ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE)
       expect(response.body).to include("6 hours")
     end
 
@@ -1122,6 +1122,15 @@ RSpec.describe "Events::Callouts", type: :request do
       get registration_ce_certificate_path(registration.slug, ce_registration)
 
       expect(response.body).to include("5 Issuer Way, Springfield, IL 62704")
+    end
+
+    it "signs it with the person the app settings name" do
+      administrator = create(:person, first_name: "Robin", last_name: "Signer")
+      Setting.create!(ce_administrator: administrator)
+
+      get registration_ce_certificate_path(registration.slug, ce_registration)
+
+      expect(response.body).to include("Robin Signer, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}")
     end
 
     it "lists only the event staff titled as facilitators" do
@@ -1158,7 +1167,7 @@ RSpec.describe "Events::Callouts", type: :request do
       # photo) still displays.
       expect(response.body).to include("/rails/active_storage/representations/")
       expect(response.body).not_to include("/rails/active_storage/blobs/")
-      expect(response.body).to include("Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}")
+      expect(response.body).to include("Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}")
     end
 
     it "leaves the signature line blank when the training certificate's strip exists but the CE resource doesn't" do

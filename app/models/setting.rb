@@ -15,6 +15,7 @@ class Setting < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :return_address, class_name: "Address", optional: true
   belongs_to :remittance_address, class_name: "Address", optional: true
+  belongs_to :ce_administrator, class_name: "Person", optional: true
 
   # singleton is a constant true behind a unique index: MySQL has no CHECK-based
   # way to cap a table at one row, but a unique index on a constant does it.
@@ -88,11 +89,17 @@ class Setting < ApplicationRecord
   end
 
   def self.stored_address_lines(association)
-    return nil unless schema_ready?("#{association}_id")
-
-    current.public_send(association)&.display_lines.presence
+    stored_association(association)&.display_lines.presence
   end
   private_class_method :stored_address_lines
+
+  # The record the row points at, or nil when the column isn't there yet.
+  def self.stored_association(name)
+    return nil unless schema_ready?("#{name}_id")
+
+    current.public_send(name)
+  end
+  private_class_method :stored_association
 
   def self.app_organization_invoice_address_lines
     org = app_organization
@@ -107,6 +114,16 @@ class Setting < ApplicationRecord
   # former colleague's name on a public page.
   def self.contact_attention
     stored(:contact_attention)
+  end
+
+  # Who signs CE confirmation certificates. Blank until an admin names someone, so
+  # a staffing change never leaves a former colleague's name on a certificate.
+  def self.ce_administrator
+    stored_association(:ce_administrator)
+  end
+
+  def self.ce_administrator_name
+    ce_administrator&.full_name.presence
   end
 
   # The public contact mailbox, shown on the contact page, the story-share footer,

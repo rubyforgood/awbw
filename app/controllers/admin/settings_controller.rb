@@ -23,6 +23,7 @@ module Admin
     def setting_params
       params.require(:setting).permit(:organization_id, :info_email, :reply_to_email, :invoice_prefix,
                                       :return_address_id, :remittance_address_id, :contact_attention,
+                                      :ce_administrator_id,
                                       :programs_email, :no_reply_email,
                                       :annual_membership_cents, :membership_renewal_window_days,
                                       :membership_grace_period_days)

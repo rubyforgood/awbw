@@ -42,6 +42,7 @@ module DataHealth
           labels << "a tax ID on #{organization.name}" if organization.present? && organization.tax_id.blank?
           labels << "a return address for invoices" if setting.return_address.blank?
           labels << "a remittance address for checks" if setting.remittance_address.blank?
+          labels << "who signs CE certificates" if setting.ce_administrator.blank? && ContinuingEducationRegistration.exists?
         end
       end
     end

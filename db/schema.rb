@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_121917) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_134412) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2052,6 +2052,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_121917) do
     t.bigint "return_address_id"
     t.bigint "remittance_address_id"
     t.string "contact_attention"
+    t.bigint "ce_administrator_id"
+    t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
     t.index ["created_by_id"], name: "index_settings_on_created_by_id"
     t.index ["organization_id"], name: "index_settings_on_organization_id"
     t.index ["remittance_address_id"], name: "index_settings_on_remittance_address_id"
@@ -2901,6 +2903,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_121917) do
   add_foreign_key "settings", "addresses", column: "remittance_address_id", on_delete: :nullify
   add_foreign_key "settings", "addresses", column: "return_address_id", on_delete: :nullify
   add_foreign_key "settings", "organizations"
+  add_foreign_key "settings", "people", column: "ce_administrator_id", on_delete: :nullify
   add_foreign_key "staff_aliases", "users"
   add_foreign_key "staff_taggings", "staff_tags"
   add_foreign_key "stories", "organizations"

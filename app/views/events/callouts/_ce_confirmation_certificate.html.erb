@@ -6,6 +6,7 @@
     An admin-uploaded "CE certificate frame" renders full-bleed, with the content in a
     centered safe area, matching the other framed certificates. %>
 <% issuing_address = app_organization_address_line %>
+<% signatory = [ Setting.ce_administrator_name, ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE ].compact_blank.join(", ") %>
 <% if frame_file %>
   <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
     <%= image_tag frame_file, alt: "",
@@ -35,10 +36,10 @@
         <div class="flex-1">
           <% if signature_file&.variable? %>
             <%= image_tag signature_file.variant(:card),
-                  alt: "Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}",
+                  alt: "Signed by #{signatory}",
                   class: "mb-[0.4cqw] h-[7cqw] w-auto object-contain object-left" %>
           <% end %>
-          <p class="border-t border-gray-400 pt-[0.4cqw] text-[1.6cqw] font-semibold text-gray-900"><%= ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME %>, <%= ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE %></p>
+          <p class="border-t border-gray-400 pt-[0.4cqw] text-[1.6cqw] font-semibold text-gray-900"><%= signatory %></p>
         </div>
         <div class="w-[22%]">
           <p class="text-center text-[1.6cqw] text-gray-900"><%= issued_on.strftime("%-m/%-d/%y") %></p>
@@ -102,10 +103,10 @@
             (e.g. a HEIC phone photo most browsers can't show raw) displays. %>
         <% if signature_file&.variable? %>
           <%= image_tag signature_file.variant(:card),
-                alt: "Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}",
+                alt: "Signed by #{signatory}",
                 class: "mb-1 h-14 w-auto object-contain object-left" %>
         <% end %>
-        <p class="border-t border-gray-400 pt-1 text-sm font-semibold text-gray-900"><%= ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME %>, <%= ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE %></p>
+        <p class="border-t border-gray-400 pt-1 text-sm font-semibold text-gray-900"><%= signatory %></p>
       </div>
       <div class="w-40">
         <p class="text-center text-sm text-gray-900"><%= issued_on.strftime("%-m/%-d/%y") %></p>

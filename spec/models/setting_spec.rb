@@ -132,6 +132,18 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".ce_administrator_name" do
+    it "names the person the row points at" do
+      Setting.create!(ce_administrator: create(:person, first_name: "Robin", last_name: "Signer"))
+
+      expect(described_class.ce_administrator_name).to eq("Robin Signer")
+    end
+
+    it "is blank until an admin picks someone, so no former colleague is printed" do
+      expect(described_class.ce_administrator_name).to be_nil
+    end
+  end
+
   describe "validations" do
     it "rejects a malformed email" do
       setting = described_class.new(info_email: "not-an-email")
