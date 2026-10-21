@@ -60,10 +60,11 @@ module PersonServices
 
     attr_reader :results, :differences
 
-    def initialize(scope: FmRolodex.all, relink: false, progress: nil)
+    def initialize(scope: FmRolodex.all, relink: false, progress: nil, run: nil)
       @scope = scope
       @relink = relink
       @progress = progress
+      @run = run
       @results = OUTCOMES.index_with { [] }
       @differences = []
       @imported_codes = Person.where.not(filemaker_code: [ nil, "" ]).pluck(:filemaker_code)
@@ -73,6 +74,7 @@ module PersonServices
     end
 
     def call
+      @tracker = Ahoy::Tracker.new
       @address_index = FmRolodex.contact_index(FmAddress)
       @phone_index = FmRolodex.contact_index(FmPhoneNumber)
       read = 0
@@ -95,9 +97,13 @@ module PersonServices
 
     # Each batch commits on its own (a savepoint inside a dry run's rollback), so a run that
     # stops partway keeps what it finished; the rerun skips those rows as already imported.
+    # Its activity events, tagged with the run, commit with it — UndoRolodexImport reads them.
     def import_batch(batch)
       ActiveRecord::Base.transaction(requires_new: true) do
-        batch.each { |rolodex| import(rolodex.preload_contacts(addresses: @address_index, phone_numbers: @phone_index)) }
+        Analytics::LifecycleBuffer.tagging(@run ? { import_run: @run } : {}) do
+          batch.each { |rolodex| import(rolodex.preload_contacts(addresses: @address_index, phone_numbers: @phone_index)) }
+        end
+        Analytics::LifecycleBuffer.flush_to(@tracker)
       end
     end
 

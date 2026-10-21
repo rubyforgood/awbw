@@ -339,6 +339,31 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00065").comments).to be_empty
   end
 
+  describe "the activity it logs" do
+    around do |example|
+      Current.source = "fm_import_people"
+      example.run
+    ensure
+      Current.reset
+    end
+
+    def run_events(run) = Ahoy::Event.where("JSON_UNQUOTE(JSON_EXTRACT(properties, '$.import_run')) = ?", run)
+
+    it "tags every record it creates or fills with the run" do
+      linked = create(:person, first_name: "Grace", last_name: "Hopper", email: "grace@example.com")
+      rolodex("00110", EMail: "ada@example.com")
+      rolodex("00111", FirstName: "Grace", LastName: "Hopper", EMail: "grace@example.com", Pronouns: "she/her")
+
+      described_class.new(run: "run-1").call
+      created = Person.find_by!(filemaker_code: "00110")
+
+      expect(run_events("run-1").where(name: "create.person").map { |event| event.properties["resource_id"] }).to eq([ created.id ])
+      fill = run_events("run-1").find_by!(name: "update.person")
+      expect(fill.properties).to include("resource_id" => linked.id)
+      expect(fill.properties["changes"]).to include("pronouns" => { "before" => nil, "after" => "she/her" })
+    end
+  end
+
   describe "batches" do
     before { stub_const("#{described_class}::BATCH_SIZE", 1) }
 
