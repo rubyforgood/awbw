@@ -8,7 +8,7 @@
 class Setting < ApplicationRecord
   DEFAULT_ORGANIZATION_NAME = "A Window Between Worlds".freeze
   DEFAULT_INVOICE_PREFIX = "INV".freeze
-  DEFAULT_PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
+  PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
   DEFAULT_CE_ADMINISTRATOR_TITLE = "CE Administrator".freeze
   DEFAULT_ANNUAL_MEMBERSHIP_CENTS = 2500
   DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS = 30
@@ -180,11 +180,11 @@ class Setting < ApplicationRecord
     stored(:reply_to_email) || ENV["REPLY_TO_EMAIL"].presence
   end
 
-  # The domain marking an address as a stand-in rather than a real one. RFC 2606
-  # reserves example.com so nothing can be delivered to it, which is why this is
-  # off the settings form — a routable domain here would mail real people.
+  # The domain marking an address as a stand-in rather than a real one. Fixed, not
+  # configurable: RFC 2606 reserves example.com so nothing can be delivered to it,
+  # and a routable domain here would mail people who have no address on file.
   def self.placeholder_email_domain
-    ENV["PLACEHOLDER_EMAIL_DOMAIN"].presence || DEFAULT_PLACEHOLDER_EMAIL_DOMAIN
+    PLACEHOLDER_EMAIL_DOMAIN
   end
 
   # Leading tag on generated invoice numbers, e.g. "INV-004".

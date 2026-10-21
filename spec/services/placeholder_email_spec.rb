@@ -18,9 +18,8 @@ RSpec.describe PlaceholderEmail do
     expect(described_class).not_to be_domain_address("jane@awbw.org")
   end
 
-  context "when the deployment sets its own domain" do
-    before { allow(ENV).to receive(:[]).and_call_original }
-    before { allow(ENV).to receive(:[]).with("PLACEHOLDER_EMAIL_DOMAIN").and_return("placeholder.invalid") }
+  context "when the domain changes" do
+    before { allow(Setting).to receive(:placeholder_email_domain).and_return("placeholder.invalid") }
 
     it "builds every form of the match from that one value" do
       expect(described_class.first).to eq("1@placeholder.invalid")
