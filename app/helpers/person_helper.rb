@@ -7,7 +7,7 @@ module PersonHelper
     allowed_to?(:full_name?, person) ? person.full_name : person.name
   end
 
-  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, tint: nil, path_params: {}, width_class: "w-full", compact: false)
+  def person_profile_button(person, truncate_at: nil, subtitle: nil, display_name: nil, data: {}, inactive: false, tint: nil, path_params: {}, width_class: "w-full", compact: false, show_title: true)
     # Compact mode shrinks the whole control (padding, avatar, type) for dense
     # tables like the registrants roster where horizontal space is at a premium.
     padding = compact ? "px-2 py-1" : "px-4 py-2"
@@ -29,7 +29,7 @@ module PersonHelper
 
     link_to person_path(person, **path_params),
             data: { turbo_prefetch: false }.merge(data),
-            title: hover_title,
+            title: (hover_title if show_title),
             class: "group relative flex items-center gap-2
                     #{width_class} #{padding}
                     border #{palette[:border]} #{palette[:bg]} #{palette[:hover_bg]} rounded-lg
