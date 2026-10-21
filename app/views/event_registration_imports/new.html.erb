@@ -18,6 +18,12 @@
     Required: <span class="font-medium">FirstName</span> and <span class="font-medium">LastName</span>.
     Every other column is optional — leave out what you don't have. Export your spreadsheet as a .csv first.
   </p>
+  <p class="mb-4 text-sm">
+    <%= link_to template_event_registration_import_path(format: :csv), class: "font-medium #{DomainTheme.text_class_for(:event_registrations, intensity: 700)} hover:underline" do %>
+      <i class="fa-solid fa-download"></i> Download the CSV template
+    <% end %>
+    <span class="text-gray-500">— every column we read, spelled the way we expect. Delete the ones you don't have.</span>
+  </p>
   <details class="mb-6 rounded-lg border border-gray-200 bg-white text-sm text-gray-600">
     <summary class="cursor-pointer px-4 py-2 font-medium text-gray-700">Columns we read</summary>
     <dl class="space-y-2 px-4 pb-4">

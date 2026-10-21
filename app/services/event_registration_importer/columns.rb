@@ -51,6 +51,22 @@ class EventRegistrationImporter
 
     HEADER_FIELDS = HEADER_ALIASES.flat_map { |field, labels| labels.map { |label| [ label, field ] } }.to_h.freeze
 
+    # The downloadable template's header row: one spelling per readable column, in
+    # the order the upload page groups them, so staff start from the exact labels
+    # rather than guessing which alias we accept. A spec holds this to every field
+    # in HEADER_ALIASES, so a new column can't ship without a place in the template.
+    TEMPLATE_HEADERS = %w[
+      FirstName LastName EMail Nickname Pronouns SecondaryEmail
+      Status Day1 Day2 Day3 Day4 Day5 RegisteredOn
+      Organization Position OrganizationWebsite OrganizationType
+      OrganizationStreet OrganizationCity OrganizationState OrganizationZip OrganizationCountry
+      Street City State Zip Country AddressType Phone PhoneType
+      PrimarySector AdditionalSectors PrimaryAgeGroup AdditionalAgeGroups
+      CE LicenseType LicenseNumber LicenseState LicenseExpires
+      Scholarship AmountPaid PaymentType CheckNumber
+      SomeoneElseWillPay InvoiceRequested W9Requested PostSurveyCompleted CertificateSent
+    ].freeze
+
     DAY_KEYS = (1..EventRegistration::DAY_FIELDS.size).to_h { |day| [ day, :"day_#{day}" ] }.freeze
 
     STATUSES = {

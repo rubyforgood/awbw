@@ -1,8 +1,11 @@
+require "csv"
+
 class EventRegistrationImportsController < ApplicationController
   # Admin-only flow for bulk-importing registrants into one event from a CSV.
   #
-  #   new     → pick the event + upload form
-  #   create  → dry-run preview of what would be created (nothing written)
+  #   new      → pick the event + upload form
+  #   template → download the header row to fill in
+  #   create   → dry-run preview of what would be created (nothing written)
   #   confirm → run the real import against the stashed file
   #
   # The uploaded file is stashed as an ActiveStorage blob between the preview and
@@ -53,6 +56,14 @@ class EventRegistrationImportsController < ApplicationController
   rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
     redirect_to new_event_registration_import_path,
                 alert: "That upload is no longer available — please choose the file again."
+  end
+
+  def template
+    authorize! EventRegistration, to: :import?
+
+    csv = CSV.generate { |out| out << EventRegistrationImporter::Columns::TEMPLATE_HEADERS }
+    send_data csv, filename: "event-registrants-import-template.csv",
+                   type: "text/csv", disposition: "attachment"
   end
 
   private

@@ -40,6 +40,29 @@ RSpec.describe "Event registration imports", type: :request do
       expect(response.body).to include("← Admin home", %(href="#{admin_path}"))
     end
 
+    it "offers the CSV template for download" do
+      sign_in admin
+      get template_event_registration_import_path(format: :csv)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to include("event-registrants-import-template.csv")
+      expect(response.body.lines.first).to start_with("FirstName,LastName,EMail")
+    end
+
+    it "keeps the template admin-only" do
+      sign_in regular_user
+      get template_event_registration_import_path(format: :csv)
+
+      expect(response).not_to have_http_status(:ok)
+    end
+
+    it "links to the template from the upload page" do
+      sign_in admin
+      get new_event_registration_import_path
+
+      expect(response.body).to include("Download the CSV template")
+    end
+
     it "redirects non-admins" do
       sign_in regular_user
       get new_event_registration_import_path

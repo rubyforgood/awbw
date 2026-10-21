@@ -496,15 +496,25 @@ exempt; this is for the message that says the work is finished.
 
 ## Response formatting
 
-**Structure the answer; don't hand back a wall of text.** Long replies are for scanning
-first and reading second.
+**Answer in short bullets and sub-bullets — never paragraphs.** This is the default for
+every reply, not just long ones. Prose is the exception, allowed only when the user asks
+for prose or when a single sentence genuinely says everything.
 
-- **Lead with the direct answer** when the user asked a question, then the detail.
+- **Bullets, not sentences.** One fact per bullet. Fragments are good. Drop "this", "the",
+  filler verbs, and hedging where the meaning survives.
+- **Sub-bullets for detail**, nested under the bullet they belong to — not trailing clauses
+  on the parent bullet.
+- **Super short.** Aim for one line per bullet. If a bullet needs a comma-spliced second
+  clause, split it into a sub-bullet.
+- **Lead with the direct answer** when the user asked a question, then the detail beneath it.
+- **Bold lead-in** naming the thing, then the point: `- **Grouping key** — CheckNumber.`
 - **Group under headers** (`##`/`###`) once a reply covers more than one topic.
-- **Use titled bullets** — a bold lead-in naming the thing, then the explanation — rather
-  than consecutive bare paragraphs.
-- **Nest detail under the point it belongs to** instead of running it inline.
-- Keep tables for genuinely tabular comparisons; keep prose short inside each bullet.
+- Keep tables for genuinely tabular comparisons.
+- **Recommendations get a verdict first** — "do it" / "skip it" / "later" — then the why
+  as sub-bullets.
+
+This governs user-facing replies. It does not shorten code comments, commit messages, or
+PR descriptions, which have their own rules above.
 
 ## Quick Commands
 
