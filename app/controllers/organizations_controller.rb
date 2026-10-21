@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-  include AhoyTracking, TagAssignable, Dedupable
+  include AhoyTracking, Dedupable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
   def index
@@ -115,7 +115,6 @@ class OrganizationsController < ApplicationController
     end
 
     if @organization.save
-      assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to @organization, notice: "Organization was successfully created."
     else
       set_form_variables
@@ -128,7 +127,6 @@ class OrganizationsController < ApplicationController
     @organization.assign_attributes(organization_params)
 
     if @organization.save
-      assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to organization_path(@organization), notice: "Organization was successfully updated.", status: :see_other
     else
       set_form_variables
@@ -189,15 +187,6 @@ class OrganizationsController < ApplicationController
     # no-show confers no facilitation (ADR-0001 D8a). One representative
     # registration per training, newest first.
     @organization_inactive_training_registrations = inactive_only_training_registrations
-
-    @org_categories_grouped = Category
-      .includes(:category_type)
-      .published
-      .order(:position, :name)
-      .group_by(&:category_type)
-      .select { |type, _| type&.profile_specific? && type.name != AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }
-      .sort_by { |type, _| type&.name.to_s.downcase }
-    @managed_category_type_ids = @org_categories_grouped.map { |type, _| type.id }
   end
 
   def set_index_variables

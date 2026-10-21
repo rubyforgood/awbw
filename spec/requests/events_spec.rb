@@ -3442,11 +3442,10 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Veterans")
         end
 
-        it "hides the life experiences and settings cards when registrants have no tags" do
+        it "hides the life experiences card when registrants have no tags" do
           get roster_event_path(owned_event), headers: charts_headers
 
           expect(response.body).not_to include("Life experiences")
-          expect(response.body).not_to include("Settings")
         end
 
         it "anchors its breakdown sections and drills each row back into this page" do

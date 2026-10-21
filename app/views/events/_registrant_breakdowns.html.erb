@@ -50,7 +50,6 @@
 <% program_status_data = program_status_rows.map { |label, count, _| [ label, count ] } %>
 <% program_status_palette = program_status_rows.map { |_, _, color| color } %>
 <% life_experience_data = data.life_experiences.map { |c| [ c.name, data.life_experience_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
-<% settings_data = data.settings.map { |c| [ c.name, data.settings_counts.fetch(c.id, 0) ] }.sort_by { |_, count| -count } %>
 
 <%# Shared pie palette: slice i and its legend swatch i both use palette[i]. %>
 <% palette = %w[#3b82f6 #ef4444 #f59e0b #10b981 #6366f1 #ec4899 #14b8a6 #f97316 #8b5cf6 #84cc16 #06b6d4 #eab308 #a855f7 #22c55e #fb7185] %>
@@ -66,7 +65,6 @@
   <% country_paths = data.country_counts.keys.index_with { |country| index_path.(country: country) } %>
   <% school_district_paths = data.school_district_counts.keys.index_with { |district| index_path.(school_district: district) } %>
   <% life_experience_paths = data.life_experiences.to_h { |c| [ c.name, index_path.(life_experience: c.id) ] } %>
-  <% settings_paths = data.settings.to_h { |c| [ c.name, index_path.(setting: c.id) ] } %>
   <% program_status_paths = program_status_data.to_h { |label, _| [ label, index_path.(program_status: label.downcase) ] } %>
   <% other_response_paths = {} %>
   <% scholarship_pie_paths = { "Scholarship" => index_path.(scholarship: "yes"), "No scholarship" => index_path.(scholarship: "no") } %>
@@ -83,7 +81,6 @@
   <% country_paths = data.country_registrant_ids_by_country.transform_values { |ids| by_ids.(ids) } %>
   <% school_district_paths = data.school_district_registrant_ids_by_district.transform_values { |ids| by_ids.(ids) } %>
   <% life_experience_paths = data.life_experiences.to_h { |c| [ c.name, by_ids.(data.life_experience_registrant_ids_by_category.fetch(c.id, [])) ] } %>
-  <% settings_paths = data.settings.to_h { |c| [ c.name, by_ids.(data.settings_registrant_ids_by_category.fetch(c.id, [])) ] } %>
   <% program_status_paths = data.program_status_registrant_ids.to_h { |status, ids| [ status.to_s.titleize, by_ids.(ids) ] } %>
   <% other_response_paths = data.other_sector_response_rows.to_h { |text, _count, ids| [ text, by_ids.(ids) ] } %>
   <% all_registrant_ids = data.registrants.map(&:id) %>
@@ -101,7 +98,6 @@
   <% country_paths = data.country_registrant_ids_by_country.transform_values { |ids| by_ids.(ids) } %>
   <% school_district_paths = data.school_district_registrant_ids_by_district.transform_values { |ids| by_ids.(ids) } %>
   <% life_experience_paths = data.life_experiences.to_h { |c| [ c.name, by_ids.(data.life_experience_registrant_ids_by_category.fetch(c.id, [])) ] } %>
-  <% settings_paths = data.settings.to_h { |c| [ c.name, by_ids.(data.settings_registrant_ids_by_category.fetch(c.id, [])) ] } %>
   <% program_status_paths = data.program_status_registrant_ids.to_h { |status, ids| [ status.to_s.titleize, by_ids.(ids) ] } %>
   <% other_response_paths = data.other_sector_response_rows.to_h { |text, _count, ids| [ text, by_ids.(ids) ] } %>
   <% all_registrant_ids = data.registrant_ids %>
@@ -110,7 +106,7 @@
   <% ce_pie_paths = { "CE" => by_ids.(data.ce_registrant_ids), "No CE" => by_ids.(all_registrant_ids - data.ce_registrant_ids) } %>
 <% else %>
   <% primary_sector_paths = sector_paths = age_group_paths = all_age_group_paths = {} %>
-  <% state_paths = country_paths = school_district_paths = life_experience_paths = settings_paths = {} %>
+  <% state_paths = country_paths = school_district_paths = life_experience_paths = {} %>
   <% program_status_paths = other_response_paths = scholarship_pie_paths = ce_pie_paths = {} %>
 <% end %>
 
@@ -207,8 +203,5 @@
   <% end %>
   <% if life_experience_data.any? %>
     <%= render "breakdown_card", title: "Life experiences", data: life_experience_data, chart: :bar, palette: palette, row_paths: life_experience_paths %>
-  <% end %>
-  <% if settings_data.any? %>
-    <%= render "breakdown_card", title: "Settings", data: settings_data, chart: :bar, palette: palette, row_paths: settings_paths %>
   <% end %>
 </div>

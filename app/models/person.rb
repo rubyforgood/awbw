@@ -142,7 +142,7 @@ class Person < ApplicationRecord
   # Age ranges edit through cocoon nested fields like sectors. A scoped view of
   # categorizable_items (AgeRange categories only) so the form's add/remove and
   # primary toggle round-trip as nested attributes — the is_primary flag splits
-  # primary vs additional, no separate primary_age_category_ids param needed.
+  # primary vs additional.
   has_many :age_range_categorizable_items,
            -> { joins(category: :category_type).where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }) },
            class_name: "CategorizableItem", as: :categorizable, inverse_of: :categorizable
@@ -601,21 +601,12 @@ class Person < ApplicationRecord
     }
   end
 
-  # Field identifiers whose "Other" free text maps onto the category-backed
-  # profile fields shown on the edit page.
-  OTHER_WORKSHOP_SETTING_IDENTIFIERS = FormField::AGE_GROUP_FIELD_IDENTIFIERS
-
   # Free-text "Other" sectors the person typed on registration forms, captured
   # as OtherResponse records (see EventRegistrationServices::PublicRegistration).
   # They can't be Sector records, so they're surfaced beside the sector tags —
   # only while pending or explicitly kept (dismissed/promoted ones drop off).
   def other_sector_responses
     other_responses.sectors.visible.order(:text)
-  end
-
-  # Free-text "Other" workshop settings (category-backed fields) from forms.
-  def other_workshop_setting_responses
-    other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
   end
 
   # The age-range nested items in category position order for the cocoon chip
@@ -651,15 +642,6 @@ class Person < ApplicationRecord
         dup.persisted? ? dup.mark_for_destruction : age_range_categorizable_items.delete(dup)
       end
     end
-  end
-
-  def other_form_responses(identifiers)
-    form_submissions
-      .joins(form_answers: :form_field)
-      .where(form_fields: { field_identifier: identifiers })
-      .pluck("form_answers.submitted_answer")
-      .flat_map { |answer| OtherOption.texts(answer) }
-      .uniq
   end
 
   def normalize_names_and_emails

@@ -456,61 +456,6 @@ set_category_positions.(age_range_type, age_ranges.map { |name, _, position| [ n
   end
 end
 
-puts "Creating WorkshopEnvironment CategoryType…"
-workshop_settings_type = find_or_create_by_name!(CategoryType, "WorkshopEnvironment") do |ct|
-  ct.display_text = "Workshop Settings"
-  ct.story_specific = false
-  ct.profile_specific = true
-  ct.published = true
-end
-workshop_settings_type.update!(display_text: "Workshop Settings", story_specific: false, profile_specific: true, published: true)
-
-# Canonical workshop settings, in display order. The parenthetical examples from
-# the registration form live in each option's description, shown as subtext under
-# the option so the label stays a clean, clickable phrase. Obvious settings have
-# no description. Admins can rename, re-describe, reorder, and publish/unpublish
-# each from the Categories admin once seeded.
-workshop_settings = [
-  [ "Clinical setting", "Community mental health, outpatient, etc" ],
-  [ "Educational setting", "Schools, universities, etc" ],
-  [ "Events and conferences", nil ],
-  [ "Faith-based setting", nil ],
-  [ "Home visits", nil ],
-  [ "Hospitals", nil ],
-  [ "Law enforcement/court/legal", nil ],
-  [ "Outreach program", "Drop-in services, support groups, etc" ],
-  [ "Prisons/jails", nil ],
-  [ "Private practice", nil ],
-  [ "Residential program", "Emergency shelters, inpatient, etc" ],
-  [ "Virtually", nil ],
-  [ "With staff", nil ],
-  [ "Other", "Please specify below." ]
-]
-
-# Park existing positions above the canonical range so we can renumber 1..N without
-# tripping the unique [category_type_id, position] index mid-reconcile.
-workshop_settings_type.categories.order(:id).each_with_index do |cat, i|
-  cat.update_columns(position: 10_000 + i)
-end
-
-workshop_settings.each_with_index do |(name, description), index|
-  # Match the clean name, or the earlier "Name (examples)" form that baked the
-  # examples into the label, so a category seeded before descriptions moved into
-  # their own column is renamed in place — preserving its taggings — rather than
-  # duplicated and left orphaned.
-  cat = workshop_settings_type.categories.where("LOWER(name) = LOWER(?)", name).first ||
-        workshop_settings_type.categories.where("LOWER(name) LIKE LOWER(?)", "#{name} (%").first
-  cat ||= workshop_settings_type.categories.create!(name: name)
-  cat.update!(name: name, published: true, description: description)
-  cat.update_columns(position: index + 1)
-end
-
-# Hide settings that are no longer offered without destroying historical taggings.
-canonical_names = workshop_settings.map { |name, _| name.downcase }
-workshop_settings_type.categories
-  .reject { |cat| canonical_names.include?(cat.name.downcase) }
-  .each { |cat| cat.update!(published: false) }
-
 # Post-event survey templates — the standalone forms the Day 1 / Day 2 / Scholarship
 # recipients survey callouts deliver inline. Shared with the data:seed_survey_forms
 # task so prod can create them without the full seed. Idempotent on form name.

@@ -25,11 +25,6 @@ RSpec.describe EventDashboard do
     let(:experience2) { create(:category, name: "Survivors", category_type: story_population) }
     let(:experience_excluded) { create(:category, name: "Elders", category_type: story_population) }
 
-    let(:workshop_environment) { create(:category_type, name: "WorkshopEnvironment") }
-    let(:setting1) { create(:category, name: "Clinical", category_type: workshop_environment) }
-    let(:setting2) { create(:category, name: "Educational", category_type: workshop_environment) }
-    let(:setting_excluded) { create(:category, name: "Virtually", category_type: workshop_environment) }
-
     let(:age_range) { create(:category_type, name: "AgeRange") }
     let(:age_group1) { create(:category, name: "Adults", category_type: age_range) }
     let(:age_group2) { create(:category, name: "Teens", category_type: age_range) }
@@ -89,13 +84,6 @@ RSpec.describe EventDashboard do
       create(:categorizable_item, category: experience1, categorizable: person2)
       create(:categorizable_item, category: experience2, categorizable: person2)
       create(:categorizable_item, category: experience_excluded, categorizable: cancelled_person)
-
-      # Workshop settings (WorkshopEnvironment categories) on registrants; the
-      # excluded one belongs to the cancelled person.
-      create(:categorizable_item, category: setting1, categorizable: person1)
-      create(:categorizable_item, category: setting1, categorizable: person2)
-      create(:categorizable_item, category: setting2, categorizable: person2)
-      create(:categorizable_item, category: setting_excluded, categorizable: cancelled_person)
 
       # Primary age group(s) served, captured as "primary_age_group" answers on
       # each registrant's registration submission (", "-joined AgeRange ids).
@@ -362,26 +350,6 @@ RSpec.describe EventDashboard do
         map = dashboard.life_experience_registrant_ids_by_category
         expect(map[experience1.id]).to contain_exactly(person1.id, person2.id)
         expect(map[experience2.id]).to contain_exactly(person2.id)
-      end
-    end
-
-    describe "settings" do
-      it "returns unique setting categories across active registrants" do
-        expect(dashboard.settings).to contain_exactly(setting1, setting2)
-      end
-
-      it "counts distinct registrants per setting" do
-        expect(dashboard.settings_counts).to eq(setting1.id => 2, setting2.id => 1)
-      end
-
-      it "returns the registrant ids tagged with a setting" do
-        expect(dashboard.settings_registrant_ids).to contain_exactly(person1.id, person2.id)
-      end
-
-      it "maps each setting to its registrant ids" do
-        map = dashboard.settings_registrant_ids_by_category
-        expect(map[setting1.id]).to contain_exactly(person1.id, person2.id)
-        expect(map[setting2.id]).to contain_exactly(person2.id)
       end
     end
 
