@@ -1,5 +1,6 @@
 class Payment < ApplicationRecord
-  include FilemakerCoded
+  include FilemakerCoded, PersonNameSearchable
+
   filemaker_archived_in FmPayment
   has_paper_trail
   PAYER_TYPES = %w[Person Organization].freeze
@@ -72,15 +73,6 @@ class Payment < ApplicationRecord
     pattern = "%#{sanitize_sql_like(query)}%"
     where("CAST(metadata AS CHAR) LIKE :q OR stripe_charge_id LIKE :q", q: pattern)
   end
-
-  scope :by_person_name, ->(query) {
-    return all if query.blank?
-    needle = "%#{sanitize_sql_like(query.to_s.strip.downcase)}%"
-    joins(:person).where(
-      "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
-      "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle",
-      needle: needle)
-  }
 
   def payer
     case payer_type

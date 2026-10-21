@@ -1,4 +1,6 @@
 class Membership < ApplicationRecord
+  include PersonNameSearchable
+
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :updated_by, class_name: "User", optional: true
 
@@ -44,16 +46,6 @@ class Membership < ApplicationRecord
   scope :ended, ->(as_of = Date.current) {
     where("end_date IS NULL OR end_date < ?", as_of)
       .where.not(id: MembershipInvoice.overdue(as_of).select(:membership_id))
-  }
-
-  scope :by_person_name, ->(query) {
-    return all if query.blank?
-
-    needle = "%#{sanitize_sql_like(query.to_s.strip.downcase)}%"
-    joins(:person).where(
-      "LOWER(CONCAT(people.first_name, ' ', people.last_name)) LIKE :needle " \
-      "OR LOWER(people.first_name) LIKE :needle OR LOWER(people.last_name) LIKE :needle",
-      needle: needle)
   }
 
   after_update :cancel_stripe_subscription, if: :just_autorenewal_cancelled?
