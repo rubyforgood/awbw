@@ -38,7 +38,7 @@
           <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
             <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">
               <%= link_to event.compact_label, attendance_event_path(report.event, ce: ("true" if report.ce_only?), return_to: "signins"),
-                    title: report.event.title, class: "hover:text-gray-700 hover:underline" %>
+                    title: event.hover_title, class: "hover:text-gray-700 hover:underline" %>
               <span class="ml-1 normal-case font-normal text-gray-400"><%= event.date_range %></span>
             </h2>
             <%= link_to "Open timesheets →", attendance_event_path(report.event, ce: ("true" if report.ce_only?), return_to: "signins"),

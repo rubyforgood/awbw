@@ -18,6 +18,20 @@ RSpec.describe "People index registration quick-links", type: :request do
     expect(response.body).to include(event_registration_path(registration))
   end
 
+  it "shows the event title and month as the quick-link tooltip" do
+    person = create(:person, first_name: "Trainee")
+    training = create(:event, title: "Equip Yourself", abbreviation: "TAC251", facilitator_training: true,
+                              start_date: Time.zone.local(2026, 10, 3))
+    create(:event_registration, registrant: person, event: training)
+
+    travel_to Time.zone.local(2026, 10, 1) do
+      get people_path, headers: turbo_headers
+    end
+
+    link = Capybara.string(response.body).find("a", text: "TAC251")
+    expect(link[:title]).to eq("Equip Yourself · October 2026")
+  end
+
   it "drops the old-training fallback when a training already falls in the window" do
     person = create(:person, first_name: "Trainee")
     old_training = create(:event, title: "OldTAC", facilitator_training: true,

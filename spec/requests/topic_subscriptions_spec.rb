@@ -41,8 +41,8 @@ RSpec.describe "TopicSubscriptions", type: :request do
       expect(response.body).to include("Dana Rivers")
       # The registrations column collapses to a compact attendance-status pill.
       expect(response.body).to include("Attended")
-      # The training's name and date ride along in the pill's hover tooltip.
-      expect(response.body).to include("TAC263 Spring Training · May 3, 2024")
+      # The training's name and month ride along in the pill's hover tooltip.
+      expect(response.body).to include("TAC263 Spring Training · May 2024")
       # Only facilitator-training events appear.
       expect(response.body).not_to include("Community Open House")
       # Row action is a plain link (no JS) to the subscription's edit page.

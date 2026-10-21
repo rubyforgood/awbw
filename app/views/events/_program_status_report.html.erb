@@ -34,7 +34,7 @@
           <% group.columns.each do |column| %>
             <tr id="<%= training_report_row_id(column.event) %>" class="scroll-mt-24">
               <td class="border border-gray-200 px-3 py-2">
-                <%= link_to column.label, dashboard_event_path(column.event), class: "text-blue-600 hover:underline", title: column.event.title %>
+                <%= link_to column.label, dashboard_event_path(column.event), class: "text-blue-600 hover:underline", title: column.event.decorate.hover_title %>
                 <% if column.date_label %><span class="ml-1 text-xs text-gray-400"><%= column.date_label %></span><% end %>
               </td>
               <td class="border border-gray-200 px-3 py-2 whitespace-nowrap text-gray-600">

@@ -155,7 +155,7 @@
                       <% person.index_quick_registrations.each do |registration| %>
                         <%= link_to registration.event.decorate.compact_label, event_registration_path(registration),
                                 data: { turbo_frame: "_top" },
-                                title: "#{registration.event.title} registration",
+                                title: registration.event.decorate.hover_title,
                                 class: admin_button_classes(size: nil, extra: "px-2.5 py-1 text-xs max-w-[160px] truncate") %>
                       <% end %>
                     </div>

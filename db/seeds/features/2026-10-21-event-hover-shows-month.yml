@@ -1,0 +1,7 @@
+name: "Event labels show the month on hover"
+area: events
+display_status: admin_facing
+released_on: 2026-10-21
+summary: >-
+  Hovering a short event label (like an abbreviation chip) now shows the full
+  event title and its month and year, so same-named events are easy to tell apart.
