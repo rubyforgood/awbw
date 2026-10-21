@@ -194,6 +194,20 @@ RSpec.describe EventCopyService do
       expect(copy.registration_ticket_callouts.custom.flat_map(&:forms)).to eq([ built ])
     end
 
+    it "keeps a built form anonymous when the source form is" do
+      form = create(:form, name: "CE evaluation", role: "general", anonymous: true)
+      create(:form_field, form: form, name: "How useful was it?", position: 1)
+      create(:registration_ticket_callout, event: event, form: form)
+      blueprint = other_environment_blueprint(event)
+      form.update!(name: "Renamed in this environment")
+
+      copy = described_class.new(blueprint, match_by: :natural).call(start_on: new_start_on)
+
+      built = copy.registration_ticket_callouts.custom.flat_map(&:forms).sole
+      expect(built).not_to eq(form)
+      expect(built).to be_anonymous
+    end
+
     it "adds only the missing questions and options to a same-name form, keeping its id and answers" do
       form = create(:form, name: "Registration", role: "registration")
       facilitator = create(:form_field, form: form, name: "Are you a facilitator?", position: 1, field_identifier: "facilitator")
