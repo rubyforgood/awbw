@@ -150,6 +150,16 @@ RSpec.describe Person, type: :model do
 
         expect(person.update(pronouns: "they/them")).to be(true)
       end
+
+      # The admin form always posts person[email], so an otherwise unrelated edit to a
+      # legacy person carries a blank one and gets asked for an address.
+      it "asks a legacy person for an email once a blank one is posted" do
+        person = create(:person, user: nil, email: "legacy@example.com")
+        person.update_column(:email, nil)
+
+        expect(person.update(pronouns: "they/them", email: "")).to be(false)
+        expect(person.errors[:email]).to include(Person::EMAIL_REQUIRED_MESSAGE)
+      end
     end
 
     describe "unique_name_and_email_combination" do
@@ -507,6 +517,31 @@ RSpec.describe Person, type: :model do
       add_phone("555-0001", primary: true, inactive: true)
       add_phone("555-0002")
       expect(phone_numbers).to all(eq("555-0002"))
+    end
+  end
+
+  describe "#preferred_email" do
+    it "prefers the login email, then the record email, then the secondary" do
+      on_login = create(:person, user: create(:user, email: "login@example.com"), email: "record@example.com")
+      on_record = create(:person, user: nil, email: "record@example.com", email_2: "second@example.com")
+      on_second = create(:person, :legacy_without_email, user: nil, email_2: "second@example.com")
+
+      expect(on_login.preferred_email).to eq("login@example.com")
+      expect(on_record.preferred_email).to eq("record@example.com")
+      expect(on_second.preferred_email).to eq("second@example.com")
+    end
+
+    it "falls through the no-email placeholder to the secondary email" do
+      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: "second@example.com")
+
+      expect(person.preferred_email).to eq("second@example.com")
+    end
+
+    it "is nil when the placeholder is the only address" do
+      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: nil)
+
+      expect(person.preferred_email).to be_nil
+      expect(person.email).to eq(Person::PLACEHOLDER_EMAIL)
     end
   end
 

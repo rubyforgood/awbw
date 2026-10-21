@@ -61,5 +61,16 @@ RSpec.describe PersonInviter do
       }.not_to change(User, :count)
       expect(ActionMailer::Base.deliveries).to be_empty
     end
+
+    it "skips a person whose only address is the no-email placeholder" do
+      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: nil)
+
+      expect {
+        result = described_class.call(person: person, sender: sender)
+        expect(result.invited).to be(false)
+        expect(result.reason).to eq(:no_email)
+      }.not_to change(User, :count)
+      expect(ActionMailer::Base.deliveries).to be_empty
+    end
   end
 end

@@ -560,8 +560,17 @@ class Person < ApplicationRecord
       .reverse
   end
 
+  def placeholder_email?
+    email.to_s.casecmp?(PLACEHOLDER_EMAIL)
+  end
+
+  # The placeholder records "no address on file", so it never stands in for a real one.
+  def email_on_file
+    email.presence unless placeholder_email?
+  end
+
   def preferred_email
-    user&.email.presence || email.presence || email_2.presence
+    user&.email.presence || email_on_file || email_2.presence
   end
 
   def communications_email
@@ -673,7 +682,8 @@ class Person < ApplicationRecord
     self.email_2 = email_2&.strip
   end
 
-  # Legacy people saved before email was required stay valid until their email changes.
+  # Legacy rows with no email stay valid while the attribute is left alone; a posted blank
+  # counts as a change, so the admin form asks for an address.
   def email_present
     return if email.present? || user&.email.present?
 

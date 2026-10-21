@@ -5,8 +5,9 @@ released_on: 2026-10-17
 pr_number: 2646
 action_path: "/people/new"
 summary: >-
-  A person can no longer be saved without an email. If they don't have one,
-  enter the placeholder 1@example.com and the form will accept it.
+  A person can no longer be saved without an email. If they don't have one, enter the
+  placeholder 1@example.com — the portal reads that as "no address on file", so they are
+  left out of emails and show no address. A person with a login already counts as having one.
 pro_tips:
-  - "A person with a login already counts as having an email, so you don't need to fill in Primary email for them."
-  - "People added before this change keep working until someone edits their email."
+  - "Search people for example.com to pull up everyone marked with the placeholder."
+  - "Editing someone added before this change will ask you for an email before it saves."

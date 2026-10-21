@@ -3,7 +3,7 @@
 <p class="mb-3 text-sm text-gray-600">AWBW staff change your email addresses and their types for you.</p>
 <% pending_requests = person.profile_change_requests.pending.where(field: ProfileChangeRequest::EMAIL_FIELDS).index_by(&:field) %>
 <% emails = [
-     { field: "primary_email", label: "Primary email", address: person.user&.email || person.email,
+     { field: "primary_email", label: "Primary email", address: person.user&.email.presence || person.email_on_file,
        type: person.email_type.presence || person.user&.email_type },
      { field: "secondary_email", label: "Secondary email", address: person.email_2, type: person.email_2_type }
    ] %>
