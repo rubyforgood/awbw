@@ -36,4 +36,12 @@ RSpec.describe AddressServices::DuplicateFinder do
 
     expect(described_class.new.groups.first.label).to eq(person.full_name)
   end
+
+  it "skips addresses left on a legacy owner type" do
+    person = create(:person)
+    2.times { create(:address, addressable: person, **attrs) }
+    Address.where(addressable: person).update_all(addressable_type: "Facilitator")
+
+    expect(described_class.new.groups).to be_empty
+  end
 end

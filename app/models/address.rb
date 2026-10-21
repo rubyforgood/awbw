@@ -14,6 +14,8 @@ class Address < ApplicationRecord
     PR GU VI AS MP
   ].freeze
 
+  ADDRESSABLE_TYPES = %w[Person Organization].freeze
+
   belongs_to :addressable, polymorphic: true, touch: true
   # Affiliations that point to this address as their organization address. Nullify
   # the link rather than block deletion when an org address is removed.
@@ -31,6 +33,7 @@ class Address < ApplicationRecord
   validates :phone, length: { maximum: 255 }
 
   scope :active, -> { where(inactive: false) }
+  scope :with_known_addressable, -> { where(addressable_type: ADDRESSABLE_TYPES) }
 
   def name
     "#{street_address}, #{city}, #{state} #{zip_code}"

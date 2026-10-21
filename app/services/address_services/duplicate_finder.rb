@@ -19,7 +19,7 @@ module AddressServices
     end
 
     def groups
-      @scope.includes(:addressable).order(:id).to_a
+      @scope.with_known_addressable.includes(:addressable).order(:id).to_a
         .group_by { |address| [ address.addressable_type, address.addressable_id ] }
         .filter_map { |_owner, addresses| group_for(addresses) }
         .sort_by { |group| group.label.to_s.downcase }
