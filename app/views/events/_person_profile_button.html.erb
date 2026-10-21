@@ -11,7 +11,7 @@
 <% person_link_params = local_assigns[:return_to] == "bulk_payments" ?
      { return_to: "bulk_payments", event_id: local_assigns[:event]&.id, expand: local_assigns[:expand] } : {} %>
 <%= link_to person_path(person, person_link_params),
-            title: "#{profile_person.name} — #{person.preferred_email}",
+            title: "#{person_name(profile_person)} — #{person.preferred_email}",
             data: { turbo_frame: "_top" },
             class: "inline-flex items-center gap-2 shrink-0 rounded-lg border border-sky-300 bg-sky-100 hover:bg-sky-200 px-3 py-2 shadow-sm transition-colors" do %>
   <% if profile_person.avatar.present? %>
@@ -19,10 +19,10 @@
                   class: "h-5 w-5 rounded-full object-cover border border-sky-300" %>
   <% else %>
     <span class="flex h-5 w-5 items-center justify-center rounded-full border border-sky-300 bg-sky-200 text-xs font-bold text-sky-700">
-      <%= profile_person.name.first.upcase %>
+      <%= person_name(profile_person).first.upcase %>
     </span>
   <% end %>
   <% if show_name %>
-    <span class="truncate font-semibold text-sky-800"><%= profile_person.name %></span>
+    <span class="truncate font-semibold text-sky-800"><%= person_name(profile_person) %></span>
   <% end %>
 <% end %>

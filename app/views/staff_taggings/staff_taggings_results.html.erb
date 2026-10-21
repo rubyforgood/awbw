@@ -26,12 +26,12 @@
                       doesn't read as a link to the person's profile. Carries return_to so the
                       edit page's eyebrow, Cancel, and post-save redirect return to this list. %>
                   <%= link_to edit_staff_tagging_path(tagging, return_to: "staff_taggings"),
-                              title: [ person&.name, person.try(:preferred_email) ].compact_blank.join(" — "),
+                              title: [ person_name(person), person.try(:preferred_email) ].compact_blank.join(" — "),
                               class: "group flex w-56 max-w-full items-center gap-2 overflow-hidden rounded-lg border border-gray-300 bg-gray-100 px-2 py-1 leading-tight text-gray-700 shadow-sm transition-colors duration-200 hover:bg-gray-200",
                               data: { turbo_frame: "_top", turbo_prefetch: false } do %>
                     <i class="fa-solid fa-user-tag flex-shrink-0 text-gray-500"></i>
                     <div class="flex min-w-0 flex-col justify-center">
-                      <span class="truncate text-xs font-semibold"><%= truncate(person&.name.to_s, length: 30) %></span>
+                      <span class="truncate text-xs font-semibold"><%= truncate(person_name(person).to_s, length: 30) %></span>
                       <% if person.try(:preferred_email).present? %>
                         <!--email_off--><span class="truncate text-xs font-normal text-gray-500"><%= person.preferred_email %></span><!--email_on-->
                       <% end %>

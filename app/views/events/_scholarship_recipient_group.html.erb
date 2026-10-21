@@ -11,9 +11,9 @@
       <% recipients.each do |recipient| %>
         <li>
           <%= link_to scholarship_recipient_registrants_path(event, recipient),
-                title: recipient.name,
+                title: person_name(recipient),
                 class: "group/reciplink flex items-center justify-between gap-2 rounded px-1 -mx-1 py-0.5 hover:bg-gray-50" do %>
-            <span class="truncate min-w-0 group-hover/reciplink:underline"><%= recipient.name %></span>
+            <span class="truncate min-w-0 group-hover/reciplink:underline"><%= person_name(recipient) %></span>
             <span class="flex items-center gap-2 shrink-0">
               <span class="tabular-nums text-gray-500"><%= dollars_from_cents(amounts_by_recipient_id[recipient.id]) %></span>
               <i class="fa-solid fa-arrow-up-right-from-square text-2xs text-transparent group-hover/reciplink:text-gray-500"></i>

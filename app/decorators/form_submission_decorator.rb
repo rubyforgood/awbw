@@ -5,7 +5,7 @@ class FormSubmissionDecorator < ApplicationDecorator
   # back to what the payer typed on the form — bulk-payment payers routinely
   # have no account, so `person` is nil — then a neutral placeholder for the name.
   def payer_name
-    return object.person.name if object.person
+    return h.person_name(object.person) if object.person
     typed_payer_name || "Anonymous payer"
   end
 

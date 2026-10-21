@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_112434) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_110524) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1649,7 +1649,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_112434) do
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
-    t.string "display_name_preference"
+    t.string "display_name_preference", default: "first_name_last_initial"
     t.string "email"
     t.string "email_2"
     t.string "email_2_type"
@@ -1668,15 +1668,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_112434) do
     t.boolean "profile_show_age_ranges", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
     t.boolean "profile_show_credentials", default: true, null: false
-    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_email", default: false, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false
     t.boolean "profile_show_monthly_reports", default: true, null: false
-    t.boolean "profile_show_phone", default: true, null: false
-    t.boolean "profile_show_pronouns", default: true, null: false
+    t.boolean "profile_show_phone", default: false, null: false
+    t.boolean "profile_show_pronouns", default: false, null: false
     t.boolean "profile_show_resources", default: true, null: false
     t.boolean "profile_show_sectors", default: true, null: false
-    t.boolean "profile_show_social_media", default: true, null: false
+    t.boolean "profile_show_social_media", default: false, null: false
     t.boolean "profile_show_stories", default: true, null: false
     t.boolean "profile_show_workshop_logs", default: true, null: false
     t.boolean "profile_show_workshop_variations", default: true, null: false
@@ -2031,6 +2031,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_112434) do
     t.index ["created_by_id"], name: "index_sectors_on_created_by_id"
     t.index ["story_share_position"], name: "index_sectors_on_story_share_position"
     t.index ["updated_by_id"], name: "index_sectors_on_updated_by_id"
+  end
+
+  create_table "staff_aliases", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.boolean "ignored", default: false, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.integer "user_id"
+    t.index ["name"], name: "index_staff_aliases_on_name", unique: true
+    t.index ["user_id"], name: "index_staff_aliases_on_user_id"
   end
 
   create_table "staff_taggings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2859,6 +2871,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_112434) do
   add_foreign_key "sectorable_items", "users", column: "updated_by_id"
   add_foreign_key "sectors", "users", column: "created_by_id"
   add_foreign_key "sectors", "users", column: "updated_by_id"
+  add_foreign_key "staff_aliases", "users"
   add_foreign_key "staff_taggings", "staff_tags"
   add_foreign_key "stories", "organizations"
   add_foreign_key "stories", "people", column: "author_id"

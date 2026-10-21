@@ -135,7 +135,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       expect(person.display_name_preference).to eq("first_name_only")
       expect(service.profile_changes).to include(
         anonymous_contributions: [ false, true ],
-        display_name_preference: [ nil, "first_name_only" ]
+        display_name_preference: [ "full_name", "first_name_only" ]
       )
     end
 

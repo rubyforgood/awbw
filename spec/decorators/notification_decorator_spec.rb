@@ -85,13 +85,14 @@ RSpec.describe NotificationDecorator, type: :decorator do
     end
 
     it "links to the registration's edit page when asked" do
-      registration = build_stubbed(:event_registration, event: build_stubbed(:event, abbreviation: "TOS205"))
+      event = build_stubbed(:event, abbreviation: "TOS205", title: "Trauma of Separation", start_date: Time.zone.local(2026, 10, 8))
+      registration = build_stubbed(:event_registration, event: event)
       notification = build_stubbed(:notification, noticeable: registration)
 
-      chip = notification.decorate.event_chip(linked: true)
+      chip = Capybara.string(notification.decorate.event_chip(linked: true)).find("a")
 
-      expect(chip).to include("<a")
-      expect(chip).to include(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+      expect(chip[:href]).to eq(Rails.application.routes.url_helpers.edit_event_registration_path(registration))
+      expect(chip[:title]).to eq("Registration for Trauma of Separation · October 2026")
     end
 
     it "stays a plain span even when linked if there is no registration to link to" do
@@ -192,6 +193,8 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "person-name resolution" do
+    before { allow(Draper::ViewContext.current.send(:view_context)).to receive(:allowed_to?).with(:full_name?, anything).and_return(false) }
+
     it "shows the person's name and hovers the email when the recipient is on file" do
       create(:person, first_name: "Tiombe", last_name: "Wallace", email: "tiombe@example.com")
       decorated = create(:notification, recipient_email: "tiombe@example.com").decorate
@@ -263,6 +266,8 @@ RSpec.describe NotificationDecorator, type: :decorator do
   end
 
   describe "#to_value / #from_value" do
+    before { allow(Draper::ViewContext.current.send(:view_context)).to receive(:allowed_to?).with(:full_name?, anything).and_return(false) }
+
     it "links the resolved contact to their edit page" do
       person = create(:person, email: "kim@example.com")
       decorated = create(:notification, recipient_email: "kim@example.com").decorate

@@ -21,24 +21,6 @@ module AgeGroupTaggable
     age_range_categories(primary: false)
   end
 
-  # Backs the edit form's "Primary" toggles — which currently-tagged AgeRange
-  # categories are marked primary.
-  def primary_age_category_ids
-    primary_age_groups.map(&:id)
-  end
-
-  # Flip is_primary on the AgeRange categorizable_items to match the given set.
-  # Runs after category membership has been assigned (the edit-form flow), so it
-  # only updates existing items rather than creating them.
-  def apply_primary_age_groups!(primary_category_ids)
-    primary = sanitize_age_ids(primary_category_ids).to_set
-    age_range_items_relation.includes(:category).find_each do |item|
-      desired = primary.include?(item.category_id)
-      item.update!(is_primary: desired) if item.is_primary? != desired
-    end
-    categorizable_items.reset
-  end
-
   # Tag AgeRange categories as primary/additional. A category named in both lists
   # is treated as primary; when a primary is given, any prior primary the caller
   # didn't re-select is demoted (reassigned).

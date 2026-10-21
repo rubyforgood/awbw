@@ -77,7 +77,7 @@ class PersonDecorator < ApplicationDecorator
 
   # The address shown on the person's profile — excludes the admin-only email_2.
   def profile_email
-    user&.email.presence || email.presence
+    user&.email.presence || object.email_on_file
   end
 
   def profile_phone

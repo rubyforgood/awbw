@@ -361,12 +361,12 @@ RSpec.describe "Events", type: :request do
         expect(hrefs).to include(a_string_including("payment_status=unpaid"))
       end
 
-      it "labels an event by its abbreviation when set, keeping the full title as a tooltip" do
-        paid_training.update!(abbreviation: "TAC261")
+      it "labels an event by its abbreviation when set, keeping the full title and month as a tooltip" do
+        paid_training.update!(abbreviation: "TAC261", start_date: Time.zone.local(2026, 5, 15))
         sign_in admin
         get revenue_events_path
         expect(response.body).to include("TAC261")
-        expect(response.body).to include('title="TAC 261"')
+        expect(Capybara.string(response.body)).to have_css("span[title='TAC 261 · May 2026']", text: "TAC261")
       end
 
       it "links each drillable revenue KPI to its filtered registrant list" do
@@ -3442,11 +3442,10 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Veterans")
         end
 
-        it "hides the life experiences and settings cards when registrants have no tags" do
+        it "hides the life experiences card when registrants have no tags" do
           get roster_event_path(owned_event), headers: charts_headers
 
           expect(response.body).not_to include("Life experiences")
-          expect(response.body).not_to include("Settings")
         end
 
         it "anchors its breakdown sections and drills each row back into this page" do

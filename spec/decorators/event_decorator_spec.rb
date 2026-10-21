@@ -98,6 +98,24 @@ RSpec.describe EventDecorator do
     end
   end
 
+  describe "#hover_title" do
+    it "joins the title and start month and year with a dot" do
+      event = build(:event, title: "Facilitator Training", start_date: Time.zone.local(2026, 10, 3)).decorate
+      expect(event.hover_title).to eq("Facilitator Training · October 2026")
+    end
+
+    it "falls back to the bare title when there is no start date" do
+      event = build(:event, title: "Facilitator Training", start_date: nil).decorate
+      expect(event.hover_title).to eq("Facilitator Training")
+    end
+
+    it "skips the month for on-demand events" do
+      event = build(:event, title: "On-Demand Training 2026", on_demand: true,
+                    start_date: Time.zone.local(2026, 1, 1)).decorate
+      expect(event.hover_title).to eq("On-Demand Training 2026")
+    end
+  end
+
   describe "#archive_status_label" do
     it "reads as Draft for an unpublished event" do
       event = build(:event, :unpublished).decorate
@@ -367,7 +385,7 @@ RSpec.describe EventDecorator do
         create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
                                               display_from: 23.days.from_now)
         event.reload
-        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+        reveal = DripDate.label(event.videoconference_details_available_from)
 
         apple = Nokogiri::HTML.fragment(event.decorate.calendar_links).css("a").find { |a| a.text == "Apple" }
 
@@ -429,7 +447,7 @@ RSpec.describe EventDecorator do
         create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
                                               display_from: 23.days.from_now)
         event.reload
-        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+        reveal = DripDate.label(event.videoconference_details_available_from)
 
         apple = Nokogiri::HTML.fragment(
           event.decorate.calendar_links(show_videoconference_details: false, payment_pending: true)
@@ -469,7 +487,7 @@ RSpec.describe EventDecorator do
         create(:registration_ticket_callout, event: event, builtin_key: "videoconference",
                                               display_from: 23.days.from_now)
         event.reload
-        reveal = event.videoconference_details_available_from.to_date.strftime("%B %-d, %Y")
+        reveal = DripDate.label(event.videoconference_details_available_from)
 
         doc = Nokogiri::HTML.fragment(event.decorate.videoconference_calendar_pending_note_html("/registration/abc/ticket"))
         link = doc.at_css("a")

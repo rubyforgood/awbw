@@ -14,18 +14,8 @@
   <!-- Search Fields -->
   <div class="flex flex-wrap items-end gap-6 md:flex-nowrap">
     <!-- KEYWORDS -->
-    <div class="min-w-[200px] flex-1 pb-2">
-      <label for="query" class="<%= search_label_class %>">
-        Keywords
-      </label>
-
-      <div class="relative">
-        <%= text_field_tag :query, params[:query],
-                           class: search_field_class(extra: "bg-white pr-10") %>
-
-        <%= render "shared/search_submit" %>
-      </div>
-    </div>
+    <%= render "shared/filter_text", param: :query, label: "Keywords", submit: true,
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[200px] flex-1 pb-2" %>
 
     <!-- VISIBILITY -->
     <div class="min-w-[150px] pb-2">

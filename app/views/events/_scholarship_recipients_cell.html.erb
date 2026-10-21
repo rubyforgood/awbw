@@ -3,7 +3,7 @@
     list recipients (name + scholarship $) split funded vs unfunded; otherwise it
     renders a plain, non-expandable label. Pass `column` (an
     EventScholarshipReport::Column). %>
-<td class="border border-gray-200 px-3 py-2 align-top" title="<%= column.event.title %>">
+<td class="border border-gray-200 px-3 py-2 align-top" title="<%= column.event.decorate.hover_title %>">
   <% if column.scholarship_count.positive? %>
     <details class="group/recipients">
       <summary class="-mx-1 flex cursor-pointer list-none items-start justify-between gap-2 rounded px-1 py-0.5 select-none hover:bg-fuchsia-50 [&::-webkit-details-marker]:hidden">

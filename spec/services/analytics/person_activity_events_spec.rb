@@ -113,6 +113,112 @@ RSpec.describe Analytics::PersonActivityEvents do
       end
     end
 
+    describe "deleted records" do
+      def deleted(type, id, attributes)
+        event(resource_type: type, resource_id: id, name: "destroy.#{type.constantize.table_name.singularize}",
+              properties: { "attributes" => attributes })
+      end
+
+      it "includes a deleted record's whole history, found through its delete snapshot" do
+        created = event(resource_type: "Affiliation", resource_id: 9_101, name: "create.affiliation")
+        destroyed = deleted("Affiliation", 9_101, "person_id" => person.id)
+
+        expect(described_class.new(person).relation).to include(created, destroyed)
+      end
+
+      it "matches a polymorphic owner by its type and id" do
+        address = deleted("Address", 9_102, "addressable_type" => "Person", "addressable_id" => person.id)
+        not_theirs = deleted("Address", 9_103, "addressable_type" => "Organization", "addressable_id" => person.id)
+
+        relation = described_class.new(person).relation
+        expect(relation).to include(address)
+        expect(relation).not_to include(not_theirs)
+      end
+
+      it "follows a deleted record's children through the deleted parent" do
+        registration = deleted("EventRegistration", 9_104, "registrant_id" => person.id)
+        ce = deleted("ContinuingEducationRegistration", 9_105, "event_registration_id" => 9_104)
+        allocation = deleted("Allocation", 9_106, "allocatable_type" => "ContinuingEducationRegistration", "allocatable_id" => 9_105)
+
+        expect(described_class.new(person).relation).to include(registration, ce, allocation)
+      end
+
+      it "matches a deleted child of a record that still exists" do
+        live = create(:event_registration, registrant: person)
+        entry = deleted("EventAttendanceTimeEntry", 9_107, "event_registration_id" => live.id)
+
+        expect(described_class.new(person).relation).to include(entry)
+      end
+
+      it "keys a deleted STI payment under its subclass and matches its refunds via the base class" do
+        payment = deleted("CashPayment", 9_108, "person_id" => person.id)
+        refund = deleted("Refund", 9_109, "refundable_type" => "Payment", "refundable_id" => 9_108)
+
+        expect(described_class.new(person).relation).to include(payment, refund)
+      end
+
+      it "includes a comment left on a deleted record" do
+        deleted("Affiliation", 9_110, "person_id" => person.id)
+        comment = deleted("Comment", 9_111, "commentable_type" => "Affiliation", "commentable_id" => 9_110)
+
+        expect(described_class.new(person).relation).to include(comment)
+      end
+
+      it "includes the login events of the person's deleted user account" do
+        person.user.update_columns(person_id: nil)
+        deleted("User", 9_114, "person_id" => person.id)
+        login = create(:ahoy_event, visit: visit, name: "auth.login",
+                                    properties: { "record_id" => 9_114, "record_type" => "User" })
+
+        expect(described_class.new(person).relation).to include(login)
+      end
+
+      it "excludes deleted records that belonged to someone else" do
+        other = create(:person)
+        theirs = deleted("Affiliation", 9_112, "person_id" => other.id)
+        their_child = deleted("ContinuingEducationRegistration", 9_113, "event_registration_id" => 9_999)
+
+        relation = described_class.new(person).relation
+        expect(relation).not_to include(theirs)
+        expect(relation).not_to include(their_child)
+      end
+
+      it "maps an owner column for every record type in the history" do
+        owners = described_class::DELETED_RECORD_OWNERS
+        map = described_class.new(person).send(:resource_ids_by_type)
+
+        expect(owners.keys).to match_array(map.keys - %w[Person Comment])
+        owners.each do |type, columns|
+          klass = type.constantize
+          columns.each_key do |column|
+            known = klass.column_names.include?(column) || klass.reflect_on_association(column)&.polymorphic?
+            expect(known).to be(true), "#{type} has no #{column} column or polymorphic belongs_to"
+          end
+        end
+      end
+    end
+
+    describe "#deleted_comment_events" do
+      def deleted_comment(id, commentable_type, commentable_id)
+        event(resource_type: "Comment", resource_id: id, name: "destroy.comment",
+              properties: { "attributes" => { "commentable_type" => commentable_type, "commentable_id" => commentable_id } })
+      end
+
+      it "lists comments deleted from the person's live and deleted records, newest first" do
+        on_profile = deleted_comment(9_201, "Person", person.id)
+        event(resource_type: "Affiliation", resource_id: 9_202, name: "destroy.affiliation",
+              properties: { "attributes" => { "person_id" => person.id } })
+        on_deleted_parent = deleted_comment(9_203, "Affiliation", 9_202)
+
+        expect(described_class.new(person).deleted_comment_events).to eq([ on_deleted_parent, on_profile ])
+      end
+
+      it "leaves out comments deleted from someone else's records" do
+        deleted_comment(9_204, "Person", create(:person).id)
+        expect(described_class.new(person).deleted_comment_events).to be_empty
+      end
+    end
+
     describe "records that reach the person through a parent" do
       let(:registration) { create(:event_registration, registrant: person) }
 
