@@ -26,7 +26,7 @@ module EventChippable
     registration = event_registration if linked
 
     if registration
-      h.link_to(label, h.edit_event_registration_path(registration), title: event.decorate.hover_title,
+      h.link_to(label, h.edit_event_registration_path(registration), title: "Registration for #{event.decorate.hover_title}",
                 data: { turbo_frame: "_top" }, class: "#{chip_class} hover:underline", **options)
     else
       h.content_tag(:span, label, { class: chip_class, title: event.decorate.hover_title }.merge(options))

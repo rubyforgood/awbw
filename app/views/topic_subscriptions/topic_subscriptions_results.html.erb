@@ -113,7 +113,7 @@
                         <% deco = registration.decorate %>
                         <% event = registration.event %>
                         <%= link_to edit_event_registration_path(registration),
-                                    title: event.decorate.hover_title,
+                                    title: "Registration for #{event.decorate.hover_title}",
                                     class: "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition hover:opacity-80 hover:shadow-sm #{deco.attendance_status_classes}",
                                     data: { turbo_frame: "_top" } do %>
                           <i class="fas <%= deco.attendance_status_icon %> text-2xs"></i>
