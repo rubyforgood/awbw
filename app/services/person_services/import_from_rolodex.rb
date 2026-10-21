@@ -317,7 +317,7 @@ module PersonServices
       [
         apply_tags(person, :tag_sectors, Sector, person.sectorable_items.where(is_primary: true).pluck(:sector_id),
                    primary_ids: sector_primary_ids, additional_ids: sector_extra_ids + additional.flat_map(&:sector_ids)),
-        apply_tags(person, :tag_age_groups, Category, person.primary_age_category_ids,
+        apply_tags(person, :tag_age_groups, Category, person.primary_age_groups.map(&:id),
                    primary_ids: age_primary_ids, additional_ids: age_extra_ids + additional.flat_map(&:age_group_ids))
       ].compact
     end
