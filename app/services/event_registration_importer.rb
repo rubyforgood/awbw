@@ -11,11 +11,13 @@ require "bigdecimal"
 #     at the row's organization, else by a name only one person carries
 #     (PersonNameMatcher). A miss creates the person, attributed to the importing
 #     admin; an email-less one gets the next free N@example.com placeholder.
-#   * EventRegistration — the Status column (Attended when blank, or derived from
-#     Day N columns when only those are filled). An active registration takes the
-#     row's status; a cancelled / no-show / transferred-out one is never overwritten
-#     — the row adds a second registration beside it (Data health lists these).
-#     Attended marks every day complete unless Day N columns say otherwise.
+#   * EventRegistration — found or created, one per registrant per event. Its
+#     status comes from the Status column (Attended when blank, or derived from
+#     Day N columns when only those are filled), but only where the portal has no
+#     deliberate outcome of its own: an attended, cancelled, no-show,
+#     transferred-out or incomplete registration keeps what it has, and the row's
+#     status is recorded as a comment on it instead. Attended marks every day
+#     complete unless Day N columns say otherwise.
 #   * FormSubmission (role "registration") — the import's OWN submission, marked
 #     `imported_from`, carrying the answers this event's form asks; created
 #     alongside (never in place of) a real registrant's submission.
@@ -29,12 +31,23 @@ require "bigdecimal"
 #     values are kept; the sheet only fills blanks and adds new addresses beside.
 #   * CE — enrolled when the row asks for CE and the event offers hours.
 #   * Money — a Scholarship first, then the AmountPaid payment (registration, then
-#     CE), then a Discount comping whatever a paying row still owes, so it reads Paid.
+#     a CE the row asked for), then a Discount comping whatever a paying row still
+#     owes, so it reads Paid. A CE the row doesn't mention is left alone.
 #
 # No emails are sent and no mailing-list subscription is made. Runs in a
 # transaction with a dry_run mode that rolls back for the preview.
 class EventRegistrationImporter
   DEFAULT_STATUS = "attended".freeze
+
+  # Statuses the sheet never overwrites: a deliberate in-app outcome outranks a
+  # spreadsheet read off whatever the trainer wrote down, so an attended
+  # registration is never walked back and a cancelled / no-show / transferred-out /
+  # incomplete one is never revived. Only a still-"registered" registration takes
+  # the row's status; otherwise the row's status becomes a comment on it.
+  PORTAL_WINS_STATUSES = (EventRegistration::INACTIVE_STATUSES + %w[attended incomplete_attendance]).freeze
+
+  # Topic on the comment that records a status the import declined to apply.
+  COMMENT_TOPIC = "Spreadsheet import".freeze
 
   # metadata key stamped on the submission the import creates, so we can find our
   # own submission on a re-run (idempotency) without ever matching a real one.
@@ -107,7 +120,7 @@ class EventRegistrationImporter
 
   Result = Struct.new(
     :rows_processed, :people_created, :people_matched, :people_matched_by_name, :placeholder_emails,
-    :registrations_created, :registrations_added_alongside, :registrations_updated, :registrations_unchanged,
+    :registrations_created, :registrations_kept, :registrations_updated, :registrations_unchanged,
     :organizations_linked, :organizations_to_reconcile,
     :payments_recorded, :payments_amount_cents,
     :scholarships_recorded, :scholarships_amount_cents,
@@ -117,7 +130,7 @@ class EventRegistrationImporter
     keyword_init: true
   ) do
     def registrations_total
-      registrations_created + registrations_added_alongside + registrations_updated + registrations_unchanged
+      registrations_created + registrations_kept + registrations_updated + registrations_unchanged
     end
 
     def summary
@@ -125,8 +138,8 @@ class EventRegistrationImporter
         "rows processed: #{rows_processed}",
         "people matched: #{people_matched} (#{people_matched_by_name} by name), created: #{people_created} " \
           "(#{placeholder_emails} with a placeholder email)",
-        "registrations created: #{registrations_created}, added beside an inactive one: #{registrations_added_alongside}, " \
-          "status updated: #{registrations_updated}, unchanged: #{registrations_unchanged}",
+        "registrations created: #{registrations_created}, status updated: #{registrations_updated}, " \
+          "portal status kept: #{registrations_kept}, unchanged: #{registrations_unchanged}",
         "organizations linked: #{organizations_linked}, to reconcile: #{organizations_to_reconcile}",
         "scholarships recorded: #{scholarships_recorded} (#{MoneyFormatter.dollars_from_cents(scholarships_amount_cents)})",
         "payments recorded: #{payments_recorded} (#{MoneyFormatter.dollars_from_cents(payments_amount_cents)})",
@@ -141,7 +154,7 @@ class EventRegistrationImporter
   RowPreview = Struct.new(
     :number, :first_name, :last_name, :email, :organization_name,
     :person_status, :person_label, :placeholder_email,
-    :status, :registration_status, :previous_status,
+    :status, :status_from_sheet, :registration_status, :previous_status,
     :organization_status, :organization_label,
     :payment_status, :payment_label, :payment_amount_cents, :discount_cents,
     :scholarship_cents, :ce_status, :details, :warnings,
@@ -162,7 +175,7 @@ class EventRegistrationImporter
     @dry_run = dry_run
     @result = Result.new(
       rows_processed: 0, people_created: 0, people_matched: 0, people_matched_by_name: 0, placeholder_emails: 0,
-      registrations_created: 0, registrations_added_alongside: 0, registrations_updated: 0, registrations_unchanged: 0,
+      registrations_created: 0, registrations_kept: 0, registrations_updated: 0, registrations_unchanged: 0,
       organizations_linked: 0, organizations_to_reconcile: 0,
       payments_recorded: 0, payments_amount_cents: 0,
       scholarships_recorded: 0, scholarships_amount_cents: 0,
@@ -223,7 +236,7 @@ class EventRegistrationImporter
     return skip(preview, "duplicate of row #{@seen_row_keys[key]} in this file") if @seen_row_keys.key?(key)
     @seen_row_keys[key] = number
 
-    preview.status = status
+    preview.status = preview.status_from_sheet = status
     organization = resolve_organization(values[:organization], preview)
     person = resolve_person(values, organization, preview)
     registration = resolve_registration(person, status, preview)
@@ -322,23 +335,18 @@ class EventRegistrationImporter
   # ── Registrations ───────────────────────────────────────────────────────
 
   def resolve_registration(person, status, preview)
-    existing = @event.event_registrations.active_first.find_by(registrant: person) unless person.new_record?
+    existing = @event.event_registrations.find_by(registrant: person) unless person.new_record?
 
     if existing.nil?
       count_registration(preview, :created)
       return if @dry_run
 
       build_registration(person, status)
-    elsif existing.inactive?
-      preview.previous_status = existing.status
-      return keep_registration(existing, preview) if status.in?(EventRegistration::INACTIVE_STATUSES)
-
-      count_registration(preview, :added_alongside)
-      return if @dry_run
-
-      build_registration(person, status)
     elsif existing.status == status
-      keep_registration(existing, preview)
+      keep_registration(existing, preview, :unchanged)
+    elsif existing.status.in?(PORTAL_WINS_STATUSES)
+      preview.previous_status = existing.status
+      keep_registration(existing, preview, :kept)
     else
       preview.previous_status = existing.status
       count_registration(preview, :updated)
@@ -347,8 +355,8 @@ class EventRegistrationImporter
     end
   end
 
-  def keep_registration(existing, preview)
-    count_registration(preview, :unchanged)
+  def keep_registration(existing, preview, outcome)
+    count_registration(preview, outcome)
     preview.status = existing.status
     existing
   end
@@ -364,6 +372,22 @@ class EventRegistrationImporter
       registrant: person, status: status, skip_cancellation_emails: true,
       created_by: @import_user, updated_by: @import_user
     )
+  end
+
+  # Says on the registration itself what the sheet claimed and why it wasn't
+  # applied, so the difference is reviewable where the status lives rather than
+  # only in the import preview. Matched on the body so a re-run adds nothing.
+  def note_status_conflict(registration, preview)
+    body = "Imported sheet said “#{status_label(preview.status_from_sheet)}”; kept this registration's " \
+           "“#{status_label(registration.status)}”."
+    return if registration.comments.exists?(topic: COMMENT_TOPIC, body: body)
+
+    registration.comments.create!(topic: COMMENT_TOPIC, body: body,
+                                  created_by: @import_user, updated_by: @import_user)
+  end
+
+  def status_label(status)
+    EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(status, status.to_s.humanize)
   end
 
   # Days, the yes/no flags, and dates: the sheet fills these in without clearing
@@ -497,8 +521,10 @@ class EventRegistrationImporter
     end
     return preview.payment_status = :missing_check_number if payment_class == CheckPayment && values[:check_number].blank?
 
-    owed = registration_cost + ce_cost - preview.scholarship_cents.to_i
     return preview.payment_status = :free if registration_cost + ce_cost <= 0
+
+    owed = registration_cost + ce_cost - preview.scholarship_cents.to_i
+    return preview.payment_status = :nothing_owed if owed <= 0
 
     preview.payment_status = :will_record
     preview.payment_label = PAYMENT_TYPE_LABELS[payment_class.name]
@@ -547,6 +573,7 @@ class EventRegistrationImporter
 
   def persist_registration(person, registration, values, organization, answers, preview)
     newly_created = person.previously_new_record?
+    note_status_conflict(registration, preview) if preview.registration_status == :kept
     apply_registration_details(registration, values)
     submission = import_submission(person, answers)
     capture_organization(person, registration, submission, organization, answers)
@@ -613,7 +640,8 @@ class EventRegistrationImporter
 
     payment = nil
     remaining = cents
-    payables(registration).each do |payable|
+    payables = payables_for(registration, values)
+    payables.each do |payable|
       to_allocate = [ remaining, payable.remaining_cost ].min
       next unless to_allocate.positive?
 
@@ -622,10 +650,15 @@ class EventRegistrationImporter
       remaining -= to_allocate
     end
 
-    payables(registration).each { |payable| cover_remainder_with_discount(payable) }
+    payables.each { |payable| cover_remainder_with_discount(payable) }
   end
 
-  def payables(registration)
+  # What this row is about. A CE registration the sheet never mentions is a live
+  # balance someone else is still expected to pay, so the import leaves it alone
+  # rather than spending the row's money on it or comping it away.
+  def payables_for(registration, values)
+    return [ registration ] unless ce_requested?(values)
+
     [ registration, *registration.continuing_education_registrations.reload ]
   end
 

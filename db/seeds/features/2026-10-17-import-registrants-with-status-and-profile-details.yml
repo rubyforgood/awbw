@@ -10,4 +10,4 @@ summary: >-
   addresses instead of duplicating them, even when a row has no email.
 pro_tips:
   - "Start from Admin home → Import registrants, or an event's Registrants page → Bulk actions. Expand “Columns we read” for the full list."
-  - "A cancelled or no-show registration is never overwritten. The import adds a second one, and Data health lists anyone registered twice for an event."
+  - "A registration already marked attended, incomplete, cancelled, no-show, or transferred out keeps that status. The sheet's status is saved as a comment on the registration so you can see what the spreadsheet claimed."

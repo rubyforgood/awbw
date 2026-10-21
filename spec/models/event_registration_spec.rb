@@ -11,38 +11,6 @@ RSpec.describe EventRegistration, type: :model do
     it { should have_many(:organizations).through(:event_registration_organizations) }
   end
 
-  describe "one active registration per person per event" do
-    let(:event) { create(:event) }
-    let(:person) { create(:person) }
-
-    it "allows an inactive registration beside an active one" do
-      create(:event_registration, event: event, registrant: person, status: "cancelled")
-
-      expect(build(:event_registration, event: event, registrant: person, status: "attended")).to be_valid
-    end
-
-    it "rejects a second active registration" do
-      create(:event_registration, event: event, registrant: person, status: "registered")
-
-      expect(build(:event_registration, event: event, registrant: person, status: "attended")).not_to be_valid
-    end
-
-    it "is enforced by the database for active registrations" do
-      create(:event_registration, event: event, registrant: person, status: "registered")
-      duplicate = build(:event_registration, event: event, registrant: person, status: "attended")
-
-      expect { duplicate.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
-    end
-
-    it "looks up the active one first" do
-      create(:event_registration, event: event, registrant: person, status: "cancelled")
-      active = create(:event_registration, event: event, registrant: person, status: "attended")
-      create(:event_registration, event: event, registrant: person, status: "no_show")
-
-      expect(event.event_registrations.active_first.find_by(registrant: person)).to eq(active)
-    end
-  end
-
   describe "#active?" do
     it "returns true for registered status" do
       reg = create(:event_registration, status: "registered")

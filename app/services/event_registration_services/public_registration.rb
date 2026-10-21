@@ -67,7 +67,7 @@ module EventRegistrationServices
         # Resolve the registration before creating affiliations so each one can record
         # which registration created it. Capture `existing` first — the find_by must
         # see prior state, not the row we're about to create.
-        existing = @event.event_registrations.active_first.find_by(registrant: person)
+        existing = @event.event_registrations.find_by(registrant: person)
         event_registration = existing || create_event_registration(person)
 
         # find_organization only ever finds, so a matched org already existed and the

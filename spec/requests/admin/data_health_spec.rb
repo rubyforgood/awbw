@@ -40,7 +40,7 @@ RSpec.describe "Admin::DataHealth", type: :request do
       get admin_data_health_path
 
       headings = Nokogiri::HTML(response.body).css("h2 button > span:first-child").map { |h| h.text.strip }
-      expect(headings).to eq([ "Settings", "Affiliations", "People", "Registrations", "Form answers", "Payments", "Stories", "Resources", "Communications" ])
+      expect(headings).to eq([ "Settings", "Affiliations", "People", "Form answers", "Payments", "Stories", "Resources", "Communications" ])
     end
 
     it "starts every group collapsed, with an expand-all control" do

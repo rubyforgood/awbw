@@ -18,8 +18,8 @@
       [ "New people", @result.people_created ],
       [ "Matched people", @result.people_matched ],
       [ "New registrations", @result.registrations_created ],
-      [ "Added beside an inactive one", @result.registrations_added_alongside ],
       [ "Status updated", @result.registrations_updated ],
+      [ "Portal status kept", @result.registrations_kept ],
       [ "Already up to date", @result.registrations_unchanged ],
       [ "Orgs to link", @result.organizations_linked ],
       [ "Orgs to reconcile", @result.organizations_to_reconcile ],
@@ -47,7 +47,10 @@
       Unmatched names are queued on each registrant's <span class="font-medium">link organization</span> page — no organizations are created here.
     </li>
     <li>People already in the portal keep their current address, phone, and sectors; the sheet only fills blanks and adds new addresses beside them.</li>
-    <li>A cancelled, no-show, or transferred-out registration is never overwritten — the row adds a second registration, listed on Data health.</li>
+    <li>
+      An attended, cancelled, no-show, transferred-out, or incomplete registration keeps the status it already has.
+      The row's status is saved as a comment on that registration instead.
+    </li>
     <% if @event.ce_eligible? && @event.ce_hours_cost_cents.to_i.positive? %>
       <li>
         CE costs <%= dollars_from_cents(@event.ce_hours_cost_cents) %> here. A row that asks for CE without an AmountPaid leaves the
@@ -105,12 +108,13 @@
                 <td class="px-3 py-2">
                   <% status_label = EventRegistration::ATTENDANCE_STATUS_LABELS.fetch(row.status, row.status.to_s.humanize) %>
                   <% previous_label = EventRegistration::ATTENDANCE_STATUS_LABELS[row.previous_status] %>
+                  <% sheet_label = EventRegistration::ATTENDANCE_STATUS_LABELS[row.status_from_sheet] %>
                   <% case row.registration_status %>
                   <% when :created %>
                     <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800">Add as <%= status_label.downcase %></span>
-                  <% when :added_alongside %>
-                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="The existing registration is kept as is; this adds a second one">
-                      Add as <%= status_label.downcase %> beside the <%= previous_label.to_s.downcase %> one
+                  <% when :kept %>
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="The portal's status wins; the sheet's is saved as a comment">
+                      Keeping <%= previous_label.to_s.downcase %> — sheet said <%= sheet_label.to_s.downcase %>
                     </span>
                   <% when :updated %>
                     <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs text-blue-800"><%= previous_label %> → <%= status_label.downcase %></span>
@@ -156,6 +160,10 @@
                   <% when :free %>
                     <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600" title="Free event — nothing to apply the amount against">
                       Free event — not applied
+                    </span>
+                  <% when :nothing_owed %>
+                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600" title="The scholarship covers the whole cost, so there's nothing left for the amount to pay">
+                      Fully covered — not applied
                     </span>
                   <% when :unknown_type %>
                     <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-800" title="Unrecognized payment type — no payment recorded">

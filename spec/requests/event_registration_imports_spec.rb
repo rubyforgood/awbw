@@ -60,7 +60,7 @@ RSpec.describe "Event registration imports", type: :request do
       expect(response.body).to include("Preview import")
     end
 
-    it "previews the extended columns: matches, placeholders, a second registration, and warnings" do
+    it "previews the extended columns: matches, placeholders, a kept status, and warnings" do
       person = create(:person, first_name: "Lee", last_name: "Placeholder", email: "lee@example.org")
       create(:event_registration, event: event, registrant: person, status: "no_show")
       extended = fixture_file_upload("spec/fixtures/files/event_registrants_import_extended.csv", "text/csv")
@@ -70,7 +70,7 @@ RSpec.describe "Event registration imports", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Link: Sample Org", "typed “Sample Org Inc.”")
       expect(response.body).to include("as 1@example.com", "Add as no show")
-      expect(response.body).to include("Already no show")
+      expect(response.body).to include("Keeping no show — sheet said cancelled")
       expect(response.body).to include("Unknown sector “Astronomy”", "FavoriteColor")
       expect(response.body).to include("scholarship")
     end

@@ -1,14 +1,14 @@
 require "set"
 
 module EventRegistrationServices
-  # Surfaces likely-duplicate registrations for the deduper's candidate list: one
-  # real person registered for the same event twice, under one Person (an inactive
-  # registration beside an active one) or two different Person records. Clusters
-  # registrations for the same event whose registrants share a signal —
-  # nickname/legal-name-aware name, email (or email_2), or FileMaker code — then
-  # annotates each cluster with why it was flagged. Registrants grouped by name but
-  # carrying different FileMaker codes are surfaced as a caution to verify, never
-  # silently treated as a clean merge.
+  # Surfaces likely-duplicate registrations for the deduper's candidate list. The
+  # (registrant_id, event_id) unique index already forbids one person registering
+  # for the same event twice, so a duplicate is one real person registered for the
+  # same event under two different Person records. Clusters registrations for the
+  # same event whose registrants share a signal — nickname/legal-name-aware name,
+  # email (or email_2), or FileMaker code — then annotates each cluster with why it
+  # was flagged. Registrants grouped by name but carrying different FileMaker codes
+  # are surfaced as a caution to verify, never silently treated as a clean merge.
   class DuplicateFinder
     Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
 
@@ -52,7 +52,6 @@ module EventRegistrationServices
 
     def reasons_for(records)
       reasons = []
-      reasons << "Same person registered more than once" if records.map(&:registrant_id).uniq.size < records.size
       reasons << "Same registrant name" if shared?(records) { |registration| name_keys(registration) }
       reasons << "Shared registrant email" if shared?(records) { |registration| email_keys(registration) }
       reasons.concat(filemaker_reasons(records))

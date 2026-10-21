@@ -114,7 +114,7 @@ module Events
         # no slug, so the policy gates it on the same access as the event's other
         # submission views (or on the viewer being that person).
         authorize! @event, to: :person_form_submission?, context: { person: person }
-        registration = @event.event_registrations.active_first.find_by(registrant: person)
+        registration = @event.event_registrations.find_by(registrant: person)
       else
         redirect_to event_path(@event), alert: "Registration not found."
         return

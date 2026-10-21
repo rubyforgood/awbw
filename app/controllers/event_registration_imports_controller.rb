@@ -98,7 +98,7 @@ class EventRegistrationImportsController < ApplicationController
   def import_notice(result)
     "Import complete — #{result.registrations_created} registrations created " \
       "(#{result.people_created} new people, #{result.people_matched} matched)" \
-      "#{", #{result.registrations_added_alongside} added beside an inactive registration" if result.registrations_added_alongside.positive?}" \
+      "#{", #{result.registrations_kept} kept the portal's status" if result.registrations_kept.positive?}" \
       "#{", #{result.registrations_updated} status updates" if result.registrations_updated.positive?}" \
       "#{", #{result.organizations_to_reconcile} orgs to reconcile" if result.organizations_to_reconcile.positive?}" \
       "#{", #{result.scholarships_recorded} scholarships (#{helpers.dollars_from_cents(result.scholarships_amount_cents)})" if result.scholarships_recorded.positive?}" \

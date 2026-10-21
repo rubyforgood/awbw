@@ -316,25 +316,46 @@ RSpec.describe EventRegistrationImporter do
         expect([ registration.completed_day_1, registration.completed_day_2, registration.completed_day_3 ]).to eq([ true, false, true ])
       end
 
-      it "adds a second registration beside a cancelled one rather than overwrite it" do
+      it "keeps a cancelled registration and comments what the sheet said" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
         cancelled = create(:event_registration, event: event, registrant: person, status: "cancelled")
 
         result = import_rows(%w[FirstName LastName EMail], %w[Pat Example pat@example.org])
 
-        expect(cancelled.reload.status).to eq("cancelled")
-        expect(event.event_registrations.where(registrant: person).pluck(:status)).to contain_exactly("cancelled", "attended")
-        expect(result.registrations_added_alongside).to eq(1)
+        expect(event.event_registrations.where(registrant: person).pluck(:status)).to eq([ "cancelled" ])
+        expect(result.registrations_kept).to eq(1)
+        expect(cancelled.comments.sole.body).to eq("Imported sheet said “Attended”; kept this registration's “Cancelled”.")
       end
 
-      it "leaves an inactive registration alone when the sheet is inactive too" do
+      it "never walks an attended registration back to the sheet's lesser status" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
+        attended = create(:event_registration, event: event, registrant: person, status: "attended")
+
+        import_rows(%w[FirstName LastName EMail Status], [ "Pat", "Example", "pat@example.org", "No show" ])
+
+        expect(attended.reload.status).to eq("attended")
+        expect(attended.comments.sole.body).to include("said “No show”", "kept this registration's “Attended”")
+      end
+
+      it "adds no second comment when the same sheet is imported again" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
         no_show = create(:event_registration, event: event, registrant: person, status: "no_show")
 
-        result = import_rows(%w[FirstName LastName EMail Status], %w[Pat Example pat@example.org Cancelled])
+        2.times { import_rows(%w[FirstName LastName EMail], %w[Pat Example pat@example.org]) }
 
         expect(no_show.reload.status).to eq("no_show")
-        expect(result.registrations_unchanged).to eq(1)
+        expect(no_show.comments.count).to eq(1)
+      end
+
+      it "applies the sheet's status to a registration still only registered" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
+        registration = create(:event_registration, event: event, registrant: person, status: "registered")
+
+        result = import_rows(%w[FirstName LastName EMail Status], %w[Pat Example pat@example.org Attended])
+
+        expect(registration.reload.status).to eq("attended")
+        expect(registration.comments).to be_empty
+        expect(result.registrations_updated).to eq(1)
       end
 
       it "records a cancellation on an active registration without emailing anyone" do
@@ -480,6 +501,26 @@ RSpec.describe EventRegistrationImporter do
         expect(ce.allocations.find_by(source_type: "Payment").amount).to eq(201)
         expect(ce.allocations.find_by(source_type: "Discount").amount).to eq(1799)
         expect(registration).to be_paid_in_full
+      end
+
+      it "leaves a CE the row never mentions out of the payment and the comping discount" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
+        registration = create(:event_registration, event: event, registrant: person, status: "registered")
+        ce = ContinuingEducationRegistration.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+
+        import_rows(%w[FirstName LastName EMail AmountPaid], [ "Pat", "Example", "pat@example.org", "7.50" ])
+
+        expect(registration.reload).to be_paid_in_full
+        expect(ce.reload.allocations).to be_empty
+        expect(ce).not_to be_paid_in_full
+      end
+
+      it "reports nothing to pay when the scholarship already covers the cost" do
+        result = import_rows(%w[FirstName LastName EMail Scholarship AmountPaid],
+                             [ "Pat", "Example", "pat@example.org", "10.99", "10.99" ], dry_run: true)
+
+        expect(result.rows.first.payment_status).to eq(:nothing_owed)
+        expect(result.payments_recorded).to eq(0)
       end
 
       it "warns that CE stays unpaid when the row carries no payment" do

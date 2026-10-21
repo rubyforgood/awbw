@@ -443,24 +443,3 @@ RSpec.describe DataHealth, ".grouped_checks" do
     expect(grouped.uniq).to eq(grouped)
   end
 end
-
-RSpec.describe DataHealth::PeopleRegisteredTwiceForAnEvent do
-  let(:event) { create(:event) }
-  let(:person) { create(:person) }
-
-  it "lists a person once for an event they hold two registrations for" do
-    first = create(:event_registration, event: event, registrant: person, status: "cancelled")
-    create(:event_registration, event: event, registrant: person, status: "attended")
-
-    check = described_class.new
-    expect(check.scope).to eq([ first ])
-    expect(check.describe(first)).to include("Cancelled", "Attended")
-  end
-
-  it "ignores the same person on different events" do
-    create(:event_registration, event: event, registrant: person)
-    create(:event_registration, event: create(:event), registrant: person)
-
-    expect(described_class.new).not_to be_any
-  end
-end
