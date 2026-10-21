@@ -60,6 +60,13 @@ class EventDecorator < ApplicationDecorator
     "#{title} (#{month_year})"
   end
 
+  # Tooltip for a compact event label (e.g. "Facilitator Training · October 2026").
+  def hover_title
+    return title if start_date.blank? || on_demand?
+
+    "#{title} · #{month_year}"
+  end
+
   # Subject pre-filled on the bulk reminder page and used as the send-time
   # fallback, so the preview and the delivered email always agree. An on-demand
   # event's start date bounds enrollment rather than naming a session, so putting
