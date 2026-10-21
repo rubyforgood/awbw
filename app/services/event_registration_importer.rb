@@ -725,15 +725,37 @@ class EventRegistrationImporter
     note_status_conflict(registration, preview) if status_kept
     apply_registration_details(registration, values, apply_days: !status_kept)
     submission = import_submission(person, answers)
-    capture_organization(person, registration, submission, organization, answers)
-    PersonServices::CaptureFromSubmission.call(person: person, answers: answers, overwrite: newly_created)
+    capture_organization(person, registration, submission, organization, answers, preview)
+    capture_person(person, answers, preview, overwrite: newly_created)
     enroll_ce(registration, values) if preview.ce_status == :will_enroll
     apply_scholarship(person, registration, values)
   end
 
-  def capture_organization(person, registration, submission, organization, answers)
+  # Fill-only mode keeps what the portal already holds. Whatever it declined is
+  # reported on the row and written to the person as a comment, so a curated sheet's
+  # value is reviewable rather than dropped.
+  def capture_person(person, answers, preview, overwrite:)
+    capture = PersonServices::CaptureFromSubmission.new(person: person, answers: answers, overwrite: overwrite)
+    capture.call
+    note_declined(person, capture.declined.map { |d| [ d.attribute.to_s.humanize, d.submitted, d.saved ] }, preview)
+  end
+
+  def note_declined(record, entries, preview)
+    entries.each { |label, submitted, saved| preview.warnings << "Kept #{label.downcase} “#{saved}” — sheet said “#{submitted}”" }
+    return if entries.empty?
+
+    body = "Imported sheet disagreed and was not applied: " +
+      entries.map { |label, submitted, saved| "#{label} “#{submitted}” (kept “#{saved}”)" }.join("; ") + "."
+    return if record.comments.exists?(topic: COMMENT_TOPIC, body: body)
+
+    record.comments.create!(topic: COMMENT_TOPIC, body: body,
+                            created_by: @import_user, updated_by: @import_user)
+  end
+
+  def capture_organization(person, registration, submission, organization, answers, preview)
     return unless organization
 
+    note_declined(organization, organization_declines(organization, answers), preview)
     result = OrganizationServices::CaptureFromSubmission.call(
       person: person, answers: answers, organization: organization, submission: submission,
       facilitator_training: @event.facilitator_training, training_date: @event.start_date,
@@ -746,6 +768,21 @@ class EventRegistrationImporter
 
     link.record_form_submission(submission)
     link.record_autofill(result.autofill)
+  end
+
+  # The org answers fill-blanks won't apply, from the comparison the link-organization
+  # flow already uses.
+  def organization_declines(organization, answers)
+    OrganizationServices::ProfileDiff.call(
+      organization: organization,
+      website: answers["organization_website"],
+      organization_type: answers["organization_type"],
+      address: {
+        street_address: answers["organization_street"], city: answers["organization_city"],
+        state: answers["organization_state"], zip_code: answers["organization_zip"],
+        country: answers["organization_country"]
+      }
+    ).map { |discrepancy| [ discrepancy.label, discrepancy.submitted, discrepancy.saved ] }
   end
 
   def enroll_ce(registration, values)

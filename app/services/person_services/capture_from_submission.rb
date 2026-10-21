@@ -20,6 +20,12 @@ module PersonServices
   # person's current name, primary address, primary phone, and primary tags, adding
   # anything new beside them.
   class CaptureFromSubmission
+    # What fill-only mode declined to write, so a caller importing curated data can
+    # report the disagreement instead of dropping it silently.
+    Declined = Struct.new(:attribute, :submitted, :saved, keyword_init: true)
+
+    attr_reader :declined
+
     def self.call(person:, form: nil, form_params: {}, answers: nil, overwrite: true)
       new(person:, form:, form_params:, answers:, overwrite:).call
     end
@@ -30,6 +36,7 @@ module PersonServices
       @form_params = (form_params || {}).transform_keys(&:to_s)
       @answers = answers&.transform_keys(&:to_s)
       @overwrite = overwrite
+      @declined = []
     end
 
     def call
@@ -53,7 +60,8 @@ module PersonServices
     # its own column, matching how a new registrant's name is resolved at sign-up.
     def apply_nickname
       nickname = field_value("nickname")&.strip
-      return if nickname.blank? || !@overwrite
+      return if nickname.blank?
+      return decline(:first_name, nickname, @person.first_name) unless @overwrite
 
       @person.update!(first_name: nickname)
       apply_value(@person, :legal_first_name, field_value("first_name"))
@@ -61,8 +69,18 @@ module PersonServices
 
     def apply_value(record, attribute, value)
       return if value.blank?
-      return if !@overwrite && record.public_send(attribute).present?
+
+      saved = record.public_send(attribute)
+      return decline(attribute, value.strip, saved) if !@overwrite && saved.present?
+
       record.update!(attribute => value.strip)
+    end
+
+    def decline(attribute, submitted, saved)
+      return if submitted.to_s.strip.casecmp?(saved.to_s.strip)
+
+      @declined << Declined.new(attribute: attribute, submitted: submitted, saved: saved)
+      nil
     end
 
     def field_value(key)

@@ -11,7 +11,7 @@ class EventRegistrationImporter
       pronouns: %w[pronouns],
       secondary_email: %w[secondaryemail email2 alternateemail],
       status: %w[status attendancestatus registrationstatus],
-      registered_on: %w[registeredon registered registrationdate dateregistered registeredat],
+      registered_on: %w[registeredon registered registrationdate dateregistered registeredat dateentered],
       organization: %w[organization organisation org organizationname],
       position: %w[position title jobtitle positiontitle organizationposition],
       organization_website: %w[organizationwebsite orgwebsite website],
@@ -47,7 +47,7 @@ class EventRegistrationImporter
       amount_paid: %w[amount amountpaid paid paymentamount paidamount],
       payment_type: %w[type method paymenttype paymentmethod],
       check_number: %w[checknumber check checkno],
-      bulk_payment: %w[bulkpayment bulkpaymentref bulkpaymentgroup paymentgroup]
+      bulk_payment: %w[bulkpayment bulkpaymentref bulkpaymentgroup paymentgroup paymentid]
     }.merge(EventRegistration::DAY_FIELDS.each_with_index.to_h { |_, index| [ :"day_#{index + 1}", [ "day#{index + 1}", "completedday#{index + 1}" ] ] }).freeze
 
     HEADER_FIELDS = HEADER_ALIASES.flat_map { |field, labels| labels.map { |label| [ label, field ] } }.to_h.freeze

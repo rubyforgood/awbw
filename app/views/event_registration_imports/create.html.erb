@@ -46,7 +46,11 @@
       Matched organizations are linked to each registration<%= " and add a facilitator affiliation" if @event.facilitator_training %>.
       Unmatched names are queued on each registrant's <span class="font-medium">link organization</span> page — no organizations are created here.
     </li>
-    <li>People already in the portal keep their current address, phone, and sectors; the sheet only fills blanks and adds new addresses beside them.</li>
+    <li>
+      People already in the portal keep their current address, phone, and sectors; the sheet only fills blanks and adds
+      new addresses beside them. Where the sheet disagrees, the row says so and the value is saved as a comment on that
+      person or organization — nothing is dropped silently.
+    </li>
     <li>Rows sharing a BulkPayment reference, or one check number, become a single payment split across those registrations — listed on this event's bulk payments page.</li>
     <li>
       An attended, cancelled, no-show, transferred-out, or incomplete registration keeps the status it already has.

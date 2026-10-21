@@ -482,6 +482,38 @@ RSpec.describe EventRegistrationImporter do
         expect(person.reload.pronouns).to eq("she/her")
       end
 
+      it "reports and comments a person value it kept rather than overwrote" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org", pronouns: "she/her")
+
+        result = import_rows(%w[FirstName LastName EMail Pronouns], [ "Pat", "Example", "pat@example.org", "they/them" ])
+
+        expect(person.reload.pronouns).to eq("she/her")
+        expect(result.rows.first.warnings).to include("Kept pronouns “she/her” — sheet said “they/them”")
+        expect(person.comments.sole.body).to eq(
+          "Imported sheet disagreed and was not applied: Pronouns “they/them” (kept “she/her”)."
+        )
+      end
+
+      it "stays quiet when the sheet agrees with what's on file" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org", pronouns: "they/them")
+
+        result = import_rows(%w[FirstName LastName EMail Pronouns], [ "Pat", "Example", "pat@example.org", "they/them" ])
+
+        expect(result.rows.first.warnings).to be_empty
+        expect(person.comments).to be_empty
+      end
+
+      it "reports an organization value it kept rather than overwrote" do
+        organization = create(:organization, name: "Sunrise Center", website_url: "https://sunrise.example.org")
+
+        result = import_rows(%w[FirstName LastName EMail Organization OrganizationWebsite],
+                             [ "Pat", "Example", "pat@example.org", "Sunrise Center", "https://other.example.org" ])
+
+        expect(organization.reload.website_url).to eq("https://sunrise.example.org")
+        expect(result.rows.first.warnings.join).to include("sheet said “https://other.example.org”")
+        expect(organization.comments.sole.body).to include("Website “https://other.example.org”")
+      end
+
       it "warns about a sector it doesn't recognize" do
         result = import_rows(%w[FirstName LastName EMail AdditionalSectors], [ "Pat", "Example", "pat@example.org", "Education, Astronomy" ])
 
