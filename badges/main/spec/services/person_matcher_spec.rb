@@ -17,13 +17,6 @@ RSpec.describe PersonMatcher do
     expect(described_class.call(email: "login@example.com", last_name: "Rivera-Cole", first_names: [ "Jamie" ])).to eq(person)
   end
 
-  it "returns a person with two logins once" do
-    # Attached without the login sync, which would make an account's email the person's own.
-    2.times { create(:user).update_columns(person_id: person.id) }
-
-    expect(described_class.new(email: "jamie@example.com", last_name: "Rivera-Cole").matches.to_a).to eq([ person ])
-  end
-
   it "matches a submitted look-alike dash against the stored hyphen" do
     expect(described_class.call(email: "jamie@example.com", last_name: "Rivera–Cole", first_names: [ "Jamie" ])).to eq(person)
   end

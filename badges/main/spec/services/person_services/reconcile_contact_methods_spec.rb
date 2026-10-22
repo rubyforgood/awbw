@@ -24,16 +24,6 @@ RSpec.describe PersonServices::ReconcileContactMethods do
     expect(ContactMethod.exists?(dup.id)).to be false
   end
 
-  it "folds a legacy untyped number into one that now says unknown" do
-    keep = contact_method
-    legacy = contact_method
-    legacy.update_columns(contact_type: nil)
-
-    described_class.new(person).call
-
-    expect(person.contact_methods.reload.pluck(:id)).to eq([ keep.id ])
-  end
-
   it "keeps contact methods that differ in value or kind" do
     contact_method(value: "555-1000")
     contact_method(value: "555-2000")

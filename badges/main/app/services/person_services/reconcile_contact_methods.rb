@@ -14,12 +14,7 @@ module PersonServices
     def self.signature(contact_method)
       return unless contact_method
 
-      IDENTITY_COLUMNS.map do |column|
-        value = contact_method.public_send(column).to_s.strip.downcase
-        # A row written before an untyped number said so holds a blank, so unknown and
-        # blank have to read alike or an otherwise identical pair won't fold.
-        value == ContactMethod::UNKNOWN_CONTACT_TYPE && column == "contact_type" ? "" : value
-      end
+      IDENTITY_COLUMNS.map { |column| contact_method.public_send(column).to_s.strip.downcase }
     end
 
     # One preserved-primary signature per kind, read before the merge while the two

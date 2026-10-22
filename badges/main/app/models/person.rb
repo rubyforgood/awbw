@@ -109,16 +109,8 @@ class Person < ApplicationRecord
   end
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
-  UNKNOWN_CONTACT_TYPE = "unknown"
-  # What an email can be stored as; people choosing their own pick from CONTACT_TYPES.
-  EMAIL_TYPES = [ *CONTACT_TYPES, UNKNOWN_CONTACT_TYPE ].freeze
-  validates :email_type, inclusion: { in: EMAIL_TYPES }, allow_blank: true
-  validates :email_2_type, inclusion: { in: EMAIL_TYPES }, allow_blank: true
-
-  # Unknown is a recorded answer, not a known one, so a flow that asks what kind of
-  # email this is still has to ask.
-  def known_email_type? = email_type.in?(CONTACT_TYPES)
-  def known_email_2_type? = email_2_type.in?(CONTACT_TYPES)
+  validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
+  validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
 
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
   # since a person still has to be listed somehow on the people index.

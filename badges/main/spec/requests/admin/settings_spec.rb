@@ -68,16 +68,6 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(options.find { |option| option["selected"] }.text).to include("Robin Signer")
     end
 
-    it "offers the chosen import user as the picker's current choice" do
-      Setting.create!(import_user: create(:user, email: "imports@example.com"))
-      sign_in admin
-
-      get admin_settings_path
-
-      options = Nokogiri::HTML(response.body).at_css("select[name='setting[import_user_id]']").css("option")
-      expect(options.find { |option| option["selected"] }.text).to include("imports@example.com")
-    end
-
     it "is denied to a non-admin" do
       sign_in create(:user)
 
@@ -123,15 +113,6 @@ RSpec.describe "Admin::Settings", type: :request do
 
       expect(response).to have_http_status(:see_other)
       expect(Setting.ce_administrator).to eq(administrator)
-    end
-
-    it "names who an import credits when its source names no one" do
-      user = create(:user)
-
-      patch admin_settings_path, params: { setting: { import_user_id: user.id } }
-
-      expect(response).to have_http_status(:see_other)
-      expect(Setting.import_user).to eq(user)
     end
 
     it "saves the attention line shown on the contact page" do

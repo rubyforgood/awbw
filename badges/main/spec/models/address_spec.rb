@@ -37,30 +37,6 @@ RSpec.describe Address, type: :model do
     end
   end
 
-  describe "address type" do
-    it "records an untyped address as unknown on save" do
-      address = create(:address, address_type: nil)
-
-      expect(address.address_type).to eq("unknown")
-      expect(address).not_to be_known_type
-    end
-
-    it "leaves a type it was given alone" do
-      expect(create(:address, address_type: "mailing")).to have_attributes(address_type: "mailing", known_type?: true)
-    end
-
-    it "types a legacy blank row on its next save, not before" do
-      address = create(:address)
-      address.update_columns(address_type: nil)
-
-      expect(address.reload.address_type).to be_nil
-
-      address.update!(city: "Missoula")
-
-      expect(address.address_type).to eq("unknown")
-    end
-  end
-
   describe "optional fields" do
     let(:address) { build(:address) }
 

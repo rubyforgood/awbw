@@ -34,16 +34,6 @@ RSpec.describe Analytics::LifecycleBuffer do
     )
   end
 
-  it "flushes to a tracker directly, for work that runs outside a request" do
-    described_class.push(name: "create.person", properties: { resource_type: "Person" })
-
-    tracked = []
-    described_class.flush_to(build_controller(tracked).ahoy)
-
-    expect(tracked).to eq([ [ "create.person", { resource_type: "Person" } ] ])
-    expect(described_class.store).to be_empty
-  end
-
   it "leaves properties untouched when no form submission id is set" do
     described_class.push(name: "update.person", properties: { resource_type: "Person" })
 

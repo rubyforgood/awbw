@@ -3,7 +3,7 @@ require "rake"
 
 RSpec.describe "legacy:user_permissions_to_comments" do
   before(:all) do
-    Rails.application.load_tasks unless Rake::Task.task_defined?("legacy:user_permissions_to_comments")
+    Rails.application.load_tasks
   end
 
   before do

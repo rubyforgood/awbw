@@ -67,7 +67,6 @@ module PersonServices
       return if new_city.blank?
 
       new_state = field_value("mailing_state")&.strip
-      new_country = field_value("mailing_country")&.strip
       existing = @person.addresses.order(:id).find do |address|
         AddressNormalizer.city(address.city) == AddressNormalizer.city(new_city) &&
           AddressNormalizer.state(address.state) == AddressNormalizer.state(new_state)
@@ -80,7 +79,7 @@ module PersonServices
           primary: true,
           inactive: false
         )
-        apply_value(existing, :country, new_country)
+        apply_value(existing, :country, field_value("mailing_country"))
         apply_value(existing, :address_type, field_value("mailing_address_type")&.downcase)
         return existing
       end
@@ -92,8 +91,8 @@ module PersonServices
         city: new_city,
         state: new_state,
         zip_code: field_value("mailing_zip"),
-        country: new_country,
-        locality: AddressLocality.for(city: new_city, state: new_state, country: new_country),
+        country: field_value("mailing_country")&.strip,
+        locality: "Unknown",
         address_type: field_value("mailing_address_type")&.downcase || "unknown",
         primary: true
       )
