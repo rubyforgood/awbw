@@ -66,10 +66,10 @@ class StorySharesController < ApplicationController
   def load_home
     @home_sectors = Sector.story_share_home_sections.limit(FEATURED_SECTOR_LIMIT).to_a
     @stories_by_sector = @home_sectors.index_with do |sector|
-      section_stories(portal_scope.sector_names_all(sector.name))
+      section_stories(portal_scope.with_primary_sector(sector))
     end
     @stories_by_audience = Category.story_share_audience_nav.select(&:story_share_home_section).index_with do |category|
-      section_stories(portal_scope.category_names_all(category.name))
+      section_stories(portal_scope.with_primary_category(category))
     end
     @featured_stories = carousel_stories
     @recent_stories = popular_stories
@@ -108,8 +108,7 @@ class StorySharesController < ApplicationController
 
   def load_browse
     per_page = params[:number_of_items_per_page].presence || 12
-    filtered = portal_scope.search_by_params(params)
-    filtered = filtered.where(id: additional_focus_area_story_ids) if params[:additional_focus_areas].present?
+    filtered = browse_scope
     @count_display = count_display(filtered.count)
     lead_ids = filtered.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
     @lead_stories = first_page? ? preloaded(Story.where(id: lead_ids)).in_order_of(:id, lead_ids).decorate : []
@@ -122,12 +121,18 @@ class StorySharesController < ApplicationController
     params[:page].to_i <= 1
   end
 
-  # "Additional focus areas": stories tagged with any published sector beyond the
-  # featured nav sectors — the catch-all page for the rest of the taxonomy.
-  def additional_focus_area_story_ids
-    sector_ids = Sector.published.excluding_other
-                       .where.not(name: Sector.story_share_featured.select(:name)).ids
-    SectorableItem.where(sectorable_type: "Story", sector_id: sector_ids).select(:sectorable_id)
+  def browse_scope
+    stories = portal_scope.search_by_params(params.except(:sector_names_all, :category_names_all))
+    stories = stories.with_primary_sector(Sector.sector_names_all(params[:sector_names_all])) if params[:sector_names_all].present?
+    stories = stories.with_primary_category(Category.category_names_all(params[:category_names_all])) if params[:category_names_all].present?
+    stories = stories.with_primary_sector(additional_focus_area_sectors) if params[:additional_focus_areas].present?
+    stories
+  end
+
+  # "Additional focus areas": published sectors beyond the featured nav sectors —
+  # the catch-all page for the rest of the taxonomy.
+  def additional_focus_area_sectors
+    Sector.published.excluding_other.where.not(name: Sector.story_share_featured.select(:name))
   end
 
   # Related stories share a sector and/or a category, most-read first (then

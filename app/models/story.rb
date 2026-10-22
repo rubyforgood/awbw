@@ -109,6 +109,14 @@ class Story < ApplicationRecord
   # Admin hand-picks the Story Share home carousel: lowest number leads, blank = not in it.
   scope :story_share_carousel, -> { where.not(story_share_carousel_position: nil).order(:story_share_carousel_position) }
 
+  # Story Share files a story under its starred sector and audience only.
+  scope :with_primary_sector, ->(sectors) {
+    where(id: SectorableItem.where(sectorable_type: "Story", is_primary: true, sector_id: sectors).select(:sectorable_id))
+  }
+  scope :with_primary_category, ->(categories) {
+    where(id: CategorizableItem.where(categorizable_type: "Story", is_primary: true, category_id: categories).select(:categorizable_id))
+  }
+
   # A story credits either author, so both the author chip filter and the person
   # profile listing match on author_id or co_author_id.
   scope :authored_by, ->(person_id) {

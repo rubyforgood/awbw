@@ -1,0 +1,12 @@
+name: "Story Share files each story under its starred sector and audience"
+area: stories
+display_status: public_facing
+released_on: 2026-10-22
+pr_number: 2782
+summary: >-
+  Story Share's sector and audience pages, home sections, and Additional Focus
+  Areas now show only stories starred with that sector or audience as primary.
+pro_tips:
+  - "To move a story onto a different Story Share page, change which sector or audience carries its star."
+  - "A story with no starred sector still shows under Browse all stories and in search."
+action_path: "/story_share"
