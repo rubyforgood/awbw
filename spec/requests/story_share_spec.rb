@@ -161,6 +161,20 @@ RSpec.describe "/story_share", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "links a workshop the visitor can view and leaves the rest as plain text" do
+        open_workshop = create(:workshop, :published, :publicly_visible, title: "Open Workshop")
+        members_workshop = create(:workshop, :published, title: "Members Workshop")
+        public_story.story_workshops.create!(workshop: open_workshop)
+        public_story.story_workshops.create!(workshop: members_workshop)
+
+        get story_share_path(public_story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Open Workshop", href: workshop_path(open_workshop))
+        expect(page).to have_text("Members Workshop")
+        expect(page).to have_no_link("Members Workshop")
+      end
+
       it "cannot view published-only story" do
         get story_share_path(published_story)
         expect(response).to redirect_to(root_path)

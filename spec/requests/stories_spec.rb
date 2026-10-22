@@ -84,6 +84,17 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(story_in_other_org.title)
       end
 
+      it "links each row's organization and workshop out of the results frame" do
+        orgless = create(:story, :published, organization: nil, title: "Orgless Story")
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(response).to have_http_status(:ok)
+        expect(page).to have_css("a[href='#{organization_path(organization)}'][data-turbo-frame='_top']", text: organization.name)
+        expect(page).to have_css("a[href='#{workshop_path(workshop)}'][data-turbo-frame='_top']", text: workshop.title)
+        expect(page).to have_text(orgless.title)
+      end
+
       it "shows the empty-state message when no stories match" do
         get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include("No stories found")
@@ -726,6 +737,17 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
         expect(response.body).not_to include(private_story.title)
+      end
+
+      it "leaves a workshop the user can't view as plain text" do
+        hidden_workshop = create(:workshop, :unpublished, title: "Draft Workshop")
+        published_story.story_workshops.create!(workshop: hidden_workshop)
+
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Draft Workshop")
+        expect(page).to have_no_link("Draft Workshop")
       end
 
       it "never shows funder-only stories" do

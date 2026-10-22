@@ -31,16 +31,11 @@
           <% if @story.organization_name.present? %>
             <p>
               <strong>Organization name:</strong>
-              <% org = @story.organization %>
-              <% if org && allowed_to?(:show?, org) %>
-                <%= link_to org.name, organization_path(org), class: profile_link %>
-              <% else %>
-                <%= @story.organization_name %>
-              <% end %><%= ", #{org.state}" if org&.state.present? %>
+              <%= @story.organization_link(link_class: profile_link) %><%= ", #{@story.organization.state}" if @story.organization.state.present? %>
             </p>
           <% end %>
-          <% if @story.workshop_title.present? %>
-            <p><strong>Workshop:</strong> <%= @story.workshop_title %></p>
+          <% if (workshop_links = @story.workshop_links(link_class: profile_link)).present? %>
+            <p><strong><%= @story.workshop_reference_count > 1 ? "Workshops" : "Workshop" %>:</strong> <%= workshop_links %></p>
           <% end %>
         </div>
         <div class="flex shrink-0 flex-wrap items-center justify-end gap-1">
