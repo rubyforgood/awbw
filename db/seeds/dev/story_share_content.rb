@@ -117,8 +117,9 @@ end
 puts "Creating Stories…"
 # Deterministic so the Story Share portal demos well: every story is published +
 # publicly visible, the first five are publicly featured, sectors/audiences are
-# tagged (with ≥3 public stories in each featured sector), a few are facilitator
-# spotlights, and most get a primary image (last two exercise the fallback).
+# tagged (with ≥3 public stories in each featured sector), a few spotlight a
+# facilitator (for person profiles), and most get a primary image (last two
+# exercise the fallback).
 story_seeds = [
   { title: "Healing Through Art: A Survivor's Journey", sectors: [ "Domestic Violence" ], audiences: [ "Adults" ] },
   { title: "Finding Strength in Creativity", sectors: [ "Domestic Violence", "Self-Care/Personal Growth" ], audiences: [ "Adults", "Families" ] },
@@ -180,7 +181,7 @@ story_seeds.each_with_index do |seed, i|
 end
 
 # Bulk stories so the Story Share portal, admin index, pagination, and the sector/
-# audience/year/spotlight filters all have realistic volume to exercise. Titles are
+# audience/year filters all have realistic volume to exercise. Titles are
 # deterministic ("Sample story 001: …") so re-running the seed is idempotent, and
 # attributes vary across the set.
 bulk_story_count = 50

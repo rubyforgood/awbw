@@ -6,7 +6,7 @@ RSpec.describe "Event registration imports", type: :request do
   let(:event) { create(:event) }
 
   before do
-    create(:organization, name: "A New Leaf")
+    create(:organization, name: "Sample Org")
     form = create(:form, name: "Registration form")
     create(:event_form, event: event, form: form, role: "registration")
     %w[first_name last_name primary_email organization_name].each do |identifier|
@@ -33,6 +33,36 @@ RSpec.describe "Event registration imports", type: :request do
       expect(response.body).to include("Import registrants")
     end
 
+    it "points the back link at admin home when opened from there" do
+      sign_in admin
+      get new_event_registration_import_path(return_to: "admin_home")
+
+      expect(response.body).to include("← Admin home", %(href="#{admin_path}"))
+    end
+
+    it "offers the CSV template for download" do
+      sign_in admin
+      get template_event_registration_import_path(format: :csv)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to include("event-registrants-import-template.csv")
+      expect(response.body.lines.first).to start_with("FileMakerCode,FirstName,LastName,EMail")
+    end
+
+    it "keeps the template admin-only" do
+      sign_in regular_user
+      get template_event_registration_import_path(format: :csv)
+
+      expect(response).not_to have_http_status(:ok)
+    end
+
+    it "links to the template from the upload page" do
+      sign_in admin
+      get new_event_registration_import_path
+
+      expect(response.body).to include("Download the CSV template")
+    end
+
     it "redirects non-admins" do
       sign_in regular_user
       get new_event_registration_import_path
@@ -51,6 +81,21 @@ RSpec.describe "Event registration imports", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Preview import")
+    end
+
+    it "previews the extended columns: matches, placeholders, a kept status, and warnings" do
+      person = create(:person, first_name: "Lee", last_name: "Placeholder", email: "lee@example.org")
+      create(:event_registration, event: event, registrant: person, status: "no_show")
+      extended = fixture_file_upload("spec/fixtures/files/event_registrants_import_extended.csv", "text/csv")
+
+      post event_registration_import_path, params: { event_id: event.id, file: extended }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Link: Sample Org", "typed “Sample Org Inc.”")
+      expect(response.body).to include("as 1@example.com", "Add as no show")
+      expect(response.body).to include("Keeping no show — sheet said cancelled")
+      expect(response.body).to include("Unknown sector “Astronomy”", "FavoriteColor")
+      expect(response.body).to include("scholarship")
     end
 
     it "re-renders the form when no event is chosen" do
@@ -94,7 +139,7 @@ RSpec.describe "Event registration imports", type: :request do
 
       expect(event.event_registrations.pluck(:status).uniq).to eq([ "attended" ])
       expect(response).to redirect_to(registrants_event_path(event))
-      expect(flash[:notice]).to match(/3 attended registrations created/)
+      expect(flash[:notice]).to match(/3 registrations created/)
     end
 
     it "records the payments and comping discounts carried on the sheet" do

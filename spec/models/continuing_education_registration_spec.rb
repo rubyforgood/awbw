@@ -67,6 +67,42 @@ RSpec.describe ContinuingEducationRegistration, type: :model do
     end
   end
 
+  describe ".enroll!" do
+    let(:event) { create(:event, ce_hours_offered: 6, ce_hours_cost_cents: 2000) }
+    let(:person) { create(:person) }
+    let(:registration) { create(:event_registration, event: event, registrant: person) }
+
+    it "enrolls against the person's license for the given number and kind" do
+      ce = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+
+      expect(ce.professional_license).to have_attributes(person: person, number: "12345", kind: "LCSW")
+      expect(ce.hours).to eq(6)
+    end
+
+    it "returns the registration's existing CE record untouched" do
+      first = described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW")
+
+      expect(described_class.enroll!(event_registration: registration, number: "99999", kind: "LMFT")).to eq(first)
+      expect(registration.continuing_education_registrations.count).to eq(1)
+    end
+
+    it "fills a license's blank state and expiry" do
+      described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW",
+                              issuing_state: "CA", expires_on: Date.new(2027, 1, 1))
+
+      expect(person.professional_licenses.sole).to have_attributes(issuing_state: "CA", expires_on: Date.new(2027, 1, 1))
+    end
+
+    it "leaves what's on file alone when a value isn't supplied" do
+      license = create(:professional_license, person: person, number: "12345", kind: "LCSW",
+                                              issuing_state: "CA", expires_on: Date.new(2027, 1, 1))
+
+      described_class.enroll!(event_registration: registration, number: "12345", kind: "LCSW", issuing_state: "OR")
+
+      expect(license.reload).to have_attributes(issuing_state: "OR", expires_on: Date.new(2027, 1, 1))
+    end
+  end
+
   describe "hours and cost defaults from the event" do
     it "defaults hours from the event's offered CE hours on create" do
       event = create(:event, ce_hours_offered: 8)

@@ -60,6 +60,13 @@ class EventDecorator < ApplicationDecorator
     "#{title} (#{month_year})"
   end
 
+  # Tooltip for a compact event label (e.g. "Facilitator Training · October 2026").
+  def hover_title
+    return title if start_date.blank? || on_demand?
+
+    "#{title} · #{month_year}"
+  end
+
   # Subject pre-filled on the bulk reminder page and used as the send-time
   # fallback, so the preview and the delivered email always agree. An on-demand
   # event's start date bounds enrollment rather than naming a session, so putting
@@ -516,7 +523,7 @@ class EventDecorator < ApplicationDecorator
   # while it's still in the future (never one that has already passed).
   def videoconference_pending_reveal_phrase(payment_pending: false)
     reveal = object.videoconference_details_available_from
-    date_clause = "on #{reveal.to_date.strftime("%B %-d, %Y")}" if reveal.present? && Time.current < reveal
+    date_clause = "on #{DripDate.label(reveal)}" if reveal.present? && Time.current < reveal
 
     if payment_pending && date_clause
       "once your payment is on file and the link unlocks #{date_clause}"

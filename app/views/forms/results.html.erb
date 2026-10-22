@@ -46,10 +46,8 @@
           dates, the question search absorbing whatever's left. %>
       <div class="flex flex-wrap items-end gap-3">
         <% if show_question_filter %>
-          <div class="min-w-44 flex-1">
-            <%= label_tag :question, "Question", class: search_label_class %>
-            <%= text_field_tag :question, @selected_question, placeholder: "Search questions", class: search_field_class %>
-          </div>
+          <%= render "shared/filter_text", param: :question, label: "Question", placeholder: "Search questions",
+                value: @selected_question, wrapper_class: "min-w-44 flex-1" %>
         <% end %>
         <% if show_event_filter %>
           <div class="w-full sm:w-44">

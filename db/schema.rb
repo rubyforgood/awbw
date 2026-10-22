@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -88,6 +88,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
     t.datetime "updated_at", null: false
     t.integer "updated_by_id"
     t.string "zip_code", null: false
+    t.boolean "invoice_address"
+    t.index ["addressable_type", "addressable_id", "invoice_address"], name: "index_addresses_on_addressable_and_invoice_role"
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
     t.index ["created_by_id"], name: "index_addresses_on_created_by_id"
     t.index ["updated_by_id"], name: "index_addresses_on_updated_by_id"
@@ -662,6 +664,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
     t.string "videoconference_label", default: "Virtual event"
     t.string "videoconference_passcode"
     t.string "videoconference_url"
+    t.boolean "ce_timesheets_enabled", default: true, null: false
+    t.integer "ce_timesheet_opens_offset_minutes", default: -30, null: false
+    t.datetime "ce_timesheet_closes_at"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
     t.index ["facilitator_training"], name: "index_events_on_facilitator_training"
     t.index ["location_id"], name: "index_events_on_location_id"
@@ -1477,6 +1482,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
     t.integer "updated_by_id"
     t.string "website_url"
     t.integer "windows_type_id"
+    t.string "tax_id"
     t.index ["created_by_id"], name: "index_organizations_on_created_by_id"
     t.index ["location_id"], name: "index_organizations_on_location_id"
     t.index ["name"], name: "index_organizations_on_name", unique: true
@@ -1647,7 +1653,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
     t.datetime "created_at", null: false
     t.integer "created_by_id"
     t.date "date_of_birth"
-    t.string "display_name_preference"
+    t.string "display_name_preference", default: "first_name_last_initial"
     t.string "email"
     t.string "email_2"
     t.string "email_2_type"
@@ -1666,15 +1672,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
     t.boolean "profile_show_age_ranges", default: true, null: false
     t.boolean "profile_show_bio", default: true, null: false
     t.boolean "profile_show_credentials", default: true, null: false
-    t.boolean "profile_show_email", default: true, null: false
+    t.boolean "profile_show_email", default: false, null: false
     t.boolean "profile_show_events_registered", default: true, null: false
     t.boolean "profile_show_member_since", default: true, null: false
     t.boolean "profile_show_monthly_reports", default: true, null: false
-    t.boolean "profile_show_phone", default: true, null: false
-    t.boolean "profile_show_pronouns", default: true, null: false
+    t.boolean "profile_show_phone", default: false, null: false
+    t.boolean "profile_show_pronouns", default: false, null: false
     t.boolean "profile_show_resources", default: true, null: false
     t.boolean "profile_show_sectors", default: true, null: false
-    t.boolean "profile_show_social_media", default: true, null: false
+    t.boolean "profile_show_social_media", default: false, null: false
     t.boolean "profile_show_stories", default: true, null: false
     t.boolean "profile_show_workshop_logs", default: true, null: false
     t.boolean "profile_show_workshop_variations", default: true, null: false
@@ -1741,6 +1747,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
     t.string "proposed_city"
     t.string "proposed_state"
     t.string "proposed_zip_code"
+    t.boolean "leaving_job", default: false, null: false
+    t.json "left_organization_ids"
     t.index ["affiliation_id"], name: "index_profile_change_requests_on_affiliation_id"
     t.index ["organization_id"], name: "index_profile_change_requests_on_organization_id"
     t.index ["person_id"], name: "index_profile_change_requests_on_person_id"
@@ -2029,6 +2037,53 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
     t.index ["created_by_id"], name: "index_sectors_on_created_by_id"
     t.index ["story_share_position"], name: "index_sectors_on_story_share_position"
     t.index ["updated_by_id"], name: "index_sectors_on_updated_by_id"
+  end
+
+  create_table "settings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.boolean "singleton", default: true, null: false
+    t.integer "organization_id"
+    t.string "info_email"
+    t.string "reply_to_email"
+    t.string "programs_email"
+    t.string "no_reply_email"
+    t.string "invoice_prefix"
+    t.integer "annual_membership_cents"
+    t.integer "membership_renewal_window_days"
+    t.integer "membership_grace_period_days"
+    t.integer "created_by_id"
+    t.integer "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "return_address_id"
+    t.bigint "remittance_address_id"
+    t.string "contact_attention"
+    t.bigint "ce_administrator_id"
+    t.string "ce_provider_number"
+    t.string "ce_administrator_title"
+    t.string "ce_accreditation_body"
+    t.string "ce_accreditation_url"
+    t.string "ce_accreditation_abbreviation"
+    t.integer "import_user_id"
+    t.index ["ce_administrator_id"], name: "index_settings_on_ce_administrator_id"
+    t.index ["created_by_id"], name: "index_settings_on_created_by_id"
+    t.index ["import_user_id"], name: "index_settings_on_import_user_id"
+    t.index ["organization_id"], name: "index_settings_on_organization_id"
+    t.index ["remittance_address_id"], name: "index_settings_on_remittance_address_id"
+    t.index ["return_address_id"], name: "index_settings_on_return_address_id"
+    t.index ["singleton"], name: "index_settings_on_singleton", unique: true
+    t.index ["updated_by_id"], name: "index_settings_on_updated_by_id"
+  end
+
+  create_table "staff_aliases", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.boolean "ignored", default: false, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.integer "updated_by_id"
+    t.integer "user_id"
+    t.index ["name"], name: "index_staff_aliases_on_name", unique: true
+    t.index ["user_id"], name: "index_staff_aliases_on_user_id"
   end
 
   create_table "staff_taggings", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2861,6 +2916,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_123640) do
   add_foreign_key "sectorable_items", "users", column: "updated_by_id"
   add_foreign_key "sectors", "users", column: "created_by_id"
   add_foreign_key "sectors", "users", column: "updated_by_id"
+  add_foreign_key "settings", "addresses", column: "remittance_address_id", on_delete: :nullify
+  add_foreign_key "settings", "addresses", column: "return_address_id", on_delete: :nullify
+  add_foreign_key "settings", "organizations"
+  add_foreign_key "settings", "people", column: "ce_administrator_id", on_delete: :nullify
+  add_foreign_key "settings", "users", column: "import_user_id", on_delete: :nullify
+  add_foreign_key "staff_aliases", "users"
   add_foreign_key "staff_taggings", "staff_tags"
   add_foreign_key "stories", "organizations"
   add_foreign_key "stories", "people", column: "author_id"

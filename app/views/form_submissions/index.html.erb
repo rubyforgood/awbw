@@ -11,7 +11,7 @@
       <% end %>
     <% elsif @person %>
       <%= link_to edit_person_path(@person), class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
-        <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= @person.name %>
+        <i class="fa-solid fa-arrow-left text-xs"></i> Edit <%= person_name(@person) %>
       <% end %>
     <% elsif !@form %>
       <%= link_to forms_path, class: "inline-flex items-center gap-1.5 text-sm #{eyebrow_link_class} px-2 py-1" do %>
@@ -27,7 +27,7 @@
 <% end %>
 <% subtitle = capture do %>
   <% if @person %>
-    Forms submitted by <span class="font-medium text-gray-900"><%= @person.name %></span>.
+    Forms submitted by <span class="font-medium text-gray-900"><%= person_name(@person) %></span>.
   <% else %>
     Forms submitted across the site — including registrations, scholarships, and public forms.
   <% end %>
@@ -46,10 +46,7 @@
         <span class="text-xs font-semibold uppercase tracking-wide">Filters</span>
       </div>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        <div>
-          <%= label_tag :search, "Search", class: search_label_class %>
-          <%= text_field_tag :search, params[:search], placeholder: "Name or email", class: search_field_class %>
-        </div>
+        <%= render "shared/filter_text", param: :search, label: "Search", placeholder: "Name or email", wrapper_class: nil %>
 
         <div>
           <%= label_tag :form_id, "Form", class: search_label_class %>

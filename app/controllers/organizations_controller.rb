@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-  include AhoyTracking, TagAssignable, Dedupable
+  include AhoyTracking, Dedupable
   before_action :set_organization, only: [ :show, :edit, :update, :destroy, :populations_served ]
 
   def index
@@ -115,7 +115,6 @@ class OrganizationsController < ApplicationController
     end
 
     if @organization.save
-      assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to @organization, notice: "Organization was successfully created."
     else
       set_form_variables
@@ -128,7 +127,6 @@ class OrganizationsController < ApplicationController
     @organization.assign_attributes(organization_params)
 
     if @organization.save
-      assign_associations(@organization) if params.dig(:organization, :category_ids)
       redirect_to organization_path(@organization), notice: "Organization was successfully updated.", status: :see_other
     else
       set_form_variables
@@ -189,15 +187,6 @@ class OrganizationsController < ApplicationController
     # no-show confers no facilitation (ADR-0001 D8a). One representative
     # registration per training, newest first.
     @organization_inactive_training_registrations = inactive_only_training_registrations
-
-    @org_categories_grouped = Category
-      .includes(:category_type)
-      .published
-      .order(:position, :name)
-      .group_by(&:category_type)
-      .select { |type, _| type&.profile_specific? && type.name != AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }
-      .sort_by { |type, _| type&.name.to_s.downcase }
-    @managed_category_type_ids = @org_categories_grouped.map { |type, _| type.id }
   end
 
   def set_index_variables
@@ -231,6 +220,7 @@ class OrganizationsController < ApplicationController
       :name, :description, :start_date, :end_date, :mission_vision_values,
       :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id, :high_profile, :parent_id,
+      :tax_id,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
@@ -253,6 +243,7 @@ class OrganizationsController < ApplicationController
         :address_type,
         :primary,
         :inactive,
+        :invoice_address,
         :phone,
         :street_address,
         :city,

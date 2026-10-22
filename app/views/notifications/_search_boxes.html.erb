@@ -6,15 +6,9 @@
                       turbo_frame: "notifications_results" },
                       autocomplete: "off",
                 class: "flex items-end gap-3" do |f| %>
-    <div class="flex-1">
-      <%= f.label :email, "Email contains",
-                  class: search_label_class %>
-
-      <%= f.text_field :email,
-                       value: params[:email],
-                       class: search_field_class(extra: "bg-white"),
-                       oninput: "this.form.requestSubmit()" %>
-    </div>
+    <%= render "shared/filter_text", param: :email, label: "Email contains",
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "flex-1",
+          input_options: { oninput: "this.form.requestSubmit()" } %>
 
     <div class="w-32">
       <%= f.label :record_type, "Record type",
@@ -47,15 +41,9 @@
       </div>
     </div>
 
-    <div class="flex-1">
-      <%= f.label :subject_line, "Subject contains",
-                  class: search_label_class %>
-
-      <%= f.text_field :subject_line,
-                       value: params[:subject_line],
-                       class: search_field_class(extra: "bg-white"),
-                       oninput: "this.form.requestSubmit()" %>
-    </div>
+    <%= render "shared/filter_text", param: :subject_line, label: "Subject contains",
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "flex-1",
+          input_options: { oninput: "this.form.requestSubmit()" } %>
 
     <div>
       <%= f.label :delivery_status, "Status",

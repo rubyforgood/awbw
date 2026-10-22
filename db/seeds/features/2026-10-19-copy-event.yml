@@ -1,0 +1,12 @@
+name: "Copy an event with its settings and callouts"
+area: events
+display_status: admin_facing
+released_on: 2026-10-19
+summary: >-
+  Copy event, on an event's edit page, makes an unpublished copy with its
+  settings, ticket callouts, forms, staff, tags, and images. Deadlines and drip
+  dates move with the new start date you pick.
+pro_tips:
+  - "Every date keeps the same number of days before or after the start, at the same time of day."
+  - "Registrations, payments, and the event's short abbreviation aren't copied."
+  - "The copy starts unpublished, so review it before you publish."

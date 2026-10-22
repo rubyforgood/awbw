@@ -187,6 +187,14 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).not_to include('href="#"')
     end
 
+    it "has no Facilitator Spotlights link or home box" do
+      create(:story, :published, :publicly_visible, spotlighted_facilitator: create(:person))
+
+      get story_shares_path
+
+      expect(response.body).not_to include("Facilitator Spotlights")
+    end
+
     it "shows featured age ranges, then story populations, as one audience row" do
       age_range = create(:category_type, name: "AgeRange")
       create(:category, :published, name: "Children", category_type: age_range, story_share_position: 1)
@@ -330,13 +338,6 @@ RSpec.describe "/story_share", type: :request do
 
       get story_shares_path(category_names_all: "Teens")
       expect(response.body).to include("A teen art story")
-      expect(response.body).not_to include("An unrelated story")
-    end
-
-    it "filters by facilitator spotlights" do
-      spotlight = create(:story, :published, :publicly_visible, title: "A spotlighted facilitator", spotlighted_facilitator: create(:person))
-      get story_shares_path(facilitator_spotlights: true)
-      expect(response.body).to include("A spotlighted facilitator")
       expect(response.body).not_to include("An unrelated story")
     end
 

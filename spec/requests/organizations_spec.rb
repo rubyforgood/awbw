@@ -96,6 +96,46 @@ RSpec.describe "/organizations", type: :request do
       expect(response).to be_successful
     end
 
+    it "shows directly associated workshops and ideas on the profile" do
+      organization = Organization.create!(valid_attributes)
+      windows_type = create(:windows_type, :adult)
+      workshop = create(:workshop, organization: organization, title: "Org Pottery Workshop", windows_type: windows_type)
+      idea = create(:workshop_idea, organization: organization, title: "Org Pottery Idea", windows_type: windows_type, created_by: admin)
+
+      get organization_url(organization)
+
+      expect(response.body).to include(workshop.title)
+      expect(response.body).to include(idea.title)
+    end
+
+    it "shows workshops and ideas authored by affiliated people on the profile" do
+      organization = Organization.create!(valid_attributes)
+      affiliated_person = create(:person)
+      create(:affiliation, organization: organization, person: affiliated_person)
+      windows_type = create(:windows_type, :adult)
+      workshop = create(:workshop, author: affiliated_person, title: "Affiliated Weaving Workshop", windows_type: windows_type)
+      idea = create(:workshop_idea, author: affiliated_person, title: "Affiliated Weaving Idea", windows_type: windows_type, created_by: admin)
+
+      get organization_url(organization)
+
+      expect(response.body).to include(workshop.title)
+      expect(response.body).to include(idea.title)
+    end
+
+    it "does not duplicate workshops or ideas that are both directly and indirectly associated" do
+      organization = Organization.create!(valid_attributes)
+      affiliated_person = create(:person)
+      create(:affiliation, organization: organization, person: affiliated_person)
+      windows_type = create(:windows_type, :adult)
+      workshop = create(:workshop, organization: organization, author: affiliated_person, title: "Dual Mosaic Workshop", windows_type: windows_type)
+      idea = create(:workshop_idea, organization: organization, author: affiliated_person, title: "Dual Mosaic Idea", windows_type: windows_type, created_by: admin)
+
+      get organization_url(organization)
+
+      expect(response.body.scan(workshop.title).count).to eq(1)
+      expect(response.body.scan(idea.title).count).to eq(1)
+    end
+
     it "hides the Monthly reports row when there are no monthly reports" do
       organization = Organization.create!(valid_attributes)
       get organization_url(organization)
@@ -209,7 +249,7 @@ RSpec.describe "/organizations", type: :request do
       expect(page).not_to have_content("Direct Sector 1")
       expect(page).to have_content("Not editable here")
       expect(page).not_to have_css("[name*='sectorable_items_attributes']")
-      expect(page).not_to have_css("[name='organization[primary_age_category_ids][]']")
+      expect(page).not_to have_css("[name='organization[category_ids][]']")
     end
 
     describe "profile display preferences" do
@@ -471,24 +511,6 @@ RSpec.describe "/organizations", type: :request do
       }
 
       expect(organization.reload.sectors).to be_empty
-    end
-
-    it "preserves the org's existing age-range taggings when saving workshop settings" do
-      age_type = create(:category_type, name: "AgeRange", published: true)
-      teen = create(:category, :published, category_type: age_type, name: "13-17")
-      settings_type = create(:category_type, name: "WorkshopEnvironment", published: true, profile_specific: true)
-      clinical = create(:category, :published, category_type: settings_type, name: "Clinical setting")
-      organization.categorizable_items.create!(category: teen)
-
-      patch organization_url(organization), params: {
-        organization: {
-          name: organization.name,
-          category_ids: [ "", clinical.id.to_s ],
-          managed_category_type_ids: [ "", settings_type.id.to_s ]
-        }
-      }
-
-      expect(organization.reload.categories).to contain_exactly(teen, clinical)
     end
   end
 

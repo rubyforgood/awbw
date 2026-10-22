@@ -33,6 +33,8 @@ class Organization < ApplicationRecord
   has_many :workshop_logs
   has_many :workshop_ideas
   has_many :workshops
+  has_many :workshops_as_author, through: :people, source: :workshops_as_author
+  has_many :workshop_ideas_as_author, through: :people, source: :workshop_ideas_as_author
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -59,29 +61,6 @@ class Organization < ApplicationRecord
   ORGANIZATION_TYPE_OTHER = "Other"
   ORGANIZATION_TYPES = [ "501c3/nonprofit", "For-profit", "Government agency", ORGANIZATION_TYPE_OTHER ].freeze
 
-  # The organization that runs this app. A grant it self-funds counts as subsidy
-  # (unfunded), not external funding, in reports. Not memoized: the record can be
-  # created mid-process (seeds, tests).
-  def self.awbw
-    find_by(name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
-  end
-
-  # The staffed programs mailbox: what facilitators are told to write to, and the
-  # reply_to on portal mail. REPLY_TO_EMAIL is the retiring name for it.
-  def self.programs_email
-    ENV["PROGRAMS_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
-  end
-
-  # The unattended sending mailbox, for mail whose from: should not invite a reply.
-  def self.no_reply_email
-    ENV["NO_REPLY_EMAIL"].presence || ENV["REPLY_TO_EMAIL"].presence
-  end
-
-  # The public contact mailbox printed on invoices, receipts, and portal contact info.
-  def self.info_email
-    ENV["INFO_EMAIL"].presence || programs_email
-  end
-
   # Validations
   validates :logo,
             content_type: %w[image/png image/jpeg image/webp],
@@ -90,6 +69,7 @@ class Organization < ApplicationRecord
   validates :name, presence: true, length: { maximum: 255 }, uniqueness: { case_sensitive: false }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" }, allow_blank: true, length: { maximum: 255 }
   validates :organization_type_other, length: { maximum: 255 }
+  validates :tax_id, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :mission_vision_values, length: { maximum: 255 }
   validate :affiliation_dates_locked, if: -> { affiliations.any? && !Current.user&.super_user? }
@@ -172,9 +152,6 @@ class Organization < ApplicationRecord
 
   # Org search: like TagFilterable (matches ALL names), but sectors and age ranges
   # match through any tag, primary or additional, an active facilitator holds.
-  # Other category types (workshop settings) are still entered on the org itself,
-  # and like the tag counts below they only surface while the org has an active
-  # facilitator, so search and the tag matrix report the same organizations.
   scope :sector_names_all, ->(names) {
     parsed = TagFilterable.parse_names(names)
     next all if parsed.empty?
@@ -264,6 +241,24 @@ class Organization < ApplicationRecord
                         .where(created_by_id: users.select(:id))
     direct.or(legacy).distinct
   end
+
+  def affiliated_workshops
+    return Workshop.none unless persisted?
+
+    direct = Workshop.where(organization_id: id)
+    indirect = Workshop.where(author_id: people.select(:id))
+    direct.or(indirect).distinct
+  end
+  alias_method :all_workshops, :affiliated_workshops
+
+  def affiliated_workshop_ideas
+    return WorkshopIdea.none unless persisted?
+
+    direct = WorkshopIdea.where(organization_id: id)
+    indirect = WorkshopIdea.where(author_id: people.select(:id))
+    direct.or(indirect).distinct
+  end
+  alias_method :all_workshop_ideas, :affiliated_workshop_ideas
 
   # Display order, and what the attendees index filters on.
   FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES

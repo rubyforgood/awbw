@@ -18,14 +18,11 @@ RSpec.describe "Person age ranges", type: :request do
   before { sign_in admin }
 
   # Age ranges are saved as age_range_categorizable_items nested attributes (the
-  # cocoon picker), not category_ids. category_ids only carries workshop settings,
-  # of which there are none here.
+  # cocoon picker).
   def update_person(age_items:)
     patch person_path(person), params: {
       person: {
         first_name: person.first_name,
-        category_ids: [ "" ],
-        managed_category_type_ids: [],
         age_range_categorizable_items_attributes: age_items
       }
     }
@@ -51,22 +48,6 @@ RSpec.describe "Person age ranges", type: :request do
       body = response.body
       expect(body.index("Children (0-12)")).to be < body.index("Teens (13-17)")
       expect(body.index("Teens (13-17)")).to be < body.index("Adults (18+)")
-    end
-
-    # Guards against silent category loss: assign_associations only preserves
-    # unmanaged taggings when the managed_category_type_ids key is posted. With no
-    # profile-specific (managed) types, the per-type hidden fields render nothing,
-    # so the form must still emit a blank one — otherwise the browser drops the key
-    # and saving replaces categories, wiping age ranges and other-type taggings.
-    it "always renders a blank managed_category_type_ids field, even with no managed types" do
-      expect(CategoryType.profile_specific).to be_empty
-
-      get edit_person_path(person)
-
-      dom = Nokogiri::HTML(response.body)
-      blank = dom.css("input[type=hidden][name='person[managed_category_type_ids][]']")
-                 .any? { |node| node["value"].to_s.empty? }
-      expect(blank).to be(true)
     end
   end
 
@@ -94,14 +75,31 @@ RSpec.describe "Person age ranges", type: :request do
     end
   end
 
+  describe "creating a person with age ranges" do
+    it "saves the selected age range on the new person" do
+      post people_path, params: {
+        skip_duplicate_check: "1",
+        person: {
+          first_name: "Age",
+          last_name: "Tester",
+          age_range_categorizable_items_attributes: [
+            { category_id: adults.id, is_primary: "1" }
+          ]
+        }
+      }
+
+      expect(response).to have_http_status(:found)
+      created = Person.find_by(first_name: "Age", last_name: "Tester")
+      expect(created.primary_age_groups).to contain_exactly(adults)
+    end
+  end
+
   describe "re-rendering after a validation error" do
     it "retains a newly chosen age range and its primary flag, with options available" do
       patch person_path(person), params: {
         person: {
           first_name: person.first_name,
           last_name: "",
-          category_ids: [ "" ],
-          managed_category_type_ids: [],
           age_range_categorizable_items_attributes: [
             { category_id: children.id, is_primary: "1" }
           ]

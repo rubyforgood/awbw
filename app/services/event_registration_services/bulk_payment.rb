@@ -24,6 +24,7 @@ module EventRegistrationServices
         backfill_payer_fields(person)
         submission = create_form_submission(person)
         send_notifications(submission, person)
+        Current.form_submission_id = submission.id
         Result.new(success?: true, form_submission: submission, errors: [])
       end
     rescue ActiveRecord::RecordInvalid => e
@@ -50,7 +51,7 @@ module EventRegistrationServices
         noticeable: submission,
         kind: :bulk_payment_confirmation_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0
       )
     end

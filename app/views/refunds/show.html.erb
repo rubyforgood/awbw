@@ -21,7 +21,7 @@
     <% if @refund.recipient.present? %>
       <div>
         <dt class="text-sm font-medium text-gray-500">Recipient</dt>
-        <dd class="mt-1 text-sm text-gray-900"><%= @refund.recipient.name %></dd>
+        <dd class="mt-1 text-sm text-gray-900"><%= person_name(@refund.recipient) %></dd>
       </div>
     <% end %>
 

@@ -68,7 +68,7 @@ When changing a model or controller, check whether these related files need upda
 - **In service objects and POROs, read constructor arguments from instance variables (`@foo`) — don't add `private attr_reader`** for them. Reserve `attr_reader` for values the object deliberately exposes to callers (e.g. `BulkInviteService#results`).
 - **Prefer decorators (Draper, app/decorators/) over view helpers for model-specific presentation** — when display logic is "about a record" (labels, badges, formatted attributes, status pills), put it on that model's decorator and call `record.decorate.thing`. Reserve `app/helpers/` for generic, cross-model view utilities that aren't tied to one model. Decorators keep presentation testable and out of ERB.
 - Use `after_commit` instead of `after_save` for side effects
-- **Don't pass `to:` to `authorize!` when the rule matches the controller action** — ActionPolicy infers the rule from the action name (`create` → `create?`, `update` → `update?`), so `authorize! @record` in the `update` action already checks `update?`. Only pass `to:` when checking a *different* rule than the current action (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or `authorize! :workshop, to: :summary?`).
+- **Never pass `to:` to `authorize!` when it names the action you're in** — ActionPolicy defaults the rule to `"#{action_name}?"` for *every* action (`index`, `show`, `new`, `create`, `edit`, `update`, `destroy`, and custom actions alike), for records, classes, and symbol policies. Write `authorize! @setting` in `show`, not `authorize! @setting, to: :show?`; `authorize! :home` in `index`, not `authorize! :home, to: :index?`; keep other options (`authorize! @submission, context: { … }`). Only pass `to:` when checking a *different* rule than the current action (e.g. `authorize! @scholarship, to: :update?` from a non-`update` action, or `authorize! :workshop, to: :summary?`).
 - **Default to no comment.** Most code should carry none — clear names and small methods explain themselves. Only add a comment for a genuinely non-obvious *why* or a gotcha that would trip up the next reader, and only when you can't make the code say it instead (a better name, a named constant, an extracted method). Never restate what the code already says, and don't comment a constant, scope, or step whose intent is clear from its name. When a comment truly earns its place, keep it to **one line**; let it run longer only when the logic is genuinely complex and the reasoning can't be inferred from the code plus domain knowledge.
 - **Comment on what the code does now, never on what it used to do or an alternative it isn't.** A comment describes current behavior — not the old version, not a bug that was fixed, not the approach that was rejected, not what another component *doesn't* do. Cut phrases like "used to", "no longer", "instead of", "rather than", "would otherwise", "we don't X here". If a *why* needs a contrast, state the reason positively (e.g. "update_columns so the over-allocation persists past the cost validation", not "update_columns because a plain update would be rejected"). Git history, not comments, carries the past.
 
@@ -197,8 +197,9 @@ template abstraction.
   (`class: "text-sm #{eyebrow_link_class} px-2 py-1"`).
 - **Shared partial** — when the repeated thing is markup (icon + text + structure), not just a
   class list.
-- **`@apply` is reserved** for genuine element/base styles (e.g. `.btn` in
-  `components/buttons.css`), not for extracting repeated utility clusters.
+- **`@apply` is reserved** for genuine element/base styles (e.g. `.default-link a` and
+  the `.optional` form-field rules in `app/frontend/stylesheets/application.tailwind.css`),
+  not for extracting repeated utility clusters.
 
 ## HTML/ERB Formatting
 
@@ -522,15 +523,25 @@ exempt; this is for the message that says the work is finished.
 
 ## Response formatting
 
-**Structure the answer; don't hand back a wall of text.** Long replies are for scanning
-first and reading second.
+**Answer in short bullets and sub-bullets — never paragraphs.** This is the default for
+every reply, not just long ones. Prose is the exception, allowed only when the user asks
+for prose or when a single sentence genuinely says everything.
 
-- **Lead with the direct answer** when the user asked a question, then the detail.
+- **Bullets, not sentences.** One fact per bullet. Fragments are good. Drop "this", "the",
+  filler verbs, and hedging where the meaning survives.
+- **Sub-bullets for detail**, nested under the bullet they belong to — not trailing clauses
+  on the parent bullet.
+- **Super short.** Aim for one line per bullet. If a bullet needs a comma-spliced second
+  clause, split it into a sub-bullet.
+- **Lead with the direct answer** when the user asked a question, then the detail beneath it.
+- **Bold lead-in** naming the thing, then the point: `- **Grouping key** — CheckNumber.`
 - **Group under headers** (`##`/`###`) once a reply covers more than one topic.
-- **Use titled bullets** — a bold lead-in naming the thing, then the explanation — rather
-  than consecutive bare paragraphs.
-- **Nest detail under the point it belongs to** instead of running it inline.
-- Keep tables for genuinely tabular comparisons; keep prose short inside each bullet.
+- Keep tables for genuinely tabular comparisons.
+- **Recommendations get a verdict first** — "do it" / "skip it" / "later" — then the why
+  as sub-bullets.
+
+This governs user-facing replies. It does not shorten code comments, commit messages, or
+PR descriptions, which have their own rules above.
 
 ## Quick Commands
 

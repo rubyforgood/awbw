@@ -9,7 +9,7 @@
 # that differs is recorded here.
 class TagAliasSeeder
   # The archive's own three fields. Settings describes where a facilitator works, so only
-  # the ones that also say who they serve resolve; the rest are in DROPPED_SETTINGS.
+  # the ones that also say who they serve resolve; the rest are in IGNORED_TERMS.
   FILEMAKER_SECTORS = {
     "Community Oppression/Violence" => "Community Violence",
     "Criminal/Legal" => "Court/Legal System",
@@ -35,6 +35,7 @@ class TagAliasSeeder
     "Oppression Against LGBTQIA+" => "LGBTQIA+",
     "People Who Do Harm/Batterers" => "Batterers Intervention",
     "Racism and Marginalization" => "Racial/Social Justice",
+    "Racism & Marginalization" => "Racial/Social Justice",
     "Religious Trauma" => "Religious/Faith-Based",
     "Secondary/Vicarious Trauma" => "Staff/Organizational Development",
     "Student-Related Stress" => "Education",
@@ -109,7 +110,8 @@ class TagAliasSeeder
     "Substance Abuse Recovery" => "Substance Use/Recovery"
   }.freeze
 
-  # Names the portal itself used before the 2026 consolidation renamed and merged them.
+  # Names the portal itself used before the 2026 consolidation renamed and merged them,
+  # plus the consolidation sheet's "Sytems" spelling of the tag it proposed.
   PORTAL_SECTORS = {
     "Child abuse" => "Child Abuse/Neglect",
     "Children of Domestic Violence Survivors" => "Domestic Violence",
@@ -129,6 +131,7 @@ class TagAliasSeeder
     "Staff & organizational development" => "Staff/Organizational Development",
     "Student" => "Education",
     "Substance use" => "Substance Use/Recovery",
+    "Sytems/Policy Change" => "Systems/Policy Change",
     "Veterans & military" => "Military/Veterans"
   }.freeze
 
@@ -161,7 +164,7 @@ class TagAliasSeeder
   # (war) that AWBW chose to leave untagged. Recorded so they don't sit in the queue of
   # terms still needing a decision.
   IGNORED_TERMS = [
-    "Community-Based", "Events and Conferences", "Events & Conferences", "Home Visits",
+    "Community-Based", "Community based", "Events and Conferences", "Events & Conferences", "Home Visits",
     "Outreach Program", "Residential Program", "Virtually", "Other", "Did not specify",
     "Residential", "In person", "In visits", "virtually & in-person", "At office", "Office space.",
     "On-Call/Crisis", "Support groups", "n/a", "none", "something", "unsure", "Everyone", "Technology",
@@ -344,19 +347,19 @@ class TagAliasSeeder
 
   def record_sectors(table, source, proposed: false)
     table.each do |term, names|
-      Array(names).each { |name| record(term, "Sector", sector_ids[name.downcase], source, name, proposed:) }
+      Array(names).each { |name| record(term, "Sector", sector_ids[key(name)], source, name, proposed:) }
     end
   end
 
   # Resolved against every sector, published or not: the point of the table is the ones that
   # aren't, which the published lookup would report as missing.
   def record_retired_sectors(table, source)
-    table.each { |term, name| record(term, "Sector", every_sector_id[name.downcase], source, name) }
+    table.each { |term, name| record(term, "Sector", every_sector_id[key(name)], source, name) }
   end
 
   def record_age_groups(table, source, proposed: false)
     table.each do |term, names|
-      names.each { |name| record(term, "Category", age_group_ids[name.downcase], source, name, proposed:) }
+      names.each { |name| record(term, "Category", age_group_ids[key(name)], source, name, proposed:) }
     end
   end
 
@@ -398,15 +401,24 @@ class TagAliasSeeder
   # Published only, the same vocabulary TagTranslation resolves against, so a term aimed at
   # a retired tag is reported rather than recorded as an alias that never resolves.
   def sector_ids
-    @sector_ids ||= Sector.published.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
+    @sector_ids ||= name_index(Sector.published)
   end
 
   def age_group_ids
-    @age_group_ids ||= Category.age_ranges.published.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
+    @age_group_ids ||= name_index(Category.age_ranges.published)
   end
 
   def every_sector_id
-    @every_sector_id ||= Sector.pluck(:name, :id).to_h { |name, id| [ name.downcase, id ] }
+    @every_sector_id ||= name_index(Sector.all)
+  end
+
+  # Keyed the way TagTranslation reads names, so a stored name with stray whitespace still matches.
+  def name_index(scope)
+    scope.pluck(:name, :id).to_h { |name, id| [ key(name), id ] }
+  end
+
+  def key(name)
+    name.to_s.squish.downcase
   end
 
   def report

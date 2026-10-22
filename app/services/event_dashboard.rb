@@ -983,35 +983,6 @@ class EventDashboard
       .transform_values { |rows| rows.map(&:last).uniq }
   end
 
-  # Workshop settings captured at registration: WorkshopEnvironment categories
-  # tagged onto registrants. Ordered by name.
-  def settings
-    @settings ||= Category.where(id: registrant_settings_ids).order(:name)
-  end
-
-  # Distinct registrant count per setting category, keyed by Category id.
-  def settings_counts
-    @settings_counts ||= settings_items
-      .distinct
-      .group(:category_id)
-      .count(:categorizable_id)
-  end
-
-  # Registrant ids tagged with at least one workshop setting.
-  def settings_registrant_ids
-    @settings_registrant_ids ||= settings_items.distinct.pluck(:categorizable_id)
-  end
-
-  # Registrant ids per setting category, keyed by Category id — the people behind
-  # each row, for drilling into the matching registrant list.
-  def settings_registrant_ids_by_category
-    @settings_registrant_ids_by_category ||= settings_items
-      .distinct
-      .pluck(:category_id, :categorizable_id)
-      .group_by(&:first)
-      .transform_values { |rows| rows.map(&:last).uniq }
-  end
-
   private
 
   # Active registrant addresses whose state is a recognized US state/territory —
@@ -1363,7 +1334,7 @@ class EventDashboard
   end
 
   # Ids of grants the org self-funded; memoized so the funded/unfunded split
-  # doesn't re-run Grant.self_funded_ids (an Organization.awbw + pluck) per call.
+  # doesn't re-run Grant.self_funded_ids (a Setting.app_organization + pluck) per call.
   def self_funded_grant_ids
     @self_funded_grant_ids ||= Grant.self_funded_ids
   end
@@ -1452,19 +1423,6 @@ class EventDashboard
 
   def registrant_life_experience_ids
     @registrant_life_experience_ids ||= life_experience_items.distinct.pluck(:category_id)
-  end
-
-  # CategorizableItem rows tying registrants to WorkshopEnvironment (workshop
-  # settings) categories — the source for the settings breakdown.
-  def settings_items
-    CategorizableItem
-      .joins(category: :category_type)
-      .where(categorizable_type: "Person", categorizable_id: registrant_ids)
-      .where(category_types: { name: "WorkshopEnvironment" })
-  end
-
-  def registrant_settings_ids
-    @registrant_settings_ids ||= settings_items.distinct.pluck(:category_id)
   end
 
   # [ person_id, age_group_category_id ] for every AgeRange selection in active

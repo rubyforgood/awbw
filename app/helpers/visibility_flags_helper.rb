@@ -72,8 +72,8 @@ module VisibilityFlagsHelper
     },
     profile_specific: {
       label: "Profile specific",
-      hint: "Shown on person & organization forms",
-      description: "Shown on the person and organization forms."
+      hint: "Kept out of content tag pickers",
+      description: "For tagging people and organizations only, so it's left out of the tag pickers on workshops, resources, events, and other content."
     },
     standout: {
       label: "Standout",

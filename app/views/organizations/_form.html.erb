@@ -112,32 +112,6 @@
     </div>
   </div>
 
-  <!-- Profile-specific Categories (e.g. Workshop Settings) -->
-  <%# Saving replaces only the category types shown here, preserving any other type
-      (age ranges included) the form never shows. %>
-  <%= hidden_field_tag "organization[managed_category_type_ids][]", "" %>
-  <% (@managed_category_type_ids || []).each do |type_id| %>
-    <%= hidden_field_tag "organization[managed_category_type_ids][]", type_id %>
-  <% end %>
-  <% if @org_categories_grouped.present? %>
-    <div class="form-group mb-8 space-y-4">
-      <%# Keeps category_ids in the params when every picker is emptied, so saving clears them. %>
-      <%= hidden_field_tag "organization[category_ids][]", "" %>
-      <% @org_categories_grouped.each do |type, cats| %>
-        <% select_id = "organization_category_ids_type_#{type.id}" %>
-        <%= label_tag select_id, type.display_label, class: "mb-2 block font-semibold text-gray-700" %>
-        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm" data-controller="searchable-checkbox">
-          <%= select_tag "organization[category_ids][]",
-                         options_from_collection_for_select(cats, :id, :name, @organization.category_ids),
-                         id: select_id,
-                         multiple: true,
-                         class: "w-full rounded-lg border border-gray-300 bg-white",
-                         data: { searchable_checkbox_target: "select", placeholder: "Add #{type.display_label.downcase}…" } %>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-
   <!-- Background info -->
   <div class="form-group mb-8 space-y-4">
     <div class="mb-2 font-semibold text-gray-700">
@@ -201,6 +175,12 @@
         <%= f.input :high_profile,
                     label: "High profile",
                     hint: "Shows a #{high_profile_gem} next to the org on dashboards and reports".html_safe %>
+        <%= f.input :tax_id,
+                    label: "Tax ID (EIN)",
+                    hint: "Shown in the site footer",
+                    input_html: {
+                      class: "rounded-md border-gray-300 bg-blue-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    } %>
       </div>
     <% end %>
 

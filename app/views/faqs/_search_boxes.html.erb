@@ -1,15 +1,8 @@
 <%= form_tag(faqs_path, method: :get, class: "space-y-4", data: { controller: "collection" }) do |f| %>
   <div class="mb-6 flex flex-col md:flex-row md:items-end md:gap-4">
     <!-- Search -->
-    <div class="mb-3 w-full md:mb-0 md:flex-1">
-      <%= label_tag :query, "Search", class: search_label_class %>
-      <div class="relative">
-        <%= text_field_tag :query, params[:query],
-                           class: search_field_class(extra: "pr-10") %>
-
-        <%= render "shared/search_submit" %>
-      </div>
-    </div>
+    <%= render "shared/filter_text", param: :query, label: "Search", submit: true,
+          wrapper_class: "mb-3 w-full md:mb-0 md:flex-1" %>
 
     <!-- Visibility -->
     <div class="mb-3 w-full md:mb-0 md:w-48">

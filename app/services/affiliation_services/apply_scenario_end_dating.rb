@@ -31,16 +31,7 @@ module AffiliationServices
     def call
       return [] unless @scenario == "new_job"
 
-      end_affiliations(@person.affiliations.active_or_pending.where.not(organization: @organization))
-    end
-
-    private
-
-    def end_affiliations(affiliations)
-      affiliations.find_each.map do |affiliation|
-        affiliation.update!(end_date: @effective_date - 1.day)
-        affiliation
-      end
+      EndOtherOrganizations.call(person: @person, organization: @organization, effective_date: @effective_date)
     end
   end
 end

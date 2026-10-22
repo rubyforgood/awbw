@@ -7,7 +7,7 @@ class CategorizableItem < ApplicationRecord
   belongs_to :updated_by, class_name: "User", optional: true
 
   # Validations
-  validates_presence_of :categorizable_type, :categorizable_id, :category_id
+  validates_presence_of :category_id
   validates :category_id, uniqueness: { scope: [ :categorizable_type, :categorizable_id ] }
 
   # A tagging reads as the category it applied.

@@ -36,7 +36,7 @@ RSpec.describe Person, type: :model do
 
     it "is false on an unpaid term past the grace window" do
       term(cost_cents: 2_500,
-        start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1,
+        start_date: Date.current - Membership.grace_period_days - 1,
         subscription: subscription)
 
       expect(person).not_to be_membership_current
@@ -76,7 +76,7 @@ RSpec.describe Person, type: :model do
     it { should have_many(:sectorable_items) }
   end
 
-  describe "normalize_names_and_emails" do
+  describe "name and email normalization" do
     let(:admin) { create(:user, :admin) }
 
     it "strips leading and trailing whitespace from names and emails" do
@@ -87,6 +87,24 @@ RSpec.describe Person, type: :model do
       expect(person.last_name).to eq("Doe")
       expect(person.email).to eq("jane@test.org")
       expect(person.email_2).to eq("jane2@test.org")
+    end
+
+    it "removes every whitespace character from emails, including non-breaking and zero-width ones" do
+      person = create(:person, user: nil, email: "\u00A0jane @test.org\t\n", email_2: "\u200Bjane2@test.org\u3000",
+                       created_by: admin, updated_by: admin)
+
+      expect(person.email).to eq("jane@test.org")
+      expect(person.email_2).to eq("jane2@test.org")
+    end
+
+    it "stores a blank or whitespace-only email as nil" do
+      person = create(:person, user: nil, email: "jane@test.org", created_by: admin, updated_by: admin)
+      person.update_columns(email: "\u00A0 \t", email_2: "  ")
+
+      person.update!(email: "", email_2: " \u200B")
+
+      expect(person.reload.email).to be_nil
+      expect(person.email_2).to be_nil
     end
 
     it "stores look-alike dashes in names as a plain hyphen" do
@@ -107,6 +125,13 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#known_email_type? / #known_email_2_type?" do
+    it "counts a work or personal type as known, and unknown or blank as not" do
+      expect(build(:person, email_type: "work", email_2_type: "personal")).to have_attributes(known_email_type?: true, known_email_2_type?: true)
+      expect(build(:person, email_type: "unknown", email_2_type: nil)).to have_attributes(known_email_type?: false, known_email_2_type?: false)
+    end
+  end
+
   describe "validations" do
     it { should validate_presence_of(:first_name) }
     it { should validate_presence_of(:last_name) }
@@ -119,6 +144,48 @@ RSpec.describe Person, type: :model do
     it { should allow_value("test@example.com").for(:email_2) }
     it { should allow_value("").for(:email_2) }
     it { should_not allow_value("not-an-email").for(:email_2).with_message("must be a valid email address") }
+
+    describe "an email only on a name collision" do
+      it "saves the first person of a name with no email at all" do
+        expect(build(:person, user: nil, email: nil)).to be_valid
+      end
+
+      it "asks the second person of that name for their own address, naming a free placeholder" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+        second = Person.new(first_name: "Jane", last_name: "Doe")
+
+        expect(second).not_to be_valid
+        expect(second.errors[:base]).to include(
+          "A person named Jane Doe with no email already exists. Give this person their own email " \
+          "address so the two can be told apart, or 1@example.com if they truly have none."
+        )
+      end
+
+      it "accepts the placeholder it named" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+
+        expect(build(:person, first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)).to be_valid
+      end
+
+      it "names the next placeholder up once the first is taken" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)
+        third = Person.new(first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)
+
+        expect(third).not_to be_valid
+        expect(third.errors[:base].sole).to include("or 2@example.com if they truly have none.")
+      end
+
+      it "leaves a different name alone" do
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
+
+        expect(build(:person, user: nil, first_name: "Jane", last_name: "Roe", email: nil)).to be_valid
+      end
+    end
+
+    it { should allow_value("unknown").for(:email_type) }
+    it { should allow_value("unknown").for(:email_2_type) }
+    it { should_not allow_value("mailing").for(:email_type) }
 
     describe "unique_name_and_email_combination" do
       let(:admin) { create(:user, :admin) }
@@ -170,6 +237,7 @@ RSpec.describe Person, type: :model do
         duplicate = build(:person, first_name: "Jane", last_name: "Doe", email: "",
                           created_by: admin, updated_by: admin)
         expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:base].sole).to start_with("A person named Jane Doe with no email already exists")
       end
 
       it "treats an en dash in the name as the same person" do
@@ -241,6 +309,34 @@ RSpec.describe Person, type: :model do
 
       person.reload
       expect(person.sectorable_items_primary_first.map { |si| si.sector.name }).to eq(%w[Mango Apple Zebra])
+    end
+  end
+
+  describe "profile defaults" do
+    let(:person) { Person.new }
+
+    it "shows the first name and last initial" do
+      expect(person.display_name_preference).to eq("first_name_last_initial")
+    end
+
+    it "hides pronouns, email, phone, and social media" do
+      expect(person).to have_attributes(profile_show_pronouns: false, profile_show_email: false, profile_show_phone: false, profile_show_social_media: false)
+    end
+
+    it "shows the rest of the profile" do
+      expect(person).to have_attributes(
+        profile_show_member_since: true,
+        profile_show_events_registered: true,
+        profile_show_workshop_variations: true,
+        profile_show_affiliations: true,
+        profile_show_resources: true,
+        profile_show_workshops: true,
+        profile_show_sectors: true,
+        profile_show_stories: true,
+        profile_show_bio: true,
+        profile_show_age_ranges: true,
+        profile_show_credentials: true
+      )
     end
   end
 
@@ -449,6 +545,41 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#preferred_email" do
+    it "prefers the login email, then the record email, then the secondary" do
+      on_login = create(:person, user: create(:user, email: "login@example.com"), email: "record@example.com")
+      on_record = create(:person, user: nil, email: "record@example.com", email_2: "second@example.com")
+      on_second = create(:person, user: nil, email: nil, email_2: "second@example.com")
+
+      expect(on_login.preferred_email).to eq("login@example.com")
+      expect(on_record.preferred_email).to eq("record@example.com")
+      expect(on_second.preferred_email).to eq("second@example.com")
+    end
+
+    it "falls through the no-email placeholder to the secondary email" do
+      person = create(:person, user: nil, email: PlaceholderEmail.first, email_2: "second@example.com")
+
+      expect(person.preferred_email).to eq("second@example.com")
+    end
+
+    it "is nil when the placeholder is the only address" do
+      person = create(:person, user: nil, email: PlaceholderEmail.first, email_2: nil)
+
+      expect(person.preferred_email).to be_nil
+      expect(person.email).to eq(PlaceholderEmail.first)
+    end
+  end
+
+  describe ".placeholder_email" do
+    it "finds only the people marked as having no address" do
+      marked = create(:person, user: nil, email: PlaceholderEmail.first)
+      create(:person, user: nil, email: "real@example.com")
+      create(:person, user: nil, email: nil)
+
+      expect(Person.placeholder_email).to contain_exactly(marked)
+    end
+  end
+
   describe "#primary_organization" do
     let(:person) { create(:person) }
 
@@ -478,7 +609,7 @@ RSpec.describe Person, type: :model do
 
     it "can exist without a user" do
       admin = create(:user, :admin)
-      person = Person.create!(first_name: "Solo", last_name: "Person",
+      person = Person.create!(first_name: "Solo", last_name: "Person", email: "solo@example.com",
                               created_by: admin, updated_by: admin)
       expect(person.user).to be_nil
     end
@@ -542,18 +673,21 @@ RSpec.describe Person, type: :model do
 
     it 'filters by shared_contact_info matching a shared email but not a hidden one' do
       person_alice.update!(email: 'alice@example.com', profile_show_email: false)
+      person_bob.update!(profile_show_email: true)
 
       expect(Person.search_by_params(shared_contact_info: 'bob@example')).to include(person_bob)
       expect(Person.search_by_params(shared_contact_info: 'alice@example')).not_to include(person_alice)
     end
 
     it 'filters by shared_contact_info matching a shared login phone' do
+      person_bob.update!(profile_show_phone: true)
       person_bob.user.update!(phone: '555-0199')
 
       expect(Person.search_by_params(shared_contact_info: '555-0199')).to include(person_bob)
     end
 
     it 'filters by shared_contact_info matching terms across a name and a shared phone' do
+      person_alice.update!(profile_show_phone: true)
       person_alice.user.update!(phone: '555-0199')
 
       results = Person.search_by_params(shared_contact_info: 'Alice 555-0199')
@@ -957,13 +1091,6 @@ RSpec.describe Person, type: :model do
 
   describe "Other form responses" do
     let(:person) { create(:person) }
-    let(:form) { create(:form) }
-    let(:submission) { create(:form_submission, person: person, form: form) }
-
-    def answer(identifier, value)
-      field = create(:form_field, form: form, field_identifier: identifier)
-      create(:form_answer, form_submission: submission, form_field: field, submitted_answer: value)
-    end
 
     describe "#other_sector_responses" do
       it "returns the person's visible sector OtherResponses" do
@@ -979,21 +1106,6 @@ RSpec.describe Person, type: :model do
         create(:other_response, :promoted, owner: person, kind: "sector", text: "Promoted")
 
         expect(person.other_sector_responses).to be_empty
-      end
-    end
-
-    describe "#other_workshop_setting_responses" do
-      it "returns free-text Other values from the category-backed fields" do
-        answer("primary_age_group", "3, Other: Toddlers")
-
-        expect(person.other_workshop_setting_responses)
-          .to contain_exactly("Toddlers")
-      end
-
-      it "does not pull from the sector fields" do
-        answer("additional_sectors", "Other: Equine therapy")
-
-        expect(person.other_workshop_setting_responses).to be_empty
       end
     end
   end
@@ -1061,7 +1173,8 @@ RSpec.describe Person, "scholarship index helpers" do
     end
 
     it "returns none when the person has no addresses on file" do
-      person = create(:person, user: nil, email: nil, email_2: nil)
+      person = create(:person, user: nil, email: "legacy@example.com", email_2: nil)
+      person.update_column(:email, nil)
       create(:notification, recipient_email: "someone@example.com")
 
       expect(person.communications_scope).to be_empty

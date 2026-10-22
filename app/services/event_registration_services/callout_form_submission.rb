@@ -36,11 +36,14 @@ module EventRegistrationServices
         @edited = !@submission.previously_new_record?
         @submission.record_callout_collection!(@callout)
         save_answers
+        OtherResponses::CaptureFromSubmission.call(@submission)
+        Quotes::CaptureFromSubmission.call(@submission)
         # Runs for any callout form; only fires when the form asks the identified
         # anonymity / name questions.
         sync_profile(person)
         stamp_scholarship_form_completion
       end
+      Current.form_submission_id = @submission.id
       @submission
     end
 

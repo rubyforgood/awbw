@@ -1,11 +1,26 @@
 class FormSubmissionDecorator < ApplicationDecorator
   delegate_all
 
+  # What linking an organization from this submission's editor does beyond the
+  # submission itself, mirroring FormSubmissionsController#link_and_report.
+  def link_organization_effects
+    return [] if linking_scenario == "close_program"
+
+    registration = on_demand_registration
+    position = org_entry[:position]
+    [
+      ("Links it to their #{registration.event.title} registration" if registration),
+      ("Adds a “#{position}” job affiliation there" if position),
+      ("Adds a Facilitator affiliation there" if OrganizationServices::LinkSubmittedOrganization::FACILITATOR_CONFERRING_SCENARIOS.include?(linking_scenario)),
+      ("Ends their affiliations at other organizations" if linking_scenario == "new_job")
+    ].compact
+  end
+
   # The payer's display name/email. Prefer the linked person's account; fall
   # back to what the payer typed on the form — bulk-payment payers routinely
   # have no account, so `person` is nil — then a neutral placeholder for the name.
   def payer_name
-    return object.person.name if object.person
+    return h.person_name(object.person) if object.person
     typed_payer_name || "Anonymous payer"
   end
 

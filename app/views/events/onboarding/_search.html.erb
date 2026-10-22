@@ -6,17 +6,8 @@
   <%= hidden_field_tag :status_filter, params[:status_filter].presence || "active" %>
   <%= hidden_field_tag :hide, params[:hide] if params[:hide].present? %>
 
-  <div class="w-full md:w-1/3">
-    <%= label_tag :keyword, "Keyword", class: search_label_class %>
-    <div class="relative">
-      <%= text_field_tag :keyword, params[:keyword],
-                         class: search_field_class,
-                         placeholder: "Name, email, phone, city, or organization" %>
-      <button type="submit" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-600">
-        <i class="fa fa-search"></i>
-      </button>
-    </div>
-  </div>
+  <%= render "shared/filter_text", param: :keyword, label: "Keyword",
+        placeholder: "Name, email, phone, city, or organization", submit: true, wrapper_class: "w-full md:w-1/3" %>
 
   <div class="flex w-full justify-end md:w-auto">
     <%= link_to "Clear", onboarding_event_path(@event, hide: params[:hide].presence),

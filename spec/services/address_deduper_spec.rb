@@ -24,6 +24,16 @@ RSpec.describe AddressDeduper do
     expect(Address.exists?(dup.id)).to be false
   end
 
+  it "folds a legacy untyped address into one that now says unknown" do
+    keep = address(address_type: Address::UNKNOWN_CONTACT_TYPE)
+    legacy = address(address_type: Address::UNKNOWN_CONTACT_TYPE)
+    legacy.update_columns(address_type: nil)
+
+    described_class.new(person).call
+
+    expect(person.addresses.reload.pluck(:id)).to eq([ keep.id ])
+  end
+
   it "merges an address spelled differently but naming the same place" do
     keep = address(street_address: "1 Main Street", state: "California", zip_code: "90001-1234")
     dup = address(street_address: "1 Main St.")

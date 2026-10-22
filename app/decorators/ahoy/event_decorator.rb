@@ -111,6 +111,21 @@ module Ahoy
       comment&.flagged? || false
     end
 
+    # A deleted comment rebuilt from its destroy snapshot, for read-only display.
+    # A deleted parent reads as its type ("Affiliation (deleted)"), unlinked.
+    def deleted_comment
+      attributes = properties_hash["attributes"].to_h
+      author = find_referenced_record("User", attributes["created_by_id"])
+      {
+        topic: attributes["topic"].presence,
+        body: attributes["body"].presence,
+        author_name: author&.full_name || "System",
+        deleted_by_name: object.user&.full_name || "System",
+        deleted_at: object.time&.strftime("%-m/%-d/%Y %-I:%M %p"),
+        parent_link: deleted_comment_parent_link
+      }
+    end
+
     # A comment's topic + body, read from the record so it shows in Details
     # regardless of how the body was captured in properties. nil for non-comments
     # and for a comment with nothing to show (e.g. a since-deleted record).
@@ -179,8 +194,9 @@ module Ahoy
     # record references (association changes, associated records) become links to
     # the record's show page so admins can jump straight to it.
     def detail_rows
-      rows = extra_properties.except("changes", Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY)
-      [ change_request_row, *(flatten_rows(rows) if rows.present?) ].compact
+      rows = extra_properties.except("changes", Analytics::LifecycleBuffer::FORM_SUBMISSION_KEY,
+                                      Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY)
+      [ change_request_row, form_submission_row, *(flatten_rows(rows) if rows.present?) ].compact
     end
 
     private
@@ -286,6 +302,14 @@ module Ahoy
 
       type, id = Analytics::EventReferenceLoader.polymorphic_references(properties_hash["attributes"].to_h)["commentable"]
       find_referenced_record(type, id) if type
+    end
+
+    def deleted_comment_parent_link
+      parent = deleted_commentable
+      return commentable_link(parent) if parent
+
+      type, = Analytics::EventReferenceLoader.polymorphic_references(properties_hash["attributes"].to_h)["commentable"]
+      { text: "#{type.to_s.underscore.humanize} (deleted)", path: nil }
     end
 
     # The Comment this event is about, from the page cache (no extra query); nil
@@ -513,6 +537,16 @@ module Ahoy
       text = safe_label(record) || item["label"].presence || "#{type} ##{id}"
       { label: label, depth: depth, action: item["action"],
         link: { text: text, path: show_path_for(record) } }
+    end
+
+    # The form submission a form-driven write was stamped with, linked to its own page.
+    def form_submission_row
+      type, id = Analytics::EventReferenceLoader.form_submission_pair(properties_hash)
+      return unless id
+
+      submission = find_referenced_record(type, id)
+      { label: "From form submission", depth: 0,
+        link: { text: submission&.title || "Form submission ##{id}", path: show_path_for(submission) } }
     end
 
     # A model's own title/name can raise on records it wasn't written for, and a

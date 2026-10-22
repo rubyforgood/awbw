@@ -1,5 +1,5 @@
 class PeopleController < ApplicationController
-  include AhoyTracking, TagAssignable, Dedupable
+  include AhoyTracking, Dedupable
   before_action :set_person, only: %i[ show edit update destroy workshop_logs checkout bio all_comments send_form_link ]
 
   # The profile's "Submitted content" sections — private to the person and admins,
@@ -153,6 +153,7 @@ class PeopleController < ApplicationController
       @total_count = base.count
       @flagged_count = base.flagged.count
       @new_comment = Comment.new
+      @deleted_comments = Analytics::PersonActivityEvents.new(@person.object).deleted_comment_events.map(&:decorate)
       track_view("person_all_comments", { person_id: @person.id })
     end
   end
@@ -206,7 +207,7 @@ class PeopleController < ApplicationController
         price_data: {
           currency: "usd",
           product_data: {
-            name: "Donation to A Window Between Worlds"
+            name: "Donation to #{Setting.app_organization_name}"
           },
           unit_amount: amount
         },
@@ -278,7 +279,6 @@ class PeopleController < ApplicationController
 
     respond_to do |format|
       if @person.save
-        assign_associations(@person) if params.dig(:person, :category_ids)
         format.html { redirect_to @person, notice: "Person was successfully created." }
       else
         set_form_variables
@@ -299,7 +299,6 @@ class PeopleController < ApplicationController
     @person.assign_attributes(attrs)
 
     if @person.save
-      assign_associations(@person) if params.dig(:person, :category_ids)
       redirect_to person_update_return_path, notice: "Person was successfully updated."
     else
       set_form_variables
@@ -338,7 +337,7 @@ class PeopleController < ApplicationController
 
     email = @person.preferred_email
     if email.blank?
-      redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), alert: "#{@person.name} has no email address on file."
+      redirect_to edit_person_path(@person, agreement_links: 1, anchor: "agreement-links"), alert: "#{helpers.person_name(@person)} has no email address on file."
       return
     end
 
@@ -516,37 +515,12 @@ class PeopleController < ApplicationController
     @sectors_collection = @all_sectors.pluck(:name, :id)
     @current_sector_ids = @person.sectorable_items.map(&:sector_id)
 
-    @person_categories_grouped = Category
-      .includes(:category_type)
-      .published
-      .order(:position, :name)
-      .group_by(&:category_type)
-      .select { |type, _| type&.profile_specific? }
-      .sort_by { |type, _| type&.name.to_s.downcase }
-
-    # Age ranges edit as their own sectors-style cocoon chip picker (AgeRange
-    # isn't a profile_specific type, so it never appears in
-    # @person_categories_grouped). Tagged via age_range_categorizable_items nested
-    # attributes, not category_ids.
+    # Age ranges edit as a sectors-style cocoon chip picker, tagged via
+    # age_range_categorizable_items nested attributes.
     @age_range_type = CategoryType.find_by(name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE)
     age_ranges = @age_range_type ? @age_range_type.categories.published.order(:position, :name) : Category.none
     @age_ranges_collection = age_ranges.pluck(:name, :id)
     @current_age_range_category_ids = @person.age_range_categorizable_items.map(&:category_id)
-
-    # The category types this form edits via category_ids — the profile-specific
-    # types shown below (workshop settings). assign_associations preserves taggings
-    # of any other type (age ranges included, handled by nested attributes), so
-    # saving the form can't drop a person's other category connections.
-    @managed_category_type_ids = @person_categories_grouped.map { |type, _| type.id }
-
-    # category_ids is applied via assign_associations only on a successful save, so
-    # on a validation-error re-render reflect the just-submitted selections rather
-    # than the stale persisted set — otherwise the checkboxes silently revert.
-    @selected_category_ids = if params.dig(:person, :category_ids)
-      Array(params[:person][:category_ids]).reject(&:blank?).map(&:to_i)
-    else
-      @person.category_ids
-    end
 
     @staff_tags_collection = StaffTag.published.ordered.pluck(:name, :id)
     @current_staff_tag_ids = @person.staff_tag_ids
@@ -557,10 +531,10 @@ class PeopleController < ApplicationController
     duplicate_ids = Set.new
 
     # Entered emails (primary + secondary) drive both email matching and match
-    # classification. example.com addresses are seed/placeholder data, so they're
+    # classification. Placeholder-domain addresses are seed data, so they're
     # excluded from the DB lookup.
     entered_emails = [ email, email_2 ].filter_map { |e| e.presence&.downcase }.uniq
-    query_emails = entered_emails.reject { |e| e.end_with?("@example.com") }
+    query_emails = entered_emails.reject { |e| PlaceholderEmail.domain_address?(e) }
 
     # Entered first-name forms: the first name and legal first name, normalized.
     # Normalize removes periods and extra whitespace: "J. R." -> "jr".

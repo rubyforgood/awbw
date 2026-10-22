@@ -58,32 +58,4 @@ RSpec.describe AgeGroupTaggable do
       expect(person.categories).to include(clinical)
     end
   end
-
-  describe "#apply_primary_age_groups!" do
-    it "flips is_primary on already-tagged age categories to match the given set" do
-      person.categories = [ young, teen, adult ]
-
-      person.apply_primary_age_groups!([ young.id, teen.id ])
-
-      expect(person.primary_age_groups).to contain_exactly(young, teen)
-      expect(person.additional_age_groups).to contain_exactly(adult)
-    end
-
-    it "clears primary when the set is empty and never creates new taggings" do
-      person.tag_age_groups(primary_ids: [ young.id ], additional_ids: [])
-
-      person.apply_primary_age_groups!([])
-
-      expect(person.primary_age_groups).to be_empty
-      expect(person.additional_age_groups).to contain_exactly(young)
-    end
-  end
-
-  describe "#primary_age_category_ids" do
-    it "returns the ids of the currently-primary age groups" do
-      person.tag_age_groups(primary_ids: [ adult.id ], additional_ids: [ teen.id ])
-
-      expect(person.primary_age_category_ids).to contain_exactly(adult.id)
-    end
-  end
 end

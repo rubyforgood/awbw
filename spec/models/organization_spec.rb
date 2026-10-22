@@ -15,6 +15,8 @@ RSpec.describe Organization do
     it { should have_many(:workshop_logs) }
     it { should have_many(:workshop_ideas) }
     it { should have_many(:workshops) }
+    it { should have_many(:workshops_as_author).through(:people) }
+    it { should have_many(:workshop_ideas_as_author).through(:people) }
   end
 
   describe 'validations' do
@@ -524,6 +526,53 @@ RSpec.describe Organization do
       expect(organization.active_facilitator_age_groups).to eq([ teen, young, adult ])
     end
   end
+
+  describe "#affiliated_workshops" do
+    let(:organization) { create(:organization) }
+    let(:affiliated_person) { create(:person) }
+    let(:windows_type) { create(:windows_type, :adult) }
+
+    before do
+      create(:affiliation, organization: organization, person: affiliated_person)
+    end
+
+    it "includes directly associated workshops and workshops authored by affiliated people without duplicates" do
+      direct_workshop = create(:workshop, organization: organization, windows_type: windows_type)
+      authored_workshop = create(:workshop, author: affiliated_person, windows_type: windows_type)
+      both_workshop = create(:workshop, organization: organization, author: affiliated_person, windows_type: windows_type)
+      unrelated_workshop = create(:workshop, windows_type: windows_type)
+
+      results = organization.affiliated_workshops
+
+      expect(results).to include(direct_workshop, authored_workshop, both_workshop)
+      expect(results).not_to include(unrelated_workshop)
+      expect(results.where(id: both_workshop.id).count).to eq(1)
+    end
+  end
+
+  describe "#affiliated_workshop_ideas" do
+    let(:organization) { create(:organization) }
+    let(:affiliated_person) { create(:person) }
+    let(:windows_type) { create(:windows_type, :adult) }
+    let(:admin) { create(:user, :admin) }
+
+    before do
+      create(:affiliation, organization: organization, person: affiliated_person)
+    end
+
+    it "includes directly associated ideas and ideas authored by affiliated people without duplicates" do
+      direct_idea = create(:workshop_idea, organization: organization, windows_type: windows_type, created_by: admin)
+      authored_idea = create(:workshop_idea, author: affiliated_person, windows_type: windows_type, created_by: admin)
+      both_idea = create(:workshop_idea, organization: organization, author: affiliated_person, windows_type: windows_type, created_by: admin)
+      unrelated_idea = create(:workshop_idea, windows_type: windows_type, created_by: admin)
+
+      results = organization.affiliated_workshop_ideas
+
+      expect(results).to include(direct_idea, authored_idea, both_idea)
+      expect(results).not_to include(unrelated_idea)
+      expect(results.where(id: both_idea.id).count).to eq(1)
+    end
+  end
 end
 
 RSpec.describe Organization, "scholarship index helpers" do
@@ -537,70 +586,6 @@ RSpec.describe Organization, "scholarship index helpers" do
 
     it "is nil without an active address" do
       expect(create(:organization).program_location).to be_nil
-    end
-  end
-
-  describe ".awbw" do
-    it "finds the org named by ORGANIZATION_NAME" do
-      awbw = create(:organization, name: ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds"))
-      create(:organization, name: "Some Partner Org")
-
-      expect(Organization.awbw).to eq(awbw)
-    end
-
-    it "is nil when no organization matches" do
-      create(:organization, name: "Some Partner Org")
-
-      expect(Organization.awbw).to be_nil
-    end
-  end
-
-  describe "configured mailboxes" do
-    def stub_env(values)
-      allow(ENV).to receive(:[]).and_call_original
-      values.each { |key, value| allow(ENV).to receive(:[]).with(key).and_return(value) }
-    end
-
-    it "prefers the dedicated vars over REPLY_TO_EMAIL" do
-      stub_env("PROGRAMS_EMAIL" => "programs@example.test",
-               "NO_REPLY_EMAIL" => "no-reply@example.test",
-               "REPLY_TO_EMAIL" => "legacy@example.test")
-
-      expect(Organization.programs_email).to eq("programs@example.test")
-      expect(Organization.no_reply_email).to eq("no-reply@example.test")
-    end
-
-    it "falls back to REPLY_TO_EMAIL so deployments keep working before the new vars are set" do
-      stub_env("PROGRAMS_EMAIL" => nil, "NO_REPLY_EMAIL" => nil, "REPLY_TO_EMAIL" => "legacy@example.test")
-
-      expect(Organization.programs_email).to eq("legacy@example.test")
-      expect(Organization.no_reply_email).to eq("legacy@example.test")
-    end
-
-    it "treats a blank var as unset rather than sending from an empty address" do
-      stub_env("PROGRAMS_EMAIL" => "", "REPLY_TO_EMAIL" => "legacy@example.test")
-
-      expect(Organization.programs_email).to eq("legacy@example.test")
-    end
-
-    it "reads the contact mailbox from INFO_EMAIL" do
-      stub_env("INFO_EMAIL" => "info@example.test", "PROGRAMS_EMAIL" => "programs@example.test")
-
-      expect(Organization.info_email).to eq("info@example.test")
-    end
-
-    it "falls back to the programs mailbox for contact info when INFO_EMAIL is unset" do
-      stub_env("INFO_EMAIL" => nil, "PROGRAMS_EMAIL" => "programs@example.test")
-
-      expect(Organization.info_email).to eq("programs@example.test")
-    end
-
-    it "is nil when nothing is configured, so no hard-coded address leaks out" do
-      stub_env("PROGRAMS_EMAIL" => nil, "NO_REPLY_EMAIL" => nil, "REPLY_TO_EMAIL" => nil, "INFO_EMAIL" => nil)
-
-      expect(Organization.programs_email).to be_nil
-      expect(Organization.no_reply_email).to be_nil
-      expect(Organization.info_email).to be_nil
     end
   end
 

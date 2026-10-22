@@ -36,6 +36,10 @@ class WorkshopIdea < ApplicationRecord
 
   validates :title, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 255 }
 
+  def name
+    title
+  end
+
   # Nested attributes
   accepts_nested_attributes_for :primary_asset, reject_if: :all_blank, allow_destroy: true
   accepts_nested_attributes_for :gallery_assets, reject_if: :all_blank, allow_destroy: true

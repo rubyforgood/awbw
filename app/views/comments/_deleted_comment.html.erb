@@ -1,0 +1,20 @@
+<%# A deleted comment, rebuilt from its destroy snapshot (Ahoy::EventDecorator#deleted_comment). Read-only. %>
+<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Deleted</span>
+    <% if comment[:parent_link][:path] %>
+      <%= link_to comment[:parent_link][:text], comment[:parent_link][:path], class: "text-xs font-medium text-indigo-600 hover:underline" %>
+    <% else %>
+      <span class="text-xs font-medium text-gray-500"><%= comment[:parent_link][:text] %></span>
+    <% end %>
+    <% if comment[:topic] %>
+      <span class="text-xs font-bold tracking-wide text-gray-500 uppercase"><%= comment[:topic] %></span>
+    <% end %>
+  </div>
+  <% if comment[:body] %>
+    <div class="mt-2 text-sm text-gray-600"><%= simple_format(comment[:body]) %></div>
+  <% end %>
+  <div class="mt-2 text-xs text-gray-400">
+    <%= comment[:author_name] %> · Deleted by <%= comment[:deleted_by_name] %> on <%= comment[:deleted_at] %>
+  </div>
+</div>

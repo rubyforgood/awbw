@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe "people/show", type: :view do
   let(:admin) { create(:user, :admin) }
 
-  let(:person) { create(:person) }
+  let(:person) { create(:person, profile_show_email: true) }
 
   before do
     assign(:person, person.decorate)

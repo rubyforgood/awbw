@@ -77,7 +77,11 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  before_validation :normalize_names_and_emails
+  before_validation :normalize_names
+
+  # Unicode-aware, plus the zero-width characters [[:space:]] skips; pasted addresses carry both.
+  EMAIL_WHITESPACE = /[[:space:]\u200B-\u200D\u2060\uFEFF]/
+  normalizes :email, :email_2, with: ->(email) { email.gsub(EMAIL_WHITESPACE, "").presence }
 
   # Validations
   validates :avatar,
@@ -109,8 +113,16 @@ class Person < ApplicationRecord
   end
 
   CONTACT_TYPES = [ "work", "personal" ].freeze
-  validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
-  validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+  UNKNOWN_CONTACT_TYPE = "unknown"
+  # What an email can be stored as; people choosing their own pick from CONTACT_TYPES.
+  EMAIL_TYPES = [ *CONTACT_TYPES, UNKNOWN_CONTACT_TYPE ].freeze
+  validates :email_type, inclusion: { in: EMAIL_TYPES }, allow_blank: true
+  validates :email_2_type, inclusion: { in: EMAIL_TYPES }, allow_blank: true
+
+  # Unknown is a recorded answer, not a known one, so a flow that asks what kind of
+  # email this is still has to ask.
+  def known_email_type? = email_type.in?(CONTACT_TYPES)
+  def known_email_2_type? = email_2_type.in?(CONTACT_TYPES)
 
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
   # since a person still has to be listed somehow on the people index.
@@ -142,7 +154,7 @@ class Person < ApplicationRecord
   # Age ranges edit through cocoon nested fields like sectors. A scoped view of
   # categorizable_items (AgeRange categories only) so the form's add/remove and
   # primary toggle round-trip as nested attributes — the is_primary flag splits
-  # primary vs additional, no separate primary_age_category_ids param needed.
+  # primary vs additional.
   has_many :age_range_categorizable_items,
            -> { joins(category: :category_type).where(category_types: { name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE }) },
            class_name: "CategorizableItem", as: :categorizable, inverse_of: :categorizable
@@ -249,6 +261,7 @@ class Person < ApplicationRecord
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
+  scope :placeholder_email, -> { where("email REGEXP ?", PlaceholderEmail.sql_pattern) }
   scope :workshop_authors, -> { credited_on(Workshop) }
   scope :workshop_variation_authors, -> { credited_on(WorkshopVariation) }
   scope :workshop_log_authors, -> { credited_on(WorkshopLog) }
@@ -557,8 +570,26 @@ class Person < ApplicationRecord
       .reverse
   end
 
+  def placeholder_email?
+    PlaceholderEmail.match?(email)
+  end
+
+  # The lowest numbered placeholder nobody with this name is using yet.
+  def next_free_placeholder_email
+    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
+    scope = scope.where.not(id: id) if persisted?
+    taken = scope.pluck(:email).filter_map { |address| PlaceholderEmail.number_in(address) }
+
+    PlaceholderEmail.at((1..).find { |number| taken.exclude?(number) })
+  end
+
+  # The placeholder records "no address on file", so it never stands in for a real one.
+  def email_on_file
+    email.presence unless placeholder_email?
+  end
+
   def preferred_email
-    user&.email.presence || email.presence || email_2.presence
+    user&.email.presence || email_on_file || email_2.presence
   end
 
   def communications_email
@@ -601,21 +632,12 @@ class Person < ApplicationRecord
     }
   end
 
-  # Field identifiers whose "Other" free text maps onto the category-backed
-  # profile fields shown on the edit page.
-  OTHER_WORKSHOP_SETTING_IDENTIFIERS = FormField::AGE_GROUP_FIELD_IDENTIFIERS
-
   # Free-text "Other" sectors the person typed on registration forms, captured
   # as OtherResponse records (see EventRegistrationServices::PublicRegistration).
   # They can't be Sector records, so they're surfaced beside the sector tags —
   # only while pending or explicitly kept (dismissed/promoted ones drop off).
   def other_sector_responses
     other_responses.sectors.visible.order(:text)
-  end
-
-  # Free-text "Other" workshop settings (category-backed fields) from forms.
-  def other_workshop_setting_responses
-    other_form_responses(OTHER_WORKSHOP_SETTING_IDENTIFIERS)
   end
 
   # The age-range nested items in category position order for the cocoon chip
@@ -653,21 +675,10 @@ class Person < ApplicationRecord
     end
   end
 
-  def other_form_responses(identifiers)
-    form_submissions
-      .joins(form_answers: :form_field)
-      .where(form_fields: { field_identifier: identifiers })
-      .pluck("form_answers.submitted_answer")
-      .flat_map { |answer| OtherOption.texts(answer) }
-      .uniq
-  end
-
-  def normalize_names_and_emails
+  def normalize_names
     self.first_name = Person.normalize_name(first_name)
     self.last_name = Person.normalize_name(last_name)
     self.legal_first_name = Person.normalize_name(legal_first_name)
-    self.email = email&.strip
-    self.email_2 = email_2&.strip
   end
 
   def unique_name_and_email_combination
@@ -687,10 +698,20 @@ class Person < ApplicationRecord
 
     scope = scope.where.not(id: id) if persisted?
 
-    if scope.exists?
-      errors.add(:base, "A person named #{first_name} #{last_name} with this email already exists")
-    end
+    errors.add(:base, duplicate_name_message) if scope.exists?
   end
+
+  # "This email" means nothing when the clash is over a blank or a placeholder, and whoever
+  # is saving needs pointing at a placeholder this name doesn't already hold.
+  def duplicate_name_message
+    name = "#{first_name} #{last_name}"
+    return "A person named #{name} with this email already exists" if email.present? && !placeholder_email?
+
+    "A person named #{name} with #{email.presence || "no email"} already exists. Give this person " \
+      "their own email address so the two can be told apart, or #{next_free_placeholder_email} if " \
+      "they truly have none."
+  end
+
   ## Consider adding additional person info to be saved on stripes customer records
   # def stripe_attributes(pay_customer)
   #   {

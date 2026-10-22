@@ -361,12 +361,12 @@ RSpec.describe "Events", type: :request do
         expect(hrefs).to include(a_string_including("payment_status=unpaid"))
       end
 
-      it "labels an event by its abbreviation when set, keeping the full title as a tooltip" do
-        paid_training.update!(abbreviation: "TAC261")
+      it "labels an event by its abbreviation when set, keeping the full title and month as a tooltip" do
+        paid_training.update!(abbreviation: "TAC261", start_date: Time.zone.local(2026, 5, 15))
         sign_in admin
         get revenue_events_path
         expect(response.body).to include("TAC261")
-        expect(response.body).to include('title="TAC 261"')
+        expect(Capybara.string(response.body)).to have_css("span[title='TAC 261 · May 2026']", text: "TAC261")
       end
 
       it "links each drillable revenue KPI to its filtered registrant list" do
@@ -1171,6 +1171,9 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include('name="event[ce_payment_due_deadline_date]"')
       expect(response.body).to include('name="event[ce_payment_due_deadline_time]"')
       expect(response.body).to include("Request CE credit by")
+      expect(response.body).to include('name="event[ce_timesheets_enabled]"')
+      expect(response.body).to include('name="event[ce_timesheet_opens_offset_minutes]"')
+      expect(response.body).to include('name="event[ce_timesheet_closes_at_date]"')
     end
 
     it "links to the sample ticket preview from the callouts section" do
@@ -1379,6 +1382,19 @@ RSpec.describe "Events", type: :request do
         expect(event.reload.ce_hours_request_deadline).to eq(Date.new(2026, 7, 1))
         pacific = event.ce_payment_due_deadline.in_time_zone("Pacific Time (US & Canada)")
         expect(pacific.strftime("%Y-%m-%d %H:%M")).to eq("2026-08-15 09:00")
+      end
+
+      it "persists the CE timesheet settings" do
+        patch event_path(event), params: { event: {
+          ce_timesheets_enabled: "0",
+          ce_timesheet_opens_offset_minutes: "-60",
+          ce_timesheet_closes_at_date: (event.start_date + 7.days).strftime("%Y-%m-%d"),
+          ce_timesheet_closes_at_time: "17:00"
+        } }
+        event.reload
+        expect(event.ce_timesheets_enabled).to be(false)
+        expect(event.ce_timesheet_opens_offset_minutes).to eq(-60)
+        expect(event.ce_timesheet_closes_at.in_time_zone("Pacific Time (US & Canada)").strftime("%H:%M")).to eq("17:00")
       end
 
       it "links a form to a callout via nested attributes" do
@@ -3442,11 +3458,10 @@ RSpec.describe "Events", type: :request do
           expect(response.body).to include("Veterans")
         end
 
-        it "hides the life experiences and settings cards when registrants have no tags" do
+        it "hides the life experiences card when registrants have no tags" do
           get roster_event_path(owned_event), headers: charts_headers
 
           expect(response.body).not_to include("Life experiences")
-          expect(response.body).not_to include("Settings")
         end
 
         it "anchors its breakdown sections and drills each row back into this page" do

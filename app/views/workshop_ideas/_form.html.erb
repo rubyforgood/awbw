@@ -79,7 +79,7 @@
                       label: "Organization",
                       required: false,
                       disabled: promoted_to_workshop,
-                      prompt: "Select organization",
+                      include_blank: "Select organization",
                       selected: (params[:organization_id].presence || f.object.organization_id),
                       hint: "Please contact AWBW if your organization is not listed.",
                       input_html: { class: "block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm #{"readonly" if promoted_to_workshop}" },

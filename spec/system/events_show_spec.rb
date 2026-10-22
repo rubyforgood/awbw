@@ -92,10 +92,13 @@ RSpec.describe "Event show page", type: :system do
       expect(page).to have_text(event.location.name)
       expect(page).to have_text("Virtual event")
 
-      # Decorator
+      # Decorator renders the stored UTC times in Pacific, whichever side of DST
+      # the event falls on.
+      pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       expect(page).to have_text("Cost: $10.99")
-      expect(page).to have_text("2") # Pacific Time
-      expect(page).to have_text("4") # Pacific Time
+      expect(page).to have_text(event.start_date.in_time_zone(pacific).strftime("%-l %P"))
+      expect(page).to have_text(event.end_date.in_time_zone(pacific).strftime("%-l %P"))
+      expect(page).to have_text(event.start_date.in_time_zone(pacific).dst? ? "PDT" : "PST")
 
       # Bookmark UI always present
       expect(page).to have_css("span.inline-block")
@@ -111,7 +114,7 @@ RSpec.describe "Event show page", type: :system do
       sign_in(admin)
       visit event_path(event)
 
-      expect(page).to have_link("Dashboard", href: dashboard_event_path(event))
+      expect(page).to have_link("Edit event", href: edit_event_path(event))
       expect(page).to have_link("Registrations", href: registrants_event_path(event))
     end
 
@@ -119,7 +122,7 @@ RSpec.describe "Event show page", type: :system do
       sign_in(user)
       visit event_path(event)
 
-      expect(page).not_to have_link("Dashboard")
+      expect(page).not_to have_link("Edit event")
       expect(page).not_to have_link("Registrations")
     end
   end

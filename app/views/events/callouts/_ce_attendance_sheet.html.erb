@@ -12,7 +12,7 @@
   whether this registrant has more than one sheet), editing_date, page_state.
 %>
 <% cols = "grid grid-cols-1 sm:grid-cols-[minmax(7rem,1fr)_2.5fr_minmax(3.5rem,auto)] gap-x-3 gap-y-1 px-3 py-2" %>
-<% editable = !sample_preview? %>
+<% editable = sheet.editable? && !sample_preview? %>
 <%# Which sheet an Edit link opens — without it, one date would open an editor on
     every sheet at once. A lone sheet doesn't need to say so. %>
 <% opening_this_sheet = !titled || params[:ce_id].to_s == ce_registration.id.to_s %>
@@ -38,7 +38,7 @@
     <div class="<%= cols %> items-center border-t border-gray-100 text-sm">
       <div class="text-gray-700">Day <%= index + 1 %> · <%= date.strftime("%a, %b %-d") %></div>
       <div class="min-w-0">
-        <% if editing_date == date && opening_this_sheet %>
+        <% if editable && editing_date == date && opening_this_sheet %>
           <%= render "events/attendance_day_form", entries: entries,
                 url: registration_ce_attendance_path(@event_registration.slug, date: date.iso8601, ce_id: (ce_registration.id if titled)),
                 cancel_path: registration_ce_path(@event_registration.slug, **page_state, anchor: "attendance") %>
@@ -60,7 +60,7 @@
                     "aria-label": "Edit your times for #{date.strftime("%b %-d")}" do %>
                 <i class="fa-solid fa-pen text-2xs"></i> Edit
               <% end %>
-            <% else %>
+            <% elsif sample_preview? %>
               <span class="ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 opacity-60">
                 <i class="fa-solid fa-pen text-2xs"></i> Edit
               </span>

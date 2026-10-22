@@ -86,7 +86,7 @@ class AttendeesBreakdowns
     @school_district_counts ||= school_district_registrant_ids_by_district.transform_values(&:size)
   end
 
-  # --- Profile categories (life experiences / settings) ----------------------
+  # --- Profile categories (life experiences) ---------------------------------
 
   def life_experiences
     Category.where(id: life_experience_counts.keys).order(:name)
@@ -94,14 +94,6 @@ class AttendeesBreakdowns
 
   def life_experience_counts
     @life_experience_counts ||= category_counts("StoryPopulation")
-  end
-
-  def settings
-    Category.where(id: settings_counts.keys).order(:name)
-  end
-
-  def settings_counts
-    @settings_counts ||= category_counts("WorkshopEnvironment")
   end
 
   # --- Organizations + program status ----------------------------------------
@@ -186,10 +178,6 @@ class AttendeesBreakdowns
 
   def life_experience_registrant_ids_by_category
     @life_experience_registrant_ids_by_category ||= person_ids_by(category_rows("StoryPopulation")) { |row| row[1] }
-  end
-
-  def settings_registrant_ids_by_category
-    @settings_registrant_ids_by_category ||= person_ids_by(category_rows("WorkshopEnvironment")) { |row| row[1] }
   end
 
   def state_registrant_ids_by_state

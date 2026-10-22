@@ -94,6 +94,11 @@ class EventPolicy < ApplicationPolicy
     admin? || owner?
   end
 
+  # Copying makes a brand-new event, and creating events is admin-only.
+  def copy?
+    admin?
+  end
+
   # Who can view/manage an event's registrants. Mirrors manage? for now, but kept
   # as its own rule so registrant access can be tightened later without affecting
   # other manage? actions.
@@ -187,6 +192,10 @@ class EventPolicy < ApplicationPolicy
                   :ce_hours_request_deadline,
                   :ce_payment_due_deadline_date,
                   :ce_payment_due_deadline_time,
+                  :ce_timesheets_enabled,
+                  :ce_timesheet_opens_offset_minutes,
+                  :ce_timesheet_closes_at_date,
+                  :ce_timesheet_closes_at_time,
                   :payment_due_deadline_date,
                   :payment_due_deadline_time,
                   :completion_deadline,

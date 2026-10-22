@@ -448,7 +448,7 @@ end
 flagship_ce = flagship&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if flagship_ce && flagship_ce.description.blank?
   flagship_ce.update!(hidden: false, title: "Continuing education", description: <<~HTML.strip)
-    <p>AWBW is approved by the <a href="https://www.camft.org/" target="_blank" rel="noopener">California Association of Marriage and Family Therapists (CAMFT)</a>, provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}, to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs in California.</p>
+    <p>AWBW is approved by the <a href="#{Setting.ce_accreditation_url}" target="_blank" rel="noopener">California Association of Marriage and Family Therapists (CAMFT)</a>, provider ##{Setting.ce_provider_number}, to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs in California.</p>
     <p>While these CE hours are automatically accepted for professionals licensed in California, each state has its own licensing board requirements regarding CE provider approval. Participants outside of California are responsible for confirming whether these hours meet the requirements for their specific license and state.</p>
     <h3>Before the training</h3>
     <ul>
@@ -478,7 +478,7 @@ trauma = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practic
 trauma_ce = trauma&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if trauma_ce && trauma_ce.description.blank?
   trauma_ce.update!(hidden: false, description: <<~HTML.strip)
-    <p>This training is approved by <a href="https://www.camft.org/" target="_blank" rel="noopener">CAMFT</a> (provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}) for <strong>18 CE hours</strong> across its three days.</p>
+    <p>This training is approved by <a href="#{Setting.ce_accreditation_url}" target="_blank" rel="noopener">CAMFT</a> (provider ##{Setting.ce_provider_number}) for <strong>18 CE hours</strong> across its three days.</p>
     <ul>
       <li>Provide your license type and number at registration; a $25 CE processing fee applies.</li>
       <li>Daily sign-in/sign-out is required — CE hours are awarded for full attendance only.</li>
@@ -987,12 +987,12 @@ if backfill_orgs.any?
   end
 end
 
-puts "Tagging registrants with life experiences and workshop settings…"
-# The background page charts registrants' StoryPopulation (life experiences) and
-# WorkshopEnvironment (settings) tags. Public registration no longer collects these
-# (the "Workshop settings" and "Client life experiences" questions were removed), but
-# the charts are retained for historical data and admin-applied tags, so seed a
-# deterministic spread here so older trainings' background charts aren't empty.
+puts "Tagging registrants with life experiences…"
+# The background page charts registrants' StoryPopulation (life experiences) tags.
+# Public registration no longer collects these (the "Client life experiences"
+# question was removed), but the chart is retained for historical data and
+# admin-applied tags, so seed a deterministic spread so older trainings' background
+# charts aren't empty.
 #
 # These tags live on the Person, not per-registration, so anyone registered for the
 # flagship "AWBW Facilitator Training" (event #1) would surface on its charts too.
@@ -1000,9 +1000,6 @@ puts "Tagging registrants with life experiences and workshop settings…"
 # tags a prior seed left on them.
 life_experience_categories = Category.joins(:category_type)
   .where(category_types: { name: "StoryPopulation" })
-  .order(:name).to_a
-setting_categories = Category.joins(:category_type)
-  .where(category_types: { name: "WorkshopEnvironment" })
   .order(:name).to_a
 
 # Pick offsets i and i+offset from a category list, wrapping around; returns [] for
@@ -1015,7 +1012,7 @@ end
 flagship_registrant_ids = facilitator_training&.event_registrations&.active&.pluck(:registrant_id) || []
 CategorizableItem.joins(category: :category_type)
   .where(categorizable_type: "Person", categorizable_id: flagship_registrant_ids)
-  .where(category_types: { name: [ "WorkshopEnvironment", "StoryPopulation" ] })
+  .where(category_types: { name: "StoryPopulation" })
   .destroy_all
 
 [ trauma_training, wellness_day, youth_day, mindful_art, virtual_session, roundtable, family_day ].compact.each do |evt|
@@ -1024,10 +1021,9 @@ CategorizableItem.joins(category: :category_type)
     next unless person
     next if flagship_registrant_ids.include?(person.id)
 
-    # Each registrant gets two life experiences and two settings, offset by their
-    # position so the charts show a realistic spread across categories.
-    tags = (pick_categories.call(life_experience_categories, i, 2) +
-            pick_categories.call(setting_categories, i, 3)).compact.uniq
+    # Each registrant gets two life experiences, offset by their position so the
+    # chart shows a realistic spread across categories.
+    tags = pick_categories.call(life_experience_categories, i, 2).compact.uniq
 
     tags.each do |category|
       CategorizableItem.find_or_create_by!(category: category, categorizable: person)

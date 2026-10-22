@@ -621,6 +621,20 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response).to redirect_to(link_organization_form_submission_path(submission))
         end
 
+        it "attributes the org and affiliation writes to the submission, so its changes audit finds them" do
+          add_answer("organization_name", "Harbor Family Shelter")
+          add_answer("organization_website", "harbor.example.org")
+          organization = create(:organization, name: "Harbor Family Shelter", website_url: nil)
+          tracked = []
+          allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, props| tracked << [ name, props ] }
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          written = tracked.select { |name, _| name.in?(%w[update.organization create.affiliation]) }
+          expect(written.map(&:first)).to include("update.organization", "create.affiliation")
+          expect(written.map { |_name, props| props[:form_submission_id] }.uniq).to eq([ submission.id ])
+        end
+
         it "ends the old org's affiliations when linking a job change, and flags them on the panel" do
           add_answer("organization_name", "Harbor Family Shelter")
           organization = create(:organization, name: "Harbor Family Shelter")
@@ -677,6 +691,70 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(organization.reload.website_url).to eq("https://harbor.example.org")
           expect(organization.organization_type).to eq("School")
           expect(flash[:warning]).to include("differ")
+        end
+      end
+
+      context "for an on-demand agreement registered to the on-demand training" do
+        let(:form) { create(:form, role: "registration", name: "Collaboration agreement (on-demand)") }
+        let(:training) { create(:event, :published, facilitator_training: true, on_demand: true) }
+        let(:submission) { create(:form_submission, form: form, person: person, role: "public", event: training) }
+        let!(:registration) { create(:event_registration, event: training, registrant: person, status: "attended") }
+
+        it "links the org to the registration, pinned to the submission, when the name doesn't match" do
+          add_answer("organization_name", "Acme Inc")
+          organization = create(:organization, name: "Acme Corporation")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          link = registration.event_registration_organizations.sole
+          expect(link.organization).to eq(organization)
+          expect(link.form_submission).to eq(submission)
+        end
+
+        it "ties the job and facilitator affiliations to the registration" do
+          add_answer("organization_name", "Acme Inc")
+          add_answer("organization_position", "Counselor")
+          organization = create(:organization, name: "Acme Corporation")
+
+          post select_organization_form_submission_path(submission, organization_id: organization.id)
+
+          expect(person.affiliations.where(organization: organization).pluck(:title, :event_registration_id))
+            .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
+        end
+
+        it "warns on the editor that linking also changes the registration and affiliations" do
+          add_answer("organization_position", "Counselor")
+
+          get link_organization_form_submission_path(submission)
+
+          expect(response.body).to include("Linking an organization here also:")
+          expect(response.body).to include("Links it to their #{training.title} registration")
+          expect(response.body).to include("Adds a “Counselor” job affiliation there")
+          expect(response.body).to include("Adds a Facilitator affiliation there")
+        end
+
+        it "links a second org without tying it to the submission another org already holds" do
+          add_answer("organization_name", "Acme Inc")
+          add_answer("organization_website", "https://typed.example")
+          first = create(:organization, name: "Acme Inc")
+          registration.link_submitted_organization!(first, submission: submission)
+          second = create(:organization, name: "Zebra Center", website_url: nil)
+
+          post select_organization_form_submission_path(submission, organization_id: second.id)
+
+          links = registration.event_registration_organizations.index_by(&:organization)
+          expect(links[first].form_submission).to eq(submission)
+          expect(links[second].form_submission).to be_nil
+          expect(links[second].form_autofill_changes).to be_empty
+        end
+
+        it "links a newly created org to the registration" do
+          create(:organization_status, name: "Active")
+          add_answer("organization_name", "Lakeside Community College")
+
+          post create_organization_form_submission_path(submission)
+
+          expect(registration.organizations.pluck(:name)).to eq([ "Lakeside Community College" ])
         end
       end
 

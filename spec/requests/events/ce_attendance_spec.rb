@@ -220,7 +220,7 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       expect(response.body).to include("Sign-in opens")
       # 8:30/9:00 UTC (open/start) shown in the page's Pacific zone.
       expect(response.body).to include("1:30 AM PDT")
-      expect(response.body).to include("Event begins 30 minutes later, at 2:00 AM PDT.")
+      expect(response.body).to include("That day's training begins at 2:00 AM PDT.")
       expect(response.body).not_to include("in about 2 hours")
     end
 
@@ -422,6 +422,99 @@ RSpec.describe "Events::Callouts CE attendance", type: :request do
       patch registration_ce_attendance_path(registration.slug, date: "not-a-date"),
             params: { attendance: { entries: { "0" => { in: "02:00", out: "09:00" } } } }
       expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "per-event timesheet settings" do
+    let(:day) { Date.new(2026, 7, 23) }
+
+    context "when timesheets are turned off" do
+      before do
+        event.update!(ce_timesheets_enabled: false)
+        pay_ce!
+      end
+
+      it "hides the sign-in section" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).not_to include("Training sign-in")
+      end
+
+      it "rejects sign-in, sign-out, and edits" do
+        entry = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.current - 1.hour)
+
+        expect { post registration_ce_sign_in_path(registration.slug) }
+          .not_to change { registration.event_attendance_time_entries.count }
+        post registration_ce_sign_out_path(registration.slug)
+        expect(entry.reload).to be_open
+        expect {
+          patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+                params: { attendance: { entries: { "0" => { in: "09:00", out: "12:00" } } } }
+        }.not_to change { registration.event_attendance_time_entries.count }
+      end
+    end
+
+    context "before the timesheet opens" do
+      before do
+        event.update!(ce_timesheet_opens_offset_minutes: 60)
+        pay_ce!
+        travel_to Time.zone.local(2026, 7, 23, 9, 30)
+      end
+
+      it "names when sign-in opens and offers no Edit" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).to include("Sign-in opens")
+        # 10:00 UTC shown in the page's Pacific zone.
+        expect(response.body).to include("Thursday, July 23 at 3:00 AM PDT")
+        expect(response.body).to include("once your timesheet opens")
+        expect(response.body).not_to include("Edit your times")
+      end
+
+      it "rejects sign-in and edits" do
+        expect { post registration_ce_sign_in_path(registration.slug) }
+          .not_to change { registration.event_attendance_time_entries.count }
+        expect {
+          patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+                params: { attendance: { entries: { "0" => { in: "09:00", out: "12:00" } } } }
+        }.not_to change { registration.event_attendance_time_entries.count }
+        expect(flash[:alert]).to include("Your timesheet opens on Thursday, July 23 at 3:00 AM PDT")
+      end
+    end
+
+    context "after the timesheet closes" do
+      before do
+        event.update!(ce_timesheet_closes_at: Time.zone.local(2026, 7, 25, 17, 0))
+        pay_ce!
+        travel_to Time.zone.local(2026, 7, 26, 10, 0)
+      end
+
+      it "says the timesheet closed and offers no Edit" do
+        get registration_ce_path(registration.slug)
+        expect(response.body).to include("Your timesheet closed on")
+        expect(response.body).not_to include("Edit your times")
+      end
+
+      it "rejects edits and catch-up sign-outs" do
+        entry = create(:event_attendance_time_entry, :open, event_registration: registration,
+          signed_in_at: Time.zone.local(2026, 7, 23, 9, 0))
+
+        expect {
+          patch registration_ce_attendance_path(registration.slug, date: day.iso8601),
+                params: { attendance: { entries: { "0" => { in: "09:00", out: "12:00" } } } }
+        }.not_to change { registration.event_attendance_time_entries.count }
+        expect(flash[:alert]).to include("Your timesheet closed")
+
+        post registration_ce_sign_out_path(registration.slug, entry_id: entry.id)
+        expect(entry.reload).to be_open
+      end
+    end
+
+    it "keeps edits open until the close time" do
+      event.update!(ce_timesheet_closes_at: Time.zone.local(2026, 7, 25, 17, 0))
+      pay_ce!
+      get registration_ce_path(registration.slug)
+      expect(response.body).to include("Edit your times")
+      expect(response.body).to include("until Saturday, July 25 at 10:00 AM PDT")
     end
   end
 end

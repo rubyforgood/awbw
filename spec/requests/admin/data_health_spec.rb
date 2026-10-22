@@ -13,10 +13,23 @@ RSpec.describe "Admin::DataHealth", type: :request do
                          start_date: 1.year.ago.to_date, event_registration: registration)
   end
 
+  # The app settings check fires until an admin names these, so a page expected to
+  # be clean has to have them chosen.
+  def configure_app_settings
+    # Pending matches what no affiliations derive, so the org itself doesn't drift.
+    pending = OrganizationStatus.find_or_create_by!(name: "Pending")
+    org = create(:organization, tax_id: "00-0000000", organization_status: pending)
+    Setting.create!(organization: org,
+                    return_address: create(:address, addressable: org),
+                    remittance_address: create(:address, addressable: org))
+  end
+
   describe "GET index" do
     before { sign_in admin }
 
     it "reports a clean bill of health when nothing is wrong" do
+      configure_app_settings
+
       get admin_data_health_path
 
       expect(response).to have_http_status(:ok)
@@ -27,7 +40,7 @@ RSpec.describe "Admin::DataHealth", type: :request do
       get admin_data_health_path
 
       headings = Nokogiri::HTML(response.body).css("h2 button > span:first-child").map { |h| h.text.strip }
-      expect(headings).to eq([ "Affiliations", "People", "Form answers", "Payments", "Stories", "Resources", "Communications" ])
+      expect(headings).to eq([ "Settings", "Affiliations", "People", "Form answers", "Payments", "Stories", "Resources", "Communications" ])
     end
 
     it "starts every group collapsed, with an expand-all control" do

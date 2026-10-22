@@ -4,7 +4,7 @@ RSpec.describe "People index share toggles", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:viewer) { create(:user, :with_person) }
   let(:turbo_headers) { { "Turbo-Frame" => "people_results", "Accept" => "text/html" } }
-  let(:person) { create(:person, first_name: "Shared", linked_in_url: "https://linkedin.com/in/shared-person") }
+  let(:person) { create(:person, first_name: "Shared", linked_in_url: "https://linkedin.com/in/shared-person", profile_show_social_media: true) }
   let(:organization) { create(:organization, name: "Visible Org") }
   let(:age_type) { create(:category_type, :published, name: "AgeRange") }
 

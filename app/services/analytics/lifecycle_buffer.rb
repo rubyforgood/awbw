@@ -1,6 +1,7 @@
 # app/services/analytics/lifecycle_buffer.rb
 module Analytics
   class LifecycleBuffer
+    FORM_SUBMISSION_KEY = "form_submission_id".freeze
     PROFILE_CHANGE_REQUEST_KEY = "profile_change_request_id".freeze
 
     def self.push(event)
@@ -8,11 +9,15 @@ module Analytics
     end
 
     def self.flush(controller)
+      flush_to(controller.ahoy)
+    end
+
+    def self.flush_to(tracker)
       return if store.empty?
 
       store.each do |payload|
         stamp_form_submission(payload)
-        controller.ahoy.track(payload[:name], payload[:properties])
+        tracker.track(payload[:name], payload[:properties])
       end
     ensure
       store.clear
@@ -21,13 +26,13 @@ module Analytics
     # The submission a public form/registration writes is created partway through
     # the request, after many of its lifecycle events have already been buffered,
     # so the id isn't knowable at push time. Stamp it here at flush — by which
-    # point the controller has set Current.form_submission_id — so every record
-    # the submission touched can be traced back to it.
+    # point the submitting service has set Current.form_submission_id — so every
+    # record the submission touched can be traced back to it.
     def self.stamp_form_submission(payload)
       return unless Current.form_submission_id
 
       payload[:properties] ||= {}
-      payload[:properties][:form_submission_id] ||= Current.form_submission_id
+      payload[:properties][FORM_SUBMISSION_KEY.to_sym] ||= Current.form_submission_id
     end
 
     # Adds properties to just the events buffered while the block runs, e.g. so every

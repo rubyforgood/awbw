@@ -1,0 +1,235 @@
+# The single row of app-wide settings an admin edits on /admin/settings: which
+# Organization this portal runs as, the mailboxes it writes from, and the invoice
+# and membership defaults.
+#
+# Every reader falls back to ENV and then to a built-in default, so a blank field
+# means "use the deployment's value" rather than "no value", and a deployment with
+# no row at all keeps working exactly as before.
+class Setting < ApplicationRecord
+  DEFAULT_ORGANIZATION_NAME = "A Window Between Worlds".freeze
+  DEFAULT_INVOICE_PREFIX = "INV".freeze
+  PLACEHOLDER_EMAIL_DOMAIN = "example.com".freeze
+  DEFAULT_CE_ADMINISTRATOR_TITLE = "CE Administrator".freeze
+  DEFAULT_ANNUAL_MEMBERSHIP_CENTS = 2500
+  DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS = 30
+  DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS = 30
+
+  belongs_to :organization, optional: true
+  belongs_to :return_address, class_name: "Address", optional: true
+  belongs_to :remittance_address, class_name: "Address", optional: true
+  belongs_to :ce_administrator, class_name: "Person", optional: true
+  belongs_to :import_user, class_name: "User", optional: true
+
+  # singleton is a constant true behind a unique index: MySQL has no CHECK-based
+  # way to cap a table at one row, but a unique index on a constant does it.
+  validates :singleton, uniqueness: true
+  validates :info_email, :reply_to_email, :programs_email, :no_reply_email,
+            format: { with: URI::MailTo::EMAIL_REGEXP, message: "must be a valid email address" },
+            allow_blank: true
+  validates :invoice_prefix, length: { maximum: 20 }
+  validates :ce_provider_number, length: { maximum: 50 }
+  validates :ce_administrator_title, :ce_accreditation_body, length: { maximum: 255 }
+  validates :ce_accreditation_abbreviation, length: { maximum: 60 }
+  validates :ce_accreditation_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]),
+                                             message: "must be a full http(s) address" }, allow_blank: true
+  validates :annual_membership_cents, :membership_renewal_window_days, :membership_grace_period_days,
+            numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+
+  after_commit { Current.setting = nil }
+
+  # The row's value for a field, or nil when the database or column isn't there yet,
+  # so a rake task can boot the app to create or migrate the very schema it reads.
+  def self.stored(field)
+    return nil unless schema_ready?(field)
+
+    current.public_send(field).presence
+  end
+  private_class_method :stored
+
+  def self.schema_ready?(field)
+    table_exists? && column_names.include?(field.to_s)
+  rescue ActiveRecord::NoDatabaseError
+    false
+  end
+  private_class_method :schema_ready?
+
+  # Memoized for the request: the mailbox is read by a footer on every page.
+  # Unsaved when no row exists yet, so every reader still answers.
+  def self.current
+    Current.setting ||= first || new
+  end
+
+  # The organization this portal runs as. Supplies the invoice and receipt header,
+  # and marks the grants it funds as subsidy rather than external funding. The name
+  # match is the fallback for deployments where nobody has picked one yet.
+  def self.app_organization
+    return nil unless schema_ready?(:organization_id)
+
+    current.app_organization
+  end
+
+  # Memoized on the row, which is itself memoized for the request, so the repeat
+  # callers (Grant.self_funded_ids, InvoiceIssuer, the footer) cost one lookup.
+  def app_organization
+    @app_organization ||= organization || Organization.find_by(name: self.class.organization_name)
+  end
+
+  # The name to print for this portal's organization.
+  def self.app_organization_name
+    app_organization&.name.presence || organization_name
+  end
+
+  # The configured name, which is also how an unflagged app organization is found.
+  def self.organization_name
+    ENV.fetch("ORGANIZATION_NAME", DEFAULT_ORGANIZATION_NAME)
+  end
+
+  # The organization's own site, linked from the navbar, footers, mega-menu and
+  # mail. Read off the organization record, which already normalizes a bare domain.
+  def self.organization_website
+    app_organization&.website_link_url.presence || ENV["ORGANIZATION_WEBSITE"].presence
+  end
+
+  # The phone printed beside the address: whatever the return address carries, else
+  # the first of the organization's addresses that holds one.
+  def self.organization_phone
+    stored_association(:return_address)&.phone.presence || app_organization_phone
+  end
+
+  def self.app_organization_phone
+    app_organization&.addresses&.active&.where&.not(phone: [ nil, "" ])&.pick(:phone)
+  end
+  private_class_method :app_organization_phone
+
+  # The return address printed in the invoice and receipt header: the address the
+  # row points at, else the app organization's flagged invoice address.
+  def self.organization_address_lines
+    stored_address_lines(:return_address) || app_organization_invoice_address_lines
+  end
+
+  # Where checks are mailed: the chosen remittance address, else the return address
+  # (checks go to the return address when a separate one isn't set).
+  def self.remittance_address_lines
+    stored_address_lines(:remittance_address) || organization_address_lines
+  end
+
+  def self.stored_address_lines(association)
+    stored_association(association)&.display_lines.presence
+  end
+  private_class_method :stored_address_lines
+
+  # The record the row points at, or nil when the column isn't there yet.
+  def self.stored_association(name)
+    return nil unless schema_ready?("#{name}_id")
+
+    current.public_send(name)
+  end
+  private_class_method :stored_association
+
+  def self.app_organization_invoice_address_lines
+    org = app_organization
+    return [] unless org
+
+    Address.display_lines_for(org)
+  end
+  private_class_method :app_organization_invoice_address_lines
+
+  # Who mail should be addressed to, shown above the mailing address on the contact
+  # page. Blank until an admin names someone, so a staffing change never leaves a
+  # former colleague's name on a public page.
+  def self.contact_attention
+    stored(:contact_attention)
+  end
+
+  # Who signs CE confirmation certificates. Blank until an admin names someone, so
+  # a staffing change never leaves a former colleague's name on a certificate.
+  def self.ce_administrator
+    stored_association(:ce_administrator)
+  end
+
+  def self.ce_administrator_name
+    ce_administrator&.full_name.presence
+  end
+
+  # Who a data import run as a rake task (no signed-in user) credits as created_by /
+  # updated_by when its source names no one the portal can resolve.
+  def self.import_user
+    stored_association(:import_user)
+  end
+
+  # The signatory's title, printed beside their name on the certificate.
+  def self.ce_administrator_title
+    stored(:ce_administrator_title) || DEFAULT_CE_ADMINISTRATOR_TITLE
+  end
+
+  # The portal's approved-provider number with the CE accrediting body, printed on
+  # the certificate. Blank until an admin enters it, since it is per-deployment.
+  def self.ce_provider_number
+    stored(:ce_provider_number)
+  end
+
+  # Who accredits this portal's CE hours: the short name the accreditor requires on
+  # the certificate, its full name, and where to read about it.
+  def self.ce_accreditation_abbreviation
+    stored(:ce_accreditation_abbreviation)
+  end
+
+  def self.ce_accreditation_body
+    stored(:ce_accreditation_body)
+  end
+
+  def self.ce_accreditation_url
+    stored(:ce_accreditation_url)
+  end
+
+  # The public contact mailbox, shown on the contact page, the story-share footer,
+  # and the invoice/receipt header.
+  def self.info_email
+    stored(:info_email) || ENV["INFO_EMAIL"].presence || programs_email
+  end
+
+  # The staffed programs mailbox: the reply_to on portal mail and the address users
+  # are told to write to.
+  def self.programs_email
+    stored(:programs_email) || ENV["PROGRAMS_EMAIL"].presence || reply_to_email
+  end
+
+  # The unattended sending mailbox, used as the from: on event mail so replies land
+  # in the programs mailbox instead.
+  def self.no_reply_email
+    stored(:no_reply_email) || ENV["NO_REPLY_EMAIL"].presence || reply_to_email
+  end
+
+  def self.reply_to_email
+    stored(:reply_to_email) || ENV["REPLY_TO_EMAIL"].presence
+  end
+
+  # The domain marking an address as a stand-in rather than a real one. Fixed, not
+  # configurable: RFC 2606 reserves example.com so nothing can be delivered to it,
+  # and a routable domain here would mail people who have no address on file.
+  def self.placeholder_email_domain
+    PLACEHOLDER_EMAIL_DOMAIN
+  end
+
+  # Leading tag on generated invoice numbers, e.g. "INV-004".
+  def self.invoice_prefix
+    stored(:invoice_prefix) || ENV["INVOICE_PREFIX"].presence || DEFAULT_INVOICE_PREFIX
+  end
+
+  def self.annual_membership_cents
+    stored(:annual_membership_cents) ||
+      ENV.fetch("ANNUAL_MEMBERSHIP_CENTS", DEFAULT_ANNUAL_MEMBERSHIP_CENTS).to_i
+  end
+
+  # How many days before a membership term ends its renewal invoice is generated.
+  def self.membership_renewal_window_days
+    stored(:membership_renewal_window_days) ||
+      ENV.fetch("ANNUAL_MEMBERSHIP_RENEWAL_WINDOW_DAYS", DEFAULT_MEMBERSHIP_RENEWAL_WINDOW_DAYS).to_i
+  end
+
+  # How long past a term's start an unpaid membership invoice still reads as current.
+  def self.membership_grace_period_days
+    stored(:membership_grace_period_days) ||
+      ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS).to_i
+  end
+end

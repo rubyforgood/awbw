@@ -30,6 +30,7 @@ RSpec.describe "page_bg_class alignment with policies" do
   #   "admin-only bg-blue-100"                        → admin?
 
   EXPECTED_MAPPINGS = {
+    "app/views/admin/settings/edit.html.erb"           => "admin-only bg-blue-100",
     # ─── public (policy action returns true) ───
     "app/views/community_news/index.html.erb"          => "public",
     "app/views/contact_us/index.html.erb"              => "public",
@@ -217,6 +218,7 @@ RSpec.describe "page_bg_class alignment with policies" do
     "app/views/community_news/new.html.erb"            => "admin-only bg-blue-100",
     "app/views/event_registrations/new.html.erb"       => "admin-only bg-blue-100",
     "app/views/events/new.html.erb"                    => "admin-only bg-blue-100",
+    "app/views/events/copies/new.html.erb"             => "admin-only bg-blue-100",
     "app/views/faqs/new.html.erb"                      => "admin-only bg-blue-100",
     "app/views/features/new.html.erb"                  => "admin-only bg-blue-100",
     "app/views/forms/new.html.erb"                     => "admin-only bg-blue-100",

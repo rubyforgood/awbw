@@ -32,7 +32,7 @@
 <section class="bg-brand-cream -mx-2 py-12 sm:-mx-6 lg:-mx-8">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <p class="max-w-3xl text-lg leading-relaxed text-gray-700">
-      At A Window Between Worlds, we uplift the voices and showcase the leadership of our extensive
+      At <%= app_organization_name %>, we uplift the voices and showcase the leadership of our extensive
       network of art workshop facilitators. This evolving collection illustrates the transformative
       power of creative expression experienced in our workshops.
     </p>
@@ -93,19 +93,13 @@
                    theme: story_share_slot_theme(index),
                    more_path: story_shares_path(sector_names_all: sector.name) %>
       <% end %>
-      <%# Audience (age) sections continue the slot palette, skipping the purple Spotlight slot. %>
       <% @stories_by_audience.each_with_index do |(category, stories), index| %>
         <%= render "sector_section",
                    title: category.name,
                    stories: stories,
-                   theme: story_share_slot_theme(@stories_by_sector.size + 1 + index),
+                   theme: story_share_slot_theme(@stories_by_sector.size + index),
                    more_path: story_shares_path(category_names_all: category.name) %>
       <% end %>
-      <%= render "sector_section",
-                 title: "Facilitator Spotlights",
-                 stories: @spotlight_stories,
-                 theme: StorySharesHelper::SPOTLIGHT_THEME,
-                 more_path: story_shares_path(facilitator_spotlights: true) %>
     </div>
   </div>
 </section>

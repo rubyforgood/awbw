@@ -21,6 +21,12 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("Great")
   end
 
+  it "attributes the request's changes to the callout submission" do
+    submission = submit({ field.id.to_s => "Great" })
+
+    expect(Current.form_submission_id).to eq(submission.id)
+  end
+
   it "carries the form's own role when it has one" do
     form.update!(role: "registration")
 
@@ -59,6 +65,40 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
 
     again = described_class.call(registration:, callout:, form:, form_params: { field.id.to_s => "Even better" })
     expect(again.edited?).to be(true)
+  end
+
+  it "captures a sector 'Other' answer for the review queue, linked to its answer" do
+    sector_field = create(:form_field, form:, field_identifier: "additional_sectors")
+
+    submission = submit({ sector_field.id.to_s => "Other: Equine therapy" })
+
+    response = registration.registrant.other_responses.sole
+    expect([ response.text, response.source_form_answer ])
+      .to eq([ "Equine therapy", submission.form_answers.find_by(form_field: sector_field) ])
+  end
+
+  it "captures a quote answer as an unpublished quote sourced to the submission" do
+    quote_field = create(:form_field, form:, field_identifier: FormField::QUOTE_FIELD_IDENTIFIER)
+
+    submission = submit({ quote_field.id.to_s => "Art helped me heal." })
+
+    expect(submission.quotes.pluck(:original_body)).to eq([ "Art helped me heal." ])
+  end
+
+  it "does not duplicate a captured quote on re-submit" do
+    quote_field = create(:form_field, form:, field_identifier: FormField::QUOTE_FIELD_IDENTIFIER)
+    submit({ quote_field.id.to_s => "Art helped me heal." })
+
+    expect { submit({ quote_field.id.to_s => "Art helped me heal." }) }.not_to change(Quote, :count)
+  end
+
+  it "rewrites the captured quote when the registrant edits their answer" do
+    quote_field = create(:form_field, form:, field_identifier: FormField::QUOTE_FIELD_IDENTIFIER)
+    submit({ quote_field.id.to_s => "Art helped me heel." })
+
+    submission = submit({ quote_field.id.to_s => "Art helped me heal." })
+
+    expect(submission.quotes.pluck(:body)).to eq([ "Art helped me heal." ])
   end
 
   describe "a survey-role form's side effects" do
@@ -135,7 +175,7 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
       expect(person.display_name_preference).to eq("first_name_only")
       expect(service.profile_changes).to include(
         anonymous_contributions: [ false, true ],
-        display_name_preference: [ nil, "first_name_only" ]
+        display_name_preference: [ "full_name", "first_name_only" ]
       )
     end
 

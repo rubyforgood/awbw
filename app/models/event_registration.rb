@@ -46,7 +46,10 @@ class EventRegistration < ApplicationRecord
   before_create :generate_slug
   before_save :capture_pre_transfer_status, if: :becoming_transferred_out?
   after_update :release_scholarships, if: :status_changed_to_cancelled?
-  after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
+  after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?, unless: :skip_cancellation_emails
+
+  # Set by the spreadsheet importer, which records historical cancellations silently.
+  attr_accessor :skip_cancellation_emails
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
@@ -600,6 +603,18 @@ class EventRegistration < ApplicationRecord
     "(#{ registrant&.full_name }) #{ event.start_date.strftime("%Y-%m-%d @ %I:%M %p") }: #{ event.title }"
   end
 
+  # Link an org a form submission named: the link row, pinned to that submission,
+  # noting what the submission wrote onto the org. An org linked after another one
+  # already holds the pin is an extra org, so it links unpinned with no note.
+  def link_submitted_organization!(organization, submission:, autofill: [])
+    link = event_registration_organizations.find_or_create_by!(organization: organization)
+    return link if event_registration_organizations.where(form_submission: submission).where.not(id: link.id).exists?
+
+    link.record_form_submission(submission)
+    link.record_autofill(autofill)
+    link
+  end
+
   def communications_email
     registrant&.preferred_email
   end
@@ -995,7 +1010,10 @@ class EventRegistration < ApplicationRecord
   # registration gets its own sheet, and they all record the same hours in the same
   # room, so one paid licence is enough to justify writing those hours down. Someone
   # part-way through paying for a second licence keeps signing in for the first.
+  # Events can switch timesheets off entirely.
   def ce_attendance_offered?
+    return false unless event&.ce_timesheets_enabled?
+
     continuing_education_registrations.any?(&:paid_in_full?)
   end
 
@@ -1202,7 +1220,7 @@ class EventRegistration < ApplicationRecord
       notification_type: 1
     )
 
-    programs_email = Organization.programs_email
+    programs_email = Setting.programs_email
     # No staff FYI without a configured programs mailbox (e.g. dev/seed with no
     # address env var); the registrant notice above still goes out.
     return if programs_email.blank?

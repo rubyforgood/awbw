@@ -1,0 +1,13 @@
+name: "Tell us about a new job or a closing program from your profile"
+area: people
+display_status: user_facing
+released_on: 2026-10-22
+pr_number: 2773
+summary: >-
+  When you add an organization, you can tick the jobs it replaced, and staff
+  end those for you. Removing your Facilitator role now closes your AWBW program there,
+  with the reason and your last day.
+pro_tips:
+  - When staff approve a new job, they can also make you a facilitator at the
+    new organization.
+  - Closing a program can end your job there too. Tick "I'm also leaving my job."

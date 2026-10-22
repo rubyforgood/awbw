@@ -29,6 +29,7 @@ module Events
         return
       end
 
+      Current.source = "bulk_payment"
       result = EventRegistrationServices::BulkPayment.call(
         event: @event,
         form: @form,

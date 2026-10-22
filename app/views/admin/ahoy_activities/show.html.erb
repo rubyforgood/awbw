@@ -82,6 +82,8 @@
                 <dd class="text-sm text-gray-900">
                   <% if key == "resource_title" && @resource_path %>
                     <%= link_to value.to_s.delete('"'), @resource_path, class: "text-indigo-600 hover:underline" %>
+                  <% elsif key == Analytics::LifecycleBuffer::FORM_SUBMISSION_KEY && @form_submission %>
+                    <%= link_to value, form_submission_path(@form_submission), class: "text-indigo-600 hover:underline" %>
                   <% elsif value.nil? %>
                     <span class="text-gray-400 italic">nil</span>
                   <% elsif value.is_a?(Hash) || value.is_a?(Array) %>

@@ -14,16 +14,23 @@ class PersonMatcher
   end
 
   def call
-    return if @email.blank? || @last_name.blank?
-    return if @first_names&.empty?
+    matches.first
+  end
 
-    scope = Person.left_joins(:user)
+  # Everyone the name + email reaches, for a caller that has to tell one match from
+  # several rather than take the first. Distinct, since the login join lists a person
+  # once per account they hold.
+  def matches
+    return Person.none if @email.blank? || @last_name.blank?
+    return Person.none if @first_names&.empty?
+
+    scope = Person.left_joins(:user).distinct
       .where("LOWER(people.last_name) = ?", @last_name)
       .where("LOWER(people.email) = :email OR LOWER(people.email_2) = :email OR LOWER(users.email) = :email", email: @email)
     scope = scope.where(
       "LOWER(people.first_name) IN (:names) OR LOWER(COALESCE(people.legal_first_name, '')) IN (:names)",
       names: @first_names
     ) if @first_names
-    scope.first
+    scope
   end
 end

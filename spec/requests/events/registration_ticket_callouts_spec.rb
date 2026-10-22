@@ -33,6 +33,17 @@ RSpec.describe "Registration ticket callouts", type: :request do
       expect(response).to redirect_to(event_path(event))
     end
 
+    it "translates the drip date into the viewer's zone" do
+      sign_in create(:user, time_zone: "Eastern Time (US & Canada)")
+      opens_at = Time.find_zone("Pacific Time (US & Canada)").local(Date.current.year + 1, 9, 10, 22)
+      callout = create(:registration_ticket_callout, event:, title: "Parking",
+        description: "<p>Use the north lot.</p>", display_from: opens_at)
+
+      get event_registration_ticket_callout_path(event, callout)
+
+      expect(response.body).to include("This content will be available on September 11, #{opens_at.year}")
+    end
+
     it "is publicly readable even when the event is not public" do
       private_event = create(:event, :unpublished, :ended)
       callout = create(:registration_ticket_callout, event: private_event,
@@ -299,6 +310,30 @@ RSpec.describe "Registration ticket callouts", type: :request do
       faq.update!(title: "Our FAQ")
       get edit_event_path(event)
       expect(response.body).to include("reset_to_default")
+    end
+
+    it "keeps an untouched built-in's drip date when an admin in another zone saves the event" do
+      admin.update!(time_zone: "Eastern Time (US & Canada)")
+      pacific = Time.find_zone("Pacific Time (US & Canada)")
+      event.update!(start_date: pacific.local(2026, 9, 10, 9), end_date: pacific.local(2026, 9, 10, 17))
+      BuiltinCallouts.seed(event)
+      videoconference = event.registration_ticket_callouts.find_by(builtin_key: "videoconference")
+
+      get edit_event_path(event)
+      expect(response.body).to include('value="2026-09-03"')
+
+      patch event_path(event), params: { event: {
+        registration_ticket_callouts_attributes: { "0" => { id: videoconference.id, display_from: "2026-09-03" } }
+      } }
+
+      expect(videoconference.reload.display_from).to eq(pacific.local(2026, 9, 3, 9))
+      expect(BuiltinCallouts.customized?(videoconference)).to be(false)
+
+      patch event_path(event), params: { event: {
+        registration_ticket_callouts_attributes: { "0" => { id: videoconference.id, display_from: "2026-09-04" } }
+      } }
+
+      expect(videoconference.reload.display_from).to eq(Time.find_zone("Eastern Time (US & Canada)").local(2026, 9, 4))
     end
 
     it "gives the Payment card an add-another linked-resource picker" do

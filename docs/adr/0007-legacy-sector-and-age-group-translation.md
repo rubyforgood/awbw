@@ -40,7 +40,7 @@ Translation is by lookup table, not by string similarity. A value that isn't in 
   tails ("Grief/loss (including COVID-related)") need no separate entry.
 - Many source values mapping to one tag is normal. Only `C & T` maps to two tags.
 - The portal spelling wins where the spreadsheet differs: **`Systems/Policy Change`** (the
-  sheet's "Sytems" is a typo).
+  sheet's "Sytems" is a typo, recorded as an alias so it still resolves).
 - `Other` is a form-only catch-all. It is never a translation target.
 
 ### FileMaker `PrimaryServiceArea` → sector
@@ -102,7 +102,7 @@ who they serve — they aren't sectors and have no portal home.
 | Oppression Against LGBTQIA+ | LGBTQIA+ |
 | Pandemic-Related Stress | Health/Medical |
 | People Who Do Harm/Batterers | Batterers Intervention |
-| Racism and Marginalization | Racial/Social Justice |
+| Racism and Marginalization (the sheet writes it "Racism & Marginalization"; both resolve) | Racial/Social Justice |
 | Religious Trauma | Religious/Faith-Based |
 | Restorative/Transformative Justice | Restorative/Transformative Justice |
 | Secondary/Vicarious Trauma | Staff/Organizational Development |
@@ -143,6 +143,13 @@ term sat in, not from the term: `PrimaryServiceArea` and `PrimaryAgeGroup` are t
 answers, `OtherServiceArea`, `Settings` and `LifeExperiences` the additional ones. So
 `Children's Services` makes Children the primary age range, and `Elder Abuse` adds Elders
 alongside whatever the primary already is.
+
+**A person holds one primary sector and one primary age range**, so where both primary
+fields name the same kind — `Children's Services` next to a `PrimaryAgeGroup` answer — the
+field that owns the kind gives the primary and the other's lands as additional. An answer
+naming several of a kind (`Families`) has no single one to pick, so the other field gets
+its turn instead. (Organizations carry several of each, mirrored up from their facilitators;
+that is the roll-up, not an answer.)
 
 ### Reads of the free text, pending staff validation
 

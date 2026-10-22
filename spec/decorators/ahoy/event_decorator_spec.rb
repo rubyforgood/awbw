@@ -116,6 +116,17 @@ RSpec.describe Ahoy::EventDecorator do
       expect(event.resource_link[:path]).to eq(Rails.application.routes.url_helpers.edit_person_path(person))
     end
 
+    it "describes a deleted comment from its snapshot, naming a deleted parent by type" do
+      author = create(:user)
+      event = create(:ahoy_event, name: "destroy.comment", resource_type: "Comment", resource_id: 0,
+                                  properties: { "attributes" => { "topic" => "Follow-up", "body" => "Called.",
+                                                                  "created_by_id" => author.id,
+                                                                  "commentable_type" => "Affiliation", "commentable_id" => 0 } }).decorate
+
+      expect(event.deleted_comment).to include(topic: "Follow-up", body: "Called.", author_name: author.full_name,
+                                               parent_link: { text: "Affiliation (deleted)", path: nil })
+    end
+
     it "flags a flagged comment" do
       comment = create(:comment, commentable: create(:person), flagged: true)
       event = create(:ahoy_event, name: "create.comment", resource_type: "Comment",
@@ -410,6 +421,23 @@ RSpec.describe Ahoy::EventDecorator do
     it "keeps an unlinked label when the polymorphic parent is gone" do
       event = decorate("commentable_id" => 0, "commentable_type" => "Person")
       expect(event.detail_rows).to eq([ { label: "Commentable", depth: 0, link: { text: "Person #0", path: nil } } ])
+    end
+
+    it "links the form submission a change came from" do
+      submission = create(:form_submission)
+      event = decorate("form_submission_id" => submission.id)
+
+      expect(event.detail_rows).to eq(
+        [ { label: "From form submission", depth: 0, link: { text: submission.title, path: "/form_submissions/#{submission.id}" } } ]
+      )
+    end
+
+    it "names a since-deleted form submission by its id, unlinked" do
+      event = decorate("form_submission_id" => 999_999)
+
+      expect(event.detail_rows).to eq(
+        [ { label: "From form submission", depth: 0, link: { text: "Form submission #999999", path: nil } } ]
+      )
     end
 
     it "indents a nested hash under its label" do
