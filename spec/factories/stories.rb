@@ -38,6 +38,10 @@ FactoryBot.define do
       publicly_featured { true }
     end
 
+    trait :story_share_featured do
+      story_share_featured { true }
+    end
+
     trait :funder_only do
       funder_only { true }
     end

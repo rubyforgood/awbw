@@ -2143,6 +2143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
     t.string "co_author_credit_preference"
     t.integer "story_share_carousel_position"
     t.boolean "funder_only", default: false, null: false
+    t.boolean "story_share_featured", default: false, null: false
     t.index ["author_id"], name: "index_stories_on_author_id"
     t.index ["co_author_id"], name: "index_stories_on_co_author_id"
     t.index ["created_by_id"], name: "index_stories_on_created_by_id"

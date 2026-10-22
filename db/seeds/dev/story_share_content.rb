@@ -116,7 +116,7 @@ end
 
 puts "Creating Stories…"
 # Deterministic so the Story Share portal demos well: every story is published +
-# publicly visible, the first five are publicly featured, sectors/audiences are
+# publicly visible, the first five are featured (portal and Story Share), sectors/audiences are
 # tagged (with ≥3 public stories in each featured sector), a few spotlight a
 # facilitator (for person profiles), and most get a primary image (last two
 # exercise the fallback).
@@ -149,13 +149,13 @@ story_seeds.each_with_index do |seed, i|
     updated_by_id: User.first&.id,
     created_at: Time.current - (i * 7).days,
     updated_at: Time.current - (i * 3).days,
-    published: true, publicly_visible: true, publicly_featured: i < 5, featured: i < 5
+    published: true, publicly_visible: true, publicly_featured: i < 5, featured: i < 5, story_share_featured: i < 5
   )
 
   # Force the demo-critical fields even on stories from an earlier seed run
   # (first_or_create! only assigns them on insert).
   story.update!(
-    published: true, publicly_visible: true, publicly_featured: i < 5, featured: i < 5,
+    published: true, publicly_visible: true, publicly_featured: i < 5, featured: i < 5, story_share_featured: i < 5,
     spotlighted_facilitator_id: story.spotlighted_facilitator_id || (Person.all.sample&.id if seed[:spotlight]),
     youtube_url: seed[:youtube] ? "https://youtube.com/watch?v=dQw4w9WgXcQ" : story.youtube_url
   )
@@ -240,6 +240,7 @@ bulk_story_count.times do |n|
     publicly_visible: is_public,
     publicly_featured: is_public && is_featured,
     featured: is_featured,
+    story_share_featured: is_featured,
     story_share_carousel_position: (n + 1 if is_public && n < 6)
   )
 

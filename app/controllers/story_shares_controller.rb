@@ -98,16 +98,16 @@ class StorySharesController < ApplicationController
     preloaded(Story.where(id: ids)).in_order_of(:id, ids).decorate
   end
 
-  # Publicly featured stories lead the section, then most recent, capped.
+  # Story Share featured stories lead the section, then most recent, capped.
   def section_stories(scope)
-    preloaded(scope).order(publicly_featured: :desc, created_at: :desc).limit(SECTION_STORY_LIMIT).decorate
+    preloaded(scope).order(story_share_featured: :desc, created_at: :desc).limit(SECTION_STORY_LIMIT).decorate
   end
 
   # Hand-picked stories lead the hero carousel (by carousel order); fall back to
-  # publicly featured then most recent so the carousel never empties.
+  # Story Share featured then most recent so the carousel never empties.
   def carousel_stories
     stories = preloaded(portal_scope.story_share_carousel).limit(FEATURED_CAROUSEL_LIMIT)
-    stories = preloaded(portal_scope.publicly_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
+    stories = preloaded(portal_scope.story_share_featured).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
     stories = preloaded(portal_scope).order(created_at: :desc).limit(FEATURED_CAROUSEL_LIMIT) if stories.empty?
     stories.decorate
   end
@@ -120,7 +120,7 @@ class StorySharesController < ApplicationController
     return load_search_results(filtered, per_page) if searching?
 
     highlights = primary_tag_matches(filtered)
-    lead_ids = highlights.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
+    lead_ids = highlights.reorder(story_share_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
     grid_ids = highlights.where.not(id: lead_ids).reorder(created_at: :desc).limit(BROWSE_GRID_LIMIT).pluck(:id)
     @lead_stories = first_page? ? in_id_order(lead_ids) : []
     @grid_stories = first_page? ? in_id_order(grid_ids) : []

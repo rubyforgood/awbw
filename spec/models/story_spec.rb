@@ -511,4 +511,13 @@ RSpec.describe Story, type: :model do
       expect(Story.story_share_carousel.to_a).to eq([ first, second ])
     end
   end
+
+  describe ".story_share_featured" do
+    it "returns only Story Share featured stories, independent of portal featuring" do
+      story_share = create(:story, :story_share_featured)
+      create(:story, :featured, :publicly_featured)
+
+      expect(Story.story_share_featured).to contain_exactly(story_share)
+    end
+  end
 end

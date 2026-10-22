@@ -759,6 +759,7 @@ RSpec.describe StoryImporter do
       import([ base_row("featured" => "yes") ])
 
       expect(Story.sole.featured).to be(true)
+      expect(Story.sole.story_share_featured).to be(true)
     end
   end
 

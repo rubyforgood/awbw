@@ -1,0 +1,12 @@
+name: "Feature a story on Story Share only"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-22
+summary: >-
+  Stories have a new "Story Share featured" checkbox that puts a story first in
+  its Story Share sections without also putting it on the portal homepage.
+pro_tips:
+  - "Featured and Publicly featured now control only the portal homepage."
+  - "Story Share featured stories also fill the Story Share carousel when no carousel order is set."
+action_path: "/story_share"
+pr_number: 2783

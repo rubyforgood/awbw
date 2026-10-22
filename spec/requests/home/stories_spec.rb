@@ -42,6 +42,15 @@ RSpec.describe "/home/stories", type: :request do
       expect(response.body).to include("AWBW Facilitator")
     end
 
+    it "leaves a story featured only on Story Share off the home feed" do
+      create(:story, :published, :publicly_visible, :story_share_featured, title: "Story Share Only Story")
+
+      get home_stories_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Story Share Only Story")
+    end
+
     it "lists featured stories newest first" do
       create(:story, :published, :featured, title: "Older featured story", created_at: 10.days.ago)
       create(:story, :published, :featured, title: "Newer featured story", created_at: 1.day.ago)

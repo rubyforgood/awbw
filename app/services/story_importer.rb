@@ -362,6 +362,7 @@ class StoryImporter
       publicly_visible: published,
       featured: featured,
       publicly_featured: featured,
+      story_share_featured: featured,
       created_by: @import_user,
       updated_by: @import_user
     )

@@ -45,6 +45,10 @@
       <div class="mt-2 border-t border-blue-200 pt-2">
         <%= visibility_flag_input f, :funder_only %>
       </div>
+      <div class="mt-2 border-t border-blue-200 pt-2">
+        <%= render "shared/visibility_info", flags: %i[story_share_featured], heading: "Story Share" %>
+        <%= visibility_flag_input f, :story_share_featured %>
+      </div>
       <div class="mt-3">
         <%= f.input :story_share_carousel_position,
                     as: :integer,

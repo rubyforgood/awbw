@@ -26,6 +26,11 @@ module VisibilityFlagsHelper
       hint: "On the public homepage",
       description: "Shows this on the homepage for visitors who are not logged in. (Requires both Published and Publicly visible to take effect.)"
     },
+    story_share_featured: {
+      label: "Story Share featured",
+      hint: "Leads its Story Share sections",
+      description: "Puts this story first in its Story Share sections and sector pages, and in the home carousel when none are hand-picked. Doesn't affect the portal homepage. (Story Share still shows it only to the audiences who can see it.)"
+    },
     funder_only: {
       label: "Funder-only",
       hint: "Shared only with the scholarship funder; off Story Share",
