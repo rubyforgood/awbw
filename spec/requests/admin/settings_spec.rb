@@ -78,6 +78,15 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(options.find { |option| option["selected"] }.text).to include("imports@example.com")
     end
 
+    it "searches every login for the import user, inactive ones included" do
+      sign_in admin
+
+      get admin_settings_path
+
+      picker = Nokogiri::HTML(response.body).at_css("select[name='setting[import_user_id]']")
+      expect(picker["data-remote-select-model-value"]).to eq(SearchController::USER_ANY_STATUS_MODEL)
+    end
+
     it "is denied to a non-admin" do
       sign_in create(:user)
 
