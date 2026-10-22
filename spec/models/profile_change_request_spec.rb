@@ -111,6 +111,59 @@ RSpec.describe ProfileChangeRequest, type: :model do
       end
     end
 
+    describe "adding a new job that replaced an old one" do
+      let(:person) { create(:person) }
+      let(:add) { { person: person, field: "affiliation", requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, proposed_title: "Therapist", details: nil, organization: create(:organization) } }
+
+      it "only accepts organizations the person currently works with" do
+        request = build(:profile_change_request, **add, left_organization_ids: [ create(:organization).id ])
+        expect(request).not_to be_valid
+        expect(request.errors[:left_organization_ids]).to be_present
+      end
+
+      it "drops the left organizations on any other kind of request" do
+        current = create(:affiliation, person: person)
+        request = build(:profile_change_request, person: person, affiliation: current, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_TITLE,
+                                                 proposed_title: "Lead", details: nil, left_organization_ids: [ current.organization_id ])
+        request.validate
+        expect(request.left_organization_ids).to be_nil
+      end
+    end
+
+    describe "removing a Facilitator affiliation" do
+      let(:facilitator) { create(:affiliation) }
+      let(:remove) { { person: facilitator.person, affiliation: facilitator, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE } }
+
+      it "closes the program and needs a reason" do
+        request = build(:profile_change_request, **remove, details: nil)
+        expect(request).to be_closing_program
+        expect(request).not_to be_valid
+        expect(request.errors[:details]).to be_present
+      end
+
+      it "keeps leaving_job and the last day" do
+        request = build(:profile_change_request, **remove, leaving_job: true, proposed_end_date: Date.new(2026, 9, 30))
+        request.validate
+        expect(request).to have_attributes(leaving_job: true, proposed_end_date: Date.new(2026, 9, 30))
+      end
+
+      it "can still be resolved when it predates the reason question" do
+        request = create(:profile_change_request, **remove)
+        request.update_columns(details: nil)
+
+        expect { request.reload.resolve!(method: "manual", reviewer: create(:user, :admin)) }.not_to raise_error
+      end
+
+      it "is a plain removal for a job affiliation" do
+        job = create(:affiliation, title: "Counselor")
+        request = build(:profile_change_request, person: job.person, affiliation: job, details: nil, leaving_job: true,
+                                                 requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE)
+        expect(request).not_to be_closing_program
+        expect(request).to be_valid
+        expect(request.leaving_job).to be(false)
+      end
+    end
+
     it "requires details for a free-form affiliation request" do
       request = build(:profile_change_request, field: "affiliation", details: nil)
       expect(request).not_to be_valid
