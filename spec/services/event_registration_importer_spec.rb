@@ -405,6 +405,35 @@ RSpec.describe EventRegistrationImporter do
       end
     end
 
+    describe "rows carrying a FileMaker code" do
+      it "matches the person that code is already recorded on, with no name or email" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org",
+                                 filemaker_code: "00006, 00009")
+
+        result = import_rows(%w[FileMakerCode Status], %w[00009 Attended])
+
+        expect(registration_of(person)).to be_present
+        expect(result.rows.first.person_status).to eq(:matched_by_filemaker_code)
+        expect(result.rows.first.last_name).to eq("Example")
+      end
+
+      it "falls back to email and name when the code matches nobody" do
+        person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org")
+
+        result = import_rows(%w[FileMakerCode FirstName LastName EMail],
+                             [ "99999", "Pat", "Example", "pat@example.org" ])
+
+        expect(registration_of(person)).to be_present
+        expect(result.rows.first.person_status).to eq(:matched)
+      end
+
+      it "still needs a name when the code matches nobody" do
+        result = import_rows(%w[FileMakerCode Status], %w[99999 Attended])
+
+        expect(result.skipped.sole.skipped_reason).to eq("missing first name, last name")
+      end
+    end
+
     describe "rows without an email" do
       let!(:organization) { create(:organization, name: "Sunrise Center") }
 

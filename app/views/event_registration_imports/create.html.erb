@@ -106,6 +106,8 @@
                         as <%= row.placeholder_email %>
                       </div>
                     <% end %>
+                  <% when :matched_by_filemaker_code %>
+                    <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="Matched on the FileMaker code already recorded on this person">Matched by FileMaker code</span>
                   <% when :matched_by_name_and_organization %>
                     <span class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-800" title="No email — matched by name at this organization">Matched by name + org</span>
                   <% when :matched_by_name %>

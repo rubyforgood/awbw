@@ -239,9 +239,16 @@ class EventRegistrationImporter
       email: values[:email], organization_name: values[:organization], details: [], warnings: []
     )
 
-    missing = [ [ "first name", values[:first_name] ], [ "last name", values[:last_name] ] ]
-      .select { |_label, value| value.blank? }.map(&:first)
-    return skip(preview, "missing #{missing.join(", ")}") if missing.any?
+    coded = person_for_filemaker_code(values[:filemaker_code])
+    if coded
+      preview.first_name ||= coded.first_name
+      preview.last_name ||= coded.last_name
+      preview.email ||= coded.email
+    else
+      missing = [ [ "first name", values[:first_name] ], [ "last name", values[:last_name] ] ]
+        .select { |_label, value| value.blank? }.map(&:first)
+      return skip(preview, "missing #{missing.join(", ")}") if missing.any?
+    end
 
     status = resolve_status(values)
     return skip(preview, "unknown status “#{values[:status]}”") if status == :invalid
@@ -252,7 +259,7 @@ class EventRegistrationImporter
 
     preview.status = preview.status_from_sheet = status
     organization = resolve_organization(values[:organization], preview)
-    person = resolve_person(values, organization, preview)
+    person = resolve_person(values, organization, preview, coded)
     registration = resolve_registration(person, status, preview)
     answers = build_answers(values, preview)
     set_money_preview(values, preview)
@@ -265,6 +272,7 @@ class EventRegistrationImporter
   end
 
   def row_key(values)
+    return "code #{values[:filemaker_code]}" if values[:filemaker_code]
     return "email #{values[:email]} #{values[:last_name].downcase}" if values[:email]
 
     "name #{values[:first_name]} #{values[:last_name]} #{values[:organization]}".downcase
@@ -297,11 +305,11 @@ class EventRegistrationImporter
 
   # ── People ──────────────────────────────────────────────────────────────
 
-  def resolve_person(values, organization, preview)
-    existing, basis = find_matching_person(values, organization)
+  def resolve_person(values, organization, preview, coded = nil)
+    existing, basis = coded ? [ coded, :filemaker_code ] : find_matching_person(values, organization)
     if existing
       @result.people_matched += 1
-      @result.people_matched_by_name += 1 if basis
+      @result.people_matched_by_name += 1 if basis && basis != :filemaker_code
       preview.person_status = basis ? :"matched_by_#{basis}" : :matched
       preview.person_label = existing.full_name
       return existing
@@ -317,6 +325,15 @@ class EventRegistrationImporter
     person.email = placeholder_email(person, preview) if person.email.blank?
     person.save! unless @dry_run
     person
+  end
+
+  # A FileMaker code names the person outright: the Rolodex import carries each
+  # archive row's id onto the person it became, so a registration row exported
+  # beside it needs no name or email to be matched.
+  def person_for_filemaker_code(code)
+    return if code.blank?
+
+    Person.with_filemaker_code(code).first
   end
 
   def find_matching_person(values, organization)

@@ -46,7 +46,7 @@ RSpec.describe "Event registration imports", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.headers["Content-Disposition"]).to include("event-registrants-import-template.csv")
-      expect(response.body.lines.first).to start_with("FirstName,LastName,EMail")
+      expect(response.body.lines.first).to start_with("FileMakerCode,FirstName,LastName,EMail")
     end
 
     it "keeps the template admin-only" do

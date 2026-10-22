@@ -15,7 +15,8 @@
     everything before anything is saved.
   </p>
   <p class="mb-2 text-sm text-gray-600">
-    Required: <span class="font-medium">FirstName</span> and <span class="font-medium">LastName</span>.
+    Required: <span class="font-medium">FirstName</span> and <span class="font-medium">LastName</span> — unless the row
+    carries a <span class="font-medium">FileMakerCode</span> we already have on file, which names the person on its own.
     Every other column is optional — leave out what you don't have. Export your spreadsheet as a .csv first.
   </p>
   <p class="mb-4 text-sm">
@@ -28,7 +29,8 @@
     <summary class="cursor-pointer px-4 py-2 font-medium text-gray-700">Columns we read</summary>
     <dl class="space-y-2 px-4 pb-4">
       <% [
-        [ "Person", "EMail, Nickname, Pronouns, SecondaryEmail. Without an email we match by name at the " \
+        [ "Person", "FileMakerCode (or ParticipantID) matches a person by the FileMaker code on their profile — " \
+                    "exact, and enough on its own. Otherwise: EMail, Nickname, Pronouns, SecondaryEmail. Without an email we match by name at the " \
                     "row's organization, then by a name only one person has; a new email-less person gets a " \
                     "placeholder like 1@example.com." ],
         [ "Status", "Status — Attended, Incomplete attendance, Registered, No show, or Cancelled. Blank means " \

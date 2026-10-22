@@ -9,6 +9,7 @@ summary: >-
   CE licenses, and scholarships. It matches existing people, organizations, and
   addresses instead of duplicating them, even when a row has no email.
 pro_tips:
+  - "If a sheet carries FileMaker codes (FileMakerCode or ParticipantID), we match those people exactly — no name or email needed on the row. Run the FileMaker people import first so the codes are on file."
   - "One check or payment covering several people: put the same BulkPayment reference (or the same CheckNumber) on each of their rows. The import records one payment, splits it across those registrations instead of charging each person the full amount, and lists it on the event's bulk payments page."
   - "A row that covers several people (NoOfPersons above 1) registers the one it names and records the money as a bulk payment for the whole group. The people it doesn't name show as TBD on the event's bulk payments page, with the balance waiting to be allocated once you add them."
   - "Download the CSV template from the import page — it has every column we read, spelled the way we expect."

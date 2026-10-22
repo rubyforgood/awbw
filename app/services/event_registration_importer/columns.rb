@@ -4,6 +4,7 @@ class EventRegistrationImporter
   # "First name", "FirstName", and "first_name" all land on :first_name.
   module Columns
     HEADER_ALIASES = {
+      filemaker_code: %w[filemakercode fmcode fmid participantid rolodexid],
       first_name: %w[firstname first],
       last_name: %w[lastname last surname name],
       email: %w[email emailaddress primaryemail],
@@ -60,7 +61,7 @@ class EventRegistrationImporter
     # rather than guessing which alias we accept. A spec holds this to every field
     # in HEADER_ALIASES, so a new column can't ship without a place in the template.
     TEMPLATE_HEADERS = %w[
-      FirstName LastName EMail Nickname Pronouns SecondaryEmail
+      FileMakerCode FirstName LastName EMail Nickname Pronouns SecondaryEmail
       Status Day1 Day2 Day3 Day4 Day5 RegisteredOn
       Organization Position OrganizationWebsite OrganizationType
       OrganizationStreet OrganizationCity OrganizationState OrganizationZip OrganizationCountry
