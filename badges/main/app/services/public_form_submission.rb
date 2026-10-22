@@ -49,7 +49,6 @@ class PublicFormSubmission
       process_close_program(submission)
       send_notifications(submission)
 
-      Current.form_submission_id = submission.id
       Result.new(success?: true, form_submission: submission, person: person, errors: [])
     end
   rescue FormSubmission::UnreadableUpload => e

@@ -372,7 +372,6 @@ module Events
       end
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
-      Current.source = "ticket_callout"
       service = EventRegistrationServices::CalloutFormSubmission.call(
         registration: @event_registration, callout: @callout, form: form,
         form_params: callout_form_params
@@ -380,7 +379,7 @@ module Events
       # A profile write-through (anonymity / name questions) is Ahoy-tracked, and
       # staff get a heads-up on the submission. The CE callout runs its own flow, so
       # it opts out of the FYI.
-      track_profile_changes(service.profile_changes, service.submission)
+      track_profile_changes(service.profile_changes)
       NotificationMailer.callout_form_submitted_fyi(service.submission, updated: service.edited?).deliver_later unless @callout.ce_config?
 
       redirect_to callout_form_landing(@callout, callout_form),
@@ -485,10 +484,9 @@ module Events
     end
 
     # One Ahoy event per profile field the survey actually changed.
-    def track_profile_changes(changes, submission)
+    def track_profile_changes(changes)
       changes.each do |attribute, (from, to)|
-        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to,
-                                           form_submission_id: submission.id)
+        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to)
       end
     end
 

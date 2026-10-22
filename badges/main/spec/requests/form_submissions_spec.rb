@@ -621,20 +621,6 @@ RSpec.describe "FormSubmissions", type: :request do
           expect(response).to redirect_to(link_organization_form_submission_path(submission))
         end
 
-        it "attributes the org and affiliation writes to the submission, so its changes audit finds them" do
-          add_answer("organization_name", "Harbor Family Shelter")
-          add_answer("organization_website", "harbor.example.org")
-          organization = create(:organization, name: "Harbor Family Shelter", website_url: nil)
-          tracked = []
-          allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, props| tracked << [ name, props ] }
-
-          post select_organization_form_submission_path(submission, organization_id: organization.id)
-
-          written = tracked.select { |name, _| name.in?(%w[update.organization create.affiliation]) }
-          expect(written.map(&:first)).to include("update.organization", "create.affiliation")
-          expect(written.map { |_name, props| props[:form_submission_id] }.uniq).to eq([ submission.id ])
-        end
-
         it "ends the old org's affiliations when linking a job change, and flags them on the panel" do
           add_answer("organization_name", "Harbor Family Shelter")
           organization = create(:organization, name: "Harbor Family Shelter")

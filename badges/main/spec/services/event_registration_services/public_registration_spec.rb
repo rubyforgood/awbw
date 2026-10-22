@@ -24,24 +24,6 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
-  describe "change attribution" do
-    let(:params) { base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com") }
-
-    it "attributes the request's changes to the registration submission" do
-      result = described_class.call(event: event, registration_form: form, form_params: params)
-
-      expect(Current.form_submission_id).to eq(result.form_submission.id)
-    end
-
-    it "attributes nothing when the registration fails and rolls back" do
-      allow(Quotes::CaptureFromSubmission).to receive(:call).and_raise(ActiveRecord::RecordInvalid.new(Person.new))
-
-      result = described_class.call(event: event, registration_form: form, form_params: params)
-
-      expect([ result.success?, Current.form_submission_id ]).to eq([ false, nil ])
-    end
-  end
-
   describe "registration status" do
     it "flips an on-demand facilitator-training registration straight to attended" do
       on_demand = create(:event, :published, :publicly_visible, facilitator_training: true, on_demand: true)

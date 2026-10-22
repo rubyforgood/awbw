@@ -114,7 +114,6 @@ module EventRegistrationServices
             changes = ResubmissionChanges.between(before_resubmission, ResubmissionChanges.snapshot(existing), submission:)
             send_duplicate_notifications(existing, changes)
           end
-          Current.form_submission_id = submission.id
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
@@ -128,7 +127,6 @@ module EventRegistrationServices
 
         send_notifications(event_registration)
 
-        Current.form_submission_id = submission.id
         Result.new(success?: true, event_registration: event_registration, form_submission: submission, errors: [])
       end
     rescue FormSubmission::UnreadableUpload => e

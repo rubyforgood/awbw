@@ -21,12 +21,6 @@ RSpec.describe EventRegistrationServices::CalloutFormSubmission do
     expect(submission.form_answers.find_by(form_field: field).submitted_answer).to eq("Great")
   end
 
-  it "attributes the request's changes to the callout submission" do
-    submission = submit({ field.id.to_s => "Great" })
-
-    expect(Current.form_submission_id).to eq(submission.id)
-  end
-
   it "carries the form's own role when it has one" do
     form.update!(role: "registration")
 
