@@ -20,6 +20,15 @@ RSpec.describe "Person email whitespace", type: :request do
     patch person_path(person), params: { person: { email: "  new@test.org\t", email_2: "​ " } }
 
     expect(person.reload.email).to eq("new@test.org")
-    expect(person.email_2).to eq("")
+    expect(person.email_2).to be_nil
+  end
+
+  it "saves a cleared whitespace-only email as nil" do
+    person.update_columns(email: "jane@test.org ", email_2: " \u00A0")
+
+    patch person_path(person), params: { person: { email: "", email_2: "" } }
+
+    expect(person.reload.email).to be_nil
+    expect(person.email_2).to be_nil
   end
 end

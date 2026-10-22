@@ -81,7 +81,7 @@ class Person < ApplicationRecord
 
   # Unicode-aware, plus the zero-width characters [[:space:]] skips; pasted addresses carry both.
   EMAIL_WHITESPACE = /[[:space:]\u200B-\u200D\u2060\uFEFF]/
-  normalizes :email, :email_2, with: ->(email) { email.gsub(EMAIL_WHITESPACE, "") }
+  normalizes :email, :email_2, with: ->(email) { email.gsub(EMAIL_WHITESPACE, "").presence }
 
   # Validations
   validates :avatar,

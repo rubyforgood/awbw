@@ -97,14 +97,14 @@ RSpec.describe Person, type: :model do
       expect(person.email_2).to eq("jane2@test.org")
     end
 
-    it "blanks a whitespace-only email" do
+    it "stores a blank or whitespace-only email as nil" do
       person = create(:person, user: nil, email: "jane@test.org", created_by: admin, updated_by: admin)
       person.update_columns(email: "\u00A0 \t", email_2: "  ")
 
-      person.update!(email: "", email_2: "")
+      person.update!(email: "", email_2: " \u200B")
 
-      expect(person.reload.email).to eq("")
-      expect(person.email_2).to eq("")
+      expect(person.reload.email).to be_nil
+      expect(person.email_2).to be_nil
     end
 
     it "stores look-alike dashes in names as a plain hyphen" do
