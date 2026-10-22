@@ -1,6 +1,13 @@
 require "rails_helper"
 
 RSpec.describe PersonDecorator do
+  describe ".email_with_type" do
+    it "abbreviates a work or personal email and leaves an unknown one bare" do
+      expect(described_class.email_with_type("ada@example.com", "work")).to eq("ada@example.com (w)")
+      expect(described_class.email_with_type("ada@example.com", "unknown")).to eq("ada@example.com")
+    end
+  end
+
   describe "#user_accounts" do
     let(:person) { create(:person) }
 

@@ -1,0 +1,9 @@
+name: "Edit an event straight from its page"
+area: events
+display_status: admin_facing
+released_on: 2026-10-20
+summary: >-
+  The event page's top bar has an "Edit event" link, so you can jump
+  straight into editing.
+pro_tips:
+  - "The dashboard is still one click away from the event's edit page."
