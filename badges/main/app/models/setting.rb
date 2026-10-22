@@ -18,6 +18,7 @@ class Setting < ApplicationRecord
   belongs_to :return_address, class_name: "Address", optional: true
   belongs_to :remittance_address, class_name: "Address", optional: true
   belongs_to :ce_administrator, class_name: "Person", optional: true
+  belongs_to :import_user, class_name: "User", optional: true
 
   # singleton is a constant true behind a unique index: MySQL has no CHECK-based
   # way to cap a table at one row, but a unique index on a constant does it.
@@ -28,7 +29,7 @@ class Setting < ApplicationRecord
   validates :invoice_prefix, length: { maximum: 20 }
   validates :ce_provider_number, length: { maximum: 50 }
   validates :ce_administrator_title, :ce_accreditation_body, length: { maximum: 255 }
-  validates :ce_accreditation_abbreviation, length: { maximum: 50 }
+  validates :ce_accreditation_abbreviation, length: { maximum: 60 }
   validates :ce_accreditation_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]),
                                              message: "must be a full http(s) address" }, allow_blank: true
   validates :annual_membership_cents, :membership_renewal_window_days, :membership_grace_period_days,
@@ -148,6 +149,12 @@ class Setting < ApplicationRecord
 
   def self.ce_administrator_name
     ce_administrator&.full_name.presence
+  end
+
+  # Who a data import run as a rake task (no signed-in user) credits as created_by /
+  # updated_by when its source names no one the portal can resolve.
+  def self.import_user
+    stored_association(:import_user)
   end
 
   # The signatory's title, printed beside their name on the certificate.
