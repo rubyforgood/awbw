@@ -4,7 +4,8 @@ class SearchController < ApplicationController
   # Virtual "model" that searches people and organizations together for the
   # compound payer / funder pickers, listing organizations first.
   COMPOUND_MODEL = "person_or_organization".freeze
-  # Every login, whatever its access, labelled with why it can't sign in — for the users deduper.
+  # Every login, whatever its access, labelled with why it can't sign in — for the users deduper
+  # and the import user setting.
   USER_ANY_STATUS_MODEL = "user_any_status".freeze
 
   def index
