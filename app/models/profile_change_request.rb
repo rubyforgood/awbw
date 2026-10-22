@@ -88,6 +88,27 @@ class ProfileChangeRequest < ApplicationRecord
     field == "affiliation" && requested_value.in?(AFFILIATION_AUTO_CATEGORIES) && !new_organization?
   end
 
+  # Removing a Facilitator row closes the person's AWBW program at that organization.
+  def closing_program?
+    field == "affiliation" && requested_value == AFFILIATION_CHANGE_REMOVE && affiliation&.facilitator?
+  end
+
+  def ends_other_organizations?
+    field == "affiliation" && requested_value == AFFILIATION_CHANGE_ADD && leaving_job?
+  end
+
+  # What approving a "left my job" add request would end.
+  def affiliations_ending_elsewhere
+    return Affiliation.none unless ends_other_organizations?
+
+    person.affiliations.active_or_pending.where.not(organization_id: organization_id).includes(:organization)
+  end
+
+  # Approving offers to carry their facilitator role over; on by default when it ends one elsewhere.
+  def confer_facilitator_by_default?
+    affiliations_ending_elsewhere.facilitators.exists?
+  end
+
   def work_address_change?
     field == "affiliation" && requested_value.in?(AFFILIATION_WORK_ADDRESS_CATEGORIES)
   end
@@ -120,10 +141,15 @@ class ProfileChangeRequest < ApplicationRecord
     when AFFILIATION_CHANGE_TITLE then proposed_title
     when AFFILIATION_CHANGE_DATES then proposed_dates_label
     when AFFILIATION_CHANGE_ORGANIZATION then proposed_organization_name
-    when AFFILIATION_CHANGE_REMOVE then "End-date and mark inactive"
+    when AFFILIATION_CHANGE_REMOVE then closing_program? ? close_program_summary : "End-date and mark inactive"
     when *AFFILIATION_WORK_ADDRESS_CATEGORIES then proposed_organization_address&.name || typed_work_address_label
     when AFFILIATION_CHANGE_ADD then [ proposed_title, organization&.name || new_organization_label, proposed_dates_label ].compact_blank.join(" · ")
     end
+  end
+
+  def close_program_summary
+    last_day = proposed_end_date&.strftime("%b %-d, %Y") || "the day it's approved"
+    "Close the program as of #{last_day}#{" and end their job there" if leaving_job?}"
   end
 
   def new_organization_label
@@ -195,7 +221,7 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   def requires_details?
-    other? || license? || (field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER)
+    other? || license? || (closing_program? && pending?) || (field == "affiliation" && requested_value == AFFILIATION_CHANGE_OTHER)
   end
 
   # A category's hidden sibling inputs still post their (stale) values; drop the
@@ -204,10 +230,9 @@ class ProfileChangeRequest < ApplicationRecord
     self.affiliation_id = nil if requested_value == AFFILIATION_CHANGE_ADD
     self.organization_id = nil unless requested_value == AFFILIATION_CHANGE_ADD
     self.proposed_title = nil unless requested_value.in?([ AFFILIATION_CHANGE_TITLE, AFFILIATION_CHANGE_ADD ])
-    unless requested_value.in?([ AFFILIATION_CHANGE_DATES, AFFILIATION_CHANGE_ADD ])
-      self.proposed_start_date = nil
-      self.proposed_end_date = nil
-    end
+    self.proposed_start_date = nil unless requested_value.in?([ AFFILIATION_CHANGE_DATES, AFFILIATION_CHANGE_ADD ])
+    self.proposed_end_date = nil unless requested_value.in?([ AFFILIATION_CHANGE_DATES, AFFILIATION_CHANGE_ADD, AFFILIATION_CHANGE_REMOVE ])
+    self.leaving_job = false unless requested_value == AFFILIATION_CHANGE_ADD || closing_program?
     self.proposed_organization_name = nil unless requested_value.in?([ AFFILIATION_CHANGE_ORGANIZATION, AFFILIATION_CHANGE_ADD ])
     self.proposed_organization_name = nil if requested_value == AFFILIATION_CHANGE_ADD && organization_id.present?
     self.proposed_organization_address_id = nil unless work_address_change?

@@ -67,6 +67,31 @@ RSpec.describe "Profile change requests", type: :request do
       expect(request.proposed_end_date).to eq(Date.new(2020, 6, 1))
     end
 
+    it "offers to close the program for a Facilitator affiliation and asks why" do
+      facilitator = create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"))
+
+      get new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: facilitator.id)
+      expect(response.body).to include("Close my AWBW program here")
+
+      get new_profile_change_request_path(person_id: person, field: "affiliation", affiliation_id: facilitator.id,
+                                          change: ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE)
+      expect(response.body).to include("Why is the program closing?", "also leaving my job at Sunrise Center")
+
+      post profile_change_requests_path(person_id: person), params: {
+        profile_change_request: { field: "affiliation", affiliation_id: facilitator.id, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE,
+                                  details: "Funding ended", leaving_job: "1", proposed_end_date: "2026-09-30" }
+      }
+      expect(person.profile_change_requests.last).to have_attributes(leaving_job: true, details: "Funding ended", proposed_end_date: Date.new(2026, 9, 30))
+    end
+
+    it "asks whether a new organization replaces the person's current job" do
+      create(:affiliation, person: person, organization: create(:organization, name: "Sunrise Center"), start_date: 1.year.ago, end_date: nil)
+
+      get new_profile_change_request_path(person_id: person, field: "affiliation", add: 1)
+
+      expect(response.body).to include("This is a new job and I&#39;ve left my old one", "end your affiliations with Sunrise Center")
+    end
+
     it "forbids submitting for someone else" do
       stranger = create(:person, user: nil)
       post profile_change_requests_path(person_id: stranger), params: {
@@ -431,6 +456,75 @@ RSpec.describe "Profile change requests", type: :request do
       expect(response.body).to match(/Pending\s*<span[^>]*>1</)
       expect(response.body).to match(/Declined\s*<span[^>]*>1</)
       expect(response.body).to match(/Resolved\s*<span[^>]*>0</)
+    end
+
+    describe "a new job that replaces the old one" do
+      let(:old_org) { create(:organization, name: "Old Shelter") }
+      let(:new_org) { create(:organization, name: "New Clinic") }
+      let!(:old_job) { create(:affiliation, person: person, organization: old_org, title: "Counselor", start_date: 2.years.ago, end_date: nil) }
+      let!(:old_facilitator) { create(:affiliation, person: person, organization: old_org, start_date: 2.years.ago, end_date: nil) }
+      let(:request) do
+        create(:profile_change_request, person: person, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, details: nil,
+                                        organization: new_org, proposed_title: "Therapist", proposed_start_date: Date.new(2026, 9, 1), leaving_job: true)
+      end
+
+      it "shows what approving ends and defaults to carrying the facilitator role over" do
+        request
+        get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
+
+        expect(response.body).to include("Approving ends", "Counselor @ Old Shelter", "Facilitator @ Old Shelter")
+        expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="confer_facilitator"|<input[^>]*name="confer_facilitator"[^>]*checked="checked"/)
+      end
+
+      it "ends the old organization the day before the new job and adds a Facilitator row" do
+        post approve_profile_change_request_path(request), params: { confer_facilitator: "1" }
+
+        expect(old_job.reload.end_date).to eq(Date.new(2026, 8, 31))
+        expect(old_facilitator.reload.end_date).to eq(Date.new(2026, 8, 31))
+        expect(person.affiliations.where(organization: new_org).pluck(:title, :start_date))
+          .to contain_exactly([ "Therapist", Date.new(2026, 9, 1) ], [ "Facilitator", Date.new(2026, 9, 1) ])
+        expect(request.reload).to be_resolved
+      end
+
+      it "adds only the job when the admin unchecks the facilitator box" do
+        post approve_profile_change_request_path(request), params: { confer_facilitator: "0" }
+
+        expect(person.affiliations.where(organization: new_org).pluck(:title)).to eq([ "Therapist" ])
+      end
+
+      it "leaves other organizations alone when the person didn't leave their job" do
+        request.update!(leaving_job: false)
+
+        post approve_profile_change_request_path(request)
+
+        expect(old_job.reload.end_date).to be_nil
+        expect(old_facilitator.reload.end_date).to be_nil
+      end
+    end
+
+    describe "closing a program" do
+      let(:org) { create(:organization, name: "Hillside Shelter") }
+      let!(:facilitator) { create(:affiliation, person: person, organization: org, start_date: 2.years.ago, end_date: nil) }
+      let!(:job) { create(:affiliation, person: person, organization: org, title: "Counselor", start_date: 2.years.ago, end_date: nil) }
+
+      def close_request(**attrs)
+        create(:profile_change_request, person: person, affiliation: facilitator, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE,
+                                        details: "Our grant funding ended.", proposed_end_date: Date.new(2026, 9, 30), **attrs)
+      end
+
+      it "ends the Facilitator row as of the last day and records why" do
+        post approve_profile_change_request_path(close_request)
+
+        expect(facilitator.reload.end_date).to eq(Date.new(2026, 9, 30))
+        expect(facilitator.comments.last.body).to include("Our grant funding ended.")
+        expect(job.reload.end_date).to be_nil
+      end
+
+      it "ends their job there too when they're leaving it" do
+        post approve_profile_change_request_path(close_request(leaving_job: true))
+
+        expect(job.reload.end_date).to eq(Date.new(2026, 9, 30))
+      end
     end
   end
 

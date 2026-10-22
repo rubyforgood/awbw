@@ -47,9 +47,18 @@
         <dd class="font-medium text-gray-900"><%= request.proposed_change_summary %></dd>
       </div>
     <% end %>
+    <% if request.ends_other_organizations? && request.pending? %>
+      <% ending = request.affiliations_ending_elsewhere %>
+      <div class="flex gap-2">
+        <dt class="w-32 shrink-0 text-gray-500">Left old job</dt>
+        <dd class="text-gray-800">
+          <%= ending.any? ? "Approving ends #{ending.map { |a| "#{a.decorate.display_title} @ #{a.organization.name}" }.to_sentence}" : "Nothing active elsewhere to end" %>
+        </dd>
+      </div>
+    <% end %>
     <% if request.details.present? %>
       <div class="flex gap-2">
-        <dt class="w-32 shrink-0 text-gray-500">Details</dt>
+        <dt class="w-32 shrink-0 text-gray-500"><%= request.closing_program? ? "Reason" : "Details" %></dt>
         <dd class="whitespace-pre-line text-gray-800"><%= request.details %></dd>
       </div>
     <% end %>
@@ -66,6 +75,12 @@
       <%= form.text_area :reviewer_note, rows: 2,
                          placeholder: "Reason or note (shared with the requester) — optional, but please add one when declining",
                          class: "w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-200" %>
+      <% if request.auto_appliable? && request.requested_value == ProfileChangeRequest::AFFILIATION_CHANGE_ADD %>
+        <label class="flex items-center gap-2 text-sm text-gray-700">
+          <%= form.check_box :confer_facilitator, checked: request.confer_facilitator_by_default?, class: "rounded border-gray-300" %>
+          Also make them a facilitator here
+        </label>
+      <% end %>
       <div class="flex flex-wrap items-center gap-2">
         <% if request.auto_appliable? %>
           <button type="submit"
