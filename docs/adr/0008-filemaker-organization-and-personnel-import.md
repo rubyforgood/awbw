@@ -19,6 +19,8 @@ The archive tables involved (row counts from the export):
 | `fm_projects` | 1,976 | One art program run at an organization (`ProjectID`, `OrgID`) |
 | `fm_personnels` | 8,907 | A person assigned to a project, with role and agreement status (`PersonID`, `ProjectID`) |
 | `fm_people_to_organizations` | 1,127 | A person's job at an organization, with title (`PersonID`, `OrgID`) |
+| `fm_rolodexes` | 39,608 | The person's own card: their organization (`OrgID`, `Organization`), `Title`, worksite (`WorksiteAddrsID`); or, flagged `isAgency__c`, an agency's card |
+| `fm_addresses`, `fm_phone_numbers`, `fm_email_addresses` | 28,398 / 33,915 / 29 | Contact rows, filed under a Rolodex card (`RolodexID`), an organization (`OrgID`), or both |
 
 Constraints already decided elsewhere:
 
@@ -37,20 +39,52 @@ Constraints already decided elsewhere:
 
 - **Order:** people (#2630) → organizations → projects → affiliations. Each pass finds the
   records the previous one created by `filemaker_code`, so each is idempotent on its own.
+  `fm:import_organizations` runs organizations + projects
+  (`OrganizationServices::ImportFromFilemaker`), then affiliations
+  (`AffiliationServices::ImportFromFilemaker`).
 - **Organizations and projects:** an `fm_projects` row becomes (or links to) an app
   `Organization`; its `fm_organizations` row becomes (or links to) that org's parent.
   Match an existing org by any shared `filemaker_code` first, then by exact name; append
   the code on a match, as the Rolodex pass does for people.
+  - **An organization with exactly one project is one org**, carrying both codes — a parent
+    with a single child would be the same place twice. Only an organization with several
+    projects (or none) gets its own org with the programs nested under it. When the portal
+    already keeps the two apart, it stays that way.
+  - **A name match only reaches an org carrying no code from the same table.** One already
+    holding another project's code is a namesake; the new org is named `"Name (P1234)"`,
+    since org names are unique.
+  - Every FileMaker organization comes over, whether or not a project or person points at it.
+- **Agencies:** a Rolodex card flagged `isAgency__c` is the agency's own card. Its website,
+  mission and addresses fill the org its `OrgID` names (or the one its `Organization` name
+  matches, created when nothing does); its email too, unless the card names a contact
+  person, whose email it then is. A card naming a contact person also becomes that person
+  in the people pass, and every address on it stays with the org.
 - **Personnel → facilitator affiliation:** an `fm_personnels` row becomes an `Affiliation`
   between the person (by Rolodex code) and the project's org, carrying `PrsnlRecID` as its
-  `filemaker_code` so each row imports once. `Role` → `title`; `Status` / dates →
-  `start_date` / `end_date` / `inactive`. `event_registration_id` stays NULL — these are
+  `filemaker_code` so each row imports once. `event_registration_id` stays NULL — these are
   historical, not training-minted.
+  - **Role:** a blank role or "Facilitator" is a Facilitator affiliation. A role naming more
+    ("Lead Facilitator") is a Facilitator affiliation plus a job affiliation with that title,
+    as registration mints them (ADR-0003 D1); any other role ("Supervisor") is a job
+    affiliation alone.
+  - **Dates:** Personnel rows carry none of their own, so the assignment starts on
+    `DateEntered` and ends on the project's `CloseDate` (else `EndDate`). A `Status` outside
+    `ACTIVE_STATUSES` ends it now, undated (`inactive`). The run tallies every Status value
+    and how it was read, so the list can be corrected before the real run.
+  - An existing same-title affiliation at that org is linked (takes the code, fills blank
+    dates) unless it already records another Personnel row — a second stint stays its own row.
 - **People-to-organizations → job affiliation:** an `fm_people_to_organizations` row becomes
-  an `Affiliation` to the umbrella org with its `Title`, carrying `RecordID` as its code.
-- **Work addresses:** the Rolodex `WorksiteAddrsID` address and any address typed Work
-  become an `Address` on the organization, and the person's affiliation there points at it
-  (`affiliations.organization_address_id`).
+  an `Affiliation` to the org carrying its `OrgID` code with its `Title`, carrying `RecordID`
+  as its code. Undated, per ADR-0003 D1.
+- **The Rolodex card → job affiliation:** the card's `OrgID` (or its typed `Organization`, via
+  `NameMatcher`) and `Title` become a job affiliation there — the field `FmRolodex::PORTAL_FIELDS`
+  already mapped to `affiliations.title`. No code: the card's ID is the person's.
+- **Work addresses:** the Rolodex `WorksiteAddrsID` address, any address typed Work, and
+  every address on an agency's card become an `Address` on the organization, and the
+  person's affiliations there that name no address point at it
+  (`affiliations.organization_address_id`), the worksite first. The organization is the one
+  FileMaker filed the address under (its `OrgID`), else the card's, else the person's only
+  one. A work address with no organization to land on stays with the person, typed work.
 - **Locality and districts come from the project, not derived.** `fm_projects` is the one
   place FileMaker records a `Locality`, and its vocabulary is where `Address::LOCALITIES`
   came from — so a project's `Locality`, `District`, `SPA` and `LASupervisorialDistrict`
@@ -69,15 +103,22 @@ Constraints already decided elsewhere:
 
 ## Open questions
 
-- **Which org does a job affiliation attach to** — the umbrella (`fm_organizations`) or the
-  person's project at that org, when there is exactly one?
-- **Reconcile vs. history.** The reconcile page ends facilitator affiliations no attended
-  training backs, hand-entered ones included. Imported personnel rows would be swept up
-  unless they're exempted (e.g. by their `PS…` code) — exempt them, or let reconcile end
-  them?
-- **Which `Status` / `AgreementStatus` values mean active**, and is a closed project
-  (`CloseDate`, `EndDate`) an end date for every affiliation under it?
-- **Merged projects** (`MergerWithID`): fold the merged-away project into the survivor's
-  org, or skip it?
-- **Unmatched people:** a personnel row whose `PersonID` no person carries — skip and
-  report, or create the person from the Rolodex row on the spot?
+The first draft of the import (#2788) answers these provisionally; confirm or change before
+the real run.
+
+- **Which org does a job affiliation attach to** — the one carrying the `OrgID` code. For an
+  organization with one project that's the program's own org, so the question only remains
+  for organizations with several projects, where it's the umbrella.
+- **Reconcile vs. history.** Still open. The reconcile page ends facilitator affiliations no
+  attended training backs, hand-entered ones included, and imported personnel rows are
+  hand-entered by that test. Exempt rows carrying a `PS…` code, or let reconcile end them?
+- **Which `Status` values mean active** — provisionally "Active" and "Current"
+  (`AffiliationServices::ImportFromFilemaker::ACTIVE_STATUSES`); the dry run's tally is the
+  check. A closed project's `CloseDate` (else `EndDate`) ends every affiliation under it.
+  `AgreementStatus` isn't read.
+- **Merged projects** (`MergerWithID`): folded — the merged-away project's code joins the
+  survivor's org, so its personnel land there. One the portal already keeps as its own org
+  is reported for a hand merge rather than merged automatically.
+- **Unmatched people:** skipped and reported.
+- **Every FileMaker organization, or only the ones something points at?** The draft brings all
+  of them.

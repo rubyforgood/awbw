@@ -1,0 +1,319 @@
+module AffiliationServices
+  # Turns the FileMaker archive's ties between people and organizations into affiliations
+  # (ADR-0008), after the Rolodex and organizations passes have made both ends. Reads, in
+  # order:
+  #
+  #   1. Personnel (FmPersonnel) — a person staffing a project's art program. A facilitating
+  #      role becomes a Facilitator affiliation, dated from when the row was entered to when
+  #      the project closed; any more specific role ("Lead Facilitator", "Supervisor") also
+  #      becomes a job affiliation with that title (ADR-0003 D1). Each carries the row's
+  #      PrsnlRecID as its filemaker_code.
+  #   2. People-to-organizations (FmPeopleToOrganization) — a job at an organization, with
+  #      its title, carrying the row's RecordID.
+  #   3. The Rolodex card itself (FmRolodex) — the organization its OrgID (or its typed
+  #      organization name) names, with its Title, and its work addresses: each lands on
+  #      the organization it belongs to and the person's affiliations there point at it.
+  #      A work address no organization can be found for stays with the person.
+  #
+  # People are found by their Rolodex code, organizations by the project or organization
+  # code the earlier pass gave them. A row whose person or organization wasn't imported is
+  # skipped and reported. An existing affiliation of the same person, organization and
+  # title is linked rather than duplicated: it takes the row's code and fills its blank
+  # dates, keeping its own where FileMaker disagrees (noted in #differences and as a
+  # comment on the affiliation).
+  #
+  # None of these is minted from a training, so event_registration_id stays NULL and the
+  # training reconciliation leaves them alone unless an admin includes hand-made rows.
+  class ImportFromFilemaker
+    include FilemakerValues
+
+    OUTCOMES = %i[created linked already_imported skipped failed].freeze
+    BATCH_SIZE = 1_000
+    # Personnel Status values that mean the person still staffs the program. Anything else
+    # reads as ended — over-reporting active programs would skew program status.
+    ACTIVE_STATUSES = %w[active current].freeze
+    FACILITATING_ROLE = /facilitat/i
+    SOURCES = { FmPersonnel => "Personnel", FmPeopleToOrganization => "People-to-organizations", FmRolodex => "Rolodex" }.freeze
+
+    attr_reader :results, :differences, :statuses, :roles
+
+    def initialize(progress: nil, run: nil)
+      @progress = progress
+      @run = run
+      @results = OUTCOMES.index_with { [] }
+      @differences = []
+      @statuses = Hash.new(0)
+      @roles = Hash.new(0)
+      @staff = StaffTranslation.new
+      @import_user_id = Setting.import_user&.id
+      @address_attributes = FmAddressAttributes.new
+      @name_matcher = OrganizationServices::NameMatcher.new
+    end
+
+    def call
+      @tracker = Ahoy::Tracker.new
+      @people = FilemakerCodeIndex.new(Person)
+      @organizations = FilemakerCodeIndex.new(Organization)
+      @affiliations = FilemakerCodeIndex.new(Affiliation)
+      @projects = FmProject.all.index_by(&:fm_id)
+      @personnel_ids = FmPersonnel.pluck(:fm_id).to_set
+      @job_ids = FmPeopleToOrganization.pluck(:fm_id).to_set
+      @read = 0
+
+      each_batch(FmPersonnel.all) { |row| import_personnel(row) }
+      each_batch(FmPeopleToOrganization.all) { |row| import_job(row) }
+      addresses = FmRolodex.contact_index(FmAddress)
+      phones = FmRolodex.contact_index(FmPhoneNumber)
+      each_batch(FmRolodex.all) { |rolodex| import_rolodex(rolodex.preload_contacts(addresses:, phone_numbers: phones)) }
+      self
+    end
+
+    private
+
+    # Each batch commits on its own, so a run that stops partway keeps what it finished.
+    # Its activity events, tagged with the run, commit with it — UndoRolodexImport reads them.
+    # Untouched, so a new affiliation doesn't stamp its person as edited now.
+    def each_batch(scope, &import)
+      scope.find_in_batches(batch_size: BATCH_SIZE) do |batch|
+        ActiveRecord::Base.transaction(requires_new: true) do
+          ActiveRecord::Base.no_touching do
+            Analytics::LifecycleBuffer.tagging(@run ? { import_run: @run } : {}) { batch.each(&import) }
+          end
+          Analytics::LifecycleBuffer.flush_to(@tracker)
+        end
+        @progress&.call(@read += batch.size)
+      end
+    end
+
+    def import_personnel(row)
+      data = row.data
+      label = "#{row.fm_id} #{data["Name"].to_s.squish}".squish
+      return record(:already_imported, label) if @affiliations.include?(row.fm_id)
+
+      people = @people.records(data["PersonID"])
+      organization = organization_for(data["ProjectID"])
+      return record(:skipped, "#{label}: person #{data["PersonID"].presence || "(none)"} wasn't imported") if people.empty?
+      return record(:skipped, "#{label}: project #{data["ProjectID"].presence || "(none)"} wasn't imported") unless organization
+
+      dates = personnel_dates(data, @projects[data["ProjectID"].to_s])
+      titles(data["Role"]).each do |title|
+        attributes = title == Affiliation::FACILITATOR_TITLE ? dates : dates.except(:start_date)
+        people.each { |person| affiliate(person, organization, row, label, title:, attributes:, codes: @personnel_ids) }
+      end
+    end
+
+    # Personnel are the people staffing the art program, so a row with no role is a
+    # facilitator. A role saying more than that is also a job title (ADR-0003 D1).
+    def titles(role)
+      role = clip(role.to_s.squish)
+      @roles[role.presence || "(blank)"] += 1
+      return [ Affiliation::FACILITATOR_TITLE ] if role.blank? || role.casecmp?(Affiliation::FACILITATOR_TITLE)
+      return [ role ] unless role.match?(FACILITATING_ROLE)
+
+      [ Affiliation::FACILITATOR_TITLE, role ]
+    end
+
+    # Personnel rows carry no dates of their own: the assignment starts when it was entered
+    # and ends when its project closed. A status that isn't active ends it now, undated.
+    def personnel_dates(data, project)
+      status = data["Status"].to_s.squish
+      active = ACTIVE_STATUSES.include?(status.downcase)
+      @statuses["#{status.presence || "(blank)"} → #{active ? "active" : "ended"}"] += 1
+      start_date = parse_date(data["DateEntered"])
+      end_date = project && (parse_date(project.data["CloseDate"]) || parse_date(project.data["EndDate"]))
+      end_date = nil if start_date && end_date && end_date < start_date
+      { start_date:, end_date:, inactive: !active }
+    end
+
+    def import_job(row)
+      data = row.data
+      label = "#{row.fm_id} #{data["PersonID"]} at #{data["OrgID"]}"
+      return record(:already_imported, label) if @affiliations.include?(row.fm_id)
+
+      people = @people.records(data["PersonID"])
+      organization = organization_for(data["OrgID"])
+      return record(:skipped, "#{label}: person wasn't imported") if people.empty?
+      return record(:skipped, "#{label}: organization wasn't imported") unless organization
+
+      people.each { |person| affiliate(person, organization, row, label, title: clip(data["Title"].to_s.squish), attributes: {}, codes: @job_ids) }
+    end
+
+    # The Rolodex card names the person's organization and their title there, and lists the
+    # work addresses the people pass left for this one.
+    def import_rolodex(rolodex)
+      data = rolodex.data
+      work = rolodex.addresses.select { |address| rolodex.organization_address?(address) }
+      return if flag?(data["Delete"]) || (data["OrgID"].blank? && data["Organization"].blank? && work.empty?)
+
+      label = "#{rolodex.fm_id} #{rolodex.name}"
+      people = @people.records(rolodex.fm_id)
+      return record(:skipped, "#{label}: person wasn't imported") if people.empty?
+
+      organization = organization_for(data["OrgID"]) || named_organization(data["Organization"])
+      if organization.nil? && (data["OrgID"].present? || data["Organization"].present?)
+        record(:skipped, "#{label}: organization #{data["OrgID"].presence || data["Organization"].squish} wasn't found")
+      end
+      title = clip(data["Title"].to_s.squish)
+      people.each do |person|
+        next unless organization
+        next if title.blank? && person.affiliations.exists?(organization:)
+
+        affiliate(person, organization, rolodex, label, title:, attributes: {}, codes: nil)
+      end
+      place_work_addresses(rolodex, people, organization, work, label)
+    end
+
+    def named_organization(name)
+      name = name.to_s.squish
+      @name_matcher.call(name)&.organization if name.present?
+    end
+
+    # The affiliation this row describes: one the person already has at the organization
+    # with the same title is linked, otherwise one is created. `codes` is the set of IDs
+    # the row's own table holds — an affiliation already carrying another of them records
+    # a different row (another stint on the same project), so it's never the match. A row
+    # with no code of its own (the Rolodex card) only fills in what's missing.
+    def affiliate(person, organization, row, label, title:, attributes:, codes:)
+      existing = person.affiliations.where(organization:).to_a
+      match = existing.find { |affiliation| same_title?(affiliation.title, title) && !records_another_row?(affiliation, codes) }
+      match ||= existing.find { |affiliation| affiliation.title.blank? } if title.present? && codes.nil?
+      return link(match, row, label, title:, attributes:, codes:) if match
+
+      create(person, organization, row, label, title:, attributes:, code: codes && row.fm_id)
+    end
+
+    def records_another_row?(affiliation, codes)
+      codes && affiliation.filemaker_codes.any? { |code| codes.include?(code) }
+    end
+
+    def same_title?(held, title)
+      held.to_s.squish.casecmp?(title.to_s.squish)
+    end
+
+    def link(affiliation, row, label, title:, attributes:, codes:)
+      return record(:already_imported, "#{label} → affiliation ##{affiliation.id}") if codes.nil? && affiliation.title.present?
+
+      affiliation.filemaker_code = Affiliation.join_filemaker_codes(affiliation.filemaker_code, row.fm_id) if codes
+      affiliation.title = title if affiliation.title.blank?
+      kept = fill_dates(affiliation, attributes)
+      affiliation.updated_by_id ||= updated_by(row.data)
+      return failed(affiliation, label) unless affiliation.save
+
+      @affiliations.add(row.fm_id, affiliation.id) if codes
+      note_differences(affiliation, row, label, kept) if kept.any?
+      record(:linked, "#{label} → affiliation ##{affiliation.id}")
+    end
+
+    # A blank date takes the archive's. The archive's status only ends an affiliation the
+    # portal still holds open with no dates of its own to say otherwise.
+    def fill_dates(affiliation, attributes)
+      kept = attributes.slice(:start_date, :end_date).filter_map do |attribute, value|
+        next if value.nil? || affiliation[attribute] == value
+
+        if affiliation[attribute].nil?
+          affiliation[attribute] = value
+          next
+        end
+
+        [ Affiliation.human_attribute_name(attribute), affiliation[attribute], value ]
+      end
+      if attributes[:inactive] && !affiliation.inactive? && affiliation.end_date.nil?
+        affiliation.inactive = true
+        affiliation.inactive_supplied = true
+      end
+      kept
+    end
+
+    def create(person, organization, row, label, title:, attributes:, code:)
+      data = row.data
+      entered = parse_date(data["DateEntered"])
+      affiliation = person.affiliations.build(
+        organization:, title:, filemaker_code: code, **attributes,
+        inactive_supplied: attributes[:inactive],
+        created_at: entered, updated_at: parse_date(data["DateTimeModified"].presence || data["ModificationTimeStamp"]) || entered,
+        created_by_id: @staff.user_id_for(data["EnteredBy"]) || @import_user_id, updated_by_id: updated_by(data)
+      )
+      return failed(affiliation, label) unless affiliation.save
+
+      @affiliations.add(code, affiliation.id) if code
+      record(:created, "#{label} → affiliation ##{affiliation.id}#{" (#{title})" if title}")
+    end
+
+    def updated_by(data)
+      @staff.user_id_for(data["ModifiedBy"]) || @import_user_id
+    end
+
+    # Each work address lands on the organization it belongs to — the one FileMaker filed it
+    # under, else the card's organization, else the person's only one — and the person's
+    # affiliations there that name no address yet point at it. The worksite FileMaker named
+    # goes first, so it's the one they point at. With nowhere to put it, it stays with the
+    # person as their own work address.
+    def place_work_addresses(rolodex, people, organization, work, label)
+      work.sort_by { |address| address.fm_id == rolodex.data["WorksiteAddrsID"] ? 0 : 1 }.each do |fm_address|
+        attributes = @address_attributes.call(fm_address.data, address_type: "work")
+        next unless attributes
+
+        people.each do |person|
+          target = organization_for(fm_address.data["OrgID"]) || organization || sole_organization(person)
+          next keep_with_person(person, attributes, label) unless target
+
+          address = organization_address(target, attributes)
+          next failed(address, label) unless address.persisted?
+
+          person.affiliations.where(organization: target, organization_address_id: nil).find_each do |affiliation|
+            affiliation.update(organization_address: address) || failed(affiliation, label)
+          end
+        end
+      end
+    end
+
+    def sole_organization(person)
+      ids = person.affiliations.distinct.pluck(:organization_id)
+      Organization.find_by(id: ids.first) if ids.one?
+    end
+
+    def organization_address(organization, attributes)
+      held = organization.addresses.find { |address| address_key(address.street_address, address.city) == address_key(attributes[:street_address], attributes[:city]) }
+      return held if held
+
+      organization.addresses.create(attributes.merge(primary: organization.addresses.where(primary: true).none?))
+    end
+
+    def keep_with_person(person, attributes, label)
+      return if person.addresses.any? { |address| address_key(address.street_address, address.city) == address_key(attributes[:street_address], attributes[:city]) }
+
+      address = person.addresses.create(attributes.merge(primary: person.addresses.where(primary: true).none?))
+      return failed(address, label) unless address.persisted?
+
+      record(:created, "#{label} → work address ##{address.id} kept on person ##{person.id}, no organization to place it on")
+    end
+
+    def address_key(street, city)
+      [ AddressNormalizer.street(street), AddressNormalizer.city(city) ]
+    end
+
+    def organization_for(code)
+      code = code.to_s.strip
+      return if code.blank?
+
+      ids = @organizations.ids(code)
+      Organization.find_by(id: ids.first) if ids.any?
+    end
+
+    def note_differences(affiliation, row, label, kept)
+      lines = kept.map { |field, portal, archive| "#{field}: kept “#{portal}”, FileMaker has “#{archive}”" }
+      Comment.create!(commentable: affiliation,
+                      body: "FileMaker #{SOURCES[row.class]} #{row.fm_id} differs from this affiliation:\n#{lines.join("\n")}")
+      @differences << "#{label} → affiliation ##{affiliation.id}: #{lines.join('; ')}"
+    end
+
+    def failed(record, label)
+      record(:failed, "#{label}: #{record.class.name} #{record.errors.full_messages.to_sentence.presence || "matches one already on file"}")
+      false
+    end
+
+    def record(outcome, message)
+      @results[outcome] << message
+    end
+  end
+end

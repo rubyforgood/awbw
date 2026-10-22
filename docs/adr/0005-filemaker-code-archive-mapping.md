@@ -25,7 +25,7 @@ drive the archive pages' links.
 |---|---|---|---|
 | `people.filemaker_code` | `fm_rolodexes` | `ID`, e.g. `00006` | `filemaker_code_links` on person edit + admin details |
 | `organizations.filemaker_code` | `fm_projects`, then `fm_organizations` | `ProjectID`, e.g. `P2775`; `OrgID`, e.g. `ORG07206` | `filemaker_code_links` on org form; `filemaker_project_links` / `filemaker_organization_links` on org edit |
-| `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels` | `ProjectID`, e.g. `P2775`; rarely `PrsnlRecID`, e.g. `PS9999` | `filemaker_code_links` on affiliation edit |
+| `affiliations.filemaker_code` | `fm_projects`, then `fm_personnels`, then `fm_people_to_organizations` | `ProjectID`, e.g. `P2775`; `PrsnlRecID`, e.g. `PS9999`, and `RecordID`, e.g. `112`, from the ADR-0008 import | `filemaker_code_links` on affiliation edit |
 | `payments.filemaker_code` | `fm_payments` | `RecordID`, e.g. `D29186` | `filemaker_code_hint` on payment edit |
 | `workshops.filemaker_code` | `fm_workshops` | `WorkshopID` | `filemaker_code_hint` on workshop form |
 | `resources.filemaker_code` | none | `RecordID` of the source quotation, e.g. `Q10215` | resource form (editable, no archive link) |

@@ -107,7 +107,7 @@ namespace :fm do
 
   desc "Reverse one fm:import_people run (RUN=fm-import-people-…) from the activity it logged. Dry-run by default; DRY_RUN=false to execute."
   task undo_import_people: :environment do
-    run = ENV["RUN"].presence || abort("Name the run to reverse: RUN=fm-import-people-… (the import prints it).")
+    run = ENV["RUN"].presence || abort("Name the run to reverse: RUN=fm-import-… (the import prints it).")
     dry_run = ENV["DRY_RUN"] != "false"
     Current.source = "fm_undo_import_people"
     undo = nil
