@@ -5,6 +5,7 @@ released_on: 2026-10-22
 action_path: "/stories"
 summary: >-
   A story's workshop and organization are now links on the Story Share page and in the stories list,
-  so you can jump straight to them.
+  and the stories listed on a workshop page now open in Story Share.
 pro_tips:
+  - "When a story names its own version of a workshop, that name is shown and still links to the workshop."
   - "Workshops or organizations you don't have access to still show their name, just without a link."

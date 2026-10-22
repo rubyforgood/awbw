@@ -27,6 +27,10 @@ class StoryDecorator < ApplicationDecorator
     h.link_to(organization.name, h.organization_path(organization), class: link_class, data: { turbo_frame: "_top" })
   end
 
+  def showcase_path
+    h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object) : h.story_path(object)
+  end
+
   def workshop_reference_count
     return story_workshops.size if story_workshops.any?
     [ workshop, external_workshop_title.presence ].compact.size
@@ -61,16 +65,14 @@ class StoryDecorator < ApplicationDecorator
 
   def workshop_reference_link(story_workshop, link_class)
     workshop = story_workshop.workshop
-    external_title = story_workshop.external_workshop_title.presence
-    return h.html_escape(external_title) if workshop.nil?
+    text = story_workshop.external_workshop_title.presence || workshop&.title
+    return h.html_escape(text) if workshop.nil?
 
-    link = workshop_link(workshop, link_class)
-    return link unless external_title
-    h.safe_join([ external_title, " (from the ", link, ")" ])
+    workshop_link(workshop, link_class, text:)
   end
 
-  def workshop_link(workshop, link_class)
-    return h.html_escape(workshop.title) unless h.allowed_to?(:show?, workshop)
-    h.link_to(workshop.title, h.workshop_path(workshop), class: link_class, data: { turbo_frame: "_top" })
+  def workshop_link(workshop, link_class, text: workshop.title)
+    return h.html_escape(text) unless h.allowed_to?(:show?, workshop)
+    h.link_to(text, h.workshop_path(workshop), class: link_class, data: { turbo_frame: "_top" })
   end
 end

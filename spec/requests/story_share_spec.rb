@@ -175,6 +175,20 @@ RSpec.describe "/story_share", type: :request do
         expect(page).to have_no_link("Members Workshop")
       end
 
+      it "links an external workshop title to its workshop, and leaves a title-only reference unlinked" do
+        open_workshop = create(:workshop, :published, :publicly_visible, title: "Open Workshop")
+        public_story.story_workshops.create!(workshop: open_workshop, external_workshop_title: "Teen variant")
+        public_story.story_workshops.create!(external_workshop_title: "Homegrown session")
+
+        get story_share_path(public_story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(open_workshop))
+        expect(page).to have_no_text("Open Workshop")
+        expect(page).to have_text("Homegrown session")
+        expect(page).to have_no_link("Homegrown session")
+      end
+
       it "cannot view published-only story" do
         get story_share_path(published_story)
         expect(response).to redirect_to(root_path)

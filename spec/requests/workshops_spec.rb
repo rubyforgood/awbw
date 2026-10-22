@@ -103,6 +103,23 @@ RSpec.describe "/workshops", type: :request do
       expect(response.body).not_to include(unrelated.title)
     end
 
+    it "sends story cards to the Story Share page" do
+      story = create(:story, :published, workshop: workshop, title: "Shared story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(Capybara.string(response.body)).to have_css("a.card-link[href='#{story_share_path(story)}']")
+    end
+
+    it "sends a funder-only story card to the portal story page, since Story Share never shows it" do
+      sign_in create(:user, :admin)
+      story = create(:story, :published, :funder_only, workshop: workshop, title: "Funder story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(Capybara.string(response.body)).to have_css("a.card-link[href='#{story_path(story)}']")
+    end
+
     it "points the new-story link back at this workshop" do
       sign_in create(:user, :admin)
       create(:story, :published, workshop: workshop)

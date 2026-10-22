@@ -114,7 +114,8 @@
         <hr class="mb-4 border-gray-300">
         <div class="stories-list grid grid-cols-1 gap-4">
           <% @workshop_stories.each do |story| %>
-            <%= render "stories/story_card", story: story.decorate %>
+            <% story = story.decorate %>
+            <%= render "stories/story_card", story:, path: story.showcase_path %>
           <% end %>
         </div>
       </section>
