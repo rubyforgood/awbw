@@ -28,7 +28,7 @@ class Setting < ApplicationRecord
   validates :invoice_prefix, length: { maximum: 20 }
   validates :ce_provider_number, length: { maximum: 50 }
   validates :ce_administrator_title, :ce_accreditation_body, length: { maximum: 255 }
-  validates :ce_accreditation_abbreviation, length: { maximum: 50 }
+  validates :ce_accreditation_abbreviation, length: { maximum: 60 }
   validates :ce_accreditation_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]),
                                              message: "must be a full http(s) address" }, allow_blank: true
   validates :annual_membership_cents, :membership_renewal_window_days, :membership_grace_period_days,
