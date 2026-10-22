@@ -8,7 +8,7 @@
   <h1 class="text-primary font-display text-3xl font-semibold">What would you like to change?</h1>
   <p class="mt-2 text-lg text-gray-700"><%= @request.affiliation_summary %></p>
   <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-    <% ProfileChangeRequestDecorator::AFFILIATION_CHANGE_CHOICES.except(ProfileChangeRequest::AFFILIATION_CHANGE_ADD).each do |change, choice| %>
+    <% ProfileChangeRequestDecorator.affiliation_change_choices(@request.affiliation).each do |change, choice| %>
       <%= link_to new_profile_change_request_path(person_id: @person, field: "affiliation", affiliation_id: @request.affiliation.id, change: change),
                   class: "border-primary/10 flex items-center gap-4 rounded-2xl border bg-white p-5 shadow-sm transition hover:border-primary hover:shadow-md" do %>
         <span class="bg-brand-cream text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl">

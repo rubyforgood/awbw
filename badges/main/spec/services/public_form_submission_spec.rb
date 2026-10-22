@@ -137,6 +137,20 @@ RSpec.describe PublicFormSubmission do
     expect(FormSubmission.last.person).to eq(existing)
   end
 
+  it "attributes the request's changes to the submission" do
+    result = described_class.call(form: form, form_params: params_for)
+
+    expect(Current.form_submission_id).to eq(result.form_submission.id)
+  end
+
+  it "attributes nothing when the submission fails and rolls back" do
+    allow(Quotes::CaptureFromSubmission).to receive(:call).and_raise(ActiveRecord::RecordInvalid.new(Person.new))
+
+    result = described_class.call(form: form, form_params: params_for)
+
+    expect([ result.success?, Current.form_submission_id ]).to eq([ false, nil ])
+  end
+
   it "reports an already-submitted error when a simultaneous submission created the person first" do
     allow(Person).to receive(:create!).and_raise(
       ActiveRecord::RecordNotUnique, "Duplicate entry for key 'people.#{Person::NAME_AND_EMAIL_INDEX}'"

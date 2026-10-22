@@ -9,10 +9,18 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     ProfileChangeRequest::AFFILIATION_CHANGE_OTHER => { label: "Something else", icon: "fa-solid fa-comment" },
     ProfileChangeRequest::AFFILIATION_CHANGE_ADD => { label: "Add an organization", icon: "fa-solid fa-plus" }
   }.freeze
+  CLOSE_PROGRAM_CHOICE = { label: "Close my AWBW program here", icon: "fa-solid fa-door-closed" }.freeze
+
+  # Leaving a Facilitator role closes the program there, so it reads that way.
+  def self.affiliation_change_choices(affiliation)
+    choices = AFFILIATION_CHANGE_CHOICES.except(ProfileChangeRequest::AFFILIATION_CHANGE_ADD)
+    affiliation&.facilitator? ? choices.merge(ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE => CLOSE_PROGRAM_CHOICE) : choices
+  end
 
   def heading
     return "Request a profile data change" if other?
     return "Request a license change" if license?
+    return CLOSE_PROGRAM_CHOICE[:label] if closing_program?
 
     AFFILIATION_CHANGE_CHOICES.dig(requested_value, :label) if field == "affiliation"
   end
@@ -118,7 +126,7 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     at_org = org ? " at #{org}" : ""
     case requested_value
     when ProfileChangeRequest::AFFILIATION_CHANGE_ADD then "add an affiliation#{with_org}"
-    when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE then "end your affiliation#{with_org}"
+    when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE then closing_program? ? "close your AWBW program#{at_org}" : "end your affiliation#{with_org}"
     when ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION then "change your organization's name to #{proposed_organization_name}"
     when ProfileChangeRequest::AFFILIATION_CHANGE_TITLE then "change your title or role#{at_org} to #{proposed_title}"
     when ProfileChangeRequest::AFFILIATION_CHANGE_DATES then "change your start or end dates#{at_org}"
@@ -153,12 +161,19 @@ class ProfileChangeRequestDecorator < ApplicationDecorator
     when ProfileChangeRequest::AFFILIATION_CHANGE_ORGANIZATION
       org_rename_confirm(affiliation&.organization, proposed_organization_name)
     when ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE
-      "End-date and mark this affiliation inactive?"
+      closing_program? ? "Close the program at #{affiliation.organization&.name}? #{close_program_summary}." : "End-date and mark this affiliation inactive?"
     when ProfileChangeRequest::AFFILIATION_CHANGE_ADD
-      "Add this affiliation to the profile?"
+      add_affiliation_confirm
     else
       "Approve and apply this change now?"
     end
+  end
+
+  def add_affiliation_confirm
+    ending = affiliations_ending_elsewhere.size
+    return "Add this affiliation to the profile?" if ending.zero?
+
+    "Add this affiliation and end #{helpers.pluralize(ending, "affiliation")} at other organizations?"
   end
 
   def org_rename_confirm(org, new_name)

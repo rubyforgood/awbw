@@ -58,6 +58,19 @@
     <%= f.input :proposed_organization_name, label: "Not on the list? Type the organization's name",
                 hint: "AWBW staff will add it to the portal.", input_html: { class: "w-full text-lg" } %>
     <%= f.input :proposed_title, label: "Your title or role", input_html: { class: "w-full text-lg" } %>
+    <% current_organizations = request.current_organizations.to_a %>
+    <% if current_organizations.any? %>
+      <fieldset class="mb-4">
+        <legend class="mb-1 block font-medium text-gray-700">Did this replace a job you left? (optional)</legend>
+        <p class="text-sm text-gray-500">Tick the organizations you've left and we'll end your affiliations there.</p>
+        <div class="mt-2 space-y-2">
+          <%= f.collection_check_boxes :left_organization_ids, current_organizations, :id, :name do |box| %>
+            <%= box.label(class: "flex cursor-pointer items-center gap-2 text-gray-700") { box.check_box(class: "rounded border-gray-300 text-blue-600 focus:ring focus:ring-blue-200") + box.text } %>
+          <% end %>
+        </div>
+        <%= f.full_error :left_organization_ids, class: "mt-1 text-sm text-red-500" %>
+      </fieldset>
+    <% end %>
   <% else %>
     <%= f.hidden_field :affiliation_id %>
   <% end %>
@@ -77,12 +90,23 @@
     <%= f.input :proposed_organization_name, label: "Correct organization name",
                 hint: ("Right now: #{current.organization&.name}" if current),
                 input_html: { class: "w-full text-lg" } %>
+  <% elsif request.closing_program? %>
+    <p class="text-lg text-gray-700">We'll close your AWBW program at <strong><%= current.organization&.name %></strong>.</p>
+    <%= f.input :proposed_end_date, as: :date, html5: true, label: "Last day of the program (optional)",
+                hint: "Leave blank if it has already ended.", input_html: { class: "w-full text-lg sm:w-1/2" } %>
+    <%= f.input :leaving_job, as: :boolean, label: "I'm also leaving my job at #{current.organization&.name}",
+                input_html: { class: "rounded border-gray-300" } %>
   <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE %>
     <p class="text-lg text-gray-700">We'll mark <strong><%= current&.organization&.name %></strong> as an organization you no longer work with.</p>
+    <%= f.input :proposed_end_date, as: :date, html5: true, label: "Your last day (optional)",
+                input_html: { class: "w-full text-lg sm:w-1/2" } %>
   <% end %>
   <% if change.in?(ProfileChangeRequest::AFFILIATION_WORK_ADDRESS_CATEGORIES) %>
     <%= render "profile_change_requests/work_address_fields", f: f, affiliation: current %>
     <%= f.input :details, as: :text, label: "Anything else you'd like us to know? (optional)", input_html: { rows: 3, class: "w-full" } %>
+  <% elsif request.closing_program? %>
+    <%= f.input :details, as: :text, label: "Why is the program closing?",
+                hint: "For example: \"Our grant funding ended.\"", input_html: { rows: 3, class: "w-full text-lg" } %>
   <% elsif change == ProfileChangeRequest::AFFILIATION_CHANGE_OTHER %>
     <%= f.input :details, as: :text, label: "What would you like us to change?", input_html: { rows: 5, class: "w-full text-lg" } %>
   <% else %>

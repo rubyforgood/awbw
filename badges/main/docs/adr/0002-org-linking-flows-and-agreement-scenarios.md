@@ -103,6 +103,10 @@ the same date. Every affiliation a scenario ends is recorded on the submission
 new job is deliberately blunt, and the flag is how a wrongly-ended row (a
 multi-org facilitator changing only one job) gets corrected.
 
+**A "this replaced a job I left" change request ends rows the same way** (`AffiliationServices::EndOtherOrganizations`,
+shared with new_job), dated the day before the new affiliation starts — but only at the organizations the
+requester ticked, so a multi-org facilitator changing one job keeps the others.
+
 **Reconciliation ends rows the same way**, for the first of those reasons —
 [ADR-0003](0003-affiliations-as-the-record-of-two-relationships.md) D6. Keep the two
 in step: they are one convention with two callers, and a reader who finds only one
