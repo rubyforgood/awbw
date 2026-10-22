@@ -51,6 +51,16 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(import.invalid_emails.sole).to include("00046", "##{person.id}", "Attn: ada@@example.com")
     end
 
+    it "notes a value with no address in it at all" do
+      rolodex("00051", EmailPrimary: "ada at example dot com", EMail: "ada@example.com")
+
+      results
+
+      person = Person.find_by!(filemaker_code: "00051")
+      expect(person).to have_attributes(email: "ada@example.com", email_2: nil)
+      expect(person.comments.sole.body).to include("ada at example dot com")
+    end
+
     it "keeps the row's usable address as the person's email" do
       rolodex("00047", EmailPrimary: "ada@example.com.", EMail: "ada@work.example.com")
 
@@ -68,6 +78,18 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
       expect(person.reload).to have_attributes(filemaker_code: "00048", email_2: nil)
       expect(person.comments.sole.body).to include("ada@old@example.com")
+    end
+
+    it "links a same-name row with no other address to the person the first one created" do
+      rolodex("00049", EMail: "ada@@example.com")
+      rolodex("00050", EMail: "ada@example.com.")
+
+      import = described_class.new.call
+
+      expect(import.results[:failed]).to be_empty
+      person = Person.sole
+      expect(person.filemaker_codes).to eq(%w[00049 00050])
+      expect(person.comments.map(&:body)).to contain_exactly(include("ada@@example.com"), include("ada@example.com."))
     end
   end
 

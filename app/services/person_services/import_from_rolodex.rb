@@ -18,9 +18,10 @@ module PersonServices
   #   * skipped          — agency, soft-deleted, or nameless rows
   #   * failed           — the Person didn't validate
   #
-  # An address the person's email validation would reject is left off — the row imports
-  # without it — and the field's whole value is left as a comment on the person and listed
-  # in #invalid_emails, so it can be fixed by hand.
+  # An email field holding no address the person's email validation accepts ("ada@@x.org",
+  # "ada at x dot org") or an address it rejects is left off — the row imports without it —
+  # and the field's whole value is left as a comment on the person and listed in
+  # #invalid_emails, so it can be fixed by hand.
   #
   # A row whose name + email matches nobody is created, even when someone already shares
   # the name or the email: folding the occasional duplicate with the person deduper beats
@@ -242,7 +243,12 @@ module PersonServices
 
     def invalid_email_values(data)
       EMAIL_FIELDS.filter_map { |field| data[field].to_s.strip.presence }
-                  .select { |value| value.scan(EMAIL_PATTERN).any? { |email| !valid_email?(email) } }.uniq
+                  .reject { |value| usable_email_value?(value) }.uniq
+    end
+
+    def usable_email_value?(value)
+      addresses = value.scan(EMAIL_PATTERN)
+      addresses.any? && addresses.all? { |email| valid_email?(email) }
     end
 
     def valid_email?(email)
