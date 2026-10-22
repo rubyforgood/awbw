@@ -249,13 +249,13 @@
     <%#
       Training sign-in/out — the in-portal replacement for the paper CE hour sign-in
       sheet. One button at a time for today: Sign in when signed out (only inside the
-      day's window), Sign out while signed in (always, so a forgotten sign-out can
-      still be closed that day). Many entries per day is expected (breaks, lunch). An
-      entry left open overnight doesn't carry into today's state — it gets its own
-      catch-up button below, stamped with that day's scheduled end rather than now.
+      day's window), Sign out while signed in (until the event's timesheet closes, so
+      a forgotten sign-out can still be closed). Many entries per day is expected
+      (breaks, lunch). An entry left open overnight doesn't carry into today's state —
+      it gets its own catch-up button below, stamped with that day's scheduled end.
 
-      The buttons only ever stamp "now"; the sheets underneath stay editable during
-      the training and after it (see events/callouts/_ce_attendance_sheet), and the
+      The buttons only ever stamp "now"; the sheets underneath stay editable through
+      the event's timesheet window (see events/callouts/_ce_attendance_sheet), and the
       controls stay singular above them because every sheet shares one set of times.
     %>
     <%# Gated per licence, so a second still being paid for doesn't take the first
@@ -271,9 +271,10 @@
     <%# A preview is never inside a real sign-in window, so show it the open state —
         otherwise an admin previewing the ticket never sees the buttons registrants get. %>
     <% window_open = sheet.window_open? || sample_preview? %>
+    <% editable = sheet.editable? || sample_preview? %>
     <%# The whole surface stays up once the training is over: the sign-in buttons are
         gone by then, but the sheets are how a registrant fills in what they missed. %>
-    <% if attendance_sheets.any? && sheet.any_days? %>
+    <% if @event.ce_timesheets_enabled? && attendance_sheets.any? && sheet.any_days? %>
       <section id="attendance" class="mt-7 scroll-mt-6 border-t border-gray-100 pt-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Training sign-in</h2>
@@ -287,7 +288,7 @@
         <%# A day left open: its own prompt above today's controls, naming the day and
             the time it will be recorded as, so closing it can't be mistaken for
             signing out of today. %>
-        <% if forgotten_entry %>
+        <% if forgotten_entry && editable %>
           <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-amber-50 px-3 py-2.5 ring-1 ring-amber-200">
             <p class="flex items-start gap-2 text-sm text-gray-700">
               <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0 text-amber-500"></i>
@@ -314,7 +315,7 @@
             <% if sample_preview? %>
               <button type="button" disabled
                       class="shrink-0 cursor-not-allowed rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white opacity-60">Sign out</button>
-            <% else %>
+            <% elsif editable %>
               <%= button_to "Sign out", registration_ce_sign_out_path(@event_registration.slug), data: { turbo: false },
                     class: "shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer" %>
             <% end %>
@@ -341,9 +342,7 @@
               <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
               <span>Sign-in opens
                 <time datetime="<%= opens_at.iso8601 %>" class="font-medium text-gray-900"><%= opens_at.strftime("%A, %B %-d at %-I:%M %p %Z") %></time>.
-                <%# Both the gap and the time come from the lead, so widening the window
-                    can't leave the sentence claiming a stale "30 min". %>
-                <span class="mt-0.5 block text-xs text-gray-500">Event begins <%= Event::ATTENDANCE_SIGN_IN_LEAD.inspect %> later, at <%= (opens_at + Event::ATTENDANCE_SIGN_IN_LEAD).strftime("%-I:%M %p %Z") %>.</span>
+                <span class="mt-0.5 block text-xs text-gray-500">That day's training begins at <%= @event.daily_start_at(opens_at.in_time_zone(Time.zone).to_date).strftime("%-I:%M %p %Z") %>.</span>
               </span>
             </p>
           <% end %>
@@ -371,10 +370,23 @@
                 titled: attendance_sheets.many?, editing_date: editing_date, page_state: page_state %>
         <% end %>
 
-        <p class="mt-3 text-xs text-gray-400">
-          <% if signed_in || window_open %>Sign in when you arrive and sign out when you leave, breaks and lunch included, so your hours are recorded accurately.<br><% end %>
-          You can add or correct any day's times yourself with <span class="font-medium text-teal-700">Edit</span> — during the training or after it.
-        </p>
+        <% if editable %>
+          <p class="mt-3 text-xs text-gray-400">
+            <% if signed_in || window_open %>Sign in when you arrive and sign out when you leave, breaks and lunch included, so your hours are recorded accurately.<br><% end %>
+            You can add or correct any day's times yourself with <span class="font-medium text-teal-700">Edit</span> — during the training or after it<% if sheet.closes_at %>, until <%= ce_timesheet_time(sheet.closes_at) %><% end %>.
+          </p>
+        <% else %>
+          <p class="mt-3 flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm text-gray-700 ring-1 ring-blue-200">
+            <i class="fa-solid fa-circle-info mt-0.5 shrink-0 text-blue-400"></i>
+            <% if sheet.closed? %>
+              <span>Your timesheet closed on <span class="font-medium text-gray-900"><%= ce_timesheet_time(sheet.closes_at) %></span>.
+                <span class="mt-0.5 block text-xs text-gray-500">Please contact the training staff if any of your times need correcting.</span>
+              </span>
+            <% else %>
+              <span>You can add or correct your times once your timesheet opens on <span class="font-medium text-gray-900"><%= ce_timesheet_time(sheet.opens_at) %></span>.</span>
+            <% end %>
+          </p>
+        <% end %>
       </section>
     <% end %>
 

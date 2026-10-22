@@ -1007,7 +1007,10 @@ class EventRegistration < ApplicationRecord
   # registration gets its own sheet, and they all record the same hours in the same
   # room, so one paid licence is enough to justify writing those hours down. Someone
   # part-way through paying for a second licence keeps signing in for the first.
+  # Events can switch timesheets off entirely.
   def ce_attendance_offered?
+    return false unless event&.ce_timesheets_enabled?
+
     continuing_education_registrations.any?(&:paid_in_full?)
   end
 

@@ -516,13 +516,9 @@
                     <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
                             resubmitted ? params.dig(:event, :continuing_education_form_id).present? : @event.continuing_education_form.present?,
                             id: "enable_continuing_education",
-                            class: "peer rounded border-gray-300" %>
+                            class: "rounded border-gray-300" %>
                     <label for="enable_continuing_education" class="cursor-pointer text-sm font-medium text-gray-700">Enable continuing education</label>
-                    <p class="mt-1 text-xs text-gray-500">Allow registrants to request CE hours.</p>
-                    <div class="hidden rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5 peer-checked:block">
-                      <%= render "events/ce_config_fields", f: f %>
-                    </div>
-                    <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
+                    <p class="mt-1 text-xs text-gray-500">Allow registrants to request CE hours. Set hours, cost, deadlines, and timesheets in the Continuing education section below.</p>
                     <% if @event.continuing_education_form.present? %>
                       <%= link_to new_event_public_registration_path(@event),
                                   class: "inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 underline mt-1",
@@ -545,10 +541,7 @@
                         <option value="<%= cf.id %>" <%= "selected" if cf.id == default_ce_id %>><%= cf.name %></option>
                       <% end %>
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">Select a continuing education form for registrants to request CE hours.</p>
-                    <div class="mt-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5">
-                      <%= render "events/ce_config_fields", f: f %>
-                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Select a continuing education form for registrants to request CE hours. Set hours, cost, deadlines, and timesheets in the Continuing education section below.</p>
                   <% end %>
                 </div>
               <% end %>
@@ -556,6 +549,29 @@
           </div>
         </div>
       </div>
+
+      <% if @continuing_education_forms&.any? %>
+        <% open_ce = @event.continuing_education_form.present? %>
+        <div id="continuing_education" class="admin-only continuing-education-section scroll-mt-24" data-controller="dropdown">
+          <button
+            type="button"
+            id="continuing_education_button"
+            class="flex w-full cursor-pointer items-center justify-between <%= open_ce ? "rounded-t-md" : "rounded-md" %> bg-gray-500 px-3 py-2 text-white hover:bg-gray-300"
+            data-action="dropdown#toggle"
+            data-dropdown-payload-param='[{"continuing_education_section":"hidden"}, {"continuing_education_arrow":"rotate-180"}, {"continuing_education_button":"rounded-t-md rounded-md"}]'
+          >
+            Continuing education
+            <i id="continuing_education_arrow" class="fa-solid fa-chevron-down h-4 w-4 transition-transform duration-300 <%= "rotate-180" if open_ce %>"></i>
+          </button>
+
+          <div id="continuing_education_section" class="<%= "hidden" unless open_ce %> rounded-b-md border border-gray-300 p-4">
+            <div class="rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5">
+              <%= render "events/ce_config_fields", f: f %>
+            </div>
+            <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
+          </div>
+        </div>
+      <% end %>
     <% end %>
 
     <%# ---- PAGE CONTENT (header + description) ---- %>
