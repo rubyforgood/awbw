@@ -251,6 +251,16 @@ RSpec.describe Story, type: :model do
     end
   end
 
+  describe '.title_matches_first' do
+    it 'puts stories whose title contains the query ahead of the rest' do
+      body_match = create(:story, :published, title: 'Newer story', rhino_body: '<p>about quilting</p>')
+      title_match = create(:story, :published, title: 'Quilting circle', created_at: 1.year.ago)
+
+      ordered = Story.where(id: [ body_match.id, title_match.id ]).title_matches_first('quilting').order(created_at: :desc)
+      expect(ordered.to_a).to eq([ title_match, body_match ])
+    end
+  end
+
   describe '.search_by_params' do
     let!(:published_story) { create(:story, :published, title: 'Healing Through Art') }
     let!(:draft_story) { create(:story, title: 'Unpublished Draft', published: false) }
@@ -314,6 +324,53 @@ RSpec.describe Story, type: :model do
         results = Story.search_by_params(query: 'Zephyrina')
         expect(results).not_to include(created_story)
       end
+    end
+
+    context 'when the query matches a tag name' do
+      def tag_with_category(story, type_name, name)
+        category_type = CategoryType.find_by(name: type_name) || create(:category_type, name: type_name)
+        story.categorizable_items.create!(category: create(:category, :published, name: name, category_type: category_type))
+      end
+
+      it 'finds stories tagged with a matching sector even when the text never names it' do
+        tagged = create(:story, :published, title: 'Painting together')
+        tagged.sectorable_items.create!(sector: create(:sector, :published, name: 'Military/Veterans'))
+
+        results = Story.search_by_params(query: 'veterans')
+        expect(results).to include(tagged)
+        expect(results).not_to include(published_story)
+      end
+
+      it 'finds stories tagged with a matching age range' do
+        tagged = create(:story, :published, title: 'After school art')
+        tag_with_category(tagged, AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE, 'Teens')
+
+        expect(Story.search_by_params(query: 'teen')).to include(tagged)
+      end
+
+      it 'finds stories tagged with a matching story population' do
+        tagged = create(:story, :published, title: 'Collage day')
+        tag_with_category(tagged, CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE, 'Foster youth')
+
+        expect(Story.search_by_params(query: 'foster youth')).to include(tagged)
+      end
+
+      it 'ignores unpublished tags and non-audience categories' do
+        hidden = create(:story, :published, title: 'Hidden tag story')
+        hidden.sectorable_items.create!(sector: create(:sector, name: 'Zebra Outreach', published: false))
+        tag_with_category(hidden, 'StoryCategory', 'Zebra Crafts')
+
+        expect(Story.search_by_params(query: 'zebra')).not_to include(hidden)
+      end
+    end
+
+    it 'requires every query word to appear in the story text' do
+      both = create(:story, :published, title: 'Both words', rhino_body: '<p>A watercolor workshop in the garden</p>')
+      one = create(:story, :published, title: 'One word', rhino_body: '<p>A watercolor afternoon</p>')
+
+      results = Story.search_by_params(query: 'watercolor garden')
+      expect(results).to include(both)
+      expect(results).not_to include(one)
     end
 
     context 'when filtering by the author_name field' do

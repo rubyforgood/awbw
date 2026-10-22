@@ -11,11 +11,12 @@ class StorySharesController < ApplicationController
   POPULAR_STORY_LIMIT = 4
   BROWSE_CAROUSEL_LIMIT = 5
   BROWSE_GRID_LIMIT = 3
+  MATCHING_TAG_LIMIT = 4
   # Any of these params means the visitor is browsing a filtered result set
   # rather than the curated landing page.
   BROWSE_PARAMS = %i[ sector_names_all category_names_all query additional_focus_areas year page ].freeze
 
-  helper_method :browsing?, :single_hero?
+  helper_method :browsing?, :single_hero?, :searching?
 
   def index
     authorize! Story, with: StorySharePolicy
@@ -57,6 +58,10 @@ class StorySharesController < ApplicationController
 
   def browsing?
     BROWSE_PARAMS.any? { |key| params[key].present? }
+  end
+
+  def searching?
+    params[:query].present?
   end
 
   # Sector pages lead with one big hero; other browse pages lead with a carousel.
@@ -112,6 +117,8 @@ class StorySharesController < ApplicationController
     filtered = portal_scope.search_by_params(params)
     filtered = filtered.with_sector(Sector.story_share_additional_focus_areas) if params[:additional_focus_areas].present?
     @count_display = count_display(filtered.count)
+    return load_search_results(filtered, per_page) if searching?
+
     highlights = primary_tag_matches(filtered)
     lead_ids = highlights.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
     grid_ids = highlights.where.not(id: lead_ids).reorder(created_at: :desc).limit(BROWSE_GRID_LIMIT).pluck(:id)
@@ -120,6 +127,21 @@ class StorySharesController < ApplicationController
     @stories = preloaded(filtered.where.not(id: lead_ids + grid_ids)).order(created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
+  end
+
+  def load_search_results(filtered, per_page)
+    @lead_stories = []
+    @grid_stories = []
+    @stories = preloaded(filtered).title_matches_first(params[:query]).order(publicly_featured: :desc, created_at: :desc)
+                                  .paginate(page: params[:page], per_page: per_page)
+                                  .decorate
+    visible_ids = portal_scope.select(:id)
+    @matching_sectors = Sector.published.sector_name(params[:query])
+                              .where(id: SectorableItem.where(sectorable_type: "Story", sectorable_id: visible_ids).select(:sector_id))
+                              .order(:name).limit(MATCHING_TAG_LIMIT)
+    @matching_audiences = Category.audiences.published.category_name(params[:query])
+                                  .where(id: CategorizableItem.where(categorizable_type: "Story", categorizable_id: visible_ids).select(:category_id))
+                                  .order(:name).limit(MATCHING_TAG_LIMIT).decorate
   end
 
   def in_id_order(ids)
