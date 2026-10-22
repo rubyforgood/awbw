@@ -601,6 +601,67 @@ RSpec.describe "Dedupable concern", type: :request do
         expect(keep.reload.filemaker_code).to eq("00006, 00012")
       end
 
+      describe "emails" do
+        before do
+          keep.update!(email: "keeper@example.com", email_2: nil)
+          delete_rec.update!(email: "dropped@example.com", email_type: "work")
+        end
+
+        it "keeps the deleted person's email as the keeper's email 2" do
+          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+          expect(keep.reload.email).to eq("keeper@example.com")
+          expect(keep.email_2).to eq("dropped@example.com")
+          expect(keep.email_2_type).to eq("work")
+        end
+
+        it "skips an email the keeper already holds" do
+          keep.update!(email_2: "Dropped@example.com")
+          delete_rec.update!(email_2: "keeper@example.com")
+
+          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+          expect(keep.reload.email_2).to eq("Dropped@example.com")
+          expect(keep.comments).to be_empty
+        end
+
+        it "keeps the email picked as primary in the preview without repeating it in email 2" do
+          post dedupe_perform_people_path, params: {
+            person_to_delete_id: delete_rec.id,
+            person_to_keep_id: keep.id,
+            person_to_keep: { email: "dropped@example.com", email_2: "keeper@example.com" }
+          }
+
+          expect(keep.reload.email).to eq("dropped@example.com")
+          expect(keep.email_2).to eq("keeper@example.com")
+        end
+
+        it "records emails that don't fit in email 2 in a comment" do
+          keep.update!(email_2: "keeper.alt@example.com")
+          delete_rec.update!(email_2: "dropped.alt@example.com")
+
+          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+          expect(keep.reload.email_2).to eq("keeper.alt@example.com")
+          comment = keep.comments.sole
+          expect(comment.body).to include("dropped@example.com", "dropped.alt@example.com")
+        end
+
+        it "doesn't carry over a placeholder email" do
+          delete_rec.update!(email: PlaceholderEmail.first)
+
+          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
+
+          expect(keep.reload.email_2).to be_nil
+        end
+
+        it "badges the deleted person's email as kept on the preview" do
+          get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+          expect(response.body).to include("dropped@example.com is kept as the kept person&#39;s email 2")
+        end
+      end
+
       # invoicee is polymorphic, so it carries no DB foreign key for the schema scan to
       # find — without Person's `has_many :invoices, as: :invoicee` the safeguard sees an
       # unhandled reference and refuses the merge outright.

@@ -189,6 +189,8 @@ module Dedupable
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
   #   editable_columns:   Array of column names the preview shows and lets an admin edit on the keeper;
   #                       only these are accepted on save (optional, defaults to every column)
+  #   kept_columns:       Array of column names whose deleted value the merge keeps elsewhere on the keeper
+  #                       (e.g. a person's emails land in email 2), so the preview badges them kept (optional)
   #   read_only_columns:  Array of column names shown side by side for comparison but not editable —
   #                       e.g. a login's email and sign-in history (optional)
   #   record_label:       Lambda(record) naming a record across the deduper when #name doesn't tell two
@@ -247,6 +249,7 @@ module Dedupable
       read_only_columns: Array(config[:read_only_columns]).map(&:to_s),
       record_label: config[:record_label] || :name.to_proc,
       union_columns: Array(config[:union_columns]).map(&:to_s),
+      kept_columns: Array(config[:kept_columns]).map(&:to_s),
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},
       field_notes: config[:field_notes] || {},

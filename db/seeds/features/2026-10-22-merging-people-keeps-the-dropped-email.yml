@@ -1,0 +1,11 @@
+name: "Merging people keeps the dropped email"
+area: people
+display_status: admin_facing
+released_on: 2026-10-22
+pr_number: 2781
+action_path: "/people/dedupe_index"
+summary: >-
+  When you merge two people, the deleted person's email is saved as the kept person's
+  email 2 instead of being dropped.
+pro_tips:
+  - "If email 2 is already filled, the extra email is saved in a comment on the kept person."

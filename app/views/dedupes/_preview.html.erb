@@ -11,6 +11,7 @@
     read_only_columns:   Column names shown side by side for comparison but not editable
     record_label:        Callable naming a record in the headers (defaults to #name)
     union_columns:       Column names whose values are combined into the keeper (not replaced)
+    kept_columns:        Column names whose deleted value is kept elsewhere on the keeper
     form_builder:        The parent form builder (f)
     belongs_to_options:  Hash of { column_name => collection } for select fields
 %>
@@ -20,6 +21,7 @@
   header_bg = DomainTheme.bg_class_for(domain, intensity: 50)
   model_class = record_to_delete.class
   union_columns ||= []
+  kept_columns ||= []
   skip_columns = %w[id created_at updated_at legacy_id]
   columns =
     if editable_columns.present?
@@ -151,8 +153,10 @@
             delete_val.presence || "—"
           end
         union_column = union_columns.include?(col.name)
-        merged_in = union_column && delete_val.to_s.split(",").map(&:strip).reject(&:blank?).difference(keep_val.to_s.split(",").map(&:strip)).any?
-        is_different = !union_column && delete_val != keep_val
+        kept_column = kept_columns.include?(col.name)
+        merged_in = (union_column && delete_val.to_s.split(",").map(&:strip).reject(&:blank?).difference(keep_val.to_s.split(",").map(&:strip)).any?) ||
+          (kept_column && delete_val.present? && delete_val != keep_val)
+        is_different = !union_column && !kept_column && delete_val != keep_val
         deprecated = deprecated_columns.include?(col.name)
       %>
 

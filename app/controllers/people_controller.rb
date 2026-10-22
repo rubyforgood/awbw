@@ -377,14 +377,12 @@ class PeopleController < ApplicationController
         date_of_birth pronouns filemaker_code member_since notes
       ],
       union_columns: %w[filemaker_code],
+      kept_columns: %w[email email_2],
       # Merging two people who each have a login leaves the kept person with both
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        next [] unless delete.user
-        next [ "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." ] unless keep.user
-
-        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently." ]
+        [ merged_email_note(keep, delete), login_merge_note(keep, delete) ].compact
       },
       # Block the merge when both people carry an active pay subscription: the merge
       # keeps both live (soft-deleting one would strand its billing), so the kept person
@@ -407,6 +405,7 @@ class PeopleController < ApplicationController
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
         @adopted_login_id = delete.user&.id unless keep.user
+        @merged_person = delete
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (merge blank-number
@@ -421,6 +420,7 @@ class PeopleController < ApplicationController
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
+      #   * the deleted person's emails (keep them in email 2, else a comment);
       #   * a survivor gaining its first login (adopt the login's email as primary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
@@ -434,12 +434,27 @@ class PeopleController < ApplicationController
           primary_signature: @keeper_primary_address_signature).call
         PersonServices::ReconcileContactMethods.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
+        PersonServices::KeepMergedEmails.new(keep, merged: @merged_person).call
         sync_adopted_login_email(keep)
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
       }
     }
+  end
+
+  def merged_email_note(keep, delete)
+    emails = PersonServices::KeepMergedEmails.new(keep, merged: delete).missing.map(&:address)
+    return if emails.empty?
+
+    "#{emails.to_sentence} #{emails.one? ? "is" : "are"} kept as the kept person's email 2 — or in a comment when email 2 is already filled."
+  end
+
+  def login_merge_note(keep, delete)
+    return unless delete.user
+    return "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." unless keep.user
+
+    "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently."
   end
 
   # Saves the preview's edits first so the sync moves the email the admin picked into
