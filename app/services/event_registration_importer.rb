@@ -49,6 +49,10 @@ class EventRegistrationImporter
   # Topic on the comment that records a status the import declined to apply.
   COMMENT_TOPIC = "Spreadsheet import".freeze
 
+  # Stands in for an attendee the sheet counted but didn't name, so the bulk payment
+  # card lists a row to link once someone works out who they were.
+  UNNAMED_ATTENDEE = { "first_name" => "TBD", "last_name" => "TBD" }.freeze
+
   # metadata key stamped on the submission the import creates, so we can find our
   # own submission on a re-run (idempotency) without ever matching a real one.
   IMPORT_SOURCE_KEY = "imported_from".freeze
@@ -239,9 +243,6 @@ class EventRegistrationImporter
       .select { |_label, value| value.blank? }.map(&:first)
     return skip(preview, "missing #{missing.join(", ")}") if missing.any?
 
-    seats = values[:person_count].to_i
-    return skip(preview, "covers #{seats} people — give each their own row") if seats > 1
-
     status = resolve_status(values)
     return skip(preview, "unknown status “#{values[:status]}”") if status == :invalid
 
@@ -396,6 +397,19 @@ class EventRegistrationImporter
   def note_status_conflict(registration, preview)
     body = "Imported sheet said “#{status_label(preview.status_from_sheet)}”; kept this registration's " \
            "“#{status_label(registration.status)}”."
+    return if registration.comments.exists?(topic: COMMENT_TOPIC, body: body)
+
+    registration.comments.create!(topic: COMMENT_TOPIC, body: body,
+                                  created_by: @import_user, updated_by: @import_user)
+  end
+
+  # One registration standing for several people, said on the registration itself —
+  # the others aren't named anywhere, so someone has to add them by hand.
+  def note_seat_count(registration, values)
+    count = seats(values)
+    return if count < 2
+
+    body = "Imported sheet says this registration covers #{count} people; only this one is named."
     return if registration.comments.exists?(topic: COMMENT_TOPIC, body: body)
 
     registration.comments.create!(topic: COMMENT_TOPIC, body: body,
@@ -599,7 +613,7 @@ class EventRegistrationImporter
     @result.payments_recorded += 1
     @result.payments_amount_cents += total
     unless @dry_run
-      submission = bulk_payment_submission(members) if members.size > 1
+      submission = bulk_payment_submission(members) if attendee_count(members) > 1
       payment = resolve_payment(members, total, submission)
     end
 
@@ -610,7 +624,7 @@ class EventRegistrationImporter
       remaining -= share
       preview.payment_amount_cents = share
       preview.payment_total_cents = total
-      preview.bulk_size = members.size if members.size > 1
+      preview.bulk_size = attendee_count(members) if attendee_count(members) > 1
       allocate_share(member, payment, share) unless @dry_run
       record_discount(preview, preview.owed_cents.to_i - share)
     end
@@ -663,7 +677,7 @@ class EventRegistrationImporter
   def persist_bulk_answers(submission, form, members, payer)
     answers = {
       "bulk_payment_attendees" => bulk_attendees(members).to_json,
-      "number_of_attendees" => members.size.to_s,
+      "number_of_attendees" => attendee_count(members).to_s,
       "organization_name" => payer.is_a?(Organization) ? payer.name : nil,
       "first_name" => payer.try(:first_name), "last_name" => payer.try(:last_name),
       "primary_email" => payer.try(:email)
@@ -674,11 +688,18 @@ class EventRegistrationImporter
     end
   end
 
+  def attendee_count(members)
+    members.sum { |member| seats(member[:values]) }
+  end
+
+  # Everyone the payment covers: the rows that named someone, then a placeholder per
+  # head the sheet counted without naming.
   def bulk_attendees(members)
-    members.map do |member|
+    named = members.map do |member|
       values = member[:values]
       { "first_name" => values[:first_name], "last_name" => values[:last_name], "email" => values[:email] }.compact
     end
+    named + Array.new(attendee_count(members) - named.size) { UNNAMED_ATTENDEE }
   end
 
   def record_discount(preview, discount)
@@ -710,6 +731,10 @@ class EventRegistrationImporter
     preview.details << "Age groups" if answers["primary_age_group"] || answers["additional_age_groups"]
     preview.details << "Registered #{Columns.date(values[:registered_on]).strftime("%-m/%-d/%Y")}" if Columns.date(values[:registered_on])
     preview.details << "Notes" if values[:notes] || values[:comments]
+    if seats(values) > 1
+      preview.warnings << "Covers #{seats(values)} people — only this one is named, " \
+                          "so the rest need adding and linking on the bulk payments page"
+    end
     if preview.registration_status == :kept && day_values(values).any?
       preview.warnings << "Day columns not applied — the registration keeps its own status"
     end
@@ -730,6 +755,12 @@ class EventRegistrationImporter
     end
   end
 
+  # How many people the row stands for. FileMaker kept one registration for a group
+  # and counted the heads, so the row names one of them at most.
+  def seats(values)
+    [ values[:person_count].to_i, 1 ].max
+  end
+
   def ce_requested?(values)
     Columns.requested?(values[:ce_requested])
   end
@@ -740,6 +771,7 @@ class EventRegistrationImporter
     newly_created = person.previously_new_record?
     status_kept = preview.registration_status == :kept
     note_status_conflict(registration, preview) if status_kept
+    note_seat_count(registration, values)
     note_sheet_comments(registration, values)
     apply_registration_details(registration, values, apply_days: !status_kept)
     submission = import_submission(person, answers)

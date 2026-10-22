@@ -379,11 +379,15 @@ RSpec.describe EventRegistrationImporter do
         expect(registration.reload.status).to eq("cancelled")
       end
 
-      it "skips a row standing for several people rather than guess their names" do
+      it "imports a row standing for several people and says so on the registration" do
         result = import_rows(%w[FirstName LastName EMail NoOfPersons], %w[Pat Example pat@example.org 3])
+        registration = registration_of(Person.find_by(email: "pat@example.org"))
 
-        expect(result.skipped.sole.skipped_reason).to eq("covers 3 people — give each their own row")
-        expect(event.event_registrations).to be_empty
+        expect(registration).to be_present
+        expect(registration.comments.pluck(:body)).to include(
+          "Imported sheet says this registration covers 3 people; only this one is named."
+        )
+        expect(result.rows.first.warnings.join).to include("Covers 3 people")
       end
 
       it "keeps the sheet's notes and comments on the registration" do
@@ -722,6 +726,29 @@ RSpec.describe EventRegistrationImporter do
         import_rows(header, [ "Pat", "Example", "pat@example.org", "500.00", "Check", "999" ])
 
         expect(event.form_submissions.where(role: "bulk_payment")).to be_empty
+      end
+
+      it "takes a row covering several people as a bulk payment, padding the unnamed attendees" do
+        form = create(:form, role: "bulk_payment")
+        create(:form_field, form: form, field_identifier: "bulk_payment_attendees")
+        create(:form_field, form: form, field_identifier: "number_of_attendees")
+
+        import_rows(%w[FirstName LastName EMail NoOfPersons AmountPaid PaymentType],
+                    [ "Pat", "Example", "pat@example.org", "3", "1500.00", "Cash" ])
+
+        submission = event.form_submissions.find_by(role: "bulk_payment")
+        expect(submission.bulk_payment_attendee_count).to eq(3)
+        expect(submission.bulk_payment_attendees.map { |a| a["last_name"] }).to eq(%w[Example TBD TBD])
+      end
+
+      it "leaves the unallocated balance on the payment for the people not yet added" do
+        import_rows(%w[FirstName LastName EMail NoOfPersons AmountPaid PaymentType],
+                    [ "Pat", "Example", "pat@example.org", "3", "1500.00", "Cash" ])
+        registration = registration_of(Person.find_by(email: "pat@example.org"))
+
+        expect(registration.allocations.find_by(source_type: "Payment").amount).to eq(50_000)
+        expect(Payment.sole).to have_attributes(amount_cents: 150_000, amount_cents_remaining: 100_000)
+        expect(registration.allocations.where(source_type: "Discount")).to be_empty
       end
 
       it "keeps an unrelated cash row on its own payment" do

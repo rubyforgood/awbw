@@ -51,7 +51,11 @@
       new addresses beside them. Where the sheet disagrees, the row says so and the value is saved as a comment on that
       person or organization — nothing is dropped silently.
     </li>
-    <li>Rows sharing a BulkPayment reference, or one check number, become a single payment split across those registrations — listed on this event's bulk payments page.</li>
+    <li>
+      Rows sharing a BulkPayment reference, or one check number, become a single payment split across those
+      registrations — listed on this event's bulk payments page. A single row with NoOfPersons above 1 lands there
+      too, with the people it doesn't name listed as TBD.
+    </li>
     <li>
       An attended, cancelled, no-show, transferred-out, or incomplete registration keeps the status it already has.
       The row's status is saved as a comment on that registration instead, and its Day columns are left out.

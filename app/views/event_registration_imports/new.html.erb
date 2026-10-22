@@ -53,8 +53,10 @@
         [ "Follow-up", "SomeoneElseWillPay, InvoiceRequested, W9Requested (Yes/No); PostSurveyCompleted and " \
                        "CertificateSent (a date, or Yes for the event's last day)." ],
         [ "Notes", "Notes and Comments are saved as comments on the registration." ],
-        [ "One row per person", "NoOfPersons above 1 means the row stands for several people. We skip it rather " \
-                                "than invent names — give each person their own row." ]
+        [ "One row covering several", "NoOfPersons above 1 means the row stands for a group. We register the " \
+                                      "person it names, record the payment as a bulk payment for that many people, " \
+                                      "and list the rest as TBD on the event's bulk payments page for someone to " \
+                                      "add and link. The unallocated balance waits there for them." ]
       ].each do |group, columns| %>
         <div>
           <dt class="font-medium text-gray-800"><%= group %></dt>
