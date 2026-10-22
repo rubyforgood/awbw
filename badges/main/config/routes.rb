@@ -144,6 +144,7 @@ Rails.application.routes.draw do
   post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
   resource :event_registration_import, only: %i[new create], path: "event_registrations/import",
                                        controller: "event_registration_imports" do
+    get :template
     post :confirm
   end
   resources :event_registrations do

@@ -26,8 +26,8 @@ module Analytics
     # The submission a public form/registration writes is created partway through
     # the request, after many of its lifecycle events have already been buffered,
     # so the id isn't knowable at push time. Stamp it here at flush — by which
-    # point the controller has set Current.form_submission_id — so every record
-    # the submission touched can be traced back to it.
+    # point the submitting service has set Current.form_submission_id — so every
+    # record the submission touched can be traced back to it.
     def self.stamp_form_submission(payload)
       return unless Current.form_submission_id
 

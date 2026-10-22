@@ -570,6 +570,15 @@ class Person < ApplicationRecord
     PlaceholderEmail.match?(email)
   end
 
+  # The lowest numbered placeholder nobody with this name is using yet.
+  def next_free_placeholder_email
+    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
+    scope = scope.where.not(id: id) if persisted?
+    taken = scope.pluck(:email).filter_map { |address| PlaceholderEmail.number_in(address) }
+
+    PlaceholderEmail.at((1..).find { |number| taken.exclude?(number) })
+  end
+
   # The placeholder records "no address on file", so it never stands in for a real one.
   def email_on_file
     email.presence unless placeholder_email?
@@ -701,14 +710,6 @@ class Person < ApplicationRecord
       "they truly have none."
   end
 
-  # The lowest numbered placeholder nobody with this name is using yet.
-  def next_free_placeholder_email
-    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
-    scope = scope.where.not(id: id) if persisted?
-    taken = scope.pluck(:email).filter_map { |address| PlaceholderEmail.number_in(address) }
-
-    PlaceholderEmail.at((1..).find { |number| taken.exclude?(number) })
-  end
   ## Consider adding additional person info to be saved on stripes customer records
   # def stripe_attributes(pay_customer)
   #   {

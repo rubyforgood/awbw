@@ -19,6 +19,14 @@ module OrganizationServices
 
     Group = Struct.new(:key, :label, :records, :reasons, keyword_init: true)
 
+    def self.normalized_name(name)
+      name.to_s.downcase.gsub(/['’]/, "").gsub(/[^a-z0-9 ]/, " ").squish
+    end
+
+    def self.suffixless_name(name)
+      normalized_name(name).gsub(LEGAL_SUFFIX, "").squish
+    end
+
     def initialize(scope = Organization.all)
       @organizations = scope.includes(:addresses).to_a
     end
@@ -83,11 +91,11 @@ module OrganizationServices
     end
 
     def normalized_name(org)
-      org.name.to_s.downcase.gsub(/['’]/, "").gsub(/[^a-z0-9 ]/, " ").squish
+      self.class.normalized_name(org.name)
     end
 
     def suffixless_name(org)
-      normalized_name(org).gsub(LEGAL_SUFFIX, "").squish
+      self.class.suffixless_name(org.name)
     end
 
     def audience_stripped_name(org)

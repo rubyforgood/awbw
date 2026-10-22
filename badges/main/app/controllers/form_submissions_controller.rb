@@ -170,6 +170,7 @@ class FormSubmissionsController < ApplicationController
   # handling: agreement scenarios confer the standing Facilitator affiliation
   # dated to the submission, and a new job ends the person's other orgs' rows.
   def link_and_report(organization, verb:, record_fills: true)
+    Current.form_submission_id = @form_submission.id
     return close_program_and_report(organization, verb:) if @form_submission.linking_scenario == "close_program"
 
     registration = @form_submission.on_demand_registration

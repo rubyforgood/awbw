@@ -22,16 +22,23 @@ module OrganizationServices
   class CaptureFromSubmission
     Result = Struct.new(:organization, :autofill, keyword_init: true)
 
-    def self.call(form:, person:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
-                  submission: nil)
-      new(form:, person:, form_params:, facilitator_training:, training_date:, event_registration:, submission:).call
+    def self.call(person:, form: nil, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
+                  submission: nil, answers: nil, organization: nil, overwrite: true)
+      new(person:, form:, form_params:, facilitator_training:, training_date:, event_registration:, submission:,
+          answers:, organization:, overwrite:).call
     end
 
-    def initialize(form:, person:, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
-                   submission: nil)
+    # `answers` (field_identifier => value) stands in for form + form_params, and
+    # `organization` for the by-name lookup, when a caller has already resolved them
+    # (the spreadsheet importer). `overwrite: false` only fills the org's blanks.
+    def initialize(person:, form: nil, form_params: {}, facilitator_training: false, training_date: nil, event_registration: nil,
+                   submission: nil, answers: nil, organization: nil, overwrite: true)
       @submission = submission
       @form = form
       @form_params = (form_params || {}).transform_keys(&:to_s)
+      @answers = answers&.transform_keys(&:to_s)
+      @organization = organization
+      @overwrite = overwrite
       @person = person
       @facilitator_training = facilitator_training
       @training_date = training_date
@@ -46,6 +53,7 @@ module OrganizationServices
         organization: organization,
         website: field_value("organization_website"),
         organization_type: field_value("organization_type"),
+        overwrite: @overwrite,
         submission: @submission
       ).changes
 
@@ -55,7 +63,8 @@ module OrganizationServices
         city: field_value("organization_city"),
         state: field_value("organization_state"),
         zip_code: field_value("organization_zip"),
-        country: field_value("organization_country")
+        country: field_value("organization_country"),
+        overwrite: @overwrite
       )
 
       AffiliationServices::CreateFromRegistration.call(
@@ -74,6 +83,8 @@ module OrganizationServices
     private
 
     def find_organization
+      return @organization if @organization
+
       name = field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER)&.strip
       return nil if name.blank?
 
@@ -81,6 +92,8 @@ module OrganizationServices
     end
 
     def field_value(key)
+      return @answers[key] if @answers
+
       field = @form.form_fields.find_by(field_identifier: key)
       return nil unless field
       @form_params[field.id.to_s]
