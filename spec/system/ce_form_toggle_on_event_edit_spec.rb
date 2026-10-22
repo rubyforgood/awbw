@@ -11,13 +11,17 @@ RSpec.describe "CE form toggle on event edit", type: :system do
   end
 
   context "when CE form is not attached" do
-    it "collapses the section and hides hours/cost fields" do
+    it "collapses the section, which still holds every CE setting once opened" do
       visit edit_event_path(event)
       expect(page).to have_field("event[continuing_education_form_id]", visible: :hidden)
 
       click_button "Continuing education"
       expect(page).to have_unchecked_field("event[continuing_education_form_id]")
-      expect(page).to have_field("event[ce_hours_offered]", visible: :hidden)
+      expect(page).to have_field("event[ce_hours_offered]")
+      expect(page).to have_field("event[ce_payment_due_deadline_date]")
+      expect(page).to have_checked_field("Use CE timesheets")
+      expect(page).to have_select("Timesheet opens for editing")
+      expect(page).to have_field("event[ce_timesheet_closes_at_date]")
     end
   end
 
@@ -32,12 +36,10 @@ RSpec.describe "CE form toggle on event edit", type: :system do
       expect(page).to have_field("event[ce_hours_offered]", visible: :visible)
     end
 
-    it "shows the timesheet window settings only while timesheets are on" do
+    it "shows the timesheet controls" do
       expect(page).to have_checked_field("Use CE timesheets")
       expect(page).to have_select("Timesheet opens for editing", selected: "As soon as CE is paid")
-
-      uncheck "Use CE timesheets"
-      expect(page).to have_select("Timesheet opens for editing", visible: :hidden)
+      expect(page).to have_field("event[ce_timesheet_closes_at_date]")
     end
   end
 end

@@ -535,10 +535,10 @@
                 <%= check_box_tag "event[continuing_education_form_id]", single_form.id,
                         resubmitted ? params.dig(:event, :continuing_education_form_id).present? : @event.continuing_education_form.present?,
                         id: "enable_continuing_education",
-                        class: "peer rounded border-gray-300" %>
+                        class: "rounded border-gray-300" %>
                 <label for="enable_continuing_education" class="cursor-pointer text-sm font-medium text-gray-700">Enable continuing education</label>
                 <p class="mt-1 text-xs text-gray-500">Allow registrants to request CE hours.</p>
-                <div class="hidden rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5 peer-checked:block">
+                <div class="mt-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2.5">
                   <%= render "events/ce_config_fields", f: f %>
                 </div>
                 <p class="mt-1 text-xs text-gray-400">Edit the CE hours ticket card and its details below, under Registration ticket callouts.</p>
