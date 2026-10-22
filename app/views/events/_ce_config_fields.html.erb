@@ -1,7 +1,7 @@
 <%# Every per-event CE setting: hours offered, total cost, the two optional
     deadlines, and the registrant timesheet (on/off plus when editing opens and
-    closes). Rendered in the Continuing education section (single-form and
-    multi-form variants). locals: f (event form builder). %>
+    closes). Rendered in the Continuing education section; the enable checkbox
+    stays in Form settings. locals: f (event form builder). %>
 <div class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-[0.7fr_0.7fr_0.7fr_1.4fr]">
   <div>
     <%= f.label :ce_hours_offered, "CE hours offered", class: "block text-xs font-medium text-gray-600 mb-1" %>
