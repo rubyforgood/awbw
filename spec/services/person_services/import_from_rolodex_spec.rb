@@ -80,16 +80,28 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(person.comments.sole.body).to include("ada@old@example.com")
     end
 
-    it "links a same-name row with no other address to the person the first one created" do
+    it "creates a new person with a placeholder email rather than linking a same-name one" do
+      existing = create(:person, first_name: "Ada", last_name: "Lovelace", email: nil, user: nil)
       rolodex("00049", EMail: "ada@@example.com")
-      rolodex("00050", EMail: "ada@example.com.")
+      rolodex("00050", EMail: "ada at example dot com")
 
       import = described_class.new.call
 
-      expect(import.results[:failed]).to be_empty
-      person = Person.sole
-      expect(person.filemaker_codes).to eq(%w[00049 00050])
-      expect(person.comments.map(&:body)).to contain_exactly(include("ada@@example.com"), include("ada@example.com."))
+      expect(import.results[:created].size).to eq(2)
+      expect(import.results[:linked]).to be_empty
+      expect(existing.reload.filemaker_code).to be_nil
+      expect(Person.where(filemaker_code: %w[00049 00050]).order(:filemaker_code).pluck(:email))
+        .to eq([ PlaceholderEmail.at(1), PlaceholderEmail.at(2) ])
+    end
+
+    it "relinks the person it created when the row is named again" do
+      rolodex("00052", EMail: "ada@@example.com")
+
+      described_class.new.call
+      import = described_class.new(scope: FmRolodex.where(fm_id: "00052"), relink: true).call
+
+      expect(import.results[:linked].size).to eq(1)
+      expect(Person.sole.comments.count).to eq(1)
     end
   end
 

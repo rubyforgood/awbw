@@ -21,7 +21,9 @@ module PersonServices
   # An email field holding no address the person's email validation accepts ("ada@@x.org",
   # "ada at x dot org") or an address it rejects is left off — the row imports without it —
   # and the field's whole value is left as a comment on the person and listed in
-  # #invalid_emails, so it can be fixed by hand.
+  # #invalid_emails, so it can be fixed by hand. A row with no usable address left is always
+  # a new person, given the next free placeholder email (1@…, 2@…) when someone already
+  # carries the name.
   #
   # A row whose name + email matches nobody is created, even when someone already shares
   # the name or the email: folding the occasional duplicate with the person deduper beats
@@ -123,7 +125,7 @@ module PersonServices
 
       row_emails = emails(data)
       email, email_2 = row_emails
-      match = match_people(row_emails, first_name, last_name)
+      match = match_people(rolodex, row_emails, first_name, last_name)
       return link(match, rolodex, label) if match.any?
 
       create(rolodex, label, first_name:, last_name:, email:, email_2:)
@@ -132,8 +134,10 @@ module PersonServices
     # Everyone the row's name and any of the addresses it holds reaches — the person sees
     # each of them as their email, so a row whose second field carries the one the portal
     # knows still finds them. A row with no address at all can only go by the name, and
-    # then only to someone the portal has no email for either.
-    def match_people(row_emails, first_name, last_name)
+    # then only to someone the portal has no email for either. One whose only addresses are
+    # unusable says nothing about who it is, so it reaches just the person it already made.
+    def match_people(rolodex, row_emails, first_name, last_name)
+      return Person.with_filemaker_code(rolodex.fm_id).to_a if row_emails.empty? && invalid_email_values(rolodex.data).any?
       return same_name_without_email(first_name, last_name) if row_emails.empty?
 
       row_emails.lazy.map { |email| PersonMatcher.new(email:, last_name:, first_names: [ first_name ]).matches.to_a }
@@ -141,8 +145,11 @@ module PersonServices
     end
 
     def same_name_without_email(first_name, last_name)
+      same_name(first_name, last_name).where(email: [ nil, "" ]).to_a
+    end
+
+    def same_name(first_name, last_name)
       Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
-            .where(email: [ nil, "" ]).to_a
     end
 
     # Several matches are one person entered more than once, so each carries the code
@@ -180,6 +187,7 @@ module PersonServices
       data = rolodex.data
       person = Person.new(**names, filemaker_code: rolodex.fm_id, **profile_attributes(data),
                           **archive_timestamps(data), **archive_stamps(data))
+      person.email = person.next_free_placeholder_email if needs_placeholder_email?(person, data)
       build_addresses(person, rolodex)
       build_phones(person, rolodex)
 
@@ -193,6 +201,10 @@ module PersonServices
       end
       @imported_codes << rolodex.fm_id
       record(:created, "#{label} → ##{person.id}")
+    end
+
+    def needs_placeholder_email?(person, data)
+      person.email.blank? && invalid_email_values(data).any? && same_name(person.first_name, person.last_name).exists?
     end
 
     def profile_attributes(data)
