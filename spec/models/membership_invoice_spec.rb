@@ -33,18 +33,22 @@ RSpec.describe MembershipInvoice, type: :model do
   describe "overlap" do
     let(:person) { create(:person) }
     let(:subscription) { create(:membership, person: person) }
+    # Anchor the fixture in the past so cancelling its membership never trips
+    # Membership#expire_unbilled_future_invoices (which drops unbilled future years).
+    let(:existing_start) { Date.current - 1.month }
+    let(:existing_end) { Date.current + 1.year }
     let!(:existing) do
       create(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2026, 1, 14),
-        end_date: Date.new(2027, 10, 13))
+        start_date: existing_start,
+        end_date: existing_end)
     end
 
     it "rejects a invoice overlapping an existing one" do
       invoice = build(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2027, 1, 1),
-        end_date: Date.new(2027, 12, 31))
+        start_date: existing_start + 1.week,
+        end_date: existing_end + 1.week)
 
       expect(invoice).not_to be_valid
       expect(invoice.errors[:base].join).to match(/overlapping/)
@@ -53,8 +57,8 @@ RSpec.describe MembershipInvoice, type: :model do
     it "rejects a invoice that merely shares the last day" do
       invoice = build(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2027, 10, 13),
-        end_date: Date.new(2028, 10, 12))
+        start_date: existing_end,
+        end_date: existing_end + 1.year)
 
       expect(invoice).not_to be_valid
     end
@@ -62,8 +66,8 @@ RSpec.describe MembershipInvoice, type: :model do
     it "accepts a invoice starting the day after the previous one ends" do
       invoice = build(:membership_invoice,
         membership: subscription,
-        start_date: Date.new(2027, 10, 14),
-        end_date: Date.new(2028, 10, 13))
+        start_date: existing_end + 1.day,
+        end_date: existing_end + 1.year)
 
       expect(invoice).to be_valid
     end
@@ -75,8 +79,8 @@ RSpec.describe MembershipInvoice, type: :model do
 
       invoice = build(:membership_invoice,
         membership: rejoined,
-        start_date: Date.new(2027, 1, 1),
-        end_date: Date.new(2027, 12, 31))
+        start_date: existing_start + 1.week,
+        end_date: existing_end + 1.week)
 
       expect(invoice).not_to be_valid
       expect(invoice.errors[:base].join).to match(/overlapping/)

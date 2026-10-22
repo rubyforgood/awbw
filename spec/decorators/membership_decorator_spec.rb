@@ -31,6 +31,10 @@ RSpec.describe MembershipDecorator, type: :decorator do
   end
 
   describe "#period_label" do
+    # period_label reads "present" whenever end_date is still ahead of Date.current,
+    # so pin "now" to keep the fixed 2027 end dates on the present side of the fence.
+    around { |example| travel_to(Time.zone.local(2026, 9, 1, 12)) { example.run } }
+
     it "shows the date range when current and not autorenewal_cancelled" do
       membership = create(:membership, start_date: Date.new(2025, 1, 15), end_date: Date.new(2027, 1, 15))
 
