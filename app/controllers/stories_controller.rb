@@ -177,9 +177,9 @@ class StoriesController < ApplicationController
   private
 
   def notify_story_published
-    return if @story.notifications.exists?(kind: %w[story_promoted story_promoted_fyi])
+    return if @story.notifications.exists?(kind: %w[story_promoted story_shared_with_funder story_promoted_fyi])
 
-    notify_story_authors unless @story.funder_only?
+    notify_story_authors
     notify_story_promoted_fyi if @story.story_idea
   end
 
@@ -188,7 +188,7 @@ class StoriesController < ApplicationController
       NotificationServices::CreateNotification.call(
         noticeable: @story,
         person: recipient[:person],
-        kind: :story_promoted,
+        kind: @story.funder_only? ? :story_shared_with_funder : :story_promoted,
         recipient_role: :person,
         recipient_email: recipient[:email],
         notification_type: 0)

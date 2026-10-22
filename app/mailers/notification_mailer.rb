@@ -118,6 +118,16 @@ class NotificationMailer < ApplicationMailer
     )
   end
 
+  def story_shared_with_funder(notification)
+    @story = notification.noticeable.decorate
+    @recipient_name = notification.person&.first_name.presence || notification.recipient_email
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Your story has been shared with the funder"
+    )
+  end
+
   def story_promoted_fyi(notification)
     @story = notification.noticeable.decorate
     @story_idea = @story.story_idea

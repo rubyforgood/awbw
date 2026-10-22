@@ -420,6 +420,37 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#story_shared_with_funder" do
+    let(:author) { create(:person, first_name: "Rosa") }
+    let(:story) { create(:story, :published, :funder_only, author: author, title: "A Healing Story") }
+    let(:notification) do
+      create(:notification, kind: "story_shared_with_funder", noticeable: story, person: author,
+             recipient_role: "person", recipient_email: author.preferred_email)
+    end
+    let(:mail) { described_class.story_shared_with_funder(notification) }
+
+    it "renders without raising" do
+      expect { mail.deliver_now }.not_to raise_error
+    end
+
+    it "sends to the author" do
+      expect(mail.to).to eq([ author.preferred_email ])
+    end
+
+    it "says the story was shared with the funder" do
+      expect(mail.subject).to eq("AWBW Portal: Your story has been shared with the funder")
+    end
+
+    it "names the story, greets the author, and makes no Story Share promise" do
+      body = mail.body.encoded
+      expect(body).to include("A Healing Story")
+      expect(body).to include("Hello <strong>Rosa</strong>")
+      expect(body).to include("shared with the funder")
+      expect(body).not_to include("live on Story Share")
+      expect(body).not_to include(story_share_url(story))
+    end
+  end
+
   describe "#story_promoted_fyi" do
     let(:submitter) { create(:user) }
     let(:story_idea) { create(:story_idea, created_by: submitter) }

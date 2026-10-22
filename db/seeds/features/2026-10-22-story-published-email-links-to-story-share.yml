@@ -9,4 +9,4 @@ summary: >-
   credited authors too.
 pro_tips:
   - "Stories created directly email the author and second author; a story with no author sends nothing."
-  - "Funder-only stories don't send this email, since they never appear on Story Share."
+  - "Funder-only stories send a \"shared with the funder\" email instead, since they never appear on Story Share."

@@ -421,10 +421,13 @@ RSpec.describe "/stories", type: :request do
           expect(admin_note.recipient_email).to eq(EmailConfigHelpers::PROGRAMS_EMAIL)
         end
 
-        it "sends only the admin FYI when a funder-only story is published" do
+        it "sends the submitter the shared-with-funder email when a funder-only story is published" do
           post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, published: "1", funder_only: "1") }
 
-          expect(Notification.where(noticeable: Story.last).pluck(:kind)).to contain_exactly("story_promoted_fyi")
+          expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email)).to contain_exactly(
+            [ "story_shared_with_funder", submitter.email ],
+            [ "story_promoted_fyi", Setting.programs_email ]
+          )
         end
 
         it "pre-checks the funder-only box when promoting a funder-only idea" do
@@ -465,11 +468,13 @@ RSpec.describe "/stories", type: :request do
         )
       end
 
-      it "skips the story-published email for a funder-only story, which never appears on Story Share" do
-        author = create(:person)
-        expect {
-          post stories_url, params: { story: base_attributes.merge(author_id: author.id, published: "1", funder_only: "1") }
-        }.not_to change(Notification, :count)
+      it "sends the authors the shared-with-funder email for a funder-only story" do
+        author = create(:person, email: "author@example.com")
+        post stories_url, params: { story: base_attributes.merge(author_id: author.id, published: "1", funder_only: "1") }
+
+        expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email)).to contain_exactly(
+          [ "story_shared_with_funder", "author@example.com" ]
+        )
       end
     end
 
