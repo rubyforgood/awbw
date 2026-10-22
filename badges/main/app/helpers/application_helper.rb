@@ -136,7 +136,7 @@ module ApplicationHelper
   # Just "training", not "on-demand training" — these titles already say so
   # ("On-Demand Training 2026"), and the pairing reads as a stutter.
   def default_reminder_message(days_until_event, event: nil)
-    organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+    organization = app_organization_name
     opening = if event&.on_demand?
       "This is a reminder that you're registered for the #{organization} training <strong>#{ERB::Util.html_escape(event.title)}</strong>."
     else
@@ -705,11 +705,42 @@ module ApplicationHelper
 
   # Fundamental US time zones only (for user preference dropdown).
   # Order: Eastern → Pacific, then Alaska, Hawaii, Arizona.
+  # The admin-flagged organization running this app. Memoized so the footer on every
+  # page doesn't re-query.
+  def app_organization
+    @app_organization ||= Setting.app_organization
+  end
+
+  def app_organization_name
+    Setting.app_organization_name
+  end
+
+  def app_organization_website
+    Setting.organization_website
+  end
+
+  def app_organization_phone
+    Setting.organization_phone
+  end
+
+  # A dialable href: digits only, with the US country code when that's all there is.
+  def tel_href(phone)
+    digits = phone.to_s.gsub(/\D/, "")
+    digits = "1#{digits}" if digits.length == 10
+
+    "tel:+#{digits}"
+  end
+
+  # The organization's address on one line, for a certificate's issuing block.
+  def app_organization_address_line
+    Setting.organization_address_lines.join(", ")
+  end
+
   def default_organization_for_form(object)
     return object.organization if object.organization.present?
 
     if current_user.super_user?
-      Organization.find_by(name: ENV["ORGANIZATION_NAME"])
+      Setting.app_organization
     elsif current_user.person&.affiliations&.count == 1
       current_user.person.primary_organization
     end

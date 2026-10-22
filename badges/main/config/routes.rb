@@ -65,6 +65,8 @@ Rails.application.routes.draw do
     get "activities/charts",         to: "ahoy_activities#charts", as: "activities_charts"
     get "activities/counts",         to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
+    get "settings",                  to: "settings#edit", as: "settings"
+    patch "settings",                to: "settings#update"
     get "data_health",               to: "data_health#index", as: "data_health"
     get "data_health/worklists",     to: "data_health#worklists", as: "data_health_worklists"
     get "data_health/:check/rows",   to: "data_health#rows", as: "data_health_rows"

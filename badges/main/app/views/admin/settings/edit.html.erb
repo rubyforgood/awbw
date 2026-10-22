@@ -1,0 +1,161 @@
+<% content_for(:page_bg_class, "admin-only bg-blue-100") %>
+<% content_for(:title, "App settings") %>
+
+<div class="container mx-auto max-w-3xl px-4 py-6">
+  <%= link_to "← Admin", admin_path, class: "text-sm #{eyebrow_link_class} px-2 py-1" %>
+
+  <h1 class="mt-2 mb-6 text-2xl font-bold text-gray-800">App settings</h1>
+
+  <%= simple_form_for @setting, url: admin_settings_path, method: :patch,
+                      html: { class: "space-y-8" } do |f| %>
+    <%= f.error_notification %>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="mb-1 text-lg font-semibold text-gray-800">This portal's organization</h2>
+      <p class="mb-4 text-sm text-gray-600">
+        Used for the name, address, and tax ID on invoices and receipts, and to treat
+        grants it funds as subsidy rather than external funding in reports.
+      </p>
+
+      <%= f.input :organization_id,
+                  collection: Organization.order(:name).pluck(:name, :id),
+                  label: "Organization",
+                  include_blank: "Match by name (#{Setting.organization_name})" %>
+
+      <% if (org = Setting.app_organization) %>
+        <div class="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
+          <p class="mb-2 font-medium text-gray-900">
+            <%= link_to org.name, organization_path(org), class: "text-blue-600 hover:text-blue-800 underline" %>
+            currently supplies:
+          </p>
+          <ul class="list-inside list-disc space-y-1">
+            <li>Invoice and receipt header name</li>
+            <li>Tax ID <%= org.tax_id.presence ? "(#{org.tax_id})" : "— not set on the organization yet" %></li>
+            <li>Public website <%= org.website_link_url.presence || "— not set on the organization yet" %></li>
+            <li>Phone, from the return address below</li>
+            <li>Treating the grants it funds as subsidy rather than external funding</li>
+          </ul>
+          <p class="mt-3 text-gray-600">
+            Its tax ID is edited on the
+            <%= link_to "organization", edit_organization_path(org), class: "text-blue-600 hover:text-blue-800 underline" %>.
+            The addresses below are set here.
+          </p>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="mb-1 text-lg font-semibold text-gray-800">Addresses</h2>
+      <p class="mb-4 text-sm text-gray-600">
+        Chosen from the organization's addresses. The header carries the return address;
+        checks go to the remittance address.
+      </p>
+      <%= f.input :contact_attention,
+                  label: "Attention line",
+                  placeholder: Setting.contact_attention,
+                  hint: "Who post should be addressed to, shown above the mailing address on the contact page" %>
+      <% addresses = (org = Setting.app_organization) ? org.addresses.active.to_a : [] %>
+      <% if addresses.any? %>
+        <% address_options = addresses.map { |address| [ address.decorate.picker_label, address.id ] } %>
+        <%= f.input :return_address_id,
+                    collection: address_options,
+                    label: "Return address",
+                    required: true,
+                    prompt: "Choose an address",
+                    hint: "Printed in the invoice and receipt header, and as the issuing address on CE certificates" %>
+        <%= f.input :remittance_address_id,
+                    collection: address_options,
+                    label: "Remittance address",
+                    required: true,
+                    prompt: "Choose an address",
+                    hint: "Where checks are mailed — shown under \"make checks payable to\" and on the pay-by-check instructions" %>
+      <% elsif org %>
+        <p class="text-sm text-gray-600">
+          Add an address to
+          <%= link_to org.name, edit_organization_path(org), class: "text-blue-600 hover:text-blue-800 underline" %>
+          to choose its return and remittance addresses.
+        </p>
+      <% else %>
+        <p class="text-sm text-gray-600">Choose this portal's organization above, then pick its addresses here.</p>
+      <% end %>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="mb-1 text-lg font-semibold text-gray-800">CE certificates</h2>
+      <p class="mb-4 text-sm text-gray-600">
+        Who signs continuing education confirmations of attendance. Their signature image is
+        uploaded as the "CE certificate signatures" resource.
+      </p>
+      <% administrator = Setting.current.ce_administrator %>
+      <%= f.input :ce_administrator_id,
+                  collection: administrator.present? ? [ [ administrator.remote_search_label[:label], administrator.id ] ] : [],
+                  selected: administrator&.id,
+                  prompt: "Search people",
+                  label: "CE administrator",
+                  hint: "Printed on the signature line of CE confirmations of attendance",
+                  input_html: { data: { controller: "remote-select", remote_select_model_value: "person" } } %>
+      <%= f.input :ce_administrator_title,
+                  label: "CE administrator title",
+                  placeholder: Setting.ce_administrator_title,
+                  hint: "Printed beside their name on the signature line" %>
+      <%= f.input :ce_accreditation_abbreviation,
+                  label: "Accreditor short name",
+                  placeholder: Setting.ce_accreditation_abbreviation,
+                  hint: "Printed as \"CAMFT-approved Continuing Education Provider # 1000151\" — the accreditor dictates this wording" %>
+      <%= f.input :ce_provider_number,
+                  label: "CE provider number",
+                  placeholder: Setting.ce_provider_number,
+                  hint: "This portal's approved-provider number with that accreditor" %>
+      <%= f.input :ce_accreditation_body,
+                  label: "Accreditor full name",
+                  placeholder: Setting.ce_accreditation_body,
+                  hint: "Used in CE callout copy, not on the certificate" %>
+      <%= f.input :ce_accreditation_url,
+                  label: "Accreditor link",
+                  placeholder: Setting.ce_accreditation_url,
+                  hint: "Where the accreditor's CE rules are published" %>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="mb-4 text-lg font-semibold text-gray-800">Mailboxes</h2>
+      <%= f.input :info_email,
+                  label: "Contact email",
+                  placeholder: Setting.info_email,
+                  hint: "Shown on the contact page, the story-share footer, and the invoice header" %>
+      <%= f.input :programs_email,
+                  label: "Programs email",
+                  placeholder: Setting.programs_email,
+                  hint: "Where staff notifications go, and the reply-to on portal mail" %>
+      <%= f.input :no_reply_email,
+                  label: "No-reply email",
+                  placeholder: Setting.no_reply_email,
+                  hint: "The from: on event mail, so replies land in the programs mailbox" %>
+      <%= f.input :reply_to_email,
+                  label: "Reply-to email",
+                  placeholder: Setting.reply_to_email,
+                  hint: "Fallback for the three above. Outbound mail is sent from addresses tied to this domain's DNS records, so change these with care" %>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="mb-4 text-lg font-semibold text-gray-800">Invoices and memberships</h2>
+      <%= f.input :invoice_prefix,
+                  label: "Invoice number prefix",
+                  placeholder: Setting.invoice_prefix,
+                  hint: "Leads generated invoice numbers, e.g. #{Setting.invoice_prefix}-004" %>
+      <%= f.input :annual_membership_cents,
+                  label: "Standard annual membership price (cents)",
+                  placeholder: Setting.annual_membership_cents,
+                  hint: "Currently #{dollars_from_cents(Setting.annual_membership_cents)}. Applies to membership invoices created from now on" %>
+      <%= f.input :membership_renewal_window_days,
+                  label: "Renewal window (days)",
+                  placeholder: Setting.membership_renewal_window_days,
+                  hint: "How many days before a membership term ends its renewal invoice is generated" %>
+      <%= f.input :membership_grace_period_days,
+                  label: "Grace period (days)",
+                  placeholder: Setting.membership_grace_period_days,
+                  hint: "How long past a term's start an unpaid membership invoice still reads as current" %>
+    </section>
+
+    <%= f.button :submit, "Save settings", class: button_classes(:primary) %>
+  <% end %>
+</div>

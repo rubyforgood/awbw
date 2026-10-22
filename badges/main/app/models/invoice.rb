@@ -27,7 +27,7 @@ class Invoice < ApplicationRecord
   end
 
   def self.next_number
-    prefix = ENV["INVOICE_PREFIX"] || "INV"
+    prefix = Setting.invoice_prefix
     max = Invoice.where("number LIKE ?", "#{prefix}-%")
                  .pluck(:number)
                  .filter_map { |n| n[/\A#{Regexp.escape(prefix)}-(\d+)\z/, 1]&.to_i }

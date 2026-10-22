@@ -19,6 +19,23 @@ RSpec.describe "Comments and communications", type: :request do
       expect(response.body).to include("Follow-up")
     end
 
+    # The filter bar is a GET form, so the browser replaces the action's query string
+    # with the form's own fields — the scope has to be a field to survive a filter.
+    it "carries the person scope through the filter form" do
+      get comments_and_communications_path(person_id: person.id)
+
+      form = Nokogiri::HTML(response.body).at_css("form##{CommentsHelper::FEED_FILTER_FORM_ID}")
+      scope = form.at_css("input[type='hidden'][name='person_id']")
+      expect(scope&.[]("value")).to eq(person.id.to_s)
+    end
+
+    it "leaves the scope field out of the everyone feed" do
+      get comments_and_communications_path
+
+      form = Nokogiri::HTML(response.body).at_css("form##{CommentsHelper::FEED_FILTER_FORM_ID}")
+      expect(form.at_css("input[type='hidden'][name='person_id']")).to be_nil
+    end
+
     it "shows the person's email on hover over their name in the title" do
       get comments_and_communications_path(person_id: person.id)
 

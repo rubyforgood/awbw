@@ -64,7 +64,7 @@ RSpec.describe PersonDecorator do
     end
 
     it "ignores the no-email placeholder" do
-      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL)
+      person = create(:person, user: nil, email: PlaceholderEmail.first)
 
       expect(person.decorate.profile_email).to be_nil
     end

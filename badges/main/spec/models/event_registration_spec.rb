@@ -192,6 +192,28 @@ RSpec.describe EventRegistration, type: :model do
     end
   end
 
+  describe "#link_submitted_organization!" do
+    let(:registration) { create(:event_registration) }
+    let(:organization) { create(:organization) }
+    let(:submission) { create(:form_submission, person: registration.registrant) }
+
+    it "links the org once, pinned to the submission" do
+      2.times { registration.link_submitted_organization!(organization, submission: submission) }
+
+      link = registration.event_registration_organizations.sole
+      expect(link.organization).to eq(organization)
+      expect(link.form_submission).to eq(submission)
+    end
+
+    it "links an extra org unpinned when another org already holds the submission" do
+      registration.link_submitted_organization!(organization, submission: submission)
+      extra = registration.link_submitted_organization!(create(:organization), submission: submission)
+
+      expect(extra.form_submission).to be_nil
+      expect(registration.event_registration_organizations.find_by(organization: organization).form_submission).to eq(submission)
+    end
+  end
+
   describe ".registrant_name" do
     it "matches a registrant by their legal first name and last name" do
       match = create(:event_registration,
@@ -1596,7 +1618,7 @@ RSpec.describe EventRegistration, type: :model do
     end
 
     it "skips the staff FYI (but still notifies the registrant) when no programs mailbox is configured" do
-      allow(Organization).to receive(:programs_email).and_return(nil)
+      allow(Setting).to receive(:programs_email).and_return(nil)
       reg = create(:event_registration, status: "registered")
 
       expect(NotificationServices::CreateNotification).to receive(:call).with(

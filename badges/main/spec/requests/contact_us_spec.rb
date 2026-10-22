@@ -110,9 +110,15 @@ RSpec.describe "ContactUs", type: :request do
       end
 
       it "shows other ways to reach us beside the form" do
+        organization = create(:organization)
+        Setting.create!(organization: organization,
+                        return_address: create(:address, addressable: organization, phone: "(310) 555-0100"))
+
         get contact_us_path
+
         expect(response.body).to include("Other ways to reach us")
-        expect(response.body).to include("tel:310-396-0317")
+        expect(response.body).to include("tel:+13105550100")
+        expect(response.body).to include("(310) 555-0100")
       end
 
       it "does not show visible form fields for name, email, and organization" do
@@ -152,11 +158,16 @@ RSpec.describe "ContactUs", type: :request do
 
   describe "portal variant" do
     it "renders portal contact info and chrome when accessed from the story share" do
+      app_org = create(:organization, name: Setting.organization_name)
+      create(:address, addressable: app_org, invoice_address: true,
+                       street_address: "100 Portal Way", city: "Springfield",
+                       state: "IL", zip_code: "62704")
+
       get contact_us_path(from: "story_share")
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(EmailConfigHelpers::INFO_EMAIL)
-      expect(response.body).to include("1029 1/2 W 24th Street")
+      expect(response.body).to include("100 Portal Way")
       expect(response.body).not_to include("Other ways to reach us")
       # Rendered inside the story_shares layout (the get-involved band)
       expect(response.body).to include("There's a place for you at AWBW")

@@ -36,7 +36,7 @@ RSpec.describe Person, type: :model do
 
     it "is false on an unpaid term past the grace window" do
       term(cost_cents: 2_500,
-        start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1,
+        start_date: Date.current - Membership.grace_period_days - 1,
         subscription: subscription)
 
       expect(person).not_to be_membership_current
@@ -139,13 +139,13 @@ RSpec.describe Person, type: :model do
       it "accepts the placeholder it named" do
         create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
 
-        expect(build(:person, first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)).to be_valid
+        expect(build(:person, first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)).to be_valid
       end
 
       it "names the next placeholder up once the first is taken" do
         create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
-        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)
-        third = Person.new(first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)
+        third = Person.new(first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)
 
         expect(third).not_to be_valid
         expect(third.errors[:base].sole).to include("or 2@example.com if they truly have none.")
@@ -528,22 +528,22 @@ RSpec.describe Person, type: :model do
     end
 
     it "falls through the no-email placeholder to the secondary email" do
-      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: "second@example.com")
+      person = create(:person, user: nil, email: PlaceholderEmail.first, email_2: "second@example.com")
 
       expect(person.preferred_email).to eq("second@example.com")
     end
 
     it "is nil when the placeholder is the only address" do
-      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: nil)
+      person = create(:person, user: nil, email: PlaceholderEmail.first, email_2: nil)
 
       expect(person.preferred_email).to be_nil
-      expect(person.email).to eq(Person::PLACEHOLDER_EMAIL)
+      expect(person.email).to eq(PlaceholderEmail.first)
     end
   end
 
   describe ".placeholder_email" do
     it "finds only the people marked as having no address" do
-      marked = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL)
+      marked = create(:person, user: nil, email: PlaceholderEmail.first)
       create(:person, user: nil, email: "real@example.com")
       create(:person, user: nil, email: nil)
 
