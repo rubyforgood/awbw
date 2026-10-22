@@ -37,6 +37,40 @@ RSpec.describe PersonServices::ImportFromRolodex do
     expect(Person.find_by!(filemaker_code: "00007")).to have_attributes(email: "ada@example.com", email_2: "ada@work.example.com")
   end
 
+  describe "an email the portal can't take" do
+    it "creates the person without it and leaves the archive's value as a comment" do
+      rolodex("00046", EMail: "Attn: ada@@example.com")
+
+      import = described_class.new.call
+
+      expect(import.results[:created].size).to eq(1)
+      expect(import.results[:failed]).to be_empty
+      person = Person.find_by!(filemaker_code: "00046")
+      expect(person).to have_attributes(email: nil, email_2: nil)
+      expect(person.comments.sole.body).to include("00046", "Attn: ada@@example.com")
+      expect(import.invalid_emails.sole).to include("00046", "##{person.id}", "Attn: ada@@example.com")
+    end
+
+    it "keeps the row's usable address as the person's email" do
+      rolodex("00047", EmailPrimary: "ada@example.com.", EMail: "ada@work.example.com")
+
+      results
+
+      person = Person.find_by!(filemaker_code: "00047")
+      expect(person).to have_attributes(email: "ada@work.example.com", email_2: nil)
+      expect(person.comments.sole.body).to include("ada@example.com.")
+    end
+
+    it "notes it on a linked person without filling their second email" do
+      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      rolodex("00048", EmailPrimary: "ada@example.com", EMail: "ada@old@example.com")
+
+      expect { expect(results[:linked].size).to eq(1) }.not_to change(Person, :count)
+      expect(person.reload).to have_attributes(filemaker_code: "00048", email_2: nil)
+      expect(person.comments.sole.body).to include("ada@old@example.com")
+    end
+  end
+
   describe "the fields FmRolodex::PORTAL_FIELDS maps onto a person" do
     let!(:age_range_type) { create(:category_type, name: "AgeRange", published: true) }
     let!(:children) { create(:category, :published, category_type: age_range_type, name: "Children") }
