@@ -77,7 +77,11 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  before_validation :normalize_names_and_emails
+  before_validation :normalize_names
+
+  # Unicode-aware, plus the zero-width characters [[:space:]] skips; pasted addresses carry both.
+  EMAIL_WHITESPACE = /[[:space:]\u200B-\u200D\u2060\uFEFF]/
+  normalizes :email, :email_2, with: ->(email) { email.gsub(EMAIL_WHITESPACE, "") }
 
   # Validations
   validates :avatar,
@@ -671,12 +675,10 @@ class Person < ApplicationRecord
     end
   end
 
-  def normalize_names_and_emails
+  def normalize_names
     self.first_name = Person.normalize_name(first_name)
     self.last_name = Person.normalize_name(last_name)
     self.legal_first_name = Person.normalize_name(legal_first_name)
-    self.email = email&.strip
-    self.email_2 = email_2&.strip
   end
 
   def unique_name_and_email_combination

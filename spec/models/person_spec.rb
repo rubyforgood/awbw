@@ -76,7 +76,7 @@ RSpec.describe Person, type: :model do
     it { should have_many(:sectorable_items) }
   end
 
-  describe "normalize_names_and_emails" do
+  describe "name and email normalization" do
     let(:admin) { create(:user, :admin) }
 
     it "strips leading and trailing whitespace from names and emails" do
@@ -87,6 +87,24 @@ RSpec.describe Person, type: :model do
       expect(person.last_name).to eq("Doe")
       expect(person.email).to eq("jane@test.org")
       expect(person.email_2).to eq("jane2@test.org")
+    end
+
+    it "removes every whitespace character from emails, including non-breaking and zero-width ones" do
+      person = create(:person, user: nil, email: "\u00A0jane @test.org\t\n", email_2: "\u200Bjane2@test.org\u3000",
+                       created_by: admin, updated_by: admin)
+
+      expect(person.email).to eq("jane@test.org")
+      expect(person.email_2).to eq("jane2@test.org")
+    end
+
+    it "blanks a whitespace-only email" do
+      person = create(:person, user: nil, email: "jane@test.org", created_by: admin, updated_by: admin)
+      person.update_columns(email: "\u00A0 \t", email_2: "  ")
+
+      person.update!(email: "", email_2: "")
+
+      expect(person.reload.email).to eq("")
+      expect(person.email_2).to eq("")
     end
 
     it "stores look-alike dashes in names as a plain hyphen" do
