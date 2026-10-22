@@ -39,7 +39,7 @@
               </p>
             </div>
           <% else %>
-            <%= f.input :email, label: "Primary email" %>
+            <%= f.input :email, label: "Primary email", input_html: { value: Person.normalize_value_for(:email, f.object.email) } %>
           <% end %>
 
           <%= f.input :email_type,
@@ -49,7 +49,7 @@
                       selected: f.object.email_type || f.object.user&.email_type,
                       include_blank: true %>
 
-          <%= f.input :email_2, label: "Secondary email" %>
+          <%= f.input :email_2, label: "Secondary email", input_html: { value: Person.normalize_value_for(:email_2, f.object.email_2) } %>
 
           <%= f.input :email_2_type,
                       label: "Secondary email type",
