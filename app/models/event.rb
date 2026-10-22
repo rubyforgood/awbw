@@ -343,8 +343,9 @@ class Event < ApplicationRecord
     span.clamp(1, 5)
   end
 
-  # Attendance sign-in opens this long before a training day's start, so early
-  # arrivals can sign in (the CE sheet shows people arriving ~10 min early). Sign-out
+  # Attendance sign-in opens this long before each training day's start when the event
+  # sets no timesheet opening, so early arrivals can sign in (the CE sheet shows people
+  # arriving ~10 min early). Sign-out
   # isn't windowed — an open entry can always be closed, since forgetting to sign out
   # is the common failure.
   ATTENDANCE_SIGN_IN_LEAD = 30.minutes
@@ -390,7 +391,7 @@ class Event < ApplicationRecord
   end
 
   # Whether a registrant may start a new sign-in right now: it's an event day and
-  # now falls within [day start − lead, day end]. Sign-out is deliberately not
+  # now falls within that day's #attendance_sign_in_window. Sign-out is deliberately not
   # gated by this (see ATTENDANCE_SIGN_IN_LEAD). With no end time on the event the
   # day stays open to its end rather than never opening at all.
   def attendance_sign_in_open?(at = Time.current)
@@ -408,12 +409,18 @@ class Event < ApplicationRecord
       .find { |opens_at| opens_at > at }
   end
 
-  # A training day's sign-in window (day start − lead through the day's end),
-  # narrowed to the event's CE timesheet window. Nil when nothing of the day is left.
+  # A training day's sign-in window: the timesheet's opening offset applied to that
+  # day's start (kept within the day), through the day's end or the timesheet's close.
+  # Nil when nothing of the day is left.
   def attendance_sign_in_window(date)
-    opens_at = [ daily_start_at(date) - ATTENDANCE_SIGN_IN_LEAD, ce_timesheet_opens_at ].compact.max
+    day_start = daily_start_at(date)
+    opens_at = [ day_start + attendance_sign_in_offset, day_start.beginning_of_day ].max
     closes_at = [ daily_end_at(date) || daily_start_at(date).end_of_day, ce_timesheet_closes_at ].compact.min
     opens_at..closes_at if ce_timesheets_enabled? && opens_at < closes_at
+  end
+
+  def attendance_sign_in_offset
+    ce_timesheet_opens_offset_minutes&.minutes || -ATTENDANCE_SIGN_IN_LEAD
   end
 
   def ce_timesheet_opens_at

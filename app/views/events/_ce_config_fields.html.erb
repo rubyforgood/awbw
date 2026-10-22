@@ -47,7 +47,7 @@
       <%= f.select :ce_timesheet_opens_offset_minutes, Event::CE_TIMESHEET_OPENS_OFFSETS.invert,
             { include_blank: "As soon as CE is paid" },
             class: "w-full rounded border-gray-300 shadow-sm px-3 py-2 bg-white focus:ring-blue-500 focus:border-blue-500" %>
-      <p class="mt-1 text-xs text-gray-500">Daily sign-in still opens no earlier than 30 minutes before each day's start.</p>
+      <p class="mt-1 text-xs text-gray-500">Sign-in opens the same way on each training day, no earlier than midnight. Left blank, it opens 30 minutes before each day's start.</p>
     </div>
     <div>
       <%= f.label :ce_timesheet_closes_at_date, class: "block text-xs font-medium text-gray-600 mb-1" do %>
