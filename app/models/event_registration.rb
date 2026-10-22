@@ -46,7 +46,10 @@ class EventRegistration < ApplicationRecord
   before_create :generate_slug
   before_save :capture_pre_transfer_status, if: :becoming_transferred_out?
   after_update :release_scholarships, if: :status_changed_to_cancelled?
-  after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?
+  after_commit :send_cancellation_emails, if: :status_changed_to_cancelled?, unless: :skip_cancellation_emails
+
+  # Set by the spreadsheet importer, which records historical cancellations silently.
+  attr_accessor :skip_cancellation_emails
 
   ACTIVE_STATUSES = %w[ registered attended incomplete_attendance ].freeze
   INACTIVE_STATUSES = %w[ cancelled no_show transferred_out ].freeze
