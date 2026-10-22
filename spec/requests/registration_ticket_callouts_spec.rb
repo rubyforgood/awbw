@@ -155,6 +155,28 @@ RSpec.describe "Callout inline form", type: :request do
     end
   end
 
+  describe "change attribution" do
+    let(:survey) { create(:form, role: "day_1_survey") }
+    let!(:anon) do
+      create(:form_field, form: survey, answer_type: :single_select_radio, name: "Anonymity?",
+        field_identifier: "anonymous_contributions")
+    end
+    let(:survey_callout) { create(:registration_ticket_callout, event:, form: survey) }
+
+    it "records the profile write-through against the callout's submission" do
+      tracked = []
+      allow_any_instance_of(Ahoy::Tracker).to receive(:track) { |_tracker, name, props| tracked << [ name, props ] }
+
+      post registration_callout_form_submit_path(registration.slug, survey_callout, survey), params: {
+        callout_form: { form_fields: { anon.id.to_s => Person::ANONYMOUS_CONTRIBUTIONS_OPTIONS[true] } }
+      }
+
+      profile_writes = tracked.select { |name, _| name.in?(%w[update.person profile.anonymous_contributions]) }
+      expect(profile_writes.map(&:first)).to include("update.person", "profile.anonymous_contributions")
+      expect(profile_writes.map { |_name, props| props[:form_submission_id] }.uniq).to eq([ FormSubmission.last.id ])
+    end
+  end
+
   describe "the generic event-scoped page" do
     it "shows a preview note instead of the interactive form" do
       get event_registration_ticket_callout_path(event, callout, reg: registration.slug)
