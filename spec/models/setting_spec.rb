@@ -227,6 +227,19 @@ RSpec.describe Setting do
     end
   end
 
+  describe ".import_user" do
+    it "is the user the row points at" do
+      user = create(:user)
+      Setting.create!(import_user: user)
+
+      expect(described_class.import_user).to eq(user)
+    end
+
+    it "is blank until an admin picks someone" do
+      expect(described_class.import_user).to be_nil
+    end
+  end
+
   describe "validations" do
     it "rejects a malformed email" do
       setting = described_class.new(info_email: "not-an-email")

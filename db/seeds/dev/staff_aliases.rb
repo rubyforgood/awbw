@@ -66,15 +66,16 @@ end
 
 StaffAlias.find_or_initialize_by(name: "admin").update!(user: admin, ignored: false)
 
-# The shared account a row is credited to when its staff name resolves to no one.
-awbw_staff = User.find_or_create_by!(email: PersonServices::ImportFromRolodex::AWBW_STAFF_EMAIL) do |record|
+# The user an import credits when its source names no one we can resolve (Setting.import_user).
+import_user = User.find_or_create_by!(email: "awbw.staff@example.com") do |record|
   record.password = "password"
   record.super_user = false
   record.confirmed_at = Time.current
 end
-unless awbw_staff.person
-  person = Person.create!(first_name: "AWBW", last_name: "Staff", email: PersonServices::ImportFromRolodex::AWBW_STAFF_EMAIL, created_by: admin, updated_by: admin)
-  awbw_staff.update!(person: person)
+unless import_user.person
+  person = Person.create!(first_name: "AWBW", last_name: "Staff", email: import_user.email, created_by: admin, updated_by: admin)
+  import_user.update!(person: person)
 end
+(Setting.first || Setting.new).update!(import_user:)
 
 puts "  #{StaffAlias.resolving.count} staff names resolve, #{StaffAlias.ignored.count} name no one"

@@ -44,8 +44,6 @@ module PersonServices
     EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
-    # The shared login a person is credited to when the archive names no staffer we can resolve.
-    AWBW_STAFF_EMAIL = "info@awbw.org".freeze
 
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
     # Both primary fields can name either kind of tag, so each kind reads the same two
@@ -69,11 +67,7 @@ module PersonServices
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
       @staff = StaffTranslation.new
-      @awbw_staff_id = self.class.awbw_staff_id
-    end
-
-    def self.awbw_staff_id
-      User.where(email: AWBW_STAFF_EMAIL).pick(:id) || Person.find_by(email: AWBW_STAFF_EMAIL)&.user&.id
+      @import_user_id = Setting.import_user&.id
     end
 
     def call
@@ -251,11 +245,11 @@ module PersonServices
     end
 
     # The staff FileMaker recorded as entering and last changing the row (StaffAlias), or
-    # the shared AWBW Staff account when the archive names no one we can resolve, so every
+    # the settings' import user when the archive names no one we can resolve, so every
     # person carries both stamps. A linked person keeps any stamps they already have.
     def archive_stamps(data)
-      { created_by_id: @staff.user_id_for(data["EnteredBy"]) || @awbw_staff_id,
-        updated_by_id: @staff.user_id_for(data["ModifiedBy"]) || @awbw_staff_id }.compact
+      { created_by_id: @staff.user_id_for(data["EnteredBy"]) || @import_user_id,
+        updated_by_id: @staff.user_id_for(data["ModifiedBy"]) || @import_user_id }.compact
     end
 
     # The archive's own entry and modification dates, so an imported person dates from

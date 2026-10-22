@@ -22,8 +22,8 @@ namespace :fm do
     if TagAlias.none?
       abort "No tag aliases recorded — run bin/rails data:seed_tag_aliases first, or every legacy term lands in the unmatched report."
     end
-    unless PersonServices::ImportFromRolodex.awbw_staff_id
-      abort "No portal login for #{PersonServices::ImportFromRolodex::AWBW_STAFF_EMAIL} — the AWBW Staff account a person is credited to when FileMaker names no staffer we can resolve."
+    unless Setting.import_user
+      abort "No import user chosen — pick one on /admin/settings (Imports); it's credited as created_by/updated_by when FileMaker names no staffer we can resolve."
     end
 
     dry_run = ENV["DRY_RUN"] != "false"
