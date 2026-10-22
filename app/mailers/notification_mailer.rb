@@ -110,12 +110,11 @@ class NotificationMailer < ApplicationMailer
 
   def story_promoted(notification)
     @story = notification.noticeable.decorate
-    @story_idea = @story.story_idea
-    @user = @story_idea&.created_by || @story.created_by
+    @recipient_name = notification.person&.first_name.presence || notification.recipient_email
 
     mail(
       to: notification.recipient_email,
-      subject: "#{SUBJECT_PREFIX} Your story idea is now a story"
+      subject: "#{SUBJECT_PREFIX} Your story is live on Story Share"
     )
   end
 

@@ -368,7 +368,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     let(:story_idea) { create(:story_idea, created_by: submitter) }
     let(:story) { create(:story, :published, story_idea: story_idea, title: "A Healing Story") }
     let(:notification) do
-      create(:notification, kind: "story_promoted", noticeable: story,
+      create(:notification, kind: "story_promoted", noticeable: story, person: submitter.person,
              recipient_role: "person", recipient_email: submitter.email)
     end
 
@@ -380,8 +380,8 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(described_class.story_promoted(notification).to).to eq([ submitter.email ])
     end
 
-    it "uses the story-idea subject" do
-      expect(described_class.story_promoted(notification).subject).to eq("AWBW Portal: Your story idea is now a story")
+    it "announces the story is live on Story Share in the subject" do
+      expect(described_class.story_promoted(notification).subject).to eq("AWBW Portal: Your story is live on Story Share")
     end
 
     it "names the story and greets the submitter by first name" do
@@ -391,8 +391,24 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(body).to include("now live on Story Share")
     end
 
-    it "links to the story when it is published" do
-      expect(described_class.story_promoted(notification).body.encoded).to include("View story")
+    it "links to the story on Story Share when it is published" do
+      body = described_class.story_promoted(notification).body.encoded
+      expect(body).to include("View story")
+      expect(body).to include(story_share_url(story))
+      expect(body).not_to include(story_url(story))
+    end
+
+    context "when the story was created directly for an author" do
+      let(:author) { create(:person, first_name: "Rosa") }
+      let(:story) { create(:story, :published, author: author, title: "A Healing Story") }
+      let(:notification) do
+        create(:notification, kind: "story_promoted", noticeable: story, person: author,
+               recipient_role: "person", recipient_email: author.preferred_email)
+      end
+
+      it "greets the author by first name" do
+        expect(described_class.story_promoted(notification).body.encoded).to include("Hello <strong>Rosa</strong>")
+      end
     end
 
     context "when the story is neither published nor publicly visible" do

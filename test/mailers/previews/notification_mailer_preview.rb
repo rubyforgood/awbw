@@ -189,6 +189,7 @@ class NotificationMailerPreview < ActionMailer::Preview
         noticeable: story,
         notification_type: 0,
         kind: "story_promoted",
+        person: user&.person,
         recipient_role: "person",
         recipient_email: user&.email || "preview@example.com"
       )

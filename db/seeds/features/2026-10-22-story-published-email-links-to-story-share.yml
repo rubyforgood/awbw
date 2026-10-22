@@ -1,0 +1,12 @@
+name: "Story-published email links to Story Share and reaches authors"
+area: stories
+display_status: user_facing
+released_on: 2026-10-22
+pr_number: 2780
+summary: >-
+  When a story is first published, the "your story is live" email now links to the story on
+  Story Share. Stories an admin creates directly (not from a story idea) now send it to their
+  credited authors too.
+pro_tips:
+  - "Stories created directly email the author and second author; a story with no author sends nothing."
+  - "Funder-only stories don't send this email, since they never appear on Story Share."

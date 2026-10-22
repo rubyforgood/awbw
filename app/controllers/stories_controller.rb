@@ -83,7 +83,7 @@ class StoriesController < ApplicationController
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@story)
         end
-        notify_story_promoted if just_published
+        notify_story_published if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -112,7 +112,7 @@ class StoriesController < ApplicationController
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
         end
-        notify_story_promoted if just_published
+        notify_story_published if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -176,19 +176,38 @@ class StoriesController < ApplicationController
 
   private
 
-  def notify_story_promoted
-    return unless @story.story_idea
+  def notify_story_published
     return if @story.notifications.exists?(kind: %w[story_promoted story_promoted_fyi])
 
-    if (submitter = @story.story_idea.created_by)
+    notify_story_authors unless @story.funder_only?
+    notify_story_promoted_fyi if @story.story_idea
+  end
+
+  def notify_story_authors
+    story_author_recipients.each do |recipient|
       NotificationServices::CreateNotification.call(
         noticeable: @story,
-        person: submitter.person,
+        person: recipient[:person],
         kind: :story_promoted,
         recipient_role: :person,
-        recipient_email: submitter.email,
+        recipient_email: recipient[:email],
         notification_type: 0)
     end
+  end
+
+  # A promoted story goes to the idea's submitter; a story created directly goes to its credited authors.
+  def story_author_recipients
+    if @story.story_idea
+      submitter = @story.story_idea.created_by
+      return submitter ? [ { person: submitter.person, email: submitter.email } ] : []
+    end
+
+    [ @story.author, @story.co_author ].compact
+      .filter_map { |person| { person: person, email: person.preferred_email } if person.preferred_email }
+      .uniq { |recipient| recipient[:email].downcase }
+  end
+
+  def notify_story_promoted_fyi
     NotificationServices::CreateNotification.call(
       noticeable: @story,
       kind: :story_promoted_fyi,
