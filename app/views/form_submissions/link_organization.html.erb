@@ -95,6 +95,21 @@
         <p class="text-gray-500 mb-4">No organization linked — the person has no active affiliation matching the submitted name.</p>
       <% end %>
 
+      <% link_effects = @form_submission.decorate.link_organization_effects %>
+      <% if link_effects.any? %>
+        <div class="mb-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+          <p class="flex items-center gap-1.5 font-semibold">
+            <i class="fa-solid fa-circle-info"></i>
+            Linking an organization here also:
+          </p>
+          <ul class="mt-1 list-disc list-inside space-y-0.5">
+            <% link_effects.each do |effect| %>
+              <li><%= effect %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
       <%= render "shared/link_organization_actions",
                  select_url: select_organization_form_submission_path(@form_submission),
                  create_url: create_organization_form_submission_path(@form_submission),
