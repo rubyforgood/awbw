@@ -82,7 +82,7 @@ class FormSubmissionChanges
 
   def relevant_events
     Ahoy::Event
-      .where("properties->>'$.form_submission_id' = ?", @form_submission.id.to_s)
+      .where("properties->>'$.#{Analytics::LifecycleBuffer::FORM_SUBMISSION_KEY}' = ?", @form_submission.id.to_s)
       .order(:time, :id)
       .select { |event| event.properties["resource_type"].in?(RELEVANT_TYPES) }
   end

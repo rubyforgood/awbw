@@ -10,7 +10,7 @@ first_names = %w[
   Priya Quincy Rosa Sana Theo Uma Vale Wes Xena Yara Zoe Amir Bree Cato Del
 ].freeze
 
-standard = Membership::ANNUAL_COST_CENTS
+standard = Membership.annual_cost_cents
 
 pay = ->(invoice, cents) do
   payment = CashPayment.create!(

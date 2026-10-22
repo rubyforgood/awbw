@@ -19,6 +19,6 @@ class IssueMembershipInvoicesJob < ApplicationJob
       .joins(:membership)
       .preload(:membership, :allocations)
       .where(memberships: { autorenewal_cancelled_at: nil })
-      .expiring_between(Date.current, Date.current + Membership::RENEWAL_WINDOW_DAYS)
+      .expiring_between(Date.current, Date.current + Membership.renewal_window_days)
   end
 end

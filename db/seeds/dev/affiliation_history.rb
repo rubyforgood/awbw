@@ -122,7 +122,7 @@ else
 
     [ 6, 4, 3, 0 ].each_with_index do |years_ago, index|
       invoice = subscription.membership_invoices.create!(
-        start_date: year.(years_ago), cost_cents: Membership::ANNUAL_COST_CENTS
+        start_date: year.(years_ago), cost_cents: Membership.annual_cost_cents
       )
       invoice.update_columns(created_at: year.(years_ago), updated_at: year.(years_ago))
 
@@ -137,11 +137,11 @@ else
 
       paid_at = year.(years_ago) + (index == 2 ? 70 : 9).days
       payment = CashPayment.create!(
-        person: person, amount_cents: Membership::ANNUAL_COST_CENTS,
-        amount_cents_remaining: Membership::ANNUAL_COST_CENTS, currency: "usd"
+        person: person, amount_cents: Membership.annual_cost_cents,
+        amount_cents_remaining: Membership.annual_cost_cents, currency: "usd"
       )
       payment.update_columns(created_at: paid_at, updated_at: paid_at)
-      Allocation.create!(source: payment, allocatable: invoice, amount: Membership::ANNUAL_COST_CENTS)
+      Allocation.create!(source: payment, allocatable: invoice, amount: Membership.annual_cost_cents)
       track.("create", payment, paid_at, { resource_title: "Membership dues #{year.(years_ago).year}" })
     end
 

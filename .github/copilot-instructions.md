@@ -187,8 +187,9 @@ template abstraction.
   (`class: "text-sm #{eyebrow_link_class} px-2 py-1"`).
 - **Shared partial** — when the repeated thing is markup (icon + text + structure), not just a
   class list.
-- **`@apply` is reserved** for genuine element/base styles (e.g. `.btn` in
-  `components/buttons.css`), not for extracting repeated utility clusters.
+- **`@apply` is reserved** for genuine element/base styles (e.g. `.default-link a` and
+  the `.optional` form-field rules in `app/frontend/stylesheets/application.tailwind.css`),
+  not for extracting repeated utility clusters.
 
 ## HTML/ERB Formatting
 

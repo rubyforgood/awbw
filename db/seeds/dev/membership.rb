@@ -7,7 +7,7 @@
 puts "Creating membership management scenarios…"
 
 admin = User.find_by!(email: "umberto.user@example.com")
-standard = Membership::ANNUAL_COST_CENTS
+standard = Membership.annual_cost_cents
 domain = "membershipdemo.seed.example.com"
 
 member = ->(email:, first:, last:) do

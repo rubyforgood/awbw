@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe MembershipDecorator, type: :decorator do
-  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership.annual_cost_cents) }
 
   describe "#cost_label" do
     it "names the standard cost when there is no override" do

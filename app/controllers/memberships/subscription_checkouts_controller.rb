@@ -38,7 +38,7 @@ module Memberships
           price_data: {
             currency: "usd",
             product_data: { name: "AWBW annual membership" },
-            unit_amount: membership.cost_cents || Membership::ANNUAL_COST_CENTS,
+            unit_amount: membership.cost_cents || Membership.annual_cost_cents,
             recurring: { interval: "year" }
           },
           quantity: 1

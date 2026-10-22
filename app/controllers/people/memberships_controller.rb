@@ -17,7 +17,7 @@ module People
       @membership = @person.memberships.build
       @membership.membership_invoices.build(
         start_date: Date.current,
-        cost_cents: Membership::ANNUAL_COST_CENTS
+        cost_cents: Membership.annual_cost_cents
       )
     end
 

@@ -194,8 +194,9 @@ module Ahoy
     # record references (association changes, associated records) become links to
     # the record's show page so admins can jump straight to it.
     def detail_rows
-      rows = extra_properties.except("changes", Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY)
-      [ change_request_row, *(flatten_rows(rows) if rows.present?) ].compact
+      rows = extra_properties.except("changes", Analytics::LifecycleBuffer::FORM_SUBMISSION_KEY,
+                                      Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY)
+      [ change_request_row, form_submission_row, *(flatten_rows(rows) if rows.present?) ].compact
     end
 
     private
@@ -536,6 +537,16 @@ module Ahoy
       text = safe_label(record) || item["label"].presence || "#{type} ##{id}"
       { label: label, depth: depth, action: item["action"],
         link: { text: text, path: show_path_for(record) } }
+    end
+
+    # The form submission a form-driven write was stamped with, linked to its own page.
+    def form_submission_row
+      type, id = Analytics::EventReferenceLoader.form_submission_pair(properties_hash)
+      return unless id
+
+      submission = find_referenced_record(type, id)
+      { label: "From form submission", depth: 0,
+        link: { text: submission&.title || "Form submission ##{id}", path: show_path_for(submission) } }
     end
 
     # A model's own title/name can raise on records it wasn't written for, and a

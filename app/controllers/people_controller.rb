@@ -198,7 +198,7 @@ class PeopleController < ApplicationController
         price_data: {
           currency: "usd",
           product_data: {
-            name: "Donation to A Window Between Worlds"
+            name: "Donation to #{Setting.app_organization_name}"
           },
           unit_amount: amount
         },
@@ -521,10 +521,10 @@ class PeopleController < ApplicationController
     duplicate_ids = Set.new
 
     # Entered emails (primary + secondary) drive both email matching and match
-    # classification. example.com addresses are seed/placeholder data, so they're
+    # classification. Placeholder-domain addresses are seed data, so they're
     # excluded from the DB lookup.
     entered_emails = [ email, email_2 ].filter_map { |e| e.presence&.downcase }.uniq
-    query_emails = entered_emails.reject { |e| e.end_with?("@example.com") }
+    query_emails = entered_emails.reject { |e| PlaceholderEmail.domain_address?(e) }
 
     # Entered first-name forms: the first name and legal first name, normalized.
     # Normalize removes periods and extra whitespace: "J. R." -> "jr".

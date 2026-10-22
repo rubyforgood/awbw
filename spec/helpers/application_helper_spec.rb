@@ -777,4 +777,11 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.badge_classes("bg-blue-50", padding: "px-5 py-0.5")).to include("px-5 py-0.5")
     end
   end
+  describe "#tel_href" do
+    it "renders a dialable href whatever the number looks like" do
+      expect(helper.tel_href("(310) 555-0100")).to eq("tel:+13105550100")
+      expect(helper.tel_href("310-555-0100")).to eq("tel:+13105550100")
+      expect(helper.tel_href("+44 20 7946 0018")).to eq("tel:+442079460018")
+    end
+  end
 end

@@ -2,7 +2,7 @@
 
 # Create a 2/1/2027 membership for every person with an active facilitator
 # affiliation, priced by the size of the org they facilitate at:
-#   bucket 1 (1 active facilitator)  -> app-wide default (Membership::ANNUAL_COST_CENTS)
+#   bucket 1 (1 active facilitator)  -> app-wide default (Membership.annual_cost_cents)
 #   bucket 2-3 (2-3 facilitators)    -> $50/yr
 #   bucket 4+ (4+ facilitators)      -> $20/yr
 #
@@ -83,7 +83,7 @@ namespace :data do
         membership = person.memberships.create!(cost_cents: cost_cents)
         Membership::EnsureInvoice.call(membership: membership, covering: covering)
         created[bucket] += 1
-        puts "  + #{person.id} #{person.full_name}: bucket #{bucket}, #{MoneyFormatter.dollars_from_cents(membership.cost_cents || Membership::ANNUAL_COST_CENTS)} (#{covering.iso8601})"
+        puts "  + #{person.id} #{person.full_name}: bucket #{bucket}, #{MoneyFormatter.dollars_from_cents(membership.cost_cents || Membership.annual_cost_cents)} (#{covering.iso8601})"
       end
 
       raise ActiveRecord::Rollback if dry_run

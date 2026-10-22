@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~144 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~127 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~138 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 23 concerns |
 
@@ -61,7 +61,7 @@ This codebase (Rails 8.1)
 | `app/views/` | ERB templates | ~824 files |
 | `app/decorators/` | Draper decorators for view logic | ~50 files |
 | `app/policies/` | ActionPolicy authorization rules | ~63 files |
-| `app/presenters/` | Presentation objects | 6 files |
+| `app/presenters/` | Presentation objects | 8 files |
 | `app/helpers/` | View helpers | ~50 files |
 | `app/mailers/` | ActionMailer classes | 6 files |
 | `app/inputs/` | Custom SimpleForm inputs | 1 file |
@@ -92,6 +92,7 @@ This codebase (Rails 8.1)
 
 | Model | Purpose |
 |---|---|
+| `Setting` | The single row of app-wide settings, edited at `/admin/settings`: which `Organization` this portal runs as (`app_organization`), the four mailboxes (`info_email` → `programs_email` → `reply_to_email`, plus `no_reply_email`), the contact page's `contact_attention` line, the CE certificate block (`ce_administrator` + `ce_administrator_title` on the signature line, `ce_provider_number` with the `ce_accreditation_abbreviation` the accreditor's required wording prints, plus the accreditor's `ce_accreditation_body` and `ce_accreditation_url` for callout copy), the `organization_website` (off the organization's own `website_url`) and `organization_phone` (off the chosen return address), the fixed `placeholder_email_domain`, the `return_address` / `remittance_address` the invoice header and cheque instructions use (FK references to `Address` records chosen from the app org, falling back to its oldest address flagged for invoices), the invoice number prefix, and the membership price plus the renewal window. Every class-level reader falls back to ENV and then a built-in default, so a blank field means "use the deployment's value" and a deployment with no row behaves exactly as before. `singleton` is a constant true behind a unique index, which is how MySQL caps the table at one row. `Setting.current` is memoized per request because the mailbox is read by a footer on every page; the memo is cleared `after_commit`. Reads go through a private `stored` helper that returns nil when the schema is behind the code, since the devise initializer reads a mailbox while booting. Read by `InvoiceIssuer`, `Invoice.next_number`, `Membership.annual_cost_cents` / `.renewal_window_days`, `Grant.self_funded_ids`, the contact page and the story-share footer |
 | `User` | Devise authentication, SearchCop search, super_user admin flag |
 | `Workshop` | Core content: rich text fields, categories, sectors, bookmarks, variations |
 | `Event` | Events with registrations, featured/published states |
@@ -238,6 +239,7 @@ or symbol. So write `authorize! @setting` in `show` (not `authorize! @setting, t
 - `RegistrantAttendanceSheet` — The registrant-facing counterpart to `EventAttendanceReport`: one registrant's training days, their decorated sessions on each, day/overall totals, and the state the CE callout's sign-in/out controls read (`signed_in?`, `open_entry`, `forgotten_entry`, `window_open?`). Built once per registration and rendered once per paid `ContinuingEducationRegistration` — the times are shared across licences (one person, one room, one set of hours), only the sheet's licence header differs
 - `EventAttendanceEntriesUpdate` — Applies a batch of submitted sign-in/out rows to one `EventRegistration`'s `event_attendance_time_entries` (add/correct/remove through nested attributes) and stamps `created_by`/`updated_by` with the editing admin — `editor: nil` for the registrant's own edits, which stay unattributed. Shared by the CE edit form (`ContinuingEducationRegistrationsController#update`, datetime rows across every day), the attendance report's inline per-day editor (`EventRegistrationsController#update_attendance`) and the registrant's own per-day editor (`Events::CalloutsController#update_ce_attendance`)
 - `AttendanceDayRows` — Parses one training day's submitted `attendance[entries][i][in|out|id|_destroy]` rows into attendance-entry attributes, binding each clock time to that day. Shared by the admin report's per-day editor and the registrant's own editor on the CE callout (both render `events/_attendance_day_form`); `.date_from` resolves the day param, nil when unparseable
+- `PlaceholderEmail` — The numbered "no address on file" stand-in (`1@example.com`) two people who share a name fall back to when neither holds an email. One module owns the whole shape — the address (`.at`/`.first`), the Ruby match (`.pattern`/`.match?`/`.number_in`), the MySQL `REGEXP` the `Person.placeholder_email` scope filters on (`.sql_pattern`), and `.domain_address?` for the duplicate checks that skip seeded addresses — all derived from `Setting.placeholder_email_domain`, so the domain is set in one place
 - `AttendanceTimeFormatter` — Renders an attendance time as a clock time ("9:02 AM") and a minutes count as "6h 51m", so the report, callout, decorator, and flash notices all read the same. `EventAttendanceHelper` is the view-side front door; decorators and other callers without a dependable view context call it directly (same split as `MoneyFormatter`/`dollars_from_cents`)
 - `DripDate` — Callout drip dates are instants: an admin sets one in their own zone and every viewer sees it translated into theirs. `DripDate.label` is the one formatter for every "Available …" date (callout page, linked forms, videoconference checklist, calendar entry), adding the clock time ("at 9 AM PDT", minutes only when non-zero) unless it's the viewer's midnight; `DripDate.cast` backs `RegistrationTicketCallout#display_from=` so re-saving the editor's date-only field never moves a stored drip
 - `ScholarshipApplication` — Gathers one person's scholarship-application answers for an event by field across all their submissions, so answers surface whether captured on a dedicated scholarship form, an embedded registration section, or the registration submission itself (used by the scholarship edit page and the public submission view)
@@ -276,6 +278,7 @@ or symbol. So write `authorize! @setting` in `show` (not `authorize! @setting, t
 - `ScholarshipsGrouping` (presenter) — Groups scholarships into the index's funder → grant → recipient hierarchy; grant-free awards collect under a trailing "Unfunded" group
 - `RegistrantCityBreakdown` (presenter) — Groups an event's registrants by the city of the org linked on their registration, counting registrants + scholarship recipients per city; drives the shared "Registrants by city" card inside `events/_registrant_breakdowns` on all three people-pages — per-event roster, cross-event attendees index, and scholarship recipients (fed plucked data by `EventDashboard` or `AttendeesBreakdowns`)
 - `AllocationLedgerLabel` (presenter) — Shared payment-method/label + check-number labelling for an allocation, used by the invoice and receipt ledgers so they can't drift
+- `InvoiceIssuer` (presenter) — Single source of truth for the issuing org's invoice/receipt header (name, address, email, tax id, payable-to note), shared by `EventInvoice`, `EventReceipt`, and `InvoicePresenter`. Name and tax id come from `Setting.app_organization`; the addresses and email are app-wide settings. `#address_lines` / `#remittance_address_lines` delegate to `Setting`, which reads the `Address` the row points at (`return_address` / `remittance_address`) and otherwise falls back to the app org's oldest address flagged for invoices (`Address.display_lines_for`); there are no hard-coded address literals. The email is `Setting.info_email`. The header carries the return address; `#remittance_address_lines` is the separate address cheques are mailed to, printed under the payable-to line on both invoices and on the pay-by-check callout
 
 ### Event Registrations
 

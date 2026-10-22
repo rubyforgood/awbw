@@ -363,4 +363,28 @@ RSpec.describe ModelDeduper do
       expect(service.lost_references(workshop)).to eq([])
     end
   end
+
+  describe "merging owners that each marked an invoice address" do
+    subject(:service) do
+      described_class.new(model_class: Organization, logger: logger, dry_run: false, min_usage: 0)
+    end
+
+    let(:keep) { create(:organization) }
+    let(:delete) { create(:organization) }
+
+    def flagged_address(owner, street)
+      create(:address, addressable: owner, street_address: street, city: "Springfield",
+                       state: "IL", zip_code: "62704", invoice_address: true)
+    end
+
+    it "moves the merged copy across with its flag intact" do
+      kept = flagged_address(keep, "1 Keep St")
+      moved = flagged_address(delete, "9 Delete Rd")
+
+      service.merge(keep, delete)
+
+      expect(moved.reload.addressable).to eq(keep)
+      expect(keep.addresses.reload.for_invoices).to contain_exactly(kept, moved)
+    end
+  end
 end

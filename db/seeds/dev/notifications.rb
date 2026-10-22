@@ -190,7 +190,7 @@ amy_person = User.find_by(email: "amy.user@example.com")&.person
 
 if amy_person && amy_person.preferred_email.present?
   amy_email = amy_person.preferred_email
-  organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+  organization = Setting.app_organization_name
 
   # Distinct admin-authored messages; paired with separate event registrations so
   # each notification is naturally unique on (noticeable, kind) and idempotent on

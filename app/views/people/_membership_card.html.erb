@@ -58,7 +58,7 @@
         <% elsif membership&.autorenewal_cancelled? %>
           <p class="text-sm text-gray-700">Contact us to renew your membership.</p>
         <% else %>
-          <p class="mb-3 text-sm text-gray-700">Set up your membership to renew automatically each year at <%= dollars_from_cents(membership&.cost_cents || Membership::ANNUAL_COST_CENTS) %>.</p>
+          <p class="mb-3 text-sm text-gray-700">Set up your membership to renew automatically each year at <%= dollars_from_cents(membership&.cost_cents || Membership.annual_cost_cents) %>.</p>
           <%# Turbo can't follow the cross-origin redirect to Stripe Checkout. %>
           <%= button_to "Set up automatic renewal", memberships_subscription_checkouts_path,
                         class: button_classes(:primary),

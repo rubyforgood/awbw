@@ -412,7 +412,7 @@ module EventRegistrationServices
         noticeable: event_registration,
         kind: :event_registration_confirmation_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0
       )
     end
@@ -432,7 +432,7 @@ module EventRegistrationServices
         noticeable: event_registration,
         kind: :event_registration_duplicate_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         custom_message: changes.to_message,
         notification_type: 1
       )
