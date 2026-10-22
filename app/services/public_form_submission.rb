@@ -174,7 +174,7 @@ class PublicFormSubmission
   # Reuses an existing Person on an email + last-name match so a returning
   # respondent isn't duplicated; nil when the form didn't collect name + email.
   def find_or_create_person
-    first_name = field_value("first_name")&.strip
+    first_name = field_value("first_name")&.strip.presence || field_value("legal_first_name")&.strip
     last_name = field_value("last_name")&.strip
     email = field_value("primary_email")&.strip&.downcase
     return nil if email.blank? || first_name.blank? || last_name.blank?

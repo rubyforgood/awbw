@@ -229,6 +229,24 @@ RSpec.describe PublicFormSubmission do
       expect(person.first_name).to eq("Sammy")
       expect(person.legal_first_name).to eq("Sam")
     end
+
+    it "saves a legal first name answer onto the person" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Samantha")).person
+
+      expect(person.first_name).to eq("Sam")
+      expect(person.legal_first_name).to eq("Samantha")
+    end
+
+    it "overwrites the legal first name of an existing matched person" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Sam", legal_first_name: "Old", last_name: "Rivera", email: "sam@example.com")
+
+      described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Samantha"))
+
+      expect(existing.reload.legal_first_name).to eq("Samantha")
+    end
   end
 
   describe "organization capture (parity with the event registration form)" do

@@ -166,7 +166,7 @@ module EventRegistrationServices
     end
 
     def resolve_names
-      submitted_first = field_value("first_name")&.strip
+      submitted_first = field_value("first_name")&.strip.presence || field_value("legal_first_name")&.strip
       nickname = field_value("nickname")&.strip
 
       if nickname.present?
@@ -199,10 +199,10 @@ module EventRegistrationServices
       )
     end
 
-    # Accepts either the typed first name or the nickname so a returning registrant
-    # who swaps their legal name and nickname still matches.
+    # Accepts the typed first name, nickname, or legal first name so a returning
+    # registrant who swaps their legal name and nickname still matches.
     def find_matching_person(last_name:, email:)
-      PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("nickname") ])
+      PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("nickname"), field_value("legal_first_name") ])
     end
 
     def record_news_subscription(person)
