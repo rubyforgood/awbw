@@ -41,6 +41,7 @@ module PersonServices
 
     def call
       apply_nickname
+      apply_value(@person, :legal_first_name, field_value("legal_first_name"))
       apply_value(@person, :pronouns, field_value("pronouns"))
       apply_value(@person, :pronunciation, field_value("pronunciation"))
       apply_value(@person, :email_type, field_value("primary_email_type")&.downcase)

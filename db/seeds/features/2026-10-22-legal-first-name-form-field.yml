@@ -1,0 +1,11 @@
+name: "Collect a legal first name on forms"
+area: registration
+display_status: admin_facing
+released_on: 2026-10-22
+action_path: "/forms/smart_form_settings"
+summary: >-
+  A question with the field identifier "legal_first_name" now saves the answer to the person's
+  legal first name, on both event registrations and standalone forms.
+pro_tips:
+  - "Pair it with a First name question to collect both the name someone goes by and their legal name."
+  - "Returning registrants are also recognized by their legal first name."
