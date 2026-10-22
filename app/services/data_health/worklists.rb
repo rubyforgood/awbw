@@ -24,12 +24,12 @@ module DataHealth
 
     def duplicates
       [
-        Entry.new("People", PersonServices::DuplicateFinder.new.groups.size, "group", dedupe_index_people_path),
-        Entry.new("Organizations", OrganizationServices::DuplicateFinder.new.groups.size, "group", dedupe_index_organizations_path),
-        Entry.new("Workshops", WorkshopServices::DuplicateFinder.new.groups.size, "group", dedupe_index_workshops_path),
-        Entry.new("Event registrations", EventRegistrationServices::DuplicateFinder.new.groups.size, "group", dedupe_index_event_registrations_path),
-        Entry.new("Categories", Dedupable.name_groups(Category).size, "group", dedupe_index_categories_path),
-        Entry.new("Sectors", Dedupable.name_groups(Sector).size, "group", dedupe_index_sectors_path)
+        Entry.new("People", group_count(Person, PersonServices::DuplicateFinder.new.groups), "group", dedupe_index_people_path),
+        Entry.new("Organizations", group_count(Organization, OrganizationServices::DuplicateFinder.new.groups), "group", dedupe_index_organizations_path),
+        Entry.new("Workshops", group_count(Workshop, WorkshopServices::DuplicateFinder.new.groups), "group", dedupe_index_workshops_path),
+        Entry.new("Event registrations", group_count(EventRegistration, EventRegistrationServices::DuplicateFinder.new.groups), "group", dedupe_index_event_registrations_path),
+        Entry.new("Categories", group_count(Category, Dedupable.name_groups(Category)), "group", dedupe_index_categories_path),
+        Entry.new("Sectors", group_count(Sector, Dedupable.name_groups(Sector)), "group", dedupe_index_sectors_path)
       ]
     end
 
@@ -44,6 +44,10 @@ module DataHealth
     end
 
     private
+
+    def group_count(model_class, groups)
+      NotDuplicateFilter.new(model_class).call(groups).size
+    end
 
     def author_credit_divergence_section_path(section)
       author_credit_divergences_path(section: section, anchor: "section-#{section}")

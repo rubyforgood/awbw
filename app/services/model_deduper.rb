@@ -390,6 +390,7 @@ class ModelDeduper
 
       reassign_polymorphic_references(primary, dupe)
       move_attachments(primary, dupe)
+      NotDuplicatePair.transfer!(from: dupe, to: primary)
 
       dupe.reload.destroy!
       logger.info "  deleted #{model_label} #{dupe.id}"

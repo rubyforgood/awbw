@@ -1,0 +1,14 @@
+name: "Mark possible duplicates as not duplicates"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-22
+pr_number: 2784
+action_path: "/people/dedupe_index"
+summary: >-
+  Each suggested group on a dedupe page now has a "Not duplicates" button. Once
+  you've checked a group and they're different records, they stop being
+  suggested together.
+pro_tips:
+  - "Works on every dedupe page: people, organizations, workshops, event registrations, logins, categories, and sectors."
+  - "The Data health duplicate counts leave out groups you've marked."
+  - "If a new record later matches one of them, the group can come back so you can review the newcomer."

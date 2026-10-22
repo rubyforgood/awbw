@@ -68,6 +68,12 @@
                   <%= group.label.presence || "(no name)" %>
                   <span class="font-normal text-gray-400">· <%= group.records.count %> <%= @dedupe[:model_label_plural].downcase %></span>
                 </h3>
+                <%= button_to "Not duplicates",
+                              url_for(action: :dedupe_dismiss),
+                              params: { record_ids: group.records.map(&:id) },
+                              form: { data: { turbo_confirm: "Mark these #{group.records.count} #{@dedupe[:model_label_plural].downcase} as not duplicates? They won't be suggested together again." } },
+                              title: "Stop suggesting these as duplicates of each other",
+                              class: button_classes(:secondary_outline, size: :sm, extra: "whitespace-nowrap") %>
               </div>
               <% if group.reasons.any? %>
                 <div class="mb-3 flex flex-wrap gap-1.5">

@@ -150,6 +150,18 @@ module Dedupable
       alert: "Error merging: #{e.message}"
   end
 
+  def dedupe_dismiss
+    authorize! :dedupe, to: :dedupe?
+    mc = dedupe_config[:model_class]
+    records = mc.where(id: Array(params[:record_ids])).to_a
+    label = mc.model_name.human.pluralize.downcase
+    return redirect_back_or_to url_for(action: :dedupe_index), alert: "Pick at least two #{label} to mark as not duplicates." if records.size < 2
+
+    NotDuplicatePair.mark!(records)
+    redirect_back_or_to url_for(action: :dedupe_index),
+      notice: "Marked #{records.size} #{label} as not duplicates. They won't be suggested together again."
+  end
+
   private
 
   # Where a merge started from outside the dedupe index returns to, with the params that carry it.
@@ -227,12 +239,11 @@ module Dedupable
   # Candidate duplicate groups for the index. A config may supply a
   # :candidate_finder (a callable returning objects that respond to #label,
   # #records, and #reasons — e.g. OrganizationServices::DuplicateFinder); without
-  # one, fall back to exact normalized-name grouping.
+  # one, fall back to exact normalized-name grouping. Pairs marked "Not duplicates" are left out.
   def dedupe_candidate_groups(config)
     finder = config[:candidate_finder]
-    return Array(finder.call) if finder
-
-    Dedupable.name_groups(config[:model_class])
+    groups = finder ? Array(finder.call) : Dedupable.name_groups(config[:model_class])
+    NotDuplicateFilter.new(config[:model_class]).call(groups)
   end
 
   def build_dedupe_vars(config)

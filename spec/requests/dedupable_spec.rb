@@ -228,6 +228,64 @@ RSpec.describe "Dedupable concern", type: :request do
         end
       end
     end
+    describe "POST dedupe_dismiss" do
+      let!(:first) { create(:category, name: "Same Name", category_type: category_type) }
+      let!(:second) { create(:category, category_type: category_type).tap { |category| category.update_column(:name, "same name") } }
+
+      context "as an admin" do
+        before { sign_in admin }
+
+        it "marks the group as not duplicates and stops suggesting it" do
+          get dedupe_index_categories_path
+          expect(response.body).to include("Possible duplicate groups (1)")
+
+          expect {
+            post dedupe_dismiss_categories_path, params: { record_ids: [ first.id, second.id ] },
+              headers: { "HTTP_REFERER" => dedupe_index_categories_url }
+          }.to change(NotDuplicatePair, :count).by(1)
+
+          expect(response).to redirect_to(dedupe_index_categories_url)
+          follow_redirect!
+          expect(response.body).to include("as not duplicates")
+          expect(response.body).not_to include("Possible duplicate groups")
+        end
+
+        it "credits the admin who marked them" do
+          post dedupe_dismiss_categories_path, params: { record_ids: [ first.id, second.id ] }
+
+          expect(NotDuplicatePair.last.created_by).to eq(admin)
+        end
+
+        it "refuses fewer than two records" do
+          expect {
+            post dedupe_dismiss_categories_path, params: { record_ids: [ first.id ] }
+          }.not_to change(NotDuplicatePair, :count)
+
+          expect(response).to redirect_to(dedupe_index_categories_path)
+        end
+
+        it "carries the marks over to the keeper on merge" do
+          third = create(:category, name: "Third", category_type: category_type)
+          NotDuplicatePair.mark!([ second, third ])
+
+          post dedupe_perform_categories_path, params: { category_to_delete_id: second.id, category_to_keep_id: first.id }
+
+          expect(NotDuplicatePair.pluck(:first_record_id, :second_record_id)).to eq([ [ first.id, third.id ] ])
+        end
+      end
+
+      context "as a regular user" do
+        before { sign_in regular_user }
+
+        it "denies access" do
+          expect {
+            post dedupe_dismiss_categories_path, params: { record_ids: [ first.id, second.id ] }
+          }.not_to change(NotDuplicatePair, :count)
+
+          expect(response).to redirect_to(root_path)
+        end
+      end
+    end
   end
 
   # ============================================================
@@ -533,6 +591,16 @@ RSpec.describe "Dedupable concern", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Same name")
+      end
+
+      it "leaves out people marked as not duplicates" do
+        jane = create(:person, first_name: "Jane", last_name: "Doe", email: "jane@example.com", user: nil)
+        twin = create(:person, first_name: "Jane", last_name: "Doe", email: "twin@example.com", user: nil)
+        NotDuplicatePair.mark!([ jane, twin ])
+
+        get dedupe_index_people_path
+
+        expect(response.body).to include("No likely duplicate people detected")
       end
     end
 

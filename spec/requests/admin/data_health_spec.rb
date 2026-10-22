@@ -216,6 +216,14 @@ RSpec.describe "Admin::DataHealth", type: :request do
       expect(response.body).to include("Author credit to review")
     end
 
+    it "leaves groups marked as not duplicates out of the counts" do
+      sign_in admin
+      workshops = create_list(:workshop, 2, title: "Anger Volcano")
+      NotDuplicatePair.mark!(workshops)
+
+      expect(DataHealth::Worklists.new.duplicates.find { |entry| entry.label == "Workshops" }.count).to eq(0)
+    end
+
     it "denies a non-admin" do
       sign_in create(:user)
 

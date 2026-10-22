@@ -1383,6 +1383,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_123103) do
     t.index ["organization_user_id"], name: "index_monthly_reports_on_organization_user_id"
   end
 
+  create_table "not_duplicate_pairs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "record_type", null: false
+    t.bigint "first_record_id", null: false
+    t.bigint "second_record_id", null: false
+    t.integer "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_not_duplicate_pairs_on_created_by_id"
+    t.index ["record_type", "first_record_id", "second_record_id"], name: "index_not_duplicate_pairs_on_type_and_records", unique: true
+    t.index ["record_type", "second_record_id"], name: "index_not_duplicate_pairs_on_record_type_and_second_record_id"
+  end
+
   create_table "notifications", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.boolean "bulk", default: false, null: false
     t.string "channel", default: "autoemail", null: false
@@ -2806,6 +2818,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_123103) do
   add_foreign_key "memberships", "users", column: "updated_by_id"
   add_foreign_key "monthly_reports", "affiliations", column: "organization_user_id"
   add_foreign_key "monthly_reports", "organizations"
+  add_foreign_key "not_duplicate_pairs", "users", column: "created_by_id"
   add_foreign_key "notifications", "notifications", column: "parent_notification_id"
   add_foreign_key "notifications", "notifications", column: "root_notification_id"
   add_foreign_key "notifications", "people"
