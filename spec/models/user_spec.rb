@@ -1,26 +1,6 @@
 require "rails_helper"
 
 RSpec.describe User do
-  describe ".awbw_staff" do
-    it "finds the AWBW Staff login by its email" do
-      staff = create(:user, email: User::AWBW_STAFF_EMAIL)
-
-      expect(described_class.awbw_staff).to eq(staff)
-    end
-
-    it "finds it through the AWBW Staff person when the login has another email" do
-      person = create(:person, first_name: "AWBW", last_name: "Staff")
-      staff = create(:user, email: "staff-login@example.com", person:)
-      person.update_columns(email: User::AWBW_STAFF_EMAIL)
-
-      expect(described_class.awbw_staff).to eq(staff)
-    end
-
-    it "is nil when there's no such account" do
-      expect(described_class.awbw_staff).to be_nil
-    end
-  end
-
   describe "starting a membership on invite" do
     let(:person) { create(:person) }
     let(:user) { create(:user, person: person) }

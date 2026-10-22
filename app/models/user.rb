@@ -96,14 +96,6 @@ class User < ApplicationRecord
   scope :has_access, -> { where(locked_at: nil, inactive: [ false, nil ]).where.not(confirmed_at: nil) }
   scope :invited, -> { where.not(welcome_instructions_sent_at: nil) }
 
-  # The shared AWBW Staff account — what an import credits when the source can't name a
-  # specific staffer, so every record it writes still says who it's attributed to.
-  AWBW_STAFF_EMAIL = "info@awbw.org".freeze
-
-  def self.awbw_staff
-    find_by(email: AWBW_STAFF_EMAIL) || Person.find_by(email: AWBW_STAFF_EMAIL)&.user
-  end
-
   def self.search_by_params(params)
     results = is_a?(ActiveRecord::Relation) ? self : all
     results = results.search(params[:search]) if params[:search].present?

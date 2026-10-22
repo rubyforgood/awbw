@@ -44,6 +44,8 @@ module PersonServices
     EMAIL_FIELDS = %w[EmailPrimary EMail].freeze
     STRING_LIMIT = 255
     BATCH_SIZE = 1_000
+    # The shared login a person is credited to when the archive names no staffer we can resolve.
+    AWBW_STAFF_EMAIL = "info@awbw.org".freeze
 
     # Whether a translated tag lands as primary or additional follows the field (ADR-0007).
     # Both primary fields can name either kind of tag, so each kind reads the same two
@@ -67,7 +69,11 @@ module PersonServices
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
       @staff = StaffTranslation.new
-      @awbw_staff_id = User.awbw_staff&.id
+      @awbw_staff_id = self.class.awbw_staff_id
+    end
+
+    def self.awbw_staff_id
+      User.where(email: AWBW_STAFF_EMAIL).pick(:id) || Person.find_by(email: AWBW_STAFF_EMAIL)&.user&.id
     end
 
     def call

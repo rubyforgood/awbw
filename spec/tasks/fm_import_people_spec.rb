@@ -41,7 +41,7 @@ RSpec.describe "fm:import_people" do
     before { create(:tag_alias) }
 
     it "stops before reading a row" do
-      expect { run_task(dry_run: false) }.to raise_error(/aborted: No portal login for #{User::AWBW_STAFF_EMAIL}/)
+      expect { run_task(dry_run: false) }.to raise_error(/aborted: No portal login for #{PersonServices::ImportFromRolodex::AWBW_STAFF_EMAIL}/)
       expect(Person.where(filemaker_code: "00200")).to be_empty
     end
   end
@@ -49,7 +49,7 @@ RSpec.describe "fm:import_people" do
   context "with tag aliases recorded" do
     before do
       create(:tag_alias)
-      create(:user, email: User::AWBW_STAFF_EMAIL)
+      create(:user, email: PersonServices::ImportFromRolodex::AWBW_STAFF_EMAIL)
     end
 
     it "rolls a dry run back and saves its report" do

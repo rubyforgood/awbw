@@ -436,7 +436,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
   describe "the staff the archive stamped on a row" do
     let!(:entered_by) { create(:user) }
     let!(:modified_by) { create(:user) }
-    let!(:awbw_staff) { create(:user, email: User::AWBW_STAFF_EMAIL) }
+    let!(:awbw_staff) { create(:user, email: PersonServices::ImportFromRolodex::AWBW_STAFF_EMAIL) }
 
     before do
       create(:staff_alias, name: "Dana Whitfield", user: entered_by)
@@ -464,6 +464,18 @@ RSpec.describe PersonServices::ImportFromRolodex do
         .to eq([ awbw_staff.id ])
       # The shared login names no one on purpose, so only the undecided name is reported.
       expect(import.unmatched_staff).to eq({ "Marisol Trevino" => 1 })
+    end
+
+    it "finds the AWBW Staff login through its person when the login has another email" do
+      awbw_staff.update_columns(email: "staff-login@example.com")
+      person = create(:person, first_name: "AWBW", last_name: "Staff", user: nil)
+      awbw_staff.update!(person:)
+      person.update_columns(email: described_class::AWBW_STAFF_EMAIL)
+      rolodex("00105", EMail: "ada@example.com")
+
+      described_class.new.call
+
+      expect(Person.find_by!(filemaker_code: "00105")).to have_attributes(created_by_id: awbw_staff.id, updated_by_id: awbw_staff.id)
     end
 
     it "fills a linked person's empty stamps and keeps the ones they have" do
