@@ -379,6 +379,21 @@ RSpec.describe EventRegistrationImporter do
         expect(registration.reload.status).to eq("cancelled")
       end
 
+      it "skips a row standing for several people rather than guess their names" do
+        result = import_rows(%w[FirstName LastName EMail NoOfPersons], %w[Pat Example pat@example.org 3])
+
+        expect(result.skipped.sole.skipped_reason).to eq("covers 3 people — give each their own row")
+        expect(event.event_registrations).to be_empty
+      end
+
+      it "keeps the sheet's notes and comments on the registration" do
+        import_rows(%w[FirstName LastName EMail Notes Comments],
+                    [ "Pat", "Example", "pat@example.org", "Arrived late day 1", "Paid at the door" ])
+
+        registration = registration_of(Person.find_by(email: "pat@example.org"))
+        expect(registration.comments.pluck(:body)).to contain_exactly("Arrived late day 1", "Paid at the door")
+      end
+
       it "sets the registration date from RegisteredOn" do
         import_rows(%w[FirstName LastName EMail RegisteredOn], %w[Pat Example pat@example.org 3/14/2024])
 
@@ -572,6 +587,18 @@ RSpec.describe EventRegistrationImporter do
 
         expect(result.rows.first.payment_status).to eq(:nothing_owed)
         expect(result.payments_recorded).to eq(0)
+      end
+
+      it "reads a count of CE hours as asking for CE" do
+        import_rows(%w[FirstName LastName EMail CEHours], %w[Pat Example pat@example.org 6])
+
+        expect(registration_of(Person.find_by(email: "pat@example.org")).continuing_education_registrations).to be_present
+      end
+
+      it "reads no CE from zero hours" do
+        import_rows(%w[FirstName LastName EMail CEHours], %w[Pat Example pat@example.org 0])
+
+        expect(registration_of(Person.find_by(email: "pat@example.org")).continuing_education_registrations).to be_empty
       end
 
       it "warns that CE stays unpaid when the row carries no payment" do

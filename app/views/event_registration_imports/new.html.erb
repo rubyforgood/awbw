@@ -41,7 +41,8 @@
         [ "Contact", "Street, City, State, Zip, Country, AddressType (Work/Personal), Phone, PhoneType (Work/Personal)." ],
         [ "Sectors & ages", "PrimarySector, AdditionalSectors, PrimaryAgeGroup, AdditionalAgeGroups — names as the " \
                             "registration form lists them; separate several with commas." ],
-        [ "CE", "CE (Yes/No), LicenseType, LicenseNumber, LicenseState, LicenseExpires." ],
+        [ "CE", "CE (Yes/No, or CEHours — any number above zero counts as asking for CE), LicenseType, " \
+                "LicenseNumber, LicenseState, LicenseExpires." ],
         [ "Money", "Scholarship (amount awarded), AmountPaid, PaymentType (cash, check, or card), CheckNumber for " \
                    "checks. A paying row's unpaid remainder is comped with a discount so it reads as paid." ],
         [ "One payment, several people", "Rows that share a BulkPayment reference — or a CheckNumber — become one " \
@@ -50,7 +51,10 @@
                                          "follows what each registration costs. The payment shows up on the event's bulk " \
                                          "payments page like a payer-submitted one." ],
         [ "Follow-up", "SomeoneElseWillPay, InvoiceRequested, W9Requested (Yes/No); PostSurveyCompleted and " \
-                       "CertificateSent (a date, or Yes for the event's last day)." ]
+                       "CertificateSent (a date, or Yes for the event's last day)." ],
+        [ "Notes", "Notes and Comments are saved as comments on the registration." ],
+        [ "One row per person", "NoOfPersons above 1 means the row stands for several people. We skip it rather " \
+                                "than invent names — give each person their own row." ]
       ].each do |group, columns| %>
         <div>
           <dt class="font-medium text-gray-800"><%= group %></dt>

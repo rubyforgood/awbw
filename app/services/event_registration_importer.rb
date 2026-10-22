@@ -239,6 +239,9 @@ class EventRegistrationImporter
       .select { |_label, value| value.blank? }.map(&:first)
     return skip(preview, "missing #{missing.join(", ")}") if missing.any?
 
+    seats = values[:person_count].to_i
+    return skip(preview, "covers #{seats} people — give each their own row") if seats > 1
+
     status = resolve_status(values)
     return skip(preview, "unknown status “#{values[:status]}”") if status == :invalid
 
@@ -397,6 +400,18 @@ class EventRegistrationImporter
 
     registration.comments.create!(topic: COMMENT_TOPIC, body: body,
                                   created_by: @import_user, updated_by: @import_user)
+  end
+
+  # Whatever the sheet's own Notes and Comments say, kept on the registration they
+  # describe rather than dropped. Matched on the body so a re-run adds nothing.
+  def note_sheet_comments(registration, values)
+    %i[notes comments].each do |field|
+      body = values[field]
+      next if body.blank? || registration.comments.exists?(topic: COMMENT_TOPIC, body: body)
+
+      registration.comments.create!(topic: COMMENT_TOPIC, body: body,
+                                    created_by: @import_user, updated_by: @import_user)
+    end
   end
 
   def status_label(status)
@@ -694,6 +709,7 @@ class EventRegistrationImporter
     preview.details << "Sectors" if answers["primary_sector"] || answers["additional_sectors"]
     preview.details << "Age groups" if answers["primary_age_group"] || answers["additional_age_groups"]
     preview.details << "Registered #{Columns.date(values[:registered_on]).strftime("%-m/%-d/%Y")}" if Columns.date(values[:registered_on])
+    preview.details << "Notes" if values[:notes] || values[:comments]
     if preview.registration_status == :kept && day_values(values).any?
       preview.warnings << "Day columns not applied — the registration keeps its own status"
     end
@@ -715,7 +731,7 @@ class EventRegistrationImporter
   end
 
   def ce_requested?(values)
-    Columns.yes_no(values[:ce_requested]) == true
+    Columns.requested?(values[:ce_requested])
   end
 
   # ── Persisting ──────────────────────────────────────────────────────────
@@ -724,6 +740,7 @@ class EventRegistrationImporter
     newly_created = person.previously_new_record?
     status_kept = preview.registration_status == :kept
     note_status_conflict(registration, preview) if status_kept
+    note_sheet_comments(registration, values)
     apply_registration_details(registration, values, apply_days: !status_kept)
     submission = import_submission(person, answers)
     capture_organization(person, registration, submission, organization, answers, preview)

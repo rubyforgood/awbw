@@ -33,7 +33,7 @@ class EventRegistrationImporter
       additional_sectors: %w[additionalsectors sectors],
       primary_age_group: %w[primaryagegroup primaryagegroupserved],
       additional_age_groups: %w[additionalagegroups additionalagegroupsserved agegroups],
-      ce_requested: %w[ce cerequested cecredit cecreditinterest],
+      ce_requested: %w[ce cerequested cecredit cecreditinterest cehours],
       license_kind: %w[licensetype licensekind celicensetype],
       license_number: %w[licensenumber license celicense celicensenumber],
       license_issuing_state: %w[licensestate licenseissuingstate celicensestate],
@@ -47,7 +47,10 @@ class EventRegistrationImporter
       amount_paid: %w[amount amountpaid paid paymentamount paidamount],
       payment_type: %w[type method paymenttype paymentmethod],
       check_number: %w[checknumber check checkno],
-      bulk_payment: %w[bulkpayment bulkpaymentref bulkpaymentgroup paymentgroup paymentid]
+      bulk_payment: %w[bulkpayment bulkpaymentref bulkpaymentgroup paymentgroup paymentid],
+      person_count: %w[noofpersons numberofpersons personcount seats],
+      notes: %w[notes note],
+      comments: %w[comments comment]
     }.merge(EventRegistration::DAY_FIELDS.each_with_index.to_h { |_, index| [ :"day_#{index + 1}", [ "day#{index + 1}", "completedday#{index + 1}" ] ] }).freeze
 
     HEADER_FIELDS = HEADER_ALIASES.flat_map { |field, labels| labels.map { |label| [ label, field ] } }.to_h.freeze
@@ -66,6 +69,7 @@ class EventRegistrationImporter
       CE LicenseType LicenseNumber LicenseState LicenseExpires
       Scholarship AmountPaid PaymentType CheckNumber BulkPayment
       SomeoneElseWillPay InvoiceRequested W9Requested PostSurveyCompleted CertificateSent
+      NoOfPersons Notes Comments
     ].freeze
 
     DAY_KEYS = (1..EventRegistration::DAY_FIELDS.size).to_h { |day| [ day, :"day_#{day}" ] }.freeze
@@ -102,6 +106,15 @@ class EventRegistrationImporter
       return if raw.blank?
 
       STATUSES.fetch(compact(raw), :invalid)
+    end
+
+    # Asked for, from either a yes/no cell or a count — FileMaker records CE as
+    # hours, so any positive number is a request and zero is not.
+    def self.requested?(raw)
+      hours = Float(raw.to_s.strip, exception: false)
+      return hours.positive? if hours
+
+      yes_no(raw) == true
     end
 
     # true / false for a recognizable yes or no, nil otherwise.
