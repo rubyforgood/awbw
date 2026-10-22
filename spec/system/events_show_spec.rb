@@ -114,7 +114,7 @@ RSpec.describe "Event show page", type: :system do
       sign_in(admin)
       visit event_path(event)
 
-      expect(page).to have_link("Dashboard", href: dashboard_event_path(event))
+      expect(page).to have_link("Edit event", href: edit_event_path(event))
       expect(page).to have_link("Registrations", href: registrants_event_path(event))
     end
 
@@ -122,7 +122,7 @@ RSpec.describe "Event show page", type: :system do
       sign_in(user)
       visit event_path(event)
 
-      expect(page).not_to have_link("Dashboard")
+      expect(page).not_to have_link("Edit event")
       expect(page).not_to have_link("Registrations")
     end
   end
