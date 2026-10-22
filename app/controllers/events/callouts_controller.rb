@@ -242,12 +242,14 @@ module Events
         alert: e.record.errors.full_messages.to_sentence
     end
 
-    # Close an open attendance entry. Not windowed — a forgotten sign-out can always
-    # be recorded. Two cases: today's entry (stamped now) and the catch-up button for
+    # Close an open attendance entry. Not windowed by the training day — a forgotten
+    # sign-out can be recorded any time until the event's timesheet closes. Two cases: today's entry (stamped now) and the catch-up button for
     # a day the registrant left open (stamped that day's scheduled end) — see
     # #sign_out_target.
     def sign_out_ce
       return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      return redirect_to(registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: timesheet_locked_alert) unless @event.ce_timesheet_open?
+
       entry, signed_out_at = sign_out_target
       unless entry
         return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: "You're not signed in."
@@ -263,13 +265,15 @@ module Events
     # The registrant editing their own sign-in/out times for one training day. The
     # buttons above are only a shortcut for stamping "now" — the times themselves stay
     # editable, so someone who arrived before signing in, or never tapped the buttons
-    # at all, can write the day up afterwards. Deliberately not windowed: the point is
-    # to fix a day after it's over. Left unattributed, like the buttons.
+    # at all, can write the day up afterwards. Not windowed by the training day — the
+    # point is to fix a day after it's over — only by the event's timesheet window.
+    # Left unattributed, like the buttons.
     def update_ce_attendance
       return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
       unless attendance_enabled?
         return redirect_to registration_ce_path(@event_registration.slug), alert: "Editing your times isn't available yet."
       end
+      return redirect_to(registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: timesheet_locked_alert) unless @event.ce_timesheet_open?
 
       date = AttendanceDayRows.date_from(params[:date])
       return head :unprocessable_content unless date
@@ -443,6 +447,13 @@ module Events
     # enough to let the registrant write those hours down.
     def attendance_enabled?
       @event_registration.ce_attendance_offered?
+    end
+
+    def timesheet_locked_alert
+      return "Timesheets aren't used for this event." unless @event.ce_timesheets_enabled?
+      return "Your timesheet closed on #{helpers.ce_timesheet_time(@event.ce_timesheet_closes_at)}. Please contact the training staff to change your times." if @event.ce_timesheet_closed?
+
+      "Your timesheet opens on #{helpers.ce_timesheet_time(@event.ce_timesheet_opens_at)}."
     end
 
     # A datetime rendered in the app zone as "9:02 AM", for sign-in/out flash notices.

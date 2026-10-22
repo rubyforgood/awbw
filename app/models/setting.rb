@@ -17,6 +17,7 @@ class Setting < ApplicationRecord
   belongs_to :return_address, class_name: "Address", optional: true
   belongs_to :remittance_address, class_name: "Address", optional: true
   belongs_to :ce_administrator, class_name: "Person", optional: true
+  belongs_to :import_user, class_name: "User", optional: true
 
   # singleton is a constant true behind a unique index: MySQL has no CHECK-based
   # way to cap a table at one row, but a unique index on a constant does it.
@@ -147,6 +148,12 @@ class Setting < ApplicationRecord
 
   def self.ce_administrator_name
     ce_administrator&.full_name.presence
+  end
+
+  # Who a data import run as a rake task (no signed-in user) credits as created_by /
+  # updated_by when its source names no one the portal can resolve.
+  def self.import_user
+    stored_association(:import_user)
   end
 
   # The signatory's title, printed beside their name on the certificate.

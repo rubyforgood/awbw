@@ -1,0 +1,23 @@
+name: "Address locality filled in automatically"
+area: people
+display_status: admin_facing
+released_on: 2026-10-20
+pr_number: 2630
+summary: >-
+  A new address now arrives with its locality already set — LA City, LA County,
+  Orange County, Outside CA, or Outside USA — worked out from the city, state,
+  county, and country instead of landing as Unknown.
+description: >-
+  <ul><li>Applies wherever an address is created without anyone being asked the
+  question: the FileMaker import, a registration or form submission, an
+  organization's work address, and an approved profile change
+  request.</li><li>A locality someone picked by hand is never overwritten — this
+  only fills in a brand-new address.</li><li>A California address outside Los
+  Angeles and Orange counties still reads as Unknown. Northern, Central, and
+  Southern CA are AWBW's own way of dividing the state and nothing on file says
+  where the lines run, so that one is still a person's call.</li><li>A state
+  spelled in a way no US state answers to also stays Unknown, since a typo and a
+  foreign region look the same.</li></ul>
+pro_tips:
+  - "Addresses saved before this keep whatever locality they had — including Unknown."
+  - "A Los Angeles mailing address reads as LA City; everywhere else in the county reads as LA County."

@@ -20,7 +20,7 @@ class EventCopyService
   ASSET_TYPES = %w[PrimaryAsset GalleryAsset].freeze
   ASSET_URL_TTL = 1.day
 
-  DATETIME_COLUMNS = %w[start_date end_date registration_close_date ce_payment_due_deadline payment_due_deadline].freeze
+  DATETIME_COLUMNS = %w[start_date end_date registration_close_date ce_payment_due_deadline ce_timesheet_closes_at payment_due_deadline].freeze
   DATE_COLUMNS = %w[ce_hours_request_deadline completion_deadline].freeze
   UNCOPIED_COLUMNS = %w[id created_at updated_at created_by_id updated_by_id location_id affiliations_reconciled_at].freeze
   # A copy starts as a draft: hidden from the public and without the source's unique abbreviation.

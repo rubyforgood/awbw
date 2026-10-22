@@ -9,11 +9,15 @@ module Analytics
     end
 
     def self.flush(controller)
+      flush_to(controller.ahoy)
+    end
+
+    def self.flush_to(tracker)
       return if store.empty?
 
       store.each do |payload|
         stamp_form_submission(payload)
-        controller.ahoy.track(payload[:name], payload[:properties])
+        tracker.track(payload[:name], payload[:properties])
       end
     ensure
       store.clear

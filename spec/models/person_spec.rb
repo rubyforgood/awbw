@@ -43,6 +43,13 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe "#known_email_type? / #known_email_2_type?" do
+    it "counts a work or personal type as known, and unknown or blank as not" do
+      expect(build(:person, email_type: "work", email_2_type: "personal")).to have_attributes(known_email_type?: true, known_email_2_type?: true)
+      expect(build(:person, email_type: "unknown", email_2_type: nil)).to have_attributes(known_email_type?: false, known_email_2_type?: false)
+    end
+  end
+
   describe "validations" do
     it { should validate_presence_of(:first_name) }
     it { should validate_presence_of(:last_name) }
@@ -93,6 +100,10 @@ RSpec.describe Person, type: :model do
         expect(build(:person, user: nil, first_name: "Jane", last_name: "Roe", email: nil)).to be_valid
       end
     end
+
+    it { should allow_value("unknown").for(:email_type) }
+    it { should allow_value("unknown").for(:email_2_type) }
+    it { should_not allow_value("mailing").for(:email_type) }
 
     describe "unique_name_and_email_combination" do
       let(:admin) { create(:user, :admin) }
