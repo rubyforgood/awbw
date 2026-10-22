@@ -1,0 +1,10 @@
+name: "Organization pages list active facilitators"
+area: people
+display_status: user_facing
+released_on: 2026-10-22
+pr_number: 2785
+summary: >-
+  An organization's people list now shows only its active facilitators whose profiles you can open,
+  and author names link to a profile only when you can open it.
+pro_tips:
+  - "An author whose profile you can't open shows as plain text; on organization pages they're left off the list."

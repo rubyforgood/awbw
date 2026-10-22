@@ -8,6 +8,7 @@ RSpec.describe "organizations/show", type: :view do
 
   before do
     assign(:organization, organization)
+    sign_in user
     allow(view).to receive(:current_user).and_return(user)
     render
   end
@@ -38,6 +39,40 @@ RSpec.describe "organizations/show", type: :view do
 
     it "sorts facilitator titles first" do
       expect(rendered).to match(/Facilitator.*Director/)
+    end
+  end
+
+  context "with people a viewer can't open" do
+    let(:facilitator) { create(:person, first_name: "Fay", last_name: "Active") }
+    let(:director) { create(:person, first_name: "Dee", last_name: "Director") }
+    let(:lapsed) { create(:person, first_name: "Lee", last_name: "Lapsed") }
+    let(:hidden) { create(:person, first_name: "Hal", last_name: "Hidden", profile_is_searchable: false) }
+
+    before do
+      create(:affiliation, person: facilitator, organization: organization)
+      create(:affiliation, person: director, organization: organization, title: "Director")
+      create(:affiliation, person: lapsed, organization: organization, end_date: 1.month.ago)
+      create(:affiliation, person: hidden, organization: organization)
+      assign(:organization, organization.reload)
+      render
+    end
+
+    it "lists only active facilitators whose profile the viewer can open" do
+      expect(rendered).to include(person_path(facilitator))
+      expect(rendered).not_to include(person_path(director))
+      expect(rendered).not_to include(person_path(lapsed))
+      expect(rendered).not_to include(person_path(hidden))
+    end
+
+    context "when the viewer is an admin" do
+      let(:user) { admin }
+
+      it "lists every active facilitator, but not other titles" do
+        expect(rendered).to include(person_path(facilitator))
+        expect(rendered).to include(person_path(hidden))
+        expect(rendered).not_to include(person_path(director))
+        expect(rendered).not_to include(person_path(lapsed))
+      end
     end
   end
 end

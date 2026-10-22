@@ -210,7 +210,7 @@ class OrganizationsController < ApplicationController
       :organization_status, :windows_type, :addresses,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
-      affiliations: { person: [ :user, *Organization::PEOPLE_TAGGINGS ] }
+      affiliations: { person: [ :user, :affiliations, *Organization::PEOPLE_TAGGINGS ] }
     ).find(params[:id])
   end
 
