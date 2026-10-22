@@ -49,7 +49,7 @@ This codebase (Rails 8.1)
 | Directory | Purpose | Count |
 |---|---|---|
 | `app/models/` | ActiveRecord models | ~144 files |
-| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~138 files |
+| `app/services/` | Service objects and POROs (e.g. `MoneyFormatter` for currency display, `StoryImporter` for the stories spreadsheet import) | ~141 files |
 | `app/jobs/` | SolidQueue background jobs | 6 files |
 | `app/models/concerns/` | Shared model modules | 23 concerns |
 
@@ -506,7 +506,7 @@ Tailwind only scans the paths listed in the `@source` directives at the top of t
 | `spec/routing/` | ~18 | Route definition tests |
 | `spec/policies/` | ~19 | Authorization policy tests |
 | `spec/decorators/` | ~29 | Decorator tests |
-| `spec/services/` | ~103 | Service object tests |
+| `spec/services/` | ~104 | Service object tests |
 | `spec/mailers/` | ~5 | Mailer tests |
 | `spec/helpers/` | ~5 | Helper tests |
 | `spec/factories/` | ~67 | FactoryBot factory definitions |

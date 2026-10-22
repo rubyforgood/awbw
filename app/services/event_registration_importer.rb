@@ -341,7 +341,7 @@ class EventRegistrationImporter
   end
 
   def bump_placeholder(address)
-    "#{address[Person::PLACEHOLDER_EMAIL_PATTERN, 1].to_i + 1}@example.com"
+    PlaceholderEmail.at(PlaceholderEmail.number_in(address) + 1)
   end
 
   def name_key(person)
@@ -779,13 +779,7 @@ class EventRegistrationImporter
       facilitator_training: @event.facilitator_training, training_date: @event.start_date,
       event_registration: registration, overwrite: false
     )
-    link = registration.event_registration_organizations.find_or_create_by!(organization: organization)
-    # Only pin our submission on a link we created — an org a real registrant
-    # already linked keeps its own pin.
-    return unless link.previously_new_record?
-
-    link.record_form_submission(submission)
-    link.record_autofill(result.autofill)
+    registration.link_submitted_organization!(organization, submission: submission, autofill: result.autofill)
   end
 
   # The org answers fill-blanks won't apply, from the comparison the link-organization
