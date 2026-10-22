@@ -63,7 +63,7 @@ RSpec.describe PersonInviter do
     end
 
     it "skips a person whose only address is the no-email placeholder" do
-      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: nil)
+      person = create(:person, user: nil, email: PlaceholderEmail.first, email_2: nil)
 
       expect {
         result = described_class.call(person: person, sender: sender)

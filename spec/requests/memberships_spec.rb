@@ -3,11 +3,11 @@ require "rails_helper"
 RSpec.describe "Memberships", type: :request do
   around { |example| travel_to(Time.current.midday) { example.run } }
 
-  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership::ANNUAL_COST_CENTS) }
+  let(:standard_cost) { MoneyFormatter.dollars_from_cents(Membership.annual_cost_cents) }
   let(:admin) { create(:user, :admin) }
   let(:person) { create(:person, first_name: "Grace", last_name: "Hopper") }
 
-  def membership_invoice_for(subscription:, cost_cents: Membership::ANNUAL_COST_CENTS, start_date: Date.current)
+  def membership_invoice_for(subscription:, cost_cents: Membership.annual_cost_cents, start_date: Date.current)
     create(:membership_invoice,
       membership: subscription,
       cost_cents: cost_cents,
@@ -71,7 +71,7 @@ RSpec.describe "Memberships", type: :request do
 
       it "shows the status badge for each year" do
         subscription = create(:membership, person: person)
-        membership_invoice_for(subscription: subscription, start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1)
+        membership_invoice_for(subscription: subscription, start_date: Date.current - Membership.grace_period_days - 1)
 
         get person_memberships_path(person)
 
@@ -102,7 +102,7 @@ RSpec.describe "Memberships", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(Date.current.to_s)
-      expect(response.body).to include((Membership::ANNUAL_COST_CENTS / 100.0).to_s)
+      expect(response.body).to include((Membership.annual_cost_cents / 100.0).to_s)
     end
   end
 
@@ -112,7 +112,7 @@ RSpec.describe "Memberships", type: :request do
         membership: {
           cost_dollars: "",
           membership_invoices_attributes: {
-            "0" => { start_date: Date.current.to_s, cost_dollars: (Membership::ANNUAL_COST_CENTS / 100).to_s }
+            "0" => { start_date: Date.current.to_s, cost_dollars: (Membership.annual_cost_cents / 100).to_s }
           }
         }
       }
@@ -137,7 +137,7 @@ RSpec.describe "Memberships", type: :request do
         subscription = person.memberships.sole
         year = subscription.membership_invoices.sole
         expect(subscription.cost_cents).to be_nil
-        expect(year.cost_cents).to eq(Membership::ANNUAL_COST_CENTS)
+        expect(year.cost_cents).to eq(Membership.annual_cost_cents)
         expect(year.start_date).to eq(Date.current)
         expect(year.end_date).to eq(Date.current + 1.year - 1.day)
         expect(response).to redirect_to(person_memberships_path(person))
@@ -214,7 +214,7 @@ RSpec.describe "Memberships", type: :request do
   describe "PATCH /memberships/:id" do
     let!(:subscription) { create(:membership, person: person) }
     let!(:existing_year) do
-      create(:membership_invoice, membership: subscription, cost_cents: Membership::ANNUAL_COST_CENTS)
+      create(:membership_invoice, membership: subscription, cost_cents: Membership.annual_cost_cents)
     end
 
     it "is not available to a non-admin" do
@@ -246,7 +246,7 @@ RSpec.describe "Memberships", type: :request do
       it "leaves years already created at the price they were billed" do
         patch membership_path(subscription), params: { membership: { cost_dollars: "60" } }
 
-        expect(existing_year.reload.cost_cents).to eq(Membership::ANNUAL_COST_CENTS)
+        expect(existing_year.reload.cost_cents).to eq(Membership.annual_cost_cents)
       end
 
       it "rejects a negative cost, explaining why" do

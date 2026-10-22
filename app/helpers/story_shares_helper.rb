@@ -71,20 +71,24 @@ module StorySharesHelper
 
   # The portal's mega-menu points at the main marketing site. Opens in a new tab
   # so visitors don't lose the story they were reading.
-  AWBW_BASE = "https://awbw.org".freeze
+
+  # A path on the marketing site, whose address an admin sets on the organization.
+  def marketing_site_url(path)
+    "#{Setting.organization_website&.chomp("/")}#{path}"
+  end
 
   # `arrow: true` puts the trailing arrow inside the link, so it is part of the
   # click target and picks up the link's hover — outside it, it was neither.
   def awbw_menu_link(label, path, html_class: "hover:text-purple-700", arrow: false)
     body = arrow ? safe_join([ label, tag.i("", class: "fa-solid fa-arrow-right text-xs") ], " ") : label
-    link_to body, "#{AWBW_BASE}#{path}", target: "_blank", rel: "noopener noreferrer", class: html_class
+    link_to body, marketing_site_url(path), target: "_blank", rel: "noopener noreferrer", class: html_class
   end
 
   # A mega-menu photo card: an awbw.org-linked image with an accent gradient and a
   # serif call-to-action (the marketing site's right-hand menu tile). The accent
   # comes from the surrounding `--accent` CSS variable.
   def awbw_menu_link_photo(image:, alt:, cta:, href:)
-    link_to "#{AWBW_BASE}#{href}", target: "_blank", rel: "noopener noreferrer", class: "mega-photo" do
+    link_to marketing_site_url(href), target: "_blank", rel: "noopener noreferrer", class: "mega-photo" do
       safe_join([
         image_tag(image, alt: alt),
         tag.span("", class: "mega-photo-overlay"),

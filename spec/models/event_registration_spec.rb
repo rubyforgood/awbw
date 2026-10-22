@@ -1618,7 +1618,7 @@ RSpec.describe EventRegistration, type: :model do
     end
 
     it "skips the staff FYI (but still notifies the registrant) when no programs mailbox is configured" do
-      allow(Organization).to receive(:programs_email).and_return(nil)
+      allow(Setting).to receive(:programs_email).and_return(nil)
       reg = create(:event_registration, status: "registered")
 
       expect(NotificationServices::CreateNotification).to receive(:call).with(

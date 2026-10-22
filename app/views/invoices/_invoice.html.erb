@@ -95,6 +95,10 @@
 
   <footer class="mt-12 text-sm">
     <p><%= invoice.payable_to_note %></p>
+    <p class="mt-1">
+      Mail to:
+      <span class="font-medium"><%= safe_join(invoice.remittance_address_lines, ", ") %></span>
+    </p>
     <p class="mt-1 font-bold">Thank you.</p>
   </footer>
 </article>

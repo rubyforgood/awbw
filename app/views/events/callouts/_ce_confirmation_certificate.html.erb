@@ -5,6 +5,11 @@
     in this public repo; the name, license, dates, hours, and facilitators render live.
     An admin-uploaded "CE certificate frame" renders full-bleed, with the content in a
     centered safe area, matching the other framed certificates. %>
+<% issuing_address = app_organization_address_line %>
+<% signatory = [ Setting.ce_administrator_name, Setting.ce_administrator_title ].compact_blank.join(", ") %>
+<% provider_number = Setting.ce_provider_number %>
+<% accreditor = Setting.ce_accreditation_abbreviation %>
+<% provider_line = [ accreditor.present? ? "#{accreditor}-approved" : nil, "Continuing Education Provider # #{provider_number}" ].compact.join(" ") %>
 <% if frame_file %>
   <article class="certificate @container relative mx-auto aspect-[2200/1556] w-full max-w-5xl overflow-hidden bg-white print:max-w-none">
     <%= image_tag frame_file, alt: "",
@@ -24,18 +29,22 @@
         <% end %>
       </div>
       <div class="text-center leading-snug">
-        <p class="text-[2cqw] font-bold tracking-wide text-purple-900 uppercase"><%= ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds") %></p>
-        <p class="text-[1.5cqw] text-purple-800"><%= ContinuingEducationRegistration::ACCREDITATION_ADDRESS %></p>
-        <p class="text-[1.5cqw] text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
+        <p class="text-[2cqw] font-bold tracking-wide text-purple-900 uppercase"><%= app_organization_name %></p>
+        <% if issuing_address.present? %>
+          <p class="text-[1.5cqw] text-purple-800"><%= issuing_address %></p>
+        <% end %>
+        <% if provider_number.present? %>
+          <p class="text-[1.5cqw] text-purple-800"><%= provider_line %></p>
+        <% end %>
       </div>
       <div class="flex items-end justify-between gap-[6cqw]">
         <div class="flex-1">
           <% if signature_file&.variable? %>
             <%= image_tag signature_file.variant(:card),
-                  alt: "Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}",
+                  alt: "Signed by #{signatory}",
                   class: "mb-[0.4cqw] h-[7cqw] w-auto object-contain object-left" %>
           <% end %>
-          <p class="border-t border-gray-400 pt-[0.4cqw] text-[1.6cqw] font-semibold text-gray-900"><%= ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME %>, <%= ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE %></p>
+          <p class="border-t border-gray-400 pt-[0.4cqw] text-[1.6cqw] font-semibold text-gray-900"><%= signatory %></p>
         </div>
         <div class="w-[22%]">
           <p class="text-center text-[1.6cqw] text-gray-900"><%= issued_on.strftime("%-m/%-d/%y") %></p>
@@ -45,7 +54,7 @@
       <p class="mx-auto max-w-[88%] text-center text-[1.3cqw] leading-relaxed text-gray-500">
         This course meets the qualifications for <span class="font-semibold text-gray-700"><%= hours_label %> hours</span>
         of continuing education credit for LMFTs, LCSWs, LPCCs, and/or LEPs as required by the California Board of
-        Behavioral Sciences. <%= ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds") %> is approved by the California Association of Marriage and Family Therapists.
+        Behavioral Sciences. <%= app_organization_name %> is approved by the California Association of Marriage and Family Therapists.
       </p>
     </div>
   </article>
@@ -86,9 +95,13 @@
     <% end %>
 
     <div class="text-center">
-      <p class="text-xl font-bold tracking-wide text-purple-900 uppercase"><%= ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds") %></p>
-      <p class="text-sm text-purple-800"><%= ContinuingEducationRegistration::ACCREDITATION_ADDRESS %></p>
-      <p class="text-sm text-purple-800">CAMFT-approved Continuing Education Provider # <%= ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER %></p>
+      <p class="text-xl font-bold tracking-wide text-purple-900 uppercase"><%= app_organization_name %></p>
+      <% if issuing_address.present? %>
+        <p class="text-sm text-purple-800"><%= issuing_address %></p>
+      <% end %>
+      <% if provider_number.present? %>
+        <p class="text-sm text-purple-800"><%= provider_line %></p>
+      <% end %>
     </div>
 
     <div class="mt-4 flex items-end justify-between gap-10">
@@ -97,10 +110,10 @@
             (e.g. a HEIC phone photo most browsers can't show raw) displays. %>
         <% if signature_file&.variable? %>
           <%= image_tag signature_file.variant(:card),
-                alt: "Signed by #{ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME}, #{ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE}",
+                alt: "Signed by #{signatory}",
                 class: "mb-1 h-14 w-auto object-contain object-left" %>
         <% end %>
-        <p class="border-t border-gray-400 pt-1 text-sm font-semibold text-gray-900"><%= ContinuingEducationRegistration::CE_ADMINISTRATOR_NAME %>, <%= ContinuingEducationRegistration::CE_ADMINISTRATOR_TITLE %></p>
+        <p class="border-t border-gray-400 pt-1 text-sm font-semibold text-gray-900"><%= signatory %></p>
       </div>
       <div class="w-40">
         <p class="text-center text-sm text-gray-900"><%= issued_on.strftime("%-m/%-d/%y") %></p>
@@ -111,7 +124,7 @@
     <p class="mx-auto max-w-2xl border-t border-gray-200 pt-5 text-center text-xs leading-relaxed text-gray-500">
       This course meets the qualifications for <span class="font-semibold text-gray-700"><%= hours_label %> hours</span>
       of continuing education credit for LMFTs, LCSWs, LPCCs, and/or LEPs as required by the California Board of
-      Behavioral Sciences. <%= ENV.fetch("ORGANIZATION_NAME", "A Window Between Worlds") %> is approved by the California Association of Marriage and Family Therapists.
+      Behavioral Sciences. <%= app_organization_name %> is approved by the California Association of Marriage and Family Therapists.
     </p>
   </div>
 </article>

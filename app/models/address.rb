@@ -31,8 +31,27 @@ class Address < ApplicationRecord
   validates :phone, length: { maximum: 255 }
 
   scope :active, -> { where(inactive: false) }
+  scope :for_invoices, -> { where(invoice_address: true) }
 
   def name
     "#{street_address}, #{city}, #{state} #{zip_code}"
+  end
+
+  # The two lines an invoice, receipt, or contact block prints for this address.
+  def display_lines
+    city_line = [ city.presence,
+                  [ state.presence, zip_code.presence ].compact.join(" ").presence ]
+      .compact.join(", ")
+    [ street_address.presence, city_line.presence ].compact
+  end
+
+  # The bill-to lines for an addressable: its oldest address marked for invoices,
+  # else its first active one, which is how a bill-to has always been picked. Oldest
+  # first so marking another address doesn't move an existing bill-to.
+  def self.display_lines_for(addressable)
+    return [] unless addressable.respond_to?(:addresses)
+
+    scope = addressable.addresses.active.order(:id)
+    (scope.for_invoices.first || scope.first)&.display_lines || []
   end
 end

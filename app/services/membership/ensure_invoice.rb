@@ -28,7 +28,7 @@ class Membership::EnsureInvoice
     invoice = invoices.new(
       start_date: @covering,
       end_date: @covering + Membership::INVOICE_PERIOD - 1.day,
-      cost_cents: @cost_cents || @membership.cost_cents || Membership::ANNUAL_COST_CENTS
+      cost_cents: @cost_cents || @membership.cost_cents || Membership.annual_cost_cents
     )
 
     invoice if invoice.save

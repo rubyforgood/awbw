@@ -289,7 +289,7 @@
                   as: :boolean,
                   required: true,
                   disabled: promoted_to_story,
-                  label: "I give A Window Between Worlds permission to share the words and images I am submitting" +
+                  label: "I give #{app_organization_name} permission to share the words and images I am submitting" +
                     " online, via social media, and in external communications, including with my fellow " +
                     "Windows Facilitators. If there is any identifying information in my images, " +
                     "such as names or faces, I certify that I have received permission from the subject, " +
@@ -304,7 +304,7 @@
                   as: :boolean,
                   disabled: promoted_to_story,
                   label: "Share my story only with the funder who provided my training scholarship and not on Story Share.",
-                  hint: "Check this if your story is a training-scholarship deliverable. It won't appear on Story Share — only A Window Between Worlds staff and the funder will see it.",
+                  hint: "Check this if your story is a training-scholarship deliverable. It won't appear on Story Share — only #{app_organization_name} staff and the funder will see it.",
                   input_html: {
                     class: ("readonly" if promoted_to_story)
                   } %>

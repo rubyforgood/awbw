@@ -66,4 +66,80 @@ RSpec.describe Address, type: :model do
       expect(address).to be_valid
     end
   end
+
+  describe "#display_lines" do
+    it "renders the street line and a combined city, state zip line" do
+      address = build(:address, street_address: "123 Main St", city: "Springfield",
+                                state: "IL", zip_code: "62704")
+
+      expect(address.display_lines).to eq([ "123 Main St", "Springfield, IL 62704" ])
+    end
+
+    it "omits a blank street line rather than leaving a gap" do
+      address = build(:address, street_address: "", city: "Springfield",
+                                state: "IL", zip_code: "62704")
+
+      expect(address.display_lines).to eq([ "Springfield, IL 62704" ])
+    end
+  end
+
+  describe ".display_lines_for" do
+    let(:organization) { create(:organization) }
+
+    it "returns nothing for an owner that has no addresses at all" do
+      expect(Address.display_lines_for(organization)).to eq([])
+    end
+
+    it "returns nothing for an owner that can't have addresses" do
+      expect(Address.display_lines_for(nil)).to eq([])
+    end
+
+    it "prefers the address flagged for invoices over the first one" do
+      create(:address, addressable: organization, street_address: "1 First Ave", city: "Springfield", state: "IL", zip_code: "62704")
+      create(:address, addressable: organization, street_address: "2 Billing Rd", city: "Shelbyville", state: "IL", zip_code: "62565",
+                       invoice_address: true)
+
+      expect(Address.display_lines_for(organization)).to eq([ "2 Billing Rd", "Shelbyville, IL 62565" ])
+    end
+
+    it "prints the oldest flagged address when an owner has marked several" do
+      first = create(:address, addressable: organization, street_address: "1 First Billing Rd", city: "Springfield",
+                               state: "IL", zip_code: "62704", invoice_address: true)
+      create(:address, addressable: organization, street_address: "2 Later Billing Rd", city: "Shelbyville",
+                       state: "IL", zip_code: "62565", invoice_address: true)
+
+      expect(Address.display_lines_for(organization)).to eq(first.display_lines)
+    end
+
+    it "falls back to the first active address when none is flagged" do
+      create(:address, addressable: organization, street_address: "1 First Ave", city: "Springfield", state: "IL", zip_code: "62704")
+
+      expect(Address.display_lines_for(organization)).to eq([ "1 First Ave", "Springfield, IL 62704" ])
+    end
+
+    it "skips inactive addresses" do
+      create(:address, addressable: organization, street_address: "1 Old Ave", city: "Springfield", state: "IL", zip_code: "62704",
+                       inactive: true)
+
+      expect(Address.display_lines_for(organization)).to eq([])
+    end
+  end
+
+  describe "the invoice flag" do
+    let(:organization) { create(:organization) }
+
+    it "lets an owner mark as many of its addresses as it likes" do
+      first = create(:address, addressable: organization, invoice_address: true)
+      second = create(:address, addressable: organization, invoice_address: true)
+
+      expect(organization.addresses.for_invoices).to contain_exactly(first, second)
+    end
+
+    it "leaves an unmarked address out, however it stores the flag" do
+      create(:address, addressable: organization, invoice_address: false)
+      create(:address, addressable: organization)
+
+      expect(organization.addresses.for_invoices).to be_empty
+    end
+  end
 end

@@ -105,13 +105,13 @@
     {
       "warning_type": "Redirect",
       "warning_code": 18,
-      "fingerprint": "4c7d6dfb5ebb6e069b702ee3f6d8b0fd8fe7eaae034e0923248f34f417b2fc1a",
+      "fingerprint": "6722548d8173ac5a0f015c87132c1d1c421908b42c83d0485b28ed8d8285ba7e",
       "check_name": "Redirect",
       "message": "Possible unprotected redirect",
       "file": "app/controllers/people_controller.rb",
       "line": 203,
       "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
-      "code": "redirect_to(Person.find(params[:id]).payment_processor.checkout(:mode => \"payment\", :metadata => stripe_metadata(:person_id => Person.find(params[:id]).id), :payment_intent_data => ({ :metadata => stripe_metadata(:person_id => Person.find(params[:id]).id) }), :line_items => ([{ :price_data => ({ :currency => \"usd\", :product_data => ({ :name => \"Donation to A Window Between Worlds\" }), :unit_amount => (((params[:amount].to_i * 100).to_i or 1000)) }), :quantity => 1 }]), :success_url => person_url(Person.find(params[:id]), :checkout => \"success\"), :cancel_url => person_url(Person.find(params[:id]), :checkout => \"cancelled\")).url, :allow_other_host => true, :status => :see_other)",
+      "code": "redirect_to(Person.find(params[:id]).payment_processor.checkout(:mode => \"payment\", :metadata => stripe_metadata(:person_id => Person.find(params[:id]).id), :payment_intent_data => ({ :metadata => stripe_metadata(:person_id => Person.find(params[:id]).id) }), :line_items => ([{ :price_data => ({ :currency => \"usd\", :product_data => ({ :name => \"Donation to #{Setting.app_organization_name}\" }), :unit_amount => (((params[:amount].to_i * 100).to_i or 1000)) }), :quantity => 1 }]), :success_url => person_url(Person.find(params[:id]), :checkout => \"success\"), :cancel_url => person_url(Person.find(params[:id]), :checkout => \"cancelled\")).url, :allow_other_host => true, :status => :see_other)",
       "render_path": null,
       "location": {
         "type": "method",

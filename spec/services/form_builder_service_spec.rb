@@ -493,16 +493,24 @@ RSpec.describe FormBuilderService do
     end
   end
 
-  # The new-form page lists a section's fields before the form exists, from the
-  # hard-coded SECTION_FIELD_NAMES. This guards it against drifting from what the
-  # builder methods actually create.
-  describe "SECTION_FIELD_NAMES" do
+  # The new-form page lists a section's fields before the form exists, from
+  # .section_field_names. This guards it against drifting from what the builder
+  # methods actually create.
+  describe ".section_field_names" do
     FormBuilderService::SECTIONS.each_key do |key|
       it "matches the fields #{key} actually builds" do
         form = described_class.new(name: "Test", sections: [ key ]).call
         built = form.form_fields.where.not(answer_type: :group_header).reorder(:position).pluck(:name)
-        expect(built).to eq(FormBuilderService::SECTION_FIELD_NAMES[key])
+        expect(built).to eq(described_class.section_field_names(key))
       end
+    end
+
+    it "follows the organization an admin picks after boot" do
+      organization = create(:organization, name: "Renamed Org")
+      Setting.create!(organization: organization)
+
+      expect(described_class.section_field_names(:consent))
+        .to eq([ "I agree to receive email communications from Renamed Org." ])
     end
   end
 end

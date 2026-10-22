@@ -254,7 +254,7 @@
               <div class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                 Email
               </div>
-              <%= mail_to Organization.programs_email,
+              <%= mail_to Setting.programs_email,
                           subject: "AWBW Portal: Website question",
                           class: "text-blue-600 hover:text-blue-800 font-medium break-all" %>
             </div>
@@ -262,9 +262,10 @@
               <div class="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                 Phone
               </div>
-              <%= link_to "310-396-0317",
-                          "tel:310-396-0317",
-                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
+              <% if (phone = app_organization_phone) %>
+                <%= link_to phone, tel_href(phone),
+                            class: "text-blue-600 hover:text-blue-800 font-medium" %>
+              <% end %>
             </div>
             <div>
               <div class="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">

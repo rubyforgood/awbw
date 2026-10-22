@@ -2,6 +2,9 @@ module DataHealth
   # Every check on the admin Data health page, under the heading it renders in, in
   # order. Adding one is a Check subclass plus a line here.
   GROUPS = {
+    "Settings" => [
+      UnconfiguredAppSettings
+    ],
     "Affiliations" => [
       FacilitatorAffiliationsFromNonTrainings,
       MisalignedAffiliationProvenance,
