@@ -7,6 +7,6 @@ summary: >-
   can turn registrant CE timesheets on or off and choose when registrants can
   start and stop editing them.
 pro_tips:
-  - "Pick when the timesheet opens relative to the event's start, from a week before to a day after. Leave it blank to open it as soon as CE is paid."
+  - "Pick when the timesheet opens relative to the event's start, from a week before to a day after. It starts at 30 minutes before."
   - "Set a close date and time to lock registrants' timesheets. Staff can still correct times on the attendance report."
-  - "The same setting decides when sign-in opens on each training day, for example 1 hour before each day's start. Left blank, sign-in opens 30 minutes before."
+  - "The same setting decides when sign-in opens on each training day, for example 1 hour before each day's start."

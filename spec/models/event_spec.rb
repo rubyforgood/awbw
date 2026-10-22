@@ -816,9 +816,9 @@ RSpec.describe Event, type: :model do
     end
 
     describe "CE timesheet window" do
-      it "is open any time by default" do
-        expect(event.ce_timesheet_opens_at).to be_nil
-        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 1, 9, 0))).to be(true)
+      it "opens 30 minutes before the start by default and stays open" do
+        expect(event.ce_timesheet_opens_at).to eq(Time.zone.local(2026, 7, 23, 8, 30))
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 23, 8, 29))).to be(false)
         expect(event.ce_timesheet_open?(Time.zone.local(2026, 9, 1, 9, 0))).to be(true)
       end
 

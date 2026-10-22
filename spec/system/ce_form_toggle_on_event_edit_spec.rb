@@ -39,7 +39,7 @@ RSpec.describe "CE form toggle on event edit", type: :system do
 
     it "shows the timesheet controls" do
       expect(page).to have_checked_field("Use CE timesheets")
-      expect(page).to have_select("Timesheet opens for editing", selected: "As soon as CE is paid")
+      expect(page).to have_select("Timesheet opens for editing", selected: "30 minutes before the start")
       expect(page).to have_field("event[ce_timesheet_closes_at_date]")
     end
   end
