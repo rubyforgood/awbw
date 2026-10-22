@@ -4,7 +4,7 @@ class StorySharesController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story, only: [ :show ]
 
-  FEATURED_SECTOR_LIMIT = 6
+  FEATURED_SECTOR_LIMIT = Sector::STORY_SHARE_NAV_LIMIT
   SECTION_STORY_LIMIT = 5
   FEATURED_CAROUSEL_LIMIT = 10
   RELATED_STORY_LIMIT = 3

@@ -115,6 +115,5 @@ class StoryShareAdminController < ApplicationController
   def expire_menu_caches
     Rails.cache.delete("story_share_nav_sectors")
     Rails.cache.delete("story_share_audience_categories")
-    Rails.cache.delete("story_share_focus_area_sectors")
   end
 end

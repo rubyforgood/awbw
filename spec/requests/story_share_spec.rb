@@ -480,6 +480,26 @@ RSpec.describe "/story_share", type: :request do
       expect(highlighted_titles).not_to include("A featured-first story")
       expect(listed_titles).to eq([ "A featured-first story" ])
     end
+
+    it "gathers stories whose primary sector is featured past the nav's limit" do
+      StorySharesController::FEATURED_SECTOR_LIMIT.times { |i| create(:sector, :published, name: "Nav sector #{i}", story_share_position: i + 1) }
+      overflow = create(:sector, :published, name: "Overflow Sector", story_share_position: StorySharesController::FEATURED_SECTOR_LIMIT + 1)
+      create(:story, :published, :publicly_visible, title: "An overflow-sector story").sectorable_items.create!(sector: overflow, is_primary: true)
+
+      get story_shares_path(additional_focus_areas: true)
+      expect(response.body).to include("An overflow-sector story")
+    end
+
+    it "gathers stories whose primary sector is Other or unpublished" do
+      other = create(:sector, :published, name: Sector::OTHER_SECTOR_NAME)
+      hidden = create(:sector, :unpublished, name: "Unpublished Sector")
+      create(:story, :published, :publicly_visible, title: "An other-sector story").sectorable_items.create!(sector: other, is_primary: true)
+      create(:story, :published, :publicly_visible, title: "An unpublished-sector story").sectorable_items.create!(sector: hidden, is_primary: true)
+
+      get story_shares_path(additional_focus_areas: true)
+      expect(response.body).to include("An other-sector story")
+      expect(response.body).to include("An unpublished-sector story")
+    end
   end
 
   # ==========================================================

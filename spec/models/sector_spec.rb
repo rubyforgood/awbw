@@ -45,13 +45,14 @@ RSpec.describe Sector, type: :model do
   end
 
   describe ".story_share_additional_focus_areas" do
-    it "returns published sectors not featured in the nav, Other included" do
+    it "returns published sectors the nav doesn't link to, Other included" do
+      Sector::STORY_SHARE_NAV_LIMIT.times { |i| create(:sector, :published, story_share_position: i + 1) }
+      overflow = create(:sector, :published, story_share_position: Sector::STORY_SHARE_NAV_LIMIT + 1)
       extra = create(:sector, :published, story_share_position: nil)
       other = create(:sector, :published, name: Sector::OTHER_SECTOR_NAME, story_share_position: nil)
-      create(:sector, :published, story_share_position: 1)
-      create(:sector, published: false, story_share_position: nil)
+      create(:sector, :unpublished, story_share_position: nil)
 
-      expect(Sector.story_share_additional_focus_areas).to contain_exactly(extra, other)
+      expect(Sector.story_share_additional_focus_areas).to contain_exactly(overflow, extra, other)
     end
   end
 
