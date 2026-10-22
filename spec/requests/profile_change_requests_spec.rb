@@ -89,7 +89,20 @@ RSpec.describe "Profile change requests", type: :request do
 
       get new_profile_change_request_path(person_id: person, field: "affiliation", add: 1)
 
-      expect(response.body).to include("This is a new job and I&#39;ve left my old one", "end your affiliations with Sunrise Center")
+      expect(response.body).to include("Did this replace a job you left?", "Sunrise Center")
+    end
+
+    it "records which organizations the person left for a new job" do
+      left = create(:organization, name: "Sunrise Center")
+      create(:affiliation, person: person, organization: left, start_date: 1.year.ago, end_date: nil)
+      create(:affiliation, person: person, start_date: 1.year.ago, end_date: nil)
+
+      post profile_change_requests_path(person_id: person), params: {
+        profile_change_request: { field: "affiliation", requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, organization_id: create(:organization).id,
+                                  proposed_title: "Therapist", left_organization_ids: [ "", left.id.to_s ] }
+      }
+
+      expect(person.profile_change_requests.last.left_organization_ids).to eq([ left.id ])
     end
 
     it "forbids submitting for someone else" do
@@ -463,9 +476,10 @@ RSpec.describe "Profile change requests", type: :request do
       let(:new_org) { create(:organization, name: "New Clinic") }
       let!(:old_job) { create(:affiliation, person: person, organization: old_org, title: "Counselor", start_date: 2.years.ago, end_date: nil) }
       let!(:old_facilitator) { create(:affiliation, person: person, organization: old_org, start_date: 2.years.ago, end_date: nil) }
+      let!(:other_job) { create(:affiliation, person: person, organization: create(:organization, name: "Weekend Center"), title: "Volunteer", start_date: 1.year.ago, end_date: nil) }
       let(:request) do
         create(:profile_change_request, person: person, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, details: nil,
-                                        organization: new_org, proposed_title: "Therapist", proposed_start_date: Date.new(2026, 9, 1), leaving_job: true)
+                                        organization: new_org, proposed_title: "Therapist", proposed_start_date: Date.new(2026, 9, 1), left_organization_ids: [ old_org.id ])
       end
 
       it "shows what approving ends and defaults to carrying the facilitator role over" do
@@ -473,14 +487,16 @@ RSpec.describe "Profile change requests", type: :request do
         get profile_change_requests_path(status: "pending"), headers: { "Turbo-Frame" => "profile_change_requests_results" }
 
         expect(response.body).to include("Approving ends", "Counselor @ Old Shelter", "Facilitator @ Old Shelter")
+        expect(response.body).not_to include("Volunteer @ Weekend Center")
         expect(response.body).to match(/<input[^>]*checked="checked"[^>]*name="confer_facilitator"|<input[^>]*name="confer_facilitator"[^>]*checked="checked"/)
       end
 
-      it "ends the old organization the day before the new job and adds a Facilitator row" do
+      it "ends only the organization they left, the day before the new job, and adds a Facilitator row" do
         post approve_profile_change_request_path(request), params: { confer_facilitator: "1" }
 
         expect(old_job.reload.end_date).to eq(Date.new(2026, 8, 31))
         expect(old_facilitator.reload.end_date).to eq(Date.new(2026, 8, 31))
+        expect(other_job.reload.end_date).to be_nil
         expect(person.affiliations.where(organization: new_org).pluck(:title, :start_date))
           .to contain_exactly([ "Therapist", Date.new(2026, 9, 1) ], [ "Facilitator", Date.new(2026, 9, 1) ])
         expect(request.reload).to be_resolved
@@ -492,8 +508,8 @@ RSpec.describe "Profile change requests", type: :request do
         expect(person.affiliations.where(organization: new_org).pluck(:title)).to eq([ "Therapist" ])
       end
 
-      it "leaves other organizations alone when the person didn't leave their job" do
-        request.update!(leaving_job: false)
+      it "leaves other organizations alone when the person didn't leave a job" do
+        request.update!(left_organization_ids: [])
 
         post approve_profile_change_request_path(request)
 

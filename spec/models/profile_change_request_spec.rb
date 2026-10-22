@@ -111,6 +111,25 @@ RSpec.describe ProfileChangeRequest, type: :model do
       end
     end
 
+    describe "adding a new job that replaced an old one" do
+      let(:person) { create(:person) }
+      let(:add) { { person: person, field: "affiliation", requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_ADD, proposed_title: "Therapist", details: nil, organization: create(:organization) } }
+
+      it "only accepts organizations the person currently works with" do
+        request = build(:profile_change_request, **add, left_organization_ids: [ create(:organization).id ])
+        expect(request).not_to be_valid
+        expect(request.errors[:left_organization_ids]).to be_present
+      end
+
+      it "drops the left organizations on any other kind of request" do
+        current = create(:affiliation, person: person)
+        request = build(:profile_change_request, person: person, affiliation: current, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_TITLE,
+                                                 proposed_title: "Lead", details: nil, left_organization_ids: [ current.organization_id ])
+        request.validate
+        expect(request.left_organization_ids).to be_nil
+      end
+    end
+
     describe "removing a Facilitator affiliation" do
       let(:facilitator) { create(:affiliation) }
       let(:remove) { { person: facilitator.person, affiliation: facilitator, requested_value: ProfileChangeRequest::AFFILIATION_CHANGE_REMOVE } }

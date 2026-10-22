@@ -16,4 +16,14 @@ RSpec.describe AffiliationServices::EndOtherOrganizations do
     expect(here.reload.end_date).to be_nil
     expect(already_ended.reload.end_date).to eq(2.years.ago.to_date)
   end
+
+  it "ends only the organizations it's limited to" do
+    left = create(:affiliation, person: person, start_date: 1.year.ago, end_date: nil)
+    kept = create(:affiliation, person: person, start_date: 1.year.ago, end_date: nil)
+
+    described_class.call(person:, organization: new_org, effective_date: Date.new(2026, 9, 1), only: [ left.organization_id ])
+
+    expect(left.reload.end_date).to eq(Date.new(2026, 8, 31))
+    expect(kept.reload.end_date).to be_nil
+  end
 end

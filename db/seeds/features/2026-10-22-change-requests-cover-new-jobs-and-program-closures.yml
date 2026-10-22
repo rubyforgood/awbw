@@ -4,8 +4,8 @@ display_status: user_facing
 released_on: 2026-10-22
 pr_number: 2773
 summary: >-
-  When you add an organization, you can say it's a new job and you've left your
-  old one. Removing your Facilitator role now closes your AWBW program there,
+  When you add an organization, you can tick the jobs it replaced, and staff
+  end those for you. Removing your Facilitator role now closes your AWBW program there,
   with the reason and your last day.
 pro_tips:
   - When staff approve a new job, they can also make you a facilitator at the

@@ -161,7 +161,8 @@ module ProfileChangeRequests
       return [] unless @request.ends_other_organizations?
 
       AffiliationServices::EndOtherOrganizations.call(
-        person: @request.person, organization: @request.organization, effective_date: new_affiliation_start
+        person: @request.person, organization: @request.organization, effective_date: new_affiliation_start,
+        only: @request.left_organization_ids
       )
     end
 

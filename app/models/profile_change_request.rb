@@ -65,6 +65,7 @@ class ProfileChangeRequest < ApplicationRecord
   validate :affiliation_target_present, if: -> { field == "affiliation" }
   validate :affiliation_proposed_values, if: -> { field == "affiliation" }
   validate :one_pending_per_target, if: :pending?
+  validate :left_organizations_are_current, if: -> { pending? && ends_other_organizations? }
 
   before_validation :snapshot_target, on: :create
   before_validation :clear_irrelevant_affiliation_fields, if: -> { field == "affiliation" }
@@ -94,14 +95,19 @@ class ProfileChangeRequest < ApplicationRecord
   end
 
   def ends_other_organizations?
-    field == "affiliation" && requested_value == AFFILIATION_CHANGE_ADD && leaving_job?
+    field == "affiliation" && requested_value == AFFILIATION_CHANGE_ADD && left_organization_ids.present?
   end
 
-  # What approving a "left my job" add request would end.
+  # Where the person works now — the jobs a new one could replace.
+  def current_organizations
+    Organization.where(id: person.affiliations.active_or_pending.select(:organization_id)).where.not(id: organization_id).order(:name)
+  end
+
+  # What approving a "this replaced a job I left" add request would end.
   def affiliations_ending_elsewhere
     return Affiliation.none unless ends_other_organizations?
 
-    person.affiliations.active_or_pending.where.not(organization_id: organization_id).includes(:organization)
+    person.affiliations.active_or_pending.where(organization_id: left_organization_ids).where.not(organization_id: organization_id).includes(:organization)
   end
 
   # Approving offers to carry their facilitator role over; on by default when it ends one elsewhere.
@@ -232,11 +238,18 @@ class ProfileChangeRequest < ApplicationRecord
     self.proposed_title = nil unless requested_value.in?([ AFFILIATION_CHANGE_TITLE, AFFILIATION_CHANGE_ADD ])
     self.proposed_start_date = nil unless requested_value.in?([ AFFILIATION_CHANGE_DATES, AFFILIATION_CHANGE_ADD ])
     self.proposed_end_date = nil unless requested_value.in?([ AFFILIATION_CHANGE_DATES, AFFILIATION_CHANGE_ADD, AFFILIATION_CHANGE_REMOVE ])
-    self.leaving_job = false unless requested_value == AFFILIATION_CHANGE_ADD || closing_program?
+    self.leaving_job = false unless closing_program?
+    self.left_organization_ids = (Array(left_organization_ids).compact_blank.map(&:to_i).uniq.presence if requested_value == AFFILIATION_CHANGE_ADD)
     self.proposed_organization_name = nil unless requested_value.in?([ AFFILIATION_CHANGE_ORGANIZATION, AFFILIATION_CHANGE_ADD ])
     self.proposed_organization_name = nil if requested_value == AFFILIATION_CHANGE_ADD && organization_id.present?
     self.proposed_organization_address_id = nil unless work_address_change?
     PROPOSED_ADDRESS_FIELDS.each { |attribute| self[attribute] = nil } if !work_address_change? || proposed_organization_address_id.present?
+  end
+
+  def left_organizations_are_current
+    return if (left_organization_ids - current_organizations.ids).empty?
+
+    errors.add(:left_organization_ids, "must be organizations you currently work with")
   end
 
   def affiliation_belongs_to_person

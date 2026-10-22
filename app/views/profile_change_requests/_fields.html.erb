@@ -58,11 +58,18 @@
     <%= f.input :proposed_organization_name, label: "Not on the list? Type the organization's name",
                 hint: "AWBW staff will add it to the portal.", input_html: { class: "w-full text-lg" } %>
     <%= f.input :proposed_title, label: "Your title or role", input_html: { class: "w-full text-lg" } %>
-    <% current_organizations = request.person.affiliations.active_or_pending.includes(:organization).filter_map(&:organization).uniq %>
+    <% current_organizations = request.current_organizations.to_a %>
     <% if current_organizations.any? %>
-      <%= f.input :leaving_job, as: :boolean, label: "This is a new job and I've left my old one",
-                  hint: "We'll end your affiliations with #{current_organizations.map(&:name).to_sentence}.",
-                  input_html: { class: "rounded border-gray-300" } %>
+      <fieldset class="mb-4">
+        <legend class="mb-1 block font-medium text-gray-700">Did this replace a job you left? (optional)</legend>
+        <p class="text-sm text-gray-500">Tick the organizations you've left and we'll end your affiliations there.</p>
+        <div class="mt-2 space-y-2">
+          <%= f.collection_check_boxes :left_organization_ids, current_organizations, :id, :name do |box| %>
+            <%= box.label(class: "flex cursor-pointer items-center gap-2 text-gray-700") { box.check_box(class: "rounded border-gray-300 text-blue-600 focus:ring focus:ring-blue-200") + box.text } %>
+          <% end %>
+        </div>
+        <%= f.full_error :left_organization_ids, class: "mt-1 text-sm text-red-500" %>
+      </fieldset>
     <% end %>
   <% else %>
     <%= f.hidden_field :affiliation_id %>
