@@ -436,6 +436,7 @@ RSpec.describe PersonServices::ImportFromRolodex do
   describe "the staff the archive stamped on a row" do
     let!(:entered_by) { create(:user) }
     let!(:modified_by) { create(:user) }
+    let!(:awbw_staff) { create(:user, email: User::AWBW_STAFF_EMAIL) }
 
     before do
       create(:staff_alias, name: "Dana Whitfield", user: entered_by)
@@ -453,24 +454,30 @@ RSpec.describe PersonServices::ImportFromRolodex do
       expect(import.unmatched_staff).to be_empty
     end
 
-    it "reports a name no portal user answers to, and leaves the stamp empty" do
+    it "credits AWBW Staff for a name no portal user answers to, and reports it" do
       rolodex("00101", EMail: "ada@example.com", EnteredBy: "Marisol Trevino", ModifiedBy: "Staff")
+      rolodex("00103", FirstName: "Grace", EMail: "grace@example.com")
 
       import = described_class.new.call
 
-      expect(Person.find_by!(filemaker_code: "00101")).to have_attributes(created_by_id: nil, updated_by_id: nil)
+      expect(Person.where(filemaker_code: %w[00101 00103]).pluck(:created_by_id, :updated_by_id).flatten.uniq)
+        .to eq([ awbw_staff.id ])
       # The shared login names no one on purpose, so only the undecided name is reported.
       expect(import.unmatched_staff).to eq({ "Marisol Trevino" => 1 })
     end
 
-    it "leaves a linked person's own stamps alone" do
-      person = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
-      person.update_columns(created_by_id: nil, updated_by_id: nil)
-      rolodex("00102", EMail: "ada@example.com", EnteredBy: "Dana Whitfield", ModifiedBy: "noor!")
+    it "fills a linked person's empty stamps and keeps the ones they have" do
+      blank = create(:person, first_name: "Ada", last_name: "Lovelace", email: "ada@example.com")
+      blank.update_columns(created_by_id: nil, updated_by_id: nil)
+      stamped = create(:person, first_name: "Grace", last_name: "Hopper", email: "grace@example.com")
+      stamped.update_columns(created_by_id: modified_by.id, updated_by_id: modified_by.id)
+      rolodex("00102", EMail: "ada@example.com", EnteredBy: "Dana Whitfield", ModifiedBy: "Staff")
+      rolodex("00104", FirstName: "Grace", LastName: "Hopper", EMail: "grace@example.com", EnteredBy: "Dana Whitfield")
 
       described_class.new.call
 
-      expect(person.reload).to have_attributes(filemaker_code: "00102", created_by_id: nil, updated_by_id: nil)
+      expect(blank.reload).to have_attributes(created_by_id: entered_by.id, updated_by_id: awbw_staff.id)
+      expect(stamped.reload).to have_attributes(created_by_id: modified_by.id, updated_by_id: modified_by.id)
     end
   end
 

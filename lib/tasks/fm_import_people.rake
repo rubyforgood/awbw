@@ -22,6 +22,9 @@ namespace :fm do
     if TagAlias.none?
       abort "No tag aliases recorded — run bin/rails data:seed_tag_aliases first, or every legacy term lands in the unmatched report."
     end
+    unless User.awbw_staff
+      abort "No portal login for #{User::AWBW_STAFF_EMAIL} — the AWBW Staff account a person is credited to when FileMaker names no staffer we can resolve."
+    end
 
     dry_run = ENV["DRY_RUN"] != "false"
     verbose = ENV["VERBOSE"] == "true"

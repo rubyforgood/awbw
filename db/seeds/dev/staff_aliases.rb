@@ -66,4 +66,15 @@ end
 
 StaffAlias.find_or_initialize_by(name: "admin").update!(user: admin, ignored: false)
 
+# The shared account a row is credited to when its staff name resolves to no one.
+awbw_staff = User.find_or_create_by!(email: User::AWBW_STAFF_EMAIL) do |record|
+  record.password = "password"
+  record.super_user = false
+  record.confirmed_at = Time.current
+end
+unless awbw_staff.person
+  person = Person.create!(first_name: "AWBW", last_name: "Staff", email: User::AWBW_STAFF_EMAIL, created_by: admin, updated_by: admin)
+  awbw_staff.update!(person: person)
+end
+
 puts "  #{StaffAlias.resolving.count} staff names resolve, #{StaffAlias.ignored.count} name no one"

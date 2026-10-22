@@ -37,8 +37,20 @@ RSpec.describe "fm:import_people" do
     end
   end
 
-  context "with tag aliases recorded" do
+  context "with tag aliases recorded but no AWBW Staff account" do
     before { create(:tag_alias) }
+
+    it "stops before reading a row" do
+      expect { run_task(dry_run: false) }.to raise_error(/aborted: No portal login for #{User::AWBW_STAFF_EMAIL}/)
+      expect(Person.where(filemaker_code: "00200")).to be_empty
+    end
+  end
+
+  context "with tag aliases recorded" do
+    before do
+      create(:tag_alias)
+      create(:user, email: User::AWBW_STAFF_EMAIL)
+    end
 
     it "rolls a dry run back and saves its report" do
       expect { run_task }.to change(ActiveStorage::Blob, :count).by(1)

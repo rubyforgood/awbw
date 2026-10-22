@@ -67,6 +67,7 @@ module PersonServices
                               .flat_map { |value| Person.split_filemaker_codes(value) }.to_set
       @translation = TagTranslation.new
       @staff = StaffTranslation.new
+      @awbw_staff_id = User.awbw_staff&.id
     end
 
     def call
@@ -213,6 +214,7 @@ module PersonServices
         [ Person.human_attribute_name(attribute), person[attribute], value ]
       end
       fill_email_2(person, rolodex.data)
+      archive_stamps(rolodex.data).each { |attribute, user_id| person[attribute] ||= user_id }
       build_addresses(person, rolodex)
       build_phones(person, rolodex)
       kept
@@ -242,12 +244,12 @@ module PersonServices
       @differences << "#{label} → ##{person.id}: #{lines.join('; ')}"
     end
 
-    # The staff FileMaker recorded as entering and last changing the row, as the created
-    # person's own stamps (StaffAlias). A linked person keeps theirs: the archive's names
-    # say who touched the FileMaker record, not their portal profile.
+    # The staff FileMaker recorded as entering and last changing the row (StaffAlias), or
+    # the shared AWBW Staff account when the archive names no one we can resolve, so every
+    # person carries both stamps. A linked person keeps any stamps they already have.
     def archive_stamps(data)
-      { created_by_id: @staff.user_id_for(data["EnteredBy"]),
-        updated_by_id: @staff.user_id_for(data["ModifiedBy"]) }.compact
+      { created_by_id: @staff.user_id_for(data["EnteredBy"]) || @awbw_staff_id,
+        updated_by_id: @staff.user_id_for(data["ModifiedBy"]) || @awbw_staff_id }.compact
     end
 
     # The archive's own entry and modification dates, so an imported person dates from
