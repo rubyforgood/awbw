@@ -119,6 +119,8 @@ class StorySharesController < ApplicationController
     @count_display = count_display(filtered.count)
     return load_search_results(filtered, per_page) if searching?
 
+    @intro_tag = intro_tag
+
     highlights = primary_tag_matches(filtered)
     lead_ids = highlights.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
     grid_ids = highlights.where.not(id: lead_ids).reorder(created_at: :desc).limit(BROWSE_GRID_LIMIT).pluck(:id)
@@ -146,6 +148,16 @@ class StorySharesController < ApplicationController
 
   def in_id_order(ids)
     preloaded(Story.where(id: ids)).in_order_of(:id, ids).decorate
+  end
+
+  # The sector or audience category whose own page this is, so its intro leads the page.
+  def intro_tag
+    sector_names = params[:sector_names_all].to_s.split("--")
+    return Sector.sector_names_all(sector_names).first if sector_names.one?
+    return if sector_names.any?
+
+    category_names = params[:category_names_all].to_s.split("--")
+    Category.audiences.category_names_all(category_names).first if category_names.one?
   end
 
   def first_page?

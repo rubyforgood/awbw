@@ -524,6 +524,35 @@ RSpec.describe "/story_share", type: :request do
       expect(listed_titles).to eq([ "An adult story with teens too" ])
     end
 
+    it "leads a sector page with the sector's intro" do
+      Sector.find_by(name: "Domestic Violence").update!(rhino_story_share_intro: "<p>Survivors finding their voice</p>")
+      get story_shares_path(sector_names_all: "Domestic Violence")
+      expect(response.body).to include("Survivors finding their voice")
+      expect(response.body).not_to include("Edit intro")
+    end
+
+    it "leads an age range page with the age range's intro" do
+      age_range = create(:category_type, name: "AgeRange")
+      create(:category, :published, name: "Children", category_type: age_range,
+                                    rhino_story_share_intro: "<p>Art with our youngest participants</p>")
+      get story_shares_path(category_names_all: "Children")
+      expect(response.body).to include("Art with our youngest participants")
+    end
+
+    it "skips intros when several sectors are combined" do
+      Sector.find_by(name: "Domestic Violence").update!(rhino_story_share_intro: "<p>Survivors finding their voice</p>")
+      get story_shares_path(sector_names_all: "Domestic Violence--Mental Health")
+      expect(response.body).not_to include("Survivors finding their voice")
+    end
+
+    it "offers admins a link to add the intro" do
+      sign_in create(:user, :admin)
+      sector = Sector.find_by(name: "Domestic Violence")
+      get story_shares_path(sector_names_all: sector.name)
+      expect(response.body).to include("Add intro")
+      expect(response.body).to include(edit_sector_path(sector, return_to: "story_share"))
+    end
+
     it "does not leak non-public stories to guests when browsing" do
       create(:story, :published, title: "A published-only secret", publicly_visible: false).tap { |s| tag_sector(s, "Domestic Violence") }
       get story_shares_path(sector_names_all: "Domestic Violence")

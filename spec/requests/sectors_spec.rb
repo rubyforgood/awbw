@@ -141,6 +141,14 @@ RSpec.describe "/sectors", type: :request do
         sector.reload
         expect(response).to redirect_to(sector_url(sector))
       end
+
+      it "saves the Story Share intro and returns to the sector's Story Share page" do
+        sector = Sector.create! valid_attributes
+        patch sector_url(sector), params: { return_to: "story_share", sector: { rhino_story_share_intro: "<p>Healing together</p>" } }
+        sector.reload
+        expect(sector.rhino_story_share_intro.to_plain_text).to eq("Healing together")
+        expect(response).to redirect_to(story_shares_path(sector_names_all: sector.name))
+      end
     end
 
     context "with invalid parameters" do
