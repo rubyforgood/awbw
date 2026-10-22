@@ -1,0 +1,11 @@
+name: "Intro text on Story Share sector and age range pages"
+area: stories
+display_status: admin_facing
+released_on: 2026-10-22
+pr_number: 2777
+summary: >-
+  Each sector, age range, and story population can carry its own intro, shown at the top of its
+  Story Share page. Write it with the same editor used for stories.
+pro_tips:
+  - "Open a sector or age range page in Story Share and click Add intro to write one."
+  - "Pages that combine several sectors don't show an intro."

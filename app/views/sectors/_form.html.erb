@@ -3,6 +3,7 @@
 
     <!-- Errors -->
     <%= render "shared/errors", resource: @sector if @sector.errors.any? %>
+    <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
 
     <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-4">
       <div class="space-y-6 md:col-span-3">
@@ -20,6 +21,13 @@
                       label: "Description",
                       hint: "Optional. Shown under this sector on the public registration form to clarify its meaning when the name alone isn't enough.",
                       input_html: { class: "form-control", rows: 2 } %>
+        </div>
+
+        <!-- Story Share intro -->
+        <div>
+          <%= rhino_editor(f, :story_share_intro,
+                           label: "Story Share intro",
+                           hint: "Optional. Shown at the top of this sector's Story Share page.") %>
         </div>
 
         <!-- Story Share portal placement -->

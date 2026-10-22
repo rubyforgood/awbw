@@ -9,6 +9,21 @@
       <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
     </div>
 
+    <% intro = @intro_tag&.rhino_story_share_intro %>
+    <% can_edit_intro = @intro_tag && allowed_to?(:edit?, @intro_tag) %>
+    <% if intro.present? || can_edit_intro %>
+      <div class="-mt-4 mb-10 max-w-3xl">
+        <% if intro.present? %>
+          <div class="max-w-none prose prose-lg text-gray-700"><%= intro %></div>
+        <% end %>
+        <% if can_edit_intro %>
+          <%= link_to intro.present? ? "Edit intro" : "Add intro",
+                      polymorphic_path(@intro_tag, action: :edit, return_to: "story_share"),
+                      class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100 mt-3 whitespace-nowrap") %>
+        <% end %>
+      </div>
+    <% end %>
+
     <% if @lead_stories.any? || @stories.any? %>
       <%# Lead spot (first page only): featured, then newest. Cards below: newest. %>
       <% if single_hero? && @lead_stories.any? %>

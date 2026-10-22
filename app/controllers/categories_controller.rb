@@ -51,7 +51,7 @@ class CategoriesController < ApplicationController
     authorize! @category
     respond_to do |format|
       if @category.update(category_params)
-        format.html { redirect_to @category, notice: "Category was successfully updated.", status: :see_other }
+        format.html { redirect_to after_update_path, notice: "Category was successfully updated.", status: :see_other }
         format.json { head :ok }
       else
         format.html do
@@ -89,6 +89,12 @@ class CategoriesController < ApplicationController
     }
   end
 
+  def after_update_path
+    return story_shares_path(category_names_all: @category.name) if params[:return_to] == "story_share"
+
+    @category
+  end
+
   def set_category
     @category = Category.find(params[:id])
   end
@@ -97,7 +103,7 @@ class CategoriesController < ApplicationController
   def category_params
     if params[:category]
       params.require(:category).permit(
-        :name, :category_type_id, :published, :position, :description, :story_share_position
+        :name, :category_type_id, :published, :position, :description, :story_share_position, :rhino_story_share_intro
       )
     else
       params.permit(:position)

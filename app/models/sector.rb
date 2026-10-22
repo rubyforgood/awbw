@@ -56,6 +56,7 @@ class Sector < ApplicationRecord
            source: :sectorable, source_type: "Story"
   # has_many through
   has_many :quotes, through: :workshops
+  has_rich_text :rhino_story_share_intro
 
   # Validations
   normalizes :name, with: ->(name) { name.squish }

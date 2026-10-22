@@ -96,6 +96,15 @@ RSpec.describe "Categories", type: :request do
         get edit_category_path(category)
         expect(response).to have_http_status(:ok)
       end
+
+      it "offers the Story Share intro only for age ranges and story populations" do
+        age_range = create(:category, category_type: create(:category_type, name: "AgeRange"))
+        get edit_category_path(age_range)
+        expect(response.body).to include("Story Share intro")
+
+        get edit_category_path(create(:category, valid_attributes))
+        expect(response.body).not_to include("Story Share intro")
+      end
     end
 
     describe "POST create" do
@@ -130,6 +139,14 @@ RSpec.describe "Categories", type: :request do
 
           expect(response).to have_http_status(:see_other)
           expect(category.reload.name).to eq("Updated Name")
+        end
+
+        it "saves the Story Share intro and returns to the category's Story Share page" do
+          patch category_path(category),
+                params: { return_to: "story_share", category: { rhino_story_share_intro: "<p>For our youngest artists</p>" } }
+
+          expect(category.reload.rhino_story_share_intro.to_plain_text).to eq("For our youngest artists")
+          expect(response).to redirect_to(story_shares_path(category_names_all: category.name))
         end
       end
 
