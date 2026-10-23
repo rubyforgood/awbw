@@ -30,27 +30,6 @@ class WorkshopDecorator < ApplicationDecorator
     form.object.name
   end
 
-  def breadcrumbs
-    if title
-      "#{breadcrumbs_title} >> #{breadcrumb_link} >> Workshop Log".html_safe
-    else
-      "Submit Workshop Log >> Report on a New Workshop"
-    end
-  end
-
-  def breadcrumb_link
-    return title unless id
-    h.link_to title, h.workshop_path(self), class: "underline"
-  end
-
-  def breadcrumbs_title
-    h.link_to "Workshops", h.workshops_path, class: "underline"
-  end
-
-  def detail_breadcrumbs
-    "#{breadcrumbs_title} >> #{breadcrumb_link}".html_safe
-  end
-
   def list_sectors
     sectorable_items.map(&:sector).map(&:name).to_sentence
   end
