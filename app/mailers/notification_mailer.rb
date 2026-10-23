@@ -126,10 +126,10 @@ class NotificationMailer < ApplicationMailer
   def story_promoted_fyi(notification)
     @story = notification.noticeable.decorate
     @story_idea = @story.story_idea
-    @user = @story_idea&.created_by || @story.created_by
+    @user = @story_idea&.created_by
 
     mail(
-      subject: "#{FYI_PREFIX} Story idea promoted to a story: #{@story.title}"
+      subject: "#{FYI_PREFIX} Story published: #{@story.title}"
     )
   end
 

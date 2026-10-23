@@ -488,8 +488,26 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(described_class.story_promoted_fyi(notification).to).to eq([ EmailConfigHelpers::PROGRAMS_EMAIL ])
     end
 
-    it "names the story in the subject" do
-      expect(described_class.story_promoted_fyi(notification).subject).to include("A Healing Story")
+    it "names the published story in the subject" do
+      expect(described_class.story_promoted_fyi(notification).subject).to eq("#{described_class::FYI_PREFIX} Story published: A Healing Story")
+    end
+
+    it "credits the idea's submitter and links the original idea" do
+      body = described_class.story_promoted_fyi(notification).body.encoded
+      expect(body).to include("Story published")
+      expect(body).to include("Idea submitted by #{submitter.full_name}")
+      expect(body).to include("View original idea")
+    end
+
+    context "when the story was created directly" do
+      let(:story) { create(:story, title: "A Healing Story") }
+
+      it "leaves out the idea details" do
+        body = described_class.story_promoted_fyi(notification).body.encoded
+        expect(body).to include("Story published")
+        expect(body).not_to include("Idea submitted by")
+        expect(body).not_to include("View original idea")
+      end
     end
   end
 

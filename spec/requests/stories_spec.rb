@@ -459,14 +459,15 @@ RSpec.describe "/stories", type: :request do
         }.not_to change(Notification, :count)
       end
 
-      it "emails the authors, and no admin FYI, when a story with no story idea is created published" do
+      it "emails the authors and an admin when a story with no story idea is created published" do
         author = create(:person, email: "author@example.com")
         co_author = create(:person, email: "co-author@example.com")
         post stories_url, params: { story: base_attributes.merge(author_id: author.id, co_author_id: co_author.id, published: "1") }
 
         expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email, :person_id)).to contain_exactly(
           [ "story_promoted", "author@example.com", author.id ],
-          [ "story_promoted", "co-author@example.com", co_author.id ]
+          [ "story_promoted", "co-author@example.com", co_author.id ],
+          [ "story_promoted_fyi", Setting.programs_email, nil ]
         )
       end
 
@@ -475,7 +476,8 @@ RSpec.describe "/stories", type: :request do
         post stories_url, params: { story: base_attributes.merge(author_id: author.id, published: "1", funder_only: "1") }
 
         expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email)).to contain_exactly(
-          [ "story_shared_with_funder", "author@example.com" ]
+          [ "story_shared_with_funder", "author@example.com" ],
+          [ "story_promoted_fyi", Setting.programs_email ]
         )
       end
     end
@@ -643,21 +645,22 @@ RSpec.describe "/stories", type: :request do
         expect(promotion_notices.size).to eq(2)
       end
 
-      it "emails the author when publishing a story with no story idea" do
+      it "emails the author and an admin when publishing a story with no story idea" do
         author = create(:person, email: "author@example.com")
         private_story.update!(author: author)
 
         patch story_url(private_story), params: { story: { published: "1" } }
 
         expect(Notification.where(noticeable: private_story).pluck(:kind, :recipient_email)).to contain_exactly(
-          [ "story_promoted", "author@example.com" ]
+          [ "story_promoted", "author@example.com" ],
+          [ "story_promoted_fyi", Setting.programs_email ]
         )
       end
 
-      it "does not email anyone when publishing a story with no story idea or author" do
-        expect {
-          patch story_url(private_story), params: { story: { published: "1" } }
-        }.not_to change(Notification, :count)
+      it "sends only the admin FYI when publishing a story with no story idea or author" do
+        patch story_url(private_story), params: { story: { published: "1" } }
+
+        expect(Notification.where(noticeable: private_story).pluck(:kind)).to contain_exactly("story_promoted_fyi")
       end
     end
 

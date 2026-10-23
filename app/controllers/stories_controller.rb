@@ -180,7 +180,7 @@ class StoriesController < ApplicationController
     return if @story.notifications.exists?(kind: %w[story_promoted story_shared_with_funder story_promoted_fyi])
 
     NotificationServices::NotifyAuthors.call(record: @story, kind: @story.funder_only? ? :story_shared_with_funder : :story_promoted)
-    notify_story_promoted_fyi if @story.story_idea
+    notify_story_promoted_fyi
   end
 
   def notify_story_promoted_fyi
