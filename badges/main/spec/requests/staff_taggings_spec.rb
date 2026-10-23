@@ -357,13 +357,30 @@ RSpec.describe "/staff_taggings", type: :request do
   describe "DELETE /staff_taggings/:id" do
     before { sign_in admin }
 
-    it "removes a tagging" do
+    it "removes a tagging and returns to the staff taggings list" do
       tagging = create(:staff_tagging)
 
       expect {
-        delete staff_tagging_path(tagging)
+        delete staff_tagging_path(tagging, return_to: "staff_taggings")
       }.to change(StaffTagging, :count).by(-1)
       expect(response).to redirect_to(staff_taggings_path)
+    end
+
+    it "returns to the staff tag it was removed from" do
+      tagging = create(:staff_tagging)
+
+      delete staff_tagging_path(tagging, return_to: "staff_tag")
+
+      expect(response).to redirect_to(staff_tag_path(tagging.staff_tag))
+    end
+
+    it "returns to the person's edit page by default" do
+      person = create(:person)
+      tagging = create(:staff_tagging, staff_taggable: person)
+
+      delete staff_tagging_path(tagging)
+
+      expect(response).to redirect_to(edit_person_path(person, anchor: "staff_tagging_#{tagging.id}"))
     end
   end
 end

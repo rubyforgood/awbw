@@ -66,7 +66,7 @@ class StaffTaggingsController < ApplicationController
   def destroy
     authorize! @staff_tagging
     @staff_tagging.destroy
-    redirect_to staff_taggings_path, notice: "Staff tagging was successfully removed.", status: :see_other
+    redirect_to staff_tagging_return_path, notice: "Staff tagging was successfully removed.", status: :see_other
   end
 
   def toggle_marked
