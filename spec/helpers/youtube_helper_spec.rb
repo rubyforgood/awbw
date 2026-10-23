@@ -15,6 +15,16 @@ RSpec.describe YoutubeHelper, type: :helper do
     end
   end
 
+  describe "#youtube_embed_url" do
+    it "builds a plain embed URL" do
+      expect(helper.youtube_embed_url("https://youtu.be/abc123")).to eq("https://www.youtube.com/embed/abc123")
+    end
+
+    it "turns on the player's JS API when asked" do
+      expect(helper.youtube_embed_url("https://youtu.be/abc123", js_api: true)).to eq("https://www.youtube.com/embed/abc123?enablejsapi=1")
+    end
+  end
+
   describe "#youtube_background_embed_url" do
     it "builds a muted, looping, controls-free autoplay embed" do
       url = helper.youtube_background_embed_url("https://www.youtube.com/watch?v=abc123")

@@ -358,7 +358,7 @@ RSpec.describe "/stories", type: :request do
 
         slides = Capybara.string(response.body).all("#hero-image .swiper-slide")
         expect(slides.size).to eq(2)
-        expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123']")
+        expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123?enablejsapi=1']")
       end
     end
 

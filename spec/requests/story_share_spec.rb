@@ -822,7 +822,7 @@ RSpec.describe "/story_share", type: :request do
       page = Capybara.string(response.body)
       slides = page.all(".swiper-slide")
       expect(slides.size).to eq(3)
-      expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123'][allowfullscreen]")
+      expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123?enablejsapi=1'][data-carousel-target='video']")
       expect(slides.drop(1)).to all(have_css("img"))
       expect(page).to have_css("iframe", count: 1)
     end
@@ -833,7 +833,7 @@ RSpec.describe "/story_share", type: :request do
       get story_share_path(story)
 
       page = Capybara.string(response.body)
-      expect(page).to have_css(".swiper-slide iframe[src='https://www.youtube.com/embed/abc123']")
+      expect(page).to have_css(".swiper-slide iframe[src='https://www.youtube.com/embed/abc123?enablejsapi=1']")
       expect(page).to have_no_css(".swiper-button-next-custom")
     end
   end

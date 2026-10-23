@@ -9,6 +9,7 @@ import 'swiper/css/navigation'
 // Pass Swiper overrides via data-carousel-options-value='{ "slidesPerView": 2, ... }'.
 // Any keys provided there win over the defaults below (breakpoints replace wholesale).
 export default class extends Controller {
+  static targets = ["video"]
   static values = { options: Object }
 
   connect() {
@@ -40,6 +41,12 @@ export default class extends Controller {
     }
 
     this.swiper = new Swiper(this.element, { ...defaults, ...this.optionsValue })
+    this.swiper.on("slideChange", () => this.pauseVideos())
+  }
+
+  pauseVideos() {
+    const command = JSON.stringify({ event: "command", func: "pauseVideo", args: [] })
+    this.videoTargets.forEach((video) => video.contentWindow?.postMessage(command, "https://www.youtube.com"))
   }
 
   disconnect() {
