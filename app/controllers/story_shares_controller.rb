@@ -10,6 +10,7 @@ class StorySharesController < ApplicationController
   RELATED_STORY_LIMIT = 3
   POPULAR_STORY_LIMIT = 4
   BROWSE_CAROUSEL_LIMIT = 5
+  BROWSE_GRID_LIMIT = 3
   # Any of these params means the visitor is browsing a filtered result set
   # rather than the curated landing page.
   BROWSE_PARAMS = %i[ sector_names_all category_names_all query additional_focus_areas year page ].freeze
@@ -108,21 +109,30 @@ class StorySharesController < ApplicationController
 
   def load_browse
     per_page = params[:number_of_items_per_page].presence || 12
-    filtered = browse_scope
+    filtered = portal_scope.search_by_params(params)
+    filtered = filtered.with_sector(additional_focus_area_sectors) if params[:additional_focus_areas].present?
     @count_display = count_display(filtered.count)
-    lead_ids = filtered.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
-    @lead_stories = first_page? ? preloaded(Story.where(id: lead_ids)).in_order_of(:id, lead_ids).decorate : []
-    @stories = preloaded(filtered.where.not(id: lead_ids)).order(created_at: :desc)
+    highlights = primary_tag_matches(filtered)
+    lead_ids = highlights.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
+    grid_ids = highlights.where.not(id: lead_ids).reorder(created_at: :desc).limit(BROWSE_GRID_LIMIT).pluck(:id)
+    @lead_stories = first_page? ? in_id_order(lead_ids) : []
+    @grid_stories = first_page? ? in_id_order(grid_ids) : []
+    @stories = preloaded(filtered.where.not(id: lead_ids + grid_ids)).order(created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
+  end
+
+  def in_id_order(ids)
+    preloaded(Story.where(id: ids)).in_order_of(:id, ids).decorate
   end
 
   def first_page?
     params[:page].to_i <= 1
   end
 
-  def browse_scope
-    stories = portal_scope.search_by_params(params.except(:sector_names_all, :category_names_all))
+  # The banner/carousel and 3-up cards feature only stories starring the browsed
+  # tag as primary; stories carrying it as a secondary tag stay in the list below.
+  def primary_tag_matches(stories)
     stories = stories.with_primary_sector(Sector.sector_names_all(params[:sector_names_all])) if params[:sector_names_all].present?
     stories = stories.with_primary_category(Category.category_names_all(params[:category_names_all])) if params[:category_names_all].present?
     stories = stories.with_primary_sector(additional_focus_area_sectors) if params[:additional_focus_areas].present?

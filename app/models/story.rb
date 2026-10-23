@@ -109,7 +109,9 @@ class Story < ApplicationRecord
   # Admin hand-picks the Story Share home carousel: lowest number leads, blank = not in it.
   scope :story_share_carousel, -> { where.not(story_share_carousel_position: nil).order(:story_share_carousel_position) }
 
-  # Story Share files a story under its starred sector and audience only.
+  scope :with_sector, ->(sectors) {
+    where(id: SectorableItem.where(sectorable_type: "Story", sector_id: sectors).select(:sectorable_id))
+  }
   scope :with_primary_sector, ->(sectors) {
     where(id: SectorableItem.where(sectorable_type: "Story", is_primary: true, sector_id: sectors).select(:sectorable_id))
   }
