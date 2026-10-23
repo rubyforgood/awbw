@@ -810,6 +810,32 @@ RSpec.describe "/story_share", type: :request do
 
       expect(carousel_slide(story)).to have_no_css("iframe")
     end
+
+    it "leads the story page carousel with the video, then the story's images" do
+      story = create(:story, :published, :publicly_visible, youtube_url: video_url)
+      [ :primary_asset, :gallery_asset ].each do |factory|
+        create(factory, owner: story).file.attach(io: StringIO.new("image"), filename: "art.png", content_type: "image/png")
+      end
+
+      get story_share_path(story)
+
+      page = Capybara.string(response.body)
+      slides = page.all(".swiper-slide")
+      expect(slides.size).to eq(3)
+      expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123'][allowfullscreen]")
+      expect(slides.drop(1)).to all(have_css("img"))
+      expect(page).to have_css("iframe", count: 1)
+    end
+
+    it "shows a video-only story as a single slide without arrows" do
+      story = create(:story, :published, :publicly_visible, youtube_url: video_url)
+
+      get story_share_path(story)
+
+      page = Capybara.string(response.body)
+      expect(page).to have_css(".swiper-slide iframe[src='https://www.youtube.com/embed/abc123']")
+      expect(page).to have_no_css(".swiper-button-next-custom")
+    end
   end
 
   # ==========================================================

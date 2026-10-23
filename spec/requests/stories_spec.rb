@@ -349,6 +349,17 @@ RSpec.describe "/stories", type: :request do
         get story_url(private_story)
         expect(response).to have_http_status(:ok)
       end
+
+      it "leads the image carousel with the story's video" do
+        private_story.update!(youtube_url: "https://youtu.be/abc123")
+        create(:primary_asset, owner: private_story).file.attach(io: StringIO.new("image"), filename: "art.png", content_type: "image/png")
+
+        get story_url(private_story)
+
+        slides = Capybara.string(response.body).all("#hero-image .swiper-slide")
+        expect(slides.size).to eq(2)
+        expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123']")
+      end
     end
 
     describe "GET /edit" do
