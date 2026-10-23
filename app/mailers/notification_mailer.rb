@@ -74,12 +74,7 @@ class NotificationMailer < ApplicationMailer
     @notification = notification
     @noticeable = notification.noticeable.decorate
     @noticeable_klass = @noticeable.object.class
-
-    if @noticeable_klass == User
-      @user = @noticeable.object
-    else
-      @user = @noticeable.try(:user) || @noticeable.try(:created_by)
-    end
+    @recipient_name = notification.person&.first_name.presence || notification.recipient_email
 
     mail(
       to: notification.recipient_email,

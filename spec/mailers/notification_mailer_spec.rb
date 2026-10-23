@@ -164,6 +164,19 @@ RSpec.describe NotificationMailer, type: :mailer do
     end
   end
 
+  describe "#idea_submitted" do
+    let(:co_author) { create(:person, first_name: "Rosa") }
+    let(:story_idea) { create(:story_idea, co_author: co_author, author: create(:person)) }
+    let(:notification) do
+      create(:notification, kind: "idea_submitted", noticeable: story_idea, person: co_author,
+             recipient_role: "person", recipient_email: co_author.preferred_email)
+    end
+
+    it "greets the author it was sent to" do
+      expect(described_class.idea_submitted(notification).body.encoded).to include("Hello <strong>Rosa</strong>")
+    end
+  end
+
   describe "#idea_submitted_fyi" do
     let(:user) { create(:user) }
 

@@ -179,32 +179,8 @@ class StoriesController < ApplicationController
   def notify_story_published
     return if @story.notifications.exists?(kind: %w[story_promoted story_shared_with_funder story_promoted_fyi])
 
-    notify_story_authors
+    NotificationServices::NotifyAuthors.call(record: @story, kind: @story.funder_only? ? :story_shared_with_funder : :story_promoted)
     notify_story_promoted_fyi if @story.story_idea
-  end
-
-  def notify_story_authors
-    story_author_recipients.each do |recipient|
-      NotificationServices::CreateNotification.call(
-        noticeable: @story,
-        person: recipient[:person],
-        kind: @story.funder_only? ? :story_shared_with_funder : :story_promoted,
-        recipient_role: :person,
-        recipient_email: recipient[:email],
-        notification_type: 0)
-    end
-  end
-
-  # A promoted story goes to the idea's submitter; a story created directly goes to its credited authors.
-  def story_author_recipients
-    if @story.story_idea
-      submitter = @story.story_idea.created_by
-      return submitter ? [ { person: submitter.person, email: submitter.email } ] : []
-    end
-
-    [ @story.author, @story.co_author ].compact
-      .filter_map { |person| { person: person, email: person.preferred_email } if person.preferred_email }
-      .uniq { |recipient| recipient[:email].downcase }
   end
 
   def notify_story_promoted_fyi
