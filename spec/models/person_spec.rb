@@ -116,6 +116,18 @@ RSpec.describe Person, type: :model do
       expect(person.legal_first_name).to eq("Mary-Katherine")
     end
 
+    it "drops a legal first name that matches the first name, ignoring case and whitespace" do
+      person = create(:person, first_name: "Mary Ann", legal_first_name: "  mary   ANN ", last_name: "Rivera")
+
+      expect(person.legal_first_name).to be_nil
+    end
+
+    it "keeps a legal first name that differs from the first name" do
+      person = create(:person, first_name: "Sam", legal_first_name: "Samantha", last_name: "Rivera")
+
+      expect(person.legal_first_name).to eq("Samantha")
+    end
+
     it "handles nil values" do
       person = create(:person, user: nil, first_name: "Jane", last_name: "Doe",
                        email: nil, email_2: nil,

@@ -112,6 +112,14 @@ class Person < ApplicationRecord
     name&.strip&.gsub(DASH_VARIANTS, "-")
   end
 
+  def self.same_name?(one, other)
+    one.to_s.squish.casecmp?(other.to_s.squish)
+  end
+
+  def legal_first_name_differs?(name)
+    !Person.same_name?(name, first_name)
+  end
+
   CONTACT_TYPES = [ "work", "personal" ].freeze
   UNKNOWN_CONTACT_TYPE = "unknown"
   # What an email can be stored as; people choosing their own pick from CONTACT_TYPES.
@@ -701,7 +709,8 @@ class Person < ApplicationRecord
   def normalize_names
     self.first_name = Person.normalize_name(first_name)
     self.last_name = Person.normalize_name(last_name)
-    self.legal_first_name = Person.normalize_name(legal_first_name)
+    self.legal_first_name = Person.normalize_name(legal_first_name).presence
+    self.legal_first_name = nil unless legal_first_name.nil? || legal_first_name_differs?(legal_first_name)
   end
 
   def unique_name_and_email_combination
