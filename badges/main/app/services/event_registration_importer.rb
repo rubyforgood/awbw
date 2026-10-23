@@ -70,7 +70,6 @@ class EventRegistrationImporter
     first_name: "first_name",
     last_name: "last_name",
     email: "primary_email",
-    nickname: "nickname",
     pronouns: "pronouns",
     secondary_email: "secondary_email",
     organization: "organization_name",
@@ -319,7 +318,7 @@ class EventRegistrationImporter
     preview.person_status = :new
     preview.person_label = "#{values[:first_name]} #{values[:last_name]}"
     person = Person.new(
-      first_name: values[:first_name], last_name: values[:last_name], email: values[:email],
+      first_name: values[:nickname] || values[:first_name], last_name: values[:last_name], email: values[:email],
       created_by: @import_user, updated_by: @import_user
     )
     person.email = placeholder_email(person, preview) if person.email.blank?
@@ -338,7 +337,7 @@ class EventRegistrationImporter
 
   def find_matching_person(values, organization)
     if values[:email]
-      person = PersonMatcher.call(email: values[:email], last_name: values[:last_name], first_names: [ values[:first_name] ])
+      person = PersonMatcher.call(email: values[:email], last_name: values[:last_name], first_names: [ values[:first_name], values[:nickname] ])
       return [ person, nil ]
     end
 
@@ -519,6 +518,7 @@ class EventRegistrationImporter
     answers = PLAIN_ANSWERS.each_with_object({}) do |(field, identifier), hash|
       hash[identifier] = values[field] if values[field]
     end
+    answers["legal_first_name"] = values[:first_name] if values[:nickname]
     answers["organization_type"] = organization_type(values[:organization_type]) if values[:organization_type]
     answers["mailing_address_type"] = contact_type(values[:mailing_address_type])
     answers["phone_type"] = contact_type(values[:phone_type])

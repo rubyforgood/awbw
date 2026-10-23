@@ -526,6 +526,22 @@ RSpec.describe EventRegistrationImporter do
         expect(person.pronouns).to eq("they/them")
       end
 
+      it "names a new person by the sheet's nickname and keeps the first name as their legal first name" do
+        import_rows(%w[FirstName Nickname LastName EMail], [ "Robert", "Bob", "Example", "bob@example.org" ])
+        person = Person.find_by(email: "bob@example.org")
+
+        expect([ person.first_name, person.legal_first_name ]).to eq(%w[Bob Robert])
+      end
+
+      it "matches a person stored under the sheet's nickname" do
+        person = create(:person, first_name: "Bob", last_name: "Example", email: "bob@example.org")
+
+        expect {
+          import_rows(%w[FirstName Nickname LastName EMail], [ "Robert", "Bob", "Example", "bob@example.org" ])
+        }.not_to change(Person, :count)
+        expect(person.reload.legal_first_name).to eq("Robert")
+      end
+
       it "keeps a matched person's current primary address and adds the sheet's beside it" do
         person = create(:person, first_name: "Pat", last_name: "Example", email: "pat@example.org", pronouns: "she/her")
         current = person.addresses.create!(street_address: "9 Elm St", city: "Portland", state: "OR", zip_code: "97201",

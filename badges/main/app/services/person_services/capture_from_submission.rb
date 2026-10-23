@@ -40,7 +40,6 @@ module PersonServices
     end
 
     def call
-      apply_nickname
       apply_value(@person, :legal_first_name, field_value("legal_first_name"))
       apply_value(@person, :pronouns, field_value("pronouns"))
       apply_value(@person, :pronunciation, field_value("pronunciation"))
@@ -56,17 +55,6 @@ module PersonServices
     end
 
     private
-
-    # A nickname becomes the person's first name and moves the legal first name to
-    # its own column, matching how a new registrant's name is resolved at sign-up.
-    def apply_nickname
-      nickname = field_value("nickname")&.strip
-      return if nickname.blank?
-      return decline(:first_name, nickname, @person.first_name) unless @overwrite
-
-      @person.update!(first_name: nickname)
-      apply_value(@person, :legal_first_name, field_value("first_name"))
-    end
 
     def apply_value(record, attribute, value)
       return if value.blank?

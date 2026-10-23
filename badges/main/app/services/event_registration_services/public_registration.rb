@@ -165,22 +165,10 @@ module EventRegistrationServices
       @form_params[field.id.to_s]
     end
 
-    def resolve_names
-      submitted_first = field_value("first_name")&.strip.presence || field_value("legal_first_name")&.strip
-      nickname = field_value("nickname")&.strip
-
-      if nickname.present?
-        { first_name: nickname, legal_first_name: submitted_first }
-      else
-        { first_name: submitted_first, legal_first_name: nil }
-      end
-    end
-
     def find_or_create_person
       return @person if @person
 
-      names = resolve_names
-      first_name = names[:first_name]
+      first_name = field_value("first_name")&.strip.presence || field_value("legal_first_name")&.strip
       last_name = field_value("last_name")&.strip
       email = field_value("primary_email")&.strip&.downcase
       email_type = field_value("primary_email_type")&.downcase
@@ -192,17 +180,16 @@ module EventRegistrationServices
       # CaptureFromSubmission, which runs for both new and existing people.
       Person.create!(
         first_name: first_name,
-        legal_first_name: names[:legal_first_name],
         last_name: last_name,
         email: email,
         email_type: email_type
       )
     end
 
-    # Accepts the typed first name, nickname, or legal first name so a returning
-    # registrant who swaps their legal name and nickname still matches.
+    # Accepts the first_name or legal_first_name answer so a returning registrant who
+    # swaps them still matches.
     def find_matching_person(last_name:, email:)
-      PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("nickname"), field_value("legal_first_name") ])
+      PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("legal_first_name") ])
     end
 
     def record_news_subscription(person)

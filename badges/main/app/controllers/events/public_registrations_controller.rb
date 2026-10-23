@@ -392,7 +392,6 @@ module Events
       keys << "last_name" if person.last_name.present?
       keys << "primary_email" << "confirm_email" if person.email.present?
       keys << "primary_email_type" if person.known_email_type?
-      keys << "nickname" if person.legal_first_name.present? || person.first_name.present?
       keys << "legal_first_name" if person.legal_first_name.present?
       keys << "pronouns" if person.pronouns.present?
       keys << "secondary_email" if person.email_2.present?
