@@ -93,17 +93,16 @@ RSpec.describe "Person profile stories section", type: :request do
           headers: { "Turbo-Frame" => "person_stories_section" }
     end
 
-    it "shows the spotlight badge only for a spotlight story the viewer may open" do
+    it "shows the spotlight badge even when the spotlight story itself is hidden from the viewer" do
       make_viewable(person)
       create(:story, title: "Draft Spotlight", spotlighted_facilitator: person, published: false)
 
       get person_path(person)
       expect(response).to be_successful
-      expect(response.body).not_to include("Spotlighted Facilitator")
-
-      create(:story, :published, title: "Published Spotlight", spotlighted_facilitator: person)
-      get person_path(person)
       expect(response.body).to include("Spotlighted Facilitator")
+
+      get_stories_section
+      expect(response.body).not_to include("Draft Spotlight")
     end
 
     context "with an anonymous credit" do
