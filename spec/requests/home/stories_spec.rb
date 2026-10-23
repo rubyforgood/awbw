@@ -3,9 +3,9 @@ require "rails_helper"
 RSpec.describe "/home/stories", type: :request do
   let(:user) { create(:user) }
 
-  before { sign_in user }
-
   describe "GET /home/stories" do
+    before { sign_in user }
+
     it "credits both authors on the card, with credentials" do
       author = create(:person, first_name: "Mae", last_name: "Beale", display_name_preference: "full_name")
       create(:professional_license, person: author, kind: "LMFT")
@@ -49,6 +49,33 @@ RSpec.describe "/home/stories", type: :request do
       get home_stories_path
 
       expect(response.body.index("Newer featured story")).to be < response.body.index("Older featured story")
+    end
+
+    it "caps the list at the configured number, newest first" do
+      Setting.create!(home_featured_stories_limit: 2)
+      create(:story, :published, :featured, title: "Oldest featured story", created_at: 3.days.ago)
+      create(:story, :published, :featured, title: "Middle featured story", created_at: 2.days.ago)
+      create(:story, :published, :featured, title: "Newest featured story", created_at: 1.day.ago)
+
+      get home_stories_path
+
+      expect(response.body).to include("Newest featured story", "Middle featured story")
+      expect(response.body).not_to include("Oldest featured story")
+    end
+  end
+
+  describe "GET /home/stories signed out" do
+    it "fills the cap from the stories a visitor may see" do
+      Setting.create!(home_featured_stories_limit: 1)
+      create(:story, :published, :publicly_visible, :publicly_featured, title: "Public featured story",
+                                                                        created_at: 2.days.ago)
+      create(:story, :published, :featured, title: "Members featured story", created_at: 1.day.ago)
+
+      get home_stories_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Public featured story")
+      expect(response.body).not_to include("Members featured story")
     end
   end
 end

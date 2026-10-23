@@ -13,6 +13,17 @@ RSpec.describe "Admin::Settings", type: :request do
       expect(response.body).to include("App settings")
     end
 
+    it "counts the featured stories each audience can see on the portal home" do
+      create_list(:story, 2, :published, :featured)
+      create(:story, :published, :publicly_visible, :publicly_featured)
+      sign_in admin
+
+      get admin_settings_path
+
+      expect(response.body).to include("2 stories featured for them")
+      expect(response.body).to include("1 story publicly featured")
+    end
+
     it "names what the chosen organization supplies" do
       organization = create(:organization, name: "Portal Runner", tax_id: "12-3456789")
       Setting.create!(organization: organization)
@@ -89,6 +100,13 @@ RSpec.describe "Admin::Settings", type: :request do
 
   describe "PATCH update" do
     before { sign_in admin }
+
+    it "saves how many featured stories the portal home shows" do
+      patch admin_settings_path, params: { setting: { home_featured_stories_limit: "4" } }
+
+      expect(response).to have_http_status(:see_other)
+      expect(Setting.home_featured_stories_limit).to eq(4)
+    end
 
     it "creates the row on first save" do
       organization = create(:organization)
