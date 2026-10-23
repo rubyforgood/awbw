@@ -1,3 +1,4 @@
+<% labels = jobs.map { |job| "#{job.title.presence || "Untitled"} · #{job.decorate.period_label}" } %>
 <p class="text-xs text-gray-500">
-  <%= jobs.any? ? "Job affiliation: #{jobs.map { |job| job.title.presence || "untitled" }.to_sentence}" : "No job affiliation" %>
+  <%= labels.any? ? "Job affiliation: #{labels.to_sentence}" : "No job affiliation" %>
 </p>

@@ -91,8 +91,19 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
 
       cards = Nokogiri::HTML(response.body).css("#reconcile_cancelled section")
       card_for = ->(reg) { cards.find { |card| card.text.include?(reg.registrant.name) }.text.squish }
-      expect(card_for.call(with_job)).to include("Job affiliation: Counselor")
+      expect(card_for.call(with_job)).to include("Job affiliation: Counselor · Since #{1.year.ago.strftime('%b %Y')}")
       expect(card_for.call(without_job)).to include("No job affiliation")
+    end
+
+    it "shows each job affiliation's date range in the note" do
+      reg = create(:event_registration, event: event, status: "cancelled")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      create(:affiliation, person: reg.registrant, organization: organization, title: "Counselor",
+                           start_date: Date.new(2024, 1, 15), end_date: 2.years.from_now.to_date)
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Counselor · Jan 2024 – #{2.years.from_now.strftime('%b %Y')}")
     end
 
     it "keeps the cancelled section and its job note after the event" do
