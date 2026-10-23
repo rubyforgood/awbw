@@ -14,13 +14,17 @@ class StoryDecorator < ApplicationDecorator
     story_workshops.map { |sw| workshop_reference_label(sw) }.compact_blank.presence&.join(" / ")
   end
 
-  def workshop_links
-    parts = story_workshops.map { |sw| workshop_reference_link(sw) }.compact
+  def workshop_links(link_class: "hover:underline")
+    parts = story_workshops.map { |sw| workshop_reference_link(sw, link_class) }.compact
     h.safe_join(parts, " / ") if parts.any?
   end
 
-  def workshop_reference_count
-    story_workshops.size
+  def workshop_label
+    "Workshop".pluralize(story_workshops.size)
+  end
+
+  def facilitator_spotlight?
+    spotlighted_facilitator_id.present?
   end
 
   private
@@ -32,12 +36,12 @@ class StoryDecorator < ApplicationDecorator
     external_title || workshop_title
   end
 
-  def workshop_reference_link(story_workshop)
+  def workshop_reference_link(story_workshop, link_class)
     workshop = story_workshop.workshop
-    external_title = story_workshop.external_workshop_title.presence
-    return h.html_escape(external_title) if workshop.nil?
+    return h.html_escape(workshop_reference_label(story_workshop)) unless workshop && h.allowed_to?(:show?, workshop)
 
-    link = h.link_to(workshop.title, h.workshop_path(workshop), class: "hover:underline")
+    external_title = story_workshop.external_workshop_title.presence
+    link = h.link_to(workshop.title, h.workshop_path(workshop), class: link_class, data: { turbo_frame: "_top" })
     return link unless external_title
     h.safe_join([ external_title, " (from the ", link, ")" ])
   end

@@ -140,6 +140,23 @@ RSpec.describe "/workshops", type: :request do
       expect(response.body).to include("show_lazy")
       expect(response.body).to include("Imageless story")
     end
+
+    it "marks a story that spotlights a facilitator" do
+      create(:story, :published, workshop: workshop, spotlighted_facilitator: create(:person), title: "Spotlight story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      card = Nokogiri::HTML(response.body).css("#workshopStories .card-link").find { |c| c.text.include?("Spotlight story") }
+      expect(card.text).to include("Facilitator spotlight")
+    end
+
+    it "leaves the spotlight mark off a story with no spotlighted facilitator" do
+      create(:story, :published, workshop: workshop, title: "Plain story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).not_to include("Facilitator spotlight")
+    end
   end
 
   describe "GET /edit stories panel" do

@@ -1,0 +1,11 @@
+name: "Stories link every workshop and flag facilitator spotlights"
+area: stories
+display_status: user_facing
+released_on: 2026-10-23
+pr_number: 2792
+summary: >-
+  A story's page now links each workshop it came from, not just the first. On a workshop's
+  page, stories that spotlight a facilitator carry a "Facilitator spotlight" badge.
+pro_tips:
+  - "Add more than one workshop to a story from the story's edit page; each shows as its own link."
+  - "Set the spotlighted facilitator on a story to give it the badge."
