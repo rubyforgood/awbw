@@ -205,6 +205,8 @@
         <% if field_notes[col.name].present? %>
           <p class="mt-1 text-xs text-gray-500"><%= field_notes[col.name] %></p>
         <% end %>
+        <p class="mt-1 hidden text-xs font-medium" role="status" aria-live="polite"
+           data-autosave-target="status" data-field-name="<%= keep_param_key %>[<%= col.name %>]"></p>
       </div>
     <% end %>
   <% end %>
