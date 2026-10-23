@@ -8,5 +8,5 @@ summary: >-
   profiles they can open, so every name leads to a profile.
 pro_tips:
   - "A facilitator's card still shows their other titles at the organization, like Director."
-  - "Admins see every active facilitator; a lock marks the ones other facilitators can't open."
+  - "Admins see every active facilitator; a lock marks the ones hidden from facilitators, who don't see those cards."
   - "On My bookmarks, a creator whose profile you can't open shows as a plain name."
