@@ -117,7 +117,7 @@ RSpec.describe "/story_share", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_link(public_story.credited_name_for_person(author), href: person_path(author))
         expect(page).to have_link(public_story.credited_name_for_person(co_author), href: person_path(co_author))
-        expect(page.find("strong", text: "Spotlighted facilitator:").find(:xpath, ".."))
+        expect(page.find("strong", text: "Facilitator spotlight:").find(:xpath, ".."))
           .to have_link(spotlight.name, href: person_path(spotlight))
       end
 
@@ -183,7 +183,7 @@ RSpec.describe "/story_share", type: :request do
         get story_share_path(public_story)
 
         page = Capybara.string(response.body)
-        expect(page).to have_text("Spotlighted facilitator: #{spotlight.name}")
+        expect(page).to have_text("Facilitator spotlight: #{spotlight.name}")
         expect(page).to have_no_link(spotlight.name)
       end
 

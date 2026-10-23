@@ -16,6 +16,12 @@ class StoryDecorator < ApplicationDecorator
     story_workshops.map { |sw| workshop_reference_label(sw) }.compact_blank.presence&.join(" / ")
   end
 
+  def facilitator_spotlight_label
+    return unless spotlighted_facilitator
+
+    [ "Facilitator spotlight", spotlighted_facilitator.name.presence ].compact.join(": ")
+  end
+
   def spotlighted_facilitator_link(link_class: "hover:underline")
     person = spotlighted_facilitator
     return if person.nil?
