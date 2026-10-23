@@ -119,7 +119,7 @@ class FormBuilderService
   SECTION_FIELD_NAMES = {
     person_identifier: [ "Preferred first name", "Last Name", "Email", "Confirm Email" ],
     person_contact_info: [
-      "Primary Email Type", "Full first name", "Pronouns", "Secondary Email", "Secondary Email Type",
+      "Primary Email Type", "Formal first name", "Pronouns", "Secondary Email", "Secondary Email Type",
       "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code", "Country",
       "Phone", "Phone Type", "Organization Name", "Position / Title", "Organization Website", "Organization Type",
       "Organization Street Address", "Organization City", "Organization State / Province", "Organization Zip / Postal Code",
@@ -478,7 +478,7 @@ class FormBuilderService
     position = add_field(form, position, "Primary Email Type", :single_select_radio,
                          key: "primary_email_type", group: "person_contact_info", required: true,
                          options: %w[Personal Work])
-    position = add_field(form, position, "Full first name", :free_form_input_one_line,
+    position = add_field(form, position, "Formal first name", :free_form_input_one_line,
                          key: "legal_first_name", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Pronouns", :free_form_input_one_line,
                          key: "pronouns", group: "person_contact_info", required: false, width: :half)
