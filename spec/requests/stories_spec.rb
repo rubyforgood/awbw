@@ -774,6 +774,21 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "GET /show" do
+      it "itemizes the author, co-author, and spotlighted facilitator" do
+        author = create(:person, first_name: "Ada", last_name: "Author")
+        co_author = create(:person, first_name: "Cole", last_name: "Coauthor")
+        spotlight = create(:person, first_name: "Sky", last_name: "Spotlight")
+        story = create(:story, :published, author:, co_author:, spotlighted_facilitator: spotlight,
+                                           author_credit_preference: "full_name")
+
+        get story_url(story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text(story.credited_name_for_person(author))
+        expect(page).to have_text(story.credited_name_for_person(co_author))
+        expect(page).to have_text("Spotlighted facilitator: #{spotlight.name}")
+      end
+
       it "links only the workshops and organization the user can open, showing a story's own workshop title" do
         open_workshop = create(:workshop, :published, title: "Open Workshop")
         draft_workshop = create(:workshop, :unpublished, title: "Draft Workshop")

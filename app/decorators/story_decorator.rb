@@ -27,6 +27,13 @@ class StoryDecorator < ApplicationDecorator
     h.link_to(organization.name, h.organization_path(organization), class: link_class, data: { turbo_frame: "_top" })
   end
 
+  def spotlighted_facilitator_link(link_class: "hover:underline")
+    person = spotlighted_facilitator
+    return if person.nil?
+    return person.name unless h.allowed_to?(:show?, person)
+    h.link_to(person.name, h.person_path(person), class: link_class, data: { turbo_frame: "_top" })
+  end
+
   def showcase_path(**params)
     h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object, **params) : h.story_path(object)
   end

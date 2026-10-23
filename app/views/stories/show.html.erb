@@ -34,6 +34,9 @@
           <p><strong>Story by:</strong>
             <%= credited_author_link(@story) %>
           </p>
+          <% if @story.spotlighted_facilitator %>
+            <p><strong>Spotlighted facilitator:</strong> <%= @story.decorate.spotlighted_facilitator_link %></p>
+          <% end %>
           <p><strong>Organization Name:</strong>
             <%= @story.decorate.organization_link %>
           </p>

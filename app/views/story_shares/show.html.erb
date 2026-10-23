@@ -31,6 +31,9 @@
             <strong>Story by:</strong>
             <%= credited_author_link(@story, class: profile_link) %>
           </p>
+          <% if @story.spotlighted_facilitator %>
+            <p><strong>Spotlighted facilitator:</strong> <%= @story.spotlighted_facilitator_link(link_class: profile_link) %></p>
+          <% end %>
           <% if @story.organization_name.present? %>
             <p>
               <strong>Organization name:</strong>

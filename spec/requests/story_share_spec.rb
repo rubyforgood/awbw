@@ -106,6 +106,21 @@ RSpec.describe "/story_share", type: :request do
         expect(page).to have_no_css("span[title^='Primary']")
       end
 
+      it "itemizes every author and the spotlighted facilitator, each linked to their profile" do
+        author = create(:person, first_name: "Ada", last_name: "Author")
+        co_author = create(:person, first_name: "Cole", last_name: "Coauthor")
+        spotlight = create(:person, first_name: "Sky", last_name: "Spotlight")
+        public_story.update!(author:, co_author:, spotlighted_facilitator: spotlight, author_credit_preference: "full_name")
+
+        get story_share_path(public_story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link(public_story.credited_name_for_person(author), href: person_path(author))
+        expect(page).to have_link(public_story.credited_name_for_person(co_author), href: person_path(co_author))
+        expect(page.find("strong", text: "Spotlighted facilitator:").find(:xpath, ".."))
+          .to have_link(spotlight.name, href: person_path(spotlight))
+      end
+
       it "can view any story" do
         get story_share_path(private_story)
         expect(response).to have_http_status(:ok)
@@ -159,6 +174,17 @@ RSpec.describe "/story_share", type: :request do
       it "can view publicly visible story" do
         get story_share_path(public_story)
         expect(response).to have_http_status(:ok)
+      end
+
+      it "names the spotlighted facilitator without a link when the guest can't open the profile" do
+        spotlight = create(:person, first_name: "Sky", last_name: "Spotlight")
+        public_story.update!(spotlighted_facilitator: spotlight)
+
+        get story_share_path(public_story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Spotlighted facilitator: #{spotlight.name}")
+        expect(page).to have_no_link(spotlight.name)
       end
 
       it "links a workshop the visitor can view and leaves the rest as plain text" do
