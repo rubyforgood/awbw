@@ -381,10 +381,7 @@ class PeopleController < ApplicationController
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
       merge_notes: ->(keep, delete) {
-        next [] unless delete.user
-        next [ "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." ] unless keep.user
-
-        [ "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently." ]
+        [ dropped_email_note(keep, delete), login_merge_note(keep, delete) ].compact
       },
       # Block the merge when both people carry an active pay subscription: the merge
       # keeps both live (soft-deleting one would strand its billing), so the kept person
@@ -440,6 +437,24 @@ class PeopleController < ApplicationController
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
       }
     }
+  end
+
+  # An adopted login's email becomes the keeper's primary, so it isn't dropped.
+  def dropped_email_note(keep, delete)
+    held = [ keep.email, keep.email_2, (delete.user&.email unless keep.user) ].compact_blank
+    dropped = [ delete.email, delete.email_2 ].compact_blank
+      .reject { |address| PlaceholderEmail.match?(address) || held.any? { |kept| kept.casecmp?(address) } }
+      .uniq(&:downcase)
+    return if dropped.empty?
+
+    "#{dropped.to_sentence} #{dropped.one? ? "isn't" : "aren't"} on the kept person and will be dropped. To keep #{dropped.one? ? "it" : "one"}, enter it in Email 2 on the right."
+  end
+
+  def login_merge_note(keep, delete)
+    return unless delete.user
+    return "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." unless keep.user
+
+    "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently."
   end
 
   # Saves the preview's edits first so the sync moves the email the admin picked into

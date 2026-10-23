@@ -424,7 +424,7 @@ end
 - `affiliation_dates` — Recalculate affiliation date ranges
 - `anchor_highlight` — Highlight anchored elements
 - `asset_picker` — Asset selection UI
-- `autosave` — Auto-save form state
+- `autosave` — Auto-save form state; optional `status` targets (`data-field-name` = the field's name) show "Saved" or "Not saved: <reason>" beside a field via `shared/_autosave_status` (dedupe preview, index notes, notification responded toggles)
 - `carousel` — Swiper-based carousels (opt-in `Autoplay` via the options value)
 - `ce_license_picker` — Fill the CE license type/number/state/expiry fields from the picked license (or clear them for a new one)
 - `cocoon` — Nested form handling (cocoon gem)
