@@ -39,11 +39,8 @@
                         organization_path(@story.organization),
                         class: "hover:underline" %>
           </p>
-          <% if (workshop_links = @story.decorate.workshop_links).present? %>
-            <p><strong><%= @story.decorate.workshop_label %>:</strong> <%= workshop_links %></p>
-          <% end %>
-          <% if (spotlight_link = @story.decorate.spotlighted_facilitator_link).present? %>
-            <p><strong>Facilitator spotlight:</strong> <%= spotlight_link %></p>
+          <% if @story.decorate.workshop_links.present? %>
+            <p><strong><%= @story.decorate.workshop_reference_count > 1 ? "Workshops" : "Workshop" %>:</strong> <%= @story.decorate.workshop_links %></p>
           <% end %>
         </div>
 

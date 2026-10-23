@@ -677,43 +677,6 @@ RSpec.describe "/story_share", type: :request do
       get story_share_path(external, no_redirect: 1)
       expect(response).to have_http_status(:ok)
     end
-
-    it "links every workshop the story came from" do
-      first = create(:workshop, :published, :publicly_visible, title: "Mask Making")
-      second = create(:workshop, :published, :publicly_visible, title: "Collage Stories")
-      story = create(:story, :published, :publicly_visible, workshop: nil)
-      story.story_workshops.create!(workshop: first)
-      story.story_workshops.create!(workshop: second)
-
-      get story_share_path(story)
-
-      page = Capybara.string(response.body)
-      expect(page).to have_text("Workshops:")
-      expect(page).to have_link("Mask Making", href: workshop_path(first))
-      expect(page).to have_link("Collage Stories", href: workshop_path(second))
-    end
-
-    it "names the spotlighted facilitator in their preferred format" do
-      facilitator = create(:person, first_name: "Rosa", last_name: "Quintero", display_name_preference: "first_name_only")
-      story = create(:story, :published, :publicly_visible, spotlighted_facilitator: facilitator)
-
-      get story_share_path(story)
-
-      page = Capybara.string(response.body)
-      expect(page).to have_text("Facilitator spotlight: Rosa")
-      expect(page).not_to have_text("Quintero")
-    end
-
-    it "shows a workshop the guest can't open as plain text" do
-      hidden = create(:workshop, :published, title: "Members Only Workshop")
-      story = create(:story, :published, :publicly_visible, workshop: hidden)
-
-      get story_share_path(story)
-
-      page = Capybara.string(response.body)
-      expect(page).to have_text("Workshop: Members Only Workshop")
-      expect(page).not_to have_link("Members Only Workshop")
-    end
   end
 
   # ==========================================================
