@@ -83,6 +83,25 @@ RSpec.describe "Person profile stories section", type: :request do
   context "as a different, non-admin viewer" do
     before { sign_in create(:user) }
 
+    it "lists only the published stories the viewer may open, for every role the person plays" do
+      person.update!(profile_is_searchable: true)
+      create(:affiliation, person:)
+      create(:story, :published, title: "Published Authored", author: person)
+      create(:story, :published, title: "Published Coauthored", author: create(:person), co_author: person)
+      create(:story, :published, title: "Published Spotlight", spotlighted_facilitator: person)
+      create(:story, title: "Draft Authored", author: person, published: false)
+      create(:story, title: "Draft Coauthored", author: create(:person), co_author: person, published: false)
+      create(:story, title: "Draft Spotlight", spotlighted_facilitator: person, published: false)
+
+      get_stories_section
+
+      expect(response).to be_successful
+      expect(response.body).to include("Published Authored", "Published Coauthored", "Published Spotlight")
+      expect(response.body).not_to include("Draft Authored")
+      expect(response.body).not_to include("Draft Coauthored")
+      expect(response.body).not_to include("Draft Spotlight")
+    end
+
     it "hides the person's funder-only authored story" do
       create(:story, :published, :publicly_visible, :funder_only,
              title: "Hidden Funder Story", author: person)

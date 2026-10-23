@@ -90,8 +90,8 @@ class PeopleController < ApplicationController
         authored = visible_authored_content(Story.credited_to_person(@person))
         spotlighted = @person.stories_as_spotlighted_facilitator
         unless viewing_own_or_admin?
-          authored = authored.not_funder_only
-          spotlighted = spotlighted.not_funder_only
+          authored = authorized_scope(authored)
+          spotlighted = authorized_scope(spotlighted)
         end
         story_ids = authored.pluck(:id) + spotlighted.pluck(:id)
         @stories = Story.with_author_credit.where(id: story_ids)
