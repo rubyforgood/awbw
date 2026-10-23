@@ -144,11 +144,11 @@ registration_form.form_fields.where(field_identifier: "interested_in_more").dest
 
 # Match the public AWBW form's field set, labels, and order (see the registration
 # screenshots): it labels the primary email "Primary Email", omits the optional
-# Pronouns question, and lists "What motivated you" before
+# Other first name / Pronouns questions, and lists "What motivated you" before
 # "How did you hear". Idempotent — each clause only matches the default state.
 registration_form.form_fields
   .where(field_identifier: "primary_email", name: "Email").update_all(name: "Primary Email")
-registration_form.form_fields.where(field_identifier: "pronouns").destroy_all
+registration_form.form_fields.where(field_identifier: %w[legal_first_name pronouns]).destroy_all
 
 motivation_field = registration_form.form_fields.find_by(field_identifier: "training_motivation")
 referral_field = registration_form.form_fields.find_by(field_identifier: "referral_source")

@@ -33,7 +33,7 @@ class SmartFormFields
                "registrant updates their record instead of creating a duplicate.",
       fields: [
         [ "first_name", "Preferred first name", "Sets the person's first name — the name they go by. Part of the duplicate-match key." ],
-        [ "legal_first_name", "Formal first name", "Sets the person's legal first name, shown to admins on their profile. Also accepted when matching a returning registrant, and used as the first name when the form doesn't ask for one." ],
+        [ "legal_first_name", "Other first name", "Sets the person's legal first name, shown to admins on their profile. Also accepted when matching a returning registrant, and used as the first name when the form doesn't ask for one." ],
         [ "last_name", "Last name", "Sets the person's last name. Part of the duplicate-match key — matching is skipped entirely when this is blank." ],
         [ "pronouns", "Pronouns", "Sets the person's pronouns." ],
         [ "pronunciation", "Name pronunciation", "Sets the admin-only note on the person's profile for how to say their name." ],
