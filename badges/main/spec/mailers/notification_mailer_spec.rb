@@ -604,7 +604,8 @@ RSpec.describe NotificationMailer, type: :mailer do
         submission.persist_answer(field, sector.id.to_s)
 
         expect(mail.body.encoded).to include("Domestic violence")
-        expect(mail.body.encoded).not_to match(/>\s*#{sector.id}\s*</)
+        # Scoped to the answer cell: the layout's Outlook <o:PixelsPerInch>96</...> would match an id of 96.
+        expect(mail.html_part.body.decoded).not_to match(%r{>\s*#{sector.id}\s*</td>})
       end
     end
   end
