@@ -126,13 +126,12 @@ class Form < ApplicationRecord
   # Whether submitted answers name the respondent: on an anonymous form only all
   # three of first name, last name, and email credit a person; anything less
   # (including a form that doesn't ask them) leaves the submission anonymous.
+  # A legal first name stands in for a first name, as PublicFormSubmission builds the person.
   def identified_by?(form_params)
     params = form_params.to_h.transform_keys(&:to_s)
-    identity_fields = form_fields.select { |field| field.field_identifier.in?(IDENTITY_IDENTIFIERS) }.index_by(&:field_identifier)
-    IDENTITY_IDENTIFIERS.all? do |identifier|
-      field = identity_fields[identifier]
-      field.present? && params[field.id.to_s].to_s.strip.present?
-    end
+    fields = form_fields.index_by(&:field_identifier)
+    answered = ->(identifier) { fields[identifier].present? && params[fields[identifier].id.to_s].to_s.strip.present? }
+    (answered.("first_name") || answered.("legal_first_name")) && answered.("last_name") && answered.("primary_email")
   end
 
   # Whether a submission must carry an answer for this field: the field's own

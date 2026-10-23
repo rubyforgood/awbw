@@ -140,6 +140,17 @@ RSpec.describe "PublicForms", type: :request do
         expect(FormSubmission.last.person).to be_nil
       end
 
+      it "records no creator or activity events for their anonymous submission" do
+        Ahoy.track_bots = true
+
+        expect { post public_form_path(form.slug), params: submission_params(email: "") }
+          .not_to change { Ahoy::Event.where(resource_type: %w[FormSubmission FormAnswer]).count }
+        expect(FormSubmission.last).to have_attributes(person: nil, created_by: nil, updated_by: nil)
+        expect(FormSubmission.last.form_answers.map(&:created_by)).to all(be_nil)
+      ensure
+        Ahoy.track_bots = false
+      end
+
       it "credits whoever all three answers name" do
         post public_form_path(form.slug),
           params: submission_params(first: user.person.first_name, last: user.person.last_name, email: user.person.email)

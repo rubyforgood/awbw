@@ -59,7 +59,6 @@ module EventRegistrationServices
         # Runs for any callout form; only fires when the form asks the identified
         # anonymity / name questions.
         sync_profile(person)
-        Quotes::CaptureFromSubmission.call(@submission)
         stamp_scholarship_form_completion
       end
       Current.form_submission_id = @submission.id
@@ -76,8 +75,8 @@ module EventRegistrationServices
       return @already_completed = true if FormCompletion.exists?(person:, form: @form, event:)
       return @incomplete = true if missing_required_answer?
 
-      # No Current.user, so UserStampable leaves a logged-in registrant off every record.
-      Current.set(user: nil) do
+      # No user or source, so a logged-in registrant is left off every record and no activity is tracked.
+      Current.set(user: nil, source: nil) do
         ActiveRecord::Base.transaction do
           @submission = FormSubmission.find_by(person:, form: @form, event:)
           @edited = @submission.present?
@@ -91,6 +90,7 @@ module EventRegistrationServices
           @submission.record_callout_collection!(@callout)
           save_answers
           FormCompletion.record!(person:, form: @form, event:)
+          OtherResponses::CaptureFromSubmission.call(@submission)
           Quotes::CaptureFromSubmission.call(@submission)
           stamp_scholarship_form_completion
         end

@@ -23,6 +23,15 @@ class PublicFormSubmission
   end
 
   def call
+    return submit if @form.identified_by?(@form_params)
+
+    # No user or source, so an unidentified submission leaves no creator or activity trail.
+    Current.set(user: nil, source: nil) { submit }
+  end
+
+  private
+
+  def submit
     ActiveRecord::Base.transaction do
       person = find_or_create_person
       return Result.new(success?: false, errors: [ IDENTITY_REQUIRED_MESSAGE ]) if @form.requires_identity? && person.nil?
@@ -59,8 +68,6 @@ class PublicFormSubmission
 
     Result.new(success?: false, errors: [ ALREADY_SUBMITTED_MESSAGE ])
   end
-
-  private
 
   # A standalone registration-role form is the on-demand agreement (ADR-0002),
   # and submitting it IS registering for the current on-demand facilitator

@@ -178,6 +178,13 @@ RSpec.describe Form do
       expect(bare.identified_by?(params)).to be(false)
     end
 
+    it "accepts a legal first name in place of a first name" do
+      legal = create(:form_field, form:, field_identifier: "legal_first_name")
+      answers = params(first: "").merge(legal.id.to_s => "Samantha")
+
+      expect(form.identified_by?(answers)).to be(true)
+    end
+
     it "reads string or symbol keys" do
       expect(form.identified_by?(params.transform_keys(&:to_sym))).to be(true)
     end
