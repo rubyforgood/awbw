@@ -447,7 +447,7 @@ RSpec.describe "/story_share", type: :request do
 
     describe "typed search" do
       it "lists results as rows without a carousel" do
-        create(:story, :published, :publicly_visible, :publicly_featured, title: "Watercolor healing journey")
+        create(:story, :published, :publicly_visible, :story_share_featured, title: "Watercolor healing journey")
         get story_shares_path(query: "Watercolor")
         expect(response.body).to include('aria-label="Search results"')
         expect(response.body).to include("Watercolor healing journey")
@@ -473,11 +473,19 @@ RSpec.describe "/story_share", type: :request do
       end
 
       it "puts title matches ahead of newer and featured text matches" do
-        create(:story, :published, :publicly_visible, :publicly_featured, title: "A featured story", rhino_body: "<p>We tried mosaic</p>")
+        create(:story, :published, :publicly_visible, :story_share_featured, title: "A featured story", rhino_body: "<p>We tried mosaic</p>")
         create(:story, :published, :publicly_visible, title: "Mosaic mornings", created_at: 1.year.ago)
 
         get story_shares_path(query: "mosaic")
         expect(response.body.index("Mosaic mornings")).to be < response.body.index("A featured story")
+      end
+
+      it "ranks Story Share featured text matches ahead of newer ones, ignoring portal featuring" do
+        create(:story, :published, :publicly_visible, :story_share_featured, title: "Story Share pick", rhino_body: "<p>We tried mosaic</p>", created_at: 1.year.ago)
+        create(:story, :published, :publicly_visible, :featured, :publicly_featured, title: "Portal pick", rhino_body: "<p>More mosaic</p>")
+
+        get story_shares_path(query: "mosaic")
+        expect(response.body.index("Story Share pick")).to be < response.body.index("Portal pick")
       end
 
       it "echoes the query and suggests topics when nothing matches" do

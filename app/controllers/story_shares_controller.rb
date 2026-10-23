@@ -132,7 +132,7 @@ class StorySharesController < ApplicationController
   def load_search_results(filtered, per_page)
     @lead_stories = []
     @grid_stories = []
-    @stories = preloaded(filtered).title_matches_first(params[:query]).order(publicly_featured: :desc, created_at: :desc)
+    @stories = preloaded(filtered).title_matches_first(params[:query]).order(story_share_featured: :desc, created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
     visible_ids = portal_scope.select(:id)
