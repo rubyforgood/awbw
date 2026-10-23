@@ -65,4 +65,12 @@ module GeographyHelper
 
     us_states + [ [ current, current ] ]
   end
+
+  # Country dropdown options, keeping an unrecognized current value selectable so a re-render doesn't drop it.
+  def country_select_options(current = nil)
+    label = CountryName.label(current)
+    return CountryName.options if label.blank? || CountryName.options.include?(label)
+
+    CountryName.options + [ label ]
+  end
 end

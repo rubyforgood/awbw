@@ -22,4 +22,15 @@ RSpec.describe GeographyHelper, type: :helper do
       expect(helper.state_select_options("NY").count { |_name, abbr| abbr == "NY" }).to eq(1)
     end
   end
+
+  describe "#country_select_options" do
+    it "returns the country list when the value is blank or a known country" do
+      expect(helper.country_select_options).to eq(CountryName.options)
+      expect(helper.country_select_options("USA")).to eq(CountryName.options)
+    end
+
+    it "appends an unrecognized value so it stays selectable" do
+      expect(helper.country_select_options("Narnia").last).to eq("Narnia")
+    end
+  end
 end

@@ -470,6 +470,19 @@ RSpec.describe EventDashboard do
       it "maps each country to its registrant ids" do
         expect(dashboard.country_registrant_ids_by_country.values.flatten).to contain_exactly(person1.id, person2.id)
       end
+
+      it "counts the different ways registrants typed the same country as one country" do
+        typed_usa = create(:person)
+        typed_us = create(:person)
+        [ [ typed_usa, "USA" ], [ typed_us, "US" ] ].each do |person, country|
+          create(:event_registration, event: event, registrant: person, status: "registered")
+          create(:address, addressable: person, country: country)
+        end
+
+        expect(dashboard.countries.count("United States")).to eq(1)
+        expect(dashboard.countries).not_to include("USA", "US")
+        expect(dashboard.country_registrant_ids_by_country["United States"]).to include(typed_usa.id, typed_us.id)
+      end
     end
 
     describe "school districts" do

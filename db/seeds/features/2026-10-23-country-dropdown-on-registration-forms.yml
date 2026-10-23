@@ -1,0 +1,12 @@
+name: "Pick your country from a list on registration forms"
+area: registration
+display_status: user_facing
+released_on: 2026-10-23
+pr_number: 2805
+summary: >-
+  The Country and Organization country questions on registration and other forms
+  are now a dropdown instead of a text box, so everyone in the US lands under one
+  "United States."
+pro_tips:
+  - "The United States sits at the top of the list; every other country follows A–Z."
+  - "Country charts on event dashboards, the attendees page, and form results now count US, USA, and United States as one country — including answers typed before the dropdown."
