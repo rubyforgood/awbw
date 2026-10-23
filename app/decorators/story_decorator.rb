@@ -1,5 +1,6 @@
 class StoryDecorator < ApplicationDecorator
   include ::Linkable
+  include ::StoryReferenceLinks
 
   def detail(length: 50)
     text = rhino_body&.to_plain_text
@@ -15,18 +16,6 @@ class StoryDecorator < ApplicationDecorator
     story_workshops.map { |sw| workshop_reference_label(sw) }.compact_blank.presence&.join(" / ")
   end
 
-  def workshop_links(link_class: "hover:underline")
-    return direct_workshop_links(link_class) if story_workshops.empty?
-    parts = story_workshops.map { |sw| workshop_reference_link(sw, link_class) }.compact
-    h.safe_join(parts, " / ") if parts.any?
-  end
-
-  def organization_link(link_class: "hover:underline")
-    return if organization.nil?
-    return organization.name unless h.allowed_to?(:show?, organization)
-    h.link_to(organization.name, h.organization_path(organization), class: link_class, data: { turbo_frame: "_top" })
-  end
-
   def spotlighted_facilitator_link(link_class: "hover:underline")
     person = spotlighted_facilitator
     return if person.nil?
@@ -38,11 +27,6 @@ class StoryDecorator < ApplicationDecorator
     h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object, **params) : h.story_path(object)
   end
 
-  def workshop_reference_count
-    return story_workshops.size if story_workshops.any?
-    [ workshop, external_workshop_title.presence ].compact.size
-  end
-
   # Read-only display of the legacy single-workshop columns kept as a safety net
   # during the join-table migration; the form surfaces it so nothing silently hides.
   def legacy_workshop_reference
@@ -51,32 +35,11 @@ class StoryDecorator < ApplicationDecorator
 
   private
 
+  def workshop_references
+    story_workshops
+  end
+
   def direct_workshop_title
     [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
-  end
-
-  def direct_workshop_links(link_class)
-    parts = [
-      (workshop_link(workshop, link_class) if workshop),
-      (h.html_escape(external_workshop_title) if external_workshop_title.presence)
-    ].compact
-    h.safe_join(parts, " / ") if parts.any?
-  end
-
-  def workshop_reference_label(story_workshop)
-    story_workshop.external_workshop_title.presence || story_workshop.workshop&.title
-  end
-
-  def workshop_reference_link(story_workshop, link_class)
-    workshop = story_workshop.workshop
-    text = workshop_reference_label(story_workshop)
-    return h.html_escape(text) if workshop.nil?
-
-    workshop_link(workshop, link_class, text:)
-  end
-
-  def workshop_link(workshop, link_class, text: workshop.title)
-    return h.html_escape(text) unless h.allowed_to?(:show?, workshop)
-    h.link_to(text, h.workshop_path(workshop), class: link_class, data: { turbo_frame: "_top" })
   end
 end

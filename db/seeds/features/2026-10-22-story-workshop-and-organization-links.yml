@@ -10,3 +10,4 @@ summary: >-
 pro_tips:
   - "When a story names its own version of a workshop, that name is shown and still links to the workshop."
   - "Workshops, organizations, or people you don't have access to still show their name, just without a link."
+  - "A story credited anonymously to an author or co-author doesn't appear on that person's profile for anyone but them and admins."
