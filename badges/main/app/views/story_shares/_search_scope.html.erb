@@ -1,0 +1,5 @@
+<%# What a typed search matched: tag links (when any tag has visible stories), then the text fields searched. %>
+<% tag_links = @matching_sectors.map { |sector| link_to sector.name, story_shares_path(sector_names_all: sector.name), class: "#{StorySharesHelper::SECTOR_TAG_CHIP} px-2.5 py-0.5" } +
+               @matching_audiences.map { |category| link_to category.display_name, story_shares_path(category_names_all: category.name), class: "#{StorySharesHelper::AUDIENCE_TAG_CHIP} px-2.5 py-0.5" } %>
+<% lead = tag_links.any? ? safe_join([ "Stories tagged ", to_sentence(tag_links, two_words_connector: " or ", last_word_connector: ", or "), ", or with" ]) : "Stories with" %>
+<p class="mb-8 text-sm leading-7 text-gray-700"><%= lead %> “<%= params[:query] %>” in the title, the story text, the author’s or second author’s name, or the spotlighted facilitator’s name.</p>
