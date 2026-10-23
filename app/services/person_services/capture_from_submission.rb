@@ -40,7 +40,7 @@ module PersonServices
     end
 
     def call
-      apply_value(@person, :legal_first_name, field_value("legal_first_name"))
+      apply_legal_first_name(field_value("legal_first_name"))
       apply_value(@person, :pronouns, field_value("pronouns"))
       apply_value(@person, :pronunciation, field_value("pronunciation"))
       apply_value(@person, :email_type, field_value("primary_email_type")&.downcase)
@@ -55,6 +55,13 @@ module PersonServices
     end
 
     private
+
+    # Recorded only when it differs from the first name, so a matching answer never displaces a legal name on file.
+    def apply_legal_first_name(value)
+      return unless @person.legal_first_name_differs?(value)
+
+      apply_value(@person, :legal_first_name, value)
+    end
 
     def apply_value(record, attribute, value)
       return if value.blank?

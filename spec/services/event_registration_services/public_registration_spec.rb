@@ -636,14 +636,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
       expect(existing.reload.legal_first_name).to eq("Robert")
     end
 
-    it "uses the legal first name as the first name when no first name is answered" do
+    it "uses the legal first name as the first name when no first name is answered, without repeating it" do
       params = base_form_params(first_name: "", last_name: "Smith", email: "bob@example.com")
         .merge(legal_field.id.to_s => "Robert")
 
       described_class.call(event: event, registration_form: form, form_params: params)
 
       registrant = EventRegistration.last.registrant
-      expect([ registrant.first_name, registrant.legal_first_name ]).to eq(%w[Robert Robert])
+      expect([ registrant.first_name, registrant.legal_first_name ]).to eq([ "Robert", nil ])
     end
 
     it "matches a returning registrant by their legal first name" do

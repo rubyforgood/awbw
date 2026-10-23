@@ -238,6 +238,43 @@ RSpec.describe PublicFormSubmission do
       expect(person.legal_first_name).to eq("Samantha")
     end
 
+    it "leaves the legal first name blank when it matches the first name, ignoring case" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "sam")).person
+
+      expect(person.first_name).to eq("Sam")
+      expect(person.legal_first_name).to be_nil
+    end
+
+    it "ignores surrounding and repeated whitespace when comparing the two names" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Mary Ann", last_name: "Rivera", email: "sam@example.com")
+      params = contact_params(first_name_field.id.to_s => "Mary Ann", legal_field.id.to_s => "  mary   ann\n")
+
+      described_class.call(form: form, form_params: params)
+
+      expect(existing.reload.legal_first_name).to be_nil
+    end
+
+    it "uses a legal first name as the first name when the form asks only for that, without repeating it" do
+      first_name_field.destroy!
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form.reload, form_params: contact_params(legal_field.id.to_s => "Samantha")).person
+
+      expect(person).to have_attributes(first_name: "Samantha", legal_first_name: nil)
+    end
+
+    it "keeps an existing person's legal first name when the answer matches their first name" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Sam", legal_first_name: "Samuel", last_name: "Rivera", email: "sam@example.com")
+
+      described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Sam"))
+
+      expect(existing.reload.legal_first_name).to eq("Samuel")
+    end
+
     it "overwrites the legal first name of an existing matched person" do
       legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
       existing = create(:person, first_name: "Sam", legal_first_name: "Old", last_name: "Rivera", email: "sam@example.com")
