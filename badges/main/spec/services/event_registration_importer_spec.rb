@@ -645,7 +645,7 @@ RSpec.describe EventRegistrationImporter do
         registration = registration_of(Person.find_by(email: "pat@example.org"))
 
         expect(registration.invoice_requested).to be(true)
-        expect(registration.post_survey_completed_at.to_date).to eq(event.end_date.to_date)
+        expect(registration.post_survey_completed_at.to_date).to eq(event.ends_on)
       end
     end
 
