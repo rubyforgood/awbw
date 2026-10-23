@@ -34,6 +34,7 @@ class Setting < ApplicationRecord
                                              message: "must be a full http(s) address" }, allow_blank: true
   validates :annual_membership_cents, :membership_renewal_window_days, :membership_grace_period_days,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :home_featured_stories_limit, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
   after_commit { Current.setting = nil }
 
@@ -231,5 +232,11 @@ class Setting < ApplicationRecord
   def self.membership_grace_period_days
     stored(:membership_grace_period_days) ||
       ENV.fetch("ANNUAL_MEMBERSHIP_GRACE_PERIOD_DAYS", DEFAULT_MEMBERSHIP_GRACE_PERIOD_DAYS).to_i
+  end
+
+  # How many featured stories the portal home lists, counted among the stories the
+  # viewer may see. Blank lists every one of them.
+  def self.home_featured_stories_limit
+    stored(:home_featured_stories_limit)
   end
 end

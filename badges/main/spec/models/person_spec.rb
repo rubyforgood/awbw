@@ -385,6 +385,29 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe ".displayed_name_like" do
+    let!(:full) { create(:person, first_name: "Wilhelmina", last_name: "Thornquist", display_name_preference: "full_name") }
+    let!(:initialled) { create(:person, first_name: "Octavia", last_name: "Brambleton", display_name_preference: "first_name_last_initial") }
+
+    it "matches first, last, and full names when the full name shows" do
+      expect(described_class.displayed_name_like("wilhelmina")).to include(full)
+      expect(described_class.displayed_name_like("Thornquist")).to include(full)
+      expect(described_class.displayed_name_like("Wilhelmina Thornquist")).to include(full)
+    end
+
+    it "matches the name as an initialled credit shows it" do
+      expect(described_class.displayed_name_like("Octavia B.")).to include(initialled)
+    end
+
+    it "does not match a last name the preference hides" do
+      expect(described_class.displayed_name_like("Brambleton")).not_to include(initialled)
+    end
+
+    it "matches nothing for a blank query" do
+      expect(described_class.displayed_name_like(" ")).to be_empty
+    end
+  end
+
   describe "display_name_preference validation" do
     it "accepts each allowed value" do
       Person::DISPLAY_NAME_PREFERENCES.each do |value|

@@ -5,8 +5,8 @@
     Pass compact: true for the tighter sidebar variant (bare chips, no label). %>
 <% compact = local_assigns.fetch(:compact, false) %>
 <% chip_pad = compact ? "px-2 py-0.5" : "px-3 py-1" %>
-<% sector_chip = "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full text-xs font-medium transition-colors #{chip_pad}" %>
-<% audience_chip = "bg-brand-amber-50 text-brand-amber-800 hover:bg-brand-amber-100 inline-flex items-center rounded-full text-xs font-medium transition-colors #{chip_pad}" %>
+<% sector_chip = "#{StorySharesHelper::SECTOR_TAG_CHIP} #{chip_pad}" %>
+<% audience_chip = "#{StorySharesHelper::AUDIENCE_TAG_CHIP} #{chip_pad}" %>
 <% primary_sector = story.primary_sector %>
 <% primary_category = story.primary_category %>
 <% sectors = story.sectors.sort_by { |sector| [ sector == primary_sector ? 0 : 1, sector.name.downcase ] } %>
