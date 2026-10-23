@@ -774,6 +774,27 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "GET /show" do
+      it "links only the workshops and organization the user can open, showing a story's own workshop title" do
+        open_workshop = create(:workshop, :published, title: "Open Workshop")
+        draft_workshop = create(:workshop, :unpublished, title: "Draft Workshop")
+        story = create(:story, :published, workshop: nil, organization: create(:organization, name: "Hidden Org"))
+        story.story_workshops.create!(workshop: open_workshop, external_workshop_title: "Teen variant")
+        story.story_workshops.create!(workshop: draft_workshop)
+        story.story_workshops.create!(external_workshop_title: "Homegrown session")
+
+        get story_url(story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(open_workshop))
+        expect(page).to have_no_text("Open Workshop")
+        expect(page).to have_text("Draft Workshop")
+        expect(page).to have_no_link("Draft Workshop")
+        expect(page).to have_text("Homegrown session")
+        expect(page).to have_no_link("Homegrown session")
+        expect(page).to have_text("Hidden Org")
+        expect(page).to have_no_link("Hidden Org")
+      end
+
       it "can view published story" do
         get story_url(published_story)
         expect(response).to have_http_status(:ok)
