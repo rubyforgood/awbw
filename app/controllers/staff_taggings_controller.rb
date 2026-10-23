@@ -22,7 +22,7 @@ class StaffTaggingsController < ApplicationController
       else
         filtered.reorder(created_at: @sort_direction)
       end
-      @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+      @count_display = count_display(filtered.count, base_scope.count)
       @mark_column_label = mark_column_label
       @staff_taggings = filtered.paginate(page: params[:page], per_page: per_page)
 

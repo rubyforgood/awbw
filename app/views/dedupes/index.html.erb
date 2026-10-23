@@ -57,7 +57,7 @@
     <% if @possible_duplicate_groups.any? %>
       <div>
         <h2 class="mb-3 text-lg font-semibold text-gray-900">
-          Possible duplicate groups (<%= @possible_duplicate_groups.count %>)
+          Possible duplicate groups (<%= number_with_delimiter(@possible_duplicate_groups.count) %>)
         </h2>
         <div class="space-y-4">
           <% @possible_duplicate_groups.each do |group| %>

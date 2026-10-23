@@ -22,7 +22,7 @@ class WorkshopVariationsController < ApplicationController
         filtered.reorder(Arel.sql("workshop_variations.created_at #{@sort_direction}, workshops.title, workshop_variations.name"))
       end
       @workshop_variations = filtered.paginate(page: params[:page], per_page: per_page).decorate
-      @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+      @count_display = count_display(filtered.count, base_scope.count)
 
       render :workshop_variations_results
     else
