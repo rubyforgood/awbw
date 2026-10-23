@@ -103,7 +103,7 @@ module StorySharesHelper
   # Cached because it renders on every portal page and rarely changes.
   def story_share_nav_sectors
     Rails.cache.fetch("story_share_nav_sectors", expires_in: 1.hour) do
-      Sector.story_share_featured.limit(StorySharesController::FEATURED_SECTOR_LIMIT).to_a
+      Sector.story_share_nav.to_a
     end
   end
 
@@ -111,17 +111,6 @@ module StorySharesHelper
   def story_share_audience_categories
     Rails.cache.fetch("story_share_audience_categories", expires_in: 1.hour) do
       Category.story_share_audience_nav
-    end
-  end
-
-  # "Additional focus areas" dropdown: published sectors that aren't already
-  # featured but do have at least one publicly-visible story.
-  def additional_focus_area_sectors
-    Rails.cache.fetch("story_share_focus_area_sectors", expires_in: 1.hour) do
-      featured = story_share_nav_sectors.map(&:id)
-      Sector.published.excluding_other.where.not(id: featured)
-            .joins(:stories).merge(Story.publicly_visible)
-            .distinct.order(:name).to_a
     end
   end
 
