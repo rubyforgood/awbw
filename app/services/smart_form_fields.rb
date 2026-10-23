@@ -29,7 +29,7 @@ class SmartFormFields
       key: :identity,
       title: "Who the registrant is",
       summary: "These decide which Person the submission belongs to. Email and last name plus either " \
-               "the preferred or full first name are matched against existing people, so a returning " \
+               "the first_name or legal_first_name are matched against existing people, so a returning " \
                "registrant updates their record instead of creating a duplicate.",
       fields: [
         [ "first_name", "Preferred first name", "Sets the person's first name — the name they go by. Part of the duplicate-match key." ],

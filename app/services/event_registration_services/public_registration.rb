@@ -186,8 +186,8 @@ module EventRegistrationServices
       )
     end
 
-    # Accepts the preferred or full first name so a returning registrant who swaps
-    # them still matches.
+    # Accepts the first_name or legal_first_name answer so a returning registrant who
+    # swaps them still matches.
     def find_matching_person(last_name:, email:)
       PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("legal_first_name") ])
     end

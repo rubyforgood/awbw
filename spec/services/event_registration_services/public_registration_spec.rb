@@ -660,7 +660,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   end
 
   describe "matching an existing registrant by name" do
-    it "matches a person stored under a preferred name when the registrant types their legal first name" do
+    it "matches a person stored under their first name when the registrant types their legal first name" do
       existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
                                  last_name: "Smith", email: "bob@example.com")
 
