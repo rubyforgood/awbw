@@ -6,7 +6,7 @@ action_path: "/stories"
 summary: >-
   A story's workshop, organization, and authors are now links on the Story Share page and in the
   stories list, story pages name the spotlighted facilitator, and stories listed on a workshop page
-  open in Story Share with a link back and a "Facilitator spotlight" badge when they spotlight someone.
+  open in Story Share with a link back and a "Spotlighted facilitator" badge when they spotlight someone.
 pro_tips:
   - "When a story names its own version of a workshop, that name is shown and still links to the workshop."
   - "Workshops, organizations, or people you don't have access to still show their name, just without a link."

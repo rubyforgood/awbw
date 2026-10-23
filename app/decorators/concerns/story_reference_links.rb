@@ -4,14 +4,12 @@ module StoryReferenceLinks
   extend ActiveSupport::Concern
 
   def workshop_links(link_class: "hover:underline")
-    return direct_workshop_links(link_class) if workshop_references.empty?
     parts = workshop_references.map { |reference| workshop_reference_link(reference, link_class) }.compact
     h.safe_join(parts, " / ") if parts.any?
   end
 
   def workshop_reference_count
-    return workshop_references.size if workshop_references.any?
-    [ workshop, external_workshop_title.presence ].compact.size
+    workshop_references.size
   end
 
   def organization_link(link_class: "hover:underline")
@@ -21,14 +19,6 @@ module StoryReferenceLinks
   end
 
   private
-
-  def direct_workshop_links(link_class)
-    parts = [
-      (workshop_link(workshop, link_class) if workshop),
-      (h.html_escape(external_workshop_title) if external_workshop_title.presence)
-    ].compact
-    h.safe_join(parts, " / ") if parts.any?
-  end
 
   def workshop_reference_label(reference)
     reference.external_workshop_title.presence || reference.workshop&.title

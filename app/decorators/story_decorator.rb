@@ -12,14 +12,13 @@ class StoryDecorator < ApplicationDecorator
   end
 
   def workshop_title
-    return direct_workshop_title if story_workshops.empty?
     story_workshops.map { |sw| workshop_reference_label(sw) }.compact_blank.presence&.join(" / ")
   end
 
-  def facilitator_spotlight_label
+  def spotlighted_facilitator_label
     return unless spotlighted_facilitator
 
-    [ "Facilitator spotlight", spotlighted_facilitator.name.presence ].compact.join(": ")
+    [ "Spotlighted facilitator", spotlighted_facilitator.name.presence ].compact.join(": ")
   end
 
   def spotlighted_facilitator_link(link_class: "hover:underline")
@@ -33,19 +32,9 @@ class StoryDecorator < ApplicationDecorator
     h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object, **params) : h.story_path(object)
   end
 
-  # Read-only display of the legacy single-workshop columns kept as a safety net
-  # during the join-table migration; the form surfaces it so nothing silently hides.
-  def legacy_workshop_reference
-    direct_workshop_title
-  end
-
   private
 
   def workshop_references
     story_workshops
-  end
-
-  def direct_workshop_title
-    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
   end
 end

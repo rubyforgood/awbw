@@ -110,7 +110,7 @@ RSpec.describe "/workshops", type: :request do
       get workshop_url(workshop), headers: frame_headers
 
       card = Nokogiri::HTML(response.body).css("#workshopStories .card-link").find { |c| c.text.include?("Spotlight story") }
-      expect(card.text.squish).to include("Facilitator spotlight: Rosa Q.")
+      expect(card.text.squish).to include("Spotlighted facilitator: Rosa Q.")
       expect(card.text).not_to include("Quintero")
     end
 
@@ -119,7 +119,7 @@ RSpec.describe "/workshops", type: :request do
 
       get workshop_url(workshop), headers: frame_headers
 
-      expect(response.body).not_to include("Facilitator spotlight")
+      expect(response.body).not_to include("Spotlighted facilitator")
     end
 
     it "sends story cards to the Story Share page" do

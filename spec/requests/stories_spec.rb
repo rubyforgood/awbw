@@ -786,7 +786,7 @@ RSpec.describe "/stories", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_text(story.credited_name_for_person(author))
         expect(page).to have_text(story.credited_name_for_person(co_author))
-        expect(page).to have_text("Facilitator spotlight: #{spotlight.name}")
+        expect(page).to have_text("Spotlighted facilitator: #{spotlight.name}")
       end
 
       it "links only the workshops and organization the user can open, showing a story's own workshop title" do

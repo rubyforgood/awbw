@@ -10,12 +10,6 @@ class StoryIdeaDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 
-  # Read-only display of the legacy single-workshop columns kept as a safety net
-  # during the join-table migration; the form surfaces it so nothing silently hides.
-  def legacy_workshop_reference
-    [ workshop&.title, external_workshop_title.presence ].compact_blank.presence&.join(" / ")
-  end
-
   private
 
   def workshop_references
