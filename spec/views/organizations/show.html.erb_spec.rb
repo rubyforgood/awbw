@@ -68,15 +68,15 @@ RSpec.describe "organizations/show", type: :view do
     context "when the viewer is an admin" do
       let(:user) { admin }
 
-      it "lists every actively affiliated person, whatever their title" do
+      it "lists every active facilitator, but not other titles" do
         expect(rendered).to include(person_path(facilitator))
         expect(rendered).to include(person_path(hidden))
-        expect(rendered).to include(person_path(director))
+        expect(rendered).not_to include(person_path(director))
         expect(rendered).not_to include(person_path(lapsed))
       end
 
-      it "locks only the people facilitators can't open" do
-        expect(rendered.scan('data-testid="profile-hidden-lock"').count).to eq(2)
+      it "locks only the facilitators others can't open" do
+        expect(rendered.scan('data-testid="profile-hidden-lock"').count).to eq(1)
       end
     end
   end
