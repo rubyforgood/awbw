@@ -12,10 +12,12 @@ class StoriesController < ApplicationController
       base_scope = authorized_scope(Story.with_author_credit
                                          .includes(:windows_type, :organization,
                                                    { story_workshops: :workshop },
+                                                   { sectorable_items: :sector },
+                                                   { categorizable_items: { category: :category_type } },
                                                    :bookmarks, :primary_asset,
                                                    :story_idea, created_by: :person))
       filtered = base_scope.search_by_params(params)
-      sortable = %w[title updated_at created_at windows_type workshop author organization]
+      sortable = %w[title updated_at created_at tags workshop author organization]
       @sort = sortable.include?(params[:sort]) ? params[:sort] : "created_at"
       @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
       filtered = apply_sort(filtered, @sort, @sort_direction)
@@ -206,9 +208,8 @@ class StoriesController < ApplicationController
     case column
     when "title", "updated_at", "created_at"
       scope.reorder(column => dir)
-    when "windows_type"
-      scope.left_joins(:windows_type)
-           .reorder(WindowsType.arel_table[:short_name].public_send(dir))
+    when "tags"
+      scope.reorder(primary_sector_name_order.public_send(dir), primary_audience_name_order.public_send(dir))
     when "workshop"
       # Sorts on the same text the column displays: a link's typed-in title wins over its workshop's.
       workshop_title = <<~SQL.squish
@@ -226,6 +227,24 @@ class StoriesController < ApplicationController
     else
       scope.reorder(created_at: :desc)
     end
+  end
+
+  def primary_sector_name_order
+    Arel.sql(<<~SQL.squish)
+      (SELECT MIN(s.name)
+       FROM sectorable_items si
+       JOIN sectors s ON s.id = si.sector_id
+       WHERE si.sectorable_type = 'Story' AND si.sectorable_id = stories.id AND si.is_primary = TRUE)
+    SQL
+  end
+
+  def primary_audience_name_order
+    primary_audience_names = Category.audiences
+      .joins(:categorizable_items)
+      .where(categorizable_items: { categorizable_type: "Story", is_primary: true })
+      .where("categorizable_items.categorizable_id = stories.id")
+      .select("MIN(categories.name)")
+    Arel.sql("(#{primary_audience_names.to_sql})")
   end
 
   # Strong parameters
