@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_094010) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -2124,7 +2124,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
-    t.string "external_workshop_title"
     t.boolean "featured", default: false, null: false
     t.integer "organization_id"
     t.boolean "permission_given"
@@ -2138,7 +2137,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.integer "updated_by_id", null: false
     t.string "website_url"
     t.integer "windows_type_id", null: false
-    t.integer "workshop_id"
     t.string "youtube_url"
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
@@ -2154,7 +2152,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.index ["story_share_carousel_position"], name: "index_stories_on_story_share_carousel_position"
     t.index ["updated_by_id"], name: "index_stories_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_stories_on_windows_type_id"
-    t.index ["workshop_id"], name: "index_stories_on_workshop_id"
   end
 
   create_table "stories_workshops", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2176,14 +2173,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.text "body"
     t.datetime "created_at", null: false
     t.integer "created_by_id", null: false
-    t.string "external_workshop_title"
     t.integer "organization_id"
     t.boolean "permission_given"
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "updated_by_id", null: false
     t.integer "windows_type_id", null: false
-    t.integer "workshop_id"
     t.string "youtube_url"
     t.bigint "co_author_id"
     t.string "co_author_credit_preference"
@@ -2196,7 +2191,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
     t.index ["spotlighted_facilitator_id"], name: "index_story_ideas_on_spotlighted_facilitator_id"
     t.index ["updated_by_id"], name: "index_story_ideas_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_story_ideas_on_windows_type_id"
-    t.index ["workshop_id"], name: "index_story_ideas_on_workshop_id"
   end
 
   create_table "story_ideas_workshops", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2927,7 +2921,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   add_foreign_key "stories", "users", column: "created_by_id"
   add_foreign_key "stories", "users", column: "updated_by_id"
   add_foreign_key "stories", "windows_types"
-  add_foreign_key "stories", "workshops"
   add_foreign_key "stories_workshops", "stories"
   add_foreign_key "stories_workshops", "workshops"
   add_foreign_key "story_ideas", "organizations"
@@ -2935,7 +2928,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_120030) do
   add_foreign_key "story_ideas", "users", column: "created_by_id"
   add_foreign_key "story_ideas", "users", column: "updated_by_id"
   add_foreign_key "story_ideas", "windows_types"
-  add_foreign_key "story_ideas", "workshops"
   add_foreign_key "story_ideas_workshops", "story_ideas"
   add_foreign_key "story_ideas_workshops", "workshops"
   add_foreign_key "topic_subscriptions", "events", column: "interested_event_id"

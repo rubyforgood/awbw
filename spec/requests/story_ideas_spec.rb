@@ -17,7 +17,7 @@ RSpec.describe "/story_ideas", type: :request do
       author_credit_preference: "full_name",
       permission_given: true,
       windows_type_id: windows_type.id,
-      workshop_id: workshop.id,
+      story_idea_workshops_attributes: [ { workshop_id: workshop.id } ],
       organization_id: organization.id,
       created_by_id: regular_user.id,
       updated_by_id: regular_user.id
