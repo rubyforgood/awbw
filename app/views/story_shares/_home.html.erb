@@ -41,6 +41,7 @@
               <%= link_to story_share_path(story), class: "block relative" do %>
                 <div class="bg-brand-navy-100 relative overflow-hidden <%= StorySharesHelper::STORY_BANNER_ASPECT %>">
                   <%= render "assets/fitted_image", file: story.display_image, alt: story.title %>
+                  <%= render "story_shares/banner_video", story: story %>
                 </div>
                 <%= render "story_shares/primary_tag_pills", story: story, pad: "px-4 py-1.5",
                            wrapper_class: "absolute top-5 left-5 right-5 z-10" %>
