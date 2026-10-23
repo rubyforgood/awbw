@@ -261,4 +261,48 @@ RSpec.describe Resource do
       expect { create(:resource, role: "ce_frame") }.to raise_error(ActiveRecord::RecordNotUnique)
     end
   end
+
+  describe "#connected_workshops" do
+    let(:resource) { create(:resource) }
+    let(:workshop) { create(:workshop) }
+
+    it "includes the resource's own workshop" do
+      resource.update!(workshop:)
+
+      expect(resource.connected_workshops).to contain_exactly(workshop)
+    end
+
+    it "includes workshops joined through workshop_resources" do
+      create(:workshop_resource, resource:, workshop:)
+
+      expect(resource.connected_workshops).to contain_exactly(workshop)
+    end
+
+    it "includes workshops whose rich text mentions the resource" do
+      workshop.rhino_objective.update!(body: "<p>See it</p>")
+      ActionTextMention.create!(action_text_rich_text: workshop.rhino_objective, mentionable: resource)
+
+      expect(resource.connected_workshops).to contain_exactly(workshop)
+    end
+
+    it "includes workshops mentioned in the resource body" do
+      resource.rhino_body.update!(body: "<p>See it</p>")
+      ActionTextMention.create!(action_text_rich_text: resource.rhino_body, mentionable: workshop)
+
+      expect(resource.connected_workshops).to contain_exactly(workshop)
+    end
+
+    it "lists a workshop connected several ways once" do
+      resource.update!(workshop:)
+      create(:workshop_resource, resource:, workshop:)
+
+      expect(resource.connected_workshops.to_a).to eq([ workshop ])
+    end
+
+    it "excludes unrelated workshops" do
+      create(:workshop)
+
+      expect(resource.connected_workshops).to be_empty
+    end
+  end
 end

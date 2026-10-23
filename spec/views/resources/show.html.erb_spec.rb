@@ -11,6 +11,7 @@ RSpec.describe "resources/show", type: :view do
     assign(:resource, resource.decorate)
     assign(:mentioners, [])
     assign(:mentionees, [])
+    assign(:connected_workshops, Workshop.none)
   end
 
   context "when resource has an attached primary image" do
