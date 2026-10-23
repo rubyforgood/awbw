@@ -589,11 +589,11 @@ RSpec.describe StoryImporter do
       expect(Story.sole.primary_sector.name).to eq("Domestic Violence")
     end
 
-    it "stars nothing for an Other-only story" do
+    it "stars Other when it's a story's only sector" do
       create(:sector, name: Sector::OTHER_SECTOR_NAME)
       import([ base_row("sectors" => "Other") ])
 
-      expect(Story.sole.primary_sector).to be_nil
+      expect(Story.sole.primary_sector.name).to eq(Sector::OTHER_SECTOR_NAME)
     end
 
     it "keeps the row's named primary over a sole-tag default" do

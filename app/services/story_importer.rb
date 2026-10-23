@@ -643,8 +643,8 @@ class StoryImporter
     primary_category = resolve_primary_category(row, sectors, categories, missing_categories)
     sectors.uniq!
     categories.uniq!
-    taggable_sectors = sectors.reject { |sector| sector.name == Sector::OTHER_SECTOR_NAME }
-    primary_sector ||= taggable_sectors.sole if taggable_sectors.one?
+    sole_sector_candidates = sectors.reject { |sector| sector.name == Sector::OTHER_SECTOR_NAME }.presence || sectors
+    primary_sector ||= sole_sector_candidates.sole if sole_sector_candidates.one?
     audiences = categories.select { |category| CategoriesTaggable::AUDIENCE_CATEGORY_TYPES.include?(category.category_type&.name) }
     primary_category ||= audiences.sole if audiences.one?
 
