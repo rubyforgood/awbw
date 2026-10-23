@@ -16,7 +16,7 @@ class CategoriesController < ApplicationController
 
     total_count = base_scope.count
     filtered_count = filtered.count
-    @count_display = filtered_count == total_count ? total_count : "#{filtered_count}/#{total_count}"
+    @count_display = count_display(filtered_count, total_count)
     set_index_variables
   end
 

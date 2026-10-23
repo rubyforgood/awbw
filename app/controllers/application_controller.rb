@@ -31,6 +31,11 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def count_display(shown, total = shown)
+    return helpers.number_with_delimiter(total) if shown == total
+    "#{helpers.number_with_delimiter(shown)}/#{helpers.number_with_delimiter(total)}"
+  end
+
   # Dollar cell for a CSV export: the money helper's formatting when there's an
   # amount, blank when there's nothing (so empty cells read cleanly).
   def csv_dollars(cents)

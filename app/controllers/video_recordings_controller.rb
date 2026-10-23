@@ -12,7 +12,7 @@ class VideoRecordingsController < ApplicationController
       base_scope = filter_by_video_type(authorized_scope(VideoRecording.all))
       filtered = base_scope.search_by_params(params)
 
-      @count_display = filtered.size == base_scope.size ? base_scope.size : "#{filtered.count}/#{base_scope.count}"
+      @count_display = count_display(filtered.count, base_scope.count)
       @video_recordings = filtered.order(:position).paginate(page: params[:page], per_page: per_page).decorate
 
       render :video_recordings_results

@@ -110,7 +110,7 @@ class StorySharesController < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 12
     filtered = portal_scope.search_by_params(params)
     filtered = filtered.where(id: additional_focus_area_story_ids) if params[:additional_focus_areas].present?
-    @count_display = filtered.count
+    @count_display = count_display(filtered.count)
     lead_ids = filtered.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
     @lead_stories = first_page? ? preloaded(Story.where(id: lead_ids)).in_order_of(:id, lead_ids).decorate : []
     @stories = preloaded(filtered.where.not(id: lead_ids)).order(created_at: :desc)
