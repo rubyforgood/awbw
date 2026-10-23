@@ -28,7 +28,8 @@ module Admin
                                       :ce_accreditation_body, :ce_accreditation_url,
                                       :programs_email, :no_reply_email,
                                       :annual_membership_cents, :membership_renewal_window_days,
-                                      :membership_grace_period_days)
+                                      :membership_grace_period_days,
+                                      :home_featured_stories_limit)
     end
   end
 end
