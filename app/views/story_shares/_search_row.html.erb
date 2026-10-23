@@ -1,10 +1,15 @@
-<li class="py-6">
-  <%= render "story_shares/primary_tag_pills", story: story, pad: "px-2.5 py-0.5", wrapper_class: "mb-2" %>
-  <%= tag.h2 id: local_assigns[:anchor_id], class: [ "text-brand-navy-900 font-display text-xl leading-snug", ("scroll-mt-48" if local_assigns[:anchor_id]) ] do %>
-    <%= link_to story.title, story_share_path(story), class: "hover:text-brand-magenta-700" %>
+<li class="flex gap-5 py-6 sm:gap-6">
+  <%= link_to story_share_path(story), class: "ring-brand-navy-900/10 block w-28 shrink-0 self-start overflow-hidden rounded-xl ring-1 sm:w-48" do %>
+    <%= render "story_shares/story_image", story: story, pills: false %>
   <% end %>
-  <p class="mt-1 text-xs text-gray-500">
-    <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
-  </p>
-  <p class="mt-2 text-sm leading-relaxed text-gray-600"><%= truncate(story.rhino_body.to_plain_text, length: 220) %></p>
+  <div class="min-w-0">
+    <%= render "story_shares/primary_tag_pills", story: story, pad: "px-2.5 py-0.5", wrapper_class: "mb-2" %>
+    <%= tag.h2 id: local_assigns[:anchor_id], class: [ "text-brand-navy-900 font-display text-xl leading-snug", ("scroll-mt-48" if local_assigns[:anchor_id]) ] do %>
+      <%= link_to story.title, story_share_path(story), class: "hover:text-brand-magenta-700" %>
+    <% end %>
+    <p class="mt-1 text-xs text-gray-500">
+      <%= story.organization_name %><%= " – #{story.organization.state}" if story.organization&.state.present? %>
+    </p>
+    <p class="mt-2 text-sm leading-relaxed text-gray-600"><%= truncate(story.rhino_body.to_plain_text, length: 220) %></p>
+  </div>
 </li>
