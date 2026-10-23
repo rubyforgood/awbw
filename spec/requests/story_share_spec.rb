@@ -779,10 +779,13 @@ RSpec.describe "/story_share", type: :request do
     end
 
     it "plays a story's video in place of its play badge on the browse carousel" do
+      teens = create(:category, :published, name: "Teens", category_type: create(:category_type, name: "AgeRange"))
       create(:story, :published, :publicly_visible, title: "Video story", youtube_url: video_url)
+        .categorizable_items.create!(category: teens, is_primary: true)
       create(:story, :published, :publicly_visible, title: "Photo story", created_at: 1.day.ago)
+        .categorizable_items.create!(category: teens, is_primary: true)
 
-      get story_shares_path(query: "story")
+      get story_shares_path(category_names_all: "Teens")
 
       slide = carousel_slide(Story.find_by(title: "Video story"))
       expect(slide).to have_css(player)
