@@ -399,6 +399,7 @@ RSpec.describe "/stories", type: :request do
       context "when promoting a story idea into a story" do
         let(:submitter) { create(:user, email: "submitter@example.com") }
         let(:story_idea) { create(:story_idea, created_by: submitter) }
+        let(:author) { create(:person, email: "author@example.com") }
 
         it "holds both promotion notices while the story is unpublished" do
           expect {
@@ -406,19 +407,29 @@ RSpec.describe "/stories", type: :request do
           }.not_to change(Notification, :count)
         end
 
-        it "notifies the idea's submitter and an admin when the story is created already published" do
+        it "notifies the story's author, not the idea's submitter, and an admin when created already published" do
           expect {
-            post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, published: "1") }
+            post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, author_id: author.id, published: "1") }
           }.to change(Notification, :count).by(2)
 
           person_note = Notification.find_by(kind: "story_promoted")
           expect(person_note.recipient_role).to eq("person")
-          expect(person_note.recipient_email).to eq(submitter.email)
+          expect(person_note.recipient_email).to eq("author@example.com")
+          expect(person_note.person).to eq(author)
           expect(person_note.noticeable).to eq(Story.last)
 
           admin_note = Notification.find_by(kind: "story_promoted_fyi")
           expect(admin_note.recipient_role).to eq("admin")
           expect(admin_note.recipient_email).to eq(EmailConfigHelpers::PROGRAMS_EMAIL)
+        end
+
+        it "sends the author the shared-with-funder email when a funder-only story is published" do
+          post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, author_id: author.id, published: "1", funder_only: "1") }
+
+          expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email)).to contain_exactly(
+            [ "story_shared_with_funder", "author@example.com" ],
+            [ "story_promoted_fyi", Setting.programs_email ]
+          )
         end
 
         it "pre-checks the funder-only box when promoting a funder-only idea" do
@@ -442,10 +453,32 @@ RSpec.describe "/stories", type: :request do
         expect(Story.order(:created_at).last).to be_funder_only
       end
 
-      it "does not send promotion emails when no story idea is linked" do
+      it "sends nothing for an unpublished story with no story idea" do
         expect {
-          post stories_url, params: { story: base_attributes }
+          post stories_url, params: { story: base_attributes.merge(author_id: create(:person).id) }
         }.not_to change(Notification, :count)
+      end
+
+      it "emails the authors and an admin when a story with no story idea is created published" do
+        author = create(:person, email: "author@example.com")
+        co_author = create(:person, email: "co-author@example.com")
+        post stories_url, params: { story: base_attributes.merge(author_id: author.id, co_author_id: co_author.id, published: "1") }
+
+        expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email, :person_id)).to contain_exactly(
+          [ "story_promoted", "author@example.com", author.id ],
+          [ "story_promoted", "co-author@example.com", co_author.id ],
+          [ "story_promoted_fyi", Setting.programs_email, nil ]
+        )
+      end
+
+      it "sends the authors the shared-with-funder email for a funder-only story" do
+        author = create(:person, email: "author@example.com")
+        post stories_url, params: { story: base_attributes.merge(author_id: author.id, published: "1", funder_only: "1") }
+
+        expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email)).to contain_exactly(
+          [ "story_shared_with_funder", "author@example.com" ],
+          [ "story_promoted_fyi", Setting.programs_email ]
+        )
       end
     end
 
@@ -581,15 +614,15 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "PATCH /update publishing a promoted story" do
-      let(:submitter) { create(:user, email: "submitter@example.com") }
+      let(:submitter) { create(:user, :with_person, email: "submitter@example.com") }
       let(:story_idea) { create(:story_idea, created_by: submitter) }
-      let(:promoted_story) { Story.create!(base_attributes.merge(story_idea: story_idea, published: false)) }
+      let(:promoted_story) { Story.create!(base_attributes.merge(story_idea: story_idea, author: submitter.person, published: false)) }
 
       def promotion_notices
         Notification.where(noticeable: promoted_story).pluck(:kind, :recipient_email)
       end
 
-      it "notifies the idea's submitter and an admin when the story is published" do
+      it "notifies the story's author and an admin when the story is published" do
         patch story_url(promoted_story), params: { story: { published: "1" } }
 
         expect(promotion_notices).to contain_exactly(
@@ -612,10 +645,22 @@ RSpec.describe "/stories", type: :request do
         expect(promotion_notices.size).to eq(2)
       end
 
-      it "does not email anyone when publishing a story with no story idea" do
-        expect {
-          patch story_url(private_story), params: { story: { published: "1" } }
-        }.not_to change(Notification, :count)
+      it "emails the author and an admin when publishing a story with no story idea" do
+        author = create(:person, email: "author@example.com")
+        private_story.update!(author: author)
+
+        patch story_url(private_story), params: { story: { published: "1" } }
+
+        expect(Notification.where(noticeable: private_story).pluck(:kind, :recipient_email)).to contain_exactly(
+          [ "story_promoted", "author@example.com" ],
+          [ "story_promoted_fyi", Setting.programs_email ]
+        )
+      end
+
+      it "sends only the admin FYI when publishing a story with no story idea or author" do
+        patch story_url(private_story), params: { story: { published: "1" } }
+
+        expect(Notification.where(noticeable: private_story).pluck(:kind)).to contain_exactly("story_promoted_fyi")
       end
     end
 
@@ -912,6 +957,13 @@ RSpec.describe "/stories", type: :request do
       end
 
       it "cannot view a funder-only story even though it is published and public" do
+        get story_url(funder_only_story)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "cannot view a funder-only story promoted from their idea when not credited as its author" do
+        funder_only_story.update!(story_idea: create(:story_idea, :funder_only, created_by: regular_user))
+
         get story_url(funder_only_story)
         expect(response).to redirect_to(root_path)
       end

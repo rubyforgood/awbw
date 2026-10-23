@@ -83,7 +83,7 @@ class StoriesController < ApplicationController
         elsif params.dig(:library_asset, :new_assets).present?
           update_asset_owner(@story)
         end
-        notify_story_promoted if just_published
+        notify_story_published if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -112,7 +112,7 @@ class StoriesController < ApplicationController
         if params[:promote_idea_assets] == "true"
           @story.attach_assets_from_idea!
         end
-        notify_story_promoted if just_published
+        notify_story_published if just_published
         success = true
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
@@ -176,19 +176,14 @@ class StoriesController < ApplicationController
 
   private
 
-  def notify_story_promoted
-    return unless @story.story_idea
-    return if @story.notifications.exists?(kind: %w[story_promoted story_promoted_fyi])
+  def notify_story_published
+    return if @story.notifications.exists?(kind: %w[story_promoted story_shared_with_funder story_promoted_fyi])
 
-    if (submitter = @story.story_idea.created_by)
-      NotificationServices::CreateNotification.call(
-        noticeable: @story,
-        person: submitter.person,
-        kind: :story_promoted,
-        recipient_role: :person,
-        recipient_email: submitter.email,
-        notification_type: 0)
-    end
+    NotificationServices::NotifyAuthors.call(record: @story, kind: @story.funder_only? ? :story_shared_with_funder : :story_promoted)
+    notify_story_promoted_fyi
+  end
+
+  def notify_story_promoted_fyi
     NotificationServices::CreateNotification.call(
       noticeable: @story,
       kind: :story_promoted_fyi,
