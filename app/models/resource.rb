@@ -190,7 +190,6 @@ class Resource < ApplicationRecord
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds) }
-  scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
   scope :published, ->(flag = nil) do
     value = flag.nil? || flag == "" ? true : ActiveModel::Type::Boolean.new.cast(flag)
