@@ -1,0 +1,13 @@
+name: "Reconcile cancelled registrants before the training"
+area: events
+display_status: admin_facing
+released_on: 2026-10-23
+action_path: "/events/1/reconcile_affiliations"
+pr_number: 2803
+summary: >-
+  Reconcile affiliations now lists cancelled registrants in their own section, so
+  the facilitator affiliation their registration created can be deleted right away
+  instead of after the training ends.
+pro_tips:
+  - "Someone who cancelled and never trained should have the affiliation deleted, not deactivated — there's no facilitation history to keep."
+  - "Registrants still marked Registered are listed under Not reconciled for reference until the training ends."

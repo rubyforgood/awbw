@@ -18,7 +18,8 @@
         later marked attended, an ending this step applied is <strong>undone</strong> rather than leaving them with a
         second affiliation for an engagement that never broke. A return after a real lapse is still a
         <strong>new</strong> affiliation, so the lapse stays visible. Anyone still marked <strong>Registered</strong> is left alone and listed
-        below — that's an unfilled roster, not an outcome. Job affiliations are never touched.
+        below — that's an unfilled roster, not an outcome. A <strong>cancellation</strong> doesn't wait for the training to end:
+        it's listed in its own section so the affiliation can be settled right away. Job affiliations are never touched.
       </p>
       <p>
         Only the row this training created is deleted — it recorded an assumption that never came true. An
@@ -35,7 +36,7 @@
     <% if @event.affiliations_reconciled_at %>
       <p class="text-gray-500">Last reconciled <%= @event.affiliations_reconciled_at.to_fs(:long) %>.</p>
     <% end %>
-    <% if @person_groups.any? && @event.affiliations_reconciliation_stale? %>
+    <% if (@cancelled_groups.any? || @person_groups.any?) && @event.affiliations_reconciliation_stale? %>
       <p class="text-amber-700">Attendance has changed since the last reconciliation — apply again below to bring affiliations up to date.</p>
     <% end %>
   </div>
@@ -53,24 +54,8 @@
   <%# One set of day ticks per registration, wherever it appears: the turbo replace
       targets them by id, and a person with two linked orgs has rows in both sections. %>
   <% ticked = Set.new %>
-  <% if @person_groups.any? %>
-    <% actionable_count = @person_groups.sum { |g| g[:rows].size } %>
-    <% color_class = {
-         red: "has-[:checked]:bg-red-50 has-[:checked]:text-red-700 has-[:checked]:border-red-300",
-         green: "has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:checked]:border-green-300",
-         blue: "has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700 has-[:checked]:border-blue-300",
-         gray: "has-[:checked]:bg-gray-100 has-[:checked]:text-gray-800 has-[:checked]:border-gray-400"
-       } %>
-    <% fa_hint = "facilitator affiliation (FA)" %>
-    <% outcome_options = {
-         create: [ [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Skip", :gray ] ],
-         deactivate: [ [ "keep", "Keep active", :green ], [ "delete", "Delete affiliation", :red ], [ "deactivate", "Deactivate affiliation", :red ] ],
-         delete: [ [ "delete", "Delete", :red ], [ "keep", "Keep", :gray ] ],
-         reactivate: [ [ "reactivate", "Reactivate", :green ], [ "create", "Create new FA", :blue, fa_hint ], [ "keep", "Leave inactive", :gray ] ],
-         retarget: [ [ "retarget", "Move to the new event", :blue ], [ "keep", "Leave as is", :gray ] ]
-       } %>
-    <% button_base = "group relative inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm cursor-pointer hover:bg-gray-50" %>
-
+  <% if @cancelled_groups.any? || @person_groups.any? %>
+    <% actionable_count = (@cancelled_groups + @person_groups).sum { |g| g[:rows].size } %>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <h2 class="text-base font-bold text-gray-900">To reconcile <span class="text-gray-400 font-normal">(<%= actionable_count %>)</span></h2>
       <span class="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
@@ -82,58 +67,28 @@
         can't nest — so the radios join it via the HTML form= attribute. %>
     <%= form_with url: reconcile_affiliations_event_path(@event), method: :post, id: "reconcile_form", data: { turbo: false } do %><% end %>
 
-    <div class="space-y-4">
-      <% @person_groups.each do |group| %>
-        <section class="rounded-lg border border-gray-200 bg-white p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <div class="flex items-center gap-2 min-w-0">
-              <%= link_to group[:person].decorate.full_name_with_display_name, edit_event_registration_path(group[:registration]), target: "_blank", rel: "noopener", class: "font-semibold text-gray-900 hover:underline hover:text-blue-700 shrink-0" %>
-              <% others = group[:other_facilitators] %>
-              <% if others.any? %>
-                <% note = "Also a facilitator at #{others.map { |a| a.organization.name }.to_sentence}." %>
-                <% anchor = others.one? ? dom_id(others.first) : "affiliations" %>
-                <%= link_to note, edit_person_path(group[:person], anchor: anchor), target: "_blank", rel: "noopener",
-                      title: note, class: "text-xs text-gray-500 truncate hover:underline hover:text-blue-700 min-w-0" %>
-              <% end %>
-            </div>
-            <%= render "event_registrations/attendance_status_badge", registration: group[:registration], return_to: "reconcile_affiliations" %>
-          </div>
-
-          <% if group[:registration]&.status == "incomplete_attendance" && ticked.add?(group[:registration].id) %>
-            <%= render "attendance_days", registration: group[:registration], event: @event %>
+    <% if @cancelled_groups.any? %>
+      <div id="reconcile_cancelled" class="mb-6">
+        <h3 class="text-sm font-semibold text-gray-700 mb-1">Cancelled <span class="text-gray-400 font-normal">(<%= @cancelled_groups.size %>)</span></h3>
+        <p class="text-xs text-gray-500 mb-3">They won't attend, so these can be settled now — no need to wait for the training to end.</p>
+        <div class="space-y-4">
+          <% @cancelled_groups.each do |group| %>
+            <%= render "person_group", group: group, ticked: ticked, pre_outcome: @pre_outcome %>
           <% end %>
+        </div>
+      </div>
+    <% end %>
 
-          <div class="divide-y divide-gray-100 border-t border-gray-100">
-            <% group[:rows].each do |row| %>
-              <%# A row this training created has nothing to preserve, so Delete leads and
-                  Deactivate is shown but not selectable — the tooltip says why. %>
-              <% default_choice = row.action == :deactivate && row.minted_here ? "delete" : row.action.to_s %>
-              <% chosen = (@pre_outcome && @pre_outcome[row.key]) || default_choice %>
-              <div class="flex flex-wrap items-center gap-3 py-2">
-                <% if row.affiliation %>
-                  <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "flex-1 min-w-0 text-sm hover:underline" do %>
-                    <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
-                    <span class="text-gray-400">· <%= row.affiliation.decorate.period_label %></span>
-                  <% end %>
-                <% else %>
-                  <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
-                <% end %>
-                <div class="flex shrink-0 items-center gap-2">
-                  <% outcome_options[row.action].each do |value, label, color, hint| %>
-                    <% unavailable = value == "deactivate" && row.minted_here %>
-                    <label class="<%= button_base %> <%= unavailable ? "opacity-50 cursor-not-allowed" : color_class[color] %>" <%= tag.attributes(title: hint) %>>
-                      <%= radio_button_tag "outcome[#{row.key}]", value, chosen == value, id: "outcome_#{row.key}_#{value}", class: "h-4 w-4 border-gray-300", form: "reconcile_form", disabled: unavailable %>
-                      <%= label %>
-                      <%= render "tooltip", kind: value.to_sym %>
-                    </label>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </section>
+    <% if @person_groups.any? %>
+      <% if @cancelled_groups.any? %>
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Other registrants <span class="text-gray-400 font-normal">(<%= @person_groups.size %>)</span></h3>
       <% end %>
-    </div>
+      <div class="space-y-4">
+        <% @person_groups.each do |group| %>
+          <%= render "person_group", group: group, ticked: ticked, pre_outcome: @pre_outcome %>
+        <% end %>
+      </div>
+    <% end %>
 
     <div class="mt-6 flex items-center justify-end gap-3">
       <%= link_to "Cancel", registrants_event_path(@event), class: "text-sm #{eyebrow_link_class}" %>

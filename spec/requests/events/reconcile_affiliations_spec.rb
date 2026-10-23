@@ -53,6 +53,28 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).to include("Create new")
     end
 
+    it "gives cancelled registrants their own section before the event, with the deletion preselected" do
+      upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
+      cancelled = create(:event_registration, event: upcoming, status: "cancelled")
+      registered = create(:event_registration, event: upcoming, status: "registered")
+      [ cancelled, registered ].each do |reg|
+        create(:event_registration_organization, event_registration: reg, organization: organization)
+      end
+      minted = create(:affiliation, person: cancelled.registrant, organization: organization, title: "Facilitator",
+                                    start_date: upcoming.starts_on, event_registration: cancelled)
+      create(:affiliation, person: registered.registrant, organization: organization, title: "Facilitator",
+                           start_date: upcoming.starts_on, event_registration: registered)
+
+      get reconcile_affiliations_event_path(upcoming)
+
+      page = Nokogiri::HTML(response.body)
+      section = page.at_css("#reconcile_cancelled")
+      expect(section.text).to include(cancelled.registrant.name)
+      expect(section.text).not_to include(registered.registrant.name)
+      expect(section.at_css("#outcome_aff\\:#{minted.id}_delete")["checked"]).to be_present
+      expect(page.text).to include("Training hasn't ended yet")
+    end
+
     it "previews a facilitator affiliation on a non-training event as a deletion" do
       non_training = create(:event, :ended, facilitator_training: false)
       person = create(:person)
