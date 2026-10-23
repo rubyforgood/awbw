@@ -9,9 +9,7 @@
       <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
     </div>
 
-    <% if searching? && (@matching_sectors.any? || @matching_audiences.any?) %>
-      <%= render "tag_links", label: "See every story tagged", sectors: @matching_sectors, audiences: @matching_audiences %>
-    <% end %>
+    <%= render "search_scope" if searching? %>
 
     <% if searching? && @stories.any? %>
       <ol aria-label="Search results" class="divide-brand-navy-900/10 divide-y">

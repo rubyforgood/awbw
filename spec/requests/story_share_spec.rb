@@ -460,14 +460,16 @@ RSpec.describe "/story_share", type: :request do
 
         get story_shares_path(query: "veterans")
         expect(response.body).to include("Painting after service")
-        expect(response.body).to include("See every story tagged")
+        expect(response.body).to include("Stories tagged")
+        expect(response.body).to include("or with “veterans” in the title, the story text, or the author’s or second author’s name")
         expect(response.body).to include(CGI.escapeHTML(story_shares_path(sector_names_all: "Military/Veterans")))
       end
 
-      it "skips tag links for tags with no visible stories" do
+      it "explains the match without tags when no tag has visible stories" do
         create(:sector, :published, name: "Veterans Affairs")
         get story_shares_path(query: "veterans")
-        expect(response.body).not_to include("See every story tagged")
+        expect(response.body).not_to include("Stories tagged")
+        expect(response.body).to include("Stories with “veterans” in the title, the story text, or the author’s or second author’s name")
       end
 
       it "puts title matches ahead of newer and featured text matches" do
