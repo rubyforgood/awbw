@@ -395,7 +395,7 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("mailing_city"), with: "Los Angeles"
     select_pr reg_field("mailing_state"), "California (CA)"
     fill_pr_text reg_field("mailing_zip"), with: "90001"
-    fill_pr_text reg_field("mailing_country"), with: "United States"
+    select_pr reg_field("mailing_country"), "United States"
     fill_pr_text reg_field("phone"), with: "555-123-4567"
     choose_pr_radio reg_field("phone_type"), "Work"
 
@@ -407,7 +407,7 @@ RSpec.describe "Public form submissions", type: :system do
     fill_pr_text reg_field("organization_city"), with: "Pasadena"
     select_pr reg_field("organization_state"), "California (CA)"
     fill_pr_text reg_field("organization_zip"), with: "91101"
-    fill_pr_text reg_field("organization_country"), with: "United States"
+    select_pr reg_field("organization_country"), "United States"
 
     select_pr reg_field("primary_sector"), "Education"
     check_pr_box reg_field("additional_sectors"), sector_mental_health.id.to_s
