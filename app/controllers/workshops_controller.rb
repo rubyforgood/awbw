@@ -134,7 +134,6 @@ class WorkshopsController < ApplicationController
 
   def set_show
     @quotes = Quote.where(workshop_id: @workshop.id).published
-    @leader_spotlights = @workshop.associated_resources.leader_spotlights.where(published: true)
     @workshop_variations = authorized_scope(@workshop.workshop_variations)
                              .includes(:windows_type, :created_by, primary_asset: [ :file_attachment ])
                              .order(created_at: :desc)

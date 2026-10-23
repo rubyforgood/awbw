@@ -58,44 +58,6 @@
       </section>
     </div>
   <% end %>
-  <% if @leader_spotlights.any? %>
-    <div id="workshop-spotlights" class="mb-3 flex-1 rounded-lg bg-white p-6 shadow-md">
-      <section id="workshopLeaderSpotlights">
-        <div class="spotlights-header mb-1 flex items-start justify-between">
-          <div class="pr-6">
-            <h2 class="mb-2 text-lg font-semibold">Related facilitator spotlights</h2>
-          </div>
-          <% if allowed_to?(:new?, Story) && @workshop.persisted? %>
-            <%= link_to "New story",
-                        new_story_path(workshop_id: @workshop.id,
-                                       windows_type_id: @workshop.windows_type_id,
-                                       owner_id: @workshop_id,
-                                       owner_type: "Workshop"),
-                        class: button_classes(:secondary_outline, extra: "admin-only bg-blue-100") %>
-          <% end %>
-        </div>
-        <hr class="mb-4 border-gray-300">
-        <div class="spotlights-list flex flex-wrap gap-4">
-          <% @leader_spotlights.each do |spotlight| %>
-            <div class="mb-3 flex max-w-[120px] flex-col items-center space-y-2">
-              <%= link_to resource_path(spotlight), class: "flex flex-col items-center text-center" do %>
-                <%= render "assets/display_image",
-                           resource: spotlight,
-                           width: 10, height: 10,
-                           variant: :index,
-                           link_to_object: true,
-                           file: spotlight.decorate.display_image %>
-                <p class="mt-1 text-sm leading-tight text-gray-700">
-                  <span class="block"><%= spotlight.author_credit %></span>
-                  <span class="block text-xs text-gray-500"><%= spotlight.title %></span>
-                </p>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      </section>
-    </div>
-  <% end %>
   <% if @workshop_stories.any? %>
     <div id="workshop-stories" class="mb-3 flex-1 rounded-lg bg-white p-6 shadow-md">
       <section id="workshopStories" class="scroll-mt-24">

@@ -114,6 +114,15 @@ RSpec.describe "/workshops", type: :request do
       expect(card.text).not_to include("Quintero")
     end
 
+    it "shows spotlights only as badged story cards, not a separate spotlight section" do
+      create(:resource, kind: "LeaderSpotlight", published: true, workshop:, title: "Leader spotlight resource")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).not_to include("Related facilitator spotlights")
+      expect(response.body).not_to include("Leader spotlight resource")
+    end
+
     it "leaves the spotlight mark off a story with no spotlighted facilitator" do
       create(:story, :published, workshop: workshop, title: "Plain story")
 
