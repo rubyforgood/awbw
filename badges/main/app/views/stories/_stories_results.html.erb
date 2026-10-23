@@ -7,16 +7,12 @@
   <table class="w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">
-          <%= sort_link.call("title", "Title") %>
-          <span class="ml-2 text-xs font-normal"><%= sort_link.call("workshop", "Workshop") %></span>
-        </th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("tags", "Tags") %></th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">
-          <div><%= sort_link.call("author", "Author") %></div>
-          <div class="text-xs font-normal"><%= sort_link.call("organization", "Organization") %></div>
-        </th>
-        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("updated_at", "Updated") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("title", "Title") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("windows_type", "Windows audience") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("workshop", "Workshop") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("author", "Author") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("organization", "Organization") %></th>
+        <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"><%= sort_link.call("updated_at", "Updated At") %></th>
         <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
       </tr>
     </thead>
@@ -36,54 +32,31 @@
                                link_to_object: true,
                                file: story.display_image %>
 
-              <!-- TITLE + BADGES, WORKSHOP BENEATH -->
-              <div class="min-w-80">
+              <!-- TITLE + BADGES -->
+              <span class="inline-flex items-center gap-2">
                 <%= link_to title_with_badges(story).html_safe,
                                   story_path(story),
                                   target: story.external_link? ? "_blank" : "", rel: "noopener noreferrer",
                                   data: { turbo_frame: "_top" },
                                   class: "font-bold hover:text-indigo-800 hover:underline" %>
-                <% if story.workshop_title %>
-                  <div class="line-clamp-1 text-xs text-gray-500" title="<%= story.workshop_title %>"><%= story.workshop_links %></div>
-                <% end %>
-              </div>
+              </span>
             </td>
 
-            <td class="px-4 py-2 text-sm">
-              <% more_tag_links = story.more_tag_links %>
-              <div class="flex max-w-sm min-w-52 flex-wrap items-center gap-1">
-                <%= story.windows_audience_chip %>
-                <% if (sector = story.lead_tag_sector) %>
-                  <%= render "sectors/tagging_label", sector: sector, is_primary: sector == story.primary_sector, compact: true %>
-                <% end %>
-                <% if (category = story.lead_tag_audience_category) %>
-                  <%= render "categories/tagging_label", category: category, is_primary: category == story.primary_category, name_only: true, compact: true %>
-                <% end %>
-                <% if more_tag_links.any? %>
-                  <div class="group relative">
-                    <span class="inline-flex cursor-help items-center rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-600">+<%= more_tag_links.size %> more</span>
-                    <div class="absolute top-full left-0 z-10 hidden pt-1 group-hover:block">
-                      <ul class="list-disc rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-7 text-sm whitespace-nowrap text-gray-800 shadow-lg">
-                        <% more_tag_links.each do |link| %>
-                          <li><%= link %></li>
-                        <% end %>
-                      </ul>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
+            <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
+
+            <td class="px-4 py-2 text-sm text-gray-800">
+              <span class="line-clamp-2" title="<%= story.workshop_title %>"><%= story.workshop_links %></span>
             </td>
 
-            <td class="min-w-36 px-4 py-2 text-sm text-gray-800">
-              <div><%= credited_author_link(story, class: "hover:underline", data: { turbo_frame: "_top" }) %></div>
-              <% if story.organization %>
-                <div class="line-clamp-1 text-xs text-gray-500" title="<%= story.organization_name %>"><%= story.organization_link %></div>
-              <% end %>
+            <td class="px-4 py-2 text-sm text-gray-800"><%= credited_author_link(story, class: "hover:underline", data: { turbo_frame: "_top" }) %></td>
+
+            <td class="px-4 py-2 text-sm text-gray-800">
+              <span class="line-clamp-2" title="<%= story.organization_name %>"><%= story.organization_link %></span>
             </td>
 
-            <td class="px-4 py-2 text-sm whitespace-nowrap text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
+            <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
 
-            <td class="px-4 py-2 text-sm whitespace-nowrap text-gray-500">
+            <td class="px-4 py-2 text-sm text-gray-500">
               <% if story.external_link? %>
                 <%= link_to "View", story.link_target,
                                   target: "_blank", rel: "noopener noreferrer",
@@ -108,7 +81,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="5" class="py-16 text-center">
+          <td colspan="7" class="py-16 text-center">
             <h2 class="mb-2 text-lg text-gray-600">No stories found</h2>
             <% if allowed_to?(:new?, Story) %>
               <div class="admin-only bg-blue-100 p-3">

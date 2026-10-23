@@ -59,24 +59,6 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(private_story.title)
       end
 
-      it "shows the windows audience as a locked admin-only chip" do
-        published_story.update!(windows_type: create(:windows_type, short_name: "Combined Audience"))
-
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
-
-        tags = Capybara.string(response.body).find("tr", text: published_story.title).find("div.flex-wrap")
-        expect(tags.first("*")).to have_text("Combined Audience")
-        expect(tags.find("span.admin-only", text: "Combined Audience")).to have_css("i.fa-lock")
-      end
-
-      it "shows unpublished tags" do
-        published_story.sectorable_items.create!(sector: create(:sector, :unpublished, name: "Hidden Sector"))
-
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
-
-        expect(Capybara.string(response.body)).to have_link("Hidden Sector")
-      end
-
       it "shows funder-only stories to admins, flagged with a chip" do
         get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include(funder_only_story.title)
@@ -120,7 +102,7 @@ RSpec.describe "/stories", type: :request do
         get stories_url(title: "Variant Story"), headers: { "Turbo-Frame" => "stories_results" }
 
         page = Capybara.string(response.body)
-        expect(page).to have_css("div[title='Teen variant'] a[href='#{workshop_path(workshop)}']", text: "Teen variant")
+        expect(page).to have_css("span[title='Teen variant'] a[href='#{workshop_path(workshop)}']", text: "Teen variant")
       end
 
       it "shows the empty-state message when no stories match" do
@@ -238,32 +220,9 @@ RSpec.describe "/stories", type: :request do
           expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
         end
 
-        describe "by tags" do
-          let(:audience_type) { create(:category_type, name: "StoryPopulation") }
-
-          def tag_primary(story, sector_name:, audience_name:)
-            story.sectorable_items.create!(sector: create(:sector, :published, name: sector_name), is_primary: true)
-            story.categorizable_items.create!(category: create(:category, :published, name: audience_name, category_type: audience_type), is_primary: true)
-          end
-
-          it "sorts by primary sector" do
-            tag_primary(story_a, sector_name: "Veterans", audience_name: "Self")
-            tag_primary(story_z, sector_name: "Arts", audience_name: "Teens")
-
-            get stories_url, params: { sort: "tags", direction: "asc" }, headers: turbo_headers
-            expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
-          end
-
-          it "breaks a primary sector tie on primary audience" do
-            shared_sector = create(:sector, :published, name: "Shared")
-            story_a.sectorable_items.create!(sector: shared_sector, is_primary: true)
-            story_z.sectorable_items.create!(sector: shared_sector, is_primary: true)
-            story_a.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: audience_type), is_primary: true)
-            story_z.categorizable_items.create!(category: create(:category, :published, name: "Colleagues", category_type: audience_type), is_primary: true)
-
-            get stories_url, params: { sort: "tags", direction: "asc" }, headers: turbo_headers
-            expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
-          end
+        it "sorts by windows_type asc" do
+          get stories_url, params: { sort: "windows_type", direction: "asc" }, headers: turbo_headers
+          expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
         it "sorts by workshop asc" do
@@ -788,35 +747,6 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(published_story.title)
         expect(response.body).to include(public_story.title)
         expect(response.body).not_to include(private_story.title)
-      end
-
-      it "shows each group's primary as a chip and lists the rest under +N more" do
-        audience_type = create(:category_type, name: "StoryPopulation")
-        published_story.sectorable_items.create!(sector: create(:sector, :published, name: "Arts Sector"))
-        published_story.sectorable_items.create!(sector: create(:sector, :published, name: "Veterans Sector"), is_primary: true)
-        published_story.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: audience_type), is_primary: true)
-        published_story.categorizable_items.create!(category: create(:category, :published, name: "Colleagues", category_type: audience_type))
-
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
-
-        row = Capybara.string(response.body).find("tr", text: published_story.title)
-        expect(row).to have_link("Veterans Sector", href: taggings_path(sector_names_all: "Veterans Sector"))
-        expect(row).to have_link("Teens", href: taggings_path(category_names_all: "Teens"))
-        expect(row).to have_text("+2 more")
-        more_list = row.find("ul.list-disc")
-        expect(more_list).to have_link("Arts Sector", href: taggings_path(sector_names_all: "Arts Sector"))
-        expect(more_list).to have_link("Colleagues", href: taggings_path(category_names_all: "Colleagues"))
-        expect(more_list).to have_no_text("Veterans Sector")
-      end
-
-      it "hides unpublished tags and the windows audience" do
-        published_story.update!(windows_type: create(:windows_type, short_name: "Combined Audience"))
-        published_story.sectorable_items.create!(sector: create(:sector, :unpublished, name: "Hidden Sector"))
-
-        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
-
-        expect(response.body).not_to include("Hidden Sector")
-        expect(response.body).not_to include("Combined Audience")
       end
 
       it "leaves a workshop the user can't view as plain text" do
