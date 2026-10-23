@@ -449,10 +449,6 @@ class EventDecorator < ApplicationDecorator
     { date: date_line, time: "#{time_line} #{s.strftime('%Z')}" }
   end
 
-  def breadcrumbs
-    "#{bookmarks_link} >> #{bookmarkable_link}".html_safe
-  end
-
   # The template key the show page renders, which it interpolates into a partial
   # path. #preview renders unsaved, unvalidated attributes, so an unknown value
   # falls back to the legacy frame instead of raising MissingTemplate.
@@ -492,29 +488,6 @@ class EventDecorator < ApplicationDecorator
     return "Free event" if cost_cents.zero?
 
     "Cost: #{MoneyFormatter.dollars_from_cents(cost_cents)}"
-  end
-
-  def content
-    if bookmarkable_class_name == "Workshop"
-      h.render "/workshops/show", workshop: bookmarkable, sectors: bookmarkable.sectors,
-                                       new_bookmark: bookmarkable.bookmarks.build,
-                                       quotes: bookmarkable.quotes, leader_spotlights: bookmarkable.leader_spotlights,
-                                       workshop_variations: bookmarkable.workshop_variations
-    end
-  end
-
-  def bookmarkable_class_name
-    bookmarkable.object.class.name
-  end
-
-  def bookmarks_link
-    h.link_to "My Bookmarks", h.bookmarks_path, class: "underline"
-  end
-
-  def bookmarkable_link
-    if bookmarkable_class_name == "Event"
-      bookmarkable.breadcrumb_link
-    end
   end
 
   private

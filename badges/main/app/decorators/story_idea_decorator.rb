@@ -1,4 +1,6 @@
 class StoryIdeaDecorator < ApplicationDecorator
+  include ::StoryReferenceLinks
+
   def title
     name
   end
@@ -8,24 +10,9 @@ class StoryIdeaDecorator < ApplicationDecorator
     length ? text&.truncate(length) : text
   end
 
-  def workshop_links
-    parts = story_idea_workshops.map { |siw| workshop_reference_link(siw) }.compact
-    h.safe_join(parts, " / ") if parts.any?
-  end
-
-  def workshop_reference_count
-    story_idea_workshops.size
-  end
-
   private
 
-  def workshop_reference_link(story_idea_workshop)
-    workshop = story_idea_workshop.workshop
-    external_title = story_idea_workshop.external_workshop_title.presence
-    return h.html_escape(external_title) if workshop.nil?
-
-    link = h.link_to(workshop.title, h.workshop_path(workshop), class: "hover:underline")
-    return link unless external_title
-    h.safe_join([ external_title, " (from the ", link, ")" ])
+  def workshop_references
+    story_idea_workshops
   end
 end

@@ -84,6 +84,27 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(story_in_other_org.title)
       end
 
+      it "links each row's organization and workshop out of the results frame" do
+        orgless = create(:story, :published, organization: nil, title: "Orgless Story")
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(response).to have_http_status(:ok)
+        expect(page).to have_css("a[href='#{organization_path(organization)}'][data-turbo-frame='_top']", text: organization.name)
+        expect(page).to have_css("a[href='#{workshop_path(workshop)}'][data-turbo-frame='_top']", text: workshop.title)
+        expect(page).to have_text(orgless.title)
+      end
+
+      it "shows an external workshop title in both the link and its hover text" do
+        story = create(:story, :published, workshop: nil, title: "Variant Story")
+        story.story_workshops.create!(workshop: workshop, external_workshop_title: "Teen variant")
+
+        get stories_url(title: "Variant Story"), headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("span[title='Teen variant'] a[href='#{workshop_path(workshop)}']", text: "Teen variant")
+      end
+
       it "shows the empty-state message when no stories match" do
         get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include("No stories found")
@@ -728,6 +749,17 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(private_story.title)
       end
 
+      it "leaves a workshop the user can't view as plain text" do
+        hidden_workshop = create(:workshop, :unpublished, title: "Draft Workshop")
+        published_story.story_workshops.create!(workshop: hidden_workshop)
+
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Draft Workshop")
+        expect(page).to have_no_link("Draft Workshop")
+      end
+
       it "never shows funder-only stories" do
         get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).not_to include(funder_only_story.title)
@@ -742,6 +774,42 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "GET /show" do
+      it "itemizes the author, co-author, and spotlighted facilitator" do
+        author = create(:person, first_name: "Ada", last_name: "Author")
+        co_author = create(:person, first_name: "Cole", last_name: "Coauthor")
+        spotlight = create(:person, first_name: "Sky", last_name: "Spotlight")
+        story = create(:story, :published, author:, co_author:, spotlighted_facilitator: spotlight,
+                                           author_credit_preference: "full_name")
+
+        get story_url(story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text(story.credited_name_for_person(author))
+        expect(page).to have_text(story.credited_name_for_person(co_author))
+        expect(page).to have_text("Spotlighted facilitator: #{spotlight.name}")
+      end
+
+      it "links only the workshops and organization the user can open, showing a story's own workshop title" do
+        open_workshop = create(:workshop, :published, title: "Open Workshop")
+        draft_workshop = create(:workshop, :unpublished, title: "Draft Workshop")
+        story = create(:story, :published, workshop: nil, organization: create(:organization, name: "Hidden Org"))
+        story.story_workshops.create!(workshop: open_workshop, external_workshop_title: "Teen variant")
+        story.story_workshops.create!(workshop: draft_workshop)
+        story.story_workshops.create!(external_workshop_title: "Homegrown session")
+
+        get story_url(story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(open_workshop))
+        expect(page).to have_no_text("Open Workshop")
+        expect(page).to have_text("Draft Workshop")
+        expect(page).to have_no_link("Draft Workshop")
+        expect(page).to have_text("Homegrown session")
+        expect(page).to have_no_link("Homegrown session")
+        expect(page).to have_text("Hidden Org")
+        expect(page).to have_no_link("Hidden Org")
+      end
+
       it "can view published story" do
         get story_url(published_story)
         expect(response).to have_http_status(:ok)

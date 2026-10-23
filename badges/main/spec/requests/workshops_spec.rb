@@ -103,6 +103,52 @@ RSpec.describe "/workshops", type: :request do
       expect(response.body).not_to include(unrelated.title)
     end
 
+    it "marks a spotlight story with the facilitator's name in their preferred format" do
+      facilitator = create(:person, first_name: "Rosa", last_name: "Quintero", display_name_preference: "first_name_last_initial")
+      create(:story, :published, workshop: workshop, spotlighted_facilitator: facilitator, title: "Spotlight story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      card = Nokogiri::HTML(response.body).css("#workshopStories .card-link").find { |c| c.text.include?("Spotlight story") }
+      expect(card.text.squish).to include("Spotlighted facilitator: Rosa Q.")
+      expect(card.text).not_to include("Quintero")
+    end
+
+    it "shows spotlights only as badged story cards, not a separate spotlight section" do
+      create(:resource, kind: "LeaderSpotlight", published: true, workshop:, title: "Leader spotlight resource")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).not_to include("Related facilitator spotlights")
+      expect(response.body).not_to include("Leader spotlight resource")
+    end
+
+    it "leaves the spotlight mark off a story with no spotlighted facilitator" do
+      create(:story, :published, workshop: workshop, title: "Plain story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(response.body).not_to include("Spotlighted facilitator")
+    end
+
+    it "sends story cards to the Story Share page" do
+      story = create(:story, :published, workshop: workshop, title: "Shared story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(Capybara.string(response.body))
+        .to have_css("a.card-link[href='#{story_share_path(story, return_to: "workshop", workshop_id: workshop.id)}']")
+    end
+
+    it "sends a funder-only story card to the portal story page, since Story Share never shows it" do
+      sign_in create(:user, :admin)
+      story = create(:story, :published, :funder_only, workshop: workshop, title: "Funder story")
+
+      get workshop_url(workshop), headers: frame_headers
+
+      expect(Capybara.string(response.body)).to have_css("a.card-link[href='#{story_path(story)}']")
+    end
+
     it "points the new-story link back at this workshop" do
       sign_in create(:user, :admin)
       create(:story, :published, workshop: workshop)

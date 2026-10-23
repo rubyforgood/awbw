@@ -34,10 +34,11 @@
           <p><strong>Story by:</strong>
             <%= credited_author_link(@story) %>
           </p>
+          <% if @story.spotlighted_facilitator %>
+            <p><strong>Spotlighted facilitator:</strong> <%= @story.decorate.spotlighted_facilitator_link %></p>
+          <% end %>
           <p><strong>Organization Name:</strong>
-            <%= link_to @story.decorate.organization_name,
-                        organization_path(@story.organization),
-                        class: "hover:underline" %>
+            <%= @story.decorate.organization_link %>
           </p>
           <% if @story.decorate.workshop_links.present? %>
             <p><strong><%= @story.decorate.workshop_reference_count > 1 ? "Workshops" : "Workshop" %>:</strong> <%= @story.decorate.workshop_links %></p>
