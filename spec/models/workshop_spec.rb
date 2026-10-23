@@ -24,8 +24,6 @@ RSpec.describe Workshop do
     it { should have_many(:category_types).through(:categories) }
     it { should have_many(:quotable_item_quotes).dependent(:destroy) } # As quotable
     it { should have_many(:quotes).through(:quotable_item_quotes) }
-    it { should have_many(:workshop_resources).dependent(:destroy) }
-    it { should have_many(:resources).through(:workshop_resources) }
     it { should have_many(:age_ranges) }
 
     # Nested Attributes

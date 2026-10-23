@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_123103) do
   create_table "action_text_mentions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "action_text_rich_text_id", null: false
     t.datetime "created_at", null: false
@@ -1960,7 +1960,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
     t.integer "updated_by_id"
     t.string "url"
     t.integer "windows_type_id"
-    t.integer "workshop_id"
     t.string "role"
     t.index ["author_id"], name: "index_resources_on_author_id"
     t.index ["created_by_id"], name: "index_resources_on_created_by_id"
@@ -1969,7 +1968,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
     t.index ["role"], name: "index_resources_on_role", unique: true
     t.index ["updated_by_id"], name: "index_resources_on_updated_by_id"
     t.index ["windows_type_id"], name: "index_resources_on_windows_type_id"
-    t.index ["workshop_id"], name: "index_resources_on_workshop_id"
   end
 
   create_table "scholarship_agreement_responses", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -2514,19 +2512,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
     t.index ["workshop_id"], name: "index_workshop_logs_on_workshop_id"
   end
 
-  create_table "workshop_resources", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.integer "created_by_id"
-    t.integer "resource_id"
-    t.datetime "updated_at", precision: nil, null: false
-    t.integer "updated_by_id"
-    t.integer "workshop_id"
-    t.index ["created_by_id"], name: "index_workshop_resources_on_created_by_id"
-    t.index ["resource_id"], name: "index_workshop_resources_on_resource_id"
-    t.index ["updated_by_id"], name: "index_workshop_resources_on_updated_by_id"
-    t.index ["workshop_id"], name: "index_workshop_resources_on_workshop_id"
-  end
-
   create_table "workshop_series_memberships", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "created_by_id"
@@ -2893,7 +2878,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
   add_foreign_key "resources", "users", column: "created_by_id"
   add_foreign_key "resources", "users", column: "updated_by_id"
   add_foreign_key "resources", "windows_types"
-  add_foreign_key "resources", "workshops"
   add_foreign_key "scholarship_agreement_responses", "scholarships"
   add_foreign_key "scholarship_agreement_responses", "users", column: "created_by_id"
   add_foreign_key "scholarship_agreement_responses", "users", column: "responded_by_id"
@@ -2965,10 +2949,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_121151) do
   add_foreign_key "workshop_logs", "users", column: "updated_by_id"
   add_foreign_key "workshop_logs", "windows_types"
   add_foreign_key "workshop_logs", "workshops"
-  add_foreign_key "workshop_resources", "resources"
-  add_foreign_key "workshop_resources", "users", column: "created_by_id"
-  add_foreign_key "workshop_resources", "users", column: "updated_by_id"
-  add_foreign_key "workshop_resources", "workshops"
   add_foreign_key "workshop_series_memberships", "users", column: "created_by_id"
   add_foreign_key "workshop_series_memberships", "users", column: "updated_by_id"
   add_foreign_key "workshop_series_memberships", "workshops", column: "workshop_child_id"

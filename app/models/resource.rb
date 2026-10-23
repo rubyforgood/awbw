@@ -103,7 +103,6 @@ class Resource < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User", optional: true
   belongs_to :author, class_name: "Person", optional: true
-  belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :organization, optional: true
   has_one :form, as: :owner
@@ -111,7 +110,6 @@ class Resource < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :reports, as: :owner
   has_many :sectorable_items, dependent: :destroy, as: :sectorable
-  has_many :workshop_resources, dependent: :destroy
 
   # has_many through
   has_many :categories, through: :categorizable_items
@@ -232,15 +230,12 @@ class Resource < ApplicationRecord
     [ "Story", "LeaderSpotlight" ].include? self.kind
   end
 
-  # Workshops tied to this resource by its workshop, the workshop_resources join,
-  # or a rich-text mention in either direction.
+  # Workshops that mention this resource in their rich text, or that it mentions in its body.
   def connected_workshops
     mentions = ActionTextMention.joins(:action_text_rich_text)
     mentioning = mentions.where(mentionable: self, action_text_rich_texts: { record_type: "Workshop" })
     mentioned = mentions.where(mentionable_type: "Workshop", action_text_rich_texts: { record_type: "Resource", record_id: id })
-    Workshop.where(id: workshop_id)
-      .or(Workshop.where(id: workshop_resources.select(:workshop_id)))
-      .or(Workshop.where(id: mentioning.select("action_text_rich_texts.record_id")))
+    Workshop.where(id: mentioning.select("action_text_rich_texts.record_id"))
       .or(Workshop.where(id: mentioned.select(:mentionable_id)))
   end
 

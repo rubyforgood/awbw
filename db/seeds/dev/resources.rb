@@ -33,7 +33,6 @@ puts "Creating Resources…"
     legacy_id: rand(1000..9999),
     position: rand(1..50),
     windows_type_id: WindowsType.all.sample&.id,
-    workshop_id: Workshop.all.sample&.id,
     created_by_id: User.all.sample&.id,
     created_at: Time.current - rand(20..120).days,
     updated_at: Time.current - rand(1..40).days,

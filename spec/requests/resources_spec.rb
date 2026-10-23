@@ -86,10 +86,14 @@ RSpec.describe "/resources", type: :request do
       let(:resource) { Resource.create!(valid_attributes) }
       let(:workshop) { create(:workshop, :published, title: "Linked Workshop") }
 
-      it "lists a workshop mentioned in the body once, outside the mentions lists" do
-        resource.update!(workshop:)
-        resource.rhino_body.update!(body: "<p>See it</p>")
-        ActionTextMention.create!(action_text_rich_text: resource.rhino_body, mentionable: workshop)
+      def mention(rich_text, record)
+        rich_text.update!(body: "<p>See it</p>")
+        ActionTextMention.create!(action_text_rich_text: rich_text, mentionable: record)
+      end
+
+      it "lists a workshop mentioned in both directions once, outside the mentions lists" do
+        mention(resource.rhino_body, workshop)
+        mention(workshop.rhino_objective, resource)
 
         get resource_url(resource)
 
@@ -99,7 +103,8 @@ RSpec.describe "/resources", type: :request do
       end
 
       it "hides unpublished workshops from guests" do
-        resource.update!(publicly_visible: true, workshop: create(:workshop, published: false, title: "Draft Workshop"))
+        resource.update!(publicly_visible: true)
+        mention(resource.rhino_body, create(:workshop, published: false, title: "Draft Workshop"))
         sign_out user
 
         get resource_url(resource)
