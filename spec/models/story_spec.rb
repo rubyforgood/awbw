@@ -326,6 +326,19 @@ RSpec.describe Story, type: :model do
       end
     end
 
+    context 'when the query matches the spotlighted facilitator' do
+      let(:spotlighted) { create(:person, first_name: 'Cordelia', last_name: 'Fenwhistle', display_name_preference: 'first_name_only') }
+      let!(:spotlight_story) { create(:story, :published, title: 'Spotlight story', spotlighted_facilitator: spotlighted) }
+
+      it 'finds the story by the name the spotlight shows' do
+        expect(Story.search_by_params(query: 'Cordelia')).to include(spotlight_story)
+      end
+
+      it 'does not find the story by a name part the spotlight hides' do
+        expect(Story.search_by_params(query: 'Fenwhistle')).not_to include(spotlight_story)
+      end
+    end
+
     context 'when the query matches a tag name' do
       def tag_with_category(story, type_name, name)
         category_type = CategoryType.find_by(name: type_name) || create(:category_type, name: type_name)

@@ -461,7 +461,7 @@ RSpec.describe "/story_share", type: :request do
         get story_shares_path(query: "veterans")
         expect(response.body).to include("Painting after service")
         expect(response.body).to include("Stories tagged")
-        expect(response.body).to include("or with “veterans” in the title, the story text, or the author’s or second author’s name")
+        expect(response.body).to include("or with “veterans” in the title, the story text, the author’s or second author’s name, or the spotlighted facilitator’s name")
         expect(response.body).to include(CGI.escapeHTML(story_shares_path(sector_names_all: "Military/Veterans")))
       end
 
@@ -469,7 +469,7 @@ RSpec.describe "/story_share", type: :request do
         create(:sector, :published, name: "Veterans Affairs")
         get story_shares_path(query: "veterans")
         expect(response.body).not_to include("Stories tagged")
-        expect(response.body).to include("Stories with “veterans” in the title, the story text, or the author’s or second author’s name")
+        expect(response.body).to include("Stories with “veterans” in the title, the story text, the author’s or second author’s name, or the spotlighted facilitator’s name")
       end
 
       it "puts title matches ahead of newer and featured text matches" do

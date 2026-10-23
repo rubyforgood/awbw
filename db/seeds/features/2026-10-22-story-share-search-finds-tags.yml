@@ -5,9 +5,10 @@ released_on: 2026-10-22
 pr_number: 2786
 action_path: /story_share?query=teens
 summary: >-
-  Story Share search looks in each story's title, story text, and author or
-  second author name, and now also finds stories tagged with a matching sector,
-  age range, or story population, even when the story never uses the word.
+  Story Share search looks in each story's title, story text, author or second
+  author name, and spotlighted facilitator, and now also finds stories tagged
+  with a matching sector, age range, or story population, even when the story
+  never uses the word.
   Results show as an easy-to-scan list, with title matches first.
 pro_tips:
   - Above the results, a line says what your search matched. Click a tag there
