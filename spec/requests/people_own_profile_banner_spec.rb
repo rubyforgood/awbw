@@ -24,7 +24,7 @@ RSpec.describe "Own profile banner", type: :request do
 
       get person_path(person)
 
-      expect(response.body).to include("AWBW staff are looking at your request", "Primary email: new@example.com")
+      expect(response.body).to include("AWBW staff are reviewing your update", "Primary email: new@example.com", "submitted", "View or edit")
       expect(response.body).to include(edit_profile_change_request_path(request))
     end
 
@@ -34,7 +34,20 @@ RSpec.describe "Own profile banner", type: :request do
 
       get person_path(person)
 
-      expect(response.body).to include("AWBW staff are looking at your requests")
+      expect(response.body).to include("AWBW staff are reviewing your updates")
+    end
+
+    it "says the current email keeps working only for a primary email request" do
+      create(:profile_change_request, :primary_email, person: person, requested_by: owner_user)
+
+      get person_path(person)
+      expect(response.body).to include("Your current email stays active until we confirm the change.")
+
+      person.profile_change_requests.destroy_all
+      create(:profile_change_request, :other, person: person, requested_by: owner_user)
+
+      get person_path(person)
+      expect(response.body).not_to include("Your current email stays active")
     end
 
     it "hides the banner in production" do
