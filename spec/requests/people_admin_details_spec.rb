@@ -31,7 +31,7 @@ RSpec.describe "Person profile admin-only details", type: :request do
   admin_visible = [
     "Admin details",
     "Admin only",
-    "Legal first name: Legalname",
+    "Other first name: Legalname",
     "SAY-it",
     "Mar 14",
     "secondary@example.com",

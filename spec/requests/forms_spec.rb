@@ -208,7 +208,7 @@ RSpec.describe "Forms", type: :request do
 
     it "lists each section's fields behind an expandable toggle" do
       get new_form_path
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
       expect(response.body).to include("Confirm Email")
       expect(response.body).to include('data-controller="expandable-card"')
     end
@@ -312,7 +312,7 @@ RSpec.describe "Forms", type: :request do
       form = FormBuilderService.new(name: "Test", sections: %i[person_identifier]).call
       get edit_form_path(form)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
     end
 
     it "offers the survey roles" do
@@ -1011,7 +1011,7 @@ RSpec.describe "Forms", type: :request do
       form = FormBuilderService.new(name: "Preview", sections: %i[person_identifier]).call
       get form_path(form)
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
     end
 
     it "shows every field including conditional ones, without applying the conditional logic" do
@@ -1517,7 +1517,7 @@ RSpec.describe "Forms", type: :request do
     it "lists an included section's actual fields behind an expandable toggle" do
       form = FormBuilderService.new(name: "Editable", sections: %i[person_identifier]).call
       get edit_sections_form_path(form)
-      expect(response.body).to include("First Name")
+      expect(response.body).to include("Preferred first name")
       expect(response.body).to include('data-controller="form-section-toggle expandable-card"')
     end
 

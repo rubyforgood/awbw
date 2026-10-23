@@ -223,11 +223,10 @@ RSpec.describe PublicFormSubmission do
       expect(existing.racial_ethnic_identity).to eq("Kept")
     end
 
-    it "treats a nickname as the first name and moves the legal name aside" do
+    it "stores a legacy nickname answer without changing the person's names" do
       person = described_class.call(form: form, form_params: contact_params(nickname_field.id.to_s => "Sammy")).person
 
-      expect(person.first_name).to eq("Sammy")
-      expect(person.legal_first_name).to eq("Sam")
+      expect([ person.first_name, person.legal_first_name ]).to eq([ "Sam", nil ])
     end
 
     it "saves a legal first name answer onto the person" do
