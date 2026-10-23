@@ -108,6 +108,15 @@ RSpec.describe FormResponseAggregator do
       expect(report.kind).to eq(:map)
       expect(report.chart).to eq(:world_map)
     end
+
+    it "tallies the different spellings of a country as one country" do
+      field = create(:form_field, form: form, name: "Country", field_identifier: "mailing_country")
+      [ "USA", "U.S.", "United States", "Virgin Islands, British" ].each { |typed| answer(create(:form_submission, form: form), field, typed) }
+
+      report = described_class.new(form).field_reports.first
+
+      expect(report.rows).to eq([ [ "United States", 3 ], [ "Virgin Islands, British", 1 ] ])
+    end
   end
 
   describe "free-text questions" do

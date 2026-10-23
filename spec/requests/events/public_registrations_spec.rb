@@ -314,6 +314,15 @@ RSpec.describe "Events::PublicRegistrations", type: :request do
       expect(response.body).to include("add or update them later")
     end
 
+    it "renders the country fields as a country dropdown" do
+      create(:form_field, form: form, field_identifier: "mailing_country", name: "Country", required: false)
+
+      get new_event_public_registration_path(event)
+
+      expect(response.body).to include("Select a country")
+      expect(response.body).to include('<option value="United States"')
+    end
+
     it "renders a structured details panel from known event data when enabled" do
       pacific = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
       start_date = 2.weeks.from_now.in_time_zone(pacific).change(hour: 9)

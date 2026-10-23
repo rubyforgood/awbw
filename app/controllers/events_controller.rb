@@ -951,7 +951,9 @@ class EventsController < ApplicationController
   end
 
   def person_country_ids(country)
-    Address.active.where(addressable_type: "Person", country: country).select(:addressable_id)
+    addresses = Address.active.where(addressable_type: "Person")
+    spellings = addresses.distinct.pluck(:country).select { |spelling| CountryName.label(spelling) == CountryName.label(country) }
+    addresses.where(country: spellings).select(:addressable_id)
   end
 
   # People whose event-registration-linked affiliation points at an organization
