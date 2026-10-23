@@ -35,9 +35,7 @@
             <%= credited_author_link(@story) %>
           </p>
           <p><strong>Organization Name:</strong>
-            <%= link_to @story.decorate.organization_name,
-                        organization_path(@story.organization),
-                        class: "hover:underline" %>
+            <%= @story.decorate.organization_link %>
           </p>
           <% if @story.decorate.workshop_links.present? %>
             <p><strong><%= @story.decorate.workshop_reference_count > 1 ? "Workshops" : "Workshop" %>:</strong> <%= @story.decorate.workshop_links %></p>

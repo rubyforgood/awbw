@@ -115,7 +115,7 @@
         <div class="stories-list grid grid-cols-1 gap-4">
           <% @workshop_stories.each do |story| %>
             <% story = story.decorate %>
-            <%= render "stories/story_card", story:, path: story.showcase_path %>
+            <%= render "stories/story_card", story:, path: story.showcase_path(return_to: "workshop", workshop_id: @workshop.id) %>
           <% end %>
         </div>
       </section>

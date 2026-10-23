@@ -1,11 +1,11 @@
-name: "Click through to a story's workshop and organization"
+name: "Click through to a story's workshop, organization, and author"
 area: stories
 display_status: user_facing
 released_on: 2026-10-22
 action_path: "/stories"
 summary: >-
-  A story's workshop and organization are now links on the Story Share page and in the stories list,
-  and the stories listed on a workshop page now open in Story Share.
+  A story's workshop, organization, and author are now links on the Story Share page and in the
+  stories list, and stories listed on a workshop page open in Story Share with a link back.
 pro_tips:
   - "When a story names its own version of a workshop, that name is shown and still links to the workshop."
-  - "Workshops or organizations you don't have access to still show their name, just without a link."
+  - "Workshops, organizations, or people you don't have access to still show their name, just without a link."

@@ -175,6 +175,21 @@ RSpec.describe "/story_share", type: :request do
         expect(page).to have_no_link("Members Workshop")
       end
 
+      it "links back to the workshop page the reader came from" do
+        open_workshop = create(:workshop, :published, :publicly_visible)
+
+        get story_share_path(public_story, return_to: "workshop", workshop_id: open_workshop.id)
+
+        expect(Capybara.string(response.body))
+          .to have_link("Workshop", href: workshop_path(open_workshop, anchor: "workshopStories"))
+      end
+
+      it "shows no workshop back link without a return_to" do
+        get story_share_path(public_story)
+
+        expect(Capybara.string(response.body)).to have_no_css("a[href*='#workshopStories']")
+      end
+
       it "links an external workshop title to its workshop, and leaves a title-only reference unlinked" do
         open_workshop = create(:workshop, :published, :publicly_visible, title: "Open Workshop")
         public_story.story_workshops.create!(workshop: open_workshop, external_workshop_title: "Teen variant")

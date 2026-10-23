@@ -27,8 +27,8 @@ class StoryDecorator < ApplicationDecorator
     h.link_to(organization.name, h.organization_path(organization), class: link_class, data: { turbo_frame: "_top" })
   end
 
-  def showcase_path
-    h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object) : h.story_path(object)
+  def showcase_path(**params)
+    h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object, **params) : h.story_path(object)
   end
 
   def workshop_reference_count

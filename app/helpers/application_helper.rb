@@ -19,7 +19,7 @@ module ApplicationHelper
   end
 
   # Byline for an AuthorCreditable record. Links each credited author to their person
-  # profile when it's searchable; a non-searchable author renders as plain text. The
+  # profile when the viewer can open it; anyone else renders as plain text. The
   # names and the separator come from the record (`credited_name_for_person`,
   # `CREDIT_SEPARATOR`), so this matches the plain-text credit everywhere else. Falls
   # back to the plain author_credit label when the credit resolves to nobody linkable
@@ -30,7 +30,7 @@ module ApplicationHelper
 
     safe_join(people.map { |person|
       name = record.credited_name_for_person(person)
-      person.profile_is_searchable ? link_to(name, person_path(person), **link_options) : name
+      allowed_to?(:show?, person) ? link_to(name, person_path(person), **link_options) : name
     }, AuthorCreditable::CREDIT_SEPARATOR)
   end
 
