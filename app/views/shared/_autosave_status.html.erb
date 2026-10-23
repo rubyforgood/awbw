@@ -1,0 +1,4 @@
+<%# Where the `autosave` controller says "Saved" or "Not saved: <reason>" for one field.
+    Render inside the controller's element. Locals: field_name (the field's name), classes (optional). %>
+<span class="hidden text-xs font-medium whitespace-nowrap <%= local_assigns[:classes] %>" role="status" aria-live="polite"
+      data-autosave-target="status" data-field-name="<%= field_name %>"></span>

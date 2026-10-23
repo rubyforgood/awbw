@@ -92,6 +92,7 @@
                  <%= "checked" if notification.responded? %>
                  class="h-5 w-5 cursor-pointer rounded border-gray-300 text-green-600 accent-green-600 focus:ring-green-500"
                  title="Responded to by staff">
+          <%= render "shared/autosave_status", field_name: "notification[responded]", classes: "mt-1 block" %>
         <% else %>
           <span class="text-gray-300">—</span>
         <% end %>
