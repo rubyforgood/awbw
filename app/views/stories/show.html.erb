@@ -42,6 +42,9 @@
           <% if (workshop_links = @story.decorate.workshop_links).present? %>
             <p><strong><%= @story.decorate.workshop_label %>:</strong> <%= workshop_links %></p>
           <% end %>
+          <% if (spotlight_link = @story.decorate.spotlighted_facilitator_link).present? %>
+            <p><strong>Facilitator spotlight:</strong> <%= spotlight_link %></p>
+          <% end %>
         </div>
 
         <%= render "story_shares/tag_chips", story: @story %>

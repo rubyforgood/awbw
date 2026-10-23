@@ -11,8 +11,8 @@
     <!-- LEFT: TEXT (leave right padding equal to bookmark width) -->
     <div class="flex-1 pr-12">
       <!-- <-- This prevents text going under bookmark -->
-      <% if story.facilitator_spotlight? %>
-        <%= render "shared/badge", label: "Facilitator spotlight", icon: "fa-solid fa-star", extra: "mb-1",
+      <% if (spotlight_label = story.facilitator_spotlight_label) %>
+        <%= render "shared/badge", label: spotlight_label, icon: "fa-solid fa-star", extra: "mb-1",
                    classes: "#{DomainTheme.bg_class_for(:spotlighted_facilitator, intensity: 100)} #{DomainTheme.text_class_for(:spotlighted_facilitator)} #{DomainTheme.border_class_for(:spotlighted_facilitator)}" %>
       <% end %>
       <h3 class="text-lg leading-tight font-semibold text-gray-900"><%= story.title %></h3>

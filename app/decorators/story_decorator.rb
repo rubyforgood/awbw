@@ -23,8 +23,18 @@ class StoryDecorator < ApplicationDecorator
     "Workshop".pluralize(story_workshops.size)
   end
 
-  def facilitator_spotlight?
-    spotlighted_facilitator_id.present?
+  def facilitator_spotlight_label
+    return unless spotlighted_facilitator
+
+    [ "Facilitator spotlight", spotlighted_facilitator.name.presence ].compact.join(": ")
+  end
+
+  def spotlighted_facilitator_link(link_class: "hover:underline")
+    person = spotlighted_facilitator
+    return unless person
+    return person.name unless h.allowed_to?(:show?, person)
+
+    h.link_to(person.name, h.person_path(person), class: link_class, data: { turbo_frame: "_top" })
   end
 
   private

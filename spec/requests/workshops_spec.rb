@@ -141,13 +141,15 @@ RSpec.describe "/workshops", type: :request do
       expect(response.body).to include("Imageless story")
     end
 
-    it "marks a story that spotlights a facilitator" do
-      create(:story, :published, workshop: workshop, spotlighted_facilitator: create(:person), title: "Spotlight story")
+    it "marks a spotlight story with the facilitator's name in their preferred format" do
+      facilitator = create(:person, first_name: "Rosa", last_name: "Quintero", display_name_preference: "first_name_last_initial")
+      create(:story, :published, workshop: workshop, spotlighted_facilitator: facilitator, title: "Spotlight story")
 
       get workshop_url(workshop), headers: frame_headers
 
       card = Nokogiri::HTML(response.body).css("#workshopStories .card-link").find { |c| c.text.include?("Spotlight story") }
-      expect(card.text).to include("Facilitator spotlight")
+      expect(card.text.squish).to include("Facilitator spotlight: Rosa Q.")
+      expect(card.text).not_to include("Quintero")
     end
 
     it "leaves the spotlight mark off a story with no spotlighted facilitator" do
