@@ -143,7 +143,10 @@
                 <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
                 <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil) %>
                 <% if admin_view && !person.published? %>
-                  <i class="fa-solid fa-lock text-2xs pointer-events-none absolute top-1.5 right-1.5 text-blue-700" title="Hidden from facilitators" data-testid="profile-hidden-lock"></i>
+                  <span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full border border-blue-200 bg-blue-100 text-blue-700 shadow-sm"
+                        title="Facilitators can't open this profile" data-testid="profile-hidden-lock">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                  </span>
                 <% end %>
               </div>
             <% end %>
