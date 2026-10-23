@@ -133,6 +133,18 @@ story_seeds = [
   { title: "When Art Opens a Door", sectors: [ "Grief/Loss" ], audiences: [ "Self" ], spotlight: true }
 ]
 story_images = %w[who-we-are-grid.jpg what-we-do.jpg ways-to-help.jpg our-next-chapter.jpg workshop_default.jpg]
+demo_video_url = "https://youtube.com/watch?v=dQw4w9WgXcQ"
+
+attach_primary_image = lambda do |story, filename|
+  asset = story.primary_asset
+  next if asset&.file&.attached?
+
+  image_path = Rails.root.join("app/assets/images", filename)
+  next unless File.exist?(image_path)
+  asset ||= story.assets.build(type: "PrimaryAsset")
+  asset.file.attach(io: File.open(image_path), filename: filename, content_type: "image/jpeg")
+  asset.save!
+end
 
 story_seeds.each_with_index do |seed, i|
   body_content = Faker::Lorem.paragraph(sentence_count: 10)
@@ -144,7 +156,7 @@ story_seeds.each_with_index do |seed, i|
     story_workshops_attributes: [ { workshop_id: [ nil, Workshop.all.sample&.id ].sample } ],
     windows_type_id: WindowsType.all.sample&.id,
     spotlighted_facilitator_id: (Person.all.sample&.id if seed[:spotlight]),
-    youtube_url: (seed[:youtube] ? "https://youtube.com/watch?v=dQw4w9WgXcQ" : nil),
+    youtube_url: (demo_video_url if seed[:youtube]),
     created_by_id: User.first&.id,
     updated_by_id: User.first&.id,
     created_at: Time.current - (i * 7).days,
@@ -157,7 +169,7 @@ story_seeds.each_with_index do |seed, i|
   story.update!(
     published: true, publicly_visible: true, publicly_featured: i < 5, featured: i < 5,
     spotlighted_facilitator_id: story.spotlighted_facilitator_id || (Person.all.sample&.id if seed[:spotlight]),
-    youtube_url: seed[:youtube] ? "https://youtube.com/watch?v=dQw4w9WgXcQ" : story.youtube_url
+    youtube_url: seed[:youtube] ? demo_video_url : story.youtube_url
   )
 
   seed[:sectors].each do |name|
@@ -170,14 +182,7 @@ story_seeds.each_with_index do |seed, i|
   end
 
   next if i >= story_images.length # last two stay image-less on purpose
-  asset = story.primary_asset
-  next if asset&.file&.attached?
-
-  image_path = Rails.root.join("app/assets/images", story_images[i])
-  next unless File.exist?(image_path)
-  asset ||= story.assets.build(type: "PrimaryAsset")
-  asset.file.attach(io: File.open(image_path), filename: story_images[i], content_type: "image/jpeg")
-  asset.save!
+  attach_primary_image.call(story, story_images[i])
 end
 
 # Bulk stories so the Story Share portal, admin index, pagination, and the sector/
@@ -216,8 +221,10 @@ bulk_story_count.times do |n|
 
   body_content = Faker::Lorem.paragraph(sentence_count: rand(6..14))
   has_spotlight = n % 9 == 0
-  has_youtube = n % 7 == 0
   is_public = n % 4 != 0
+  in_carousel = is_public && n < 6
+  # Odd carousel slides carry a video over their photo so the home carousel mixes both.
+  has_youtube = n % 7 == 0 || (in_carousel && n.odd?)
   is_featured = n % 11 == 0
   has_author = bulk_people.any? && n % 3 != 0
   created = Time.current - rand(1..900).days
@@ -231,7 +238,7 @@ bulk_story_count.times do |n|
     windows_type_id: bulk_windows_types.sample&.id,
     spotlighted_facilitator_id: (bulk_people.sample&.id if has_spotlight),
     author_id: (bulk_people.sample&.id if has_author),
-    youtube_url: (has_youtube ? "https://youtube.com/watch?v=dQw4w9WgXcQ" : nil),
+    youtube_url: (demo_video_url if has_youtube),
     created_by_id: seed_user&.id,
     updated_by_id: seed_user&.id,
     created_at: created,
@@ -240,8 +247,10 @@ bulk_story_count.times do |n|
     publicly_visible: is_public,
     publicly_featured: is_public && is_featured,
     featured: is_featured,
-    story_share_carousel_position: (n + 1 if is_public && n < 6)
+    story_share_carousel_position: (n + 1 if in_carousel)
   )
+  story.update!(youtube_url: demo_video_url) if has_youtube && story.youtube_url.blank?
+  attach_primary_image.call(story, story_images[n % story_images.length]) if in_carousel
 
   bulk_sectors.sample(rand(1..2)).each do |sector|
     story.sectorable_items.find_or_create_by!(sector: sector)
