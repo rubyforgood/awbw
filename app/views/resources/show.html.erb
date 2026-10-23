@@ -57,6 +57,19 @@
           <%= render "assets/resource_display", resource: @resource %>
         </div>
       </div>
+      <% if @connected_workshops.any? %>
+        <div id="connected-workshops" class="mb-3 flex-1 rounded-lg bg-white p-4 shadow-md">
+          <section>
+            <h2 class="mb-2 text-lg font-semibold">Workshops</h2>
+            <hr class="mb-4 border-gray-300">
+            <div class="flex flex-wrap gap-2">
+              <% @connected_workshops.each do |workshop| %>
+                <%= link_to workshop.title, workshop_path(workshop), class: button_classes(:secondary_outline) %>
+              <% end %>
+            </div>
+          </section>
+        </div>
+      <% end %>
       <!-- Mentions -->
       <%= render "shared/show_mentions_list", mentions: @mentioners, heading: "Mentioned by" %>
       <%= render "shared/show_mentions_list", mentions: @mentionees, heading: "Mentions in this Resource" %>

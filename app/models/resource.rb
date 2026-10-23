@@ -232,6 +232,18 @@ class Resource < ApplicationRecord
     [ "Story", "LeaderSpotlight" ].include? self.kind
   end
 
+  # Workshops tied to this resource by its workshop, the workshop_resources join,
+  # or a rich-text mention in either direction.
+  def connected_workshops
+    mentions = ActionTextMention.joins(:action_text_rich_text)
+    mentioning = mentions.where(mentionable: self, action_text_rich_texts: { record_type: "Workshop" })
+    mentioned = mentions.where(mentionable_type: "Workshop", action_text_rich_texts: { record_type: "Resource", record_id: id })
+    Workshop.where(id: workshop_id)
+      .or(Workshop.where(id: workshop_resources.select(:workshop_id)))
+      .or(Workshop.where(id: mentioning.select("action_text_rich_texts.record_id")))
+      .or(Workshop.where(id: mentioned.select(:mentionable_id)))
+  end
+
   def custom_label_list
     "#{self.title} (#{self.kind.upcase})" unless self.kind.nil?
   end
