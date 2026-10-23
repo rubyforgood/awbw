@@ -57,15 +57,12 @@ class StoryDecorator < ApplicationDecorator
   end
 
   def workshop_reference_label(story_workshop)
-    workshop_title = story_workshop.workshop&.title
-    external_title = story_workshop.external_workshop_title.presence
-    return "#{external_title} (from the #{workshop_title})" if external_title && workshop_title
-    external_title || workshop_title
+    story_workshop.external_workshop_title.presence || story_workshop.workshop&.title
   end
 
   def workshop_reference_link(story_workshop, link_class)
     workshop = story_workshop.workshop
-    text = story_workshop.external_workshop_title.presence || workshop&.title
+    text = workshop_reference_label(story_workshop)
     return h.html_escape(text) if workshop.nil?
 
     workshop_link(workshop, link_class, text:)

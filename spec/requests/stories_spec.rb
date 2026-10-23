@@ -95,6 +95,16 @@ RSpec.describe "/stories", type: :request do
         expect(page).to have_text(orgless.title)
       end
 
+      it "shows an external workshop title in both the link and its hover text" do
+        story = create(:story, :published, workshop: nil, title: "Variant Story")
+        story.story_workshops.create!(workshop: workshop, external_workshop_title: "Teen variant")
+
+        get stories_url(title: "Variant Story"), headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("span[title='Teen variant'] a[href='#{workshop_path(workshop)}']", text: "Teen variant")
+      end
+
       it "shows the empty-state message when no stories match" do
         get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include("No stories found")
