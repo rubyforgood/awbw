@@ -537,10 +537,10 @@ RSpec.describe Organization do
     end
 
     it "includes directly associated workshops and workshops authored by affiliated people without duplicates" do
-      direct_workshop = create(:workshop, organization: organization, windows_type: windows_type)
-      authored_workshop = create(:workshop, author: affiliated_person, windows_type: windows_type)
-      both_workshop = create(:workshop, organization: organization, author: affiliated_person, windows_type: windows_type)
-      unrelated_workshop = create(:workshop, windows_type: windows_type)
+      direct_workshop = create(:workshop, title: "Direct Workshop", organization: organization, windows_type: windows_type)
+      authored_workshop = create(:workshop, title: "Authored Workshop", author: affiliated_person, windows_type: windows_type)
+      both_workshop = create(:workshop, title: "Both Workshop", organization: organization, author: affiliated_person, windows_type: windows_type)
+      unrelated_workshop = create(:workshop, title: "Unrelated Workshop", windows_type: windows_type)
 
       results = organization.affiliated_workshops
 
@@ -561,10 +561,10 @@ RSpec.describe Organization do
     end
 
     it "includes directly associated ideas and ideas authored by affiliated people without duplicates" do
-      direct_idea = create(:workshop_idea, organization: organization, windows_type: windows_type, created_by: admin)
-      authored_idea = create(:workshop_idea, author: affiliated_person, windows_type: windows_type, created_by: admin)
-      both_idea = create(:workshop_idea, organization: organization, author: affiliated_person, windows_type: windows_type, created_by: admin)
-      unrelated_idea = create(:workshop_idea, windows_type: windows_type, created_by: admin)
+      direct_idea = create(:workshop_idea, title: "Direct Idea", organization: organization, windows_type: windows_type, created_by: admin)
+      authored_idea = create(:workshop_idea, title: "Authored Idea", author: affiliated_person, windows_type: windows_type, created_by: admin)
+      both_idea = create(:workshop_idea, title: "Both Idea", organization: organization, author: affiliated_person, windows_type: windows_type, created_by: admin)
+      unrelated_idea = create(:workshop_idea, title: "Unrelated Idea", windows_type: windows_type, created_by: admin)
 
       results = organization.affiliated_workshop_ideas
 
