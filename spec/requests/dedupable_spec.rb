@@ -604,61 +604,56 @@ RSpec.describe "Dedupable concern", type: :request do
       describe "emails" do
         before do
           keep.update!(email: "keeper@example.com", email_2: nil)
-          delete_rec.update!(email: "dropped@example.com", email_type: "work")
+          delete_rec.update!(email: "dropped@example.com")
         end
 
-        it "keeps the deleted person's email as the keeper's email 2" do
+        it "leaves email 2 for the admin to fill in" do
           post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
 
           expect(keep.reload.email).to eq("keeper@example.com")
-          expect(keep.email_2).to eq("dropped@example.com")
-          expect(keep.email_2_type).to eq("work")
+          expect(keep.email_2).to be_nil
         end
 
-        it "skips an email the keeper already holds" do
-          keep.update!(email_2: "Dropped@example.com")
-          delete_rec.update!(email_2: "keeper@example.com")
-
-          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
-
-          expect(keep.reload.email_2).to eq("Dropped@example.com")
-          expect(keep.comments).to be_empty
-        end
-
-        it "keeps the email picked as primary in the preview without repeating it in email 2" do
+        it "keeps an email the admin moves into email 2 in the preview" do
           post dedupe_perform_people_path, params: {
             person_to_delete_id: delete_rec.id,
             person_to_keep_id: keep.id,
-            person_to_keep: { email: "dropped@example.com", email_2: "keeper@example.com" }
+            person_to_keep: { email_2: "dropped@example.com" }
           }
 
-          expect(keep.reload.email).to eq("dropped@example.com")
-          expect(keep.email_2).to eq("keeper@example.com")
+          expect(keep.reload.email_2).to eq("dropped@example.com")
         end
 
-        it "records emails that don't fit in email 2 in a comment" do
-          keep.update!(email_2: "keeper.alt@example.com")
-          delete_rec.update!(email_2: "dropped.alt@example.com")
-
-          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
-
-          expect(keep.reload.email_2).to eq("keeper.alt@example.com")
-          comment = keep.comments.sole
-          expect(comment.body).to include("dropped@example.com", "dropped.alt@example.com")
-        end
-
-        it "doesn't carry over a placeholder email" do
-          delete_rec.update!(email: PlaceholderEmail.first)
-
-          post dedupe_perform_people_path, params: { person_to_delete_id: delete_rec.id, person_to_keep_id: keep.id }
-
-          expect(keep.reload.email_2).to be_nil
-        end
-
-        it "badges the deleted person's email as kept on the preview" do
+        it "names the email that will be dropped on the preview" do
           get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
 
-          expect(response.body).to include("dropped@example.com is kept as the kept person&#39;s email 2")
+          expect(response.body).to include("dropped@example.com isn&#39;t on the kept person and will be dropped")
+        end
+
+        it "doesn't flag an email the kept person already holds" do
+          keep.update!(email_2: "Dropped@example.com")
+
+          get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+          expect(response.body).not_to include("will be dropped. To keep")
+        end
+
+        it "logs each autosaved preview edit in the kept person's change log" do
+          pushed = []
+          allow(Analytics::LifecycleBuffer).to receive(:push) { |payload| pushed << payload }
+
+          patch dedupe_update_keep_people_path, params: { id: keep.id, person_to_keep: { email_2: "dropped@example.com" } }
+
+          update = pushed.find { |payload| payload[:name] == "update.person" }
+          expect(update[:properties][:changes]).to include("email_2")
+        end
+
+        it "doesn't flag a placeholder email" do
+          delete_rec.update!(email: PlaceholderEmail.first)
+
+          get dedupe_preview_people_path(person_to_keep_id: keep.id, person_to_delete_id: delete_rec.id)
+
+          expect(response.body).not_to include("will be dropped. To keep")
         end
       end
 

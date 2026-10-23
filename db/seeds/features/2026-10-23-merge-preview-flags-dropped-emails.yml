@@ -1,0 +1,11 @@
+name: "Merge preview flags emails that would be dropped"
+area: people
+display_status: admin_facing
+released_on: 2026-10-23
+pr_number: 2781
+action_path: "/people/dedupe_index"
+summary: >-
+  When you preview merging two people, a note lists any of the deleted person's emails
+  the kept person doesn't have, so you can decide whether to save one as their email 2.
+pro_tips:
+  - "Paste the email into Email 2 on the right. Preview edits save right away and show in the person's change log."
