@@ -213,6 +213,7 @@ RSpec.describe "/story_ideas", type: :request do
 
     describe "POST /create" do
       it "creates StoryIdea with admin and submitter notifications" do
+        admin.update!(person: create(:person))
         story_idea_count_before = StoryIdea.count
         notification_count_before = Notification.count
 
@@ -249,6 +250,15 @@ RSpec.describe "/story_ideas", type: :request do
         story_idea = create(:story_idea)
         get story_idea_url(story_idea)
         expect(response).to redirect_to(root_path)
+      end
+
+      it "shows an idea that credits them as co-author" do
+        co_author = create(:user, :with_person)
+        sign_in co_author
+        story_idea = create(:story_idea, author: create(:person), co_author: co_author.person)
+
+        get story_idea_url(story_idea)
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -320,7 +330,23 @@ RSpec.describe "/story_ideas", type: :request do
         expect(StoryIdea.last).not_to be_funder_only
       end
 
+      it "confirms to the idea's authors and an admin" do
+        submitter = create(:user, :with_person)
+        co_author = create(:person, email: "co-author@example.com")
+        sign_in submitter
+
+        post story_ideas_url, params: { story_idea: valid_attributes.merge(co_author_id: co_author.id) }
+
+        expect(Notification.where(noticeable: StoryIdea.last).pluck(:kind, :recipient_email, :person_id)).to contain_exactly(
+          [ "idea_submitted", submitter.person.preferred_email, submitter.person.id ],
+          [ "idea_submitted", "co-author@example.com", co_author.id ],
+          [ "idea_submitted_fyi", Setting.programs_email, nil ]
+        )
+      end
+
       it "creates admin and submitter notifications and enqueues mailer jobs" do
+        submitter = create(:user, :with_person)
+        sign_in submitter
         clear_enqueued_jobs
 
         expect {
@@ -336,7 +362,7 @@ RSpec.describe "/story_ideas", type: :request do
 
         submitter_notification = notifications.find_by(kind: "idea_submitted")
         expect(submitter_notification.recipient_role).to eq("person")
-        expect(submitter_notification.recipient_email).to eq(regular_user.email)
+        expect(submitter_notification.recipient_email).to eq(submitter.email)
 
         expect(enqueued_jobs.map { |j| j[:job] })
           .to include(NotificationMailerJob)

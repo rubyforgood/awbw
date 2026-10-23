@@ -189,10 +189,26 @@ class NotificationMailerPreview < ActionMailer::Preview
         noticeable: story,
         notification_type: 0,
         kind: "story_promoted",
+        person: user&.person,
         recipient_role: "person",
         recipient_email: user&.email || "preview@example.com"
       )
     NotificationMailer.story_promoted(notification)
+  end
+
+  def story_shared_with_funder
+    story = Story.where(funder_only: true).first || Story.first
+    person = story&.author || story&.created_by&.person
+    notification = find_valid_notification("story_shared_with_funder") ||
+      Notification.create!(
+        noticeable: story,
+        notification_type: 0,
+        kind: "story_shared_with_funder",
+        person: person,
+        recipient_role: "person",
+        recipient_email: person&.preferred_email || "preview@example.com"
+      )
+    NotificationMailer.story_shared_with_funder(notification)
   end
 
   def story_promoted_fyi

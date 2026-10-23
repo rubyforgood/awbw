@@ -38,6 +38,7 @@ class Notification < ApplicationRecord
     idea_submitted_fyi
     story_promoted
     story_promoted_fyi
+    story_shared_with_funder
     report_submitted
     report_submitted_fyi
     workshop_log_submitted

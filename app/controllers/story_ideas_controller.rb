@@ -45,13 +45,7 @@ class StoryIdeasController < ApplicationController
     StoryIdea.transaction do
       if @story_idea.save
         assign_associations(@story_idea)
-        NotificationServices::CreateNotification.call(
-          noticeable: @story_idea,
-          person: @story_idea.created_by&.person,
-          kind: :idea_submitted,
-          recipient_role: :person,
-          recipient_email: @story_idea.created_by.email,
-          notification_type: 0)
+        NotificationServices::NotifyAuthors.call(record: @story_idea, kind: :idea_submitted)
         NotificationServices::CreateNotification.call(
           noticeable: @story_idea,
           kind: :idea_submitted_fyi,

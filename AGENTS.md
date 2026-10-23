@@ -355,6 +355,7 @@ Both flows record on `EventRegistrationOrganization` what the submission meant f
 ### Notifications
 
 - `NotificationServices::CreateNotification` — Notification creation
+- `NotificationServices::NotifyAuthors` — Notifies a record's credited author and co-author (story, workshop, and workshop variation ideas; stories)
 - `NotificationServices::PersistDeliveredEmail` — Email delivery tracking
 
 ### User Management
