@@ -9,7 +9,17 @@
       <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
     </div>
 
-    <% if @lead_stories.any? || @grid_stories.any? || @stories.any? %>
+    <%= render "search_scope" if searching? %>
+
+    <% if searching? && @stories.any? %>
+      <ol aria-label="Search results" class="divide-brand-navy-900/10 divide-y">
+        <% @stories.each_with_index do |story, i| %>
+          <%= render "search_row", story: story, anchor_id: (i.zero? ? "stories" : nil) %>
+        <% end %>
+      </ol>
+
+      <div class="pagination mt-10"><%= tailwind_paginate @stories, anchor: "stories" %></div>
+    <% elsif @lead_stories.any? || @grid_stories.any? || @stories.any? %>
       <%# Lead spot and 3-up cards (first page only): featured, then newest. Rows below: newest. %>
       <% if single_hero? && @lead_stories.any? %>
         <% lead = @lead_stories.first %>
@@ -73,7 +83,15 @@
       <div class="pagination mt-10"><%= tailwind_paginate @stories, anchor: "stories" %></div>
     <% else %>
       <div class="py-20 text-center text-gray-600">
-        No stories found.
+        <p><%= searching? ? "No stories found for “#{params[:query]}”." : "No stories found." %></p>
+        <% if searching? %>
+          <%= render "tag_links", label: "Try one of these topics:", sectors: story_share_nav_sectors,
+                                  audiences: story_share_audience_categories.map(&:decorate), wrapper_class: "mt-6 justify-center" %>
+          <p class="mt-2">
+            Have a story about this?
+            <%= link_to "Share your story", new_story_share_path, class: "text-brand-magenta-700 hover:text-brand-magenta-800 font-semibold" %>
+          </p>
+        <% end %>
       </div>
     <% end %>
 

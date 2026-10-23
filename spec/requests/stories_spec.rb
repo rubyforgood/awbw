@@ -128,6 +128,27 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include("No stories found")
       end
 
+      it "finds stories by sector, age range, and story population tag names in the keyword search" do
+        sector_story = Story.create!(base_attributes.merge(title: "Sector tagged story", published: true))
+        sector_story.sectorable_items.create!(sector: create(:sector, :published, name: "Military/Veterans"))
+        age_story = Story.create!(base_attributes.merge(title: "Age range tagged story", published: true))
+        age_story.categorizable_items.create!(category: create(:category, :published, name: "Teens",
+                                                                category_type: create(:category_type, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE)))
+        population_story = Story.create!(base_attributes.merge(title: "Population tagged story", published: true))
+        population_story.categorizable_items.create!(category: create(:category, :published, name: "Foster youth",
+                                                                       category_type: create(:category_type, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)))
+
+        get stories_url(query: "veterans"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Sector tagged story")
+        expect(response.body).not_to include("Age range tagged story")
+
+        get stories_url(query: "teens"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Age range tagged story")
+
+        get stories_url(query: "foster"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Population tagged story")
+      end
+
       it "filters by title and body query together" do
         match = Story.create!(base_attributes.merge(title: "Best Story Match", rhino_body: "healing through art", published: true))
         title_only = Story.create!(base_attributes.merge(title: "Best Story Other", rhino_body: "something else", published: true))
