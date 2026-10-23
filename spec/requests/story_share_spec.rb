@@ -490,7 +490,7 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).to include("An overflow-sector story")
     end
 
-    it "gathers stories whose primary sector is Other or unpublished" do
+    it "gathers stories whose primary sector is Other, but not an unpublished one" do
       other = create(:sector, :published, name: Sector::OTHER_SECTOR_NAME)
       hidden = create(:sector, :unpublished, name: "Unpublished Sector")
       create(:story, :published, :publicly_visible, title: "An other-sector story").sectorable_items.create!(sector: other, is_primary: true)
@@ -498,7 +498,7 @@ RSpec.describe "/story_share", type: :request do
 
       get story_shares_path(additional_focus_areas: true)
       expect(response.body).to include("An other-sector story")
-      expect(response.body).to include("An unpublished-sector story")
+      expect(response.body).not_to include("An unpublished-sector story")
     end
   end
 
