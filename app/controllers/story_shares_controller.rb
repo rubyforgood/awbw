@@ -111,11 +111,22 @@ class StorySharesController < ApplicationController
     filtered = portal_scope.search_by_params(params)
     filtered = filtered.where(id: additional_focus_area_story_ids) if params[:additional_focus_areas].present?
     @count_display = filtered.count
+    @intro_tag = intro_tag
     lead_ids = filtered.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
     @lead_stories = first_page? ? preloaded(Story.where(id: lead_ids)).in_order_of(:id, lead_ids).decorate : []
     @stories = preloaded(filtered.where.not(id: lead_ids)).order(created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
+  end
+
+  # The sector or audience category whose own page this is, so its intro leads the page.
+  def intro_tag
+    sector_names = params[:sector_names_all].to_s.split("--")
+    return Sector.sector_names_all(sector_names).first if sector_names.one?
+    return if sector_names.any?
+
+    category_names = params[:category_names_all].to_s.split("--")
+    Category.audiences.category_names_all(category_names).first if category_names.one?
   end
 
   def first_page?
