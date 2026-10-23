@@ -44,6 +44,17 @@ RSpec.describe Sector, type: :model do
     end
   end
 
+  describe ".story_share_additional_focus_areas" do
+    it "returns published sectors not featured in the nav, Other included" do
+      extra = create(:sector, :published, story_share_position: nil)
+      other = create(:sector, :published, name: Sector::OTHER_SECTOR_NAME, story_share_position: nil)
+      create(:sector, :published, story_share_position: 1)
+      create(:sector, published: false, story_share_position: nil)
+
+      expect(Sector.story_share_additional_focus_areas).to contain_exactly(extra, other)
+    end
+  end
+
   describe ".has_published_taggings" do
     let(:organization) { create(:organization) }
 
