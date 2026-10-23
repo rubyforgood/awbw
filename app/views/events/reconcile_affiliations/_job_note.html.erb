@@ -1,0 +1,3 @@
+<p class="text-xs text-gray-500">
+  <%= jobs.any? ? "Job affiliation: #{jobs.map { |job| job.title.presence || "untitled" }.to_sentence}" : "No job affiliation" %>
+</p>

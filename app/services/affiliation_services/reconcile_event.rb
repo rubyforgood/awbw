@@ -5,9 +5,16 @@ module AffiliationServices
   # the timestamp live here. Job affiliations are never touched.
   class ReconcileEvent
     Row = Struct.new(:person, :registration, :organization, :affiliation, :action, :reason, :key,
-                     :minted_here, keyword_init: true) do
+                     :minted_here, :jobs, keyword_init: true) do
       def actionable?
         action != :noop
+      end
+
+      # Whether removing or moving this facilitator row could leave the person
+      # unlinked from the org, so the page notes their remaining job affiliations.
+      def shows_jobs?
+        %i[ delete deactivate ].include?(action) ||
+          EventRegistration::INACTIVE_STATUSES.include?(registration&.status)
       end
     end
 
@@ -16,12 +23,10 @@ module AffiliationServices
     end
 
     # `other_facilitators` are the person's active facilitator affiliations with orgs
-    # they did NOT link on this event; `jobs_by_org` their open job affiliations with
-    # the orgs they did.
+    # they did NOT link on this event.
     def actionable_person_groups
       all_rows.select(&:actionable?).group_by(&:person).map do |person, rows|
-        { person:, registration: rows.first.registration, rows:, other_facilitators: other_facilitators(person),
-          jobs_by_org: jobs_by_org(person) }
+        { person:, registration: rows.first.registration, rows:, other_facilitators: other_facilitators(person) }
       end
     end
 
@@ -91,7 +96,7 @@ module AffiliationServices
     def row_for(person, registration, organization, decision)
       Row.new(person:, registration:, organization:, affiliation: decision.affiliation,
               action: decision.action, reason: decision.reason, minted_here: decision.minted_here,
-              key: row_key(person, organization, decision))
+              key: row_key(person, organization, decision), jobs: jobs_by_person_org.fetch([ person.id, organization.id ], []))
     end
 
     # Stable per-row identity for the outcome map: the affiliation itself when there
@@ -125,11 +130,11 @@ module AffiliationServices
         .to_a
     end
 
-    def jobs_by_org(person)
-      person.affiliations.active_or_pending
-        .where(organization_id: linked_org_ids(person))
+    def jobs_by_person_org
+      @jobs_by_person_org ||= Affiliation.active_or_pending
+        .where(person_id: registrations_by_person.keys.compact.map(&:id))
         .reject(&:facilitator?)
-        .group_by(&:organization_id)
+        .group_by { |affiliation| [ affiliation.person_id, affiliation.organization_id ] }
     end
 
     def linked_org_ids(person)

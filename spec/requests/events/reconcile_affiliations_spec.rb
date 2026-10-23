@@ -124,6 +124,34 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(response.body).not_to include("job affiliation")
     end
 
+    it "notes job affiliations for a transferred-out registrant" do
+      person, _affiliation = registrant_with_affiliation(status: "registered")
+      source = person.event_registrations.find_by(event: event)
+      destination_event = create(:event, facilitator_training: true, start_date: 3.months.from_now,
+                                         end_date: 3.months.from_now + 1.day, registration_close_date: 2.months.from_now)
+      destination = create(:event_registration, registrant: person, event: destination_event, status: "registered")
+      create(:event_registration_organization, event_registration: destination, organization: organization)
+      destination.update!(transferred_from_registration: source)
+      source.update!(status: "transferred_out")
+      create(:affiliation, person: person, organization: organization, title: "Counselor", start_date: 1.year.ago.to_date)
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Move to the new event")
+      expect(response.body).to include("Job affiliation: Counselor")
+    end
+
+    it "notes job affiliations on a no-show listed under Not reconciled" do
+      person = create(:person)
+      reg = create(:event_registration, event: event, registrant: person, status: "no_show")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+
+      get reconcile_affiliations_event_path(event)
+
+      expect(response.body).to include("Didn&#39;t attend — no affiliation created")
+      expect(response.body).to include("No job affiliation")
+    end
+
     it "previews a facilitator affiliation on a non-training event as a deletion" do
       non_training = create(:event, :ended, facilitator_training: false)
       person = create(:person)

@@ -49,11 +49,8 @@
           <% else %>
             <span class="text-gray-800"><%= row.organization.name %></span>
           <% end %>
-          <% if outcome_options[row.action].any? { |value, *| value == "delete" } %>
-            <% jobs = group[:jobs_by_org].fetch(row.organization.id, []) %>
-            <p class="text-xs text-gray-500">
-              <%= jobs.any? ? "Job affiliation: #{jobs.map { |job| job.title.presence || "untitled" }.to_sentence}" : "No job affiliation" %>
-            </p>
+          <% if row.shows_jobs? %>
+            <%= render "job_note", jobs: row.jobs %>
           <% end %>
         </div>
         <div class="flex shrink-0 items-center gap-2">
