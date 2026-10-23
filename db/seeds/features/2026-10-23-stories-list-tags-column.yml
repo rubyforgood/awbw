@@ -1,0 +1,13 @@
+name: "See a story's sector and audience tags in the stories list"
+area: stories
+display_status: user_facing
+released_on: 2026-10-23
+action_path: "/stories"
+pr_number: 2799
+summary: >-
+  The stories list now shows each story's sector and audience tags in one column, with the workshop
+  under the story title and the organization under the author, so titles have more room to read.
+pro_tips:
+  - "Click a tag to see everything else tagged with it."
+  - "Sort by Tags to group stories by their starred sector, then their starred audience."
+  - "Workshop and Organization are small sort links in the column headers."
