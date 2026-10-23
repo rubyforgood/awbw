@@ -25,6 +25,7 @@
               <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Title</th>
               <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Timeframe</th>
               <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Author</th>
+              <th class="w-1/6 px-4 py-2 text-left text-sm font-semibold text-gray-700">Organization</th>
               <th class="w-[60px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Promoted?</th>
               <th class="w-[80px] px-4 py-2 text-center text-sm font-semibold text-gray-700">Actions</th>
             </tr>
@@ -46,6 +47,7 @@
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.title %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.time_frame_total %></td>
                 <td class="px-4 py-2 text-sm text-gray-800"><%= credited_author_link(workshop_idea, class: eyebrow_link_class) %></td>
+                <td class="px-4 py-2 text-sm text-gray-800"><%= workshop_idea.organization&.name %></td>
                 <td class="px-4 py-2 text-center text-sm text-gray-800">
                   <% if workshop_idea.workshops.any? %>
                     <span class='fa fa-check-circle text-green-500'></span>

@@ -31,6 +31,10 @@ class Organization < ApplicationRecord
   end
   has_many :reports
   has_many :workshop_logs
+  has_many :workshop_ideas
+  has_many :workshops
+  has_many :workshops_as_author, through: :people, source: :workshops_as_author
+  has_many :workshop_ideas_as_author, through: :people, source: :workshop_ideas_as_author
   has_many :grants, as: :funder, dependent: :destroy
 
   has_many :categorizable_items, dependent: :destroy, inverse_of: :categorizable, as: :categorizable
@@ -38,7 +42,6 @@ class Organization < ApplicationRecord
   # has_many through
   has_many :categories, through: :categorizable_items
   has_many :sectors, through: :sectorable_items
-  has_many :workshops, through: :users
 
   # Asset associations
   has_one_attached :logo, dependent: :purge do |attachable|
@@ -238,6 +241,24 @@ class Organization < ApplicationRecord
                         .where(created_by_id: users.select(:id))
     direct.or(legacy).distinct
   end
+
+  def affiliated_workshops
+    return Workshop.none unless persisted?
+
+    direct = Workshop.where(organization_id: id)
+    indirect = Workshop.where(author_id: people.select(:id))
+    direct.or(indirect).distinct
+  end
+  alias_method :all_workshops, :affiliated_workshops
+
+  def affiliated_workshop_ideas
+    return WorkshopIdea.none unless persisted?
+
+    direct = WorkshopIdea.where(organization_id: id)
+    indirect = WorkshopIdea.where(author_id: people.select(:id))
+    direct.or(indirect).distinct
+  end
+  alias_method :all_workshop_ideas, :affiliated_workshop_ideas
 
   # Display order, and what the attendees index filters on.
   FACILITATOR_PROGRAM_STATUSES = FacilitatorProgramStatus::STATUSES

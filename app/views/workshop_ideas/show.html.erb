@@ -42,6 +42,17 @@
           <%= @workshop_idea.timeframe.presence || "—" %>
         </div>
         <div>
+          <span class="font-semibold text-gray-700">Organization:</span>
+          <% if @workshop_idea.organization && allowed_to?(:show?, @workshop_idea.organization) %>
+            <%= link_to @workshop_idea.organization.name,
+                        organization_path(@workshop_idea.organization),
+                        data: { turbo_frame: "_top" },
+                        class: "inline-block px-3 py-1 rounded-md text-sm font-medium #{DomainTheme.bg_class_for(:organizations, intensity: 100)} #{DomainTheme.text_class_for(:organizations)} #{DomainTheme.bg_class_for(:organizations, intensity: 100, hover: true)}" %>
+          <% else %>
+            <%= @workshop_idea.organization&.name || "—" %>
+          <% end %>
+        </div>
+        <div>
           <span class="font-semibold text-gray-700">Created by:</span>
           <%= person_name(@workshop_idea.created_by) %>
           <br><span class="text-gray-400"><%= @workshop_idea.created_at.in_time_zone.strftime("%Y-%m-%d %I:%M %P") %></span>

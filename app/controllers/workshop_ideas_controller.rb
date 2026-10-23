@@ -92,6 +92,7 @@ class WorkshopIdeasController < ApplicationController
     @potential_series_workshops = authorized_scope(Workshop.published).includes(:windows_type).order(:title)
     @sectors = Sector.published
     @windows_types = WindowsType.all
+    @organizations = authorized_scope(Organization.all, as: :currently_affiliated).order(:name)
     @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
     @categories_grouped =
       Category
@@ -115,7 +116,7 @@ class WorkshopIdeasController < ApplicationController
   def workshop_idea_params
     params.require(:workshop_idea).permit(
       :title, :staff_notes, :author_credit_preference,
-      :created_by_id, :updated_by_id, :windows_type_id,
+      :created_by_id, :updated_by_id, :windows_type_id, :organization_id,
       :time_closing, :time_creation, :time_demonstration,
       :time_hours, :time_intro, :time_minutes,
       :time_opening, :time_opening_circle, :time_warm_up,

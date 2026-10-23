@@ -45,11 +45,37 @@ RSpec.describe "/workshop_ideas", type: :request do
         get workshop_ideas_path
         expect(response).to have_http_status(:ok)
       end
+
+      it "displays the organization name when present" do
+        org = create(:organization, name: "Sunset Arts")
+        create(:workshop_idea, valid_attributes.merge(organization: org))
+        get workshop_ideas_path
+        expect(response.body).to include("Sunset Arts")
+      end
+
+      it "does not error when organization is nil" do
+        create(:workshop_idea, valid_attributes.merge(organization: nil))
+        get workshop_ideas_path
+        expect(response).to have_http_status(:ok)
+      end
     end
 
     describe "GET /show" do
       it "renders successfully" do
         idea = create(:workshop_idea, valid_attributes)
+        get workshop_idea_path(idea)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "displays the organization name when present" do
+        org = create(:organization, name: "Sunset Arts")
+        idea = create(:workshop_idea, valid_attributes.merge(organization: org))
+        get workshop_idea_path(idea)
+        expect(response.body).to include("Sunset Arts")
+      end
+
+      it "does not error when organization is nil" do
+        idea = create(:workshop_idea, valid_attributes.merge(organization: nil))
         get workshop_idea_path(idea)
         expect(response).to have_http_status(:ok)
       end
@@ -59,6 +85,18 @@ RSpec.describe "/workshop_ideas", type: :request do
       it "renders successfully" do
         get new_workshop_idea_path
         expect(response).to have_http_status(:ok)
+      end
+
+      it "offers every organization in the dropdown, including ones the admin isn't affiliated with" do
+        first_org = create(:organization, name: "First Arts Org")
+        second_org = create(:organization, name: "Second Arts Org")
+
+        get new_workshop_idea_path
+
+        page = Capybara.string(response.body)
+        option_values = page.all("select[name='workshop_idea[organization_id]'] option").map(&:value)
+        expect(option_values).to include(first_org.id.to_s, second_org.id.to_s)
+        expect(option_values).to include("")
       end
     end
 
@@ -77,6 +115,23 @@ RSpec.describe "/workshop_ideas", type: :request do
         }.to change(WorkshopIdea, :count).by(1)
 
         expect(response).to redirect_to(workshop_idea_path(WorkshopIdea.last))
+      end
+
+      it "creates a WorkshopIdea with an organization" do
+        org = create(:organization)
+        expect {
+          post workshop_ideas_path, params: { workshop_idea: valid_attributes.merge(organization_id: org.id) }
+        }.to change(WorkshopIdea, :count).by(1)
+
+        expect(WorkshopIdea.last.organization).to eq(org)
+      end
+
+      it "creates a WorkshopIdea without an organization" do
+        expect {
+          post workshop_ideas_path, params: { workshop_idea: valid_attributes.merge(organization_id: "") }
+        }.to change(WorkshopIdea, :count).by(1)
+
+        expect(WorkshopIdea.last.organization).to be_nil
       end
 
       it "sends admin and submitter notifications" do
@@ -118,6 +173,26 @@ RSpec.describe "/workshop_ideas", type: :request do
 
         expect(idea.reload.title).to eq("Updated Title")
         expect(response).to redirect_to(workshop_idea_path(idea))
+      end
+
+      it "updates the organization_id" do
+        idea = create(:workshop_idea, valid_attributes)
+        org = create(:organization)
+
+        patch workshop_idea_path(idea),
+              params: { workshop_idea: { organization_id: org.id } }
+
+        expect(idea.reload.organization_id).to eq(org.id)
+      end
+
+      it "allows clearing the organization_id" do
+        org = create(:organization)
+        idea = create(:workshop_idea, valid_attributes.merge(organization: org))
+
+        patch workshop_idea_path(idea),
+              params: { workshop_idea: { organization_id: "" } }
+
+        expect(idea.reload.organization_id).to be_nil
       end
 
       it "handles RecordNotUnique gracefully" do
@@ -175,6 +250,44 @@ RSpec.describe "/workshop_ideas", type: :request do
       end
     end
 
+    describe "GET /new" do
+      before do
+        allow_any_instance_of(WorkshopIdeaPolicy).to receive(:new?).and_return(true)
+      end
+
+      it "fills in the one organization the user is currently active at" do
+        person = create(:person, user: regular_user)
+        current_org = create(:organization, name: "Current Arts Org")
+        past_org = create(:organization, name: "Former Arts Org")
+        create(:affiliation, person: person, organization: current_org, start_date: 1.year.ago)
+        create(:affiliation, person: person, organization: current_org, start_date: 5.years.ago, end_date: 3.years.ago)
+        create(:affiliation, person: person, organization: past_org, start_date: 3.years.ago, end_date: 2.years.ago)
+
+        get new_workshop_idea_path
+
+        page = Capybara.string(response.body)
+        expect(page).to have_field("workshop_idea[organization_id]", type: :hidden, with: current_org.id.to_s)
+        expect(page).not_to have_select("workshop_idea[organization_id]")
+        expect(page).not_to have_text(past_org.name)
+      end
+
+      it "lets the user choose among several current organizations" do
+        person = create(:person, user: regular_user)
+        first_org = create(:organization, name: "First Arts Org")
+        second_org = create(:organization, name: "Second Arts Org")
+        past_org = create(:organization, name: "Former Arts Org")
+        create(:affiliation, person: person, organization: first_org)
+        create(:affiliation, person: person, organization: second_org)
+        create(:affiliation, person: person, organization: past_org, inactive: true)
+
+        get new_workshop_idea_path
+
+        page = Capybara.string(response.body)
+        option_values = page.all("select[name='workshop_idea[organization_id]'] option").map(&:value)
+        expect(option_values).to eq([ "", first_org.id.to_s, second_org.id.to_s ])
+      end
+    end
+
     describe "POST /create" do
       context "with valid params" do
         it "creates a WorkshopIdea" do
@@ -182,6 +295,25 @@ RSpec.describe "/workshop_ideas", type: :request do
             post workshop_ideas_path,
                  params: { workshop_idea: valid_attributes }
           }.to change(WorkshopIdea, :count).by(1)
+        end
+
+        it "creates a WorkshopIdea with an organization" do
+          org = create(:organization)
+          expect {
+            post workshop_ideas_path,
+                 params: { workshop_idea: valid_attributes.merge(organization_id: org.id) }
+          }.to change(WorkshopIdea, :count).by(1)
+
+          expect(WorkshopIdea.last.organization).to eq(org)
+        end
+
+        it "creates a WorkshopIdea without an organization" do
+          expect {
+            post workshop_ideas_path,
+                 params: { workshop_idea: valid_attributes.merge(organization_id: "") }
+          }.to change(WorkshopIdea, :count).by(1)
+
+          expect(WorkshopIdea.last.organization).to be_nil
         end
       end
 
