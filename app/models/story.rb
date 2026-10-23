@@ -139,8 +139,7 @@ class Story < ApplicationRecord
   scope :tag_name_like, ->(query) {
     sector_ids = Sector.published.sector_name(query).select(:id)
     audience_ids = Category.audiences.published.category_name(query).select(:id)
-    where(id: SectorableItem.where(sectorable_type: "Story", sector_id: sector_ids).select(:sectorable_id))
-      .or(where(id: CategorizableItem.where(categorizable_type: "Story", category_id: audience_ids).select(:categorizable_id)))
+    with_sector(sector_ids).or(where(id: CategorizableItem.where(categorizable_type: "Story", category_id: audience_ids).select(:categorizable_id)))
   }
 
   scope :title_matches_first, ->(query) {
