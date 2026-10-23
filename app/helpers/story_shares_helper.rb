@@ -14,12 +14,17 @@ module StorySharesHelper
 
   SECTOR_TAG_CHIP = "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
   AUDIENCE_TAG_CHIP = "bg-brand-amber-100 text-brand-amber-800 hover:bg-brand-amber-200 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
+  AGE_RANGE_TAG_CHIP = "bg-brand-rust text-white hover:bg-brand-rust/85 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
 
   STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
   STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
   STORY_IMAGE_GUIDANCE = "Images look best as landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. " \
     "A recent phone photo taken sideways works well. Tall images show in full on a blurred background. " \
     "Some spots trim the edges, so keep the main subject near the center.".freeze
+
+  def audience_tag_chip_class(category)
+    category.category_type&.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE ? AGE_RANGE_TAG_CHIP : AUDIENCE_TAG_CHIP
+  end
 
   def story_share_slot_theme(index)
     SLOT_THEMES[index % SLOT_THEMES.size]
