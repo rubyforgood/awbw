@@ -641,9 +641,14 @@ class StoryImporter
 
     primary_sector = resolve_primary_sector(row, sectors, categories, missing_sectors)
     primary_category = resolve_primary_category(row, sectors, categories, missing_categories)
+    sectors.uniq!
+    categories.uniq!
+    primary_sector ||= sectors.sole if sectors.one?
+    audiences = categories.select { |category| CategoriesTaggable::AUDIENCE_CATEGORY_TYPES.include?(category.category_type&.name) }
+    primary_category ||= audiences.sole if audiences.one?
 
     RowTags.new(
-      sectors: sectors.uniq, categories: categories.uniq,
+      sectors: sectors, categories: categories,
       missing_sectors: missing_sectors.uniq, missing_categories: missing_categories.uniq,
       primary_sector: primary_sector, primary_category: primary_category
     )
