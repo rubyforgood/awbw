@@ -87,7 +87,7 @@ RSpec.describe "/story_share", type: :request do
         public_story.sectorable_items.create!(sector: create(:sector, :published, name: "Zoo"), is_primary: true)
         public_story.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: population), is_primary: true)
 
-        get story_shares_url(sector_names_all: arts.name)
+        get story_shares_url(sector_names_all: "Zoo")
 
         page = Capybara.string(response.body)
         pills = page.all("span[title^='Primary']").map { |pill| pill.text.strip }
@@ -99,7 +99,7 @@ RSpec.describe "/story_share", type: :request do
         arts = create(:sector, :published, name: "Arts")
         public_story.sectorable_items.create!(sector: arts)
 
-        get story_shares_url(sector_names_all: arts.name)
+        get story_shares_url(page: 1)
 
         page = Capybara.string(response.body)
         expect(page).to have_css("span.rounded-full.uppercase", text: "Arts")
@@ -220,9 +220,9 @@ RSpec.describe "/story_share", type: :request do
   describe "landing-page audience sections" do
     let!(:age_range) { create(:category_type, name: "AgeRange") }
 
-    def tag_story(category, title)
+    def tag_story(category, title, is_primary: true)
       story = create(:story, :published, :publicly_visible, title: title)
-      story.categorizable_items.create!(category: category)
+      story.categorizable_items.create!(category: category, is_primary: is_primary)
       story
     end
 
@@ -261,15 +261,27 @@ RSpec.describe "/story_share", type: :request do
 
       expect(response.body).not_to include("More Children stories...")
     end
+
+    it "lists only stories starring the audience as primary" do
+      teens = create(:category, :published, name: "Teens", category_type: age_range, story_share_position: 1)
+      tag_story(teens, "A teen-first story")
+      tag_story(teens, "A story only touching on teens", is_primary: false)
+
+      get story_shares_path
+
+      section = Capybara.string(response.body).find("h2", exact_text: "Teens").find(:xpath, "..")
+      expect(section).to have_text("A teen-first story")
+      expect(section).to have_no_text("A story only touching on teens")
+    end
   end
 
   # ==========================================================
   # LANDING PAGE — sector sections
   # ==========================================================
   describe "landing-page sector sections" do
-    def tag_sector_story(sector, title)
+    def tag_sector_story(sector, title, is_primary: true)
       story = create(:story, :published, :publicly_visible, title: title)
-      story.sectorable_items.create!(sector: sector)
+      story.sectorable_items.create!(sector: sector, is_primary: is_primary)
       story
     end
 
@@ -292,16 +304,37 @@ RSpec.describe "/story_share", type: :request do
 
       expect(response.body).not_to include("More Homelessness stories...")
     end
+
+    it "lists only stories starring the sector as primary" do
+      sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
+      tag_sector_story(sector, "A story about housing")
+      tag_sector_story(sector, "A story only touching on housing", is_primary: false)
+
+      get story_shares_path
+
+      section = Capybara.string(response.body).find("h2", exact_text: "Homelessness").find(:xpath, "..")
+      expect(section).to have_text("A story about housing")
+      expect(section).to have_no_text("A story only touching on housing")
+    end
   end
 
   # ==========================================================
   # BROWSING / FILTERING (public)
   # ==========================================================
   describe "browsing filtered results" do
-    def tag_sector(story, name)
+    def tag_sector(story, name, is_primary: true)
       sector = Sector.find_by(name: name) || create(:sector, :published, name: name)
-      story.sectorable_items.create!(sector: sector)
+      story.sectorable_items.create!(sector: sector, is_primary: is_primary)
       sector
+    end
+
+    def highlighted_titles
+      page = Capybara.string(response.body)
+      page.all("div.mb-12 h2, article h3").map { |node| node.text.strip }
+    end
+
+    def listed_titles
+      Capybara.string(response.body).all("div.space-y-16 h2").map { |node| node.text.strip }
     end
 
     let!(:dv_story) do
@@ -315,6 +348,19 @@ RSpec.describe "/story_share", type: :request do
       get story_shares_path(sector_names_all: "Domestic Violence")
       expect(response.body).to include("A DV survivor story")
       expect(response.body).not_to include("An unrelated story")
+    end
+
+    it "lists stories carrying the sector as a secondary tag below the hero and cards, never in them" do
+      2.times do |i|
+        story = create(:story, :published, :publicly_visible, :publicly_featured, title: "A secondary DV story #{i}")
+        tag_sector(story, "Mental Health")
+        tag_sector(story, "Domestic Violence", is_primary: false)
+      end
+
+      get story_shares_path(sector_names_all: "Domestic Violence")
+      expect(highlighted_titles).to eq([ "A DV survivor story" ])
+      expect(listed_titles).to contain_exactly("A secondary DV story 0", "A secondary DV story 1")
+      expect(response.body).to include("3 stories")
     end
 
     it "renders an empty state when a sector has no matching stories" do
@@ -334,11 +380,27 @@ RSpec.describe "/story_share", type: :request do
       story_population = create(:category_type, name: "StoryPopulation")
       teens = create(:category, :published, name: "Teens", category_type: story_population)
       teen_story = create(:story, :published, :publicly_visible, title: "A teen art story")
-      teen_story.categorizable_items.create!(category: teens)
+      teen_story.categorizable_items.create!(category: teens, is_primary: true)
 
       get story_shares_path(category_names_all: "Teens")
       expect(response.body).to include("A teen art story")
       expect(response.body).not_to include("An unrelated story")
+    end
+
+    it "keeps an audience's carousel and cards to stories starring it as primary, listing the rest below" do
+      age_range = create(:category_type, name: "AgeRange")
+      teens = create(:category, :published, name: "Teens", category_type: age_range)
+      adults = create(:category, :published, name: "Adults", category_type: age_range)
+      create(:story, :published, :publicly_visible, title: "A teen art story")
+        .categorizable_items.create!(category: teens, is_primary: true)
+      create(:story, :published, :publicly_visible, :publicly_featured, title: "An adult story with teens too").tap do |story|
+        story.categorizable_items.create!(category: adults, is_primary: true)
+        story.categorizable_items.create!(category: teens)
+      end
+
+      get story_shares_path(category_names_all: "Teens")
+      expect(highlighted_titles).to eq([ "A teen art story" ])
+      expect(listed_titles).to eq([ "An adult story with teens too" ])
     end
 
     it "does not leak non-public stories to guests when browsing" do
@@ -348,7 +410,7 @@ RSpec.describe "/story_share", type: :request do
     end
 
     it "anchors pagination links to the first story's title so they skip the top hero" do
-      3.times { |i| create(:story, :published, :publicly_visible, title: "DV story #{i}").tap { |s| tag_sector(s, "Domestic Violence") } }
+      6.times { |i| create(:story, :published, :publicly_visible, title: "DV story #{i}").tap { |s| tag_sector(s, "Domestic Violence") } }
       get story_shares_path(sector_names_all: "Domestic Violence", number_of_items_per_page: 2)
       expect(response.body).to include('id="stories"')
       expect(response.body).to match(/href="[^"]*page=2[^"]*#stories"/)
@@ -380,25 +442,43 @@ RSpec.describe "/story_share", type: :request do
     it "shows the hero only on the first browse page" do
       create(:story, :published, :publicly_visible, :publicly_featured, title: "Featured lead housing story", created_at: 10.days.ago)
         .tap { |story| tag_sector(story, "Housing") }
-      create(:story, :published, :publicly_visible, title: "Plain newest housing story", created_at: 1.day.ago)
-        .tap { |story| tag_sector(story, "Housing") }
-      create(:story, :published, :publicly_visible, title: "Plain older housing story", created_at: 5.days.ago)
-        .tap { |story| tag_sector(story, "Housing") }
+      (1..5).each do |days|
+        create(:story, :published, :publicly_visible, title: "Plain housing story #{days}", created_at: days.days.ago)
+          .tap { |story| tag_sector(story, "Housing") }
+      end
 
       get story_shares_path(sector_names_all: "Housing", number_of_items_per_page: 1, page: 2)
-      expect(response.body).to include("Plain older housing story")
+      expect(listed_titles).to eq([ "Plain housing story 5" ])
+      expect(highlighted_titles).to be_empty
       expect(response.body).not_to include("Featured lead housing story")
     end
 
     it "aggregates non-featured sectors on the additional focus areas page" do
       featured = create(:sector, :published, name: "Featured Sector", story_share_position: 1)
       extra = create(:sector, :published, name: "Homelessness")
-      create(:story, :published, :publicly_visible, title: "A featured-only story").tap { |s| s.sectorable_items.create!(sector: featured) }
-      create(:story, :published, :publicly_visible, title: "An additional-area story").tap { |s| s.sectorable_items.create!(sector: extra) }
+      create(:story, :published, :publicly_visible, title: "A featured-only story").tap { |s| s.sectorable_items.create!(sector: featured, is_primary: true) }
+      create(:story, :published, :publicly_visible, title: "An additional-area story").tap { |s| s.sectorable_items.create!(sector: extra, is_primary: true) }
 
       get story_shares_path(additional_focus_areas: true)
       expect(response.body).to include("An additional-area story")
       expect(response.body).not_to include("A featured-only story")
+    end
+
+    it "features additional focus areas by primary sector, listing secondary matches below" do
+      featured = create(:sector, :published, name: "Featured Sector", story_share_position: 1)
+      extra = create(:sector, :published, name: "Homelessness")
+      create(:story, :published, :publicly_visible, title: "A featured-first story").tap do |story|
+        story.sectorable_items.create!(sector: featured, is_primary: true)
+        story.sectorable_items.create!(sector: extra)
+      end
+
+      create(:story, :published, :publicly_visible, title: "A homelessness-first story")
+        .tap { |story| story.sectorable_items.create!(sector: extra, is_primary: true) }
+
+      get story_shares_path(additional_focus_areas: true)
+      expect(highlighted_titles).to include("A homelessness-first story")
+      expect(highlighted_titles).not_to include("A featured-first story")
+      expect(listed_titles).to eq([ "A featured-first story" ])
     end
   end
 
@@ -466,7 +546,7 @@ RSpec.describe "/story_share", type: :request do
     it "shows a portrait story image whole on a home topic card" do
       sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
       story = create(:story, :published, :publicly_visible, title: "Tall topic artwork")
-      story.sectorable_items.create!(sector: sector)
+      story.sectorable_items.create!(sector: sector, is_primary: true)
       attach_image(story, :primary_asset, width: 600, height: 900)
 
       get story_shares_path
@@ -480,7 +560,7 @@ RSpec.describe "/story_share", type: :request do
       sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
       story = create(:story, :published, :publicly_visible, title: "Tall browse artwork", created_at: 2.days.ago)
       lead = create(:story, :published, :publicly_visible, title: "Newer lead story")
-      [ story, lead ].each { |s| s.sectorable_items.create!(sector: sector) }
+      [ story, lead ].each { |s| s.sectorable_items.create!(sector: sector, is_primary: true) }
       attach_image(story, :primary_asset, width: 600, height: 900)
 
       get story_shares_path(sector_names_all: "Homelessness")
@@ -512,7 +592,7 @@ RSpec.describe "/story_share", type: :request do
       sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
       featured = create(:story, :published, :publicly_visible, title: "Carousel story", story_share_carousel_position: 1)
       topic = create(:story, :published, :publicly_visible, title: "Topic story")
-      topic.sectorable_items.create!(sector: sector)
+      topic.sectorable_items.create!(sector: sector, is_primary: true)
 
       get story_shares_path
 
@@ -525,7 +605,7 @@ RSpec.describe "/story_share", type: :request do
       sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
       older = create(:story, :published, :publicly_visible, title: "Older card story", created_at: 2.days.ago)
       lead = create(:story, :published, :publicly_visible, title: "Newer lead story")
-      [ older, lead ].each { |s| s.sectorable_items.create!(sector: sector) }
+      [ older, lead ].each { |s| s.sectorable_items.create!(sector: sector, is_primary: true) }
 
       get story_shares_path(sector_names_all: "Homelessness")
 

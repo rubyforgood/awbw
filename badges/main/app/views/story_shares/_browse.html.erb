@@ -9,8 +9,8 @@
       <p class="text-sm text-gray-500"><%= pluralize(@count_display, "story") %></p>
     </div>
 
-    <% if @lead_stories.any? || @stories.any? %>
-      <%# Lead spot (first page only): featured, then newest. Cards below: newest. %>
+    <% if @lead_stories.any? || @grid_stories.any? || @stories.any? %>
+      <%# Lead spot and 3-up cards (first page only): featured, then newest. Rows below: newest. %>
       <% if single_hero? && @lead_stories.any? %>
         <% lead = @lead_stories.first %>
         <div class="ring-brand-navy-900/10 mb-12 overflow-hidden rounded-2xl shadow-md ring-1">
@@ -51,16 +51,13 @@
           </button>
         </div>
       <% end %>
-      <% grid_stories = @stories.first(3) %>
-      <% row_stories = @stories.drop(3) %>
-
       <%# Pagination anchors to the first story's title (#stories) so paging
           lands on the results, not the hero. Falls to the first row when the
-          grid is empty (short pages). %>
+          grid is empty (later pages, short results). %>
       <!-- 3-up featured grid -->
-      <% if grid_stories.any? %>
+      <% if @grid_stories.any? %>
         <div class="mb-16 grid grid-cols-1 gap-8 md:grid-cols-3">
-          <% grid_stories.each_with_index do |story, i| %>
+          <% @grid_stories.each_with_index do |story, i| %>
             <%= render "browse_card", story: story, anchor_id: (i.zero? ? "stories" : nil) %>
           <% end %>
         </div>
@@ -68,8 +65,8 @@
 
       <!-- Remaining stories as rows -->
       <div class="space-y-16">
-        <% row_stories.each_with_index do |story, i| %>
-          <%= render "browse_row", story: story, anchor_id: (grid_stories.empty? && i.zero? ? "stories" : nil) %>
+        <% @stories.each_with_index do |story, i| %>
+          <%= render "browse_row", story: story, anchor_id: (@grid_stories.empty? && i.zero? ? "stories" : nil) %>
         <% end %>
       </div>
 

@@ -80,6 +80,8 @@ class Sector < ApplicationRecord
   scope :story_share_featured, -> { where.not(story_share_position: nil).order(:story_share_position) }
   # Featured sectors that also get a full section on the Story Share home, in nav order.
   scope :story_share_home_sections, -> { story_share_featured.where(story_share_home_section: true) }
+  # "Additional focus areas": the Story Share catch-all for every published sector not featured in the nav, Other included.
+  scope :story_share_additional_focus_areas, -> { published.where(story_share_position: nil) }
   scope :has_taggings, -> { joins(:sectorable_items).distinct }
   scope :taggings_presence, ->(value) do
     case value
