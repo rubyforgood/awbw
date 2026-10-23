@@ -13,7 +13,7 @@ RSpec.describe "/stories", type: :request do
       title: "Story #{SecureRandom.hex(4)}",
       rhino_body: "<p>Once upon a time...</p>",
       windows_type_id: windows_type.id,
-      workshop_id: workshop.id,
+      story_workshops_attributes: [ { workshop_id: workshop.id } ],
       organization_id: organization.id,
       created_by_id: admin.id,
       updated_by_id: admin.id
@@ -211,29 +211,11 @@ RSpec.describe "/stories", type: :request do
 
         it "sorts by workshop using a link's typed-in title when it has no workshop" do
           [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
-          story_a.update!(workshop: nil)
-          story_z.update!(workshop: nil)
           story_a.story_workshops.create!(external_workshop_title: "Zeppelin Session")
           story_z.story_workshops.create!(external_workshop_title: "Aardvark Session")
 
           get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
           expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
-        end
-
-        it "sorts by workshop using the legacy external title when there are no links" do
-          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
-          story_a.update!(workshop: nil, external_workshop_title: "Zeppelin Session")
-          story_z.update!(workshop: nil, external_workshop_title: "Aardvark Session")
-
-          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
-          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
-        end
-
-        it "sorts by workshop for stories that only have the legacy workshop column" do
-          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
-
-          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
-          expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
         it "sorts by author asc" do
@@ -454,26 +436,6 @@ RSpec.describe "/stories", type: :request do
         expect(page).to have_select("story[co_author_id]", selected: second.remote_search_label[:label])
         expect(page).to have_select("story[spotlighted_facilitator_id]", selected: spotlight.remote_search_label[:label])
         expect(page).to have_select("story[co_author_credit_preference]", selected: "First name only")
-      end
-    end
-
-    describe "legacy workshop on the edit page" do
-      it "surfaces the legacy direct workshop read-only when present" do
-        legacy_workshop = create(:workshop, title: "Legacy Direct Workshop")
-        story = create(:story, :published, workshop: legacy_workshop)
-
-        get edit_story_url(story)
-
-        expect(response.body).to include("Previously linked (read-only)")
-        expect(response.body).to include("Legacy Direct Workshop")
-      end
-
-      it "omits the read-only legacy block when there is no direct workshop data" do
-        story = create(:story, :published, workshop: nil, external_workshop_title: nil)
-
-        get edit_story_url(story)
-
-        expect(response.body).not_to include("Previously linked (read-only)")
       end
     end
 

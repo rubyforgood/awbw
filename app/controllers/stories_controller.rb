@@ -10,7 +10,7 @@ class StoriesController < ApplicationController
     if turbo_frame_request?
       per_page = params[:number_of_items_per_page].presence || 12
       base_scope = authorized_scope(Story.with_author_credit
-                                         .includes(:windows_type, :organization, :workshop,
+                                         .includes(:windows_type, :organization,
                                                    { story_workshops: :workshop },
                                                    :bookmarks, :primary_asset,
                                                    :story_idea, created_by: :person))
@@ -210,21 +210,14 @@ class StoriesController < ApplicationController
       scope.left_joins(:windows_type)
            .reorder(WindowsType.arel_table[:short_name].public_send(dir))
     when "workshop"
-      # Sorts on the same text the column displays: a link's typed-in title wins
-      # over its workshop's, and un-migrated stories fall back to the legacy
-      # stories.workshop_id / stories.external_workshop_title pair.
+      # Sorts on the same text the column displays: a link's typed-in title wins over its workshop's.
       workshop_title = <<~SQL.squish
-        COALESCE(
-          (SELECT MIN(COALESCE(sw.external_workshop_title, w.title))
-           FROM stories_workshops sw
-           LEFT JOIN workshops w ON w.id = sw.workshop_id
-           WHERE sw.story_id = stories.id),
-          workshops.title,
-          stories.external_workshop_title
-        )
+        (SELECT MIN(COALESCE(sw.external_workshop_title, w.title))
+         FROM stories_workshops sw
+         LEFT JOIN workshops w ON w.id = sw.workshop_id
+         WHERE sw.story_id = stories.id)
       SQL
-      scope.left_joins(:workshop)
-           .reorder(Arel.sql("#{workshop_title} #{dir == :asc ? "ASC" : "DESC"}"))
+      scope.reorder(Arel.sql("#{workshop_title} #{dir == :asc ? "ASC" : "DESC"}"))
     when "author"
       scope.order_by_author(direction)
     when "organization"
@@ -257,8 +250,6 @@ class StoriesController < ApplicationController
       story_idea_id: idea.id,
       rhino_body: idea.rhino_body,
       organization_id: idea.organization.id,
-      workshop_id: idea.workshop_id,
-      external_workshop_title: idea.external_workshop_title,
       story_workshops_attributes: story_workshops_attributes_from(idea),
       windows_type_id: idea.windows_type_id,
       youtube_url: idea.youtube_url,
@@ -272,16 +263,8 @@ class StoriesController < ApplicationController
   end
 
   def story_workshops_attributes_from(idea)
-    return direct_story_workshops_attributes_from(idea) if idea.story_idea_workshops.empty?
     idea.story_idea_workshops.map do |siw|
       { workshop_id: siw.workshop_id, external_workshop_title: siw.external_workshop_title, position: siw.position }
     end
-  end
-
-  def direct_story_workshops_attributes_from(idea)
-    rows = []
-    rows << { workshop_id: idea.workshop_id } if idea.workshop_id.present?
-    rows << { external_workshop_title: idea.external_workshop_title } if idea.external_workshop_title.present?
-    rows
   end
 end
