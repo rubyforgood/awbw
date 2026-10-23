@@ -67,10 +67,10 @@ RSpec.describe "organizations/show", type: :view do
     context "when the viewer is an admin" do
       let(:user) { admin }
 
-      it "lists every active facilitator, but not other titles" do
+      it "lists every actively affiliated person, whatever their title" do
         expect(rendered).to include(person_path(facilitator))
         expect(rendered).to include(person_path(hidden))
-        expect(rendered).not_to include(person_path(director))
+        expect(rendered).to include(person_path(director))
         expect(rendered).not_to include(person_path(lapsed))
       end
     end

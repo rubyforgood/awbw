@@ -235,13 +235,15 @@ class OrganizationDecorator < ApplicationDecorator
     badges
   end
 
-  # Keeps every active title per person so a facilitator's card also lists e.g. "Director".
-  def active_affiliations_by_facilitator
-    object.affiliations
-          .select { |affiliation| affiliation.active? && affiliation.person }
-          .sort_by { |affiliation| [ affiliation.person.first_name.to_s.downcase, affiliation.person.last_name.to_s.downcase ] }
-          .group_by(&:person)
-          .select { |_person, affiliations| affiliations.any?(&:facilitator?) }
+  # facilitators_only keeps every active title per person, so a facilitator's card still lists e.g. "Director".
+  def active_affiliations_by_person(facilitators_only: false)
+    grouped = object.affiliations
+                    .select { |affiliation| affiliation.active? && affiliation.person }
+                    .sort_by { |affiliation| [ affiliation.person.first_name.to_s.downcase, affiliation.person.last_name.to_s.downcase ] }
+                    .group_by(&:person)
+    return grouped unless facilitators_only
+
+    grouped.select { |_person, affiliations| affiliations.any?(&:facilitator?) }
   end
 
   private

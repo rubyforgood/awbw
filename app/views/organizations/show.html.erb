@@ -131,8 +131,10 @@
     <div class="grid grid-cols-1 gap-8 md:grid-cols-5">
       <!-- Organization affiliations -->
       <div id="affiliations" class="scroll-mt-4 md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
-        <h2 class="mb-3 font-display text-2xl text-gray-900">Facilitators</h2>
-        <% grouped = org_decorated.active_affiliations_by_facilitator.select { |person, _| allowed_to?(:show?, person) } %>
+        <% admin_view = current_user&.super_user? %>
+        <h2 class="mb-3 font-display text-2xl text-gray-900"><%= admin_view ? "Affiliations" : "Facilitators" %></h2>
+        <% grouped = org_decorated.active_affiliations_by_person(facilitators_only: !admin_view)
+                                  .select { |person, _| allowed_to?(:show?, person) } %>
         <% if grouped.any? %>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <% grouped.each do |person, person_affiliations| %>
@@ -145,7 +147,7 @@
           </div>
           <div data-paginated-fields-target="nav" class="mt-3"></div>
         <% else %>
-          <p class="text-gray-500 italic">No active facilitators.</p>
+          <p class="text-gray-500 italic"><%= admin_view ? "No active affiliations." : "No active facilitators." %></p>
         <% end %>
       </div>
       <!-- Sectors + Age groups served (two columns on desktop; stack on narrow viewports) -->
