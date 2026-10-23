@@ -64,8 +64,9 @@ RSpec.describe "/stories", type: :request do
 
         get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
 
-        chip = Capybara.string(response.body).find("span.admin-only", text: "Combined Audience")
-        expect(chip).to have_css("i.fa-lock")
+        tags = Capybara.string(response.body).find("tr", text: published_story.title).find("div.flex-wrap")
+        expect(tags.first("*")).to have_text("Combined Audience")
+        expect(tags.find("span.admin-only", text: "Combined Audience")).to have_css("i.fa-lock")
       end
 
       it "shows unpublished tags" do
@@ -789,18 +790,23 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(private_story.title)
       end
 
-      it "links sector and audience chips to their tag pages, primary first" do
+      it "shows each group's primary as a chip and lists the rest under +N more" do
         audience_type = create(:category_type, name: "StoryPopulation")
         published_story.sectorable_items.create!(sector: create(:sector, :published, name: "Arts Sector"))
         published_story.sectorable_items.create!(sector: create(:sector, :published, name: "Veterans Sector"), is_primary: true)
         published_story.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: audience_type), is_primary: true)
+        published_story.categorizable_items.create!(category: create(:category, :published, name: "Colleagues", category_type: audience_type))
 
         get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
 
-        page = Capybara.string(response.body)
-        expect(page).to have_link("Teens", href: taggings_path(category_names_all: "Teens"))
-        expect(page).to have_link("Arts Sector", href: taggings_path(sector_names_all: "Arts Sector"))
-        expect(response.body.index("Veterans Sector")).to be < response.body.index("Arts Sector")
+        row = Capybara.string(response.body).find("tr", text: published_story.title)
+        expect(row).to have_link("Veterans Sector", href: taggings_path(sector_names_all: "Veterans Sector"))
+        expect(row).to have_link("Teens", href: taggings_path(category_names_all: "Teens"))
+        expect(row).to have_text("+2 more")
+        more_list = row.find("ul.list-disc")
+        expect(more_list).to have_link("Arts Sector", href: taggings_path(sector_names_all: "Arts Sector"))
+        expect(more_list).to have_link("Colleagues", href: taggings_path(category_names_all: "Colleagues"))
+        expect(more_list).to have_no_text("Veterans Sector")
       end
 
       it "hides unpublished tags and the windows audience" do
