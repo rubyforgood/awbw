@@ -71,8 +71,9 @@ class ResourcesController < ApplicationController
     authorize! @resource
     noindex! if @resource.hidden_from_search
     track_view(@resource)
-    @mentioners = authorized_scope_mentions(@resource.mentioner_records_grouped)
-    @mentionees = authorized_scope_mentions(@resource.mentionee_records_grouped)
+    @connected_workshops = authorized_scope(@resource.connected_workshops).order(:title)
+    @mentioners = authorized_scope_mentions(@resource.mentioner_records_grouped).except("Workshop")
+    @mentionees = authorized_scope_mentions(@resource.mentionee_records_grouped).except("Workshop")
   end
 
   def create
