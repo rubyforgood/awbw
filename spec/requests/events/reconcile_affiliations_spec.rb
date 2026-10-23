@@ -75,6 +75,55 @@ RSpec.describe "Events::ReconcileAffiliations", type: :request do
       expect(page.text).to include("Training hasn't ended yet")
     end
 
+    it "notes on each cancelled row whether the person keeps a job affiliation with that organization" do
+      upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
+      with_job, without_job = Array.new(2) do
+        reg = create(:event_registration, event: upcoming, status: "cancelled")
+        create(:event_registration_organization, event_registration: reg, organization: organization)
+        create(:affiliation, person: reg.registrant, organization: organization, title: "Facilitator",
+                             start_date: upcoming.starts_on, event_registration: reg)
+        reg
+      end
+      create(:affiliation, person: with_job.registrant, organization: organization, title: "Counselor",
+                           start_date: 1.year.ago.to_date)
+
+      get reconcile_affiliations_event_path(upcoming)
+
+      cards = Nokogiri::HTML(response.body).css("#reconcile_cancelled section")
+      card_for = ->(reg) { cards.find { |card| card.text.include?(reg.registrant.name) }.text.squish }
+      expect(card_for.call(with_job)).to include("Job affiliation: Counselor")
+      expect(card_for.call(without_job)).to include("No job affiliation")
+    end
+
+    it "keeps the cancelled section and its job note after the event" do
+      reg = create(:event_registration, event: event, status: "cancelled")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+      create(:affiliation, person: reg.registrant, organization: organization, title: "Facilitator",
+                           start_date: event.starts_on, event_registration: reg)
+
+      get reconcile_affiliations_event_path(event)
+
+      section = Nokogiri::HTML(response.body).at_css("#reconcile_cancelled")
+      expect(section.text).to include(reg.registrant.name)
+      expect(section.text).to include("No job affiliation")
+    end
+
+    it "notes job affiliations on any row offering a delete, and only there" do
+      no_show, _affiliation = registrant_with_affiliation(status: "no_show")
+      create(:affiliation, person: no_show, organization: organization, title: "Counselor",
+                           start_date: 1.year.ago.to_date)
+      upcoming = create(:event, facilitator_training: true, start_date: 3.days.from_now, end_date: 5.days.from_now)
+      reg = create(:event_registration, event: upcoming, status: "registered")
+      create(:event_registration_organization, event_registration: reg, organization: organization)
+
+      get reconcile_affiliations_event_path(event)
+      expect(response.body).to include("Job affiliation: Counselor")
+
+      get reconcile_affiliations_event_path(upcoming)
+      expect(response.body).to include("Create new")
+      expect(response.body).not_to include("job affiliation")
+    end
+
     it "previews a facilitator affiliation on a non-training event as a deletion" do
       non_training = create(:event, :ended, facilitator_training: false)
       person = create(:person)

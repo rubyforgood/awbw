@@ -38,16 +38,24 @@
       <%# A row this training created has nothing to preserve, so Delete leads and
           Deactivate is shown but not selectable — the tooltip says why. %>
       <% default_choice = row.action == :deactivate && row.minted_here ? "delete" : row.action.to_s %>
-      <% chosen = (pre_outcome&.dig(row.key)) || default_choice %>
+      <% chosen = pre_outcome&.dig(row.key) || default_choice %>
       <div class="flex flex-wrap items-center gap-3 py-2">
-        <% if row.affiliation %>
-          <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "flex-1 min-w-0 text-sm hover:underline" do %>
-            <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
-            <span class="text-gray-400">· <%= row.affiliation.decorate.period_label %></span>
+        <div class="flex-1 min-w-0 text-sm">
+          <% if row.affiliation %>
+            <%= link_to edit_person_path(row.person, anchor: dom_id(row.affiliation)), target: "_blank", rel: "noopener", title: "Edit affiliation", class: "hover:underline" do %>
+              <span class="text-gray-800 hover:text-blue-700"><%= row.organization.name %></span>
+              <span class="text-gray-400">· <%= row.affiliation.decorate.period_label %></span>
+            <% end %>
+          <% else %>
+            <span class="text-gray-800"><%= row.organization.name %></span>
           <% end %>
-        <% else %>
-          <span class="flex-1 min-w-0 text-sm text-gray-800"><%= row.organization.name %></span>
-        <% end %>
+          <% if outcome_options[row.action].any? { |value, *| value == "delete" } %>
+            <% jobs = group[:jobs_by_org].fetch(row.organization.id, []) %>
+            <p class="text-xs text-gray-500">
+              <%= jobs.any? ? "Job affiliation: #{jobs.map { |job| job.title.presence || "untitled" }.to_sentence}" : "No job affiliation" %>
+            </p>
+          <% end %>
+        </div>
         <div class="flex shrink-0 items-center gap-2">
           <% outcome_options[row.action].each do |value, label, color, hint| %>
             <% unavailable = value == "deactivate" && row.minted_here %>

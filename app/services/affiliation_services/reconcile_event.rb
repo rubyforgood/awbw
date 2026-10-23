@@ -16,10 +16,12 @@ module AffiliationServices
     end
 
     # `other_facilitators` are the person's active facilitator affiliations with orgs
-    # they did NOT link on this event.
+    # they did NOT link on this event; `jobs_by_org` their open job affiliations with
+    # the orgs they did.
     def actionable_person_groups
       all_rows.select(&:actionable?).group_by(&:person).map do |person, rows|
-        { person:, registration: rows.first.registration, rows:, other_facilitators: other_facilitators(person) }
+        { person:, registration: rows.first.registration, rows:, other_facilitators: other_facilitators(person),
+          jobs_by_org: jobs_by_org(person) }
       end
     end
 
@@ -121,6 +123,13 @@ module AffiliationServices
         .where.not(organization_id: linked_org_ids(person))
         .includes(:organization)
         .to_a
+    end
+
+    def jobs_by_org(person)
+      person.affiliations.active_or_pending
+        .where(organization_id: linked_org_ids(person))
+        .reject(&:facilitator?)
+        .group_by(&:organization_id)
     end
 
     def linked_org_ids(person)
