@@ -793,7 +793,7 @@ RSpec.describe "/story_share", type: :request do
       sector = create(:sector, :published, name: "Homelessness", story_share_position: 1)
       card_story = create(:story, :published, :publicly_visible, title: "Video card story", youtube_url: video_url, created_at: 2.days.ago)
       lead = create(:story, :published, :publicly_visible, title: "Newer lead story")
-      [ card_story, lead ].each { |s| s.sectorable_items.create!(sector: sector) }
+      [ card_story, lead ].each { |s| s.sectorable_items.create!(sector: sector, is_primary: true) }
 
       get story_shares_path(sector_names_all: "Homelessness")
 
