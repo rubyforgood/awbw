@@ -54,8 +54,10 @@
 
       <div class="mt-8 flex flex-wrap justify-center gap-3">
         <% if allowed_to?(:destroy?, @staff_tagging) %>
-          <%= link_to "Remove tagging", staff_tagging_path(@staff_tagging), class: button_classes(:danger_outline),
-                      data: { turbo_method: :delete, turbo_confirm: "Remove this tag from #{taggable&.name}?" } %>
+          <%= link_to "Remove tagging",
+                      staff_tagging_path(@staff_tagging, return_to: params[:return_to].presence, origin_id: params[:origin_id].presence, admin: params[:admin].presence),
+                      class: button_classes(:danger_outline),
+                      data: { turbo: true, turbo_method: :delete, turbo_confirm: "Remove this tag from #{taggable&.name}?" } %>
         <% end %>
         <%= link_to "Cancel", back_path, class: button_classes(:secondary_outline) %>
         <%= f.button :submit, "Save changes", class: button_classes(:primary) %>
