@@ -251,6 +251,15 @@ RSpec.describe "/story_ideas", type: :request do
         get story_idea_url(story_idea)
         expect(response).to redirect_to(root_path)
       end
+
+      it "shows an idea that credits them as co-author" do
+        co_author = create(:user, :with_person)
+        sign_in co_author
+        story_idea = create(:story_idea, author: create(:person), co_author: co_author.person)
+
+        get story_idea_url(story_idea)
+        expect(response).to have_http_status(:ok)
+      end
     end
 
     describe "GET /new" do
