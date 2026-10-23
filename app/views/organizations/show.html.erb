@@ -138,10 +138,13 @@
         <% if grouped.any? %>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <% grouped.each do |person, person_affiliations| %>
-              <div data-paginated-fields-target="item">
+              <div class="relative" data-paginated-fields-target="item">
                 <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
                 <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
                 <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil) %>
+                <% if admin_view && !person.published? %>
+                  <i class="fa-solid fa-lock text-2xs pointer-events-none absolute top-1.5 right-1.5 text-blue-700" title="Hidden from facilitators" data-testid="profile-hidden-lock"></i>
+                <% end %>
               </div>
             <% end %>
           </div>

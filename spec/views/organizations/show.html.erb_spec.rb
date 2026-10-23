@@ -58,6 +58,7 @@ RSpec.describe "organizations/show", type: :view do
     end
 
     it "lists only active facilitators whose profile the viewer can open" do
+      expect(rendered).not_to include("profile-hidden-lock")
       expect(rendered).to include(person_path(facilitator))
       expect(rendered).not_to include(person_path(director))
       expect(rendered).not_to include(person_path(lapsed))
@@ -72,6 +73,10 @@ RSpec.describe "organizations/show", type: :view do
         expect(rendered).to include(person_path(hidden))
         expect(rendered).to include(person_path(director))
         expect(rendered).not_to include(person_path(lapsed))
+      end
+
+      it "locks only the people facilitators can't open" do
+        expect(rendered.scan('data-testid="profile-hidden-lock"').count).to eq(2)
       end
     end
   end
