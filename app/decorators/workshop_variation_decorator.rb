@@ -1,8 +1,4 @@
 class WorkshopVariationDecorator < ApplicationDecorator
-  def breadcrumbs
-    "#{workshop_link} >> #{name}".html_safe
-  end
-
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end
@@ -28,14 +24,5 @@ class WorkshopVariationDecorator < ApplicationDecorator
     else
       body
     end
-  end
-
-  private
-
-  def method_name
-  end
-
-  def workshop_link
-    h.link_to "#{workshop.title}", h.workshop_path(workshop)
   end
 end

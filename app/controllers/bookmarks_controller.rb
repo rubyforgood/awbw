@@ -1,6 +1,4 @@
 class BookmarksController < ApplicationController
-  before_action :set_breadcrumb
-
   VALID_SORTS = %w[created_at title popularity].freeze
 
   def index
@@ -129,9 +127,5 @@ class BookmarksController < ApplicationController
     params.require(:bookmark).permit(
       :bookmarkable_id, :bookmarkable_type
     )
-  end
-
-  def set_breadcrumb
-    @breadcrumb = params[:breadcrumb]
   end
 end
