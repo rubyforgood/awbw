@@ -59,8 +59,8 @@ RSpec.describe "A person's own profile as the place to edit", type: :request do
 
       get person_path(person)
 
-      expect(response.body).to include("AWBW staff are looking at your request")
-      expect(response.body).to include("Primary email: new@example.com")
+      expect(response.body).to include("AWBW staff are reviewing your update", "View or edit", "within 2–3 business days")
+      expect(response.body).to include("New primary email: new@example.com")
       expect(response.body).to include(edit_profile_change_request_path(request))
     end
 
