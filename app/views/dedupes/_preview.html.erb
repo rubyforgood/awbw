@@ -205,6 +205,7 @@
         <% if field_notes[col.name].present? %>
           <p class="mt-1 text-xs text-gray-500"><%= field_notes[col.name] %></p>
         <% end %>
+        <%= render "shared/autosave_status", field_name: "#{keep_param_key}[#{col.name}]", classes: "mt-1 block" %>
       </div>
     <% end %>
   <% end %>
