@@ -56,7 +56,7 @@ RSpec.describe FormBuilderService do
 
       it "creates contact info fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
-        expect(keys).to include("pronouns", "phone", "mailing_city", "organization_name")
+        expect(keys).to include("legal_first_name", "pronouns", "phone", "mailing_city", "organization_name")
       end
 
       it "seeds the organization fields under the canonical organization_ identifiers" do

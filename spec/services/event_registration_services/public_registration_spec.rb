@@ -613,9 +613,7 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   end
 
   describe "legal first name" do
-    let!(:legal_field) do
-      create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
-    end
+    let(:legal_field) { form.form_fields.find_by!(field_identifier: "legal_first_name") }
 
     it "saves the answer onto a new registrant" do
       params = base_form_params(first_name: "Bob", last_name: "Smith", email: "bob@example.com")

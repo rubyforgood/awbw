@@ -4,9 +4,9 @@ display_status: admin_facing
 released_on: 2026-10-23
 action_path: "/forms/smart_form_settings"
 summary: >-
-  New forms ask for a "Preferred first name" (first_name) instead of "First Name", and the
-  smart field for legal_first_name is now called "Full first name". The nickname field
-  identifier no longer changes a person's name.
+  New forms ask for a "Preferred first name" (first_name), and the contact info section asks
+  for a "Full first name" (legal_first_name) where it used to ask for a nickname. The nickname
+  field identifier no longer changes a person's name.
 pro_tips:
   - "To collect both names, pair Preferred first name (first_name) with Full first name (legal_first_name)."
   - "An existing question keyed nickname still saves its answer on the submission, but no longer sets the person's first name."
