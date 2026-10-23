@@ -19,15 +19,19 @@
   </div>
   <% if pending_requests.any? %>
     <div class="border-primary/10 bg-brand-cream mt-4 rounded-xl border p-4 text-gray-800">
-      <p class="text-primary font-semibold"><i class="fa-solid fa-clock"></i> AWBW staff are looking at your <%= "request".pluralize(pending_requests.size) %></p>
-      <ul class="mt-2 space-y-1">
+      <p class="text-primary font-semibold"><i class="fa-solid fa-clock"></i> AWBW staff are reviewing your <%= "update".pluralize(pending_requests.size) %></p>
+      <ul class="mt-2 space-y-2">
         <% pending_requests.each do |request| %>
           <li>
-            <%= request.requester_summary %> · sent <%= request.requested_on %>
-            <%= link_to "See or change it", edit_profile_change_request_path(request), class: "ms-2 font-medium underline" %>
+            <%= request.requester_summary %> · submitted <%= request.requested_on %>
+            <%= link_to "View or edit", edit_profile_change_request_path(request), class: "ms-2 font-semibold underline" %>
+            <% if request.field == "primary_email" %>
+              <p class="text-sm text-gray-600">Your current email stays active until we confirm the change.</p>
+            <% end %>
           </li>
         <% end %>
       </ul>
+      <p class="mt-2 text-sm text-gray-600">We'll confirm within 2–3 business days.</p>
     </div>
   <% end %>
 </div>
