@@ -18,9 +18,6 @@ class Story < ApplicationRecord
   belongs_to :author, class_name: "Person", optional: true
   belongs_to :co_author, class_name: "Person", optional: true
   belongs_to :story_idea, optional: true
-  # Kept as a legacy safety copy alongside story_workshops during the multi-step
-  # import; the join is the source of truth for display and editing.
-  belongs_to :workshop, optional: true
   has_many :story_workshops, -> { order(:position, :id) }, inverse_of: :story, dependent: :destroy
   has_many :workshops, through: :story_workshops
   has_many :bookmarks, as: :bookmarkable, dependent: :destroy
@@ -47,7 +44,6 @@ class Story < ApplicationRecord
   validates :updated_by_id, presence: true
   validates :title, presence: true, uniqueness: true, length: { maximum: 255 }
   validates :rhino_body, presence: true
-  validates :external_workshop_title, length: { maximum: 255 }
   validates :website_url, length: { maximum: 255 }
   validates :youtube_url, length: { maximum: 255 }
   normalizes :co_author_credit_preference, with: ->(value) { value.presence }

@@ -443,11 +443,12 @@ RSpec.describe StoryImporter do
       expect(StoryIdea.sole.workshops).to contain_exactly(workshop)
     end
 
-    it "keeps the free-text workshop title (minus the prefix) on the join when there is no match" do
+    it "keeps the free-text workshop title (minus the prefix) on the story and idea joins when there is no match" do
       import([ base_row("workshop" => "External title: Some Unlisted Workshop") ])
 
       expect(Story.sole.workshops).to be_empty
       expect(Story.sole.story_workshops.map(&:external_workshop_title)).to contain_exactly("Some Unlisted Workshop")
+      expect(StoryIdea.sole.story_idea_workshops.map(&:external_workshop_title)).to contain_exactly("Some Unlisted Workshop")
     end
   end
 

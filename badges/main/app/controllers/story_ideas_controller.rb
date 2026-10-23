@@ -6,7 +6,7 @@ class StoryIdeasController < ApplicationController
     authorize!
     per_page = params[:number_of_items_per_page].presence || 25
     base_scope = authorized_scope(StoryIdea.with_author_credit
-                                           .includes(:windows_type, :organization, :workshop, :updated_by))
+                                           .includes(:windows_type, :organization, :updated_by, story_idea_workshops: :workshop))
     filtered = base_scope.search_by_params(params)
     @story_ideas = filtered.order(created_at: :desc)
                            .paginate(page: params[:page], per_page: per_page)
@@ -132,7 +132,7 @@ class StoryIdeasController < ApplicationController
       :title, :rhino_body, :youtube_url,
       :permission_given, :funder_only, :author_credit_preference,
       :co_author_id, :co_author_credit_preference, :spotlighted_facilitator_id,
-      :windows_type_id, :organization_id, :workshop_id, :external_workshop_title,
+      :windows_type_id, :organization_id,
       :created_by_id, :updated_by_id,
       category_ids: [],
       sector_ids: [],
