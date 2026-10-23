@@ -662,26 +662,11 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
   end
 
   describe "matching an existing registrant by name" do
-    it "matches a person stored under a nickname when the registrant types their legal first name" do
+    it "matches a person stored under a preferred name when the registrant types their legal first name" do
       existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
                                  last_name: "Smith", email: "bob@example.com")
 
       params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com")
-
-      expect {
-        described_class.call(event: event, registration_form: form, form_params: params)
-      }.not_to change(Person, :count)
-
-      expect(EventRegistration.last.registrant).to eq(existing)
-    end
-
-    it "matches a person stored under a legal name when the registrant types their nickname" do
-      existing = create(:person, first_name: "Robert", legal_first_name: nil,
-                                 last_name: "Smith", email: "bob@example.com")
-
-      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com").merge(
-        field_id("nickname") => "Bob"
-      )
 
       expect {
         described_class.call(event: event, registration_form: form, form_params: params)

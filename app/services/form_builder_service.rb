@@ -66,7 +66,7 @@ class FormBuilderService
   SECTION_FIELD_IDENTIFIERS = {
     person_identifier: %w[first_name last_name primary_email confirm_email],
     person_contact_info: %w[
-      primary_email_type nickname pronouns secondary_email secondary_email_type
+      primary_email_type pronouns secondary_email secondary_email_type
       mailing_street mailing_address_type mailing_city mailing_state mailing_zip mailing_country
       phone phone_type organization_name organization_position organization_website organization_type
       organization_street organization_city organization_state organization_zip organization_country
@@ -117,9 +117,9 @@ class FormBuilderService
   # through `.section_field_names`, which adds the consent label — that one
   # carries the organization name, which an admin can change while the app runs.
   SECTION_FIELD_NAMES = {
-    person_identifier: [ "First Name", "Last Name", "Email", "Confirm Email" ],
+    person_identifier: [ "Preferred first name", "Last Name", "Email", "Confirm Email" ],
     person_contact_info: [
-      "Primary Email Type", "Preferred Nickname", "Pronouns", "Secondary Email", "Secondary Email Type",
+      "Primary Email Type", "Pronouns", "Secondary Email", "Secondary Email Type",
       "Street Address", "Address Type", "City", "State / Province", "Zip / Postal Code", "Country",
       "Phone", "Phone Type", "Organization Name", "Position / Title", "Organization Website", "Organization Type",
       "Organization Street Address", "Organization City", "Organization State / Province", "Organization Zip / Postal Code",
@@ -461,7 +461,7 @@ class FormBuilderService
   # ---- Section builders ----
 
   def build_person_identifier_fields(form, position)
-    position = add_field(form, position, "First Name", :free_form_input_one_line,
+    position = add_field(form, position, "Preferred first name", :free_form_input_one_line,
                          key: "first_name", group: "person_identifier", required: true, width: :half)
     position = add_field(form, position, "Last Name", :free_form_input_one_line,
                          key: "last_name", group: "person_identifier", required: true, width: :half)
@@ -478,8 +478,6 @@ class FormBuilderService
     position = add_field(form, position, "Primary Email Type", :single_select_radio,
                          key: "primary_email_type", group: "person_contact_info", required: true,
                          options: %w[Personal Work])
-    position = add_field(form, position, "Preferred Nickname", :free_form_input_one_line,
-                         key: "nickname", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Pronouns", :free_form_input_one_line,
                          key: "pronouns", group: "person_contact_info", required: false, width: :half)
     position = add_field(form, position, "Secondary Email", :free_form_input_one_line,

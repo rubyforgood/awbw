@@ -56,7 +56,7 @@ RSpec.describe FormBuilderService do
 
       it "creates contact info fields" do
         keys = form.form_fields.pluck(:field_identifier).compact
-        expect(keys).to include("nickname", "pronouns", "phone", "mailing_city", "organization_name")
+        expect(keys).to include("pronouns", "phone", "mailing_city", "organization_name")
       end
 
       it "seeds the organization fields under the canonical organization_ identifiers" do
@@ -232,7 +232,7 @@ RSpec.describe FormBuilderService do
 
       it "does not include fields from unselected sections" do
         keys = form.form_fields.pluck(:field_identifier).compact
-        expect(keys).not_to include("nickname", "phone", "payment_method")
+        expect(keys).not_to include("pronouns", "phone", "payment_method")
       end
     end
 
@@ -247,7 +247,7 @@ RSpec.describe FormBuilderService do
       it "creates fields from all sections" do
         keys = form.form_fields.pluck(:field_identifier).compact
         expect(keys).to include(
-          "first_name", "nickname", "racial_ethnic_identity",
+          "first_name", "pronouns", "racial_ethnic_identity",
           "additional_sectors", "referral_source",
           "scholarship_eligibility", "payment_method", "communication_consent"
         )
@@ -489,7 +489,7 @@ RSpec.describe FormBuilderService do
 
     it "exposes each built-in section's question fields in order" do
       identifier = described_class.editable_sections(form).find { |e| e[:key] == :person_identifier }
-      expect(identifier[:questions].map(&:name)).to eq([ "First Name", "Last Name", "Email", "Confirm Email" ])
+      expect(identifier[:questions].map(&:name)).to eq([ "Preferred first name", "Last Name", "Email", "Confirm Email" ])
     end
   end
 
