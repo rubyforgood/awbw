@@ -1,6 +1,26 @@
 require "rails_helper"
 
 RSpec.describe OrganizationDecorator do
+  describe "#active_affiliations_by_facilitator" do
+    let(:organization) { create(:organization) }
+    let(:facilitator) { create(:person, first_name: "Zoe") }
+    let(:earlier) { create(:person, first_name: "Abe") }
+
+    it "groups each active facilitator's active titles, sorted by name, leaving out everyone else" do
+      facilitation = create(:affiliation, organization: organization, person: facilitator)
+      director = create(:affiliation, organization: organization, person: facilitator, title: "Director")
+      create(:affiliation, organization: organization, person: facilitator, title: "Counselor", end_date: 1.month.ago)
+      create(:affiliation, organization: organization, person: earlier)
+      create(:affiliation, organization: organization, title: "Board Member")
+      create(:affiliation, organization: organization, end_date: 1.month.ago)
+
+      grouped = organization.reload.decorate.active_affiliations_by_facilitator
+
+      expect(grouped.keys).to eq([ earlier, facilitator ])
+      expect(grouped[facilitator]).to contain_exactly(facilitation, director)
+    end
+  end
+
   describe "#affiliated_since_display" do
     let(:organization) { create(:organization) }
 
