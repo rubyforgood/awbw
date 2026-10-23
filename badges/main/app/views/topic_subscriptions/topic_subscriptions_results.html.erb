@@ -13,12 +13,12 @@
         <%= link_to topic_subscriptions_path(toggle_params.merge(status: "active")),
               data: { turbo_frame: "_top" },
               class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "#{eyebrow_link_class}"}" do %>
-          Active <span class="text-gray-400">(<%= @active_count %>)</span>
+          Active <span class="text-gray-400">(<%= number_with_delimiter(@active_count) %>)</span>
         <% end %>
         <%= link_to topic_subscriptions_path(toggle_params.merge(status: "unsubscribed")),
               data: { turbo_frame: "_top" },
               class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "unsubscribed" ? "bg-white text-gray-800 shadow-sm" : "#{eyebrow_link_class}"}" do %>
-          Unsubscribed <span class="text-gray-400">(<%= @unsubscribed_count %>)</span>
+          Unsubscribed <span class="text-gray-400">(<%= number_with_delimiter(@unsubscribed_count) %>)</span>
         <% end %>
       </nav>
       <p class="text-sm text-gray-500"><%= total %> subscription<%= "s" if total != 1 %></p>

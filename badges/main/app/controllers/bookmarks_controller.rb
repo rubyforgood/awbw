@@ -15,7 +15,7 @@ class BookmarksController < ApplicationController
       @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
       Bookmark.preload_bookmarkable_associations(@bookmarks)
       @bookmarks = @bookmarks.decorate
-      @count_display = filtered.length == base_scope.length ? base_scope.length : "#{filtered.length}/#{base_scope.length}"
+      @count_display = count_display(filtered.length, base_scope.length)
       set_index_variables
       render :bookmarks_results
     else
@@ -41,7 +41,7 @@ class BookmarksController < ApplicationController
       @bookmarks_count = filtered.length
       @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
       Bookmark.preload_bookmarkable_associations(@bookmarks)
-      @count_display = filtered.length == user_base.length ? user_base.length : "#{filtered.length}/#{user_base.length}"
+      @count_display = count_display(filtered.length, user_base.length)
       set_index_variables
       render :personal_lazy
     else

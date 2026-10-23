@@ -6,7 +6,7 @@ class <%= controller_class_name %>Controller < ApplicationController
     per_page = params[:number_of_items_per_page].presence || 25
     unfiltered = <%= orm_class.all(class_name) %>
     filtered = unfiltered.search_by_params(params)
-    @count_display = filtered.count == unfiltered.count ? unfiltered.count : "#{filtered.count}/#{unfiltered.count}"
+    @count_display = count_display(filtered.count, unfiltered.count)
     @<%= plural_table_name %> = filtered.paginate(page: params[:page], per_page: per_page).decorate
   end
 

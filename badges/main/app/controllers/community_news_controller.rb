@@ -22,7 +22,7 @@ class CommunityNewsController < ApplicationController
         filtered.reorder(@sort => @sort_direction)
       end
       @community_news = filtered.paginate(page: params[:page], per_page: per_page).decorate
-      @count_display = filtered.count == base_scope.count ? base_scope.count : "#{filtered.count}/#{base_scope.count}"
+      @count_display = count_display(filtered.count, base_scope.count)
 
       render :community_news_results
     else

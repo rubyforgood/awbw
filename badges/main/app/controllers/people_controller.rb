@@ -30,7 +30,7 @@ class PeopleController < ApplicationController
       filters = authorized_scope(params, as: :index).to_unsafe_h
       filtered = base_scope.search_by_params(filters)
                            .order(:first_name, :last_name)
-      @count_display = filtered.count
+      @count_display = count_display(filtered.count)
       @people = filtered.paginate(page: params[:page], per_page: per_page)
 
       render :people_results
@@ -146,7 +146,7 @@ class PeopleController < ApplicationController
     if turbo_frame_request?
       filtered = base.search_by_params(params)
       @total_count = base.count
-      @count_display = filtered.count == @total_count ? @total_count : "#{filtered.count}/#{@total_count}"
+      @count_display = count_display(filtered.count, @total_count)
       @comments = filtered.paginate(page: params[:page], per_page: 20)
       render :person_comments_results
     else
