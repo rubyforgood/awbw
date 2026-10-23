@@ -447,6 +447,12 @@ RSpec.describe NotificationMailer, type: :mailer do
       expect(body).to include("Hello <strong>Rosa</strong>")
       expect(body).to include("shared with the funder")
       expect(body).not_to include("live on Story Share")
+    end
+
+    it "links to the story's portal page, not Story Share" do
+      body = mail.body.encoded
+      expect(body).to include("View your story")
+      expect(body).to include(story_url(story))
       expect(body).not_to include(story_share_url(story))
     end
   end

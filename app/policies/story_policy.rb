@@ -57,12 +57,13 @@ class StoryPolicy < ApplicationPolicy
     spotlighted.or(authored).or(co_authored)
   end
 
-  # The named author, a credited co-author, or the submitter — the people who
-  # may see their own story even when it's funder-only.
+  # The named author, a credited co-author, the creator, or the story idea's
+  # submitter — the people who may see their own story even when it's funder-only.
   def own_story?
     return false unless user
     person_id = user.person_id
     (person_id.present? && [ record.author_id, record.co_author_id ].include?(person_id)) ||
-      record.created_by_id == user.id
+      record.created_by_id == user.id ||
+      record.story_idea&.created_by_id == user.id
   end
 end

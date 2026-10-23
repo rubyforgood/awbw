@@ -10,3 +10,4 @@ summary: >-
 pro_tips:
   - "Stories created directly email the author and second author; a story with no author sends nothing."
   - "Funder-only stories send a \"shared with the funder\" email instead, since they never appear on Story Share."
+  - "Whoever submitted the story idea can open their own funder-only story from that email."

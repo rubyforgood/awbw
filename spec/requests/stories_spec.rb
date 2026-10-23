@@ -955,6 +955,13 @@ RSpec.describe "/stories", type: :request do
         get story_url(funder_only_story)
         expect(response).to redirect_to(root_path)
       end
+
+      it "can view a funder-only story promoted from their own story idea" do
+        funder_only_story.update!(story_idea: create(:story_idea, :funder_only, created_by: regular_user))
+
+        get story_url(funder_only_story)
+        expect(response).to have_http_status(:ok)
+      end
     end
 
     describe "POST /create" do
