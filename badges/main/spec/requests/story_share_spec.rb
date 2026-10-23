@@ -445,51 +445,6 @@ RSpec.describe "/story_share", type: :request do
       expect(response.body).not_to include("An unrelated story")
     end
 
-    describe "typed search" do
-      it "lists results as rows without a carousel" do
-        create(:story, :published, :publicly_visible, :publicly_featured, title: "Watercolor healing journey")
-        get story_shares_path(query: "Watercolor")
-        expect(response.body).to include('aria-label="Search results"')
-        expect(response.body).to include("Watercolor healing journey")
-        expect(response.body).not_to include("swiper-slide")
-      end
-
-      it "finds stories by their sector tag and links to that sector's page" do
-        tagged = create(:story, :published, :publicly_visible, title: "Painting after service")
-        tag_sector(tagged, "Military/Veterans")
-
-        get story_shares_path(query: "veterans")
-        expect(response.body).to include("Painting after service")
-        expect(response.body).to include("Stories tagged")
-        expect(response.body).to include("or with “veterans” in the title, the story text, the author’s or second author’s name, or the spotlighted facilitator’s name")
-        expect(response.body).to include(CGI.escapeHTML(story_shares_path(sector_names_all: "Military/Veterans")))
-      end
-
-      it "explains the match without tags when no tag has visible stories" do
-        create(:sector, :published, name: "Veterans Affairs")
-        get story_shares_path(query: "veterans")
-        expect(response.body).not_to include("Stories tagged")
-        expect(response.body).to include("Stories with “veterans” in the title, the story text, the author’s or second author’s name, or the spotlighted facilitator’s name")
-      end
-
-      it "puts title matches ahead of newer and featured text matches" do
-        create(:story, :published, :publicly_visible, :publicly_featured, title: "A featured story", rhino_body: "<p>We tried mosaic</p>")
-        create(:story, :published, :publicly_visible, title: "Mosaic mornings", created_at: 1.year.ago)
-
-        get story_shares_path(query: "mosaic")
-        expect(response.body.index("Mosaic mornings")).to be < response.body.index("A featured story")
-      end
-
-      it "echoes the query and suggests topics when nothing matches" do
-        create(:sector, :published, name: "Featured Topic", story_share_position: 1)
-        get story_shares_path(query: "nonexistentword")
-        expect(response.body).to include("No stories found for “nonexistentword”")
-        expect(response.body).to include("Try one of these topics")
-        expect(response.body).to include("Featured Topic")
-        expect(response.body).to include("Have a story about this?")
-      end
-    end
-
     it "filters by audience category" do
       story_population = create(:category_type, name: "StoryPopulation")
       teens = create(:category, :published, name: "Teens", category_type: story_population)

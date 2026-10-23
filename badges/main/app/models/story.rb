@@ -135,17 +135,6 @@ class Story < ApplicationRecord
     end
   }
 
-  # Published sector and audience (age range, story population) tags whose name contains the query.
-  scope :tag_name_like, ->(query) {
-    sector_ids = Sector.published.sector_name(query).select(:id)
-    audience_ids = Category.audiences.published.category_name(query).select(:id)
-    with_sector(sector_ids).or(where(id: CategorizableItem.where(categorizable_type: "Story", category_id: audience_ids).select(:categorizable_id)))
-  }
-
-  scope :title_matches_first, ->(query) {
-    order(Arel.sql(sanitize_sql_array([ "CASE WHEN stories.title LIKE ? THEN 0 ELSE 1 END", "%#{sanitize_sql_like(query)}%" ])))
-  }
-
   def self.search_by_params(params)
     conditions = {}
     conditions[:title] = params[:title] if params[:title].present?
@@ -158,10 +147,9 @@ class Story < ApplicationRecord
       stories = self.search(conditions)
     end
 
-    # Keyword search matches the title, the rich-text body, the credited
-    # author/creator name, the spotlighted facilitator's shown name, and
-    # sector/audience tag names, OR-ed together via id subqueries so SearchCop's
-    # joins and the `people` joins stay isolated. (A plain LIKE handles
+    # Keyword search matches the title, the rich-text body, and the credited
+    # author/creator name, OR-ed together via id subqueries so SearchCop's joins
+    # and the `people` joins stay isolated from each other. (A plain LIKE handles
     # the title because SearchCop's default group pairs it with the boolean
     # `published` column and won't match a title on its own.)
     if params[:query].present?
@@ -169,8 +157,6 @@ class Story < ApplicationRecord
       stories = stories.where("stories.title LIKE ?", "%#{query}%")
                        .or(stories.where(id: self.search(query).select("stories.id")))
                        .or(stories.where(id: by_credited_person_name(query).select("stories.id")))
-                       .or(stories.where(id: tag_name_like(query).select("stories.id")))
-                       .or(stories.where(spotlighted_facilitator_id: Person.displayed_name_like(query).select(:id)))
     end
 
     if params[:author_name].present?

@@ -12,9 +12,6 @@ module StorySharesHelper
     { heading: "text-fuchsia-700", link: "text-fuchsia-700 hover:underline", overlay: "bg-fuchsia-800/80", chip: "bg-fuchsia-700" }
   ].freeze
 
-  SECTOR_TAG_CHIP = "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
-  AUDIENCE_TAG_CHIP = "bg-brand-amber-100 text-brand-amber-800 hover:bg-brand-amber-200 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
-
   STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
   STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
   STORY_IMAGE_GUIDANCE = "Images look best as landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. " \
