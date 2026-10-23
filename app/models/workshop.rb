@@ -246,6 +246,10 @@ class Workshop < ApplicationRecord
     []
   end
 
+  def connected_resources
+    connected_records(Resource)
+  end
+
   def default_image_url
     ActionController::Base.helpers.asset_path(
       "workshop_default.jpg"
