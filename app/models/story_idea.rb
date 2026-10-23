@@ -121,10 +121,7 @@ class StoryIdea < ApplicationRecord
   private
 
   def story_idea_workshop_label(story_idea_workshop)
-    workshop_title = story_idea_workshop.workshop&.title
-    external_title = story_idea_workshop.external_workshop_title.presence
-    return "#{external_title} (from the #{workshop_title})" if external_title && workshop_title
-    external_title || workshop_title
+    story_idea_workshop.external_workshop_title.presence || story_idea_workshop.workshop&.title
   end
 
   def co_author_differs_from_author

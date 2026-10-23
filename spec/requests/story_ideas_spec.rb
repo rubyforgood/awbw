@@ -42,6 +42,19 @@ RSpec.describe "/story_ideas", type: :request do
         expect(response).to be_successful
       end
 
+      it "links each idea's workshop and organization, showing the idea's own workshop title" do
+        org = create(:organization, name: "Index Org")
+        story_idea = create(:story_idea, organization: org, workshop: nil)
+        story_idea.story_idea_workshops.create!(workshop:, external_workshop_title: "Teen variant")
+
+        get story_ideas_url
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(workshop))
+        expect(page).to have_link("Index Org", href: organization_path(org))
+        expect(response.body).not_to include("(from the")
+      end
+
       it "filters story ideas by organization_id" do
         org = create(:organization)
         matching = create(:story_idea, organization: org)
@@ -71,6 +84,20 @@ RSpec.describe "/story_ideas", type: :request do
         page = Capybara.string(response.body)
         expect(page).to have_link(org.name, href: organization_path(org))
         expect(page).to have_link(creator.name, href: person_path(creator_person))
+      end
+
+      it "shows a workshop reference's own title, linked to the workshop" do
+        story_idea = create(:story_idea, workshop: nil)
+        story_idea.story_idea_workshops.create!(workshop:, external_workshop_title: "Teen variant")
+        story_idea.story_idea_workshops.create!(external_workshop_title: "Homegrown session")
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(workshop))
+        expect(page).to have_text("Homegrown session")
+        expect(page).to have_no_link("Homegrown session")
+        expect(response.body).not_to include("(from the")
       end
 
       it "stars the primary sector and category" do
@@ -425,6 +452,18 @@ RSpec.describe "/story_ideas", type: :request do
         expect(page).to have_text(org.name)
         expect(page).not_to have_link(org.name)
         expect(page).to have_link(regular_user.name, href: person_path(person))
+      end
+
+      it "shows a workshop the owner can't open as plain text, under the idea's own title" do
+        draft_workshop = create(:workshop, :unpublished)
+        story_idea = create(:story_idea, created_by: regular_user, workshop: nil)
+        story_idea.story_idea_workshops.create!(workshop: draft_workshop, external_workshop_title: "Teen variant")
+
+        get story_idea_url(story_idea)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Teen variant")
+        expect(page).to have_no_link("Teen variant")
       end
 
       it "renders the creator as plain text when they have no person record" do

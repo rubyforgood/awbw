@@ -1,5 +1,6 @@
 class StoryDecorator < ApplicationDecorator
   include ::Linkable
+  include ::StoryReferenceLinks
 
   def detail(length: 50)
     text = rhino_body&.to_plain_text
@@ -14,31 +15,26 @@ class StoryDecorator < ApplicationDecorator
     story_workshops.map { |sw| workshop_reference_label(sw) }.compact_blank.presence&.join(" / ")
   end
 
-  def workshop_links
-    parts = story_workshops.map { |sw| workshop_reference_link(sw) }.compact
-    h.safe_join(parts, " / ") if parts.any?
+  def spotlighted_facilitator_label
+    return unless spotlighted_facilitator
+
+    [ "Spotlighted facilitator", spotlighted_facilitator.name.presence ].compact.join(": ")
   end
 
-  def workshop_reference_count
-    story_workshops.size
+  def spotlighted_facilitator_link(link_class: "hover:underline")
+    person = spotlighted_facilitator
+    return if person.nil?
+    return person.name unless h.allowed_to?(:show?, person)
+    h.link_to(person.name, h.person_path(person), class: link_class, data: { turbo_frame: "_top" })
+  end
+
+  def showcase_path(**params)
+    h.allowed_to?(:show?, object, with: StorySharePolicy) ? h.story_share_path(object, **params) : h.story_path(object)
   end
 
   private
 
-  def workshop_reference_label(story_workshop)
-    workshop_title = story_workshop.workshop&.title
-    external_title = story_workshop.external_workshop_title.presence
-    return "#{external_title} (from the #{workshop_title})" if external_title && workshop_title
-    external_title || workshop_title
-  end
-
-  def workshop_reference_link(story_workshop)
-    workshop = story_workshop.workshop
-    external_title = story_workshop.external_workshop_title.presence
-    return h.html_escape(external_title) if workshop.nil?
-
-    link = h.link_to(workshop.title, h.workshop_path(workshop), class: "hover:underline")
-    return link unless external_title
-    h.safe_join([ external_title, " (from the ", link, ")" ])
+  def workshop_references
+    story_workshops
   end
 end

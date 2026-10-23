@@ -85,17 +85,8 @@ class PeopleController < ApplicationController
         @workshop_variations = visible_authored_content(WorkshopVariation.credited_to_person(@person)).order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/workshop_variations", locals: { person: @person, workshop_variations: @workshop_variations }
       when "stories"
-        # Author (or legacy creator) plus stories they were spotlighted in. The
-        # spotlight is a separate credit from authorship, so anonymity doesn't apply.
-        authored = visible_authored_content(Story.credited_to_person(@person))
-        spotlighted = @person.stories_as_spotlighted_facilitator
-        unless viewing_own_or_admin?
-          authored = authored.not_funder_only
-          spotlighted = spotlighted.not_funder_only
-        end
-        story_ids = authored.pluck(:id) + spotlighted.pluck(:id)
-        @stories = Story.with_author_credit.where(id: story_ids)
-                        .order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
+        @stories = authorized_scope(Story.with_author_credit, as: :on_profile, scope_options: { person: @person })
+                     .order(created_at: :desc).paginate(page: params[:page], per_page: per_page)
         render partial: "people/sections/stories", locals: { person: @person, stories: @stories }
       when "resources"
         # Author, or the legacy fallback to their user's creations (author_person).

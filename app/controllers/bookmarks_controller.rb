@@ -92,7 +92,6 @@ class BookmarksController < ApplicationController
     @bookmark = Bookmark.find(params[:id]).decorate
     authorize! @bookmark
     @bookmarkable = @bookmark.bookmarkable
-    load_workshop_data if @bookmark.bookmarkable_class_name == "Workshop"
   end
 
   def destroy
@@ -124,12 +123,6 @@ class BookmarksController < ApplicationController
     @bookmarkable_types = Bookmark.bookmarkable_type_options
     @workshops = authorized_scope(Workshop.where("led_count > 0")).order(led_count: :desc)
     @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
-  end
-
-  def load_workshop_data
-    @quotes = @bookmarkable.quotes
-    @workshop_variations = @bookmarkable.workshop_variations.decorate
-    @sectors = @bookmarkable.sectors
   end
 
   def bookmark_params

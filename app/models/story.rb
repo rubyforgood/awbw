@@ -121,6 +121,10 @@ class Story < ApplicationRecord
     where("stories.author_id = :id OR stories.co_author_id = :id", id: person_id) if person_id.present?
   }
 
+  scope :co_credited_openly, -> {
+    where(co_author_credit_preference: nil).or(where.not(co_author_credit_preference: ANONYMOUS))
+  }
+
   scope :credited_to_person, ->(person) {
     if person
       where(author_id: person.id)

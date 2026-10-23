@@ -45,13 +45,13 @@
             <td class="px-4 py-2 text-sm text-gray-800"><%= story.windows_type&.short_name %></td>
 
             <td class="px-4 py-2 text-sm text-gray-800">
-              <span title="<%= story.workshop_title %>"><%= story.workshop_title&.truncate(30) %></span>
+              <span class="line-clamp-2" title="<%= story.workshop_title %>"><%= story.workshop_links %></span>
             </td>
 
-            <td class="px-4 py-2 text-sm text-gray-800"><%= story.author_credit %></td>
+            <td class="px-4 py-2 text-sm text-gray-800"><%= credited_author_link(story, class: "hover:underline", data: { turbo_frame: "_top" }) %></td>
 
             <td class="px-4 py-2 text-sm text-gray-800">
-              <span title="<%= story.organization&.name %>"><%= story.organization&.name&.truncate(30) %></span>
+              <span class="line-clamp-2" title="<%= story.organization_name %>"><%= story.organization_link %></span>
             </td>
 
             <td class="px-4 py-2 text-sm text-gray-500"><%= story.updated_at.strftime("%b %d, %Y") %></td>
