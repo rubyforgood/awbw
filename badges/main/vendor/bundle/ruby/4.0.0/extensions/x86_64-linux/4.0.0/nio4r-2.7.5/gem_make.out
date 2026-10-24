@@ -13,14 +13,14 @@ checking for sys/resource.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-9sq4ke sitelibdir\=./.gem.20261024-2942-9sq4ke clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-9sq4ke sitelibdir\=./.gem.20261024-2942-9sq4ke
-compiling bytebuffer.c
-compiling monitor.c
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva
 compiling nio4r_ext.c
 compiling selector.c
+compiling monitor.c
+compiling bytebuffer.c
 In file included from nio4r_ext.c:6:
 ../libev/ev.c:234:5: warning: ‘EV_NO_THREADS’ is not defined, evaluates to ‘0’ [-Wundef]
   234 | #if EV_NO_THREADS
@@ -251,8 +251,8 @@ cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ 
 linking shared-object nio4r_ext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-9sq4ke sitelibdir\=./.gem.20261024-2942-9sq4ke install
-/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261024-2942-9sq4ke
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva install
+/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261024-2385-5w0fva
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20261024-2942-9sq4ke sitelibdir\=./.gem.20261024-2942-9sq4ke clean
+make DESTDIR\= sitearchdir\=./.gem.20261024-2385-5w0fva sitelibdir\=./.gem.20261024-2385-5w0fva clean

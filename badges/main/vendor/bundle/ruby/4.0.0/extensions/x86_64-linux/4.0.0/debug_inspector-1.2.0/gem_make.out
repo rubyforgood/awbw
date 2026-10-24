@@ -3,16 +3,16 @@ current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/deb
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-qbiku2 sitelibdir\=./.gem.20261024-2942-qbiku2 clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-inpqfj sitelibdir\=./.gem.20261024-2385-inpqfj clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-qbiku2 sitelibdir\=./.gem.20261024-2942-qbiku2
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-inpqfj sitelibdir\=./.gem.20261024-2385-inpqfj
 compiling debug_inspector.c
 linking shared-object debug_inspector.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2942-qbiku2 sitelibdir\=./.gem.20261024-2942-qbiku2 install
-/usr/bin/install -c -m 0755 debug_inspector.so ./.gem.20261024-2942-qbiku2
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2385-inpqfj sitelibdir\=./.gem.20261024-2385-inpqfj install
+/usr/bin/install -c -m 0755 debug_inspector.so ./.gem.20261024-2385-inpqfj
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug_inspector-1.2.0/ext/debug_inspector
-make DESTDIR\= sitearchdir\=./.gem.20261024-2942-qbiku2 sitelibdir\=./.gem.20261024-2942-qbiku2 clean
+make DESTDIR\= sitearchdir\=./.gem.20261024-2385-inpqfj sitelibdir\=./.gem.20261024-2385-inpqfj clean
