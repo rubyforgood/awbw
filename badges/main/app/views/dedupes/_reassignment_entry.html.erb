@@ -1,6 +1,18 @@
 <%# One aligned cell of the reassignment summary. Locals: entry ({ label:, count:,
-  names: [..] } or nil for a side that has none of this association), border, round.
-  A single record shows inline; several expand to a bulleted list of every loaded name. %>
+  names: [..], records: [..] } or nil for a side that has none of this association), border, round,
+  record_outcomes ({ record => what the merge changes through it }, optional).
+  A single record shows inline; several expand to a bulleted list of every loaded name.
+  Logins show their email and sign-in state instead of a name. %>
+<%
+  logins = entry && entry[:records]&.first.is_a?(User)
+  record_outcomes = local_assigns[:record_outcomes] || {}
+  item = ->(index) {
+    record = entry[:records][index]
+    label = logins ? render("users/login_status", user: record, show_email: true) : entry[:names][index]
+    outcome = record_outcomes[record]
+    outcome ? safe_join([ label, render("dedupes/merge_outcome", text: outcome) ], " ") : label
+  }
+%>
 <div class="border-x border-b <%= border %> <%= round %> bg-white px-5 py-3 text-sm">
   <% if entry.nil? %>
     <span class="text-gray-300">—</span>
@@ -8,7 +20,7 @@
     <span class="font-medium text-gray-800"><%= entry[:label] %></span>
     <span class="text-gray-400">(<%= entry[:count] %>)</span>
     <% if entry[:names].any? %>
-      <span class="text-gray-500">· <%= entry[:names].first %></span>
+      <span class="text-gray-500">· <%= item.call(0) %></span>
     <% end %>
   <% else %>
     <% extra = entry[:count] - entry[:names].size %>
@@ -19,8 +31,8 @@
         <i class="fa-solid fa-chevron-right ml-auto text-xs text-gray-400 transition-transform group-open:rotate-90"></i>
       </summary>
       <ul class="mt-1 ml-5 list-disc space-y-0.5 text-gray-500">
-        <% entry[:names].each do |name| %>
-          <li><%= name %></li>
+        <% entry[:names].each_index do |index| %>
+          <li><%= item.call(index) %></li>
         <% end %>
         <% if extra > 0 %>
           <li class="list-none text-gray-400">+<%= extra %> more</li>

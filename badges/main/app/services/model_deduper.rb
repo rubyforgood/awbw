@@ -56,7 +56,7 @@ class ModelDeduper
   # Like #reassignment_counts, but also the record names per association so the
   # preview can show *what* moves, not just how many. Names are capped so a huge
   # association can't bloat the page; anything past the cap is reported as a count.
-  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ] }.
+  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ], records: [ the same records ] }.
   NAME_LIMIT = 50
 
   def reassignment_preview(record)
@@ -65,10 +65,12 @@ class ModelDeduper
       count = scope.count
       next if count.zero?
 
+      records = scope.limit(NAME_LIMIT).to_a
       {
         label: join_label(join),
         count: count,
-        names: scope.limit(NAME_LIMIT).map { |related| record_display(related) }
+        names: records.map { |related| record_display(related) },
+        records: records
       }
     end.sort_by { |entry| entry[:label] }
   end

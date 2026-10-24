@@ -1,0 +1,14 @@
+<%# A login's sign-in state at a glance: lock when it can't sign in, invite sent, last login. %>
+<% user = user.decorate %>
+<span class="inline-flex flex-wrap items-center gap-x-1.5">
+  <% if local_assigns[:show_email] %>
+    <span class="font-medium text-gray-700"><!--email_off--><%= user.email %><!--email_on--></span>
+  <% end %>
+  <% if user.access_statuses.any? %>
+    <i class="fa-solid fa-lock text-red-500" title="Can't log in: <%= user.access_statuses.join(", ") %>"></i>
+  <% end %>
+  <% if user.invited_label %>
+    <i class="fa-solid fa-envelope-circle-check text-gray-400" title="<%= user.invited_label %>"></i>
+  <% end %>
+  <span><%= user.last_login_label %></span>
+</span>
