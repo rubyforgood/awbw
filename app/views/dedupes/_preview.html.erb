@@ -31,6 +31,8 @@
   belongs_to_options ||= {}
   remote_select_options ||= {}
   field_notes ||= {}
+  delete_logins = local_assigns[:field_logins]&.call(record_to_delete) || {}
+  keep_logins = local_assigns[:field_logins]&.call(record_to_keep) || {}
   deprecated_columns ||= []
   preview_images ||= nil
   read_only_columns = Array(local_assigns[:read_only_columns]).filter_map { |name| model_class.columns_hash[name.to_s] }
@@ -168,6 +170,9 @@
         <% elsif is_different && !deprecated %>
           <span class="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800">Will be dropped</span>
         <% end %>
+        <% if delete_logins[col.name] %>
+          <%= render "users/login_chip", user: delete_logins[col.name] %>
+        <% end %>
       </div>
 
       <!-- Right: editable -->
@@ -201,6 +206,9 @@
           <%= keep_f.text_field col.name.to_sym, class: "w-full px-2 py-1 border border-gray-300 rounded text-gray-900 #{"font-semibold" if col.name == "name"} focus:border-blue-500 focus:ring-blue-200" %>
         <% else %>
           <span class="text-gray-500"><%= record_to_keep.public_send(col_assoc.name)&.try(:name) || "(none)" %></span>
+        <% end %>
+        <% if keep_logins[col.name] %>
+          <div class="mt-1"><%= render "users/login_chip", user: keep_logins[col.name] %></div>
         <% end %>
         <% if field_notes[col.name].present? %>
           <p class="mt-1 text-xs text-gray-500"><%= field_notes[col.name] %></p>

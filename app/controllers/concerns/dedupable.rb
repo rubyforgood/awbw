@@ -186,6 +186,8 @@ module Dedupable
   #                       for a target set too large to enumerate (e.g. author_id => "person") (optional)
   #   field_notes:        Hash of { column_name => hint } rendered under the keeper's field, to guide
   #                       an admin on what to enter (e.g. full_name is a legacy free-text author) (optional)
+  #   field_logins:       Lambda(record) returning { column_name => User } for fields holding a login's
+  #                       email, so the preview flags them with the login's status (optional)
   #   deprecated_columns: Array of column names to render muted with a "Deprecated" badge (optional)
   #   editable_columns:   Array of column names the preview shows and lets an admin edit on the keeper;
   #                       only these are accepted on save (optional, defaults to every column)
@@ -250,6 +252,7 @@ module Dedupable
       belongs_to_options: opts.is_a?(Proc) ? opts.call : (opts || {}),
       remote_select_options: config[:remote_select_options] || {},
       field_notes: config[:field_notes] || {},
+      field_logins: config[:field_logins],
       deprecated_columns: Array(config[:deprecated_columns]).map(&:to_s),
       preview_images: config[:preview_images],
       record_extras: config[:record_extras],
