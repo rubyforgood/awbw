@@ -1583,6 +1583,6 @@ class EventDashboard
   def resolved_country(country)
     @resolved_countries ||= {}
     return @resolved_countries[country] if @resolved_countries.key?(country)
-    @resolved_countries[country] = ISO3166::Country.find_country_by_any_name(country)
+    @resolved_countries[country] = CountryName.find(country)
   end
 end

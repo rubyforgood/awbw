@@ -29,6 +29,44 @@ RSpec.describe CountryName do
     end
   end
 
+  describe "plain names" do
+    it "stores and offers the everyday name, not the formal ISO one" do
+      expect(described_class.canonical("Russian Federation")).to eq("Russia")
+      expect(described_class.canonical("RU")).to eq("Russia")
+      expect(described_class.canonical("Syrian Arab Republic")).to eq("Syria")
+      expect(described_class.canonical("Congo, The Democratic Republic of the")).to eq("Democratic Republic of the Congo")
+      expect(described_class.canonical("Virgin Islands, British")).to eq("British Virgin Islands")
+      expect(described_class.options).to include("Russia", "Syria", "Laos", "Vatican City")
+      expect(described_class.options).not_to include("Russian Federation", "Syrian Arab Republic")
+    end
+
+    it "reads every option back as itself" do
+      described_class.options.each { |name| expect(described_class.canonical(name)).to eq(name) }
+    end
+
+    it "finds the gem's country for every option" do
+      described_class.options.each { |name| expect(described_class.find(name)).to be_a(ISO3166::Country) }
+      expect(described_class.find("Republic of the Congo").alpha3).to eq("COG")
+    end
+
+    it "keeps commas out of every option, so a stored answer never splits" do
+      expect(described_class.options.grep(/,/)).to be_empty
+    end
+  end
+
+  describe ".selected / .options_for" do
+    it "preselects the stored country, reading an older spelling as its plain name" do
+      expect(described_class.selected("Russian Federation")).to eq("Russia")
+      expect(described_class.options_for("Russian Federation")).to eq(described_class.options)
+    end
+
+    it "keeps an unrecognized stored value selectable so saving the form doesn't drop it" do
+      expect(described_class.selected("Narnia")).to eq("Narnia")
+      expect(described_class.options_for("Narnia").last).to eq("Narnia")
+      expect(described_class.options_for(nil)).to eq(described_class.options)
+    end
+  end
+
   describe ".resolve" do
     it "uses the typed country when it's recognized" do
       expect(described_class.resolve("USA", state: "TX")).to eq("United States")
