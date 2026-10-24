@@ -92,8 +92,8 @@ RSpec.describe Address, type: :model do
       expect(build(:address, country: " Narnia ", state: "Central Region").tap(&:valid?).country).to eq("Narnia")
     end
 
-    it "stores a country with no letters as nil when the state doesn't name one" do
-      [ "", "   ", "-", "--" ].each do |placeholder|
+    it "stores a placeholder country as nil when the state doesn't name one" do
+      [ "", "   ", "-", "--", "n/a", "none", "Unknown" ].each do |placeholder|
         expect(build(:address, country: placeholder, state: "-").tap(&:valid?).country).to be_nil
       end
     end

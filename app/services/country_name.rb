@@ -2,6 +2,9 @@
 module CountryName
   UNITED_STATES = "United States"
   US_MINOR_OUTLYING_ISLANDS = "United States Minor Outlying Islands"
+  BLANK_HINT = "Blank: set from state"
+  # Typed in place of a country to say there isn't one, keyed as AddressNormalizer.words joins them.
+  PLACEHOLDERS = [ "n a", "none", "unknown", "not applicable" ].to_set.freeze
 
   # Spellings found in AWBW's data (form answers + FileMaker) that the countries gem doesn't read.
   ALIASES = {
@@ -55,11 +58,11 @@ module CountryName
   end
 
   # An address's country: the typed one when recognized, else the one its state implies,
-  # else the typed value as-is. A value with no letters ("-") is no country, and a US
-  # state code typed as the country ("CA" next to state CA) is the US, not Canada.
+  # else the typed value as-is. A placeholder ("-", "n/a", "unknown") is no country, and a
+  # US state code typed as the country ("CA" next to state CA) is the US, not Canada.
   def resolve(country, state:)
     text = country.to_s.strip
-    text = "" unless text.match?(/[[:alpha:]]/)
+    text = "" if placeholder?(text)
     return UNITED_STATES if us_state?(text) && us_state?(state)
 
     canonical(text) || from_state(state) || text.presence
@@ -74,6 +77,10 @@ module CountryName
     return if key.blank?
 
     REGIONS[key] || ISO3166::Country.find_country_by_any_name(state.to_s.strip)&.common_name
+  end
+
+  def placeholder?(text)
+    !text.match?(/[[:alpha:]]/) || PLACEHOLDERS.include?(AddressNormalizer.words(text).join(" "))
   end
 
   # "CA", "Ca.", "California", "VIRGINIA", "CA - California" are US states; "ON", "BC" aren't.
