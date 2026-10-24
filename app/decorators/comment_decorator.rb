@@ -12,6 +12,12 @@ class CommentDecorator < ApplicationDecorator
     h.commentable_label(commentable)
   end
 
+  def source_title
+    return unless commentable.is_a?(Person)
+
+    [ commentable.full_name, commentable.preferred_email.presence&.then { "(#{it})" } ].compact.join(" ")
+  end
+
   # Where the source chip links to — the record's edit page, shared with the
   # communication chips via CommentsHelper so both feeds behave the same.
   def source_path
