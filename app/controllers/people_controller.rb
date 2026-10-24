@@ -30,7 +30,7 @@ class PeopleController < ApplicationController
       filters = authorized_scope(params, as: :index).to_unsafe_h
       contact_info = filters.delete(:contact_info)
       filtered = base_scope.search_by_params(filters)
-      filtered = filtered.search_name_email(contact_info) if contact_info.present?
+      filtered = filtered.search_name_email(contact_info)
       filtered = filtered.order(:first_name, :last_name)
 
       total = filtered.count
@@ -48,7 +48,7 @@ class PeopleController < ApplicationController
     filters = params.to_unsafe_h
     contact_info = filters.delete(:contact_info)
     people = Person.includes(:user).search_by_params(filters)
-    people = people.search_name_email(contact_info) if contact_info.present?
+    people = people.search_name_email(contact_info)
     @email_addresses = people.filter_map { |person| person.preferred_email.presence }.uniq.sort
   end
 
