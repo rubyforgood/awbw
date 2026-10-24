@@ -17,6 +17,8 @@ leaves its record in place; renaming a feature's `name` here creates a new recor
 
 ## Adding a feature
 
+Optional for contributors: maintainers can add it if you skip it.
+
 When you ship a user-facing feature **or** improvement, add a new file:
 `YYYY-MM-DD-short-slug.yml`, named with the ship date and a slug of the name.
 One file per feature keeps parallel PRs from conflicting.
