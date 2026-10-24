@@ -8,16 +8,16 @@ checking for whether -std=c99 is accepted as CFLAGS... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-jcu7yj sitelibdir\=./.gem.20261024-2913-jcu7yj clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-aifhro sitelibdir\=./.gem.20261024-2127-aifhro clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-jcu7yj sitelibdir\=./.gem.20261024-2913-jcu7yj
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-aifhro sitelibdir\=./.gem.20261024-2127-aifhro
 compiling bootsnap.c
 linking shared-object bootsnap/bootsnap.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-jcu7yj sitelibdir\=./.gem.20261024-2913-jcu7yj install
-/usr/bin/install -c -m 0755 bootsnap.so ./.gem.20261024-2913-jcu7yj/bootsnap
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-aifhro sitelibdir\=./.gem.20261024-2127-aifhro install
+/usr/bin/install -c -m 0755 bootsnap.so ./.gem.20261024-2127-aifhro/bootsnap
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/bootsnap-1.22.0/ext/bootsnap
-make DESTDIR\= sitearchdir\=./.gem.20261024-2913-jcu7yj sitelibdir\=./.gem.20261024-2913-jcu7yj clean
+make DESTDIR\= sitearchdir\=./.gem.20261024-2127-aifhro sitelibdir\=./.gem.20261024-2127-aifhro clean

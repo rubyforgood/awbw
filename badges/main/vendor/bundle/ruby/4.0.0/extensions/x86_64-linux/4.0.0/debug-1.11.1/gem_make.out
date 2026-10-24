@@ -3,17 +3,17 @@ current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/deb
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-5kvqpg sitelibdir\=./.gem.20261024-2913-5kvqpg clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-qm5zwa sitelibdir\=./.gem.20261024-2127-qm5zwa clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-5kvqpg sitelibdir\=./.gem.20261024-2913-5kvqpg
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-qm5zwa sitelibdir\=./.gem.20261024-2127-qm5zwa
 compiling debug.c
 compiling iseq_collector.c
 linking shared-object debug/debug.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-5kvqpg sitelibdir\=./.gem.20261024-2913-5kvqpg install
-/usr/bin/install -c -m 0755 debug.so ./.gem.20261024-2913-5kvqpg/debug
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-qm5zwa sitelibdir\=./.gem.20261024-2127-qm5zwa install
+/usr/bin/install -c -m 0755 debug.so ./.gem.20261024-2127-qm5zwa/debug
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
-make DESTDIR\= sitearchdir\=./.gem.20261024-2913-5kvqpg sitelibdir\=./.gem.20261024-2913-5kvqpg clean
+make DESTDIR\= sitearchdir\=./.gem.20261024-2127-qm5zwa sitelibdir\=./.gem.20261024-2127-qm5zwa clean

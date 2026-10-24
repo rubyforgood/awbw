@@ -13,10 +13,10 @@ checking for sys/resource.h... yes
 creating Makefile
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-iy7v02 sitelibdir\=./.gem.20261024-2913-iy7v02 clean
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-jkrh2o sitelibdir\=./.gem.20261024-2127-jkrh2o clean
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-iy7v02 sitelibdir\=./.gem.20261024-2913-iy7v02
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-jkrh2o sitelibdir\=./.gem.20261024-2127-jkrh2o
 compiling bytebuffer.c
 compiling monitor.c
 compiling nio4r_ext.c
@@ -28,10 +28,6 @@ In file included from nio4r_ext.c:6:
 ../libev/ev.c:240:5: warning: "EV_NO_SMP" is not defined, evaluates to 0 [-Wundef]
   240 | #if EV_NO_SMP
       |     ^~~~~~~~~
-bytebuffer.c: In function ‘Init_NIO_ByteBuffer’:
-bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definition]
-   59 | void Init_NIO_ByteBuffer()
-      |      ^~~~~~~~~~~~~~~~~~~
 ../libev/ev.c:573:48: warning: "/*" within comment [-Wcomment]
   573 | /*#define MIN_INTERVAL  0.00000095367431640625 /* 1/2**20, good till 2200 */
       |                                                 
@@ -77,16 +73,12 @@ bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definitio
 ../libev/ev.c:786:19: warning: "__i386__" is not defined, evaluates to 0 [-Wundef]
   786 |     #if __i386 || __i386__
       |                   ^~~~~~~~
-monitor.c: In function ‘Init_NIO_Monitor’:
 ../libev/ev.c:734:20: warning: "__cplusplus" is not defined, evaluates to 0 [-Wundef]
   734 | #define ECB_CPP   (__cplusplus+0)
       |                    ^~~~~~~~~~~
 ../libev/ev.c:924:5: note: in expansion of macro ‘ECB_CPP’
   924 | #if ECB_CPP
       |     ^~~~~~~
-monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
-   50 | void Init_NIO_Monitor()
-      |      ^~~~~~~~~~~~~~~~
 ../libev/ev.c:735:20: warning: "__cplusplus" is not defined, evaluates to 0 [-Wundef]
   735 | #define ECB_CPP11 (__cplusplus >= 201103L)
       |                    ^~~~~~~~~~~
@@ -137,10 +129,6 @@ monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
 ../libev/ev.c:1746:5: warning: "ECB_MEMORY_FENCE_NEEDS_PTHREADS" is not defined, evaluates to 0 [-Wundef]
  1746 | #if ECB_MEMORY_FENCE_NEEDS_PTHREADS
       |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-selector.c: In function ‘NIO_Selector_wakeup’:
-selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
-  525 |     write(selector->wakeup_writer, "\0", 1);
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ../libev/ev.c:1976:5: warning: "EV_AVOID_STDIO" is not defined, evaluates to 0 [-Wundef]
  1976 | #if EV_AVOID_STDIO
       |     ^~~~~~~~~~~~~~
@@ -192,6 +180,10 @@ In file included from ../libev/ev.c:2130:
 ../libev/ev.c:2402:31: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  2402 | #if EV_SELECT_IS_WINSOCKET || EV_USE_IOCP
       |                               ^~~~~~~~~~~
+selector.c: In function ‘NIO_Selector_wakeup’:
+selector.c:525:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  525 |     write(selector->wakeup_writer, "\0", 1);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ../libev/ev.c: At top level:
 ../libev/ev.c:3073:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3073 | #if EV_USE_IOCP
@@ -223,6 +215,14 @@ In file included from ../libev/ev.c:3095:
 ../libev/ev.c:3318:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3318 | #if EV_USE_IOCP
       |     ^~~~~~~~~~~
+monitor.c: In function ‘Init_NIO_Monitor’:
+bytebuffer.c: In function ‘Init_NIO_ByteBuffer’:
+bytebuffer.c:59:6: warning: old-style function definition [-Wold-style-definition]
+   59 | void Init_NIO_ByteBuffer()
+      |      ^~~~~~~~~~~~~~~~~~~
+monitor.c:50:6: warning: old-style function definition [-Wold-style-definition]
+   50 | void Init_NIO_Monitor()
+      |      ^~~~~~~~~~~~~~~~
 ../libev/ev.c: In function ‘ev_loop_destroy’:
 ../libev/ev.c:3409:5: warning: "EV_USE_IOCP" is not defined, evaluates to 0 [-Wundef]
  3409 | #if EV_USE_IOCP
@@ -238,10 +238,6 @@ In file included from ../libev/ev.c:3095:
 ../libev/ev.c:5683:27: warning: "/*" within comment [-Wcomment]
  5683 | /* EV_EMBED    0x00010000 /* embedded event loop needs sweep */
       |                            
-At top level:
-cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
-cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
-cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
 nio4r_ext.c: In function ‘Init_nio4r_ext’:
 nio4r_ext.c:13:6: warning: old-style function definition [-Wold-style-definition]
    13 | void Init_nio4r_ext()
@@ -272,11 +268,15 @@ At top level:
 cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
 cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
 cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
 linking shared-object nio4r_ext.so
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2913-iy7v02 sitelibdir\=./.gem.20261024-2913-iy7v02 install
-/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261024-2913-iy7v02
+make -j4 DESTDIR\= sitearchdir\=./.gem.20261024-2127-jkrh2o sitelibdir\=./.gem.20261024-2127-jkrh2o install
+/usr/bin/install -c -m 0755 nio4r_ext.so ./.gem.20261024-2127-jkrh2o
 
 current directory: /home/runner/work/awbw/awbw/vendor/bundle/ruby/4.0.0/gems/nio4r-2.7.5/ext/nio4r
-make DESTDIR\= sitearchdir\=./.gem.20261024-2913-iy7v02 sitelibdir\=./.gem.20261024-2913-iy7v02 clean
+make DESTDIR\= sitearchdir\=./.gem.20261024-2127-jkrh2o sitelibdir\=./.gem.20261024-2127-jkrh2o clean
