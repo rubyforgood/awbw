@@ -1,15 +1,28 @@
 <%# Renders a resource's primary + gallery images as one carousel of uniform-size slides. %>
 <%# Every image is forced into the same fixed aspect box, so there is no hero/thumbnail size split. %>
+<%# Optional locals: video_url (YouTube embed URL with js_api, shown as the first slide); video_title. %>
 <%
+  video_url = local_assigns[:video_url]
   assets = []
   assets << resource.primary_asset if resource.respond_to?(:primary_asset) && resource.primary_asset&.file&.attached?
   assets += resource.gallery_assets.select { |asset| asset.file.attached? } if resource.respond_to?(:gallery_assets)
 %>
-<% if assets.any? %>
+<% slide_count = assets.size + (video_url ? 1 : 0) %>
+<% if slide_count.positive? %>
   <div data-controller="carousel"
        class="relative swiper my-6 w-full"
        data-carousel-options-value='{ "spaceBetween": 16, "slidesPerView": 1, "breakpoints": {} }'>
     <div class="swiper-wrapper">
+      <% if video_url %>
+        <div class="swiper-slide">
+          <div class="relative aspect-[3/2] overflow-hidden rounded-lg bg-black">
+            <iframe src="<%= video_url %>" title="<%= local_assigns[:video_title] %>"
+                    class="absolute inset-0 h-full w-full"
+                    data-carousel-target="video"
+                    allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        </div>
+      <% end %>
       <% assets.each_with_index do |asset, idx| %>
         <div class="swiper-slide">
           <% portrait = portrait_image?(asset.file) %>
@@ -25,7 +38,7 @@
       <% end %>
     </div>
 
-    <% if assets.size > 1 %>
+    <% if slide_count > 1 %>
       <button class="swiper-button-next-custom absolute top-1/2 -translate-y-1/2 right-2 w-12 h-12 rounded-full bg-white border border-gray-300 text-gray-700 shadow-md hover:shadow-lg flex items-center justify-center transition hover:bg-gray-50 z-40"
               aria-label="Next">
         <i class="fa-solid fa-chevron-right text-xl"></i>

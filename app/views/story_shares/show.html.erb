@@ -57,21 +57,14 @@
 
       <%= render "tag_chips", story: @story %>
 
-      <!-- Story images -->
-      <%= render "assets/display_assets_carousel", resource: @story %>
+      <!-- Story video + images -->
+      <%= render "assets/display_assets_carousel", resource: @story,
+                 video_url: youtube_embed_url(@story.youtube_url, js_api: true), video_title: "#{@story.title} video" %>
 
       <!-- Body -->
       <div class="mb-10 max-w-none prose prose-lg text-gray-700">
         <%= @story.rhino_body %>
       </div>
-
-      <!-- YouTube embed -->
-      <% if (embed_url = youtube_embed_url(@story.youtube_url)) %>
-        <div class="mb-10 aspect-video">
-          <iframe src="<%= embed_url %>" class="h-full w-full rounded-lg"
-                  title="<%= @story.title %> video" allowfullscreen loading="lazy"></iframe>
-        </div>
-      <% end %>
 
       <!-- Share -->
       <div class="mb-8 border-t border-gray-200 pt-6">
