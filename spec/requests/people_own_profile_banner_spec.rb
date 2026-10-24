@@ -24,7 +24,7 @@ RSpec.describe "Own profile banner", type: :request do
 
       get person_path(person)
 
-      expect(response.body).to include("AWBW staff are reviewing your update", "Primary email: new@example.com", "View or edit", "Submitted ", " · we'll confirm within 2–3 business days")
+      expect(response.body).to include("AWBW staff are reviewing your update", "New primary email: new@example.com", "View or edit", "Sent ", "We'll confirm within 2–3 business days.")
       expect(response.body).to include(edit_profile_change_request_path(request))
     end
 
