@@ -44,6 +44,16 @@ custom-rhino-editor table .column-resize-handle {
 custom-rhino-editor table p {
   margin: 0;
 }
+/* trix.css zeroes paragraph margins; match the prose spacing every rendered body uses */
+custom-rhino-editor .trix-content > p {
+  margin-block: 1.25em;
+}
+custom-rhino-editor .trix-content > p:first-child {
+  margin-top: 0;
+}
+custom-rhino-editor .trix-content > p:last-child {
+  margin-bottom: 0;
+}
 custom-rhino-editor a {
   text-decoration: underline;
   color: #2563eb; /* Tailwind blue-600 */
