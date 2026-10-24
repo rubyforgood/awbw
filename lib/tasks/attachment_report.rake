@@ -8,10 +8,10 @@ namespace :attachment_report do
 
   def run_attachment_report(start_id: nil, finish_id: nil)
     models = [
-      Address, AgeRange, AnswerOption, Attachment, Banner, Bookmark,
+      Address, AgeRange, AnswerOption, Banner, Bookmark,
       Category, CategorizableItem, CommunityNews, EventRegistration, Event,
       Person, Faq, FormBuilder, FormFieldAnswerOption, FormField, Form,
-      Image, Location, MediaFile, CategoryType, MonthlyReport, Notification,
+      Location, MediaFile, CategoryType, MonthlyReport, Notification,
       OrganizationObligation, OrganizationStatus, OrganizationUser, Project,
       QuotableItemQuote, Quote, ReportFormFieldAnswer, Report, Resource,
       SectorableItem, Sector, Story, StoryIdea, UserFormFormField, UserForm,
