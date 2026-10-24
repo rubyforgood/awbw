@@ -21,11 +21,11 @@
       <nav class="inline-flex rounded-lg bg-gray-100 p-0.5 text-sm font-medium" aria-label="Status filter">
         <%= link_to topic_subscription_types_path(status: "active"),
               class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "active" ? "bg-white text-gray-800 shadow-sm" : "#{eyebrow_link_class}"}" do %>
-          Active <span class="text-gray-400">(<%= @active_count %>)</span>
+          Active <span class="text-gray-400">(<%= number_with_delimiter(@active_count) %>)</span>
         <% end %>
         <%= link_to topic_subscription_types_path(status: "archived"),
               class: "px-3 py-1 rounded-md transition-colors #{@status_filter == "archived" ? "bg-white text-gray-800 shadow-sm" : "#{eyebrow_link_class}"}" do %>
-          Archived <span class="text-gray-400">(<%= @archived_count %>)</span>
+          Archived <span class="text-gray-400">(<%= number_with_delimiter(@archived_count) %>)</span>
         <% end %>
       </nav>
     </div>

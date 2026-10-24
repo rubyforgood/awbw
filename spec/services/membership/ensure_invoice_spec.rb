@@ -13,7 +13,7 @@ RSpec.describe Membership::EnsureInvoice do
 
     it "charges the standard cost" do
       invoice = described_class.call(membership: subscription)
-      expect(invoice.cost_cents).to eq(Membership::ANNUAL_COST_CENTS)
+      expect(invoice.cost_cents).to eq(Membership.annual_cost_cents)
     end
 
     it "charges the subscription's own cost when it has one" do

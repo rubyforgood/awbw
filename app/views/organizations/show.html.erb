@@ -93,7 +93,7 @@
                        end %>
             <% if phone.present? %>
               <span class="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white px-3 py-1 text-gray-700">
-                <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= link_to phone, "tel:#{phone}", class: "hover:text-primary" %>
+                <i class="fa-solid fa-phone text-xs <%= DomainTheme.text_class_for(:organizations, intensity: 600) %>"></i> <%= link_to phone, tel_href(phone), class: "hover:text-primary" %>
               </span>
             <% end %>
           <% end %>
@@ -131,24 +131,27 @@
     <div class="grid grid-cols-1 gap-8 md:grid-cols-5">
       <!-- Organization affiliations -->
       <div id="affiliations" class="scroll-mt-4 md:col-span-3" data-controller="paginated-fields" data-paginated-fields-per-page-value="9">
-        <h2 class="mb-3 font-display text-2xl text-gray-900">Affiliations</h2>
-        <% active_affiliations = @organization.affiliations
-             .select { |a| !a.inactive? && (a.end_date.nil? || a.end_date >= Date.current) && a.person.present? }
-             .sort_by { |a| [a.person.first_name.to_s.downcase, a.person.last_name.to_s.downcase] } %>
-        <% grouped = active_affiliations.group_by(&:person) %>
+        <h2 class="mb-3 font-display text-2xl text-gray-900">Facilitators</h2>
+        <% grouped = org_decorated.active_affiliations_by_facilitator.select { |person, _| allowed_to?(:show?, person) } %>
         <% if grouped.any? %>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <% grouped.each do |person, person_affiliations| %>
-              <div data-paginated-fields-target="item">
+              <div class="relative" data-paginated-fields-target="item">
                 <% titles = person_affiliations.filter_map { |a| a.title.presence }.uniq %>
                 <% titles = titles.sort_by { |t| [t.downcase.include?("facilitator") ? 0 : 1, t.downcase] } %>
                 <%= person_profile_button(person, subtitle: titles.any? ? titles.join(", ") : nil) %>
+                <% if allowed_to?(:hidden_profile_marker?, person) %>
+                  <span class="absolute top-1 right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-blue-200 bg-blue-100 text-blue-700 shadow-sm"
+                        title="Hidden from facilitators — only admins see this card" data-testid="profile-hidden-lock">
+                    <i class="fa-solid fa-lock text-2xs"></i>
+                  </span>
+                <% end %>
               </div>
             <% end %>
           </div>
           <div data-paginated-fields-target="nav" class="mt-3"></div>
         <% else %>
-          <p class="text-gray-500 italic">No active affiliations.</p>
+          <p class="text-gray-500 italic">No active facilitators.</p>
         <% end %>
       </div>
       <!-- Sectors + Age groups served (two columns on desktop; stack on narrow viewports) -->

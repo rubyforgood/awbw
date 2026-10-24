@@ -814,5 +814,90 @@ RSpec.describe Event, type: :model do
         expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 24, 12, 0))).to be_nil
       end
     end
+
+    describe "CE timesheet window" do
+      it "opens 30 minutes before the start by default and stays open" do
+        expect(event.ce_timesheet_opens_at).to eq(Time.zone.local(2026, 7, 23, 8, 30))
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 23, 8, 29))).to be(false)
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 9, 1, 9, 0))).to be(true)
+      end
+
+      it "opens at the chosen offset from the event's start" do
+        event.ce_timesheet_opens_offset_minutes = -1_440
+        expect(event.ce_timesheet_opens_at).to eq(Time.zone.local(2026, 7, 22, 9, 0))
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 22, 8, 59))).to be(false)
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 22, 9, 0))).to be(true)
+      end
+
+      it "closes at the chosen close time" do
+        event.ce_timesheet_closes_at = Time.zone.local(2026, 7, 31, 17, 0)
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 31, 16, 59))).to be(true)
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 31, 17, 0))).to be(false)
+        expect(event.ce_timesheet_closed?(Time.zone.local(2026, 7, 31, 17, 0))).to be(true)
+      end
+
+      it "is never open when timesheets are turned off" do
+        event.ce_timesheets_enabled = false
+        expect(event.ce_timesheet_open?(Time.zone.local(2026, 7, 23, 10, 0))).to be(false)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 10, 0))).to be(false)
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 7, 0))).to be_nil
+      end
+
+      it "opens daily sign-in at the same offset from every day's start" do
+        event.ce_timesheet_opens_offset_minutes = -60
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 7, 59))).to be(false)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 8, 0))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 8, 0))).to be(true)
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 10, 0)))
+          .to eq(Time.zone.local(2026, 7, 24, 8, 0))
+      end
+
+      it "holds daily sign-in until after the start for a later opening" do
+        event.ce_timesheet_opens_offset_minutes = 60
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 9, 30))).to be(false)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 10, 0))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 9, 30))).to be(false)
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 7, 0)))
+          .to eq(Time.zone.local(2026, 7, 23, 10, 0))
+      end
+
+      it "opens daily sign-in at midnight when the offset reaches past the day" do
+        event.ce_timesheet_opens_offset_minutes = -1_440
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 22, 23, 59))).to be(false)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 0, 0))).to be(true)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 0, 0))).to be(true)
+      end
+
+      it "has no daily sign-in when the timesheet opens a day after the start" do
+        event.ce_timesheet_opens_offset_minutes = 1_440
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 24, 10, 0))).to be(false)
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 20, 0, 0))).to be_nil
+      end
+
+      it "ends daily sign-in when the timesheet closes" do
+        event.ce_timesheet_closes_at = Time.zone.local(2026, 7, 23, 12, 0)
+        expect(event.attendance_sign_in_open?(Time.zone.local(2026, 7, 23, 12, 30))).to be(false)
+        expect(event.next_attendance_sign_in_opens_at(Time.zone.local(2026, 7, 23, 10, 0))).to be_nil
+      end
+
+      it "rejects an opening offset that isn't offered" do
+        event.ce_timesheet_opens_offset_minutes = 17
+        expect(event).not_to be_valid
+        expect(event.errors[:ce_timesheet_opens_offset_minutes]).to be_present
+      end
+
+      it "rejects a close time before the timesheet opens" do
+        event.ce_timesheet_opens_offset_minutes = 0
+        event.ce_timesheet_closes_at_date = "2026-07-22"
+        event.ce_timesheet_closes_at_time = "17:00"
+        expect(event).not_to be_valid
+        expect(event.errors[:ce_timesheet_closes_at]).to include("must be after the timesheet opens")
+      end
+
+      it "builds the close time from the date and time inputs" do
+        event.update!(ce_timesheet_closes_at_date: "2026-07-31", ce_timesheet_closes_at_time: "17:00")
+        expect(event.reload.ce_timesheet_closes_at).to eq(Time.zone.local(2026, 7, 31, 17, 0))
+      end
+    end
   end
 end

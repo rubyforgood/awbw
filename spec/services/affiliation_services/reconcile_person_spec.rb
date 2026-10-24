@@ -47,6 +47,27 @@ RSpec.describe AffiliationServices::ReconcilePerson do
       expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
 
+    it "deletes the minted row as soon as the person cancels, without waiting for the training to end" do
+      reg = training_registration(status: "cancelled", ended: false)
+      affiliation = owned_facilitator(registration: reg, start_date: Date.current)
+
+      reconcile(reg)
+
+      expect(Affiliation.exists?(affiliation.id)).to be(false)
+    end
+
+    it "waits on another upcoming training's row even when this registration is cancelled" do
+      reg = training_registration(status: "cancelled", ended: false)
+      other = training_registration(status: "registered", ended: false)
+      affiliation = owned_facilitator(registration: other, start_date: Date.current)
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event,
+                                 registration: reg, include_unowned: true).plan
+
+      expect(plan.map(&:reason)).to eq([ described_class::TRAINING_PENDING ])
+      expect(affiliation.reload).to be_active
+    end
+
     # They were here for part of it. Deleting the row would erase that; ending it
     # records a facilitator term that was brief rather than one that never began.
     it "ends the minted row rather than deleting it for a partial attendance" do
@@ -84,6 +105,25 @@ RSpec.describe AffiliationServices::ReconcilePerson do
                                  event: reg.event, registration: reg).plan
 
       expect(plan.first.reason).to eq(described_class::TRAINING_PENDING)
+    end
+
+    it "files a row starting on an upcoming training's date as pending, not as already ended" do
+      reg = training_registration(status: "registered", ended: false)
+      owned_facilitator(registration: reg)
+
+      plan = described_class.new(person: person, organization: organization,
+                                 event: reg.event, registration: reg).plan
+
+      expect(plan.map(&:reason)).to eq([ described_class::TRAINING_PENDING ])
+    end
+
+    it "deletes an upcoming training's row once the person cancels" do
+      reg = training_registration(status: "cancelled", ended: false)
+      affiliation = owned_facilitator(registration: reg)
+
+      reconcile(reg)
+
+      expect(Affiliation.exists?(affiliation.id)).to be(false)
     end
 
     it "deletes it on the day a one-day training ends, with no reliance on the inactive flag" do
@@ -457,6 +497,16 @@ RSpec.describe AffiliationServices::ReconcilePerson do
 
       expect { described_class.call(person: person, organization: organization, event: reg.event, registration: reg) }
         .to change { person.affiliations.facilitators.where(organization: organization).count }.by(1)
+    end
+
+    it "proposes no affiliation for a registrant who cancelled before the training" do
+      reg = training_registration(status: "cancelled", ended: false)
+
+      plan = described_class.new(person: person, organization: organization, event: reg.event,
+                                 registration: reg).plan
+
+      expect(plan.map(&:action)).to eq([ :noop ])
+      expect(plan.first.reason).to eq(described_class::CANCELLED)
     end
 
     it "proposes nothing when the caller passes no registration to own the new row" do

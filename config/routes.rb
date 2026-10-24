@@ -65,6 +65,8 @@ Rails.application.routes.draw do
     get "activities/charts",         to: "ahoy_activities#charts", as: "activities_charts"
     get "activities/counts",         to: "analytics#index", as: "activities_counts"
     post "activities/counts/print",  to: "analytics#print", as: "analytics_print"
+    get "settings",                  to: "settings#edit", as: "settings"
+    patch "settings",                to: "settings#update"
     get "data_health",               to: "data_health#index", as: "data_health"
     get "data_health/worklists",     to: "data_health#worklists", as: "data_health_worklists"
     get "data_health/:check/rows",   to: "data_health#rows", as: "data_health_rows"
@@ -142,6 +144,7 @@ Rails.application.routes.draw do
   post "registration/:slug/pay", to: "events/registrations#pay", as: :registration_pay
   resource :event_registration_import, only: %i[new create], path: "event_registrations/import",
                                        controller: "event_registration_imports" do
+    get :template
     post :confirm
   end
   resources :event_registrations do

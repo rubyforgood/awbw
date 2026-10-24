@@ -9,6 +9,11 @@ module EventAttendanceHelper
     AttendanceTimeFormatter.clock_time(time)
   end
 
+  # "Monday, October 20 at 5:00 PM PDT" — when a CE timesheet opens or closes.
+  def ce_timesheet_time(time)
+    time.in_time_zone(Time.zone).strftime("%A, %B %-d at %-I:%M %p %Z")
+  end
+
   # Identifies one reported line's sessions on one training day — the report's editable
   # unit. Doubles as the cell's DOM id, the `edit` param that opens it, and the anchor
   # the page returns to after a save. Keyed by the line (EventAttendanceReport::Row#key)

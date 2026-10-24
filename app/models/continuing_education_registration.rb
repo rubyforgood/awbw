@@ -3,19 +3,6 @@ class ContinuingEducationRegistration < ApplicationRecord
   include Certifiable
   include Communicable
 
-  # AWBW's continuing-education accreditation, referenced by the CE callout copy
-  # and the completion certificate's CE clause. Kept here as the single source of
-  # truth so the certificate and any callout text point at the same body + link.
-  ACCREDITATION_BODY = "the California Association of Marriage and Family Therapists (CAMFT)".freeze
-  ACCREDITATION_URL = "https://www.camft.org/".freeze
-  # AWBW's CAMFT approved-provider number (per awbw.org's CE hours page).
-  ACCREDITATION_PROVIDER_NUMBER = "1000151".freeze
-  # AWBW's issuing address, shown on the CE Confirmation of Attendance certificate.
-  ACCREDITATION_ADDRESS = "1029 1/2 West 24th Street, Los Angeles, CA 90007".freeze
-  # The signatory on the CE Confirmation of Attendance certificate.
-  CE_ADMINISTRATOR_NAME = "Christy Turek Rials".freeze
-  CE_ADMINISTRATOR_TITLE = "CE Administrator".freeze
-
   has_paper_trail
 
   belongs_to :event_registration
@@ -76,6 +63,22 @@ class ContinuingEducationRegistration < ApplicationRecord
       results = results.issued_on_or_before(to)
     end
     results
+  end
+
+  # Enrolls a registration in CE against the registrant's license for the given
+  # number and kind (a placeholder license when none was given); hours and cost come
+  # from the event. Returns the registration's existing CE record when it has one.
+  # A license is matched by number + kind, so it may already carry a state and
+  # expiry from an earlier event — only the values given here are written, since a
+  # blank one means "not supplied", never "clear what's on file".
+  def self.enroll!(event_registration:, number: nil, kind: nil, issuing_state: nil, expires_on: nil)
+    existing = event_registration.continuing_education_registrations.first
+    return existing if existing
+
+    license = ProfessionalLicense.find_or_create_for(person: event_registration.registrant, number: number, kind: kind)
+    attributes = { issuing_state: issuing_state, expires_on: expires_on }.compact
+    license.update!(attributes) if attributes.any?
+    event_registration.continuing_education_registrations.create!(professional_license: license)
   end
 
   def self.parse_iso_date(value)

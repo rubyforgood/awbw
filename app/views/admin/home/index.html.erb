@@ -161,6 +161,11 @@
               <i class="fa-solid fa-heart-pulse"></i> Data health
               <%= turbo_frame_tag :data_health_count, src: admin_home_data_health_count_path, loading: :lazy %>
             <% end %>
+            <% if allowed_to?(:import?, EventRegistration) %>
+              <%= link_to new_event_registration_import_path(return_to: "admin_home"), class: button_classes(:primary_outline) do %>
+                <i class="fa-solid fa-upload"></i> Import registrants
+              <% end %>
+            <% end %>
             <%= link_to author_credit_divergences_path, class: button_classes(:primary_outline) do %>
               <i class="fa-solid fa-pen-nib"></i> Author credit divergences
               <%= turbo_frame_tag :author_credit_count, src: admin_home_author_credit_count_path, loading: :lazy %>

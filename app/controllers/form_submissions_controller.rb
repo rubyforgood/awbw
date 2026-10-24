@@ -91,7 +91,7 @@ class FormSubmissionsController < ApplicationController
     existing = Organization.where("LOWER(name) = ?", name.downcase).first
     organization = existing || Organization.create!(name: name, organization_status: OrganizationStatus.find_by(name: "Active"))
 
-    notice = link_and_report(organization, verb: existing ? "linked" : "created and linked")
+    notice = link_and_report(organization, verb: existing ? "linked" : "created and linked", record_fills: existing.present?)
 
     redirect_to link_organization_form_submission_path(@form_submission, return_to: params[:return_to].presence), notice: notice
   end
@@ -169,15 +169,18 @@ class FormSubmissionsController < ApplicationController
   # The scenario (derived from the form's role) drives the affiliation
   # handling: agreement scenarios confer the standing Facilitator affiliation
   # dated to the submission, and a new job ends the person's other orgs' rows.
-  def link_and_report(organization, verb:)
+  def link_and_report(organization, verb:, record_fills: true)
+    Current.form_submission_id = @form_submission.id
     return close_program_and_report(organization, verb:) if @form_submission.linking_scenario == "close_program"
 
+    registration = @form_submission.on_demand_registration
     result = OrganizationServices::LinkSubmittedOrganization.call(
       person: @form_submission.person,
       organization: organization,
       entry: submission_org_entry,
       scenario: @form_submission.linking_scenario,
-      training_date: @form_submission.created_at.to_date
+      training_date: @form_submission.created_at.to_date,
+      event_registration: registration
     )
 
     # The explicit link keeps this submission reading as linked even when the
@@ -185,6 +188,8 @@ class FormSubmissionsController < ApplicationController
     # the processing panel flag what the scenario end-dated, for correction.
     @form_submission.link_organization!(organization.id)
     @form_submission.record_scenario_ended!(result.ended_affiliations.map(&:id))
+    registration&.link_submitted_organization!(organization, submission: @form_submission,
+                                                             autofill: record_fills ? result.saved : [])
 
     warning = result.warning(organization: organization)
     flash[:warning] = warning if warning

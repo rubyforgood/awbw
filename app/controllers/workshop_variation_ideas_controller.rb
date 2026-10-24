@@ -39,22 +39,16 @@ class WorkshopVariationIdeasController < ApplicationController
     @workshop_variation_idea = WorkshopVariationIdea.new(workshop_variation_idea_params)
     # Credit the submitting account's person as the author, so the idea lists on
     # their profile by authorship like every other content type.
-    @workshop_variation_idea.author ||= @workshop_variation_idea.created_by&.person
+    @workshop_variation_idea.author ||= current_user.person
     authorize! @workshop_variation_idea
 
     if @workshop_variation_idea.save
-      NotificationServices::CreateNotification.call(
-        noticeable: @workshop_variation_idea,
-        person: @workshop_variation_idea.created_by&.person,
-        kind: :idea_submitted,
-        recipient_role: :person,
-        recipient_email: @workshop_variation_idea.created_by.email,
-        notification_type: 0)
+      NotificationServices::NotifyAuthors.call(record: @workshop_variation_idea, kind: :idea_submitted)
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_variation_idea,
         kind: :idea_submitted_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0)
 
       flash[:notice] = "Workshop variation idea was successfully created."

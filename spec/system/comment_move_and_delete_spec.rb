@@ -16,7 +16,7 @@ RSpec.describe "Moving and deleting a comment", type: :system do
       click_button "Edit"
       select "Profile", from: "Logged against"
       click_button "Save"
-      expect(page).to have_link("Profile")
+      expect(page).to have_link(person.full_name)
     end
 
     expect(comment.reload.commentable).to eq(person)

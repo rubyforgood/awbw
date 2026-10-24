@@ -25,22 +25,16 @@ class WorkshopIdeasController < ApplicationController
     @workshop_idea = WorkshopIdea.new(workshop_idea_params)
     # Credit the submitting account's person as the author, so the idea lists on
     # their profile by authorship like every other content type.
-    @workshop_idea.author ||= @workshop_idea.created_by&.person
+    @workshop_idea.author ||= current_user.person
     authorize! @workshop_idea
 
     if @workshop_idea.save
-      NotificationServices::CreateNotification.call(
-        noticeable: @workshop_idea,
-        person: @workshop_idea.created_by&.person,
-        kind: :idea_submitted,
-        recipient_role: :person,
-        recipient_email: @workshop_idea.created_by.email,
-        notification_type: 0)
+      NotificationServices::NotifyAuthors.call(record: @workshop_idea, kind: :idea_submitted)
       NotificationServices::CreateNotification.call(
         noticeable: @workshop_idea,
         kind: :idea_submitted_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0)
 
       flash[:notice] = "Workshop idea was successfully created."

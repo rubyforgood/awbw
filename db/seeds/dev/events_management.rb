@@ -144,11 +144,11 @@ registration_form.form_fields.where(field_identifier: "interested_in_more").dest
 
 # Match the public AWBW form's field set, labels, and order (see the registration
 # screenshots): it labels the primary email "Primary Email", omits the optional
-# Preferred Nickname / Pronouns questions, and lists "What motivated you" before
+# Other first name / Pronouns questions, and lists "What motivated you" before
 # "How did you hear". Idempotent — each clause only matches the default state.
 registration_form.form_fields
   .where(field_identifier: "primary_email", name: "Email").update_all(name: "Primary Email")
-registration_form.form_fields.where(field_identifier: %w[nickname pronouns]).destroy_all
+registration_form.form_fields.where(field_identifier: %w[legal_first_name pronouns]).destroy_all
 
 motivation_field = registration_form.form_fields.find_by(field_identifier: "training_motivation")
 referral_field = registration_form.form_fields.find_by(field_identifier: "referral_source")
@@ -448,7 +448,7 @@ end
 flagship_ce = flagship&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if flagship_ce && flagship_ce.description.blank?
   flagship_ce.update!(hidden: false, title: "Continuing education", description: <<~HTML.strip)
-    <p>AWBW is approved by the <a href="https://www.camft.org/" target="_blank" rel="noopener">California Association of Marriage and Family Therapists (CAMFT)</a>, provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}, to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs in California.</p>
+    <p>AWBW is approved by the <a href="#{Setting.ce_accreditation_url}" target="_blank" rel="noopener">California Association of Marriage and Family Therapists (CAMFT)</a>, provider ##{Setting.ce_provider_number}, to sponsor continuing education for LMFTs, LCSWs, LPCCs, and LEPs in California.</p>
     <p>While these CE hours are automatically accepted for professionals licensed in California, each state has its own licensing board requirements regarding CE provider approval. Participants outside of California are responsible for confirming whether these hours meet the requirements for their specific license and state.</p>
     <h3>Before the training</h3>
     <ul>
@@ -478,7 +478,7 @@ trauma = Event.find_by(title: "Facilitator Training: Trauma-Informed Art Practic
 trauma_ce = trauma&.registration_ticket_callouts&.find_by(builtin_key: "ce_hours")
 if trauma_ce && trauma_ce.description.blank?
   trauma_ce.update!(hidden: false, description: <<~HTML.strip)
-    <p>This training is approved by <a href="https://www.camft.org/" target="_blank" rel="noopener">CAMFT</a> (provider ##{ContinuingEducationRegistration::ACCREDITATION_PROVIDER_NUMBER}) for <strong>18 CE hours</strong> across its three days.</p>
+    <p>This training is approved by <a href="#{Setting.ce_accreditation_url}" target="_blank" rel="noopener">CAMFT</a> (provider ##{Setting.ce_provider_number}) for <strong>18 CE hours</strong> across its three days.</p>
     <ul>
       <li>Provide your license type and number at registration; a $25 CE processing fee applies.</li>
       <li>Daily sign-in/sign-out is required — CE hours are awarded for full attendance only.</li>
@@ -1120,7 +1120,6 @@ form_submissions.each do |data|
     when "position_title" then "Facilitator"
     when "organization_website" then "https://example.org"
     when "secondary_email" then data[:person].email_2
-    when "preferred_nickname" then data[:person].first_name
     when "pronouns" then [ "she/her", "he/him", "they/them" ].sample
     else
       if field.answer_type == "free_form_input_paragraph"

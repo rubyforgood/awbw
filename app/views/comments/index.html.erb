@@ -24,7 +24,8 @@
                clear_path: comments_path,
                frame: "comments_results",
                show_person: true,
-               show_event: true %>
+               show_event: true,
+               show_per_page: true %>
 
     <% result_src = comments_path + "?" + request.query_string %>
     <%= turbo_frame_tag "comments_results", src: result_src, data: { turbo: "temporary" } do %>

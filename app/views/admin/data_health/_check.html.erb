@@ -32,7 +32,7 @@
     <% end %>
   </div>
 
-  <% if check.any? %>
+  <% if check.any? && check.lists_rows? %>
     <%= render "rows", check: check, page: 1 %>
   <% end %>
 </div>

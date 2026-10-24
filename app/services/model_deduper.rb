@@ -56,8 +56,9 @@ class ModelDeduper
   # Like #reassignment_counts, but also the record names per association so the
   # preview can show *what* moves, not just how many. Names are capped so a huge
   # association can't bloat the page; anything past the cap is reported as a count.
-  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ] }.
+  # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ], records: [ the same records ] }.
   NAME_LIMIT = 50
+  SNIPPET_LENGTH = 60
 
   def reassignment_preview(record)
     reassignable_joins.filter_map do |join|
@@ -65,17 +66,22 @@ class ModelDeduper
       count = scope.count
       next if count.zero?
 
+      records = scope.limit(NAME_LIMIT).to_a
       {
         label: join_label(join),
         count: count,
-        names: scope.limit(NAME_LIMIT).map { |related| record_display(related) }
+        names: records.map { |related| record_display(related) },
+        records: records
       }
     end.sort_by { |entry| entry[:label] }
   end
 
-  # A best-effort human name for an associated record: its own name/title, else a
-  # named parent (e.g. an affiliation's person), else its id.
+  # A best-effort human name for an associated record: its decorator's #dedupe_label,
+  # else its own name/title, else a named parent (e.g. an affiliation's person), else its id.
   def record_display(record)
+    labeled = record.decorate.try(:dedupe_label) if record.decorator_class?
+    return labeled if labeled.present?
+
     own = display_string(record)
     return own if own
 
@@ -309,16 +315,19 @@ class ModelDeduper
     scope
   end
 
-  # Columns (other than the FK) of a unique index that includes the FK. A
-  # soft-delete index (one containing `deleted_at`) is skipped: MySQL treats NULLs
-  # as distinct, so `[owner, deleted_at]` does NOT bound live rows to one per owner
-  # (pay_customers), and collapsing on it would destroy a row the DB happily keeps.
+  # Columns (other than the FK) of a unique index that includes the FK. An index
+  # keyed on a NULL-distinct marker is skipped, because MySQL treats NULLs as
+  # distinct so it does NOT bound rows to one per owner, and collapsing on it would
+  # destroy rows the DB happily keeps — a soft-delete index (`[owner, deleted_at]`,
+  # on pay_customers).
+  NULL_DISTINCT_MARKERS = %w[ deleted_at ].freeze
+
   def natural_key_columns(join_klass, fk)
     join_klass.connection.indexes(join_klass.table_name)
       .select(&:unique)
       .map { |index| Array(index.columns) }
       .select { |cols| cols.include?(fk) }
-      .reject { |cols| cols.include?("deleted_at") }
+      .reject { |cols| cols.intersect?(NULL_DISTINCT_MARKERS) }
       .map { |cols| (cols - [ fk ]).map(&:to_sym) }
       .find(&:present?) || []
   end

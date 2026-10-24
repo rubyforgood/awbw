@@ -45,7 +45,7 @@
 #   Mission
 #   WebSite
 #   EMail
-#   EmailPrimary
+#   EmailPrimary              which slot EMail is: 1 primary, 2 secondary
 #   EmailType
 #   EmailNotes
 #   BestTimeToCall
@@ -111,18 +111,19 @@ class FmRolodex < ApplicationRecord
     "FirstName" => "people.first_name",
     "LastName" => "people.last_name",
     "Pronouns" => "people.pronouns",
-    "EmailPrimary" => "people.email",
+    "EmailPrimary" => "people.email or people.email_2 (the slot EMail lands in)",
     "EMail" => "people.email",
     "EmailType" => "people.email_type",
     "BestTimeToCall" => "people.best_time_to_call",
     "DateOfBirth" => "people.date_of_birth",
     "Ethnicity" => "people.racial_ethnic_identity",
-    "Comments" => "people.notes",
     "Title" => "affiliations.title",
     "FacilitatorSinceMonth" => "people.member_since (with FacilitatorSinceYear)",
     "FacilitatorSinceYear" => "people.member_since (with FacilitatorSinceMonth)",
     "PrimaryServiceArea" => "the person's primary sector",
     "OtherServiceArea" => "the person's additional sectors",
+    "Settings" => "the person's additional sectors",
+    "LifeExperiences" => "the person's additional sectors",
     "PrimaryAgeGroup" => "the person's primary age group",
     "DateEntered" => "people.created_at",
     "DateTimeModified" => "people.updated_at",
@@ -203,12 +204,25 @@ class FmRolodex < ApplicationRecord
     fm_join("FirstName", "LastName") || (agency && "#{agency} (agency)") || fm_id
   end
 
+  # Every record of `model` keyed by fm_id and grouped by the RolodexID it names, for a bulk
+  # reader to hand to #preload_contacts so each row reads from memory.
+  def self.contact_index(model)
+    records = model.all.to_a
+    { by_id: records.index_by(&:fm_id), by_rolodex: records.group_by { |record| record.data["RolodexID"].to_s } }
+  end
+
+  def preload_contacts(addresses:, phone_numbers:)
+    @addresses = contact_records(FmAddress, primary_ids: address_ids, index: addresses)
+    @phone_numbers = contact_records(FmPhoneNumber, primary_ids: phone_ids, index: phone_numbers)
+    self
+  end
+
   def phone_numbers
-    @phone_numbers ||= contact_records(FmPhoneNumber, primary_ids: data.values_at("PrimaryPhoneID"))
+    @phone_numbers ||= contact_records(FmPhoneNumber, primary_ids: phone_ids)
   end
 
   def addresses
-    @addresses ||= contact_records(FmAddress, primary_ids: data.values_at("PrimaryAddrsID", "WorksiteAddrsID"))
+    @addresses ||= contact_records(FmAddress, primary_ids: address_ids)
   end
 
   def job_affiliations
@@ -231,11 +245,18 @@ class FmRolodex < ApplicationRecord
 
   private
 
+  def phone_ids = data.values_at("PrimaryPhoneID")
+  def address_ids = data.values_at("PrimaryAddrsID", "WorksiteAddrsID")
+
   # Ones this record points at are listed first, even when their RolodexID names someone else; one the
   # archive lacks stands in as an unsaved placeholder.
-  def contact_records(model, primary_ids:)
+  def contact_records(model, primary_ids:, index: nil)
     primary_ids = primary_ids.compact_blank.uniq
-    records = model.find_by_data("RolodexID", fm_id).or(model.where(fm_id: primary_ids)).order(:fm_id).to_a
+    records = if index
+      (index[:by_rolodex].fetch(fm_id, []) + primary_ids.filter_map { |id| index[:by_id][id] }).uniq.sort_by(&:fm_id)
+    else
+      model.find_by_data("RolodexID", fm_id).or(model.where(fm_id: primary_ids)).order(:fm_id).to_a
+    end
     records += (primary_ids - records.map(&:fm_id)).map { |id| model.new(fm_id: id, data: {}) }
     records.sort_by { |record| primary_ids.index(record.fm_id) || primary_ids.size }
   end

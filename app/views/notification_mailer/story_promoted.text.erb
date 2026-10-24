@@ -1,6 +1,6 @@
 Your story has been shared
 
-Hello <%= @user.first_name_or_email %>,
+Hello <%= @recipient_name %>,
 
 We are happy to share your story is now live on Story Share! You can check it out at the link below.
 
@@ -12,7 +12,7 @@ Thank you for sharing your story with us and helping others see the healing powe
 
 <% if @story.published? || @story.publicly_visible? %>
 View story:
-<%= polymorphic_url(@story) %>
+<%= story_share_url(@story) %>
 <% end %>
 
 --

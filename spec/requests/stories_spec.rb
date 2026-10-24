@@ -13,7 +13,7 @@ RSpec.describe "/stories", type: :request do
       title: "Story #{SecureRandom.hex(4)}",
       rhino_body: "<p>Once upon a time...</p>",
       windows_type_id: windows_type.id,
-      workshop_id: workshop.id,
+      story_workshops_attributes: [ { workshop_id: workshop.id } ],
       organization_id: organization.id,
       created_by_id: admin.id,
       updated_by_id: admin.id
@@ -59,6 +59,24 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).to include(private_story.title)
       end
 
+      it "shows the windows audience as a locked admin-only chip" do
+        published_story.update!(windows_type: create(:windows_type, short_name: "Combined Audience"))
+
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        tags = Capybara.string(response.body).find("tr", text: published_story.title).find("div.flex-wrap")
+        expect(tags.first("*")).to have_text("Combined Audience")
+        expect(tags.find("span.admin-only", text: "Combined Audience")).to have_css("i.fa-lock")
+      end
+
+      it "shows unpublished tags" do
+        published_story.sectorable_items.create!(sector: create(:sector, :unpublished, name: "Hidden Sector"))
+
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        expect(Capybara.string(response.body)).to have_link("Hidden Sector")
+      end
+
       it "shows funder-only stories to admins, flagged with a chip" do
         get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include(funder_only_story.title)
@@ -84,9 +102,60 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(story_in_other_org.title)
       end
 
+      it "links each row's organization and workshop out of the results frame" do
+        orgless = create(:story, :published, organization: nil, title: "Orgless Story")
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(response).to have_http_status(:ok)
+        expect(page).to have_css("a[href='#{organization_path(organization)}'][data-turbo-frame='_top']", text: organization.name)
+        expect(page).to have_css("a[href='#{workshop_path(workshop)}'][data-turbo-frame='_top']", text: workshop.title)
+        expect(page).to have_text(orgless.title)
+      end
+
+      it "shows an external workshop title in both the link and its hover text" do
+        story = create(:story, :published, workshop: nil, title: "Variant Story")
+        story.story_workshops.create!(workshop: workshop, external_workshop_title: "Teen variant")
+
+        get stories_url(title: "Variant Story"), headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(page).to have_css("div[title='Teen variant'] a[href='#{workshop_path(workshop)}']", text: "Teen variant")
+      end
+
       it "shows the empty-state message when no stories match" do
         get stories_url(title: "no-such-story-zzz"), headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).to include("No stories found")
+      end
+
+      it "finds stories by organization name in the keyword search" do
+        other_org = create(:organization, name: "Riverbend Shelter")
+        Story.create!(base_attributes.merge(title: "Shelter mural story", organization_id: other_org.id, published: true))
+
+        get stories_url(query: "riverbend"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Shelter mural story")
+        expect(response.body).not_to include(published_story.title)
+      end
+
+      it "finds stories by sector, age range, and story population tag names in the keyword search" do
+        sector_story = Story.create!(base_attributes.merge(title: "Sector tagged story", published: true))
+        sector_story.sectorable_items.create!(sector: create(:sector, :published, name: "Military/Veterans"))
+        age_story = Story.create!(base_attributes.merge(title: "Age range tagged story", published: true))
+        age_story.categorizable_items.create!(category: create(:category, :published, name: "Teens",
+                                                                category_type: create(:category_type, name: AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE)))
+        population_story = Story.create!(base_attributes.merge(title: "Population tagged story", published: true))
+        population_story.categorizable_items.create!(category: create(:category, :published, name: "Foster youth",
+                                                                       category_type: create(:category_type, name: CategoriesTaggable::STORY_POPULATION_CATEGORY_TYPE)))
+
+        get stories_url(query: "veterans"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Sector tagged story")
+        expect(response.body).not_to include("Age range tagged story")
+
+        get stories_url(query: "teens"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Age range tagged story")
+
+        get stories_url(query: "foster"), headers: { "Turbo-Frame" => "stories_results" }
+        expect(response.body).to include("Population tagged story")
       end
 
       it "filters by title and body query together" do
@@ -199,9 +268,32 @@ RSpec.describe "/stories", type: :request do
           expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
         end
 
-        it "sorts by windows_type asc" do
-          get stories_url, params: { sort: "windows_type", direction: "asc" }, headers: turbo_headers
-          expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
+        describe "by tags" do
+          let(:audience_type) { create(:category_type, name: "StoryPopulation") }
+
+          def tag_primary(story, sector_name:, audience_name:)
+            story.sectorable_items.create!(sector: create(:sector, :published, name: sector_name), is_primary: true)
+            story.categorizable_items.create!(category: create(:category, :published, name: audience_name, category_type: audience_type), is_primary: true)
+          end
+
+          it "sorts by primary sector" do
+            tag_primary(story_a, sector_name: "Veterans", audience_name: "Self")
+            tag_primary(story_z, sector_name: "Arts", audience_name: "Teens")
+
+            get stories_url, params: { sort: "tags", direction: "asc" }, headers: turbo_headers
+            expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+          end
+
+          it "breaks a primary sector tie on primary audience" do
+            shared_sector = create(:sector, :published, name: "Shared")
+            story_a.sectorable_items.create!(sector: shared_sector, is_primary: true)
+            story_z.sectorable_items.create!(sector: shared_sector, is_primary: true)
+            story_a.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: audience_type), is_primary: true)
+            story_z.categorizable_items.create!(category: create(:category, :published, name: "Colleagues", category_type: audience_type), is_primary: true)
+
+            get stories_url, params: { sort: "tags", direction: "asc" }, headers: turbo_headers
+            expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
+          end
         end
 
         it "sorts by workshop asc" do
@@ -211,29 +303,11 @@ RSpec.describe "/stories", type: :request do
 
         it "sorts by workshop using a link's typed-in title when it has no workshop" do
           [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
-          story_a.update!(workshop: nil)
-          story_z.update!(workshop: nil)
           story_a.story_workshops.create!(external_workshop_title: "Zeppelin Session")
           story_z.story_workshops.create!(external_workshop_title: "Aardvark Session")
 
           get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
           expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
-        end
-
-        it "sorts by workshop using the legacy external title when there are no links" do
-          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
-          story_a.update!(workshop: nil, external_workshop_title: "Zeppelin Session")
-          story_z.update!(workshop: nil, external_workshop_title: "Aardvark Session")
-
-          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
-          expect(titles_in_response).to eq([ "Zulu Story", "Alpha Story" ])
-        end
-
-        it "sorts by workshop for stories that only have the legacy workshop column" do
-          [ story_a, story_z ].each { |story| story.story_workshops.destroy_all }
-
-          get stories_url, params: { sort: "workshop", direction: "asc" }, headers: turbo_headers
-          expect(titles_in_response).to eq([ "Alpha Story", "Zulu Story" ])
         end
 
         it "sorts by author asc" do
@@ -274,6 +348,17 @@ RSpec.describe "/stories", type: :request do
       it "can view any story" do
         get story_url(private_story)
         expect(response).to have_http_status(:ok)
+      end
+
+      it "leads the image carousel with the story's video" do
+        private_story.update!(youtube_url: "https://youtu.be/abc123")
+        create(:primary_asset, owner: private_story).file.attach(io: StringIO.new("image"), filename: "art.png", content_type: "image/png")
+
+        get story_url(private_story)
+
+        slides = Capybara.string(response.body).all("#hero-image .swiper-slide")
+        expect(slides.size).to eq(2)
+        expect(slides.first).to have_css("iframe[src='https://www.youtube.com/embed/abc123?enablejsapi=1']")
       end
     end
 
@@ -334,6 +419,7 @@ RSpec.describe "/stories", type: :request do
       context "when promoting a story idea into a story" do
         let(:submitter) { create(:user, email: "submitter@example.com") }
         let(:story_idea) { create(:story_idea, created_by: submitter) }
+        let(:author) { create(:person, email: "author@example.com") }
 
         it "holds both promotion notices while the story is unpublished" do
           expect {
@@ -341,19 +427,29 @@ RSpec.describe "/stories", type: :request do
           }.not_to change(Notification, :count)
         end
 
-        it "notifies the idea's submitter and an admin when the story is created already published" do
+        it "notifies the story's author, not the idea's submitter, and an admin when created already published" do
           expect {
-            post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, published: "1") }
+            post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, author_id: author.id, published: "1") }
           }.to change(Notification, :count).by(2)
 
           person_note = Notification.find_by(kind: "story_promoted")
           expect(person_note.recipient_role).to eq("person")
-          expect(person_note.recipient_email).to eq(submitter.email)
+          expect(person_note.recipient_email).to eq("author@example.com")
+          expect(person_note.person).to eq(author)
           expect(person_note.noticeable).to eq(Story.last)
 
           admin_note = Notification.find_by(kind: "story_promoted_fyi")
           expect(admin_note.recipient_role).to eq("admin")
           expect(admin_note.recipient_email).to eq(EmailConfigHelpers::PROGRAMS_EMAIL)
+        end
+
+        it "sends the author the shared-with-funder email when a funder-only story is published" do
+          post stories_url, params: { story: base_attributes.merge(story_idea_id: story_idea.id, author_id: author.id, published: "1", funder_only: "1") }
+
+          expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email)).to contain_exactly(
+            [ "story_shared_with_funder", "author@example.com" ],
+            [ "story_promoted_fyi", Setting.programs_email ]
+          )
         end
 
         it "pre-checks the funder-only box when promoting a funder-only idea" do
@@ -377,10 +473,32 @@ RSpec.describe "/stories", type: :request do
         expect(Story.order(:created_at).last).to be_funder_only
       end
 
-      it "does not send promotion emails when no story idea is linked" do
+      it "sends nothing for an unpublished story with no story idea" do
         expect {
-          post stories_url, params: { story: base_attributes }
+          post stories_url, params: { story: base_attributes.merge(author_id: create(:person).id) }
         }.not_to change(Notification, :count)
+      end
+
+      it "emails the authors and an admin when a story with no story idea is created published" do
+        author = create(:person, email: "author@example.com")
+        co_author = create(:person, email: "co-author@example.com")
+        post stories_url, params: { story: base_attributes.merge(author_id: author.id, co_author_id: co_author.id, published: "1") }
+
+        expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email, :person_id)).to contain_exactly(
+          [ "story_promoted", "author@example.com", author.id ],
+          [ "story_promoted", "co-author@example.com", co_author.id ],
+          [ "story_promoted_fyi", Setting.programs_email, nil ]
+        )
+      end
+
+      it "sends the authors the shared-with-funder email for a funder-only story" do
+        author = create(:person, email: "author@example.com")
+        post stories_url, params: { story: base_attributes.merge(author_id: author.id, published: "1", funder_only: "1") }
+
+        expect(Notification.where(noticeable: Story.last).pluck(:kind, :recipient_email)).to contain_exactly(
+          [ "story_shared_with_funder", "author@example.com" ],
+          [ "story_promoted_fyi", Setting.programs_email ]
+        )
       end
     end
 
@@ -457,26 +575,6 @@ RSpec.describe "/stories", type: :request do
       end
     end
 
-    describe "legacy workshop on the edit page" do
-      it "surfaces the legacy direct workshop read-only when present" do
-        legacy_workshop = create(:workshop, title: "Legacy Direct Workshop")
-        story = create(:story, :published, workshop: legacy_workshop)
-
-        get edit_story_url(story)
-
-        expect(response.body).to include("Previously linked (read-only)")
-        expect(response.body).to include("Legacy Direct Workshop")
-      end
-
-      it "omits the read-only legacy block when there is no direct workshop data" do
-        story = create(:story, :published, workshop: nil, external_workshop_title: nil)
-
-        get edit_story_url(story)
-
-        expect(response.body).not_to include("Previously linked (read-only)")
-      end
-    end
-
     describe "PATCH /update linked workshops" do
       let(:workshop) { create(:workshop, title: "Anger Volcano") }
 
@@ -536,20 +634,20 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "PATCH /update publishing a promoted story" do
-      let(:submitter) { create(:user, email: "submitter@example.com") }
+      let(:submitter) { create(:user, :with_person, email: "submitter@example.com") }
       let(:story_idea) { create(:story_idea, created_by: submitter) }
-      let(:promoted_story) { Story.create!(base_attributes.merge(story_idea: story_idea, published: false)) }
+      let(:promoted_story) { Story.create!(base_attributes.merge(story_idea: story_idea, author: submitter.person, published: false)) }
 
       def promotion_notices
         Notification.where(noticeable: promoted_story).pluck(:kind, :recipient_email)
       end
 
-      it "notifies the idea's submitter and an admin when the story is published" do
+      it "notifies the story's author and an admin when the story is published" do
         patch story_url(promoted_story), params: { story: { published: "1" } }
 
         expect(promotion_notices).to contain_exactly(
           [ "story_promoted", submitter.email ],
-          [ "story_promoted_fyi", Organization.programs_email ]
+          [ "story_promoted_fyi", Setting.programs_email ]
         )
       end
 
@@ -567,10 +665,22 @@ RSpec.describe "/stories", type: :request do
         expect(promotion_notices.size).to eq(2)
       end
 
-      it "does not email anyone when publishing a story with no story idea" do
-        expect {
-          patch story_url(private_story), params: { story: { published: "1" } }
-        }.not_to change(Notification, :count)
+      it "emails the author and an admin when publishing a story with no story idea" do
+        author = create(:person, email: "author@example.com")
+        private_story.update!(author: author)
+
+        patch story_url(private_story), params: { story: { published: "1" } }
+
+        expect(Notification.where(noticeable: private_story).pluck(:kind, :recipient_email)).to contain_exactly(
+          [ "story_promoted", "author@example.com" ],
+          [ "story_promoted_fyi", Setting.programs_email ]
+        )
+      end
+
+      it "sends only the admin FYI when publishing a story with no story idea or author" do
+        patch story_url(private_story), params: { story: { published: "1" } }
+
+        expect(Notification.where(noticeable: private_story).pluck(:kind)).to contain_exactly("story_promoted_fyi")
       end
     end
 
@@ -766,6 +876,46 @@ RSpec.describe "/stories", type: :request do
         expect(response.body).not_to include(private_story.title)
       end
 
+      it "shows each group's primary as a chip and lists the rest under +N more" do
+        audience_type = create(:category_type, name: "StoryPopulation")
+        published_story.sectorable_items.create!(sector: create(:sector, :published, name: "Arts Sector"))
+        published_story.sectorable_items.create!(sector: create(:sector, :published, name: "Veterans Sector"), is_primary: true)
+        published_story.categorizable_items.create!(category: create(:category, :published, name: "Teens", category_type: audience_type), is_primary: true)
+        published_story.categorizable_items.create!(category: create(:category, :published, name: "Colleagues", category_type: audience_type))
+
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        row = Capybara.string(response.body).find("tr", text: published_story.title)
+        expect(row).to have_link("Veterans Sector", href: taggings_path(sector_names_all: "Veterans Sector"))
+        expect(row).to have_link("Teens", href: taggings_path(category_names_all: "Teens"))
+        expect(row).to have_text("+2 more")
+        more_list = row.find("ul.list-disc")
+        expect(more_list).to have_link("Arts Sector", href: taggings_path(sector_names_all: "Arts Sector"))
+        expect(more_list).to have_link("Colleagues", href: taggings_path(category_names_all: "Colleagues"))
+        expect(more_list).to have_no_text("Veterans Sector")
+      end
+
+      it "hides unpublished tags and the windows audience" do
+        published_story.update!(windows_type: create(:windows_type, short_name: "Combined Audience"))
+        published_story.sectorable_items.create!(sector: create(:sector, :unpublished, name: "Hidden Sector"))
+
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        expect(response.body).not_to include("Hidden Sector")
+        expect(response.body).not_to include("Combined Audience")
+      end
+
+      it "leaves a workshop the user can't view as plain text" do
+        hidden_workshop = create(:workshop, :unpublished, title: "Draft Workshop")
+        published_story.story_workshops.create!(workshop: hidden_workshop)
+
+        get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text("Draft Workshop")
+        expect(page).to have_no_link("Draft Workshop")
+      end
+
       it "never shows funder-only stories" do
         get stories_url, params: {}, headers: { "Turbo-Frame" => "stories_results" }
         expect(response.body).not_to include(funder_only_story.title)
@@ -780,6 +930,42 @@ RSpec.describe "/stories", type: :request do
     end
 
     describe "GET /show" do
+      it "itemizes the author, co-author, and spotlighted facilitator" do
+        author = create(:person, first_name: "Ada", last_name: "Author")
+        co_author = create(:person, first_name: "Cole", last_name: "Coauthor")
+        spotlight = create(:person, first_name: "Sky", last_name: "Spotlight")
+        story = create(:story, :published, author:, co_author:, spotlighted_facilitator: spotlight,
+                                           author_credit_preference: "full_name")
+
+        get story_url(story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_text(story.credited_name_for_person(author))
+        expect(page).to have_text(story.credited_name_for_person(co_author))
+        expect(page).to have_text("Spotlighted facilitator: #{spotlight.name}")
+      end
+
+      it "links only the workshops and organization the user can open, showing a story's own workshop title" do
+        open_workshop = create(:workshop, :published, title: "Open Workshop")
+        draft_workshop = create(:workshop, :unpublished, title: "Draft Workshop")
+        story = create(:story, :published, workshop: nil, organization: create(:organization, name: "Hidden Org"))
+        story.story_workshops.create!(workshop: open_workshop, external_workshop_title: "Teen variant")
+        story.story_workshops.create!(workshop: draft_workshop)
+        story.story_workshops.create!(external_workshop_title: "Homegrown session")
+
+        get story_url(story)
+
+        page = Capybara.string(response.body)
+        expect(page).to have_link("Teen variant", href: workshop_path(open_workshop))
+        expect(page).to have_no_text("Open Workshop")
+        expect(page).to have_text("Draft Workshop")
+        expect(page).to have_no_link("Draft Workshop")
+        expect(page).to have_text("Homegrown session")
+        expect(page).to have_no_link("Homegrown session")
+        expect(page).to have_text("Hidden Org")
+        expect(page).to have_no_link("Hidden Org")
+      end
+
       it "can view published story" do
         get story_url(published_story)
         expect(response).to have_http_status(:ok)
@@ -791,6 +977,13 @@ RSpec.describe "/stories", type: :request do
       end
 
       it "cannot view a funder-only story even though it is published and public" do
+        get story_url(funder_only_story)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "cannot view a funder-only story promoted from their idea when not credited as its author" do
+        funder_only_story.update!(story_idea: create(:story_idea, :funder_only, created_by: regular_user))
+
         get story_url(funder_only_story)
         expect(response).to redirect_to(root_path)
       end

@@ -48,6 +48,32 @@ RSpec.describe PublicFormSubmission do
       expect(existing.reload.status).to eq("attended")
     end
 
+    context "when the submitted organization matches" do
+      let!(:org) { create(:organization, name: "Helping Hands") }
+      let!(:org_name_field) { create(:form_field, form: form, field_identifier: "organization_name") }
+      let!(:org_position_field) { create(:form_field, form: form, field_identifier: "organization_position") }
+
+      def org_params
+        params_for.merge(org_name_field.id.to_s => "Helping Hands", org_position_field.id.to_s => "Counselor")
+      end
+
+      it "links the organization to the on-demand registration, pinned to the submission" do
+        result = described_class.call(form: form, form_params: org_params)
+
+        link = EventRegistration.find_by!(event: training, registrant: result.person).event_registration_organizations.sole
+        expect(link.organization).to eq(org)
+        expect(link.form_submission).to eq(result.form_submission)
+      end
+
+      it "ties the job and facilitator affiliations to the on-demand registration" do
+        result = described_class.call(form: form, form_params: org_params)
+
+        registration = EventRegistration.find_by!(event: training, registrant: result.person)
+        expect(result.person.affiliations.where(organization: org).pluck(:title, :event_registration_id))
+          .to contain_exactly([ "Counselor", registration.id ], [ "Facilitator", registration.id ])
+      end
+    end
+
     it "quietly skips when no current on-demand training exists" do
       training.update!(published: false)
 
@@ -109,6 +135,20 @@ RSpec.describe PublicFormSubmission do
     expect { described_class.call(form: form, form_params: params_for) }.not_to change(Person, :count)
 
     expect(FormSubmission.last.person).to eq(existing)
+  end
+
+  it "attributes the request's changes to the submission" do
+    result = described_class.call(form: form, form_params: params_for)
+
+    expect(Current.form_submission_id).to eq(result.form_submission.id)
+  end
+
+  it "attributes nothing when the submission fails and rolls back" do
+    allow(Quotes::CaptureFromSubmission).to receive(:call).and_raise(ActiveRecord::RecordInvalid.new(Person.new))
+
+    result = described_class.call(form: form, form_params: params_for)
+
+    expect([ result.success?, Current.form_submission_id ]).to eq([ false, nil ])
   end
 
   it "reports an already-submitted error when a simultaneous submission created the person first" do
@@ -183,11 +223,65 @@ RSpec.describe PublicFormSubmission do
       expect(existing.racial_ethnic_identity).to eq("Kept")
     end
 
-    it "treats a nickname as the first name and moves the legal name aside" do
+    it "stores a legacy nickname answer without changing the person's names" do
       person = described_class.call(form: form, form_params: contact_params(nickname_field.id.to_s => "Sammy")).person
 
-      expect(person.first_name).to eq("Sammy")
-      expect(person.legal_first_name).to eq("Sam")
+      expect([ person.first_name, person.legal_first_name ]).to eq([ "Sam", nil ])
+    end
+
+    it "saves a legal first name answer onto the person" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Samantha")).person
+
+      expect(person.first_name).to eq("Sam")
+      expect(person.legal_first_name).to eq("Samantha")
+    end
+
+    it "leaves the legal first name blank when it matches the first name, ignoring case" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "sam")).person
+
+      expect(person.first_name).to eq("Sam")
+      expect(person.legal_first_name).to be_nil
+    end
+
+    it "ignores surrounding and repeated whitespace when comparing the two names" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Mary Ann", last_name: "Rivera", email: "sam@example.com")
+      params = contact_params(first_name_field.id.to_s => "Mary Ann", legal_field.id.to_s => "  mary   ann\n")
+
+      described_class.call(form: form, form_params: params)
+
+      expect(existing.reload.legal_first_name).to be_nil
+    end
+
+    it "uses a legal first name as the first name when the form asks only for that, without repeating it" do
+      first_name_field.destroy!
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+
+      person = described_class.call(form: form.reload, form_params: contact_params(legal_field.id.to_s => "Samantha")).person
+
+      expect(person).to have_attributes(first_name: "Samantha", legal_first_name: nil)
+    end
+
+    it "keeps an existing person's legal first name when the answer matches their first name" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Sam", legal_first_name: "Samuel", last_name: "Rivera", email: "sam@example.com")
+
+      described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Sam"))
+
+      expect(existing.reload.legal_first_name).to eq("Samuel")
+    end
+
+    it "overwrites the legal first name of an existing matched person" do
+      legal_field = create(:form_field, form: form, name: "Legal first name", field_identifier: "legal_first_name")
+      existing = create(:person, first_name: "Sam", legal_first_name: "Old", last_name: "Rivera", email: "sam@example.com")
+
+      described_class.call(form: form, form_params: contact_params(legal_field.id.to_s => "Samantha"))
+
+      expect(existing.reload.legal_first_name).to eq("Samantha")
     end
   end
 
@@ -223,6 +317,15 @@ RSpec.describe PublicFormSubmission do
     end
 
     it "records the form answer behind an org-type 'Other'" do
+      result = described_class.call(form: form, form_params: org_params(org_type_field.id.to_s => "Other: Mobile clinic"))
+
+      response = org.reload.other_responses.sole
+      expect(response.source_form_answer.form_submission).to eq(result.form_submission)
+    end
+
+    it "records the form answer behind an agreement's org-type 'Other'" do
+      form.update!(role: "new_job")
+
       result = described_class.call(form: form, form_params: org_params(org_type_field.id.to_s => "Other: Mobile clinic"))
 
       response = org.reload.other_responses.sole

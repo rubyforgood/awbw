@@ -83,7 +83,8 @@ module AdminCardsHelper
       model_card(:banners, icon: "📣"),
       model_card(:faqs, icon: "❔", title: "FAQs"),
       custom_card("Features & tips", features_path, icon: "⭐", color: :sky, intensity: 100),
-      custom_card("Smart resource settings", admin_resource_roles_path, icon: "📌", color: :sky, intensity: 100)
+      custom_card("Smart resource settings", admin_resource_roles_path, icon: "📌", color: :sky, intensity: 100),
+      custom_card("App settings", admin_settings_path, icon: "⚙️", color: :sky, intensity: 100)
     ]
   end
 

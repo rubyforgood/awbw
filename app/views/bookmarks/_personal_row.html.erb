@@ -57,8 +57,10 @@
    <div class="text-sm text-gray-600">
      <% author = bookmarkable.created_by if bookmarkable.respond_to?(:created_by) %>
      Created by:
-     <% if author&.person %>
+     <% if author&.person && allowed_to?(:show?, author.person) %>
        <%= person_profile_button(author.person, compact: true, width_class: "inline-flex w-fit", data: { turbo: false }) %>
+     <% elsif author&.person %>
+       <span class="font-medium text-gray-700"><%= person_name(author.person) %></span>
      <% elsif author %>
        <%= user_button(author, data: { turbo: false }) %>
      <% elsif bookmark.bookmarkable_type == "Workshop" %>

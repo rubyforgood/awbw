@@ -3,10 +3,6 @@ class ReportDecorator < ApplicationDecorator
     name.titleize
   end
 
-  def breadcrumbs
-    "#{h.link_to 'Submit Report', h.new_report_path} >> #{formatted_title}".html_safe
-  end
-
   def formatted_title
     type.titleize
   end

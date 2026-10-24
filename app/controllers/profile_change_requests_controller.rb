@@ -60,7 +60,7 @@ class ProfileChangeRequestsController < ApplicationController
   def approve
     authorize! @request
     result = Analytics::LifecycleBuffer.tagging(Analytics::LifecycleBuffer::PROFILE_CHANGE_REQUEST_KEY.to_sym => @request.id) do
-      ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user)
+      ProfileChangeRequests::Apply.call(request: @request, reviewer: current_user, confer_facilitator: params[:confer_facilitator] == "1")
     end
 
     unless result.applied
@@ -155,7 +155,7 @@ class ProfileChangeRequestsController < ApplicationController
     params.require(:profile_change_request).permit(
       :field, :requested_value, :details, :affiliation_id, :organization_id, :professional_license_id, :proposed_email_type,
       :proposed_title, :proposed_start_date, :proposed_end_date, :proposed_organization_name, :proposed_organization_address_id,
-      :proposed_street_address, :proposed_city, :proposed_state, :proposed_zip_code
+      :proposed_street_address, :proposed_city, :proposed_state, :proposed_zip_code, :leaving_job, left_organization_ids: []
     )
   end
 
@@ -173,7 +173,7 @@ class ProfileChangeRequestsController < ApplicationController
     NotificationServices::CreateNotification.call(
       noticeable: request,
       recipient_role: :admin,
-      recipient_email: Organization.programs_email,
+      recipient_email: Setting.programs_email,
       kind: "profile_change_requested_fyi",
       notification_type: "profile_change_requested_notification",
       sender: current_user

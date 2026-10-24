@@ -1,0 +1,14 @@
+name: "One home for the organization's contact details"
+area: reporting
+display_status: admin_facing
+released_on: 2026-10-21
+action_path: /admin/settings
+pr_number: 2570
+summary: >-
+  The portal's phone number and public website link now come from the organization
+  App settings points at, so the contact page, footers, navbar and portal email all
+  show the same thing. Both were typed into the code in several places, in formats
+  that had already drifted apart.
+pro_tips:
+  - "The phone comes from the return address chosen in App settings — edit it on that address."
+  - "The website comes from the organization's own Website field."

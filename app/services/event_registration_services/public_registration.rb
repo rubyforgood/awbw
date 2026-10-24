@@ -93,7 +93,7 @@ module EventRegistrationServices
         if existing
           before_resubmission = ResubmissionChanges.snapshot(existing)
           existing.update!(scholarship_requested: true) if @scholarship_requested
-          create_ce_registration(existing, person)
+          create_ce_registration(existing)
           existing.update!(w9_requested: true) if w9_requested?
           existing.update!(invoice_requested: true) if invoice_requested?
           payment_method = field_value("payment_method")&.strip
@@ -114,10 +114,11 @@ module EventRegistrationServices
             changes = ResubmissionChanges.between(before_resubmission, ResubmissionChanges.snapshot(existing), submission:)
             send_duplicate_notifications(existing, changes)
           end
+          Current.form_submission_id = submission.id
           return Result.new(success?: true, event_registration: existing, form_submission: submission, errors: [])
         end
 
-        create_ce_registration(event_registration, person)
+        create_ce_registration(event_registration)
         organization_link = connect_organization(event_registration, organization)
         submission = create_form_submission(person)
         organization_link&.record_form_submission(submission)
@@ -127,6 +128,7 @@ module EventRegistrationServices
 
         send_notifications(event_registration)
 
+        Current.form_submission_id = submission.id
         Result.new(success?: true, event_registration: event_registration, form_submission: submission, errors: [])
       end
     rescue FormSubmission::UnreadableUpload => e
@@ -163,22 +165,10 @@ module EventRegistrationServices
       @form_params[field.id.to_s]
     end
 
-    def resolve_names
-      submitted_first = field_value("first_name")&.strip
-      nickname = field_value("nickname")&.strip
-
-      if nickname.present?
-        { first_name: nickname, legal_first_name: submitted_first }
-      else
-        { first_name: submitted_first, legal_first_name: nil }
-      end
-    end
-
     def find_or_create_person
       return @person if @person
 
-      names = resolve_names
-      first_name = names[:first_name]
+      first_name = field_value("first_name")&.strip.presence || field_value("legal_first_name")&.strip
       last_name = field_value("last_name")&.strip
       email = field_value("primary_email")&.strip&.downcase
       email_type = field_value("primary_email_type")&.downcase
@@ -190,17 +180,16 @@ module EventRegistrationServices
       # CaptureFromSubmission, which runs for both new and existing people.
       Person.create!(
         first_name: first_name,
-        legal_first_name: names[:legal_first_name],
         last_name: last_name,
         email: email,
         email_type: email_type
       )
     end
 
-    # Accepts either the typed first name or the nickname so a returning registrant
-    # who swaps their legal name and nickname still matches.
+    # Accepts the first_name or legal_first_name answer so a returning registrant who
+    # swaps them still matches.
     def find_matching_person(last_name:, email:)
-      PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("nickname") ])
+      PersonMatcher.call(email:, last_name:, first_names: [ field_value("first_name"), field_value("legal_first_name") ])
     end
 
     def record_news_subscription(person)
@@ -265,15 +254,13 @@ module EventRegistrationServices
     # found-or-created from the license-number answer (a placeholder license when
     # none was given). Hours come from the event via the model. No-op when they
     # didn't opt in or a CE registration already exists for this registration.
-    def create_ce_registration(event_registration, person)
+    def create_ce_registration(event_registration)
       return unless ce_credit_requested?
-      return if event_registration.continuing_education_registrations.exists?
 
-      license = ProfessionalLicense.find_or_create_for(person: person, number: ce_license_number, kind: ce_license_kind)
-      if ce_license_issuing_state || ce_license_expires_on
-        license.update!(issuing_state: ce_license_issuing_state, expires_on: ce_license_expires_on)
-      end
-      event_registration.continuing_education_registrations.create!(professional_license: license)
+      ContinuingEducationRegistration.enroll!(
+        event_registration: event_registration, number: ce_license_number, kind: ce_license_kind,
+        issuing_state: ce_license_issuing_state, expires_on: ce_license_expires_on
+      )
     end
 
     def ce_credit_requested?
@@ -412,7 +399,7 @@ module EventRegistrationServices
         noticeable: event_registration,
         kind: :event_registration_confirmation_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         notification_type: 0
       )
     end
@@ -432,7 +419,7 @@ module EventRegistrationServices
         noticeable: event_registration,
         kind: :event_registration_duplicate_fyi,
         recipient_role: :admin,
-        recipient_email: Organization.programs_email,
+        recipient_email: Setting.programs_email,
         custom_message: changes.to_message,
         notification_type: 1
       )

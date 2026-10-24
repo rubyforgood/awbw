@@ -1,7 +1,7 @@
 class NotificationMailer < ApplicationMailer
   helper EventHelper
 
-  default to: -> { Organization.programs_email }
+  default to: -> { Setting.programs_email }
 
   SUBJECT_PREFIX = "AWBW Portal:".freeze
   FYI_PREFIX = "#{SUBJECT_PREFIX} [FYI]".freeze
@@ -74,12 +74,7 @@ class NotificationMailer < ApplicationMailer
     @notification = notification
     @noticeable = notification.noticeable.decorate
     @noticeable_klass = @noticeable.object.class
-
-    if @noticeable_klass == User
-      @user = @noticeable.object
-    else
-      @user = @noticeable.try(:user) || @noticeable.try(:created_by)
-    end
+    @recipient_name = notification.person&.first_name.presence || notification.recipient_email
 
     mail(
       to: notification.recipient_email,
@@ -110,22 +105,31 @@ class NotificationMailer < ApplicationMailer
 
   def story_promoted(notification)
     @story = notification.noticeable.decorate
-    @story_idea = @story.story_idea
-    @user = @story_idea&.created_by || @story.created_by
+    @recipient_name = notification.person&.first_name.presence || notification.recipient_email
 
     mail(
       to: notification.recipient_email,
-      subject: "#{SUBJECT_PREFIX} Your story idea is now a story"
+      subject: "#{SUBJECT_PREFIX} Your story is live on Story Share"
+    )
+  end
+
+  def story_shared_with_funder(notification)
+    @story = notification.noticeable.decorate
+    @recipient_name = notification.person&.first_name.presence || notification.recipient_email
+
+    mail(
+      to: notification.recipient_email,
+      subject: "#{SUBJECT_PREFIX} Your story has been shared with the funder"
     )
   end
 
   def story_promoted_fyi(notification)
     @story = notification.noticeable.decorate
     @story_idea = @story.story_idea
-    @user = @story_idea&.created_by || @story.created_by
+    @user = @story_idea&.created_by
 
     mail(
-      subject: "#{FYI_PREFIX} Story idea promoted to a story: #{@story.title}"
+      subject: "#{FYI_PREFIX} Story published: #{@story.title}"
     )
   end
 

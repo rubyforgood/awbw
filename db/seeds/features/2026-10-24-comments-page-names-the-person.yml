@@ -1,0 +1,11 @@
+name: "Comment and communication chips say whose record it is"
+area: communications
+display_status: admin_facing
+released_on: 2026-10-24
+action_path: "/comments_and_communications"
+summary: >-
+  On the Comments page and the Comments & communications feed, the chip on an entry about someone's
+  profile, registration, scholarship, or CE registration leads with that person's name. Hover it for
+  their full name and email.
+pro_tips:
+  - "The \"Log it against\" picker still says \"Profile\", since you've already picked the person there."

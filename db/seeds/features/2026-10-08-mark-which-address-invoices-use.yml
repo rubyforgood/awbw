@@ -1,0 +1,13 @@
+name: "Mark which address invoices use"
+area: payments
+display_status: admin_facing
+released_on: 2026-10-08
+action_path: /organizations
+pr_number: 2570
+summary: >-
+  An organization's address can now be marked as its invoice address, so invoices
+  and receipts bill to the right one instead of whichever address happened to be
+  first. The address picker on an invoice lists the marked one first and labels it.
+pro_tips:
+  - "Nothing changes until you mark one — unmarked organizations keep their current behaviour."
+  - "Mark as many as you need. Invoices print the oldest marked address, so marking another never moves an existing bill-to."

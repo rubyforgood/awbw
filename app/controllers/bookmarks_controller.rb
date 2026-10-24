@@ -1,6 +1,4 @@
 class BookmarksController < ApplicationController
-  before_action :set_breadcrumb
-
   VALID_SORTS = %w[created_at title popularity].freeze
 
   def index
@@ -15,7 +13,7 @@ class BookmarksController < ApplicationController
       @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
       Bookmark.preload_bookmarkable_associations(@bookmarks)
       @bookmarks = @bookmarks.decorate
-      @count_display = filtered.length == base_scope.length ? base_scope.length : "#{filtered.length}/#{base_scope.length}"
+      @count_display = count_display(filtered.length, base_scope.length)
       set_index_variables
       render :bookmarks_results
     else
@@ -41,7 +39,7 @@ class BookmarksController < ApplicationController
       @bookmarks_count = filtered.length
       @bookmarks = filtered.paginate(page: params[:page], per_page: per_page)
       Bookmark.preload_bookmarkable_associations(@bookmarks)
-      @count_display = filtered.length == user_base.length ? user_base.length : "#{filtered.length}/#{user_base.length}"
+      @count_display = count_display(filtered.length, user_base.length)
       set_index_variables
       render :personal_lazy
     else
@@ -92,7 +90,6 @@ class BookmarksController < ApplicationController
     @bookmark = Bookmark.find(params[:id]).decorate
     authorize! @bookmark
     @bookmarkable = @bookmark.bookmarkable
-    load_workshop_data if @bookmark.bookmarkable_class_name == "Workshop"
   end
 
   def destroy
@@ -126,19 +123,9 @@ class BookmarksController < ApplicationController
     @users = User.has_access.includes(:person).references(:person).order(Arel.sql("LOWER(people.first_name), LOWER(people.last_name), LOWER(users.email), LOWER(people.email_2), LOWER(people.email)"))
   end
 
-  def load_workshop_data
-    @quotes = @bookmarkable.quotes
-    @workshop_variations = @bookmarkable.workshop_variations.decorate
-    @sectors = @bookmarkable.sectors
-  end
-
   def bookmark_params
     params.require(:bookmark).permit(
       :bookmarkable_id, :bookmarkable_type
     )
-  end
-
-  def set_breadcrumb
-    @breadcrumb = params[:breadcrumb]
   end
 end

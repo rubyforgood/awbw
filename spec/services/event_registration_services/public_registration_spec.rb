@@ -24,6 +24,24 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     }
   end
 
+  describe "change attribution" do
+    let(:params) { base_form_params(first_name: "Sam", last_name: "Rowe", email: "sam@example.com") }
+
+    it "attributes the request's changes to the registration submission" do
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(Current.form_submission_id).to eq(result.form_submission.id)
+    end
+
+    it "attributes nothing when the registration fails and rolls back" do
+      allow(Quotes::CaptureFromSubmission).to receive(:call).and_raise(ActiveRecord::RecordInvalid.new(Person.new))
+
+      result = described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect([ result.success?, Current.form_submission_id ]).to eq([ false, nil ])
+    end
+  end
+
   describe "registration status" do
     it "flips an on-demand facilitator-training registration straight to attended" do
       on_demand = create(:event, :published, :publicly_visible, facilitator_training: true, on_demand: true)
@@ -594,12 +612,44 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
     end
   end
 
-  describe "matching an existing registrant by name" do
-    it "matches a person stored under a nickname when the registrant types their legal first name" do
-      existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
-                                 last_name: "Smith", email: "bob@example.com")
+  describe "legal first name" do
+    let(:legal_field) { form.form_fields.find_by!(field_identifier: "legal_first_name") }
 
-      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com")
+    it "saves the answer onto a new registrant" do
+      params = base_form_params(first_name: "Bob", last_name: "Smith", email: "bob@example.com")
+        .merge(legal_field.id.to_s => "Robert")
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      registrant = EventRegistration.last.registrant
+      expect([ registrant.first_name, registrant.legal_first_name ]).to eq(%w[Bob Robert])
+    end
+
+    it "overwrites the legal first name of a returning registrant" do
+      existing = create(:person, first_name: "Bob", legal_first_name: "Old",
+                                 last_name: "Smith", email: "bob@example.com")
+      params = base_form_params(first_name: "Bob", last_name: "Smith", email: "bob@example.com")
+        .merge(legal_field.id.to_s => "Robert")
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      expect(existing.reload.legal_first_name).to eq("Robert")
+    end
+
+    it "uses the legal first name as the first name when no first name is answered, without repeating it" do
+      params = base_form_params(first_name: "", last_name: "Smith", email: "bob@example.com")
+        .merge(legal_field.id.to_s => "Robert")
+
+      described_class.call(event: event, registration_form: form, form_params: params)
+
+      registrant = EventRegistration.last.registrant
+      expect([ registrant.first_name, registrant.legal_first_name ]).to eq([ "Robert", nil ])
+    end
+
+    it "matches a returning registrant by their legal first name" do
+      existing = create(:person, first_name: "Robert", last_name: "Smith", email: "bob@example.com")
+      params = base_form_params(first_name: "Bob", last_name: "Smith", email: "bob@example.com")
+        .merge(legal_field.id.to_s => "Robert")
 
       expect {
         described_class.call(event: event, registration_form: form, form_params: params)
@@ -607,14 +657,14 @@ RSpec.describe EventRegistrationServices::PublicRegistration do
 
       expect(EventRegistration.last.registrant).to eq(existing)
     end
+  end
 
-    it "matches a person stored under a legal name when the registrant types their nickname" do
-      existing = create(:person, first_name: "Robert", legal_first_name: nil,
+  describe "matching an existing registrant by name" do
+    it "matches a person stored under their first name when the registrant types their legal first name" do
+      existing = create(:person, first_name: "Bob", legal_first_name: "Robert",
                                  last_name: "Smith", email: "bob@example.com")
 
-      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com").merge(
-        field_id("nickname") => "Bob"
-      )
+      params = base_form_params(first_name: "Robert", last_name: "Smith", email: "bob@example.com")
 
       expect {
         described_class.call(event: event, registration_form: form, form_params: params)

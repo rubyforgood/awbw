@@ -12,6 +12,18 @@ module Mentionable
     end
   end
 
+  # Records of klass linked to this one by a rich-text mention in either direction.
+  def connected_records(klass)
+    mentions = ActionTextMention.joins(:action_text_rich_text)
+    mentioning = mentions.where(mentionable: self, action_text_rich_texts: { record_type: klass.polymorphic_name })
+    mentioned = mentions.where(
+      mentionable_type: klass.polymorphic_name,
+      action_text_rich_texts: { record_type: self.class.polymorphic_name, record_id: id }
+    )
+    klass.where(id: mentioning.select("action_text_rich_texts.record_id"))
+      .or(klass.where(id: mentioned.select(:mentionable_id)))
+  end
+
   def mentionee_records_grouped
     rich_text_fields = self.class.mentionable_rich_text_fields
 

@@ -36,7 +36,7 @@ RSpec.describe Person, type: :model do
 
     it "is false on an unpaid term past the grace window" do
       term(cost_cents: 2_500,
-        start_date: Date.current - Membership::GRACE_PERIOD_DAYS - 1,
+        start_date: Date.current - Membership.grace_period_days - 1,
         subscription: subscription)
 
       expect(person).not_to be_membership_current
@@ -76,7 +76,7 @@ RSpec.describe Person, type: :model do
     it { should have_many(:sectorable_items) }
   end
 
-  describe "normalize_names_and_emails" do
+  describe "name and email normalization" do
     let(:admin) { create(:user, :admin) }
 
     it "strips leading and trailing whitespace from names and emails" do
@@ -89,6 +89,24 @@ RSpec.describe Person, type: :model do
       expect(person.email_2).to eq("jane2@test.org")
     end
 
+    it "removes every whitespace character from emails, including non-breaking and zero-width ones" do
+      person = create(:person, user: nil, email: "\u00A0jane @test.org\t\n", email_2: "\u200Bjane2@test.org\u3000",
+                       created_by: admin, updated_by: admin)
+
+      expect(person.email).to eq("jane@test.org")
+      expect(person.email_2).to eq("jane2@test.org")
+    end
+
+    it "stores a blank or whitespace-only email as nil" do
+      person = create(:person, user: nil, email: "jane@test.org", created_by: admin, updated_by: admin)
+      person.update_columns(email: "\u00A0 \t", email_2: "  ")
+
+      person.update!(email: "", email_2: " \u200B")
+
+      expect(person.reload.email).to be_nil
+      expect(person.email_2).to be_nil
+    end
+
     it "stores look-alike dashes in names as a plain hyphen" do
       person = create(:person, first_name: "Mary\u2011Kate", last_name: "Rivera\u2013Cole",
                        legal_first_name: "Mary\u2010Katherine", created_by: admin, updated_by: admin)
@@ -98,12 +116,31 @@ RSpec.describe Person, type: :model do
       expect(person.legal_first_name).to eq("Mary-Katherine")
     end
 
+    it "drops a legal first name that matches the first name, ignoring case and whitespace" do
+      person = create(:person, first_name: "Mary Ann", legal_first_name: "  mary   ANN ", last_name: "Rivera")
+
+      expect(person.legal_first_name).to be_nil
+    end
+
+    it "keeps a legal first name that differs from the first name" do
+      person = create(:person, first_name: "Sam", legal_first_name: "Samantha", last_name: "Rivera")
+
+      expect(person.legal_first_name).to eq("Samantha")
+    end
+
     it "handles nil values" do
       person = create(:person, user: nil, first_name: "Jane", last_name: "Doe",
                        email: nil, email_2: nil,
                        created_by: admin, updated_by: admin)
       expect(person.email).to be_nil
       expect(person.email_2).to be_nil
+    end
+  end
+
+  describe "#known_email_type? / #known_email_2_type?" do
+    it "counts a work or personal type as known, and unknown or blank as not" do
+      expect(build(:person, email_type: "work", email_2_type: "personal")).to have_attributes(known_email_type?: true, known_email_2_type?: true)
+      expect(build(:person, email_type: "unknown", email_2_type: nil)).to have_attributes(known_email_type?: false, known_email_2_type?: false)
     end
   end
 
@@ -139,13 +176,13 @@ RSpec.describe Person, type: :model do
       it "accepts the placeholder it named" do
         create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
 
-        expect(build(:person, first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)).to be_valid
+        expect(build(:person, first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)).to be_valid
       end
 
       it "names the next placeholder up once the first is taken" do
         create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: nil)
-        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)
-        third = Person.new(first_name: "Jane", last_name: "Doe", email: Person::PLACEHOLDER_EMAIL)
+        create(:person, user: nil, first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)
+        third = Person.new(first_name: "Jane", last_name: "Doe", email: PlaceholderEmail.first)
 
         expect(third).not_to be_valid
         expect(third.errors[:base].sole).to include("or 2@example.com if they truly have none.")
@@ -157,6 +194,10 @@ RSpec.describe Person, type: :model do
         expect(build(:person, user: nil, first_name: "Jane", last_name: "Roe", email: nil)).to be_valid
       end
     end
+
+    it { should allow_value("unknown").for(:email_type) }
+    it { should allow_value("unknown").for(:email_2_type) }
+    it { should_not allow_value("mailing").for(:email_type) }
 
     describe "unique_name_and_email_combination" do
       let(:admin) { create(:user, :admin) }
@@ -356,6 +397,29 @@ RSpec.describe Person, type: :model do
     end
   end
 
+  describe ".displayed_name_like" do
+    let!(:full) { create(:person, first_name: "Wilhelmina", last_name: "Thornquist", display_name_preference: "full_name") }
+    let!(:initialled) { create(:person, first_name: "Octavia", last_name: "Brambleton", display_name_preference: "first_name_last_initial") }
+
+    it "matches first, last, and full names when the full name shows" do
+      expect(described_class.displayed_name_like("wilhelmina")).to include(full)
+      expect(described_class.displayed_name_like("Thornquist")).to include(full)
+      expect(described_class.displayed_name_like("Wilhelmina Thornquist")).to include(full)
+    end
+
+    it "matches the name as an initialled credit shows it" do
+      expect(described_class.displayed_name_like("Octavia B.")).to include(initialled)
+    end
+
+    it "does not match a last name the preference hides" do
+      expect(described_class.displayed_name_like("Brambleton")).not_to include(initialled)
+    end
+
+    it "matches nothing for a blank query" do
+      expect(described_class.displayed_name_like(" ")).to be_empty
+    end
+  end
+
   describe "display_name_preference validation" do
     it "accepts each allowed value" do
       Person::DISPLAY_NAME_PREFERENCES.each do |value|
@@ -528,22 +592,22 @@ RSpec.describe Person, type: :model do
     end
 
     it "falls through the no-email placeholder to the secondary email" do
-      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: "second@example.com")
+      person = create(:person, user: nil, email: PlaceholderEmail.first, email_2: "second@example.com")
 
       expect(person.preferred_email).to eq("second@example.com")
     end
 
     it "is nil when the placeholder is the only address" do
-      person = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL, email_2: nil)
+      person = create(:person, user: nil, email: PlaceholderEmail.first, email_2: nil)
 
       expect(person.preferred_email).to be_nil
-      expect(person.email).to eq(Person::PLACEHOLDER_EMAIL)
+      expect(person.email).to eq(PlaceholderEmail.first)
     end
   end
 
   describe ".placeholder_email" do
     it "finds only the people marked as having no address" do
-      marked = create(:person, user: nil, email: Person::PLACEHOLDER_EMAIL)
+      marked = create(:person, user: nil, email: PlaceholderEmail.first)
       create(:person, user: nil, email: "real@example.com")
       create(:person, user: nil, email: nil)
 

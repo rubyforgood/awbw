@@ -7,13 +7,14 @@ module Quotes
   # its creator, and the submission is kept as the quote's source. The quote
   # starts unpublished for an admin to review, refine, and publish.
   #
-  # Idempotent per submission: re-running (an edited re-submission calls this
-  # again) won't duplicate a quote already captured for the same text. The match
-  # keys on the untouched `original_body`, so an admin editing the published
-  # `body` doesn't cause a re-capture.
+  # One quote per submission: re-running (an edited re-submission calls this
+  # again) rewrites the quote it already captured rather than adding a second one,
+  # so the review queue never holds a superseded version beside the current text.
+  # An admin reworking or publishing that quote claims it, and the form leaves it
+  # alone from then on.
   #
-  # Shared by the registration, scholarship, bulk-payment, and public-form
-  # submission paths.
+  # Shared by the registration, scholarship, bulk-payment, ticket-callout, and
+  # public-form submission paths.
   class CaptureFromSubmission
     def self.call(submission)
       new(submission).call
@@ -28,10 +29,13 @@ module Quotes
       return if body.blank?
       return if @submission.quotes.exists?(original_body: body)
 
+      captured = @submission.quotes.order(:id).last
+      return rewrite(captured, body) if captured
+
       quote = Quote.create!(
         body: body,
-        speaker_name: answers[FormField::QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER].presence,
-        age: answers[FormField::QUOTE_AGE_RANGE_FIELD_IDENTIFIER].presence,
+        speaker_name: speaker_name,
+        age: age,
         created_by: @submission.person&.user
       )
       quote.quotable_item_quotes.create!(quotable: @submission)
@@ -39,12 +43,31 @@ module Quotes
 
     private
 
+    # Only while the quote still reads exactly as captured. Once an admin has
+    # reworded or published it, it's theirs and the form stops writing to it — the
+    # newer answer stays on the submission for them to read.
+    # A speaker or age the form doesn't collect was filled in by hand, so keep it.
+    def rewrite(quote, body)
+      return if quote.published? || quote.body != quote.original_body
+
+      quote.update!(body: body, original_body: body,
+                    speaker_name: speaker_name || quote.speaker_name, age: age || quote.age)
+    end
+
     def answers
       @answers ||= @submission.answers_by_identifier
     end
 
     def quote_body
       FormField::QUOTE_BODY_FIELD_IDENTIFIERS.filter_map { |id| answers[id].presence }.first
+    end
+
+    def speaker_name
+      answers[FormField::QUOTE_SPEAKER_NAME_FIELD_IDENTIFIER].presence
+    end
+
+    def age
+      answers[FormField::QUOTE_AGE_RANGE_FIELD_IDENTIFIER].presence
     end
   end
 end

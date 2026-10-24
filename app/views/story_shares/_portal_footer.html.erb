@@ -5,7 +5,7 @@
     <div class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
       <!-- Brand + social -->
       <div>
-        <div class="font-display text-2xl leading-none font-bold text-white">A Window Between Worlds</div>
+        <div class="font-display text-2xl leading-none font-bold text-white"><%= app_organization_name %></div>
         <div class="text-brand-yellow-400 mt-1 text-xs font-semibold tracking-widest uppercase">Art transforming trauma</div>
         <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
           Trauma-informed healing arts, transforming individuals, teams, and communities for over 35 years.
@@ -24,7 +24,7 @@
               <i class="<%= icon %>"></i>
             <% end %>
           <% end %>
-          <%= link_to "mailto:#{Organization.info_email}", aria: { label: "Email" },
+          <%= link_to "mailto:#{Setting.info_email}", aria: { label: "Email" },
                       class: "hover:bg-brand-navy-800 flex size-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors" do %>
             <i class="fa-solid fa-envelope"></i>
           <% end %>
@@ -58,9 +58,13 @@
       <div>
         <h3 class="text-brand-yellow-400 mb-4 text-xs font-bold tracking-widest uppercase">Get in touch</h3>
         <ul class="space-y-2 text-sm text-white/80">
-          <li><%= mail_to Organization.info_email, Organization.info_email, class: "hover:text-white" %></li>
-          <li><%= link_to "(310) 396-0317", "tel:+13103960317", class: "hover:text-white" %></li>
-          <li class="pt-1 text-white/70">1029 1/2 W 24th Street<br>Los Angeles, CA 90007</li>
+          <li><%= mail_to Setting.info_email, Setting.info_email, class: "hover:text-white" %></li>
+          <% if (phone = app_organization_phone) %>
+            <li><%= link_to phone, tel_href(phone), class: "hover:text-white" %></li>
+          <% end %>
+          <% if (address_lines = Setting.organization_address_lines).any? %>
+            <li class="pt-1 text-white/70"><%= safe_join(address_lines, tag.br) %></li>
+          <% end %>
         </ul>
         <%= awbw_menu_link "Donate", "/ways-to-give/",
                            html_class: "bg-brand-yellow-400 hover:bg-brand-yellow-500 text-brand-navy-900 mt-5 inline-flex items-center rounded-full px-6 py-2 text-sm font-semibold transition-colors" %>
@@ -91,7 +95,7 @@
     </div>
 
     <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row">
-      <p>© <%= Date.current.year %> A Window Between Worlds • Registered 501(c)(3) EIN: 95-448606</p>
+      <p>© <%= Date.current.year %> <%= app_organization_name %><% if (ein = app_organization&.tax_id.presence) %> • Registered 501(c)(3) EIN: <%= ein %><% end %></p>
       <p>Portal built with 🤍 by <%= link_to "Ruby for Good", "https://www.rubyforgood.org", class: "underline hover:text-white" %></p>
     </div>
   </div>

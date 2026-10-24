@@ -42,6 +42,16 @@ RSpec.describe EventCopyService do
       expect(copy.completion_deadline).to eq(Date.new(2027, 2, 11))
     end
 
+    it "copies the CE timesheet settings, shifting the close time with the start" do
+      event.update!(ce_timesheets_enabled: false, ce_timesheet_opens_offset_minutes: -1_440,
+        ce_timesheet_closes_at: zone.parse("2026-03-17 17:00"))
+
+      copy = described_class.copy(event, start_on: new_start_on)
+
+      expect(copy).to have_attributes(ce_timesheets_enabled: false, ce_timesheet_opens_offset_minutes: -1_440)
+      expect(copy.ce_timesheet_closes_at).to eq(zone.parse("2027-01-19 17:00"))
+    end
+
     it "copies callouts in order with their linked forms, resources, and shifted drip dates" do
       form = create(:form, name: "Day 1 evaluation")
       resource = create(:resource, title: "Worksheet")

@@ -5,13 +5,14 @@ module ProfileChangeRequests
   class Apply
     Result = Struct.new(:applied, :message, keyword_init: true)
 
-    def self.call(request:, reviewer:)
-      new(request:, reviewer:).call
+    def self.call(request:, reviewer:, confer_facilitator: false)
+      new(request:, reviewer:, confer_facilitator:).call
     end
 
-    def initialize(request:, reviewer:)
+    def initialize(request:, reviewer:, confer_facilitator: false)
       @request = request
       @reviewer = reviewer
+      @confer_facilitator = confer_facilitator
     end
 
     def call
@@ -72,9 +73,21 @@ module ProfileChangeRequests
     def apply_affiliation_remove
       affiliation = @request.affiliation
       return Result.new(applied: false, message: "The affiliation no longer exists.") unless affiliation
+      return apply_close_program(affiliation) if @request.closing_program?
 
-      affiliation.update(inactive: true, inactive_supplied: true, end_date: affiliation.end_date || Date.current)
+      affiliation.update(inactive: true, inactive_supplied: true, end_date: @request.proposed_end_date || affiliation.end_date || Date.current)
       Result.new(applied: true, message: "Affiliation ended and marked inactive.")
+    end
+
+    def apply_close_program(affiliation)
+      ended = AffiliationServices::CloseProgram.call(
+        person: @request.person,
+        organization: affiliation.organization,
+        effective_date: @request.proposed_end_date || Date.current,
+        reason: @request.details,
+        leaving_job: @request.leaving_job?
+      )
+      Result.new(applied: true, message: ended.any? ? "Program closed. #{ended_message(ended)}" : "Program closed; nothing was still active.")
     end
 
     def apply_affiliation_work_address
@@ -114,7 +127,7 @@ module ProfileChangeRequests
         city: @request.proposed_city,
         state: @request.proposed_state,
         zip_code: @request.proposed_zip_code.to_s,
-        locality: "Unknown",
+        locality: AddressLocality.for(city: @request.proposed_city, state: @request.proposed_state),
         address_type: "work",
         primary: organization.addresses.active.where(primary: true).none?
       )
@@ -123,17 +136,54 @@ module ProfileChangeRequests
     def apply_affiliation_add
       return Result.new(applied: false, message: "This organization isn't in the portal yet.") if @request.new_organization?
 
-      affiliation = @request.person.affiliations.create(
-        organization_id: @request.organization_id,
-        title: @request.proposed_title,
-        start_date: @request.proposed_start_date,
-        end_date: @request.proposed_end_date
-      )
-      if affiliation.persisted?
-        Result.new(applied: true, message: "New affiliation added.")
-      else
-        Result.new(applied: false, message: affiliation.errors.full_messages.to_sentence)
+      result = nil
+      Affiliation.transaction do
+        ended = end_other_organizations
+        affiliation = @request.person.affiliations.create(
+          organization_id: @request.organization_id,
+          title: @request.proposed_title,
+          start_date: @request.proposed_start_date,
+          end_date: @request.proposed_end_date
+        )
+        unless affiliation.persisted?
+          result = Result.new(applied: false, message: affiliation.errors.full_messages.to_sentence)
+          raise ActiveRecord::Rollback
+        end
+
+        result = Result.new(applied: true, message: [ "New affiliation added.", ended_message(ended), confer_facilitator ].compact.join(" "))
       end
+      result
+    rescue ActiveRecord::RecordInvalid => e
+      Result.new(applied: false, message: e.record.errors.full_messages.to_sentence)
+    end
+
+    def end_other_organizations
+      return [] unless @request.ends_other_organizations?
+
+      AffiliationServices::EndOtherOrganizations.call(
+        person: @request.person, organization: @request.organization, effective_date: new_affiliation_start,
+        only: @request.left_organization_ids
+      )
+    end
+
+    def confer_facilitator
+      return unless @confer_facilitator
+
+      affiliations = @request.person.affiliations
+      return if affiliations.facilitators.active_or_pending.exists?(organization_id: @request.organization_id)
+
+      affiliations.create!(organization_id: @request.organization_id, title: Affiliation::FACILITATOR_TITLE, start_date: new_affiliation_start)
+      "Added a Facilitator affiliation."
+    end
+
+    def new_affiliation_start
+      @request.proposed_start_date || Date.current
+    end
+
+    def ended_message(affiliations)
+      return if affiliations.empty?
+
+      "Ended #{affiliations.map { |a| "#{a.decorate.display_title} @ #{a.organization.name}" }.to_sentence}."
     end
 
     def apply_primary_email

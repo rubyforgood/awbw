@@ -17,19 +17,19 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
       renewal = invoice.membership.membership_invoices.reorder(:start_date).last
       expect(renewal.start_date).to eq(invoice.end_date + 1.day)
       expect(renewal.end_date).to eq(invoice.end_date + 1.year)
-      expect(renewal.cost_cents).to eq(Membership::ANNUAL_COST_CENTS)
+      expect(renewal.cost_cents).to eq(Membership.annual_cost_cents)
     end
 
     it "creates one for a invoice expiring on the window's last day" do
       travel_to(Time.current.midday) do
-        term_ending(Date.current + Membership::RENEWAL_WINDOW_DAYS)
+        term_ending(Date.current + Membership.renewal_window_days)
 
         expect { described_class.new.perform }.to change(MembershipInvoice, :count).by(1)
       end
     end
 
     it "leaves a invoice expiring beyond the window alone" do
-      term_ending(Date.current + Membership::RENEWAL_WINDOW_DAYS + 1)
+      term_ending(Date.current + Membership.renewal_window_days + 1)
 
       expect { described_class.new.perform }.not_to change(MembershipInvoice, :count)
     end
@@ -59,7 +59,7 @@ RSpec.describe IssueMembershipInvoicesJob, type: :job do
       described_class.new.perform
 
       expect(subscription.membership_invoices.reorder(:start_date).last.cost_cents)
-        .to eq(Membership::ANNUAL_COST_CENTS)
+        .to eq(Membership.annual_cost_cents)
     end
 
     it "renews an unpaid invoice, since renewal doesn't depend on payment" do

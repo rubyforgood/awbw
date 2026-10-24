@@ -15,7 +15,6 @@
     <% promoted_to_story = f.object.stories.any? %>
     <% if promoted_to_story %>
       <%= f.hidden_field :windows_type_id, value: f.object.windows_type_id %>
-      <%= f.hidden_field :workshop_id, value: f.object.workshop_id %>
       <%= f.hidden_field :organization_id, value: f.object.organization_id %>
       <%= f.hidden_field :title, value: f.object.title %>
       <%= f.hidden_field :rhino_body, value: f.object.rhino_body %>
@@ -97,13 +96,6 @@
       <p class="mb-3 text-sm text-gray-500">
         Link each workshop in the curriculum, or type a name for one that isn't listed.
       </p>
-      <% legacy_workshop = f.object.persisted? ? f.object.decorate.legacy_workshop_reference : nil %>
-      <% if legacy_workshop.present? %>
-        <div class="mb-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
-          <span class="block text-xs font-medium text-gray-500">Previously linked (read-only)</span>
-          <span class="text-sm text-gray-800"><%= legacy_workshop %></span>
-        </div>
-      <% end %>
       <% if promoted_to_story %>
         <p class="text-sm text-gray-700"><%= story_idea.workshop_title.presence || "—" %></p>
       <% else %>
@@ -289,7 +281,7 @@
                   as: :boolean,
                   required: true,
                   disabled: promoted_to_story,
-                  label: "I give A Window Between Worlds permission to share the words and images I am submitting" +
+                  label: "I give #{app_organization_name} permission to share the words and images I am submitting" +
                     " online, via social media, and in external communications, including with my fellow " +
                     "Windows Facilitators. If there is any identifying information in my images, " +
                     "such as names or faces, I certify that I have received permission from the subject, " +
@@ -304,7 +296,7 @@
                   as: :boolean,
                   disabled: promoted_to_story,
                   label: "Share my story only with the funder who provided my training scholarship and not on Story Share.",
-                  hint: "Check this if your story is a training-scholarship deliverable. It won't appear on Story Share — only A Window Between Worlds staff and the funder will see it.",
+                  hint: "Check this if your story is a training-scholarship deliverable. It won't appear on Story Share — only #{app_organization_name} staff and the funder will see it.",
                   input_html: {
                     class: ("readonly" if promoted_to_story)
                   } %>

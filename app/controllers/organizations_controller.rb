@@ -210,7 +210,7 @@ class OrganizationsController < ApplicationController
       :organization_status, :windows_type, :addresses,
       :categorizable_items,
       { comments: [ :created_by, :updated_by ] },
-      affiliations: { person: [ :user, *Organization::PEOPLE_TAGGINGS ] }
+      affiliations: { person: [ :user, :affiliations, *Organization::PEOPLE_TAGGINGS ] }
     ).find(params[:id])
   end
 
@@ -220,6 +220,7 @@ class OrganizationsController < ApplicationController
       :name, :description, :start_date, :end_date, :mission_vision_values,
       :organization_type, :organization_type_other, :filemaker_code, :logo, :notes, :email, :website_url,
       :organization_status_id, :location_id, :windows_type_id, :high_profile, :parent_id,
+      :tax_id,
       :profile_show_sectors, :profile_show_age_ranges, :profile_show_email, :profile_show_phone,
       :profile_show_website, :profile_show_description, :profile_show_workshops,
       :profile_show_stories, :profile_show_events_registered, :profile_show_workshop_logs,
@@ -242,6 +243,7 @@ class OrganizationsController < ApplicationController
         :address_type,
         :primary,
         :inactive,
+        :invoice_address,
         :phone,
         :street_address,
         :city,

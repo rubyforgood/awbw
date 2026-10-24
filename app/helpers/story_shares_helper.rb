@@ -12,11 +12,21 @@ module StorySharesHelper
     { heading: "text-fuchsia-700", link: "text-fuchsia-700 hover:underline", overlay: "bg-fuchsia-800/80", chip: "bg-fuchsia-700" }
   ].freeze
 
+  SECTOR_TAG_CHIP = "bg-brand-magenta-50 text-brand-magenta-700 hover:bg-brand-magenta-100 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
+  AUDIENCE_TAG_CHIP = "bg-brand-amber-100 text-brand-amber-800 hover:bg-brand-amber-200 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
+  AGE_RANGE_TAG_CHIP = "bg-brand-rust text-white hover:bg-brand-rust/85 inline-flex items-center rounded-full text-xs font-medium transition-colors".freeze
+
   STORY_IMAGE_ASPECT = "aspect-[3/2]".freeze
   STORY_BANNER_ASPECT = "aspect-[4/3] sm:aspect-[2/1]".freeze
+  # Zooms a 16:9 player until its letterboxed video covers the banner box at each breakpoint.
+  STORY_BANNER_VIDEO_SCALE = "scale-[1.34] sm:scale-[1.125]".freeze
   STORY_IMAGE_GUIDANCE = "Images look best as landscape photos in a 3:2 shape, at least 1800 × 1200 pixels. " \
     "A recent phone photo taken sideways works well. Tall images show in full on a blurred background. " \
     "Some spots trim the edges, so keep the main subject near the center.".freeze
+
+  def audience_tag_chip_class(category)
+    category.category_type&.name == AgeGroupTaggable::AGE_RANGE_CATEGORY_TYPE ? AGE_RANGE_TAG_CHIP : AUDIENCE_TAG_CHIP
+  end
 
   def story_share_slot_theme(index)
     SLOT_THEMES[index % SLOT_THEMES.size]
@@ -71,20 +81,24 @@ module StorySharesHelper
 
   # The portal's mega-menu points at the main marketing site. Opens in a new tab
   # so visitors don't lose the story they were reading.
-  AWBW_BASE = "https://awbw.org".freeze
+
+  # A path on the marketing site, whose address an admin sets on the organization.
+  def marketing_site_url(path)
+    "#{Setting.organization_website&.chomp("/")}#{path}"
+  end
 
   # `arrow: true` puts the trailing arrow inside the link, so it is part of the
   # click target and picks up the link's hover — outside it, it was neither.
   def awbw_menu_link(label, path, html_class: "hover:text-purple-700", arrow: false)
     body = arrow ? safe_join([ label, tag.i("", class: "fa-solid fa-arrow-right text-xs") ], " ") : label
-    link_to body, "#{AWBW_BASE}#{path}", target: "_blank", rel: "noopener noreferrer", class: html_class
+    link_to body, marketing_site_url(path), target: "_blank", rel: "noopener noreferrer", class: html_class
   end
 
   # A mega-menu photo card: an awbw.org-linked image with an accent gradient and a
   # serif call-to-action (the marketing site's right-hand menu tile). The accent
   # comes from the surrounding `--accent` CSS variable.
   def awbw_menu_link_photo(image:, alt:, cta:, href:)
-    link_to "#{AWBW_BASE}#{href}", target: "_blank", rel: "noopener noreferrer", class: "mega-photo" do
+    link_to marketing_site_url(href), target: "_blank", rel: "noopener noreferrer", class: "mega-photo" do
       safe_join([
         image_tag(image, alt: alt),
         tag.span("", class: "mega-photo-overlay"),
@@ -99,7 +113,7 @@ module StorySharesHelper
   # Cached because it renders on every portal page and rarely changes.
   def story_share_nav_sectors
     Rails.cache.fetch("story_share_nav_sectors", expires_in: 1.hour) do
-      Sector.story_share_featured.limit(StorySharesController::FEATURED_SECTOR_LIMIT).to_a
+      Sector.story_share_nav.to_a
     end
   end
 
@@ -107,17 +121,6 @@ module StorySharesHelper
   def story_share_audience_categories
     Rails.cache.fetch("story_share_audience_categories", expires_in: 1.hour) do
       Category.story_share_audience_nav
-    end
-  end
-
-  # "Additional focus areas" dropdown: published sectors that aren't already
-  # featured but do have at least one publicly-visible story.
-  def additional_focus_area_sectors
-    Rails.cache.fetch("story_share_focus_area_sectors", expires_in: 1.hour) do
-      featured = story_share_nav_sectors.map(&:id)
-      Sector.published.excluding_other.where.not(id: featured)
-            .joins(:stories).merge(Story.publicly_visible)
-            .distinct.order(:name).to_a
     end
   end
 

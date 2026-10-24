@@ -30,4 +30,20 @@ RSpec.describe ApplicationController do
       end
     end
   end
+
+  describe "#count_display" do
+    let(:controller) { described_class.new }
+
+    it "delimits a single count with commas" do
+      expect(controller.send(:count_display, 36_405)).to eq("36,405")
+    end
+
+    it "delimits both sides of a filtered/total count" do
+      expect(controller.send(:count_display, 1_204, 36_405)).to eq("1,204/36,405")
+    end
+
+    it "shows only the total when nothing is filtered out" do
+      expect(controller.send(:count_display, 36_405, 36_405)).to eq("36,405")
+    end
+  end
 end

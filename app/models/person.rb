@@ -77,7 +77,11 @@ class Person < ApplicationRecord
       saver: { quality: 80 }
   end
 
-  before_validation :normalize_names_and_emails
+  before_validation :normalize_names
+
+  # Unicode-aware, plus the zero-width characters [[:space:]] skips; pasted addresses carry both.
+  EMAIL_WHITESPACE = /[[:space:]\u200B-\u200D\u2060\uFEFF]/
+  normalizes :email, :email_2, with: ->(email) { email.gsub(EMAIL_WHITESPACE, "").presence }
 
   # Validations
   validates :avatar,
@@ -103,18 +107,30 @@ class Person < ApplicationRecord
   # Autocorrect and pasted text swap in look-alike dashes; storing a plain hyphen keeps "Smith-Jones" one person.
   DASH_VARIANTS = /[\u2010-\u2015\u2212]/
   NAME_AND_EMAIL_INDEX = "index_people_on_name_and_email".freeze
-  # Stands in for "no address on file" when two people share a name and neither has an
-  # email, which is the only time one is required. Numbered so each of them gets their own.
-  PLACEHOLDER_EMAIL = "1@example.com".freeze
-  PLACEHOLDER_EMAIL_PATTERN = /\A(\d+)@example\.com\z/
 
   def self.normalize_name(name)
     name&.strip&.gsub(DASH_VARIANTS, "-")
   end
 
+  def self.same_name?(one, other)
+    one.to_s.squish.casecmp?(other.to_s.squish)
+  end
+
+  def legal_first_name_differs?(name)
+    !Person.same_name?(name, first_name)
+  end
+
   CONTACT_TYPES = [ "work", "personal" ].freeze
-  validates :email_type, inclusion: { in: %w[work personal] }, allow_blank: true
-  validates :email_2_type, inclusion: { in: %w[work personal] }, allow_blank: true
+  UNKNOWN_CONTACT_TYPE = "unknown"
+  # What an email can be stored as; people choosing their own pick from CONTACT_TYPES.
+  EMAIL_TYPES = [ *CONTACT_TYPES, UNKNOWN_CONTACT_TYPE ].freeze
+  validates :email_type, inclusion: { in: EMAIL_TYPES }, allow_blank: true
+  validates :email_2_type, inclusion: { in: EMAIL_TYPES }, allow_blank: true
+
+  # Unknown is a recorded answer, not a known one, so a flow that asks what kind of
+  # email this is still has to ask.
+  def known_email_type? = email_type.in?(CONTACT_TYPES)
+  def known_email_2_type? = email_2_type.in?(CONTACT_TYPES)
 
   # Anonymity isn't one of these — it's the separate `anonymous_contributions` flag,
   # since a person still has to be listed somehow on the people index.
@@ -201,6 +217,29 @@ class Person < ApplicationRecord
     OR (people.profile_show_phone AND (users.phone LIKE :pattern OR contact_methods.value LIKE :pattern))
   SQL
 
+  # Spaces and periods are dropped on both sides so an initialled name ("Cathy S.") finds itself.
+  DISPLAYED_NAME_MATCH_SQL = <<~SQL.squish
+    (COALESCE(people.display_name_preference, '') NOT IN (:first_name_hidden)
+      AND LOWER(REPLACE(people.first_name, ' ', '')) LIKE :name)
+    OR (COALESCE(people.display_name_preference, '') NOT IN (:last_name_hidden)
+      AND LOWER(REPLACE(people.last_name, ' ', '')) LIKE :name)
+    OR (COALESCE(people.display_name_preference, '') IN ('', 'full_name')
+      AND LOWER(REPLACE(CONCAT(people.first_name, people.last_name), ' ', '')) LIKE :name)
+    OR (people.display_name_preference = 'first_name_last_initial'
+      AND LOWER(REPLACE(CONCAT(people.first_name, LEFT(people.last_name, 1)), ' ', '')) LIKE :name)
+  SQL
+
+  # Matches only the name parts #name shows, so search can't surface a hidden last name.
+  scope :displayed_name_like, ->(query) {
+    name = query.to_s.gsub(/[\s.]+/, "").downcase
+    if name.blank?
+      none
+    else
+      where(DISPLAYED_NAME_MATCH_SQL, name: "%#{sanitize_sql_like(name)}%",
+            first_name_hidden: FIRST_NAME_HIDDEN_PREFERENCES, last_name_hidden: LAST_NAME_HIDDEN_PREFERENCES)
+    end
+  }
+
   # Same term syntax as SearchCop: a quoted phrase is one term, otherwise split on whitespace.
   SEARCH_TERM_PATTERN = /"([^"]*)"|'([^']*)'|(\S+)/
 
@@ -253,7 +292,7 @@ class Person < ApplicationRecord
     joins(:staff_taggings).where(staff_taggings: { staff_tag_id: tag_ids }).distinct }
   scope :story_authors, -> { joins(:stories_as_author).distinct }
   scope :blog_contributors, -> { where(blog_contributor: true) }
-  scope :placeholder_email, -> { where("email REGEXP ?", "^[0-9]+@example\\.com$") }
+  scope :placeholder_email, -> { where("email REGEXP ?", PlaceholderEmail.sql_pattern) }
   scope :workshop_authors, -> { credited_on(Workshop) }
   scope :workshop_variation_authors, -> { credited_on(WorkshopVariation) }
   scope :workshop_log_authors, -> { credited_on(WorkshopLog) }
@@ -563,7 +602,16 @@ class Person < ApplicationRecord
   end
 
   def placeholder_email?
-    email.to_s.match?(PLACEHOLDER_EMAIL_PATTERN)
+    PlaceholderEmail.match?(email)
+  end
+
+  # The lowest numbered placeholder nobody with this name is using yet.
+  def next_free_placeholder_email
+    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
+    scope = scope.where.not(id: id) if persisted?
+    taken = scope.pluck(:email).filter_map { |address| PlaceholderEmail.number_in(address) }
+
+    PlaceholderEmail.at((1..).find { |number| taken.exclude?(number) })
   end
 
   # The placeholder records "no address on file", so it never stands in for a real one.
@@ -658,12 +706,11 @@ class Person < ApplicationRecord
     end
   end
 
-  def normalize_names_and_emails
+  def normalize_names
     self.first_name = Person.normalize_name(first_name)
     self.last_name = Person.normalize_name(last_name)
-    self.legal_first_name = Person.normalize_name(legal_first_name)
-    self.email = email&.strip
-    self.email_2 = email_2&.strip
+    self.legal_first_name = Person.normalize_name(legal_first_name).presence
+    self.legal_first_name = nil unless legal_first_name.nil? || legal_first_name_differs?(legal_first_name)
   end
 
   def unique_name_and_email_combination
@@ -697,14 +744,6 @@ class Person < ApplicationRecord
       "they truly have none."
   end
 
-  # The lowest numbered placeholder nobody with this name is using yet.
-  def next_free_placeholder_email
-    scope = Person.where("LOWER(first_name) = ? AND LOWER(last_name) = ?", first_name.downcase, last_name.downcase)
-    scope = scope.where.not(id: id) if persisted?
-    taken = scope.pluck(:email).filter_map { |address| address.to_s[PLACEHOLDER_EMAIL_PATTERN, 1]&.to_i }
-
-    "#{(1..).find { |number| taken.exclude?(number) }}@example.com"
-  end
   ## Consider adding additional person info to be saved on stripes customer records
   # def stripe_attributes(pay_customer)
   #   {

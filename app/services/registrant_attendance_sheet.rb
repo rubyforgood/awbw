@@ -76,6 +76,23 @@ class RegistrantAttendanceSheet
     @next_opens_at ||= event.next_attendance_sign_in_opens_at(@at)
   end
 
+  # Whether the registrant can change their times now — sign in/out and Edit alike.
+  def editable?
+    event.ce_timesheet_open?(@at)
+  end
+
+  def closed?
+    event.ce_timesheet_closed?(@at)
+  end
+
+  def opens_at
+    event.ce_timesheet_opens_at
+  end
+
+  def closes_at
+    event.ce_timesheet_closes_at
+  end
+
   private
 
   def event

@@ -242,12 +242,14 @@ module Events
         alert: e.record.errors.full_messages.to_sentence
     end
 
-    # Close an open attendance entry. Not windowed — a forgotten sign-out can always
-    # be recorded. Two cases: today's entry (stamped now) and the catch-up button for
+    # Close an open attendance entry. Not windowed by the training day — a forgotten
+    # sign-out can be recorded any time until the event's timesheet closes. Two cases: today's entry (stamped now) and the catch-up button for
     # a day the registrant left open (stamped that day's scheduled end) — see
     # #sign_out_target.
     def sign_out_ce
       return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
+      return redirect_to(registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: timesheet_locked_alert) unless @event.ce_timesheet_open?
+
       entry, signed_out_at = sign_out_target
       unless entry
         return redirect_to registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: "You're not signed in."
@@ -263,13 +265,15 @@ module Events
     # The registrant editing their own sign-in/out times for one training day. The
     # buttons above are only a shortcut for stamping "now" — the times themselves stay
     # editable, so someone who arrived before signing in, or never tapped the buttons
-    # at all, can write the day up afterwards. Deliberately not windowed: the point is
-    # to fix a day after it's over. Left unattributed, like the buttons.
+    # at all, can write the day up afterwards. Not windowed by the training day — the
+    # point is to fix a day after it's over — only by the event's timesheet window.
+    # Left unattributed, like the buttons.
     def update_ce_attendance
       return redirect_to(registration_ce_path(@event_registration.slug)) if sample_preview?
       unless attendance_enabled?
         return redirect_to registration_ce_path(@event_registration.slug), alert: "Editing your times isn't available yet."
       end
+      return redirect_to(registration_ce_path(@event_registration.slug, anchor: "attendance"), alert: timesheet_locked_alert) unless @event.ce_timesheet_open?
 
       date = AttendanceDayRows.date_from(params[:date])
       return head :unprocessable_content unless date
@@ -368,6 +372,7 @@ module Events
       end
       return redirect_to registration_ce_path(@event_registration.slug) if ce_form_locked?(@callout)
 
+      Current.source = "ticket_callout"
       service = EventRegistrationServices::CalloutFormSubmission.call(
         registration: @event_registration, callout: @callout, form: form,
         form_params: callout_form_params
@@ -375,7 +380,7 @@ module Events
       # A profile write-through (anonymity / name questions) is Ahoy-tracked, and
       # staff get a heads-up on the submission. The CE callout runs its own flow, so
       # it opts out of the FYI.
-      track_profile_changes(service.profile_changes)
+      track_profile_changes(service.profile_changes, service.submission)
       NotificationMailer.callout_form_submitted_fyi(service.submission, updated: service.edited?).deliver_later unless @callout.ce_config?
 
       redirect_to callout_form_landing(@callout, callout_form),
@@ -445,6 +450,13 @@ module Events
       @event_registration.ce_attendance_offered?
     end
 
+    def timesheet_locked_alert
+      return "Timesheets aren't used for this event." unless @event.ce_timesheets_enabled?
+      return "Your timesheet closed on #{helpers.ce_timesheet_time(@event.ce_timesheet_closes_at)}. Please contact the training staff to change your times." if @event.ce_timesheet_closed?
+
+      "Your timesheet opens on #{helpers.ce_timesheet_time(@event.ce_timesheet_opens_at)}."
+    end
+
     # A datetime rendered in the app zone as "9:02 AM", for sign-in/out flash notices.
     def local_time(time)
       helpers.attendance_clock_time(time)
@@ -473,9 +485,10 @@ module Events
     end
 
     # One Ahoy event per profile field the survey actually changed.
-    def track_profile_changes(changes)
+    def track_profile_changes(changes, submission)
       changes.each do |attribute, (from, to)|
-        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to)
+        ahoy.track("profile.#{attribute}", person_id: @event_registration.registrant_id, from: from, to: to,
+                                           form_submission_id: submission.id)
       end
     end
 

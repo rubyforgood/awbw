@@ -1,8 +1,4 @@
 class WorkshopVariationDecorator < ApplicationDecorator
-  def breadcrumbs
-    "#{workshop_link} >> #{name}".html_safe
-  end
-
   def detail(length: nil)
     length ? description&.truncate(length) : description
   end
@@ -20,7 +16,7 @@ class WorkshopVariationDecorator < ApplicationDecorator
         img.set_attribute("src", src)
       end
       html.xpath("//a").each do |link|
-        href = link.attributes["href"].value.prepend("http://awbw.org")
+        href = link.attributes["href"].value.prepend(Setting.organization_website.to_s.chomp("/"))
         link.set_attribute("href", href)
         link.set_attribute("class", "underline")
       end
@@ -28,14 +24,5 @@ class WorkshopVariationDecorator < ApplicationDecorator
     else
       body
     end
-  end
-
-  private
-
-  def method_name
-  end
-
-  def workshop_link
-    h.link_to "#{workshop.title}", h.workshop_path(workshop)
   end
 end

@@ -24,6 +24,7 @@
      `primary`, green is `success`, orange is `accent`. These add the rest, the
      cream page surface, and the display serif used for headlines. */
   --color-brand-cream: #fcfaeb;
+  --color-brand-rust: #c84607;
   --font-display: "Fraunces", "Lato", serif;
 
   /* Each brand colour as a full 50–950 scale, so it is used exactly like a

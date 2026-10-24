@@ -39,16 +39,17 @@ class PublicFormSubmission
 
       if person
         record_news_subscription(person)
-        capture_organization(submission)
+        registration = register_for_on_demand_training(submission)
+        capture_organization(submission, registration)
         PersonServices::CaptureFromSubmission.call(person: person, form: @form, form_params: @form_params)
       end
 
       OtherResponses::CaptureFromSubmission.call(submission)
       Quotes::CaptureFromSubmission.call(submission)
-      register_for_on_demand_training(submission)
       process_close_program(submission)
       send_notifications(submission)
 
+      Current.form_submission_id = submission.id
       Result.new(success?: true, form_submission: submission, person: person, errors: [])
     end
   rescue FormSubmission::UnreadableUpload => e
@@ -68,13 +69,10 @@ class PublicFormSubmission
   # A standalone registration-role form is the on-demand agreement (ADR-0002),
   # and submitting it IS registering for the current on-demand facilitator
   # training — so mint that event registration (idempotent via the unique
-  # registrant+event index) and stamp the event on the submission. A quiet
-  # no-op when no current on-demand training exists.
+  # registrant+event index) and stamp the event on the submission. Returns the
+  # registration; nil when no current on-demand training exists.
   def register_for_on_demand_training(submission)
     return unless @form.role == "registration"
-    # Registration mints a facilitator event registration — impossible without an
-    # identified person, so an anonymous submission skips it.
-    return unless submission.person
 
     event = Event.current_on_demand_facilitator_training
     return unless event
@@ -84,6 +82,7 @@ class PublicFormSubmission
     # Created "registered" (the column default), then flipped: an on-demand
     # agreement only arrives after the external LMS training is complete.
     registration.update!(status: "attended") unless registration.status == "attended"
+    registration
   end
 
   # A close-program submission end-dates the person's affiliations at the named
@@ -123,9 +122,9 @@ class PublicFormSubmission
   # affiliation comes from the typed position either way. Skipped on a
   # close-program form, whose submission ends affiliations at the org rather than
   # creating them (process_close_program).
-  def capture_organization(submission)
+  def capture_organization(submission, registration)
     return if @form.role == "close_program"
-    return process_agreement_organization(submission) if submission.agreement_scenario?
+    return process_agreement_organization(submission, registration) if submission.agreement_scenario?
 
     organization = OrganizationServices::CaptureFromSubmission.call(
       form: @form, form_params: @form_params, person: submission.person, submission: submission
@@ -142,7 +141,7 @@ class PublicFormSubmission
   # linking it by hand, so the two paths can't drift (ADR-0002). Anything the
   # core would have to guess at is left for an admin on the submission's linking
   # page.
-  def process_agreement_organization(submission)
+  def process_agreement_organization(submission, registration)
     organization = organization_named(field_value(FormField::ORGANIZATION_NAME_FIELD_IDENTIFIER))
     return unless organization
 
@@ -151,11 +150,13 @@ class PublicFormSubmission
       organization: organization,
       entry: submission.org_entry,
       scenario: submission.linking_scenario,
-      training_date: submission.created_at.to_date
+      training_date: submission.created_at.to_date,
+      event_registration: registration
     )
 
     submission.link_organization!(organization.id)
     submission.record_scenario_ended!(result.ended_affiliations.map(&:id))
+    registration&.link_submitted_organization!(organization, submission: submission, autofill: result.saved)
     organization
   end
 
@@ -173,7 +174,7 @@ class PublicFormSubmission
   # Reuses an existing Person on an email + last-name match so a returning
   # respondent isn't duplicated; nil when the form didn't collect name + email.
   def find_or_create_person
-    first_name = field_value("first_name")&.strip
+    first_name = field_value("first_name")&.strip.presence || field_value("legal_first_name")&.strip
     last_name = field_value("last_name")&.strip
     email = field_value("primary_email")&.strip&.downcase
     return nil if email.blank? || first_name.blank? || last_name.blank?
@@ -229,7 +230,7 @@ class PublicFormSubmission
       noticeable: submission,
       kind: :form_submission_confirmation_fyi,
       recipient_role: :admin,
-      recipient_email: Organization.programs_email,
+      recipient_email: Setting.programs_email,
       notification_type: 0
     )
   end

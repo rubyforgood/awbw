@@ -36,7 +36,7 @@ contact_us_samples = [
     message: "I have a background in counseling and would like to volunteer. Where can I learn about current openings?" }
 ]
 
-programs_email = Organization.programs_email.presence ||
+programs_email = Setting.programs_email.presence ||
   abort("PROGRAMS_EMAIL is blank: copy it from .env.sample into .env (bin/setup creates .env when missing)")
 sample_user = User.where.not(person_id: nil).first
 
@@ -190,7 +190,7 @@ amy_person = User.find_by(email: "amy.user@example.com")&.person
 
 if amy_person && amy_person.preferred_email.present?
   amy_email = amy_person.preferred_email
-  organization = ENV.fetch("ORGANIZATION_NAME", "AWBW")
+  organization = Setting.app_organization_name
 
   # Distinct admin-authored messages; paired with separate event registrations so
   # each notification is naturally unique on (noticeable, kind) and idempotent on

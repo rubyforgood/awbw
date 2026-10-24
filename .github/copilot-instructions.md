@@ -187,8 +187,9 @@ template abstraction.
   (`class: "text-sm #{eyebrow_link_class} px-2 py-1"`).
 - **Shared partial** — when the repeated thing is markup (icon + text + structure), not just a
   class list.
-- **`@apply` is reserved** for genuine element/base styles (e.g. `.btn` in
-  `components/buttons.css`), not for extracting repeated utility clusters.
+- **`@apply` is reserved** for genuine element/base styles (e.g. `.default-link a` and
+  the `.optional` form-field rules in `app/frontend/stylesheets/application.tailwind.css`),
+  not for extracting repeated utility clusters.
 
 ## HTML/ERB Formatting
 
@@ -324,6 +325,18 @@ follow this). Match the existing pattern:
   in-card forms answering with turbo streams — omit it. When a results frame's
   cards contain several such links, prefer `turbo_frame_tag :x_results,
   target: "_top"` so no link can be forgotten.
+- **Per-page dropdown: render `shared/_per_page_select` inside the filter form.**
+  The form's `collection` controller submits it on change — no `onchange` or
+  `<script>`. The param is always `number_of_items_per_page` (read it as
+  `params[:number_of_items_per_page].presence || <default>`, no clamping, so any
+  size works from the URL); presets live in `PaginationHelper::PER_PAGE_OPTIONS`.
+  Pass the controller's fallback as `default:` so Clear filters resets to it, and
+  carry the param through the results view's `pagination_params`.
+- **A frameless filter form wired to `collection` submits text as you type, so
+  morph the page to keep focus:** `turbo_refreshes_with method: :morph, scroll:
+  :preserve` in the view, `data: { turbo_action: "replace" }` on the form, and
+  `data-turbo-permanent` (plus an `id`) on any TomSelect wrapper so the morph
+  doesn't strip its widget. Workshop logs is the reference.
 
 ## Features & tips page (`/features`)
 
@@ -495,15 +508,25 @@ exempt; this is for the message that says the work is finished.
 
 ## Response formatting
 
-**Structure the answer; don't hand back a wall of text.** Long replies are for scanning
-first and reading second.
+**Answer in short bullets and sub-bullets — never paragraphs.** This is the default for
+every reply, not just long ones. Prose is the exception, allowed only when the user asks
+for prose or when a single sentence genuinely says everything.
 
-- **Lead with the direct answer** when the user asked a question, then the detail.
+- **Bullets, not sentences.** One fact per bullet. Fragments are good. Drop "this", "the",
+  filler verbs, and hedging where the meaning survives.
+- **Sub-bullets for detail**, nested under the bullet they belong to — not trailing clauses
+  on the parent bullet.
+- **Super short.** Aim for one line per bullet. If a bullet needs a comma-spliced second
+  clause, split it into a sub-bullet.
+- **Lead with the direct answer** when the user asked a question, then the detail beneath it.
+- **Bold lead-in** naming the thing, then the point: `- **Grouping key** — CheckNumber.`
 - **Group under headers** (`##`/`###`) once a reply covers more than one topic.
-- **Use titled bullets** — a bold lead-in naming the thing, then the explanation — rather
-  than consecutive bare paragraphs.
-- **Nest detail under the point it belongs to** instead of running it inline.
-- Keep tables for genuinely tabular comparisons; keep prose short inside each bullet.
+- Keep tables for genuinely tabular comparisons.
+- **Recommendations get a verdict first** — "do it" / "skip it" / "later" — then the why
+  as sub-bullets.
+
+This governs user-facing replies. It does not shorten code comments, commit messages, or
+PR descriptions, which have their own rules above.
 
 ## Quick Commands
 

@@ -103,7 +103,6 @@ class Resource < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User", optional: true
   belongs_to :author, class_name: "Person", optional: true
-  belongs_to :workshop, optional: true
   belongs_to :windows_type, optional: true
   belongs_to :organization, optional: true
   has_one :form, as: :owner
@@ -111,7 +110,6 @@ class Resource < ApplicationRecord
   has_many :categorizable_items, dependent: :destroy, as: :categorizable
   has_many :reports, as: :owner
   has_many :sectorable_items, dependent: :destroy, as: :sectorable
-  has_many :workshop_resources, dependent: :destroy
 
   # has_many through
   has_many :categories, through: :categorizable_items
@@ -190,7 +188,6 @@ class Resource < ApplicationRecord
   scope :kinds, ->(kinds) {
     kinds = Array(kinds).flatten.map(&:to_s)
     where(kind: kinds) }
-  scope :leader_spotlights, -> { kinds("LeaderSpotlight") }
   scope :published_kinds, -> { where(kind: PUBLISHED_KINDS) }
   scope :published, ->(flag = nil) do
     value = flag.nil? || flag == "" ? true : ActiveModel::Type::Boolean.new.cast(flag)
@@ -231,6 +228,10 @@ class Resource < ApplicationRecord
 
   def story?
     [ "Story", "LeaderSpotlight" ].include? self.kind
+  end
+
+  def connected_workshops
+    connected_records(Workshop)
   end
 
   def custom_label_list

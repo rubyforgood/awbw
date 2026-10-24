@@ -4,17 +4,19 @@ class StorySharesController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_story, only: [ :show ]
 
-  FEATURED_SECTOR_LIMIT = 6
+  FEATURED_SECTOR_LIMIT = Sector::STORY_SHARE_NAV_LIMIT
   SECTION_STORY_LIMIT = 5
   FEATURED_CAROUSEL_LIMIT = 10
   RELATED_STORY_LIMIT = 3
   POPULAR_STORY_LIMIT = 4
   BROWSE_CAROUSEL_LIMIT = 5
+  BROWSE_GRID_LIMIT = 3
+  MATCHING_TAG_LIMIT = 4
   # Any of these params means the visitor is browsing a filtered result set
   # rather than the curated landing page.
   BROWSE_PARAMS = %i[ sector_names_all category_names_all query additional_focus_areas year page ].freeze
 
-  helper_method :browsing?, :single_hero?
+  helper_method :browsing?, :single_hero?, :searching?
 
   def index
     authorize! Story, with: StorySharePolicy
@@ -58,6 +60,10 @@ class StorySharesController < ApplicationController
     BROWSE_PARAMS.any? { |key| params[key].present? }
   end
 
+  def searching?
+    params[:query].present?
+  end
+
   # Sector pages lead with one big hero; other browse pages lead with a carousel.
   def single_hero?
     params[:sector_names_all].present?
@@ -66,10 +72,10 @@ class StorySharesController < ApplicationController
   def load_home
     @home_sectors = Sector.story_share_home_sections.limit(FEATURED_SECTOR_LIMIT).to_a
     @stories_by_sector = @home_sectors.index_with do |sector|
-      section_stories(portal_scope.sector_names_all(sector.name))
+      section_stories(portal_scope.with_primary_sector(sector))
     end
     @stories_by_audience = Category.story_share_audience_nav.select(&:story_share_home_section).index_with do |category|
-      section_stories(portal_scope.category_names_all(category.name))
+      section_stories(portal_scope.with_primary_category(category))
     end
     @featured_stories = carousel_stories
     @recent_stories = popular_stories
@@ -109,25 +115,50 @@ class StorySharesController < ApplicationController
   def load_browse
     per_page = params[:number_of_items_per_page].presence || 12
     filtered = portal_scope.search_by_params(params)
-    filtered = filtered.where(id: additional_focus_area_story_ids) if params[:additional_focus_areas].present?
-    @count_display = filtered.count
-    lead_ids = filtered.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
-    @lead_stories = first_page? ? preloaded(Story.where(id: lead_ids)).in_order_of(:id, lead_ids).decorate : []
-    @stories = preloaded(filtered.where.not(id: lead_ids)).order(created_at: :desc)
+    filtered = filtered.with_sector(Sector.story_share_additional_focus_areas) if params[:additional_focus_areas].present?
+    @count_display = count_display(filtered.count)
+    return load_search_results(filtered, per_page) if searching?
+
+    highlights = primary_tag_matches(filtered)
+    lead_ids = highlights.reorder(publicly_featured: :desc, created_at: :desc).limit(single_hero? ? 1 : BROWSE_CAROUSEL_LIMIT).pluck(:id)
+    grid_ids = highlights.where.not(id: lead_ids).reorder(created_at: :desc).limit(BROWSE_GRID_LIMIT).pluck(:id)
+    @lead_stories = first_page? ? in_id_order(lead_ids) : []
+    @grid_stories = first_page? ? in_id_order(grid_ids) : []
+    @stories = preloaded(filtered.where.not(id: lead_ids + grid_ids)).order(created_at: :desc)
                                   .paginate(page: params[:page], per_page: per_page)
                                   .decorate
+  end
+
+  def load_search_results(filtered, per_page)
+    @lead_stories = []
+    @grid_stories = []
+    @stories = preloaded(filtered).title_matches_first(params[:query]).order(publicly_featured: :desc, created_at: :desc)
+                                  .paginate(page: params[:page], per_page: per_page)
+                                  .decorate
+    visible_ids = portal_scope.select(:id)
+    @matching_sectors = Sector.published.sector_name(params[:query])
+                              .where(id: SectorableItem.where(sectorable_type: "Story", sectorable_id: visible_ids).select(:sector_id))
+                              .order(:name).limit(MATCHING_TAG_LIMIT)
+    @matching_audiences = Category.audiences.published.category_name(params[:query])
+                                  .where(id: CategorizableItem.where(categorizable_type: "Story", categorizable_id: visible_ids).select(:category_id))
+                                  .order(:name).limit(MATCHING_TAG_LIMIT).decorate
+  end
+
+  def in_id_order(ids)
+    preloaded(Story.where(id: ids)).in_order_of(:id, ids).decorate
   end
 
   def first_page?
     params[:page].to_i <= 1
   end
 
-  # "Additional focus areas": stories tagged with any published sector beyond the
-  # featured nav sectors — the catch-all page for the rest of the taxonomy.
-  def additional_focus_area_story_ids
-    sector_ids = Sector.published.excluding_other
-                       .where.not(name: Sector.story_share_featured.select(:name)).ids
-    SectorableItem.where(sectorable_type: "Story", sector_id: sector_ids).select(:sectorable_id)
+  # The banner/carousel and 3-up cards feature only stories starring the browsed
+  # tag as primary; stories carrying it as a secondary tag stay in the list below.
+  def primary_tag_matches(stories)
+    stories = stories.with_primary_sector(Sector.sector_names_all(params[:sector_names_all])) if params[:sector_names_all].present?
+    stories = stories.with_primary_category(Category.category_names_all(params[:category_names_all])) if params[:category_names_all].present?
+    stories = stories.with_primary_sector(Sector.story_share_additional_focus_areas) if params[:additional_focus_areas].present?
+    stories
   end
 
   # Related stories share a sector and/or a category, most-read first (then
