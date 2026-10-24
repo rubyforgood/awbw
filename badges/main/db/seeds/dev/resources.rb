@@ -33,7 +33,6 @@ puts "Creating Resources…"
     legacy_id: rand(1000..9999),
     position: rand(1..50),
     windows_type_id: WindowsType.all.sample&.id,
-    workshop_id: Workshop.all.sample&.id,
     created_by_id: User.all.sample&.id,
     created_at: Time.current - rand(20..120).days,
     updated_at: Time.current - rand(1..40).days,
@@ -137,4 +136,29 @@ if w9
       resource: w9, subtitle: "AWBW's W-9 tax form for your records"
     )
   end
+end
+
+# A mention is the only thing connecting a resource and a workshop, so seed one
+# each way to fill the resource page's "Workshops" panel. Writing the attachment
+# into the body is what creates the mention row, via ActionText::RichText's
+# before_save hook.
+puts "Connecting resources and workshops through Rhino mentions…"
+mention = ->(rich_text, record) do
+  next if rich_text.persisted? && rich_text.mentions_for(record.class).include?(record)
+
+  attachment = %(<action-text-attachment sgid="#{record.attachable_sgid}" content-type="#{record.attachable_content_type}"></action-text-attachment>)
+  existing_html = rich_text.body ? rich_text.body.to_html : ""
+  rich_text.update!(body: "#{existing_html}<p>See #{attachment}</p>")
+end
+
+mentioning_workshop = Workshop.find_by(title: "Comfort Journals")
+mentioned_workshop = Workshop.find_by(title: "Watercolor Windows")
+mentioned_resource, mentioning_resource = Resource.published.searchable.order(:id).first(2)
+
+if mentioning_workshop && mentioned_resource
+  mention.call(mentioning_workshop.rhino_materials, mentioned_resource)
+end
+
+if mentioned_workshop && mentioning_resource
+  mention.call(mentioning_resource.rhino_body, mentioned_workshop)
 end
