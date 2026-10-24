@@ -43,6 +43,16 @@ class UserDecorator < ApplicationDecorator
     "#{h.time_ago_in_words(last_sign_in_at)} ago"
   end
 
+  def last_login_label
+    return "Never logged in" unless last_sign_in_at
+
+    "Last logged in #{last_sign_in_at.strftime("%b %-d, %Y")}"
+  end
+
+  def invited_label
+    "Invited #{welcome_instructions_sent_at.strftime("%b %-d, %Y")}" if welcome_instructions_sent_at
+  end
+
   def display_primary_address
     primary_address == 1 ? "work" : "home"
   end

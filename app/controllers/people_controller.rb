@@ -378,6 +378,8 @@ class PeopleController < ApplicationController
         date_of_birth pronouns filemaker_code member_since notes
       ],
       union_columns: %w[filemaker_code],
+      field_logins: ->(person) { logins_by_email_field(person) },
+      merge_outcomes: ->(keep, delete) { email_merge_outcomes(keep, delete) },
       # Merging two people who each have a login leaves the kept person with both
       # (users.person_id has no unique constraint); both logins still sign in to the
       # one record. Surface it so the admin isn't surprised — it doesn't block.
@@ -404,7 +406,7 @@ class PeopleController < ApplicationController
         @keeper_default_pay_customer_id = keep.pay_customers.active.find_by(default: true)&.id
         @keeper_primary_address_signature = AddressDeduper.primary_signature(keep, delete)
         @keeper_primary_contact_signatures = PersonServices::ReconcileContactMethods.primary_signatures(keep, delete)
-        @adopted_login_id = delete.user&.id unless keep.user
+        @primary_login_id = primary_login(keep, delete)&.id
       },
       # Reconcile what the generic merge leaves inconsistent on the kept person:
       #   * redundant professional licenses within a kind (merge blank-number
@@ -419,7 +421,7 @@ class PeopleController < ApplicationController
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
-      #   * a survivor gaining its first login (adopt the login's email as primary).
+      #   * a survivor gaining a login (adopt the primary login's email as primary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
@@ -432,7 +434,7 @@ class PeopleController < ApplicationController
           primary_signature: @keeper_primary_address_signature).call
         PersonServices::ReconcileContactMethods.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
-        sync_adopted_login_email(keep)
+        sync_primary_login_email(keep)
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
@@ -440,9 +442,9 @@ class PeopleController < ApplicationController
     }
   end
 
-  # An adopted login's email becomes the keeper's primary, so it isn't dropped.
+  # The primary login's email becomes the keeper's primary, so it isn't dropped.
   def dropped_email_note(keep, delete)
-    held = [ keep.email, keep.email_2, (delete.user&.email unless keep.user) ].compact_blank
+    held = [ keep.email, keep.email_2, primary_login(keep, delete)&.email ].compact_blank
     dropped = [ delete.email, delete.email_2 ].compact_blank
       .reject { |address| PlaceholderEmail.match?(address) || held.any? { |kept| kept.casecmp?(address) } }
       .uniq(&:downcase)
@@ -451,17 +453,81 @@ class PeopleController < ApplicationController
     "#{dropped.to_sentence} #{dropped.one? ? "isn't" : "aren't"} on the kept person and will be dropped. To keep #{dropped.one? ? "it" : "one"}, enter it in Email 2 on the right."
   end
 
+  def logins_by_email_field(person)
+    logins = User.where(person_id: person.id).index_by { |user| user.email.downcase }
+    %w[email email_2].each_with_object({}) do |column, by_field|
+      login = logins[person.public_send(column).to_s.downcase]
+      by_field[column] = login if login
+    end
+  end
+
+  # What the login email sync changes on the kept person, flagged beside each email and login.
+  def email_merge_outcomes(keep, delete)
+    login = primary_login(keep, delete)
+    return {} if login.nil? || login.email.casecmp?(keep.email.to_s)
+
+    fields = { "email" => { keep: "becomes #{login.email} (#{primary_login_reason(login, keep, delete)})" } }
+    if keep.email.present?
+      secondary_free = keep.email_2.blank? || keep.email_2.casecmp?(login.email)
+      fields["email_2"] = { keep: secondary_free ? "becomes #{keep.email}" : "stays; #{keep.email} is saved in a comment" }
+    end
+    delete_column = %w[email email_2].find { |column| delete.public_send(column).to_s.casecmp?(login.email) }
+    fields[delete_column] = { **fields[delete_column].to_h, delete: "becomes the primary email" } if delete_column
+
+    { fields: fields, records: { login => "its email becomes the primary email" } }
+  end
+
   def login_merge_note(keep, delete)
     return unless delete.user
-    return "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." unless keep.user
 
-    "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently."
+    login = primary_login(keep, delete)
+    return "#{keep.full_name} takes over the other person's login, so its email (#{login.email}) becomes their primary email. The email chosen here moves to their secondary email." unless keep.user
+
+    both = "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently."
+    return both if login.email.casecmp?(keep.email.to_s)
+
+    "#{both} Their primary email becomes #{login.email}, #{primary_login_reason(login, keep, delete)}. The email chosen here moves to their secondary email."
+  end
+
+  # The login whose email the kept person's primary email follows: an adopted login,
+  # else the most recently used of both; ties go to the only person with history, else the kept person.
+  def primary_login(keep, delete)
+    @primary_logins ||= Hash.new do |memo, (kept, deleted)|
+      memo[[ kept, deleted ]] = find_primary_login(kept, deleted)
+    end
+    @primary_logins[[ keep, delete ]]
+  end
+
+  def find_primary_login(keep, delete)
+    return unless delete.user
+    return delete.user unless keep.user
+
+    favored_person_id = person_with_history(keep, delete)&.id || keep.id
+    User.where(person_id: [ keep.id, delete.id ]).max_by do |login|
+      [ login.last_sign_in_at.to_i, login.person_id == favored_person_id ? 1 : 0 ]
+    end
+  end
+
+  def primary_login_reason(login, keep, delete)
+    return "the login they take over" unless keep.user
+    return "the login used most recently" if login.last_sign_in_at
+    return "the login of the person with affiliations or event registrations" if person_with_history(keep, delete)
+
+    "the kept person's login"
+  end
+
+  def person_with_history(keep, delete)
+    @people_with_history ||= Hash.new do |memo, pair|
+      with_history = pair.select { |person| person.affiliations.exists? || person.event_registrations.exists? }
+      memo[pair] = (with_history.first if with_history.one?)
+    end
+    @people_with_history[[ keep, delete ]]
   end
 
   # Saves the preview's edits first so the sync moves the email the admin picked into
   # the secondary slot.
-  def sync_adopted_login_email(keep)
-    login = User.find_by(id: @adopted_login_id)
+  def sync_primary_login_email(keep)
+    login = User.find_by(id: @primary_login_id)
     return unless login
 
     keep.save! if keep.changed?
