@@ -6,8 +6,8 @@ pr_number: 2644
 action_path: "/people/dedupe_index"
 summary: >-
   When the person you keep has no login but the other person does, the kept
-  person takes over that login and their primary email becomes the login email,
-  the same as linking a login.
+  person takes over that login. Their primary email stays the one you chose, and
+  the login's email is kept as their secondary email.
 pro_tips:
-  - "The merge preview warns you when this will happen. The email you chose there is kept as the secondary email."
-  - "If the kept person already has their own login, their primary email is left as you chose it."
+  - "The merge preview warns you when this will happen."
+  - "If the kept person has no primary email, the login's email becomes their primary email."

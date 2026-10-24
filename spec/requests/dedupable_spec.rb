@@ -731,24 +731,47 @@ RSpec.describe "Dedupable concern", type: :request do
       let!(:keep) { create(:person, first_name: "No", last_name: "Login", email: "keeper@example.com", user: nil) }
       let!(:delete_rec) { create(:person, first_name: "Has", last_name: "Login", email: "login@example.com") }
 
-      it "warns on the preview that the login's email becomes the primary email" do
+      it "warns on the preview that the login's email becomes the secondary email" do
         get dedupe_preview_people_path(
           person_to_keep_id: keep.id,
           person_to_delete_id: delete_rec.id
         )
 
-        expect(response.body).to include("takes over the other person&#39;s login", "login@example.com")
+        expect(response.body).to include("takes over the other person&#39;s login", "stays their primary email", "login@example.com")
         expect(response.body).not_to include("Merge blocked")
       end
 
-      it "makes the moved login's email the kept person's primary email" do
+      it "keeps the kept person's primary email and files the login's email as secondary" do
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id
+        }
+
+        expect(keep.reload.email).to eq("keeper@example.com")
+        expect(keep.email_2).to eq("login@example.com")
+        expect(keep.user.email).to eq("login@example.com")
+      end
+
+      it "adopts the login's email as primary when the kept person has none" do
+        keep.update_columns(email: nil)
+
         post dedupe_perform_people_path, params: {
           person_to_delete_id: delete_rec.id,
           person_to_keep_id: keep.id
         }
 
         expect(keep.reload.email).to eq("login@example.com")
-        expect(keep.email_2).to eq("keeper@example.com")
+      end
+
+      it "keeps an email picked in the preview as the primary email" do
+        post dedupe_perform_people_path, params: {
+          person_to_delete_id: delete_rec.id,
+          person_to_keep_id: keep.id,
+          person_to_keep: { email: "picked@example.com" }
+        }
+
+        expect(keep.reload.email).to eq("picked@example.com")
+        expect(keep.email_2).to eq("login@example.com")
       end
 
       it "still combines both people's FileMaker codes" do
@@ -761,18 +784,6 @@ RSpec.describe "Dedupable concern", type: :request do
         }
 
         expect(keep.reload.filemaker_code).to eq("FM-100, FM-273")
-        expect(keep.email).to eq("login@example.com")
-      end
-
-      it "keeps an email picked in the preview as the secondary email" do
-        post dedupe_perform_people_path, params: {
-          person_to_delete_id: delete_rec.id,
-          person_to_keep_id: keep.id,
-          person_to_keep: { email: "picked@example.com" }
-        }
-
-        expect(keep.reload.email).to eq("login@example.com")
-        expect(keep.email_2).to eq("picked@example.com")
       end
     end
 

@@ -418,7 +418,7 @@ class PeopleController < ApplicationController
       #     `payment_processor` isn't ambiguous and a later checkout can't flip it);
       #   * duplicate addresses / contact methods (merge identical ones into one,
       #     keeping a single primary — the survivor's own, else the deleted person's);
-      #   * a survivor gaining its first login (adopt the login's email as primary).
+      #   * a survivor gaining its first login (keep the login's email as secondary).
       after_merge: ->(keep) {
         PersonServices::ReconcileProfessionalLicenses.new(keep).call
         ContinuingEducationDeduper.new(ContinuingEducationRegistration.for_registrant(keep.id).to_a).call
@@ -431,7 +431,7 @@ class PeopleController < ApplicationController
           primary_signature: @keeper_primary_address_signature).call
         PersonServices::ReconcileContactMethods.new(keep,
           primary_signatures: @keeper_primary_contact_signatures).call
-        sync_adopted_login_email(keep)
+        keep_adopted_login_email(keep)
       },
       record_extras: ->(person) {
         [ person.preferred_email.presence, person.filemaker_code.presence && "FileMaker #{person.filemaker_code}" ].compact.join(" · ").presence
@@ -439,9 +439,8 @@ class PeopleController < ApplicationController
     }
   end
 
-  # An adopted login's email becomes the keeper's primary, so it isn't dropped.
   def dropped_email_note(keep, delete)
-    held = [ keep.email, keep.email_2, (delete.user&.email unless keep.user) ].compact_blank
+    held = [ keep.email, keep.email_2, (delete.user&.email if adopted_login_fits?(keep)) ].compact_blank
     dropped = [ delete.email, delete.email_2 ].compact_blank
       .reject { |address| PlaceholderEmail.match?(address) || held.any? { |kept| kept.casecmp?(address) } }
       .uniq(&:downcase)
@@ -452,19 +451,24 @@ class PeopleController < ApplicationController
 
   def login_merge_note(keep, delete)
     return unless delete.user
-    return "#{keep.full_name} takes over the other person's login, so its email (#{delete.user.email}) becomes their primary email. The email chosen here moves to their secondary email." unless keep.user
+    return "#{keep.full_name} takes over the other person's login. The email chosen here stays their primary email, and the login's email (#{delete.user.email}) becomes their secondary email." unless keep.user
 
     "Both people have a login. After the merge, both logins sign in to the kept person (#{keep.full_name}) — no login is lost. Their profile shows whichever login was used most recently."
   end
 
-  # Saves the preview's edits first so the sync moves the email the admin picked into
-  # the secondary slot.
-  def sync_adopted_login_email(keep)
+  def keep_adopted_login_email(keep)
     login = User.find_by(id: @adopted_login_id)
-    return unless login
+    return if login.nil? || [ keep.email, keep.email_2 ].any? { |held| held.to_s.casecmp?(login.email) }
 
-    keep.save! if keep.changed?
-    PersonLoginEmailSync.call(login)
+    if keep.email.blank?
+      keep.assign_attributes(email: login.email, email_type: login.email_type.presence || keep.email_type)
+    elsif keep.email_2.blank?
+      keep.assign_attributes(email_2: login.email, email_2_type: login.email_type.presence || keep.email_2_type)
+    end
+  end
+
+  def adopted_login_fits?(keep)
+    !keep.user && (keep.email.blank? || keep.email_2.blank?)
   end
 
   def active_pay_subscription?(person)
