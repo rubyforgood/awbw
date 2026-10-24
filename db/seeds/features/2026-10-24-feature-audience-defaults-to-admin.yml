@@ -1,0 +1,10 @@
+name: "New features default to admin-facing, with guidance on announcements"
+area: content
+display_status: admin_facing
+released_on: 2026-10-24
+pr_number: 2826
+action_path: "/features/new"
+summary: >-
+  A new Features & tips entry now starts as admin-facing, the full changelog. The
+  Audience field explains that facilitator- and public-facing entries are release
+  announcements for big features, written for them as a second entry.

@@ -225,6 +225,21 @@ RSpec.describe "/features", type: :request do
     end
   end
 
+  describe "GET /features/new" do
+    it "defaults the audience to admin-facing" do
+      sign_in admin
+      get new_feature_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to match(/<option selected="selected" value="admin_facing">/)
+    end
+
+    it "explains that non-admin audiences are release announcements" do
+      sign_in admin
+      get new_feature_path
+      expect(response.body).to include("release announcement for a big feature")
+    end
+  end
+
   describe "POST /features" do
     let(:valid_attributes) do
       { name: "Brand new", area: "events", display_status: "user_facing",
