@@ -70,7 +70,7 @@ module EventRegistrationServices
       }.each do |key, value|
         next if value.blank?
 
-        field = @form.form_fields.find_by(field_identifier: key)
+        field = @form.form_fields.identified_as(key).first
         next unless field
         next if @form_params[field.id.to_s].present?
 
@@ -85,7 +85,7 @@ module EventRegistrationServices
     end
 
     def field_value(key)
-      field = @form.form_fields.find_by(field_identifier: key)
+      field = @form.form_fields.identified_as(key).first
       return nil unless field
       @form_params[field.id.to_s]
     end

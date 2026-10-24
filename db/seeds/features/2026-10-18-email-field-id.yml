@@ -7,4 +7,4 @@ summary: >-
   submits the form, the same as "primary_email", so their answers can update
   their profile.
 pro_tips:
-  - "The form editor saves \"email\" as \"primary_email\". Re-save an older form to switch an existing \"email\" question over."
+  - "Forms that already use \"email\" work as they are. The form editor shows and saves it as \"primary_email\"."

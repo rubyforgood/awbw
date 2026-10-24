@@ -106,13 +106,21 @@ RSpec.describe FormField do
         expect(create(:form_field, field_identifier: "email").field_identifier).to eq("primary_email")
       end
 
-      it "switches an existing email field to primary_email when it is saved again" do
+      it "switches a stored email field to primary_email when it is saved again" do
         field = create(:form_field)
         field.update_column(:field_identifier, "email")
 
         field.reload.update!(field_identifier: "email")
 
+        expect(field.reload.read_attribute_before_type_cast(:field_identifier)).to eq("primary_email")
+      end
+
+      it "reads a stored email field as primary_email" do
+        field = create(:form_field)
+        field.update_column(:field_identifier, "email")
+
         expect(field.reload.field_identifier).to eq("primary_email")
+        expect(FormField.identified_as("primary_email")).to include(field)
       end
 
       it "leaves other identifiers as entered" do

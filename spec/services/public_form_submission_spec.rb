@@ -17,8 +17,10 @@ RSpec.describe PublicFormSubmission do
     }
   end
 
-  context "when the email question uses the email field ID" do
-    let!(:email_field) { create(:form_field, form: form, name: "Email", field_identifier: "email") }
+  context "when the email question was saved with the email field ID" do
+    let!(:email_field) do
+      create(:form_field, form: form, name: "Email").tap { |field| field.update_column(:field_identifier, "email") }
+    end
 
     it "identifies the submitter" do
       result = described_class.call(form: form, form_params: params_for)
