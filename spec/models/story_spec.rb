@@ -339,6 +339,17 @@ RSpec.describe Story, type: :model do
       end
     end
 
+    context 'when the query matches the organization name' do
+      it 'finds stories from a matching organization even when the text never names it' do
+        org_story = create(:story, :published, title: 'Painting together',
+                                               organization: create(:organization, name: 'Riverbend Shelter'))
+
+        results = Story.search_by_params(query: 'riverbend')
+        expect(results).to include(org_story)
+        expect(results).not_to include(published_story)
+      end
+    end
+
     context 'when the query matches a tag name' do
       def tag_with_category(story, type_name, name)
         category_type = CategoryType.find_by(name: type_name) || create(:category_type, name: type_name)

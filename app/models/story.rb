@@ -159,11 +159,11 @@ class Story < ApplicationRecord
     end
 
     # Keyword search matches the title, the rich-text body, the credited
-    # author/creator name, the spotlighted facilitator's shown name, and
-    # sector/audience tag names, OR-ed together via id subqueries so SearchCop's
-    # joins and the `people` joins stay isolated. (A plain LIKE handles
-    # the title because SearchCop's default group pairs it with the boolean
-    # `published` column and won't match a title on its own.)
+    # author/creator name, the spotlighted facilitator's shown name, the
+    # organization name, and sector/audience tag names, OR-ed together via id
+    # subqueries so SearchCop's joins and the `people` joins stay isolated. (A
+    # plain LIKE handles the title because SearchCop's default group pairs it
+    # with the boolean `published` column and won't match a title on its own.)
     if params[:query].present?
       query = params[:query]
       stories = stories.where("stories.title LIKE ?", "%#{query}%")
@@ -171,6 +171,7 @@ class Story < ApplicationRecord
                        .or(stories.where(id: by_credited_person_name(query).select("stories.id")))
                        .or(stories.where(id: tag_name_like(query).select("stories.id")))
                        .or(stories.where(spotlighted_facilitator_id: Person.displayed_name_like(query).select(:id)))
+                       .or(stories.where(organization_id: Organization.name_like(query).select(:id)))
     end
 
     if params[:author_name].present?

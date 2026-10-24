@@ -454,6 +454,13 @@ RSpec.describe "/story_share", type: :request do
         expect(response.body).not_to include("swiper-slide")
       end
 
+      it "finds stories by their organization name" do
+        create(:story, :published, :publicly_visible, title: "Painting after service",
+                                                      organization: create(:organization, name: "Riverbend Shelter"))
+        get story_shares_path(query: "Riverbend")
+        expect(response.body).to include("Painting after service")
+      end
+
       it "finds stories by their sector tag and links to that sector's page" do
         tagged = create(:story, :published, :publicly_visible, title: "Painting after service")
         tag_sector(tagged, "Military/Veterans")
