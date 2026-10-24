@@ -342,6 +342,11 @@ follow this). Match the existing pattern:
   size works from the URL); presets live in `PaginationHelper::PER_PAGE_OPTIONS`.
   Pass the controller's fallback as `default:` so Clear filters resets to it, and
   carry the param through the results view's `pagination_params`.
+- **A frameless filter form wired to `collection` submits text as you type, so
+  morph the page to keep focus:** `turbo_refreshes_with method: :morph, scroll:
+  :preserve` in the view, `data: { turbo_action: "replace" }` on the form, and
+  `data-turbo-permanent` (plus an `id`) on any TomSelect wrapper so the morph
+  doesn't strip its widget. Workshop logs is the reference.
 
 ## Features & tips page (`/features`)
 

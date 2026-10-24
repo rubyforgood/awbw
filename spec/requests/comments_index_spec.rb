@@ -54,6 +54,15 @@ RSpec.describe "Comments index", type: :request do
       expect(select_tag).not_to include("onchange")
     end
 
+    it "leaves submitting every filter to the form's collection controller" do
+      sign_in admin
+      get comments_path
+
+      filter_form = response.body[%r{<form[^>]*data-controller="collection".*?</form>}m]
+      expect(filter_form).to be_present
+      expect(filter_form).not_to match(/\b(onchange|oninput)=/)
+    end
+
     it "keeps a per-page size from the URL selected even when it isn't a preset" do
       sign_in admin
       get comments_path(number_of_items_per_page: 12)

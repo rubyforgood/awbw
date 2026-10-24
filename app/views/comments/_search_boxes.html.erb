@@ -15,8 +15,7 @@
   </div>
   <div class="flex flex-wrap items-end gap-3">
     <%= render "shared/filter_text", param: :query, label: "Keyword", placeholder: "Body or topic…", submit: true,
-          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[150px] grow",
-          input_options: { oninput: "this.form.requestSubmit()" } %>
+          field_class: search_field_class(extra: "bg-white"), wrapper_class: "min-w-[150px] grow" %>
 
     <div class="min-w-[150px] grow">
       <label for="author_id" class="<%= search_label_class %>">Author</label>
@@ -30,27 +29,24 @@
     <div class="w-36">
       <label for="source" class="<%= search_label_class %>">Type</label>
       <%= f.select :source, options_for_select(source_options, params[:source]), {},
-                   class: search_field_class(extra: "bg-white search-select-placeholder"),
-                   onchange: "this.form.requestSubmit()" %>
+                   class: search_field_class(extra: "bg-white search-select-placeholder") %>
     </div>
 
     <div class="w-36">
       <label for="from" class="<%= search_label_class %>">From</label>
       <%= f.date_field :from, value: params[:from],
-                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:from]),
-                       onchange: "this.form.requestSubmit()" %>
+                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:from]) %>
     </div>
 
     <div class="w-36">
       <label for="to" class="<%= search_label_class %>">To</label>
       <%= f.date_field :to, value: params[:to],
-                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:to]),
-                       onchange: "this.form.requestSubmit()" %>
+                       class: date_filter_class(search_field_class(extra: "bg-white"), params[:to]) %>
     </div>
 
     <div class="pb-1">
       <label class="inline-flex cursor-pointer items-center select-none" title="Flagged for follow-up">
-        <%= check_box_tag :flagged, "1", params[:flagged] == "1", class: "peer sr-only", onchange: "this.form.requestSubmit()" %>
+        <%= check_box_tag :flagged, "1", params[:flagged] == "1", class: "peer sr-only" %>
         <i class="fa-regular fa-flag text-gray-500 peer-checked:text-orange-500 peer-checked:[--fa-style:900]!"></i>
         <span class="ml-1.5 text-sm text-gray-500 peer-checked:text-orange-600">Flagged</span>
       </label>
