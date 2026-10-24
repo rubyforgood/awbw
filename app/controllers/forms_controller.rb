@@ -10,6 +10,7 @@ class FormsController < ApplicationController
       @sort = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "name"
       @sort_direction = params[:direction] == "desc" ? "desc" : "asc"
       @forms = sorted_forms
+      @survey_default_ids = Form.survey_default_ids
       render :forms_results
     else
       @owned_forms = Form.owned.includes(:owner, :form_fields).order(:owner_type, :id)

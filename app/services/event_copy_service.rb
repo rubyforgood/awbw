@@ -300,7 +300,7 @@ class EventCopyService
     form
   end
 
-  # Each survey role belongs to one form, so the target's form for that role stands in.
+  # The target's default form for the survey role stands in.
   def matching_form(ref)
     named = Form.order(:id).find_by(name: ref["name"], role: ref["role"]) || Form.order(:id).find_by(name: ref["name"])
     return named if named
