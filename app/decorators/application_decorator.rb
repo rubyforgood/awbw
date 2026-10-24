@@ -1,6 +1,4 @@
 class ApplicationDecorator < Draper::Decorator
-  DEDUPE_SNIPPET_LENGTH = 60
-
   delegate_all
 
   def display_image

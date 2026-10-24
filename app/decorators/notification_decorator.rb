@@ -39,7 +39,7 @@ class NotificationDecorator < ApplicationDecorator
   BULK_META = { label: "Bulk", classes: "bg-indigo-100 text-indigo-800" }.freeze
 
   def dedupe_label
-    subject = email_subject.to_s.squish.truncate(DEDUPE_SNIPPET_LENGTH, separator: " ").presence || title
+    subject = email_subject.to_s.squish.truncate(ModelDeduper::SNIPPET_LENGTH, separator: " ").presence || title
     [ subject, created_at&.strftime("%b %-d, %Y") ].compact.join(" · ")
   end
 

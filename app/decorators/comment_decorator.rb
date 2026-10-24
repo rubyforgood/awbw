@@ -24,7 +24,7 @@ class CommentDecorator < ApplicationDecorator
   end
 
   def dedupe_label
-    body.to_s.squish.truncate(DEDUPE_SNIPPET_LENGTH, separator: " ")
+    body.to_s.squish.truncate(ModelDeduper::SNIPPET_LENGTH, separator: " ")
   end
 
   def author_name

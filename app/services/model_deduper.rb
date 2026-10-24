@@ -58,6 +58,7 @@ class ModelDeduper
   # association can't bloat the page; anything past the cap is reported as a count.
   # Each entry is { label:, count:, names: [ up to NAME_LIMIT display strings ], records: [ the same records ] }.
   NAME_LIMIT = 50
+  SNIPPET_LENGTH = 60
 
   def reassignment_preview(record)
     reassignable_joins.filter_map do |join|
